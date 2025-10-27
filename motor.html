@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRV8833 馬達驅動板概念原理圖</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            padding: 1rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .schematic-wrapper {
+            width: 100%;
+            height: auto;
+            min-height: 600px;
+            overflow: auto;
+            border-radius: 8px;
+            background-color: #fff;
+        }
+        svg {
+            display: block;
+        }
+
+        /* SVG Styles */
+        .component-box { fill: #f0f9ff; stroke: #38bdf8; stroke-width: 2; }
+        .pin-label { font-size: 10px; font-weight: 600; fill: #4b5563; }
+        .net-line { stroke-width: 2; fill: none; }
+        .net-gnd { stroke: #34d399; } /* Green for Ground */
+        .net-vm { stroke: #ef4444; } /* Red for Motor Power */
+        .net-3v3 { stroke: #f97316; } /* Orange for Logic Power */
+        .net-ctrl { stroke: #3b82f6; } /* Blue for Control Signals */
+        .net-motor { stroke: #6b7280; } /* Gray for Motor Outputs */
+        .net-i2c { stroke: #a855f7; } /* Purple for I2C */
+        .label-text { font-size: 10px; font-weight: 700; fill: #1f2937; }
+        .junction { fill: #1f2937; }
+
+        .tooltip {
+            position: absolute;
+            background-color: #1f2937;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.1s;
+            z-index: 10;
+        }
+        .net-line:hover {
+            stroke-width: 3;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body class="p-4 bg-gray-100">
+
+<div class="container p-6">
+    <h1 class="text-2xl font-bold text-gray-800 mb-2">DRV8833 馬達驅動板概念原理圖 (Rev 8)</h1>
+    <p class="text-sm text-gray-500 mb-6">點擊網路線路 (Net Line) 可查看網路名稱和描述。</p>
+
+    <!-- Legend -->
+    <div class="flex flex-wrap gap-4 mb-6 text-sm">
+        <span class="flex items-center"><svg width="15" height="15"><line x1="0" y1="7.5" x2="15" y2="7.5" class="net-line net-vm" /></svg><span class="ml-1 text-red-500">VM (馬達電源)</span></span>
+        <span class="flex items-center"><svg width="15" height="15"><line x1="0" y1="7.5" x2="15" y2="7.5" class="net-line net-3v3" /></svg><span class="ml-1 text-orange-500">3V3 (邏輯電源)</span></span>
+        <span class="flex items-center"><svg width="15" height="15"><line x1="0" y1="7.5" x2="15" y2="7.5" class="net-line net-ctrl" /></svg><span class="ml-1 text-blue-500">控制訊號 (AIN/BIN)</span></span>
+        <span class="flex items-center"><svg width="15" height="15"><line x1="0" y1="7.5" x2="15" y2="7.5" class="net-line net-motor" /></svg><span class="ml-1 text-gray-500">馬達輸出</span></span>
+        <span class="flex items-center"><svg width="15" height="15"><line x1="0" y1="7.5" x2="15" y2="7.5" class="net-line net-gnd" /></svg><span class="ml-1 text-green-500">GND (接地)</span></span>
+    </div>
+
+    <div class="schematic-wrapper">
+        <svg id="schematic" viewBox="0 0 1000 600"></svg>
+    </div>
+</div>
+
+<div id="tooltip" class="tooltip"></div>
+
+<script>
+    const svg = document.getElementById('schematic');
+    const tooltip = document.getElementById('tooltip');
+    const WIDTH = 1000;
+    const HEIGHT = 600;
+
+    // Helper functions
+    const createEl = (name, attrs) => {
+        const el = document.createElementNS("http://www.w3.org/2000/svg", name);
+        for (const key in attrs) {
+            el.setAttribute(key, attrs[key]);
+        }
+        return el;
+    };
+
+    const drawBox = (x, y, w, h, ref, description) => {
+        const group = createEl('g', {});
+        group.appendChild(createEl('rect', {
+            x: x, y: y, width: w, height: h, rx: 8, ry: 8, class: 'component-box'
+        }));
+        group.appendChild(createEl('text', {
+            x: x + w / 2, y: y + 20, 'text-anchor': 'middle', class: 'font-bold fill-gray-900', style: 'font-size: 14px;', textContent: ref
+        }));
+        group.appendChild(createEl('text', {
+            x: x + w / 2, y: y + 40, 'text-anchor': 'middle', class: 'fill-gray-600', style: 'font-size: 10px;', textContent: description
+        }));
+        svg.appendChild(group);
+        return { x, y, w, h };
+    };
+
+    const drawPin = (x, y, label, side, align = 'start') => {
+        const line = createEl('line', { x1: x, y1: y, x2: side === 'left' ? x - 10 : x + 10, y2: y, stroke: '#6b7280', 'stroke-width': 1 });
+        const textAnchor = side === 'left' ? 'end' : 'start';
+        const textX = side === 'left' ? x - 12 : x + 12;
+        const text = createEl('text', { x: textX, y: y + 3, 'text-anchor': textAnchor, class: 'pin-label', textContent: label });
+        svg.appendChild(line);
+        svg.appendChild(text);
+        return { x: side === 'left' ? x - 10 : x + 10, y: y };
+    };
+
+    const drawLabel = (x, y, netName, netClass) => {
+        const rect = createEl('rect', { x: x - 5, y: y - 10, width: 40, height: 20, fill: '#e5e7eb', stroke: netClass.stroke, 'stroke-width': 1, rx: 4, ry: 4 });
+        const text = createEl('text', { x: x + 15, y: y + 5, 'text-anchor': 'middle', class: 'label-text', textContent: netName });
+        svg.appendChild(rect);
+        svg.appendChild(text);
+        return { x: x + 15, y: y };
+    };
+
+    const drawLine = (path, netName, netDescription, netClass) => {
+        const line = createEl('polyline', { points: path, class: `net-line ${netClass.class}`, 'data-net': netName, 'data-desc': netDescription });
+        svg.appendChild(line);
+        
+        // Add hover listener
+        line.addEventListener('mousemove', (e) => {
+            tooltip.textContent = `${netName}: ${netDescription}`;
+            tooltip.style.left = `${e.clientX + 15}px`;
+            tooltip.style.top = `${e.clientY + 15}px`;
+            tooltip.style.opacity = 1;
+        });
+        line.addEventListener('mouseleave', () => {
+            tooltip.style.opacity = 0;
+        });
+        
+        return line;
+    };
+
+    const drawJunction = (x, y) => {
+        svg.appendChild(createEl('circle', { cx: x, cy: y, r: 3, class: 'junction' }));
+    };
+
+    // Component Positions (Relative to 1000x600 canvas)
+    const POS = {
+        U2: { x: 50, y: 150, w: 120, h: 250 }, // ESP32-C3 MCU
+        U1: { x: 300, y: 150, w: 120, h: 250 }, // DRV8833 Motor Driver
+        PowerIn: { x: 50, y: 50 }, // J_PWR
+        MotorA: { x: 750, y: 180 }, // J_M1
+        MotorB: { x: 750, y: 350 }, // J_M2
+    };
+
+    // Net Classes
+    const NET_CLASSES = {
+        GND: { class: 'net-gnd', stroke: '#34d399' },
+        VM: { class: 'net-vm', stroke: '#ef4444' },
+        V33: { class: 'net-3v3', stroke: '#f97316' },
+        CTRL: { class: 'net-ctrl', stroke: '#3b82f6' },
+        MOTOR: { class: 'net-motor', stroke: '#6b7280' },
+        I2C: { class: 'net-i2c', stroke: '#a855f7' },
+        NSLEEP: { class: 'net-ctrl', stroke: '#9333ea' },
+    };
+    
+    // --- 1. Draw Components ---
+    drawBox(POS.U2.x, POS.U2.y, POS.U2.w, POS.U2.h, "U2", "ESP32C3 Module");
+    drawBox(POS.U1.x, POS.U1.y, POS.U1.w, POS.U1.h, "U1", "DRV8833 Motor Driver");
+
+    // Connectors
+    const connJpwr = drawBox(POS.PowerIn.x, POS.PowerIn.y, 80, 50, "J_PWR", "VM_IN");
+    const connJM1 = drawBox(POS.MotorA.x, POS.MotorA.y, 80, 50, "J_M1", "Motor A");
+    const connJM2 = drawBox(POS.MotorB.x, POS.MotorB.y, 80, 50, "J_M2", "Motor B");
+
+    // Power Filtering (Simplified representation)
+    drawBox(200, 50, 80, 50, "VM Filter", "D1, TVS1, FB1");
+    drawBox(450, 100, 80, 100, "VM Bulk", "C1, C2, C5");
+    drawBox(200, 300, 80, 50, "3V3 Filter", "C3, C4");
+
+    // --- 2. Define Pin Locations ---
+    const pins = {};
+
+    // U2 Pins (Right side)
+    pins.U2_3V3 = drawPin(POS.U2.x + POS.U2.w, POS.U2.y + 30, "3V3", 'right');
+    pins.U2_GND = drawPin(POS.U2.x + POS.U2.w, POS.U2.y + 60, "GND", 'right');
+    pins.U2_IO3 = drawPin(POS.U2.x + POS.U2.w, POS.U2.y + 90, "IO3 (AIN1)", 'right');
+    pins.U2_IO2 = drawPin(POS.U2.x + POS.U2.w, POS.U2.y + 120, "IO2 (AIN2)", 'right');
+    pins.U2_IO10 = drawPin(POS.U2.x + POS.U2.w, POS.U2.y + 150, "IO10 (BIN1)", 'right');
+    pins.U2_IO7 = drawPin(POS.U2.x + POS.U2.w, POS.U2.y + 180, "IO7 (BIN2)", 'right');
+    pins.U2_IO1 = drawPin(POS.U2.x + POS.U2.w, POS.U2.y + 210, "IO1 (LED)", 'right');
+    pins.U2_SDA = drawPin(POS.U2.x + POS.U2.w, POS.U2.y + 240, "IO8 (SDA)", 'right');
+    pins.U2_SCL = drawPin(POS.U2.x + POS.U2.w, POS.U2.y + 270, "IO9 (SCL)", 'right');
+    
+    // U1 Pins (Left side - Inputs/Power)
+    pins.U1_VM = drawPin(POS.U1.x, POS.U1.y + 30, "VM", 'left');
+    pins.U1_GND = drawPin(POS.U1.x, POS.U1.y + 60, "GND", 'left');
+    pins.U1_nSLEEP = drawPin(POS.U1.x, POS.U1.y + 90, "nSLEEP", 'left');
+    pins.U1_AIN1 = drawPin(POS.U1.x, POS.U1.y + 120, "AIN1", 'left');
+    pins.U1_AIN2 = drawPin(POS.U1.x, POS.U1.y + 150, "AIN2", 'left');
+    pins.U1_BIN1 = drawPin(POS.U1.x, POS.U1.y + 180, "BIN1", 'left');
+    pins.U1_BIN2 = drawPin(POS.U1.x, POS.U1.y + 210, "BIN2", 'left');
+
+    // U1 Pins (Right side - Outputs)
+    pins.U1_AOUT1 = drawPin(POS.U1.x + POS.U1.w, POS.U1.y + 100, "AOUT1", 'right');
+    pins.U1_AOUT2 = drawPin(POS.U1.x + POS.U1.w, POS.U1.y + 130, "AOUT2", 'right');
+    pins.U1_BOUT1 = drawPin(POS.U1.x + POS.U1.w, POS.U1.y + 200, "BOUT1", 'right');
+    pins.U1_BOUT2 = drawPin(POS.U1.x + POS.U1.w, POS.U1.y + 230, "BOUT2", 'right');
+
+    // Connector Pins (Simplified)
+    pins.J_PWR_VM = { x: connJpwr.x + connJpwr.w / 2, y: connJpwr.y + connJpwr.h + 10 };
+    pins.J_PWR_GND = { x: connJpwr.x + connJpwr.w / 2, y: connJpwr.y - 10 };
+    pins.J_M1_P = { x: connJM1.x, y: connJM1.y + connJM1.h / 2 - 10 };
+    pins.J_M1_N = { x: connJM1.x, y: connJM1.y + connJM1.h / 2 + 10 };
+    pins.J_M2_P = { x: connJM2.x, y: connJM2.y + connJM2.h / 2 - 10 };
+    pins.J_M2_N = { x: connJM2.x, y: connJM2.y + connJM2.h / 2 + 10 };
+
+    // --- 3. Draw Nets (Lines and Global Labels) ---
+
+    // GND Net (Green)
+    drawLine(
+        `${pins.U2_GND.x},${pins.U2_GND.y} ${pins.U2_GND.x + 50},${pins.U2_GND.y} ${pins.U2_GND.x + 50},${connJpwr.y + 5} 
+         ${connJpwr.x + connJpwr.w / 2},${connJpwr.y + 5} ${connJpwr.x + connJpwr.w / 2},${connJpwr.y}`,
+        "GND", "系統接地", NET_CLASSES.GND
+    );
+    drawLabel(800, 570, "GND", NET_CLASSES.GND); // Global GND label
+
+    // 3V3 Net (Orange)
+    drawLine(
+        `${pins.U2_3V3.x},${pins.U2_3V3.y} ${pins.U2_3V3.x + 100},${pins.U2_3V3.y}`,
+        "3V3", "ESP32 邏輯電源", NET_CLASSES.V33
+    );
+    drawLabel(800, 500, "3V3", NET_CLASSES.V33); // Global 3V3 label
+
+    // VM_IN -> VM_FILTERED -> VM_DRV (Red)
+    const vmFilterOutX = 280;
+    const vmFilterOutY = 50 + 25;
+    const vmBulkX = 450 + 80 / 2;
+    const vmBulkY = 450; // Use a dedicated point for bulk caps
+    
+    // VM_IN to Filter
+    drawLine(
+        `${pins.J_PWR_VM.x},${pins.J_PWR_VM.y} ${pins.J_PWR_VM.x},${vmFilterOutY} 190,${vmFilterOutY}`,
+        "VM_IN", "未濾波馬達電源輸入", NET_CLASSES.VM
+    );
+    // Filter to Bulk/Driver
+    drawLine(
+        `280,${vmFilterOutY} ${vmFilterOutX},${pins.U1_VM.y} ${pins.U1_VM.x},${pins.U1_VM.y}`,
+        "VM_DRV", "驅動器清潔電源 (VM)", NET_CLASSES.VM
+    );
+    // Connection to Bulk Caps
+    drawLine(
+        `280,${vmFilterOutY} 450,${vmFilterOutY} 450,${450 - 50}`,
+        "VM_FILTERED", "保護後馬達電源", NET_CLASSES.VM
+    );
+    drawLabel(800, 50, "VM_DRV", NET_CLASSES.VM); // Global VM_DRV label
+
+    // MCU Control Signals (Blue)
+    const ctrlLineX = POS.U1.x - 50;
+
+    // AIN1 / IO3
+    drawLine(
+        `${pins.U2_IO3.x},${pins.U2_IO3.y} ${ctrlLineX},${pins.U2_IO3.y} ${ctrlLineX},${pins.U1_AIN1.y} ${pins.U1_AIN1.x},${pins.U1_AIN1.y}`,
+        "AIN1/IO3", "馬達 A 控制訊號 1", NET_CLASSES.CTRL
+    );
+    drawJunction(ctrlLineX, pins.U2_IO3.y);
+    drawJunction(ctrlLineX, pins.U1_AIN1.y);
+
+    // AIN2 / IO2
+    drawLine(
+        `${pins.U2_IO2.x},${pins.U2_IO2.y} ${ctrlLineX},${pins.U2_IO2.y} ${ctrlLineX},${pins.U1_AIN2.y} ${pins.U1_AIN2.x},${pins.U1_AIN2.y}`,
+        "AIN2/IO2", "馬達 A 控制訊號 2", NET_CLASSES.CTRL
+    );
+    drawJunction(ctrlLineX, pins.U2_IO2.y);
+    drawJunction(ctrlLineX, pins.U1_AIN2.y);
+
+    // BIN1 / IO10
+    drawLine(
+        `${pins.U2_IO10.x},${pins.U2_IO10.y} ${ctrlLineX + 50},${pins.U2_IO10.y} ${ctrlLineX + 50},${pins.U1_BIN1.y} ${pins.U1_BIN1.x},${pins.U1_BIN1.y}`,
+        "BIN1/IO10", "馬達 B 控制訊號 1", NET_CLASSES.CTRL
+    );
+    drawJunction(ctrlLineX + 50, pins.U2_IO10.y);
+    drawJunction(ctrlLineX + 50, pins.U1_BIN1.y);
+
+    // BIN2 / IO7
+    drawLine(
+        `${pins.U2_IO7.x},${pins.U2_IO7.y} ${ctrlLineX + 50},${pins.U2_IO7.y} ${ctrlLineX + 50},${pins.U1_BIN2.y} ${pins.U1_BIN2.x},${pins.U1_BIN2.y}`,
+        "BIN2/IO7", "馬達 B 控制訊號 2", NET_CLASSES.CTRL
+    );
+    drawJunction(ctrlLineX + 50, pins.U2_IO7.y);
+    drawJunction(ctrlLineX + 50, pins.U1_BIN2.y);
+
+    // nSLEEP (Purple)
+    const nsleepLineX = POS.U1.x - 100;
+    drawLine(
+        `${pins.U1_nSLEEP.x},${pins.U1_nSLEEP.y} ${nsleepLineX},${pins.U1_nSLEEP.y}`,
+        "nSLEEP", "DRV8833 啟用 (下拉至 GND)", NET_CLASSES.NSLEEP
+    );
+    drawLabel(nsleepLineX - 40, pins.U1_nSLEEP.y, "R1 (10K)", NET_CLASSES.NSLEEP); // R1 Pull-Down
+
+    // Motor Outputs (Gray)
+    const motorLineX = POS.U1.x + POS.U1.w + 100;
+
+    // Motor A
+    drawLine(
+        `${pins.U1_AOUT1.x},${pins.U1_AOUT1.y} ${motorLineX},${pins.U1_AOUT1.y} ${motorLineX},${pins.J_M1_P.y} ${pins.J_M1_P.x - 10},${pins.J_M1_P.y}`,
+        "MOTOR_A_P", "馬達 A 輸出 (+)", NET_CLASSES.MOTOR
+    );
+    drawLine(
+        `${pins.U1_AOUT2.x},${pins.U1_AOUT2.y} ${motorLineX},${pins.U1_AOUT2.y} ${motorLineX},${pins.J_M1_N.y} ${pins.J_M1_N.x - 10},${pins.J_M1_N.y}`,
+        "MOTOR_A_N", "馬達 A 輸出 (-)", NET_CLASSES.MOTOR
+    );
+    
+    // Motor B
+    drawLine(
+        `${pins.U1_BOUT1.x},${pins.U1_BOUT1.y} ${motorLineX + 50},${pins.U1_BOUT1.y} ${motorLineX + 50},${pins.J_M2_P.y} ${pins.J_M2_P.x - 10},${pins.J_M2_P.y}`,
+        "MOTOR_B_P", "馬達 B 輸出 (+)", NET_CLASSES.MOTOR
+    );
+    drawLine(
+        `${pins.U1_BOUT2.x},${pins.U1_BOUT2.y} ${motorLineX + 50},${pins.U1_BOUT2.y} ${motorLineX + 50},${pins.J_M2_N.y} ${pins.J_M2_N.x - 10},${pins.J_M2_N.y}`,
+        "MOTOR_B_N", "馬達 B 輸出 (-)", NET_CLASSES.MOTOR
+    );
+
+    // I2C and LED (Right Side Bottom)
+    const auxX = 550;
+    const auxY = 400;
+    drawBox(auxX, auxY, 150, 100, "Auxiliary Ports", "I2C, LED");
+    
+    const i2cOutX = auxX + 150;
+    pins.Aux_SDA = drawPin(i2cOutX, auxY + 30, "SDA (J_I2C.3)", 'right');
+    pins.Aux_SCL = drawPin(i2cOutX, auxY + 60, "SCL (J_I2C.4)", 'right');
+    pins.Aux_LED = drawPin(i2cOutX, auxY + 90, "LED (J_LED.1)", 'right');
+
+    drawLine(
+        `${pins.U2_SDA.x},${pins.U2_SDA.y} ${pins.U2_SDA.x + 300},${pins.U2_SDA.y} ${pins.U2_SDA.x + 300},${pins.Aux_SDA.y} ${pins.Aux_SDA.x},${pins.Aux_SDA.y}`,
+        "ESP_IO8_SDA", "I2C 數據線", NET_CLASSES.I2C
+    );
+    drawLine(
+        `${pins.U2_SCL.x},${pins.U2_SCL.y} ${pins.U2_SCL.x + 300},${pins.U2_SCL.y} ${pins.U2_SCL.x + 300},${pins.Aux_SCL.y} ${pins.Aux_SCL.x},${pins.Aux_SCL.y}`,
+        "ESP_IO9_SCL", "I2C 時鐘線", NET_CLASSES.I2C
+    );
+    drawLine(
+        `${pins.U2_IO1.x},${pins.U2_IO1.y} ${pins.U2_IO1.x + 300},${pins.U2_IO1.y} ${pins.U2_IO1.x + 300},${pins.Aux_LED.y} ${pins.Aux_LED.x},${pins.Aux_LED.y}`,
+        "ESP_IO1_LED", "LED 控制 (經 R2)", NET_CLASSES.CTRL
+    );
+
+</script>
+</body>
+</html>
