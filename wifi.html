@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web BLE 裝置掃描器</title>
+    <!-- 載入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 使用 Inter 字體 */
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-3xl mx-auto bg-white shadow-xl rounded-xl p-6 md:p-10">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-2">
+            網頁藍牙低功耗 (BLE) 掃描
+        </h1>
+        <p class="text-sm text-red-600 bg-red-100 p-3 rounded-lg mb-6">
+            <b>重要提醒：</b> 此功能需透過 Chrome 或 Edge 瀏覽器（且需支援 Web Bluetooth）執行，並且會彈出作業系統層級的選擇視窗，而非直接在網頁上顯示清單。
+        </p>
+
+        <!-- 掃描按鈕 -->
+        <button id="scanButton" 
+                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-150 ease-in-out shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 flex items-center justify-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            <span>開始掃描 BLE 裝置</span>
+        </button>
+
+        <!-- 狀態與結果顯示區域 -->
+        <div class="mt-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">掃描狀態與結果</h2>
+            <div id="statusLog" class="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg text-sm mb-4">
+                等待點擊「開始掃描」...
+            </div>
+            
+            <div id="deviceList" class="space-y-3">
+                <!-- 裝置清單將顯示在這裡 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const scanButton = document.getElementById('scanButton');
+        const statusLog = document.getElementById('statusLog');
+        const deviceList = document.getElementById('deviceList');
+
+        /**
+         * 將訊息記錄到狀態區域
+         * @param {string} message 要顯示的訊息
+         * @param {string} type 訊息類型 ('info', 'success', 'error')
+         */
+        function logStatus(message, type = 'info') {
+            let bgColor, textColor, borderColor;
+            switch (type) {
+                case 'success':
+                    [bgColor, textColor, borderColor] = ['bg-green-50', 'text-green-800', 'border-green-200'];
+                    break;
+                case 'error':
+                    [bgColor, textColor, borderColor] = ['bg-red-50', 'text-red-800', 'border-red-200'];
+                    break;
+                case 'info':
+                default:
+                    [bgColor, textColor, borderColor] = ['bg-blue-50', 'text-blue-800', 'border-blue-200'];
+                    break;
+            }
+            statusLog.className = `p-4 rounded-lg text-sm mb-4 border ${borderColor} ${bgColor} ${textColor}`;
+            statusLog.innerHTML = message;
+        }
+
+        /**
+         * 檢查瀏覽器是否支援 Web Bluetooth API
+         */
+        function checkBluetoothSupport() {
+            if (!navigator.bluetooth) {
+                logStatus("❌ 錯誤：您的瀏覽器或設備不支持 Web Bluetooth API。請使用最新版的 Chrome 或 Edge。", 'error');
+                scanButton.disabled = true;
+                return false;
+            }
+            return true;
+        }
+
+        /**
+         * 啟動 BLE 掃描並連接/記錄裝置
+         */
+        async function scanBleDevices() {
+            if (!checkBluetoothSupport()) return;
+
+            logStatus("正在請求裝置選擇視窗...請在彈出視窗中選擇一個裝置。", 'info');
+            deviceList.innerHTML = ''; // 清空舊的裝置清單
+            scanButton.disabled = true;
+            scanButton.innerText = "掃描中...";
+
+            try {
+                // 使用 navigator.bluetooth.requestDevice 請求裝置
+                const device = await navigator.bluetooth.requestDevice({
+                    // 'filters' 參數允許過濾裝置
+                    // 這裡我們不設定過濾器，以顯示所有附近的裝置
+                    // 如果要過濾具有特定服務的裝置，可以使用 services: [...]
+                    acceptAllDevices: true,
+                    optionalServices: [
+                        'battery_service', // 範例：常見的服務 UUID
+                        '0000FFFF-0000-1000-8000-00805F9B34FB' // 範例：自訂 UUID
+                    ]
+                });
+
+                // 成功選取裝置後
+                const deviceId = device.id || 'N/A';
+                const deviceName = device.name || `無名稱裝置 (${deviceId})`;
+                
+                logStatus(`✅ 成功選取裝置: ${deviceName}`, 'success');
+                
+                // 將找到的裝置添加到清單中
+                const deviceItem = document.createElement('div');
+                deviceItem.className = 'bg-green-100 p-4 rounded-lg shadow-sm border border-green-300';
+                deviceItem.innerHTML = `
+                    <p class="font-semibold text-lg text-green-700">${deviceName}</p>
+                    <p class="text-sm text-green-600">ID: ${deviceId}</p>
+                    <p class="text-sm text-gray-600 mt-2">
+                        您可以嘗試使用 device.gatt.connect() 進行連線。
+                    </p>
+                `;
+                deviceList.appendChild(deviceItem);
+
+                // 在這裡可以加入連線邏輯: 
+                // const server = await device.gatt.connect();
+
+            } catch (error) {
+                if (error.name === 'NotFoundError') {
+                    logStatus("⚠️ 使用者取消或找不到任何匹配的裝置。", 'info');
+                } else if (error.message.includes("does not have permission")) {
+                    logStatus(`❌ 錯誤：瀏覽器權限不足。請確保您已啟用藍牙並授權網頁使用藍牙。`, 'error');
+                } else {
+                    logStatus(`❌ 掃描錯誤: ${error.message}`, 'error');
+                    console.error('BLE Scan Error:', error);
+                }
+            } finally {
+                scanButton.disabled = false;
+                scanButton.innerText = "開始掃描 BLE 裝置";
+            }
+        }
+
+        // 綁定事件
+        scanButton.addEventListener('click', scanBleDevices);
+
+        // 頁面載入時檢查支援性
+        window.onload = checkBluetoothSupport;
+
+    </script>
+</body>
+</html>
