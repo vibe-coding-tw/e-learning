@@ -95,6 +95,17 @@
             try {
                 // 使用 navigator.bluetooth.requestDevice 請求裝置
                 const device = await navigator.bluetooth.requestDevice({
+                    filters: [{
+                        namePrefix: 'esp32' // 過濾器：名稱必須以 'esp32' 開頭
+                    }],
+                    optionalServices: [
+                        'battery_service', // 標準服務
+                        '0000ffff-0000-1000-8000-000000000000' // 修正：全小寫
+                    ]
+                });
+/*
+現在，當您點擊掃描按鈕時，瀏覽器只會顯示名稱以 `"esp32"` 開頭的裝置，大大減少了清單的混亂程度。
+                const device = await navigator.bluetooth.requestDevice({
                     // 'filters' 參數允許過濾裝置
                     // 這裡我們不設定過濾器，以顯示所有附近的裝置
                     // 如果要過濾具有特定服務的裝置，可以使用 services: [...]
@@ -103,14 +114,8 @@
                         'battery_service', // 標準服務
                         '0000ffff-0000-1000-8000-000000000000' // 修正：全小寫
                     ]
-/*                    
-                    optionalServices: [
-                        'battery_service', // 範例：常見的服務 UUID
-                        '0000FFFF-0000-1000-8000-00805F9B34FB' // 範例：自訂 UUID
-                    ]
-*/                        
                 });
-
+*/
                 // 成功選取裝置後
                 const deviceId = device.id || 'N/A';
                 const deviceName = device.name || `無名稱裝置 (${deviceId})`;
