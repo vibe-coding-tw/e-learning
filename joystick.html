@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
   <title>BLE 搖桿控制 (Mobile)</title>
-  <!-- 引入 Tailwind CSS 以實現更好的響應式設計和美化，雖然本程式碼主要使用內聯 CSS，但保留此連結作為最佳實踐 -->
+  <!-- 引入 Tailwind CSS 以實現更好的響應式設計和美化 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* 使用 Inter 或系統字體以獲得最佳移動體驗 */
@@ -42,16 +42,16 @@
 
 <script>
 // --- UUIDs (與 ESP32 端需一致, 且必須是小寫) ---
-// BLE 控制服務 UUID (4FAFC201-1FB5-459E-8FCC-000000000000)
 const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-000000000000'; 
-// 用於寫入 (Write) 控制指令的特徵 UUID (請根據您的 ESP32 程式碼調整)
 const CHARACTERISTIC_UUID = '4fafc202-1fb5-459e-8fcc-000000000000'; 
+// 用於儲存裝置 ID 的 key
+const DEVICE_ID_KEY = 'ble_joystick_device_id'; 
 
 // 狀態變數
 let device = null;
 let characteristic = null;
 let sendingInterval = null;
-let lastPayload = {t:0,s:0}; // 儲存油門(throttle)和轉向(steer)的值
+let lastPayload = {t:0.0,s:0.0}; 
 
 // DOM 元素
 const pad = document.getElementById('pad');
@@ -61,58 +61,35 @@ const btnConnect = document.getElementById('btnConnect');
 
 let rect, centerX, centerY, maxRadius;
 
-/**
- * 重新計算搖桿區域的尺寸和中心點
- */
+// --- 搖桿與 UI 邏輯 (略) ---
+
 function resize() {
   rect = pad.getBoundingClientRect();
   centerX = rect.left + rect.width/2;
   centerY = rect.top + rect.height/2;
-  // 最大移動半徑設定為搖桿區域半徑的 85%
   maxRadius = rect.width/2 * 0.85; 
 }
 window.addEventListener('resize', resize);
 resize();
 
 let pointerActive = false;
-
-/**
- * 將數值限制在最小值和最大值之間
- */
 function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
 
-/**
- * 將觸摸/滑鼠位置轉換為油門(T)和轉向(S)值 (-1.0 到 1.0)
- * @param {number} px 螢幕 X 座標
- * @param {number} py 螢幕 Y 座標
- * @returns {{t: number, s: number}} 包含 throttle 和 steer 的物件
- */
 function pointerToTS(px,py){
   const dx = px - centerX;
-  const dy = centerY - py; // y 軸向上為正 (油門向前)
+  const dy = centerY - py; 
   const dist = Math.sqrt(dx*dx+dy*dy);
-  
-  // 計算歸一化座標 (限制在 -1.0 到 1.0)
+  const limitedDistRatio = clamp(dist / maxRadius, 0, 1);
   const normalizedX = dx / maxRadius;
   const normalizedY = dy / maxRadius;
-  
-  // 將歸一化距離限制在 1.0 以內
-  const limitedDistRatio = clamp(dist / maxRadius, 0, 1);
-
-  // 油門 (Throttle) = Y 軸 (向上為正)
   const throttle = clamp(normalizedY, -1, 1) * limitedDistRatio;
-  // 轉向 (Steer) = X 軸 (向右為正)
   const steer = clamp(normalizedX, -1, 1) * limitedDistRatio;
-  
   return {
-    t: Math.round(throttle * 100) / 100, // 四捨五入到小數點後兩位
+    t: Math.round(throttle * 100) / 100, 
     s: Math.round(steer * 100) / 100 
   };
 }
 
-/**
- * 更新搖桿圓點 (stick) 的位置
- */
 function updateStick(px,py){
   const dx = px - centerX;
   const dy = py - centerY;
@@ -121,22 +98,17 @@ function updateStick(px,py){
   const limited = Math.min(dist, maxRadius);
   const x = centerX + Math.cos(angle)*limited;
   const y = centerY + Math.sin(angle)*limited;
-  
-  // 設置相對位置
   stick.style.left = (x - rect.left) + 'px';
   stick.style.top = (y - rect.top) + 'px';
 }
 
-/**
- * 將搖桿重置回中心點
- */
 function resetStick(){
   stick.style.left = '50%';
   stick.style.top = '50%';
   stick.textContent = '0.00,0.00';
 }
 
-// --- 觸控 / 滑鼠事件處理 ---
+// Touch / Pointer handling (略)
 pad.addEventListener('pointerdown', (e)=>{
   pointerActive = true;
   pad.setPointerCapture(e.pointerId);
@@ -146,7 +118,6 @@ pad.addEventListener('pointerdown', (e)=>{
   updateStick(e.clientX, e.clientY);
   stick.textContent = (t.t.toFixed(2))+','+(t.s.toFixed(2));
 });
-
 pad.addEventListener('pointermove', (e)=>{
   if(!pointerActive) return;
   const t = pointerToTS(e.clientX, e.clientY);
@@ -154,54 +125,16 @@ pad.addEventListener('pointermove', (e)=>{
   updateStick(e.clientX, e.clientY);
   stick.textContent = (t.t.toFixed(2))+','+(t.s.toFixed(2));
 });
-
 pad.addEventListener('pointerup', (e)=>{
   if (!pointerActive) return;
   pointerActive = false;
   pad.releasePointerCapture(e.pointerId);
   lastPayload.t = 0.0; 
-  lastPayload.s = 0.0; // 釋放時歸零
+  lastPayload.s = 0.0; 
   resetStick();
 });
 
-// --- BLE 連線邏輯 (已加入名稱前綴過濾) ---
-async function connectBLE(){
-  try{
-    status.textContent = '掃描中 (過濾: esp32)...';
-    
-    // 實作 Web Bluetooth 裝置請求，使用名稱前綴過濾器
-    device = await navigator.bluetooth.requestDevice({
-      // 過濾器：只顯示名稱以 'esp32' 開頭的裝置
-      filters:[{
-        namePrefix: 'esp32' 
-      }],
-      // 必須將使用的 Service UUID 放入 optionalServices 確保連線後存取權限
-      optionalServices: [SERVICE_UUID] 
-    });
-    
-    status.textContent = '連線中...';
-    
-    const server = await device.gatt.connect();
-    const service = await server.getPrimaryService(SERVICE_UUID);
-    characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
-    
-    status.textContent = '✅ 已連線: ' + device.name;
-    btnConnect.textContent = '已連線 (斷開)';
-
-    // 開始定期傳送控制指令
-    if(sendingInterval) clearInterval(sendingInterval);
-    sendingInterval = setInterval(sendControl, 60); // 每 60 ms
-
-    // 設定斷線事件監聽器
-    device.addEventListener('gattserverdisconnected', onDisconnect);
-  }catch(err){
-    console.error('BLE 連線失敗:', err);
-    status.textContent = '❌ 連線失敗或使用者取消';
-    btnConnect.textContent = '連線 BLE';
-    clearInterval(sendingInterval);
-    sendingInterval = null;
-  }
-}
+// --- BLE 連線邏輯 (核心修改部分) ---
 
 /**
  * 處理 BLE 斷線
@@ -212,14 +145,100 @@ function onDisconnect() {
     if (sendingInterval) clearInterval(sendingInterval);
     sendingInterval = null;
     resetStick();
-    device.removeEventListener('gattserverdisconnected', onDisconnect);
-    device = null;
-    characteristic = null;
 }
 
 /**
- * 定期向 ESP32 傳送控制指令
+ * 取得裝置物件 (透過掃描或快速重連)
+ * @returns {Promise<BluetoothDevice>} 裝置物件
  */
+async function acquireDevice() {
+    // 1. 嘗試使用 localStorage 儲存的 ID 進行快速連線
+    const storedDeviceId = localStorage.getItem(DEVICE_ID_KEY);
+
+    if (storedDeviceId) {
+        status.textContent = '嘗試使用 ID 快速連線...';
+        try {
+            // 使用 getDevices() 取得瀏覽器記得的裝置 (無需彈出視窗)
+            const devices = await navigator.bluetooth.getDevices();
+            const knownDevice = devices.find(d => d.id === storedDeviceId);
+
+            if (knownDevice) {
+                 status.textContent = `已找到儲存的裝置: ${knownDevice.name}`;
+                 return knownDevice;
+            }
+        } catch (e) {
+            console.warn("Could not retrieve known device:", e);
+        }
+    }
+    
+    // 2. 如果沒有儲存 ID 或 getDevices 失敗，則啟動掃描 (會彈出視窗)
+    status.textContent = '掃描中 (過濾: esp32)...';
+    const newDevice = await navigator.bluetooth.requestDevice({
+        filters:[{ namePrefix: 'esp32' }],
+        optionalServices: [SERVICE_UUID] 
+    });
+    
+    // 儲存新裝置的 ID 以供下次使用
+    localStorage.setItem(DEVICE_ID_KEY, newDevice.id);
+    return newDevice;
+}
+
+
+async function connectBLE(){
+    if (!navigator.bluetooth) {
+        status.textContent = '❌ 瀏覽器不支援 Web Bluetooth。';
+        return;
+    }
+    
+    if (device && device.gatt.connected) {
+        // 如果已連線，則手動斷開
+        device.gatt.disconnect();
+        return;
+    }
+
+    try{
+        // 1. 取得裝置物件：如果是第一次，會掃描；如果不是，會嘗試快速連線。
+        if (!device) {
+             // 只有在 device 為 null 時，才嘗試從 localStorage 取得或進行掃描
+             device = await acquireDevice();
+        } 
+        
+        if (!device) throw new Error("裝置未連線或未找到。");
+
+        status.textContent = `連線到 ${device.name}...`;
+
+        // 2. 設定斷線事件監聽器 (先移除再新增，確保只監聽一次)
+        device.removeEventListener('gattserverdisconnected', onDisconnect);
+        device.addEventListener('gattserverdisconnected', onDisconnect);
+
+        // 3. 連線 GATT 伺服器
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService(SERVICE_UUID);
+        characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+        
+        status.textContent = '✅ 已連線: ' + device.name;
+        btnConnect.textContent = '已連線 (斷開)';
+
+        // 4. 開始定期傳送控制指令
+        if(sendingInterval) clearInterval(sendingInterval);
+        sendingInterval = setInterval(sendControl, 60);
+
+    }catch(err){
+        console.error('BLE 連線失敗:', err);
+        status.textContent = `❌ 連線失敗 (${err.message.slice(0, 30)}...)`;
+        btnConnect.textContent = '連線 BLE';
+        clearInterval(sendingInterval);
+        sendingInterval = null;
+        
+        // 如果是連線失敗，清空 device 讓下次可以重新掃描
+        if (device && !device.gatt.connected) {
+            device = null;
+            localStorage.removeItem(DEVICE_ID_KEY);
+        }
+    }
+}
+
+
 async function sendControl(){
   if(!characteristic || !device || !device.gatt.connected) {
     if (sendingInterval) clearInterval(sendingInterval);
@@ -227,34 +246,19 @@ async function sendControl(){
     return;
   }
   
-  // 建立 payload 格式: t:<float>,s:<float>
-  const t = Number(lastPayload.t).toFixed(3);
-  const s = Number(lastPayload.s).toFixed(3);
+  const t = lastPayload.t.toFixed(3);
+  const s = lastPayload.s.toFixed(3);
   const payload = `t:${t},s:${s}`;
   
   try{
-    // 將字串編碼為 Uint8Array 後寫入特徵
     await characteristic.writeValue(new TextEncoder().encode(payload));
   }catch(err){
     console.warn('send failed (可能已斷線):', err.message);
-    // 即使寫入失敗，GATT disconnected 事件也會捕捉到真正的斷線
   }
 }
 
 // --- 按鈕事件處理 ---
-btnConnect.addEventListener('click', ()=>{
-  if(device && device.gatt.connected){
-    // 如果已連線，則手動斷開
-    device.gatt.disconnect();
-    return;
-  }
-  if(!navigator.bluetooth){
-    // 使用狀態訊息代替 alert()
-    status.textContent = '❌ 瀏覽器不支援 Web Bluetooth。';
-    return;
-  }
-  connectBLE();
-});
+btnConnect.addEventListener('click', connectBLE);
 
 // 初始設定
 resetStick();
