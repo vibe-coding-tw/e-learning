@@ -37,21 +37,25 @@
       </div>
     </div>
 
-    <div class="info">說明：上/下推控制前/後（throttle），左右推控制轉向（steer）。每 60 ms 傳一次指令。</div>
+    <div class="info">說明：上/下推控制前/後（throttle），左右推控制轉向（steer）。每 60 ms 傳一次指令。Payload 格式：T (整數), S (整數)。</div>
   </div>
 
 <script>
 // --- UUIDs (與 ESP32 端需一致, 且必須是小寫) ---
+// BLE 控制服務 UUID
 const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-000000000000'; 
+// 用於寫入 (Write) 控制指令的特徵 UUID
 const CHARACTERISTIC_UUID = '4fafc201-1fb5-459e-8fcc-000000000000'; 
 // 用於儲存裝置 ID 的 key
 const DEVICE_ID_KEY = 'ble_joystick_device_id'; 
+// 整數轉換的範圍上限 (例如: 8-bit 或 16-bit)
+const MAX_CONTROL_VALUE = 255; 
 
 // 狀態變數
 let device = null;
 let characteristic = null;
 let sendingInterval = null;
-let lastPayload = {t:0.0,s:0.0}; 
+let lastPayload = {t:0.0,s:0.0}; // 儲存油門(throttle)和轉向(steer)的浮點數值 (-1.0 to 1.0)
 
 // DOM 元素
 const pad = document.getElementById('pad');
@@ -61,7 +65,7 @@ const btnConnect = document.getElementById('btnConnect');
 
 let rect, centerX, centerY, maxRadius;
 
-// --- 搖桿與 UI 邏輯 (略) ---
+// --- 搖桿與 UI 邏輯 ---
 
 function resize() {
   rect = pad.getBoundingClientRect();
@@ -75,6 +79,9 @@ resize();
 let pointerActive = false;
 function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
 
+/**
+ * 將觸摸/滑鼠位置轉換為油門(T)和轉向(S)值 (-1.0 到 1.0)
+ */
 function pointerToTS(px,py){
   const dx = px - centerX;
   const dy = centerY - py; 
@@ -85,11 +92,14 @@ function pointerToTS(px,py){
   const throttle = clamp(normalizedY, -1, 1) * limitedDistRatio;
   const steer = clamp(normalizedX, -1, 1) * limitedDistRatio;
   return {
-    t: Math.round(throttle * 100) / 100, 
-    s: Math.round(steer * 100) / 100 
+    t: throttle, 
+    s: steer 
   };
 }
 
+/**
+ * 更新搖桿圓點 (stick) 的位置
+ */
 function updateStick(px,py){
   const dx = px - centerX;
   const dy = py - centerY;
@@ -98,17 +108,21 @@ function updateStick(px,py){
   const limited = Math.min(dist, maxRadius);
   const x = centerX + Math.cos(angle)*limited;
   const y = centerY + Math.sin(angle)*limited;
+  
   stick.style.left = (x - rect.left) + 'px';
   stick.style.top = (y - rect.top) + 'px';
 }
 
+/**
+ * 將搖桿重置回中心點
+ */
 function resetStick(){
   stick.style.left = '50%';
   stick.style.top = '50%';
-  stick.textContent = '0.00,0.00';
+  stick.textContent = '0,0'; // 顯示整數格式
 }
 
-// Touch / Pointer handling (略)
+// Touch / Pointer handling
 pad.addEventListener('pointerdown', (e)=>{
   pointerActive = true;
   pad.setPointerCapture(e.pointerId);
@@ -116,15 +130,23 @@ pad.addEventListener('pointerdown', (e)=>{
   const t = pointerToTS(e.clientX, e.clientY);
   lastPayload.t = t.t; lastPayload.s = t.s;
   updateStick(e.clientX, e.clientY);
-  stick.textContent = (t.t.toFixed(2))+','+(t.s.toFixed(2));
+  // 顯示整數值
+  const t_int = Math.round(t.t * MAX_CONTROL_VALUE);
+  const s_int = Math.round(t.s * MAX_CONTROL_VALUE);
+  stick.textContent = `${t_int},${s_int}`;
 });
+
 pad.addEventListener('pointermove', (e)=>{
   if(!pointerActive) return;
   const t = pointerToTS(e.clientX, e.clientY);
   lastPayload.t = t.t; lastPayload.s = t.s;
   updateStick(e.clientX, e.clientY);
-  stick.textContent = (t.t.toFixed(2))+','+(t.s.toFixed(2));
+  // 顯示整數值
+  const t_int = Math.round(t.t * MAX_CONTROL_VALUE);
+  const s_int = Math.round(t.s * MAX_CONTROL_VALUE);
+  stick.textContent = `${t_int},${s_int}`;
 });
+
 pad.addEventListener('pointerup', (e)=>{
   if (!pointerActive) return;
   pointerActive = false;
@@ -134,7 +156,7 @@ pad.addEventListener('pointerup', (e)=>{
   resetStick();
 });
 
-// --- BLE 連線邏輯 (核心修改部分) ---
+// --- BLE 連線邏輯 ---
 
 /**
  * 處理 BLE 斷線
@@ -149,16 +171,13 @@ function onDisconnect() {
 
 /**
  * 取得裝置物件 (透過掃描或快速重連)
- * @returns {Promise<BluetoothDevice>} 裝置物件
  */
 async function acquireDevice() {
-    // 1. 嘗試使用 localStorage 儲存的 ID 進行快速連線
     const storedDeviceId = localStorage.getItem(DEVICE_ID_KEY);
 
     if (storedDeviceId) {
         status.textContent = '嘗試使用 ID 快速連線...';
         try {
-            // 使用 getDevices() 取得瀏覽器記得的裝置 (無需彈出視窗)
             const devices = await navigator.bluetooth.getDevices();
             const knownDevice = devices.find(d => d.id === storedDeviceId);
 
@@ -171,14 +190,12 @@ async function acquireDevice() {
         }
     }
     
-    // 2. 如果沒有儲存 ID 或 getDevices 失敗，則啟動掃描 (會彈出視窗)
     status.textContent = '掃描中 (過濾: esp32)...';
     const newDevice = await navigator.bluetooth.requestDevice({
         filters:[{ namePrefix: 'esp32' }],
         optionalServices: [SERVICE_UUID] 
     });
     
-    // 儲存新裝置的 ID 以供下次使用
     localStorage.setItem(DEVICE_ID_KEY, newDevice.id);
     return newDevice;
 }
@@ -191,15 +208,12 @@ async function connectBLE(){
     }
     
     if (device && device.gatt.connected) {
-        // 如果已連線，則手動斷開
         device.gatt.disconnect();
         return;
     }
 
     try{
-        // 1. 取得裝置物件：如果是第一次，會掃描；如果不是，會嘗試快速連線。
         if (!device) {
-             // 只有在 device 為 null 時，才嘗試從 localStorage 取得或進行掃描
              device = await acquireDevice();
         } 
         
@@ -207,11 +221,9 @@ async function connectBLE(){
 
         status.textContent = `連線到 ${device.name}...`;
 
-        // 2. 設定斷線事件監聽器 (先移除再新增，確保只監聽一次)
         device.removeEventListener('gattserverdisconnected', onDisconnect);
         device.addEventListener('gattserverdisconnected', onDisconnect);
 
-        // 3. 連線 GATT 伺服器
         const server = await device.gatt.connect();
         const service = await server.getPrimaryService(SERVICE_UUID);
         characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
@@ -219,7 +231,6 @@ async function connectBLE(){
         status.textContent = '✅ 已連線: ' + device.name;
         btnConnect.textContent = '已連線 (斷開)';
 
-        // 4. 開始定期傳送控制指令
         if(sendingInterval) clearInterval(sendingInterval);
         sendingInterval = setInterval(sendControl, 60);
 
@@ -230,7 +241,6 @@ async function connectBLE(){
         clearInterval(sendingInterval);
         sendingInterval = null;
         
-        // 如果是連線失敗，清空 device 讓下次可以重新掃描
         if (device && !device.gatt.connected) {
             device = null;
             localStorage.removeItem(DEVICE_ID_KEY);
@@ -239,6 +249,10 @@ async function connectBLE(){
 }
 
 
+/**
+ * 定期向 ESP32 傳送控制指令
+ * *** 關鍵修改：將浮點數轉換為整數並格式化為 "T,S" 字串 ***
+ */
 async function sendControl(){
   if(!characteristic || !device || !device.gatt.connected) {
     if (sendingInterval) clearInterval(sendingInterval);
@@ -246,9 +260,12 @@ async function sendControl(){
     return;
   }
   
-  const t = lastPayload.t.toFixed(3);
-  const s = lastPayload.s.toFixed(3);
-  const payload = `t:${t},s:${s}`;
+  // 1. 將 -1.0 到 1.0 的浮點數轉換為 -MAX_CONTROL_VALUE 到 MAX_CONTROL_VALUE 的整數
+  const t_int = Math.round(lastPayload.t * MAX_CONTROL_VALUE);
+  const s_int = Math.round(lastPayload.s * MAX_CONTROL_VALUE);
+  
+  // 2. 建立 payload 格式: T,S (例如: "200,0")
+  const payload = `${t_int},${s_int}`;
   
   try{
     await characteristic.writeValue(new TextEncoder().encode(payload));
