@@ -4,16 +4,24 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
   <title>BLE 搖桿控制 (Mobile)</title>
+  <!-- 引入 Tailwind CSS 以實現更好的響應式設計和美化，雖然本程式碼主要使用內聯 CSS，但保留此連結作為最佳實踐 -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    html,body{height:100%;margin:0;font-family:system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans TC';-webkit-touch-callout:none;-webkit-user-select:none;}
-    .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:12px;gap:12px}
-    .top{width:100%;display:flex;gap:8px;align-items:center}
-    button{padding:10px 14px;border-radius:10px;border:0;background:#222;color:white;font-weight:600}
-    #status{flex:1;text-align:center}
-    .joystick-wrap{width:90vw;max-width:520px;height:66vh;display:flex;align-items:center;justify-content:center}
-    .pad{width:84vw;max-width:420px;height:84vw;max-height:420px;border-radius:999px;background:linear-gradient(180deg,#f3f3f3,#e6e6e6);position:relative;touch-action:none;}
-    .stick{position:absolute;width:30%;height:30%;max-width:150px;max-height:150px;border-radius:999px;background:rgba(40,40,40,0.85);transform:translate(-50%,-50%);left:50%;top:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
-    .info{font-size:14px;color:#444}
+    /* 使用 Inter 或系統字體以獲得最佳移動體驗 */
+    html,body{height:100%;margin:0;font-family:system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans TC', 'Inter', sans-serif; -webkit-touch-callout:none;-webkit-user-select:none; background-color: #f7f7f7;}
+    .app{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:12px;gap:12px; height: 100%; box-sizing: border-box;}
+    .top{width:100%;display:flex;gap:8px;align-items:center; max-width: 520px;}
+    
+    /* 美化按鈕 */
+    button{padding:10px 14px;border-radius:12px;border:none;background:#2563EB;color:white;font-weight:700;box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); transition: all 0.15s ease-in-out;}
+    button:hover { background: #1e40af; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);}
+    
+    #status{flex:1;text-align:center;font-weight:600;color:#333; padding: 10px; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);}
+    
+    .joystick-wrap{width:90vw;max-width:520px;height:66vh;display:flex;align-items:center;justify-content:center; flex-grow: 1; margin-top: 20px;}
+    .pad{width:84vw;max-width:420px;height:84vw;max-height:420px;border-radius:999px;background:linear-gradient(180deg,#f3f3f3,#e6e6e6);position:relative;touch-action:none; border: 4px solid #ccc; box-shadow: inset 0 0 10px rgba(0,0,0,0.1), 0 5px 15px rgba(0,0,0,0.1);}
+    .stick{position:absolute;width:30%;height:30%;max-width:150px;max-height:150px;border-radius:999px;background:rgba(40,40,40,0.85);transform:translate(-50%,-50%);left:50%;top:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
+    .info{font-size:14px;color:#444; margin-bottom: 20px;}
   </style>
 </head>
 <body>
@@ -33,15 +41,19 @@
   </div>
 
 <script>
-// UUIDs - 與 ESP32 端需一致
-const SERVICE_UUID = '12345678-1234-5678-1234-56789abcdef0';
-const CHARACTERISTIC_UUID = 'abcdef01-1234-5678-1234-56789abcdef0';
+// --- UUIDs (與 ESP32 端需一致, 且必須是小寫) ---
+// BLE 控制服務 UUID (4FAFC201-1FB5-459E-8FCC-000000000000)
+const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-000000000000'; 
+// 用於寫入 (Write) 控制指令的特徵 UUID (請根據您的 ESP32 程式碼調整)
+const CHARACTERISTIC_UUID = '4fafc202-1fb5-459e-8fcc-000000000000'; 
 
+// 狀態變數
 let device = null;
 let characteristic = null;
 let sendingInterval = null;
-let lastPayload = {t:0,s:0};
+let lastPayload = {t:0,s:0}; // 儲存油門(throttle)和轉向(steer)的值
 
+// DOM 元素
 const pad = document.getElementById('pad');
 const stick = document.getElementById('stick');
 const status = document.getElementById('status');
@@ -49,33 +61,58 @@ const btnConnect = document.getElementById('btnConnect');
 
 let rect, centerX, centerY, maxRadius;
 
+/**
+ * 重新計算搖桿區域的尺寸和中心點
+ */
 function resize() {
   rect = pad.getBoundingClientRect();
   centerX = rect.left + rect.width/2;
   centerY = rect.top + rect.height/2;
-  maxRadius = rect.width/2 * 0.85; // limit
+  // 最大移動半徑設定為搖桿區域半徑的 85%
+  maxRadius = rect.width/2 * 0.85; 
 }
 window.addEventListener('resize', resize);
 resize();
 
 let pointerActive = false;
-let curX = 0, curY = 0;
 
+/**
+ * 將數值限制在最小值和最大值之間
+ */
 function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
 
+/**
+ * 將觸摸/滑鼠位置轉換為油門(T)和轉向(S)值 (-1.0 到 1.0)
+ * @param {number} px 螢幕 X 座標
+ * @param {number} py 螢幕 Y 座標
+ * @returns {{t: number, s: number}} 包含 throttle 和 steer 的物件
+ */
 function pointerToTS(px,py){
   const dx = px - centerX;
-  const dy = centerY - py; // y positive up
+  const dy = centerY - py; // y 軸向上為正 (油門向前)
   const dist = Math.sqrt(dx*dx+dy*dy);
-  const r = clamp(dist / maxRadius, 0, 1);
-  const nx = dx / (maxRadius); // -1..1
-  const ny = dy / (maxRadius); // -1..1
-  // throttle = ny, steer = nx
-  const throttle = clamp(ny, -1, 1);
-  const steer = clamp(nx, -1, 1);
-  return {t:throttle, s:steer, r};
+  
+  // 計算歸一化座標 (限制在 -1.0 到 1.0)
+  const normalizedX = dx / maxRadius;
+  const normalizedY = dy / maxRadius;
+  
+  // 將歸一化距離限制在 1.0 以內
+  const limitedDistRatio = clamp(dist / maxRadius, 0, 1);
+
+  // 油門 (Throttle) = Y 軸 (向上為正)
+  const throttle = clamp(normalizedY, -1, 1) * limitedDistRatio;
+  // 轉向 (Steer) = X 軸 (向右為正)
+  const steer = clamp(normalizedX, -1, 1) * limitedDistRatio;
+  
+  return {
+    t: Math.round(throttle * 100) / 100, // 四捨五入到小數點後兩位
+    s: Math.round(steer * 100) / 100 
+  };
 }
 
+/**
+ * 更新搖桿圓點 (stick) 的位置
+ */
 function updateStick(px,py){
   const dx = px - centerX;
   const dy = py - centerY;
@@ -84,17 +121,22 @@ function updateStick(px,py){
   const limited = Math.min(dist, maxRadius);
   const x = centerX + Math.cos(angle)*limited;
   const y = centerY + Math.sin(angle)*limited;
+  
+  // 設置相對位置
   stick.style.left = (x - rect.left) + 'px';
   stick.style.top = (y - rect.top) + 'px';
 }
 
+/**
+ * 將搖桿重置回中心點
+ */
 function resetStick(){
   stick.style.left = '50%';
   stick.style.top = '50%';
-  stick.textContent = '0,0';
+  stick.textContent = '0.00,0.00';
 }
 
-// Touch / Pointer handling
+// --- 觸控 / 滑鼠事件處理 ---
 pad.addEventListener('pointerdown', (e)=>{
   pointerActive = true;
   pad.setPointerCapture(e.pointerId);
@@ -104,6 +146,7 @@ pad.addEventListener('pointerdown', (e)=>{
   updateStick(e.clientX, e.clientY);
   stick.textContent = (t.t.toFixed(2))+','+(t.s.toFixed(2));
 });
+
 pad.addEventListener('pointermove', (e)=>{
   if(!pointerActive) return;
   const t = pointerToTS(e.clientX, e.clientY);
@@ -111,64 +154,109 @@ pad.addEventListener('pointermove', (e)=>{
   updateStick(e.clientX, e.clientY);
   stick.textContent = (t.t.toFixed(2))+','+(t.s.toFixed(2));
 });
+
 pad.addEventListener('pointerup', (e)=>{
+  if (!pointerActive) return;
   pointerActive = false;
   pad.releasePointerCapture(e.pointerId);
-  lastPayload.t = 0; lastPayload.s = 0; // center on release
+  lastPayload.t = 0.0; 
+  lastPayload.s = 0.0; // 釋放時歸零
   resetStick();
 });
 
-// BLE
+// --- BLE 連線邏輯 (已加入名稱前綴過濾) ---
 async function connectBLE(){
   try{
-    status.textContent = '掃描中...';
+    status.textContent = '掃描中 (過濾: esp32)...';
+    
+    // 實作 Web Bluetooth 裝置請求，使用名稱前綴過濾器
     device = await navigator.bluetooth.requestDevice({
-      filters:[{services:[SERVICE_UUID]}],
-      optionalServices: [SERVICE_UUID]
+      // 過濾器：只顯示名稱以 'esp32' 開頭的裝置
+      filters:[{
+        namePrefix: 'esp32' 
+      }],
+      // 必須將使用的 Service UUID 放入 optionalServices 確保連線後存取權限
+      optionalServices: [SERVICE_UUID] 
     });
+    
     status.textContent = '連線中...';
+    
     const server = await device.gatt.connect();
     const service = await server.getPrimaryService(SERVICE_UUID);
     characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
-    status.textContent = '已連線: ' + device.name;
+    
+    status.textContent = '✅ 已連線: ' + device.name;
+    btnConnect.textContent = '已連線 (斷開)';
 
-    // 開始定期傳送
+    // 開始定期傳送控制指令
     if(sendingInterval) clearInterval(sendingInterval);
     sendingInterval = setInterval(sendControl, 60); // 每 60 ms
 
-    device.addEventListener('gattserverdisconnected', ()=>{
-      status.textContent = '已斷線';
-      clearInterval(sendingInterval);
-      sendingInterval = null;
-    });
+    // 設定斷線事件監聽器
+    device.addEventListener('gattserverdisconnected', onDisconnect);
   }catch(err){
-    console.error(err);
-    status.textContent = '連線失敗';
+    console.error('BLE 連線失敗:', err);
+    status.textContent = '❌ 連線失敗或使用者取消';
+    btnConnect.textContent = '連線 BLE';
+    clearInterval(sendingInterval);
+    sendingInterval = null;
   }
 }
 
+/**
+ * 處理 BLE 斷線
+ */
+function onDisconnect() {
+    status.textContent = '❌ 已斷線';
+    btnConnect.textContent = '連線 BLE';
+    if (sendingInterval) clearInterval(sendingInterval);
+    sendingInterval = null;
+    resetStick();
+    device.removeEventListener('gattserverdisconnected', onDisconnect);
+    device = null;
+    characteristic = null;
+}
+
+/**
+ * 定期向 ESP32 傳送控制指令
+ */
 async function sendControl(){
-  if(!characteristic) return;
-  // payload 格式: t:<float>,s:<float> 例如 t:0.50,s:-0.20
+  if(!characteristic || !device || !device.gatt.connected) {
+    if (sendingInterval) clearInterval(sendingInterval);
+    sendingInterval = null;
+    return;
+  }
+  
+  // 建立 payload 格式: t:<float>,s:<float>
   const t = Number(lastPayload.t).toFixed(3);
   const s = Number(lastPayload.s).toFixed(3);
   const payload = `t:${t},s:${s}`;
+  
   try{
+    // 將字串編碼為 Uint8Array 後寫入特徵
     await characteristic.writeValue(new TextEncoder().encode(payload));
   }catch(err){
-    console.warn('send failed',err);
+    console.warn('send failed (可能已斷線):', err.message);
+    // 即使寫入失敗，GATT disconnected 事件也會捕捉到真正的斷線
   }
 }
 
+// --- 按鈕事件處理 ---
 btnConnect.addEventListener('click', ()=>{
+  if(device && device.gatt.connected){
+    // 如果已連線，則手動斷開
+    device.gatt.disconnect();
+    return;
+  }
   if(!navigator.bluetooth){
-    alert('此瀏覽器不支援 Web Bluetooth。請使用 Chrome for Android 或有支援 Web Bluetooth 的瀏覽器。');
+    // 使用狀態訊息代替 alert()
+    status.textContent = '❌ 瀏覽器不支援 Web Bluetooth。';
     return;
   }
   connectBLE();
 });
 
-// 初始 reset
+// 初始設定
 resetStick();
 </script>
 </body>
