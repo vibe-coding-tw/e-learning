@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Gemini TTS 笑臉按鈕 (Web Audio API)</title>
+  <title>Gemini TTS 笑臉按鈕 (iOS 播放優化)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* 核心深色主題樣式 */
@@ -187,21 +187,42 @@
     
     // API Configurations
     const API_URL_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent';
-    const API_KEY = ""; // API key will be injected by the Canvas environment at runtime.
+    const API_KEY = ""; 
 
     // Status Texts
     const CLICK_PHRASE = "你好啊！歡迎來到 Vibe Coding 的世界，課程即將開始。"; 
     const INITIAL_PHRASE = "Hello World"; 
     
-    // Voice Configuration (Kore is a firm, clear voice)
+    // Voice Configuration
     const VOICE_NAME = "Kore"; 
 
     let statusTimeout;
     let isSpeaking = false; 
+    
+    // 關鍵變數：AudioContext 必須被單獨管理，以便在使用者點擊時恢復 (resume) 狀態。
+    let audioContext = null; 
 
     // ========================================================================
     // Audio Utility Functions
     // ========================================================================
+
+    /**
+     * 初始化或返回單例 AudioContext
+     * @returns {AudioContext} 
+     */
+    function getAudioContext() {
+        if (!audioContext) {
+            // 處理跨瀏覽器前綴
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (AudioContextClass) {
+                audioContext = new AudioContextClass();
+            } else {
+                console.error("此瀏覽器不支持 Web Audio API。");
+                return null;
+            }
+        }
+        return audioContext;
+    }
 
     /**
      * Helper function: Converts a Base64 string to an ArrayBuffer.
@@ -269,14 +290,15 @@
     }
 
     // ========================================================================
-    // TTS Logic and Playback (Web Audio API for iOS Compatibility)
+    // TTS Logic and Playback (Web Audio API with explicit resume)
     // ========================================================================
 
     /**
      * Generates and plays audio using the Gemini TTS API.
      * @param {string} text The text to synthesize.
+     * @param {AudioContext} activeAudioContext - 來自點擊事件中已恢復狀態的 AudioContext
      */
-    async function speakText(text) {
+    async function speakText(text, activeAudioContext) {
         if (isSpeaking) return;
 
         isSpeaking = true;
@@ -286,7 +308,7 @@
 
         const payload = {
             contents: [{
-                parts: [{ text: `Say cheerfully: ${text}` }] // 加入語氣指令
+                parts: [{ text: `Say cheerfully: ${text}` }] 
             }],
             generationConfig: {
                 responseModalities: ["AUDIO"],
@@ -306,6 +328,7 @@
 
         // 帶有指數退避的 API 呼叫邏輯
         while (attempt < maxRetries) {
+            // [API CALL LOGIC remains the same]
             try {
                 response = await fetch(apiUrl, {
                     method: 'POST',
@@ -356,25 +379,20 @@
             // 2. 轉換為 WAV Blob
             const wavBlob = pcmToWav(pcm16, sampleRate);
             
-            // 3. **核心改動：使用 Web Audio API 播放 (更適用於 iOS/Safari)**
+            // 3. Web Audio API 播放
             const reader = new FileReader();
 
             reader.onload = async (e) => {
                 const arrayBuffer = e.target.result;
-                // 必須在使用者互動的事件處理中創建 AudioContext
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                const audioContext = new AudioContext();
 
                 try {
-                    // 解碼音訊數據
-                    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                    // 使用點擊事件中傳入的已啟動 AudioContext
+                    const audioBuffer = await activeAudioContext.decodeAudioData(arrayBuffer);
                     
-                    // 創建音源節點
-                    const source = audioContext.createBufferSource();
+                    const source = activeAudioContext.createBufferSource();
                     source.buffer = audioBuffer;
-                    source.connect(audioContext.destination);
+                    source.connect(activeAudioContext.destination);
 
-                    // 設置播放結束後的清理邏輯
                     source.onended = () => {
                         // 清理狀態
                         isSpeaking = false;
@@ -389,7 +407,6 @@
                         }, 7000); 
                     };
 
-                    // 啟動播放 (必須直接在使用者事件內完成)
                     source.start(0);
 
                 } catch (error) {
@@ -408,7 +425,6 @@
                 }
             };
             
-            // 將 Blob 讀取為 ArrayBuffer，然後觸發 onload
             reader.readAsArrayBuffer(wavBlob);
 
         } else {
@@ -423,11 +439,21 @@
 
     /**
      * Handles the click/touch event on the smiley button.
+     * 核心優化：確保 AudioContext 在點擊的同步範圍內被建立和恢復 (resume)。
      */
     function handleSmileClick() {
         if (isSpeaking) {
-             console.log("正在發言或加載，忽略點擊。");
              return;
+        }
+        
+        // 1. 關鍵步驟：在使用者點擊事件的同步範圍內啟動 AudioContext
+        const ctx = getAudioContext();
+        if (!ctx) return; 
+
+        // 檢查狀態並強制恢復 (iOS Safari 必需)
+        if (ctx.state === 'suspended') {
+             // 必須在使用者互動中呼叫 resume()
+            ctx.resume().catch(e => console.error("AudioContext resume failed:", e));
         }
 
         // 清除舊的狀態恢復計時器
@@ -445,7 +471,8 @@
             }
         }, 300);
 
-        speakText(CLICK_PHRASE)
+        // 傳入已啟動的 AudioContext
+        speakText(CLICK_PHRASE, ctx)
             .then(() => {
                 console.log("TTS 生成成功。");
             })
