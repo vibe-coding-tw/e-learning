@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>BLE 馬達控制器</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 核心深色主題樣式 */
+    body { 
+        background-color: #1f2937; 
+        color: #f9fafb; 
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        min-height: 100vh; 
+        margin: 0; 
+        padding: 1rem;
+        user-select: none; /* 防止文字被選中 */
+    }
+    .container-wrap { 
+        max-width: 500px; 
+        width: 100%; 
+        padding: 30px; 
+        background-color: #1f2937;
+        border-radius: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    /* 狀態顯示區域 (現在在 header-status 內部) */
+    #statusDisplay{
+        /* 移除原有的 90% 寬度和固定邊距，現在由 flex-grow 和父容器控制 */
+        min-height: 3rem;
+        padding: 10px; /* 稍微縮小內邊距 */
+        background: #232d3a; /* 給予背景色，使其看起來像個獨立顯示屏 */
+        border-radius: 12px; 
+        font-size: 0.9rem; /* 稍微縮小字體 */
+        font-weight: 600;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: color 0.5s ease;
+        color: #60a5fa; /* 初始藍色 */
+        /* 內凹陰影，讓它更像一個顯示屏 */
+        box-shadow: 
+            inset 3px 3px 6px #1a222c, 
+            inset -3px -3px 6px #3b4555;
+    }
+
+    /* 按鈕 Neumorphic 基底樣式 */
+    .control-button {
+        /* 使用 Tailwind 顏色 #374151 (gray-700) 作為基底 */
+        background: #374151; 
+        border: none;
+        color: #f9fafb; 
+        font-weight: 600;
+        border-radius: 12px;
+        transition: all 0.1s ease;
+        cursor: pointer;
+        /* 外凸陰影 */
+        box-shadow: 
+            5px 5px 10px #1a222c, 
+            -5px -5px 10px #3b4555;
+    }
+
+    /* 按下時的內凹效果 (模擬點擊) */
+    .control-button:active, .control-button.active {
+        background: #232d3a;
+        color: #fcd34d; /* 琥珀黃作為活動顏色 */
+        /* 內凹陰影 */
+        box-shadow: 
+            inset 3px 3px 6px #1a222c, 
+            inset -3px -3px 6px #3b4555;
+        transform: scale(0.98);
+    }
+
+    /* 方向按鈕佈局 - D-Pad 樣式 */
+    .dpad-container {
+        display: grid;
+        grid-template-areas: 
+            ". forward ."
+            "left center right"
+            ". reverse .";
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 15px;
+        width: 90%; /* 控制整體寬度 */
+        max-width: 350px;
+        margin: 20px auto;
+    }
+
+    /* 單個按鈕大小和網格位置 */
+    .dpad-button {
+        width: 100%;
+        height: 80px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.1rem;
+    }
+    .dpad-button svg {
+        width: 24px;
+        height: 24px;
+        fill: currentColor; /* 使用文字顏色 */
+    }
+    
+    #btnForward { grid-area: forward; }
+    #btnReverse { grid-area: reverse; }
+    #btnLeft { grid-area: left; }
+    #btnRight { grid-area: right; }
+    /* 中間留空或放置停止按鈕，這裡留空 */
+    .center-spacer { grid-area: center; }
+
+    /* 連接按鈕 - 調整為配合 Header 的樣式 */
+    #btnConnect {
+        /* 移除原有的 90% 寬度和邊距 */
+        padding: 8px 12px;
+        height: 3rem; /* 確保與狀態顯示區高度一致 */
+        background: #4f46e5; /* 靛藍 */
+        box-shadow: 3px 3px 6px #171d26, -3px -3px 6px #273142;
+    }
+    #btnConnect:hover {
+        background: #3730a3; /* 深靛藍 */
+    }
+
+    /* 返回主選單按鈕 */
+    .menu-button {
+        display: block;
+        width: 90%;
+        padding: 12px;
+        margin-top: 30px;
+        border-radius: 12px;
+        border: none;
+        background: #9ca3af; /* 淺灰色 */
+        color: #1f2937;
+        font-weight: 700;
+        text-align: center;
+        text-decoration: none;
+        box-shadow: 3px 3px 6px #171d26, -3px -3px 6px #273142;
+        transition: all 0.2s ease;
+    }
+    .menu-button:hover {
+        background: #6b7280; 
+        color: #f9fafb;
+    }
+
+  </style>
+</head>
+<body class="p-4">
+    <!-- Firebase 初始化區塊 (必須包含) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // 設定 Firebase Global 變數
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app;
+        let db;
+        let auth;
+        
+        // 將 Firebase 實例暴露給全局 scope，供下方主要邏輯使用 (可選，但為了模組化方便)
+        window.firebaseApp = null;
+        window.firestoreDb = null;
+        window.firebaseAuth = null;
+        window.currentUserId = null;
+
+        setLogLevel('debug'); // 開啟 Firebase 偵錯日誌
+
+        if (firebaseConfig) {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                window.firebaseApp = app;
+                window.firestoreDb = db;
+                window.firebaseAuth = auth;
+
+                // 認證邏輯
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        window.currentUserId = user.uid;
+                        console.log("Firebase Auth: Signed in with UID:", user.uid);
+                    } else {
+                        // 嘗試使用自定義 Token 或匿名登入
+                        try {
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                        } catch (error) {
+                            console.error("Firebase Auth Error:", error);
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase Initialization Error:", error);
+            }
+        } else {
+            console.warn("Firebase configuration not found. BLE control will function, but persistence features are disabled.");
+        }
+    </script>
+    <!-- Firebase 初始化區塊結束 -->
+
+    <div class="container-wrap">
+        
+        <!-- 新增：BLE 連線和狀態顯示區的 Header -->
+        <div class="header-status flex justify-between items-center w-full mb-5 gap-3 max-w-[440px]">
+            <!-- 連線按鈕 - 移到左側 -->
+            <button id="btnConnect" class="control-button text-sm flex-shrink-0">
+                🔌 連線 BLE 裝置
+            </button>
+            
+            <!-- 狀態顯示區 - 移到右側，flex-grow 讓它佔滿剩餘空間 -->
+            <div id="statusDisplay" class="flex-grow">
+                請點擊「連線 BLE」按鈕
+            </div>
+        </div>
+
+        <!-- 方向控制按鈕佈局 (保持不變) -->
+        <div class="dpad-container">
+            <!-- 前進 -->
+            <button id="btnForward" class="dpad-button control-button" data-cmd="W">
+                <!-- SVG 向上箭頭 -->
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 4.00001L19 13.0001H5L12 4.00001Z"/></svg>
+                前進
+            </button>
+            
+            <!-- 左轉 -->
+            <button id="btnLeft" class="dpad-button control-button" data-cmd="A">
+                <!-- SVG 向左箭頭 -->
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 12.0001L13 19.0001V5L4 12.0001Z"/></svg>
+                左轉
+            </button>
+
+            <!-- 中心點：停止/閒置指示 -->
+            <div class="center-spacer dpad-button bg-gray-600 shadow-inner flex-col text-sm text-gray-400 font-normal">
+                釋放停止
+                <span id="currentCommand" class="mt-1 font-mono text-xs text-yellow-300">IDLE</span>
+            </div>
+
+            <!-- 右轉 -->
+            <button id="btnRight" class="dpad-button control-button" data-cmd="D">
+                <!-- SVG 向右箭頭 -->
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 12.0001L11 5V19.0001L20 12.0001Z"/></svg>
+                右轉
+            </button>
+
+            <!-- 後退 -->
+            <button id="btnReverse" class="dpad-button control-button" data-cmd="S">
+                <!-- SVG 向下箭頭 -->
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 19.9999L5 10.9999H19L12 19.9999Z"/></svg>
+                後退
+            </button>
+        </div>
+
+        
+        <!-- 返回主選單按鈕 -->
+        <a href="index.html" class="menu-button">
+            返回主選單
+        </a>
+    </div>
+
+<script>
+    const statusDisplay = document.getElementById('statusDisplay');
+    const connectButton = document.getElementById('btnConnect');
+    const commandDisplay = document.getElementById('currentCommand');
+    const directionalButtons = document.querySelectorAll('.dpad-button[data-cmd]');
+
+    // --- BLE 配置參數 (請根據您的馬達裝置修改) ---
+    // 範例：使用 Arduino Nano 33 BLE 或 ESP32 BLE 服務
+    const SERVICE_UUID = '0000180c-0000-1000-8000-00805f9b34fb'; // 這是 Battery Service UUID，請替換為您的控制服務 UUID
+    const CHARACTERISTIC_UUID = '00002a06-0000-1000-8000-00805f9b34fb'; // 這是 Alert Level characteristic UUID，請替換為您的控制特性 UUID
+
+    const COMMANDS = {
+        'W': '前進', // Forward
+        'S': '後退', // Reverse
+        'A': '左轉', // Left
+        'D': '右轉', // Right
+        'X': '停止'  // Stop (Idle)
+    };
+    
+    let bleDevice = null;
+    let bleCharacteristic = null;
+    let isConnected = false;
+    let currentCommand = 'X';
+
+    /**
+     * 更新狀態顯示區和日誌
+     * @param {string} message 狀態訊息
+     * @param {boolean} isError 是否為錯誤
+     */
+    function updateStatus(message, isError = false) {
+        statusDisplay.textContent = message;
+        statusDisplay.style.color = isError ? '#f87171' : (message.includes('成功') ? '#4ade80' : '#60a5fa');
+        console.log(`[Status] ${message}`);
+    }
+
+    /**
+     * 寫入指令到 BLE 特性
+     * @param {string} cmd 單個字元指令 (e.g., 'W', 'S', 'X')
+     */
+    async function sendBleCommand(cmd) {
+        if (!isConnected || !bleCharacteristic) {
+            updateStatus('❌ 尚未連線到 BLE 裝置。', true);
+            return;
+        }
+
+        if (cmd === currentCommand) {
+            // 如果指令相同，則不重複發送（除非是 Stop）
+            return; 
+        }
+
+        try {
+            // 將字元指令轉換為 byte 陣列 (ASCII)
+            const data = new TextEncoder().encode(cmd);
+            await bleCharacteristic.writeValue(data);
+            
+            currentCommand = cmd;
+            commandDisplay.textContent = cmd in COMMANDS ? COMMANDS[cmd] : cmd;
+            
+            // 只有在連線時才記錄成功發送，避免洗版
+            if(cmd !== 'X') {
+                 console.log(`Command sent: ${cmd} (${COMMANDS[cmd] || 'Unknown'})`);
+            }
+        } catch (error) {
+            updateStatus(`❌ 發送指令失敗: ${error.message}`, true);
+            console.error('BLE Write Error:', error);
+        }
+    }
+
+    /**
+     * 連線到 BLE 裝置
+     */
+    async function connectBle() {
+        if (!navigator.bluetooth) {
+            updateStatus('❌ 瀏覽器不支援 Web Bluetooth API。', true);
+            return;
+        }
+
+        updateStatus('🌐 正在掃描並連線...');
+        connectButton.disabled = true;
+
+        try {
+            // 1. 請求裝置
+            bleDevice = await navigator.bluetooth.requestDevice({
+                filters: [{ services: [SERVICE_UUID] }],
+                optionalServices: [SERVICE_UUID] // 確保能存取服務
+            });
+
+            // 2. 連線到 GATT 伺服器
+            const server = await bleDevice.gatt.connect();
+
+            // 3. 獲取服務
+            const service = await server.getPrimaryService(SERVICE_UUID);
+
+            // 4. 獲取特性
+            bleCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+
+            isConnected = true;
+            updateStatus(`✅ 已連線到裝置: ${bleDevice.name || 'Unknown Device'}，可以開始控制。`);
+            connectButton.textContent = '✅ 已連線';
+            // 移除 bg-indigo-600 (已在 CSS 中移除)
+            connectButton.classList.remove('bg-indigo-600'); 
+            connectButton.classList.add('bg-green-600');
+
+            // 監聽斷線事件
+            bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+
+        } catch (error) {
+            updateStatus(`❌ 連線失敗: ${error.message}`, true);
+            console.error('BLE Connect Error:', error);
+        } finally {
+            connectButton.disabled = false;
+            if(!isConnected) {
+                connectButton.textContent = '🔌 連線 BLE 裝置';
+                // 確保失敗時按鈕顏色回復
+                connectButton.classList.remove('bg-green-600');
+                connectButton.classList.add('bg-indigo-600');
+            }
+        }
+    }
+    
+    /**
+     * 處理 BLE 斷線事件
+     */
+    function onDisconnected(event) {
+        const device = event.target;
+        isConnected = false;
+        bleDevice = null;
+        bleCharacteristic = null;
+        updateStatus(`🛑 裝置 "${device.name || 'Unknown'}" 已斷線。請重新連線。`, true);
+        connectButton.textContent = '🔌 連線 BLE 裝置';
+        connectButton.classList.remove('bg-green-600');
+        connectButton.classList.add('bg-indigo-600');
+        commandDisplay.textContent = 'IDLE';
+    }
+
+
+    // --- 事件處理邏輯 ---
+
+    /**
+     * 按鈕按下或觸控開始時的處理，發送移動指令
+     * @param {Event} event 
+     */
+    function handleStartMove(event) {
+        // 阻止預設行為，防止移動端長按選取或彈出選單
+        event.preventDefault(); 
+        const button = event.currentTarget;
+        const cmd = button.getAttribute('data-cmd');
+
+        // 視覺反饋
+        button.classList.add('active');
+        
+        // 發送指令
+        sendBleCommand(cmd);
+    }
+    
+    /**
+     * 按鈕釋放或觸控結束時的處理，發送停止指令
+     * @param {Event} event 
+     */
+    function handleStopMove(event) {
+        // 阻止預設行為
+        event.preventDefault(); 
+        const button = event.currentTarget;
+
+        // 視覺反饋
+        button.classList.remove('active');
+        
+        // 發送停止指令
+        sendBleCommand('X');
+    }
+
+    // --- 初始化事件綁定 ---
+    connectButton.addEventListener('click', connectBle);
+
+    directionalButtons.forEach(button => {
+        // 桌面端：滑鼠按下/釋放
+        button.addEventListener('mousedown', handleStartMove);
+        button.addEventListener('mouseup', handleStopMove);
+        button.addEventListener('mouseleave', handleStopMove); // 滑鼠移出時也視為停止
+        
+        // 行動端：觸控開始/結束
+        button.addEventListener('touchstart', handleStartMove);
+        button.addEventListener('touchend', handleStopMove);
+    });
+
+</script>
+</body>
+</html>
