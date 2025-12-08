@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>BLE 馬達控制器</title>
+  <title>BLE D-Pad 控制器</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* 核心深色主題樣式 */
@@ -17,7 +17,7 @@
         min-height: 100vh; 
         margin: 0; 
         padding: 1rem;
-        user-select: none;
+        user-select: none; /* 防止誤選 */
     }
     .container-wrap { 
         max-width: 500px; 
@@ -31,7 +31,7 @@
         text-align: center;
     }
 
-    /* --- 頂部控制列 --- */
+    /* --- 頂部控制列 (top-bar) --- */
     .top-bar {
         width: 100%;
         display: flex;
@@ -41,12 +41,12 @@
         margin-bottom: 20px; 
     }
 
-    /* BLE 連線按鈕 (#btnConnect) 專用樣式 - 現代漸層高對比風格 (已修復並強化) */
+    /* BLE 連線按鈕 (#btnConnect) 專用樣式 - 現代漸層高對比風格 */
     #btnConnect {
         padding: 10px 14px;
         border-radius: 12px;
-        border: 2px solid #4f46e5; /* 靛藍色邊框 */
-        background: linear-gradient(145deg, #4f46e5 0%, #3730a3 100%); /* 靛藍漸層 */
+        border: 2px solid #4f46e5;
+        background: linear-gradient(145deg, #4f46e5 0%, #3730a3 100%);
         color: white;
         font-weight: 700;
         letter-spacing: 0.5px;
@@ -54,7 +54,7 @@
         flex-shrink: 0;
         height: 48px; 
         box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4); 
-        display: flex; /* 讓內容居中 */
+        display: flex;
         align-items: center;
         justify-content: center;
     }
@@ -68,9 +68,9 @@
         box-shadow: 0 2px 10px rgba(79, 70, 229, 0.3);
     }
     
-    /* 連線成功或斷開後的顏色 (紅色用於「斷開」操作) */
+    /* 連線成功或斷開後的顏色 */
     #btnConnect.connected {
-        background: linear-gradient(145deg, #dc2626 0%, #991b1b 100%); /* 紅色漸層 */
+        background: linear-gradient(145deg, #dc2626 0%, #991b1b 100%);
         border: 2px solid #dc2626;
         box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
     }
@@ -79,7 +79,7 @@
         box-shadow: 0 6px 20px rgba(220, 38, 38, 0.6);
     }
 
-    /* 狀態顯示區域 (#statusDisplay) 樣式 (維持 Neumorphic 內凹風格) */
+    /* 狀態顯示區域 (#statusDisplay) */
     #statusDisplay{
         flex: 1; 
         text-align: center;
@@ -100,7 +100,7 @@
         white-space: nowrap;
     }
 
-    /* --- D-Pad 專用樣式 (保留 neumorphic 風格) --- */
+    /* --- D-Pad 專用樣式 --- */
     .control-button {
         background: #374151; 
         border: none;
@@ -115,7 +115,7 @@
     }
     .control-button:active, .control-button.active {
         background: #232d3a;
-        color: #fcd34d; 
+        color: #fcd34d; /* 按下時的亮色 */
         box-shadow: 
             inset 3px 3px 6px #1a222c, 
             inset -3px -3px 6px #3b4555;
@@ -131,7 +131,7 @@
         gap: 15px;
         width: 90%; 
         max-width: 350px;
-        margin: 20px auto;
+        margin: 40px auto; /* 增加與頂部的間距 */
     }
     .dpad-button {
         width: 100%;
@@ -141,6 +141,7 @@
         align-items: center;
         font-size: 1.1rem;
         flex-direction: column;
+        min-width: 80px;
     }
     .dpad-button svg {
         width: 24px;
@@ -151,28 +152,15 @@
     #btnReverse { grid-area: reverse; }
     #btnLeft { grid-area: left; }
     #btnRight { grid-area: right; }
-    .center-spacer { grid-area: center; }
-
-    /* 返回主選單按鈕 */
-    .menu-button {
-        display: block;
-        width: 90%;
-        padding: 12px;
-        margin-top: 30px;
+    .center-spacer { 
+        grid-area: center; 
+        box-shadow: inset 3px 3px 6px #1a222c, inset -3px -3px 6px #3b4555; /* 中心點的內凹陰影 */
         border-radius: 12px;
-        border: none;
-        background: #9ca3af; 
-        color: #1f2937;
-        font-weight: 700;
-        text-align: center;
-        text-decoration: none;
-        box-shadow: 3px 3px 6px #171d26, -3px -3px 6px #273142;
-        transition: all 0.2s ease;
     }
-    .menu-button:hover {
-        background: #6b7280; 
-        color: #f9fafb;
-    }
+
+    /* 狀態區塊 */
+    .info{font-size:14px;color:#9ca3af; margin-top: 20px;}
+    #main-status { font-weight: 700; text-shadow: 0 0 5px rgba(79, 70, 229, 0.5); }
   </style>
 </head>
 <body class="p-4">
@@ -183,7 +171,6 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Set Firebase Global variables
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
@@ -207,7 +194,6 @@
                 window.firestoreDb = db;
                 window.firebaseAuth = auth;
 
-                // Authentication logic
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         window.currentUserId = user.uid;
@@ -233,306 +219,375 @@
 
     <div class="container-wrap">
         
-        <!-- HTML 結構修正: 使用 .top-bar 類別，並將 id="status" 改為 id="statusDisplay" -->
+        <h1 class="text-3xl font-extrabold text-center text-indigo-400 mb-6">BLE D-Pad 控制器</h1>
+
         <div class="top-bar">
-            <!-- 連線按鈕 (使用現代風格 CSS) -->
+            <!-- 連線按鈕 -->
             <button id="btnConnect">
                 🔌 連線 BLE 裝置
             </button>
             
-            <!-- 狀態顯示區 (修正為 statusDisplay ID) -->
+            <!-- 狀態顯示區 (ID已修正為 statusDisplay) -->
             <div id="statusDisplay">
                 請點擊「連線 BLE」按鈕
             </div>
         </div>
 
-        <!-- 方向控制按鈕佈局 (D-Pad) -->
+        <!-- D-Pad 方向控制按鈕佈局 -->
         <div class="dpad-container">
             <!-- 前進 -->
             <button id="btnForward" class="dpad-button control-button" data-cmd="W">
-                <!-- SVG 向上箭頭 -->
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 4.00001L19 13.0001H5L12 4.00001Z"/></svg>
                 前進
             </button>
             
             <!-- 左轉 -->
             <button id="btnLeft" class="dpad-button control-button" data-cmd="A">
-                <!-- SVG 向左箭頭 -->
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 12.0001L13 19.0001V5L4 12.0001Z"/></svg>
                 左轉
             </button>
 
             <!-- 中心點：當前指令指示 -->
-            <div class="center-spacer dpad-button bg-gray-600 shadow-inner flex-col text-sm text-gray-400 font-normal">
-                釋放停止
-                <span id="currentCommand" class="mt-1 font-mono text-xs text-yellow-300">IDLE</span>
+            <div class="center-spacer dpad-button bg-gray-600 flex-col text-sm text-gray-400 font-normal">
+                狀態
+                <span id="main-status" class="mt-1 font-mono text-xs text-green-400">靜止</span>
             </div>
 
             <!-- 右轉 -->
             <button id="btnRight" class="dpad-button control-button" data-cmd="D">
-                <!-- SVG 向右箭頭 -->
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 12.0001L11 5V19.0001L20 12.0001Z"/></svg>
                 右轉
             </button>
 
             <!-- 後退 -->
             <button id="btnReverse" class="dpad-button control-button" data-cmd="S">
-                <!-- SVG 向下箭頭 -->
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 19.9999L5 10.9999H19L12 19.9999Z"/></svg>
                 後退
             </button>
         </div>
 
+        <div class="text-center space-y-2">
+            <p class="text-xs text-gray-500">
+                T (速度): <span id="val_t">0</span> | S (轉向): <span id="val_s">0</span>
+            </p>
+        </div>
         
-        <!-- 返回主選單按鈕 -->
-        <a href="index.html" class="menu-button">
-            返回主選單
-        </a>
+        <div class="info text-center">
+            Payload 格式："T,S" (T/S 範圍 $-255$ 到 $255$).
+        </div>
+
     </div>
 
 <script>
-    // JS 變數名稱修正: 狀態顯示區 ID 統一為 statusDisplay
-    const statusDisplay = document.getElementById('statusDisplay');
-    const connectButton = document.getElementById('btnConnect');
-    const commandDisplay = document.getElementById('currentCommand');
-    const directionalButtons = document.querySelectorAll('.dpad-button[data-cmd]');
+// --- BLE & Control Configuration ---
+const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-000000000000'; 
+const CHARACTERISTIC_UUID = '4fafc201-1fb5-459e-8fcc-000000000000'; 
+const DEVICE_ID_KEY = 'ble_motor_controller_device_id'; // 使用更通用的 ID 鍵
+const MAX_CONTROL_VALUE = 255; 
 
-    // --- BLE & Control Configuration ---
-    const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-000000000000'; 
-    const CHARACTERISTIC_UUID = '4fafc201-1fb5-459e-8fcc-000000000000'; 
-    const DEVICE_ID_KEY = 'ble_motor_controller_device_id'; 
-    const MAX_CONTROL_VALUE = 255; 
+// D-Pad 指令映射到 "T,S" (Throttle, Steer) Payload 字串
+const COMMAND_PAYLOADS = {
+    'W': `${MAX_CONTROL_VALUE},0`,    // 前進: T=255, S=0
+    'S': `-${MAX_CONTROL_VALUE},0`,   // 後退: T=-255, S=0
+    'A': `0,-${MAX_CONTROL_VALUE}`,   // 左轉: T=0, S=-255 
+    'D': `0,${MAX_CONTROL_VALUE}`,    // 右轉: T=0, S=255
+    'X': '0,0'                        // 停止: T=0, S=0
+};
 
-    // D-Pad 指令映射到 "T,S" (Throttle, Steer) Payload 字串
-    const COMMAND_PAYLOADS = {
-        'W': `${MAX_CONTROL_VALUE},0`,    // 前進: T=255, S=0
-        'S': `-${MAX_CONTROL_VALUE},0`,   // 後退: T=-255, S=0
-        'A': `0,-${MAX_CONTROL_VALUE}`,   // 左轉: T=0, S=-255
-        'D': `0,${MAX_CONTROL_VALUE}`,    // 右轉: T=0, S=255
-        'X': '0,0'                        // 停止: T=0, S=0
-    };
+// --- DOM Elements ---
+const statusDisplay = document.getElementById('statusDisplay'); // BLE 連線狀態
+const mainStatusEl = document.getElementById('main-status'); // 當前動作狀態
+const valTEl = document.getElementById('val_t'); // T (Throttle) 數值
+const valSEl = document.getElementById('val_s'); // S (Steer) 數值
+const btnConnect = document.getElementById('btnConnect');
+const directionalButtons = document.querySelectorAll('.dpad-button[data-cmd]');
 
-    const COMMANDS = {
-        'W': '前進',
-        'S': '後退',
-        'A': '左轉',
-        'D': '右轉',
-        'X': '停止'
-    };
+// --- State Variables ---
+let bleDevice = null;
+let bleCharacteristic = null;
+let isConnected = false;
+let currentCommand = 'X';
+let sendingInterval = null; // 用於定期重發停止命令 (可選，但推薦用於可靠性)
+
+
+// --- Helper Functions ---
+
+/**
+ * 更新狀態顯示區和日誌
+ * @param {string} message 狀態訊息
+ * @param {boolean} isError 是否為錯誤
+ */
+function updateStatus(message, isError = false) {
+    statusDisplay.textContent = message;
+    statusDisplay.style.color = isError ? '#f87171' : (message.includes('成功') || message.includes('已連線') ? '#4ade80' : '#f9fafb'); 
+    console.log(`[Status] ${message}`);
+}
+
+/**
+ * 處理 BLE 斷線事件
+ */
+function onDisconnect() {
+    isConnected = false;
+    // 清除 UI 狀態
+    updateStatus('❌ 已斷線。請重新連線。', true);
+    btnConnect.textContent = '🔌 連線 BLE 裝置';
+    btnConnect.classList.remove('connected');
     
-    let bleDevice = null;
-    let bleCharacteristic = null;
-    let isConnected = false;
-    let currentCommand = 'X';
+    // 重置動作狀態
+    currentCommand = 'X';
+    updateActionStatus('靜止', 'text-green-400', 0, 0);
 
-    /**
-     * 更新狀態顯示區和日誌
-     * @param {string} message 狀態訊息
-     * @param {boolean} isError 是否為錯誤
-     */
-    function updateStatus(message, isError = false) {
-        statusDisplay.textContent = message;
-        // 根據訊息內容設置顏色
-        statusDisplay.style.color = isError ? '#f87171' : (message.includes('成功') || message.includes('已連線') ? '#4ade80' : '#f9fafb'); 
-        console.log(`[Status] ${message}`);
-    }
+    // 清理定期發送
+    if (sendingInterval) clearInterval(sendingInterval);
+    sendingInterval = null;
+    
+    // 清理資源
+    if (bleDevice) bleDevice.removeEventListener('gattserverdisconnected', onDisconnect);
+    bleDevice = null;
+    bleCharacteristic = null;
+}
 
-    /**
-     * 處理 BLE 斷線事件
-     */
-    function onDisconnect() {
-        isConnected = false;
-        // 清除 UI 狀態
-        updateStatus('❌ 已斷線。請重新連線。', true);
-        connectButton.textContent = '🔌 連線 BLE 裝置';
-        connectButton.classList.remove('connected');
-        commandDisplay.textContent = 'IDLE';
-        
-        // 清理資源
-        if (bleDevice) bleDevice.removeEventListener('gattserverdisconnected', onDisconnect);
-        bleDevice = null;
-        bleCharacteristic = null;
-    }
-
-    /**
-     * 取得裝置物件 (透過掃描或快速重連) - 恢復穩健的快速重連邏輯
-     */
-    async function acquireDevice() {
-        // 嘗試從 localStorage 取得上次連線的裝置 ID
-        const storedDeviceId = localStorage.getItem(DEVICE_ID_KEY);
-
-        if (storedDeviceId) {
-            updateStatus('嘗試使用 ID 快速連線...');
-            try {
-                // 檢查是否有 API 可用來取得已知裝置
-                const devices = await navigator.bluetooth.getDevices();
-                const knownDevice = devices.find(d => d.id === storedDeviceId);
-
-                if (knownDevice) {
-                     updateStatus(`已找到儲存的裝置: ${knownDevice.name}`);
-                     return knownDevice;
-                }
-            } catch (e) {
-                console.warn("Could not retrieve known device for quick reconnect:", e);
-            }
-        }
-        
-        updateStatus('🌐 正在掃描...');
-        // 請求新裝置，使用服務 UUID 過濾
-        const newDevice = await navigator.bluetooth.requestDevice({
-            filters:[{ services: [SERVICE_UUID] }],
-            optionalServices: [SERVICE_UUID] 
-        });
-        
-        localStorage.setItem(DEVICE_ID_KEY, newDevice.id);
-        return newDevice;
-    }
+/**
+ * 更新動作狀態和 T/S 數值
+ * @param {string} statusText 狀態文字
+ * @param {string} colorClass Tailwind 顏色類別
+ * @param {number} tVal T (Throttle) 值
+ * @param {number} sVal S (Steer) 值
+ */
+function updateActionStatus(statusText, colorClass, tVal, sVal) {
+    mainStatusEl.textContent = statusText;
+    mainStatusEl.className = `mt-1 font-mono text-xs ${colorClass}`;
+    valTEl.textContent = tVal;
+    valSEl.textContent = sVal;
+}
 
 
-    /**
-     * 連線到 BLE 裝置 - 恢復穩健的連線邏輯
-     */
-    async function connectBle() {
-        if (!navigator.bluetooth) {
-            updateStatus('❌ 瀏覽器不支援 Web Bluetooth API。', true);
-            return;
-        }
+// --- BLE Connection Logic ---
 
-        // 如果已連線，則執行斷開操作
-        if (bleDevice && bleDevice.gatt && bleDevice.gatt.connected) {
-            updateStatus('中斷連線中...');
-            bleDevice.gatt.disconnect();
-            return;
-        }
+/**
+ * 取得裝置物件 (透過掃描或快速重連)
+ */
+async function acquireDevice() {
+    const storedDeviceId = localStorage.getItem(DEVICE_ID_KEY);
 
-        updateStatus('🌐 正在掃描並連線...');
-        connectButton.disabled = true;
-
+    if (storedDeviceId) {
+        updateStatus('嘗試使用 ID 快速連線...');
         try {
-            // 1. 請求裝置
-            bleDevice = await acquireDevice();
-            
-            if (!bleDevice) throw new Error("裝置未連線或未找到。");
+            const devices = await navigator.bluetooth.getDevices();
+            const knownDevice = devices.find(d => d.id === storedDeviceId);
 
-            updateStatus(`連線到 ${bleDevice.name}...`);
-            
-            // 2. 監聽斷線事件
-            bleDevice.removeEventListener('gattserverdisconnected', onDisconnect);
-            bleDevice.addEventListener('gattserverdisconnected', onDisconnect);
-
-            // 3. 連線到 GATT 伺服器
-            const server = await bleDevice.gatt.connect();
-
-            // 4. 獲取服務與特性
-            const service = await server.getPrimaryService(SERVICE_UUID);
-            bleCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
-
-            isConnected = true;
-            updateStatus(`✅ 已連線到裝置: ${bleDevice.name}。`);
-            connectButton.textContent = '💔 斷開';
-            connectButton.classList.add('connected');
-
-        } catch (error) {
-            updateStatus(`❌ 連線失敗: ${error.message}`, true);
-            console.error('BLE Connect Error:', error);
-            
-            // 清理狀態
-            if (bleDevice && (!bleDevice.gatt || !bleDevice.gatt.connected)) {
-                bleDevice = null;
-                localStorage.removeItem(DEVICE_ID_KEY);
+            if (knownDevice) {
+                 updateStatus(`已找到儲存的裝置: ${knownDevice.name}`);
+                 return knownDevice;
             }
-        } finally {
-            connectButton.disabled = false;
+        } catch (e) {
+            console.warn("Could not retrieve known device for quick reconnect:", e);
         }
-    }
-
-
-    /**
-     * 寫入指令到 BLE 特性，格式為 "T,S" 字串。
-     * @param {string} cmd 單個字元指令 (e.g., 'W', 'S', 'X')
-     */
-    async function sendBleCommand(cmd) {
-        if (!isConnected || !bleCharacteristic) {
-            currentCommand = cmd;
-            commandDisplay.textContent = COMMANDS[cmd] || 'Unknown';
-            return;
-        }
-
-        const payload = COMMAND_PAYLOADS[cmd];
-
-        // 優化: 避免重複發送相同的移動指令
-        if (cmd === currentCommand) {
-            return; 
-        }
-
-        if (!payload) {
-            console.error(`Unknown command: ${cmd}`);
-            return;
-        }
-
-        try {
-            // 將字串 payload 編碼為 ArrayBuffer 並寫入
-            await bleCharacteristic.writeValue(new TextEncoder().encode(payload));
-            
-            currentCommand = cmd;
-            commandDisplay.textContent = COMMANDS[cmd] || 'Unknown';
-            
-            if(cmd !== 'X') {
-                 console.log(`Payload sent: ${payload} (${COMMANDS[cmd]})`);
-            }
-        } catch (error) {
-            updateStatus(`❌ 發送指令失敗: ${error.message} (可能已斷線)`, true);
-            console.error('BLE Write Error:', error);
-            onDisconnect(); // 觸發斷線處理
-        }
-    }
-
-    // --- 事件處理邏輯 ---
-
-    /**
-     * 按鈕按下或觸控開始時的處理，發送移動指令
-     */
-    function handleStartMove(event) {
-        event.preventDefault(); 
-        const button = event.currentTarget;
-        const cmd = button.getAttribute('data-cmd');
-
-        button.classList.add('active');
-        
-        sendBleCommand(cmd);
     }
     
-    /**
-     * 按鈕釋放或觸控結束時的處理，發送停止指令
-     */
-    function handleStopMove(event) {
-        event.preventDefault(); 
-        const button = event.currentTarget;
-
-        button.classList.remove('active');
-        
-        sendBleCommand('X');
-    }
-
-    // --- 初始化事件綁定 ---
-    connectButton.addEventListener('click', connectBle);
-
-    directionalButtons.forEach(button => {
-        // 使用 Pointer Events 處理滑鼠和觸控
-        button.addEventListener('pointerdown', handleStartMove);
-        button.addEventListener('pointerup', handleStopMove);
-        
-        // 當按住按鈕時，如果滑鼠指標或手指移出按鈕區域，也視為停止
-        button.addEventListener('pointerleave', (e) => {
-             // 確保只有在按住時移出才發送停止，避免誤觸
-            if (button.classList.contains('active')) {
-                handleStopMove(e);
-            }
-        });
-        
-        // 為了確保最佳觸控體驗，同時監聽 touchcancel
-        button.addEventListener('touchcancel', handleStopMove);
+    updateStatus('🌐 正在掃描...');
+    // 請求新裝置，使用服務 UUID 過濾
+    const newDevice = await navigator.bluetooth.requestDevice({
+        filters:[{ services: [SERVICE_UUID] }],
+        optionalServices: [SERVICE_UUID] 
     });
+    
+    localStorage.setItem(DEVICE_ID_KEY, newDevice.id);
+    return newDevice;
+}
+
+
+/**
+ * 連線到 BLE 裝置
+ */
+async function connectBle() {
+    if (!navigator.bluetooth) {
+        updateStatus('❌ 瀏覽器不支援 Web Bluetooth API。', true);
+        return;
+    }
+
+    // 檢查是否已連線，如果是則執行斷開操作
+    if (bleDevice && bleDevice.gatt && bleDevice.gatt.connected) {
+        updateStatus('中斷連線中...');
+        bleDevice.gatt.disconnect();
+        return;
+    }
+
+    updateStatus('🌐 正在掃描並連線...');
+    btnConnect.disabled = true;
+
+    try {
+        // 1. 請求裝置
+        bleDevice = await acquireDevice();
+        
+        if (!bleDevice) throw new Error("裝置未連線或未找到。");
+
+        updateStatus(`連線到 ${bleDevice.name}...`);
+        
+        // 2. 監聽斷線事件
+        bleDevice.removeEventListener('gattserverdisconnected', onDisconnect);
+        bleDevice.addEventListener('gattserverdisconnected', onDisconnect);
+
+        // 3. 連線到 GATT 伺服器
+        const server = await bleDevice.gatt.connect();
+
+        // 4. 獲取服務與特性
+        const service = await server.getPrimaryService(SERVICE_UUID);
+        bleCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+
+        isConnected = true;
+        updateStatus(`✅ 已連線到裝置: ${bleDevice.name}。`);
+        btnConnect.textContent = '💔 斷開';
+        btnConnect.classList.add('connected');
+        
+        // 開始定期發送控制指令
+        if (!sendingInterval) {
+             sendingInterval = setInterval(sendControl, 60); // 每 60ms
+        }
+
+
+    } catch (error) {
+        updateStatus(`❌ 連線失敗: ${error.message}`, true);
+        console.error('BLE Connect Error:', error);
+        
+        // 清理狀態
+        if (bleDevice && (!bleDevice.gatt || !bleDevice.gatt.connected)) {
+            bleDevice = null;
+            localStorage.removeItem(DEVICE_ID_KEY);
+        }
+    } finally {
+        btnConnect.disabled = false;
+    }
+}
+
+
+/**
+ * 寫入指令到 BLE 特性，格式為 "T,S" 字串。
+ * @param {string} cmd 單個字元指令 (e.g., 'W', 'S', 'X')
+ */
+async function sendBleCommand(cmd) {
+    const payload = COMMAND_PAYLOADS[cmd];
+
+    if (!payload) {
+        console.error(`Unknown command: ${cmd}`);
+        return;
+    }
+    
+    // 如果指令與當前相同，直接返回 (避免重複發送相同的移動指令)
+    if (cmd === currentCommand) {
+        return; 
+    }
+    
+    currentCommand = cmd;
+    
+    // 更新 D-Pad 狀態顯示 (不管是否連線，先更新 UI)
+    const [t, s] = payload.split(',').map(Number);
+    let statusText = '';
+    let statusColor = 'text-green-400';
+    
+    if (cmd === 'W') { statusText = '前進中'; statusColor = 'text-yellow-400'; }
+    else if (cmd === 'S') { statusText = '後退中'; statusColor = 'text-yellow-400'; }
+    else if (cmd === 'A') { statusText = '左轉中'; statusColor = 'text-yellow-400'; }
+    else if (cmd === 'D') { statusText = '右轉中'; statusColor = 'text-yellow-400'; }
+    else { statusText = '靜止'; statusColor = 'text-green-400'; }
+    
+    updateActionStatus(statusText, statusColor, t, s);
+
+    // 只有在連線時才發送 BLE 
+    if (!isConnected || !bleCharacteristic) {
+        return;
+    }
+
+    try {
+        await bleCharacteristic.writeValue(new TextEncoder().encode(payload));
+        
+        if(cmd !== 'X') {
+             console.log(`Payload sent: ${payload} (${statusText})`);
+        }
+    } catch (error) {
+        updateStatus(`❌ 發送指令失敗: ${error.message} (可能已斷線)`, true);
+        console.error('BLE Write Error:', error);
+        onDisconnect();
+    }
+}
+
+/**
+ * 定期向 BLE 傳送當前指令 (主要用於持續發送停止指令，確保可靠性)
+ */
+async function sendControl(){
+    // 檢查連線狀態
+    if(!isConnected || !bleCharacteristic) {
+        if (sendingInterval) clearInterval(sendingInterval);
+        sendingInterval = null;
+        return;
+    }
+    
+    // 如果是靜止狀態，重複發送 '0,0' 以確保馬達停下
+    if (currentCommand === 'X') {
+        try{
+            await bleCharacteristic.writeValue(new TextEncoder().encode(COMMAND_PAYLOADS['X']));
+        }catch(err){
+            console.warn('Stop signal failed (可能已斷線):', err.message);
+        }
+    }
+    // 其他移動指令只在按鈕按下時發送一次
+}
+
+
+// --- D-Pad Event Handlers ---
+
+/**
+ * 按鈕按下或觸控開始時的處理，發送移動指令
+ */
+function handleStartMove(event) {
+    event.preventDefault(); 
+    const button = event.currentTarget;
+    const cmd = button.getAttribute('data-cmd');
+
+    // 視覺回饋
+    button.classList.add('active');
+    
+    // 發送指令
+    sendBleCommand(cmd);
+}
+
+/**
+ * 按鈕釋放或觸控結束時的處理，發送停止指令
+ */
+function handleStopMove(event) {
+    event.preventDefault(); 
+    const button = event.currentTarget;
+
+    // 視覺回饋
+    button.classList.remove('active');
+    
+    // 發送停止指令
+    sendBleCommand('X');
+}
+
+// --- Initialization Event Bindings ---
+
+btnConnect.addEventListener('click', connectBle);
+
+directionalButtons.forEach(button => {
+    // Pointerdown/Pointerup 處理滑鼠點擊和觸控開始/結束
+    button.addEventListener('pointerdown', handleStartMove);
+    button.addEventListener('pointerup', handleStopMove);
+    
+    // 當按住按鈕時，如果滑鼠指標或手指移出按鈕區域，也視為停止
+    button.addEventListener('pointerleave', (e) => {
+         if (button.classList.contains('active')) {
+             handleStopMove(e); // 觸發停止
+         }
+    });
+    
+    // 處理觸控意外中斷
+    button.addEventListener('touchcancel', handleStopMove);
+});
+
+// 初始狀態顯示
+updateActionStatus('靜止', 'text-green-400', 0, 0);
+
 </script>
 </body>
 </html>
