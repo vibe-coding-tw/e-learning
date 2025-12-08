@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>Hello World - 招動</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 保持深色背景和字體風格一致 */
+    body { 
+        background-color: #1f2937; 
+        color: #f9fafb; 
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        min-height: 100vh; 
+        margin: 0; 
+        padding: 1rem;
+    }
+    .container-wrap { 
+        max-width: 450px; 
+        width: 100%; 
+        padding: 30px; 
+        background-color: #1f2937;
+        border-radius: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    /* 笑臉按鈕容器樣式 (Neumorphic 外凸效果) */
+    #smileButton {
+        width: 250px;
+        height: 250px;
+        margin: 30px auto;
+        border-radius: 50%;
+        cursor: pointer;
+        background: #374151; /* 較淺的深灰色作為基底 */
+        /* 外凸陰影 */
+        box-shadow: 
+            8px 8px 16px #1a222c, 
+            -8px -8px 16px #3b4555;
+        transition: all 0.2s ease;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        user-select: none;
+        touch-action: manipulation;
+    }
+
+    /* 按下/啟用時的內凹效果 */
+    #smileButton:active, #smileButton.active {
+        background: #232d3a;
+        /* 內凹陰影 */
+        box-shadow: 
+            inset 5px 5px 10px #1a222c, 
+            inset -5px -5px 10px #3b4555;
+        transform: scale(0.98);
+    }
+    
+    /* 內嵌 SVG 笑臉的顏色 */
+    .face-svg {
+        width: 80%;
+        height: 80%;
+        fill: #4f46e5; /* 臉部底色：靛藍 */
+        stroke: #fcd34d; /* 眼睛和嘴巴：琥珀黃 */
+        stroke-width: 5;
+    }
+
+    /* 狀態顯示區域 - 內凹樣式 */
+    #statusDisplay{
+        min-height: 3rem;
+        width: 90%;
+        padding: 12px; 
+        margin-top: 20px;
+        background: #2d3748; 
+        border-radius: 12px; 
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #fcd34d;
+        /* Neumorphic 內凹效果 */
+        box-shadow: inset 3px 3px 6px #171d26, inset -3px -3px 6px #3b4555;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* 返回主選單按鈕 */
+    .menu-button {
+        display: block;
+        width: 90%;
+        padding: 12px;
+        margin-top: 30px;
+        border-radius: 12px;
+        border: none;
+        background: #4f46e5; 
+        color: white;
+        font-weight: 700;
+        text-align: center;
+        text-decoration: none;
+        box-shadow: 3px 3px 6px #171d26, -3px -3px 6px #273142;
+        transition: all 0.2s ease;
+    }
+    .menu-button:hover {
+        background: #3730a3; 
+        box-shadow: 5px 5px 10px #171d26, -5px -5px 10px #273142;
+    }
+  </style>
+</head>
+<body class="p-4">
+    <div class="container-wrap">
+        
+        <h1 class="text-3xl font-extrabold text-indigo-400 mb-6">
+            Hello World - 招動
+        </h1>
+
+        <!-- 笑臉按鈕 -->
+        <div id="smileButton" role="button" aria-label="Say Hello">
+            <!-- SVG 笑臉圖形 -->
+            <svg class="face-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <!-- 臉部圓形 -->
+                <circle cx="50" cy="50" r="45" fill="#4f46e5"/>
+                <!-- 左眼 -->
+                <circle cx="35" cy="35" r="5" fill="#fcd34d"/>
+                <!-- 右眼 -->
+                <circle cx="65" cy="35" r="5" fill="#fcd34d"/>
+                <!-- 嘴巴 -->
+                <path d="M 30 65 Q 50 85, 70 65" fill="none" stroke="#fcd34d" stroke-width="5" stroke-linecap="round"/>
+            </svg>
+        </div>
+
+        <!-- 狀態顯示區 -->
+        <div id="statusDisplay">
+            點擊笑臉開始
+        </div>
+        
+        <!-- 返回主選單按鈕 -->
+        <a href="index.html" class="menu-button">
+            返回主選單
+        </a>
+    </div>
+
+<script>
+    const smileButton = document.getElementById('smileButton');
+    const statusDisplay = document.getElementById('statusDisplay');
+    const utterance = new SpeechSynthesisUtterance("Hello!"); // 預設語音內容
+
+    /**
+     * 語音朗讀 "Hello!"
+     */
+    function speakHello() {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // 取消任何正在進行的語音
+            
+            // 選擇中文聲音 (如果系統支援)
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(voice => voice.lang.startsWith('zh'));
+            
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            } else {
+                 // 如果找不到中文，嘗試英文，確保能發聲
+                 utterance.lang = 'en-US';
+            }
+            utterance.rate = 1.0; // 語速
+
+            window.speechSynthesis.speak(utterance);
+        } else {
+            console.warn("瀏覽器不支援 Web Speech API (TTS)。");
+        }
+    }
+    
+    /**
+     * 處理笑臉點擊事件
+     */
+    function handleSmileClick() {
+        // 1. 更新狀態顯示
+        statusDisplay.textContent = "Hello";
+        
+        // 2. 播放語音
+        speakHello();
+    }
+    
+    // 綁定點擊事件
+    smileButton.addEventListener('click', handleSmileClick);
+
+    // 處理移動裝置的觸控事件
+    smileButton.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        smileButton.classList.add('active');
+        handleSmileClick();
+    });
+    
+    smileButton.addEventListener('touchend', () => {
+        smileButton.classList.remove('active');
+    });
+
+</script>
+</body>
+</html>
