@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Hello World</title>
+  <title>Gemini TTS 笑臉按鈕</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* 保持深色背景和字體風格一致 */
+    /* 核心深色主題樣式 */
     body { 
         background-color: #1f2937; 
         color: #f9fafb; 
@@ -34,7 +34,6 @@
     #smileButton {
         width: 250px;
         height: 250px;
-        /* 移除原先用於頂部定位的 50px top margin，現在只需要底部 30px */
         margin: 0 auto 30px auto; 
         border-radius: 50%;
         cursor: pointer;
@@ -66,30 +65,57 @@
     .face-svg {
         width: 80%;
         height: 80%;
-        fill: #4f46e5; /* 臉部底色：靛藍 */
-        stroke: #fcd34d; /* 眼睛和嘴巴：琥珀黃 */
-        stroke-width: 5;
+        /* 移除 fill 和 stroke 覆蓋，讓 SVG 內部定義的顏色生效 (黃臉黑線) */
+    }
+    
+    /* 載入指示器 */
+    #loadingSpinner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid #fcd34d;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        z-index: 10;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    
+    #loadingSpinner.visible {
+        opacity: 1;
     }
 
-    /* 狀態顯示區域 - 移除陰影與背景 */
+    @keyframes spin {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+
+    /* 狀態顯示區域 - 預設字體稍微小一點 (1.25rem)，用於語音訊息等 */
     #statusDisplay{
         min-height: 3rem;
         width: 90%;
         padding: 12px; 
-        /* 狀態列移到上方，設定底部間距 */
         margin: 0 0 30px 0; 
-        /* 移除背景色，設為透明 */
         background: transparent; 
         border-radius: 12px; 
-        font-size: 1.5rem;
+        font-size: 1.25rem; /* 狀態文字變小 */
         font-weight: 700;
-        /* 移除 Neumorphic 內凹效果的陰影 */
-        /* box-shadow: inset 3px 3px 6px #171d26, inset -3px -3px 6px #3b4555; */ 
         display: flex;
         justify-content: center;
         align-items: center;
-        transition: color 0.5s ease;
+        transition: color 0.5s ease, font-size 0.3s ease;
     }
+    
+    /* Hello World 初始狀態 - 字體變大 */
+    #statusDisplay.initial-status {
+        font-size: 2rem; /* Hello World 字體變大 */
+    }
+
 
     /* 返回主選單按鈕 */
     .menu-button {
@@ -111,29 +137,38 @@
         background: #3730a3; 
         box-shadow: 5px 5px 10px #171d26, -5px -5px 10px #273142;
     }
+    
+    /* 禁用狀態的笑臉按鈕 (在載入音訊時) */
+    #smileButton.disabled {
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+
   </style>
 </head>
 <body class="p-4">
     <div class="container-wrap">
         
         <!-- 狀態顯示區 - 移到最上方 -->
-        <div id="statusDisplay">
-            <!-- 初始內容將由 JavaScript 設定為 "Hello World" -->
+        <div id="statusDisplay" class="initial-status">
+            <!-- 初始內容將由 JavaScript 設定 -->
         </div>
 
         <!-- 笑臉按鈕 -->
         <div id="smileButton" role="button" aria-label="Say Hello">
-            <!-- SVG 笑臉圖形 -->
+            <!-- SVG 笑臉圖形 - 已更新為您提供的樣式 (黃臉黑五官) -->
             <svg class="face-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <!-- 臉部圓形 -->
-                <circle cx="50" cy="50" r="45" fill="#4f46e5"/>
-                <!-- 左眼 -->
-                <circle cx="35" cy="35" r="5" fill="#fcd34d"/>
-                <!-- 右眼 -->
-                <circle cx="65" cy="35" r="5" fill="#fcd34d"/>
-                <!-- 嘴巴 -->
-                <path d="M 30 65 Q 50 85, 70 65" fill="none" stroke="#fcd34d" stroke-width="5" stroke-linecap="round"/>
+                <!-- 臉部圓形 (黃色) -->
+                <circle cx="50" cy="50" r="48" fill="#FFDA00"/>
+                <!-- 左眼 (黑色) -->
+                <circle cx="35" cy="35" r="8" fill="#000"/>
+                <!-- 右眼 (黑色) -->
+                <circle cx="65" cy="35" r="8" fill="#000"/>
+                <!-- 嘴巴 (黑色) -->
+                <path d="M 25 65 Q 50 85, 75 65" fill="none" stroke="#000" stroke-width="5" stroke-linecap="round"/>
             </svg>
+            <!-- 載入指示器 -->
+            <div id="loadingSpinner"></div>
         </div>
 
         
@@ -146,104 +181,285 @@
 <script>
     const smileButton = document.getElementById('smileButton');
     const statusDisplay = document.getElementById('statusDisplay');
+    const loadingSpinner = document.getElementById('loadingSpinner');
     
-    // 定義狀態文字
-    // 已將 "Vibe Racer" 改為 "程式設計"
-    const CLICK_PHRASE = "你好啊！歡迎來到程式設計的世界，課程即將開始。"; 
-    // 初始狀態文字
-    const INITIAL_PHRASE = "Hello World"; 
+    // API Configurations
+    const API_URL_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent';
+    const API_KEY = ""; // The API key is injected by the Canvas environment at runtime.
 
-    // 延遲計時器，用於控制狀態復原
+    // Status Texts
+    const CLICK_PHRASE = "你好啊！歡迎來到 Vibe Coding 的世界，課程即將開始。"; 
+    const INITIAL_PHRASE = "Hello World"; 
+    
+    // Voice Configuration (Kore is a firm, clear voice)
+    const VOICE_NAME = "Kore"; 
+
     let statusTimeout;
+    let isSpeaking = false;
 
     /**
-     * 語音朗讀指定的文字
-     * @param {string} text 要朗讀的文字
+     * Helper function: Converts a Base64 string to an ArrayBuffer.
+     * @param {string} base64 base64 encoded string
+     * @returns {ArrayBuffer} 
      */
-    function speakText(text) {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // 取消任何正在進行的語音
-            
-            const utterance = new SpeechSynthesisUtterance(text);
-            
-            // 選擇中文聲音 (優先 zh-TW 台灣中文)
-            const voices = window.speechSynthesis.getVoices();
-            // 尋找 zh-TW 語音
-            let preferredVoice = voices.find(voice => voice.lang.toLowerCase() === 'zh-tw');
-            
-            if (!preferredVoice) {
-                 // 如果找不到 zh-TW，則嘗試任何中文 (zh)
-                 preferredVoice = voices.find(voice => voice.lang.toLowerCase().startsWith('zh'));
-            }
-            
-            if (preferredVoice) {
-                utterance.voice = preferredVoice;
-                utterance.lang = preferredVoice.lang;
-                console.log(`TTS Voice selected: ${preferredVoice.name} (${preferredVoice.lang})`);
-            } else {
-                 // 找不到中文，則切換到英文
-                 utterance.lang = 'en-US';
-                 console.warn("未找到中文語音，將使用英文語音。");
-            }
-            utterance.rate = 1.0; 
+    function base64ToArrayBuffer(base64) {
+        const binaryString = atob(base64);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes.buffer;
+    }
 
-            window.speechSynthesis.speak(utterance);
+    /**
+     * Helper function: Converts PCM 16-bit audio data into a WAV Blob.
+     * The Gemini TTS API returns raw PCM data, which needs a WAV header for browser playback.
+     * @param {Int16Array} pcm16 16-bit signed PCM data
+     * @param {number} sampleRate Sample rate (e.g., 24000)
+     * @returns {Blob} WAV format audio Blob
+     */
+    function pcmToWav(pcm16, sampleRate) {
+        const numChannels = 1;
+        const bitsPerSample = 16;
+        const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
+        const blockAlign = numChannels * (bitsPerSample / 8);
+        const dataLength = pcm16.length * (bitsPerSample / 8);
+        const buffer = new ArrayBuffer(44 + dataLength);
+        const view = new DataView(buffer);
+        let offset = 0;
+
+        /* Helper to write string to DataView */
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+        
+        /* 1. RIFF Chunk */
+        writeString(view, offset, 'RIFF'); offset += 4; // Chunk ID
+        view.setUint32(offset, 36 + dataLength, true); offset += 4; // Chunk Size
+        writeString(view, offset, 'WAVE'); offset += 4; // Format
+
+        /* 2. fmt Chunk (Format) */
+        writeString(view, offset, 'fmt '); offset += 4; // Sub-chunk 1 ID
+        view.setUint32(offset, 16, true); offset += 4; // Sub-chunk 1 Size (16 for PCM)
+        view.setUint16(offset, 1, true); offset += 2; // Audio Format (1 = PCM)
+        view.setUint16(offset, numChannels, true); offset += 2; // Number of Channels
+        view.setUint32(offset, sampleRate, true); offset += 4; // Sample Rate
+        view.setUint32(offset, byteRate, true); offset += 4; // Byte Rate
+        view.setUint16(offset, blockAlign, true); offset += 2; // Block Align
+        view.setUint16(offset, bitsPerSample, true); offset += 2; // Bits per Sample
+
+        /* 3. data Chunk */
+        writeString(view, offset, 'data'); offset += 4; // Sub-chunk 2 ID
+        view.setUint32(offset, dataLength, true); offset += 4; // Sub-chunk 2 Size
+
+        /* Write PCM data (Int16) */
+        for (let i = 0; i < pcm16.length; i++) {
+            view.setInt16(offset + i * 2, pcm16[i], true); // true for little-endian
+        }
+
+        return new Blob([buffer], { type: 'audio/wav' });
+    }
+
+    /**
+     * Generates and plays audio using the Gemini TTS API.
+     * @param {string} text The text to synthesize.
+     */
+    async function speakText(text) {
+        if (isSpeaking) return;
+
+        isSpeaking = true;
+        smileButton.classList.add('disabled');
+        loadingSpinner.classList.add('visible');
+        statusDisplay.classList.remove('initial-status'); // 移除 Hello World 的大字體
+
+        const payload = {
+            contents: [{
+                parts: [{ text: `Say cheerfully: ${text}` }] // Add style instruction
+            }],
+            generationConfig: {
+                responseModalities: ["AUDIO"],
+                speechConfig: {
+                    voiceConfig: {
+                        prebuiltVoiceConfig: { voiceName: VOICE_NAME }
+                    }
+                }
+            },
+            model: "gemini-2.5-flash-preview-tts"
+        };
+        
+        const apiUrl = `${API_URL_BASE}?key=${API_KEY}`;
+        let response;
+        let attempt = 0;
+        const maxRetries = 3;
+
+        // Exponential backoff retry logic
+        while (attempt < maxRetries) {
+            try {
+                response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    break; 
+                } else if (response.status === 429 && attempt < maxRetries - 1) {
+                    const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+                    console.warn(`API Rate limit exceeded. Retrying in ${delay / 1000}s...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    attempt++;
+                } else {
+                    throw new Error(`API Error: ${response.statusText}`);
+                }
+            } catch (error) {
+                if (attempt === maxRetries - 1) {
+                    throw error; 
+                }
+                const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+                console.warn(`Fetch Failed. Retrying in ${delay / 1000}s...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                attempt++;
+            }
+        }
+        
+        if (!response || !response.ok) {
+            throw new Error("Could not get a valid response from Gemini API.");
+        }
+
+        const result = await response.json();
+        const part = result?.candidates?.[0]?.content?.parts?.[0];
+        const audioData = part?.inlineData?.data;
+        const mimeType = part?.inlineData?.mimeType;
+
+        if (audioData && mimeType && mimeType.startsWith("audio/L16")) {
+            const rateMatch = mimeType.match(/rate=(\d+)/);
+            if (!rateMatch) throw new Error("Could not extract sample rate from MIME Type.");
+            
+            const sampleRate = parseInt(rateMatch[1], 10);
+            
+            // 1. Base64 -> ArrayBuffer -> Int16Array
+            const pcmData = base64ToArrayBuffer(audioData);
+            const pcm16 = new Int16Array(pcmData);
+            
+            // 2. PCM -> WAV Blob
+            const wavBlob = pcmToWav(pcm16, sampleRate);
+            const audioUrl = URL.createObjectURL(wavBlob);
+            
+            // 3. Playback
+            const audio = new Audio(audioUrl);
+            
+            audio.onended = () => {
+                isSpeaking = false;
+                smileButton.classList.remove('disabled');
+                loadingSpinner.classList.remove('visible');
+                URL.revokeObjectURL(audioUrl); 
+
+                // 在語音播放結束後，等待 7 秒恢復初始狀態
+                statusTimeout = setTimeout(() => { 
+                    statusDisplay.textContent = INITIAL_PHRASE;
+                    statusDisplay.style.color = '#60a5fa'; 
+                    statusDisplay.classList.add('initial-status'); // 恢復 Hello World 的大字體
+                }, 7000); // 7000 毫秒 = 7 秒
+            };
+
+            audio.onerror = (e) => {
+                 console.error("Audio playback error:", e);
+                 isSpeaking = false;
+                 smileButton.classList.remove('disabled');
+                 loadingSpinner.classList.remove('visible');
+                 URL.revokeObjectURL(audioUrl);
+            }
+            
+            audio.play().catch(e => {
+                console.error("Audio playback blocked (requires user interaction):", e);
+                isSpeaking = false;
+                smileButton.classList.remove('disabled');
+                loadingSpinner.classList.remove('visible');
+            });
+
         } else {
-            console.warn("瀏覽器不支援 Web Speech API (TTS)。");
+            throw new Error("Missing or incorrectly formatted audio data in API response.");
         }
     }
-    
+
+
     /**
-     * 處理笑臉點擊事件
+     * Handles the click/touch event on the smiley button.
      */
-    function handleSmileClick() {
-        // 1. 清除任何未完成的狀態復原定時器
+    function handleSmileClick(event) {
+        if (isSpeaking) return;
+
+        // 清除舊的狀態恢復計時器 (如果存在)
         clearTimeout(statusTimeout);
-
-        // 2. 更新狀態顯示 (單次即時反饋)
-        statusDisplay.textContent = CLICK_PHRASE;
-        statusDisplay.style.color = '#fcd34d'; // 琥珀黃
         
-        // 3. 播放語音
-        speakText(CLICK_PHRASE);
+        // 在開始生成時，移除大字體類別
+        statusDisplay.classList.remove('initial-status');
 
-        // 4. 5秒後恢復初始狀態
-        statusTimeout = setTimeout(() => {
-            statusDisplay.textContent = INITIAL_PHRASE;
-            statusDisplay.style.color = '#60a5fa'; // 藍色 for initial status
-        }, 5000);
+        statusDisplay.textContent = "正在生成語音...";
+        statusDisplay.style.color = '#fcd34d'; 
+        
+        speakText(CLICK_PHRASE)
+            .then(() => {
+                console.log("TTS Generation successful.");
+            })
+            .catch(error => {
+                console.error("TTS Generation Failed:", error);
+                statusDisplay.textContent = "語音失敗 (API 錯誤)";
+                statusDisplay.style.color = '#f87171'; 
+                isSpeaking = false;
+                smileButton.classList.remove('disabled');
+                loadingSpinner.classList.remove('visible');
+                // 失敗時，立即啟動一個短暫的計時器，讓錯誤訊息停留一下，然後恢復初始狀態
+                statusTimeout = setTimeout(() => { 
+                    statusDisplay.textContent = INITIAL_PHRASE;
+                    statusDisplay.style.color = '#60a5fa'; 
+                    statusDisplay.classList.add('initial-status'); // 恢復 Hello World 的大字體
+                }, 3000); // 錯誤訊息停留 3 秒
+            });
+            
+        // Show the intended phrase quickly after generation starts
+        setTimeout(() => {
+            if(statusDisplay.textContent === "正在生成語音...") {
+                statusDisplay.textContent = CLICK_PHRASE;
+            }
+        }, 300);
+        
     }
 
-    // 綁定點擊事件
+    // Event Bindings
     smileButton.addEventListener('click', handleSmileClick);
 
-    // 處理移動裝置的觸控事件
-    smileButton.addEventListener('touchstart', (e) => {
+    smileButton.addEventListener('pointerdown', (e) => {
+        if (isSpeaking) return;
         e.preventDefault();
         smileButton.classList.add('active');
-        handleSmileClick();
+        // Only call handleSmileClick on pointerdown for touch devices to be responsive
+        // The desktop click will be handled by the 'click' event
+        if (e.pointerType !== 'mouse') {
+            handleSmileClick(e);
+        }
     });
     
-    smileButton.addEventListener('touchend', () => {
+    smileButton.addEventListener('pointerup', () => {
+        smileButton.classList.remove('active');
+    });
+    
+    smileButton.addEventListener('pointercancel', () => {
         smileButton.classList.remove('active');
     });
 
-    // 頁面載入完成後設定初始狀態
+
+    // Initial state setup on page load
     window.onload = () => {
         statusDisplay.textContent = INITIAL_PHRASE;
-        statusDisplay.style.color = '#60a5fa'; // 藍色 for initial status (原標題顏色)
-        
-        // 確保在 onload 後能立即取得語音清單
-        if ('speechSynthesis' in window) {
-            speechSynthesis.onvoiceschanged = () => {
-                console.log("TTS voices loaded.");
-                // 可選：重新執行一次 speakText 確保語音選取正確
-            };
-            // 如果語音已經載入，手動觸發一次
-            if (speechSynthesis.getVoices().length > 0) {
-                 console.log("TTS voices already available.");
-            }
-        }
+        statusDisplay.style.color = '#60a5fa'; 
+        statusDisplay.classList.add('initial-status'); // 確保初始狀態是大字體
+        isSpeaking = false;
+        smileButton.classList.remove('disabled');
+        loadingSpinner.classList.remove('visible');
     };
 
 </script>
