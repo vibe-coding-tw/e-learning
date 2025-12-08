@@ -161,14 +161,16 @@
     </div>
 
 <script>
-// --- BLE & Control Configuration (Reusing Joystick/Prepare UUIDs for consistency) ---
-const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-000000000000'; 
-const CHARACTERISTIC_UUID = '4fafc201-1fb5-459e-8fcc-000000000000'; 
+// --- BLE Configuration ---
+const SERVICE_UUID = '0000ffff-0000-1000-8000-000000000000'; 
+const SSID_CHARACTERISTIC_UUID = '0000ffff-0000-1000-8000-000000000001'; 
+const PASS_CHARACTERISTIC_UUID = '0000ffff-0000-1000-8000-000000000002'; 
 const DEVICE_ID_KEY = 'ble_config_device_id'; 
 
 // --- State Variables ---
 let device = null;
-let characteristic = null;
+let ssid_characteristic = null;
+let pass_characteristic = null;
 
 // --- DOM Elements ---
 const statusLog = document.getElementById('statusLog');
@@ -226,7 +228,8 @@ function onDisconnect() {
     updateUI(false);
     if (device) device.removeEventListener('gattserverdisconnected', onDisconnect);
     device = null;
-    characteristic = null;
+    ssid_characteristic = null;
+    pass_characteristic = null;
 }
 
 /**
@@ -281,7 +284,8 @@ async function connectBLE(){
 
         const server = await device.gatt.connect();
         const service = await server.getPrimaryService(SERVICE_UUID);
-        characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID); 
+        ssid_characteristic = await service.getCharacteristic(SSID_CHARACTERISTIC_UUID); 
+        pass_characteristic = await service.getCharacteristic(PASS_CHARACTERISTIC_UUID); 
         
         logStatus('✅ 已連線: ' + device.name, 'success');
         updateUI(true);
@@ -301,7 +305,7 @@ async function connectBLE(){
  * 傳送 SSID 和密碼給裝置
  */
 async function sendConfig(){
-    if(!characteristic || !device || !device.gatt.connected) {
+    if(!ssid_characteristic || !pass_characteristic || !device || !device.gatt.connected) {
         logStatus('⚠️ 請先連線到 BLE 裝置。', 'info');
         return;
     }
@@ -321,7 +325,9 @@ async function sendConfig(){
         logStatus(`傳送設定: ${ssid} | ${password.length} 字元...`, 'info');
         btnSend.disabled = true; // 傳送中禁用按鈕
 
-        await characteristic.writeValue(new TextEncoder().encode(payload));
+        //await characteristic.writeValue(new TextEncoder().encode(payload));
+        await ssid_characteristic.writeValue(new TextEncoder().encode(ssid));
+        await pass_characteristic.writeValue(new TextEncoder().encode(password));
         
         logStatus('✅ 設定成功傳送! 裝置應開始嘗試連線 Wi-Fi。', 'success');
         
