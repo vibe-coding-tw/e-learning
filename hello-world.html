@@ -71,19 +71,20 @@
         stroke-width: 5;
     }
 
-    /* 狀態顯示區域 - 內凹樣式 */
+    /* 狀態顯示區域 - 移除陰影與背景 */
     #statusDisplay{
         min-height: 3rem;
         width: 90%;
         padding: 12px; 
         /* 狀態列移到上方，設定底部間距 */
         margin: 0 0 30px 0; 
-        background: #2d3748; 
+        /* 移除背景色，設為透明 */
+        background: transparent; 
         border-radius: 12px; 
         font-size: 1.5rem;
         font-weight: 700;
-        /* Neumorphic 內凹效果 */
-        box-shadow: inset 3px 3px 6px #171d26, inset -3px -3px 6px #3b4555;
+        /* 移除 Neumorphic 內凹效果的陰影 */
+        /* box-shadow: inset 3px 3px 6px #171d26, inset -3px -3px 6px #3b4555; */ 
         display: flex;
         justify-content: center;
         align-items: center;
@@ -147,8 +148,9 @@
     const statusDisplay = document.getElementById('statusDisplay');
     
     // 定義狀態文字
-    const CLICK_PHRASE = "你好啊！吃過飯了嗎";
-    // 初始狀態文字 (已更改為 "Hello World")
+    // 已將 "Vibe Racer" 改為 "程式設計"
+    const CLICK_PHRASE = "你好啊！歡迎來到程式設計的世界，課程即將開始。"; 
+    // 初始狀態文字
     const INITIAL_PHRASE = "Hello World"; 
 
     // 延遲計時器，用於控制狀態復原
