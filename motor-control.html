@@ -17,7 +17,7 @@
         min-height: 100vh; 
         margin: 0; 
         padding: 1rem;
-        user-select: none; /* 防止文字被選中 */
+        user-select: none;
     }
     .container-wrap { 
         max-width: 500px; 
@@ -31,28 +31,67 @@
         text-align: center;
     }
 
-    /* 狀態顯示區域 */
+    /* --- 頂部控制列 (參考 joystick.html 的 .top 樣式) --- */
+    .top-bar {
+        width: 100%;
+        display: flex;
+        gap: 8px; /* 匹配 joystick.html 的 gap */
+        align-items: center;
+        max-width: 440px; 
+        margin-bottom: 20px; /* 調整與下方 D-Pad 的間距 */
+    }
+
+    /* BLE 連線按鈕 (#btnConnect) 專用樣式 (參考 joystick.html 的 button 樣式) */
+    #btnConnect {
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: none;
+        background: #4f46e5; /* 靛藍色 */
+        color: white;
+        font-weight: 700;
+        /* 外凸陰影 */
+        box-shadow: 3px 3px 6px #1a202c, -3px -3px 6px #273142;
+        transition: all 0.15s ease-in-out;
+        flex-shrink: 0;
+        height: 48px; /* 確保與狀態欄一致高度 */
+    }
+    #btnConnect:hover {
+        background: #3730a3; /* 深靛藍 */
+        /* 懸停陰影 */
+        box-shadow: 5px 5px 10px #1a202c, -5px -5px 10px #273142;
+    }
+    
+    /* 連線成功或斷開後的顏色 */
+    #btnConnect.connected {
+        background: #ef4444; /* 紅色表示斷開 */
+    }
+    #btnConnect.connected:hover {
+        background: #b91c1c;
+    }
+
+    /* 狀態顯示區域 (#statusDisplay) 樣式 (參考 joystick.html 的 #status 樣式) */
     #statusDisplay{
-        min-height: 3rem;
-        padding: 10px;
-        background: #232d3a;
+        flex: 1; /* 佔滿剩餘空間 */
+        text-align: center;
+        font-weight: 700;
+        color: #f9fafb;
+        padding: 10px; 
+        background: #2d3748; /* 深灰色背景 */
         border-radius: 12px; 
-        font-size: 0.9rem;
-        font-weight: 600;
+        min-height: 48px; /* 確保與按鈕高度一致 */
         display: flex;
         justify-content: center;
         align-items: center;
+        font-size: 0.9rem;
+        /* 內凹陰影 */
+        box-shadow: inset 3px 3px 6px #1a202c, inset -3px -3px 6px #273142;
         transition: color 0.5s ease;
-        color: #60a5fa;
-        box-shadow: 
-            inset 3px 3px 6px #1a222c, 
-            inset -3px -3px 6px #3b4555;
-        overflow: hidden; /* 隱藏溢出的文字 */
+        overflow: hidden; 
         text-overflow: ellipsis;
         white-space: nowrap;
     }
 
-    /* 按鈕 Neumorphic 基底樣式 */
+    /* --- D-Pad 專用樣式 (保留 neumorphic 風格) --- */
     .control-button {
         background: #374151; 
         border: none;
@@ -65,8 +104,6 @@
             5px 5px 10px #1a222c, 
             -5px -5px 10px #3b4555;
     }
-
-    /* 按下時的內凹效果 (模擬點擊) */
     .control-button:active, .control-button.active {
         background: #232d3a;
         color: #fcd34d; 
@@ -75,8 +112,6 @@
             inset -3px -3px 6px #3b4555;
         transform: scale(0.98);
     }
-
-    /* 方向按鈕佈局 - D-Pad 樣式 */
     .dpad-container {
         display: grid;
         grid-template-areas: 
@@ -89,8 +124,6 @@
         max-width: 350px;
         margin: 20px auto;
     }
-
-    /* 單個按鈕大小和網格位置 */
     .dpad-button {
         width: 100%;
         height: 80px;
@@ -105,33 +138,11 @@
         height: 24px;
         fill: currentColor;
     }
-    
     #btnForward { grid-area: forward; }
     #btnReverse { grid-area: reverse; }
     #btnLeft { grid-area: left; }
     #btnRight { grid-area: right; }
     .center-spacer { grid-area: center; }
-
-    /* 連接按鈕 - 調整為配合 Header 的樣式 */
-    #btnConnect {
-        padding: 8px 12px;
-        height: 3rem;
-        background: #4f46e5; 
-        box-shadow: 3px 3px 6px #171d26, -3px -3px 6px #273142;
-        font-size: 0.9rem;
-    }
-    #btnConnect:hover {
-        background: #3730a3;
-    }
-    
-    /* 連線成功或斷開後的顏色 */
-    #btnConnect.connected {
-        background: #ef4444; /* 紅色表示斷開 */
-    }
-    #btnConnect.connected:hover {
-        background: #b91c1c;
-    }
-
 
     /* 返回主選單按鈕 */
     .menu-button {
@@ -153,7 +164,6 @@
         background: #6b7280; 
         color: #f9fafb;
     }
-
   </style>
 </head>
 <body class="p-4">
@@ -213,15 +223,15 @@
 
     <div class="container-wrap">
         
-        <!-- BLE 連線和狀態顯示區的 Header -->
-        <div class="header-status flex justify-between items-center w-full mb-5 gap-3 max-w-[440px]">
+        <!-- BLE 連線和狀態顯示區的 Header (使用 .top-bar 匹配 joystick.html 佈局) -->
+        <div class="top-bar">
             <!-- 連線按鈕 -->
-            <button id="btnConnect" class="control-button text-sm flex-shrink-0">
+            <button id="btnConnect">
                 🔌 連線 BLE 裝置
             </button>
             
             <!-- 狀態顯示區 -->
-            <div id="statusDisplay" class="flex-grow">
+            <div id="statusDisplay">
                 請點擊「連線 BLE」按鈕
             </div>
         </div>
@@ -277,9 +287,7 @@
     const directionalButtons = document.querySelectorAll('.dpad-button[data-cmd]');
 
     // --- BLE & Control Configuration (來自 joystick.html 的 UUID 設定) ---
-    // 假設您的 BLE 裝置 (如 ESP32) 使用此 UUID 服務
     const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-000000000000'; 
-    // 假設特性 UUID 與服務 UUID 相同，用於寫入控制指令
     const CHARACTERISTIC_UUID = '4fafc201-1fb5-459e-8fcc-000000000000'; 
     const DEVICE_ID_KEY = 'ble_motor_controller_device_id'; 
     const MAX_CONTROL_VALUE = 255; 
@@ -313,7 +321,7 @@
      */
     function updateStatus(message, isError = false) {
         statusDisplay.textContent = message;
-        statusDisplay.style.color = isError ? '#f87171' : (message.includes('成功') || message.includes('已連線') ? '#4ade80' : '#60a5fa');
+        statusDisplay.style.color = isError ? '#f87171' : (message.includes('成功') || message.includes('已連線') ? '#4ade80' : '#f9fafb'); // 成功為綠色，預設為白色/淺色
         console.log(`[Status] ${message}`);
     }
 
@@ -336,7 +344,6 @@
 
     /**
      * 取得裝置物件 (透過掃描或快速重連)
-     * 參考自 joystick.html
      */
     async function acquireDevice() {
         const storedDeviceId = localStorage.getItem(DEVICE_ID_KEY);
@@ -344,7 +351,6 @@
         if (storedDeviceId) {
             updateStatus('嘗試使用 ID 快速連線...');
             try {
-                // 嘗試獲取已配對的裝置
                 const devices = await navigator.bluetooth.getDevices();
                 const knownDevice = devices.find(d => d.id === storedDeviceId);
 
@@ -360,7 +366,7 @@
         updateStatus('🌐 正在掃描...');
         // 請求新裝置 (可選加 filter 如 { namePrefix: 'ESP' })
         const newDevice = await navigator.bluetooth.requestDevice({
-            filters:[{ services: [SERVICE_UUID] }], // 優先使用服務 UUID 篩選
+            filters:[{ services: [SERVICE_UUID] }],
             optionalServices: [SERVICE_UUID] 
         });
         
@@ -382,7 +388,6 @@
         if (bleDevice && bleDevice.gatt && bleDevice.gatt.connected) {
             updateStatus('中斷連線中...');
             bleDevice.gatt.disconnect();
-            // onDisconnect 會處理 UI 狀態更新
             return;
         }
 
@@ -390,7 +395,7 @@
         connectButton.disabled = true;
 
         try {
-            // 1. 請求裝置 (使用 acquireDevice 支援快速連線)
+            // 1. 請求裝置
             bleDevice = await acquireDevice();
             
             if (!bleDevice) throw new Error("裝置未連線或未找到。");
@@ -434,7 +439,6 @@
      */
     async function sendBleCommand(cmd) {
         if (!isConnected || !bleCharacteristic) {
-            // 不在連線狀態時，只更新本地狀態
             currentCommand = cmd;
             commandDisplay.textContent = COMMANDS[cmd] || 'Unknown';
             return;
@@ -443,7 +447,6 @@
         const payload = COMMAND_PAYLOADS[cmd];
 
         if (cmd === currentCommand) {
-            // 如果指令相同，則不重複發送
             return; 
         }
 
@@ -453,7 +456,6 @@
         }
 
         try {
-            // 將 "T,S" 字串轉換為 byte 陣列 (ASCII)
             await bleCharacteristic.writeValue(new TextEncoder().encode(payload));
             
             currentCommand = cmd;
@@ -465,7 +467,6 @@
         } catch (error) {
             updateStatus(`❌ 發送指令失敗: ${error.message} (可能已斷線)`, true);
             console.error('BLE Write Error:', error);
-            // 寫入失敗可能是斷線，執行斷線清理
             onDisconnect();
         }
     }
@@ -482,7 +483,6 @@
 
         button.classList.add('active');
         
-        // 發送指令 (現在發送 "T,S" 字串)
         sendBleCommand(cmd);
     }
     
@@ -495,7 +495,6 @@
 
         button.classList.remove('active');
         
-        // 發送停止指令 ("0,0")
         sendBleCommand('X');
     }
 
