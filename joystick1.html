@@ -83,6 +83,7 @@
         <h1 class="text-3xl font-extrabold text-center text-indigo-400 mb-6">BLE 搖桿控制</h1>
 
         <div class="top">
+            <!-- 按鈕文字會根據連線狀態切換 -->
             <button id="btnConnect">連線 BLE</button>
             <div id="status">未連線</div>
         </div>
@@ -108,7 +109,9 @@
 
 <script>
 // --- BLE & Control Configuration ---
+// 1. SERVICE_UUID 保持不變
 const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-000000000000'; 
+// 2. CHARACTERISTIC_UUID 修正為與 SERVICE_UUID 相同
 const CHARACTERISTIC_UUID = '4fafc201-1fb5-459e-8fcc-000000000000'; 
 const DEVICE_ID_KEY = 'ble_joystick_device_id'; 
 const MAX_CONTROL_VALUE = 255; 
@@ -295,14 +298,15 @@ joystickInner.addEventListener('touchcancel', handleEnd);
 
 /**
  * 處理 BLE 斷線
+ * 3. 處理斷線後，將按鈕文字改回「連線 BLE」
  */
 function onDisconnect() {
     statusEl.textContent = '❌ 已斷線';
-    btnConnect.textContent = '連線 BLE';
+    btnConnect.textContent = '連線 BLE'; // 斷線後改回連線
     if (sendingInterval) clearInterval(sendingInterval);
     sendingInterval = null;
     stopMotors(); // 斷線時停止馬達
-    device.removeEventListener('gattserverdisconnected', onDisconnect);
+    if (device) device.removeEventListener('gattserverdisconnected', onDisconnect);
     device = null;
     characteristic = null;
 }
@@ -329,6 +333,7 @@ async function acquireDevice() {
     }
     
     statusEl.textContent = '掃描中 (過濾: esp32)...';
+    // 注意: 由於 CHARACTERISTIC_UUID 已被修改，這裡必須確保 SERVICE_UUID 是正確的。
     const newDevice = await navigator.bluetooth.requestDevice({
         filters:[{ namePrefix: 'esp32' }],
         optionalServices: [SERVICE_UUID] 
@@ -345,8 +350,11 @@ async function connectBLE(){
         return;
     }
     
+    // 3. 處理已連線狀態下的按鈕點擊 (斷開連線)
     if (device && device.gatt.connected) {
+        statusEl.textContent = '中斷連線中...';
         device.gatt.disconnect();
+        // onDisconnect 會處理 UI 狀態更新
         return;
     }
 
@@ -364,10 +372,12 @@ async function connectBLE(){
 
         const server = await device.gatt.connect();
         const service = await server.getPrimaryService(SERVICE_UUID);
-        characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+        // 使用修正後的 CHARACTERISTIC_UUID
+        characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID); 
         
         statusEl.textContent = '✅ 已連線: ' + device.name;
-        btnConnect.textContent = '已連線 (斷開)';
+        // 3. 連線成功，將按鈕文字改為「斷開」
+        btnConnect.textContent = '斷開'; 
 
         // 如果搖桿正在拖曳，則開始傳送
         if(isDragging && !sendingInterval) {
@@ -381,7 +391,7 @@ async function connectBLE(){
         clearInterval(sendingInterval);
         sendingInterval = null;
         
-        if (device && !device.gatt.connected) {
+        if (device && (!device.gatt || !device.gatt.connected)) {
             device = null;
             localStorage.removeItem(DEVICE_ID_KEY);
         }
