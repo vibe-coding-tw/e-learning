@@ -6,7 +6,7 @@
   <title>BLE 馬達控制器</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* 核心深色主題樣式 */
+    /* 確保全螢幕高度和柔軟的背景色 */
     body { 
         background-color: #1f2937; 
         color: #f9fafb; 
@@ -17,18 +17,13 @@
         min-height: 100vh; 
         margin: 0; 
         padding: 1rem;
-        user-select: none;
     }
     .container-wrap { 
-        max-width: 500px; 
+        max-width: 400px; 
         width: 100%; 
-        padding: 30px; 
-        background-color: #1f2937;
-        border-radius: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
+        padding: 20px; 
+        background-color: #1f2937; /* 與 body 背景一致 */
+        border-radius: 1rem;
     }
 
     /* --- 頂部控制列 (參考 joystick.html 的 .top 樣式) --- */
@@ -223,17 +218,10 @@
 
     <div class="container-wrap">
         
-        <!-- BLE 連線和狀態顯示區的 Header (使用 .top-bar 匹配 joystick.html 佈局) -->
-        <div class="top-bar">
-            <!-- 連線按鈕 -->
-            <button id="btnConnect">
-                🔌 連線 BLE 裝置
-            </button>
-            
-            <!-- 狀態顯示區 -->
-            <div id="statusDisplay">
-                請點擊「連線 BLE」按鈕
-            </div>
+        <div class="top">
+            <!-- 按鈕文字會根據連線狀態切換 -->
+            <button id="btnConnect">連線 BLE</button>
+            <div id="status">未連線</div>
         </div>
 
         <!-- 方向控制按鈕佈局 -->
@@ -345,6 +333,71 @@
     /**
      * 取得裝置物件 (透過掃描或快速重連)
      */
+     async function acquireDevice() {
+    logStatus('掃描中 (過濾: esp32)...', 'info');
+    
+    try {
+        // 使用 filters 確保只顯示預期的裝置
+        const newDevice = await navigator.bluetooth.requestDevice({
+            filters:[{ namePrefix: 'esp32' }],
+            optionalServices: [SERVICE_UUID] 
+        });
+        
+        localStorage.setItem(DEVICE_ID_KEY, newDevice.id);
+        return newDevice;
+    } catch(e) {
+        if (e.name === 'NotFoundError') {
+             throw new Error("找不到裝置或使用者取消。");
+        }
+        throw e;
+    }
+}
+
+
+/**
+ * 連線/斷開 BLE 裝置
+ */
+async function connectBLE(){
+    if (!navigator.bluetooth) {
+        logStatus('❌ 瀏覽器不支援 Web Bluetooth。', 'error');
+        return;
+    }
+    
+    // 處理已連線狀態下的按鈕點擊 (斷開連線)
+    if (device && device.gatt.connected) {
+        logStatus('中斷連線中...');
+        device.gatt.disconnect();
+        // onDisconnect 會處理 UI 狀態更新
+        return;
+    }
+
+    try{
+        device = await acquireDevice();
+        if (!device) throw new Error("裝置未連線或未找到。");
+
+        logStatus(`連線到 ${device.name}...`, 'info');
+
+        device.removeEventListener('gattserverdisconnected', onDisconnect);
+        device.addEventListener('gattserverdisconnected', onDisconnect);
+
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService(SERVICE_UUID);
+        characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID); 
+        
+        logStatus('✅ 已連線: ' + device.name, 'success');
+        updateUI(true);
+
+    }catch(err){
+        console.error('BLE 連線失敗:', err);
+        logStatus(`❌ 連線失敗 (${err.message.slice(0, 30)}...)`, 'error');
+        updateUI(false);
+        if (device && (!device.gatt || !device.gatt.connected)) {
+            device = null;
+        }
+    }
+}
+
+/*
     async function acquireDevice() {
         const storedDeviceId = localStorage.getItem(DEVICE_ID_KEY);
 
@@ -375,9 +428,6 @@
     }
 
 
-    /**
-     * 連線到 BLE 裝置
-     */
     async function connectBle() {
         if (!navigator.bluetooth) {
             updateStatus('❌ 瀏覽器不支援 Web Bluetooth API。', true);
@@ -432,7 +482,7 @@
         }
     }
 
-
+*/
     /**
      * 寫入指令到 BLE 特性，格式為 "T,S" 字串。
      * @param {string} cmd 單個字元指令 (e.g., 'W', 'S', 'X')
