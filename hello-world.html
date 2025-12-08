@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Hello World - 招動</title>
+  <title>Hello World</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* 保持深色背景和字體風格一致 */
@@ -34,7 +34,8 @@
     #smileButton {
         width: 250px;
         height: 250px;
-        margin: 30px auto;
+        /* 移除原先用於頂部定位的 50px top margin，現在只需要底部 30px */
+        margin: 0 auto 30px auto; 
         border-radius: 50%;
         cursor: pointer;
         background: #374151; /* 較淺的深灰色作為基底 */
@@ -75,17 +76,18 @@
         min-height: 3rem;
         width: 90%;
         padding: 12px; 
-        margin-top: 20px;
+        /* 狀態列移到上方，設定底部間距 */
+        margin: 0 0 30px 0; 
         background: #2d3748; 
         border-radius: 12px; 
         font-size: 1.5rem;
         font-weight: 700;
-        color: #fcd34d;
         /* Neumorphic 內凹效果 */
         box-shadow: inset 3px 3px 6px #171d26, inset -3px -3px 6px #3b4555;
         display: flex;
         justify-content: center;
         align-items: center;
+        transition: color 0.5s ease;
     }
 
     /* 返回主選單按鈕 */
@@ -113,9 +115,10 @@
 <body class="p-4">
     <div class="container-wrap">
         
-        <h1 class="text-3xl font-extrabold text-indigo-400 mb-6">
-            Hello World - 招動
-        </h1>
+        <!-- 狀態顯示區 - 移到最上方 -->
+        <div id="statusDisplay">
+            <!-- 初始內容將由 JavaScript 設定為 "Hello World" -->
+        </div>
 
         <!-- 笑臉按鈕 -->
         <div id="smileButton" role="button" aria-label="Say Hello">
@@ -132,10 +135,6 @@
             </svg>
         </div>
 
-        <!-- 狀態顯示區 -->
-        <div id="statusDisplay">
-            點擊笑臉開始
-        </div>
         
         <!-- 返回主選單按鈕 -->
         <a href="index.html" class="menu-button">
@@ -146,26 +145,45 @@
 <script>
     const smileButton = document.getElementById('smileButton');
     const statusDisplay = document.getElementById('statusDisplay');
-    const utterance = new SpeechSynthesisUtterance("Hello!"); // 預設語音內容
+    
+    // 定義狀態文字
+    const CLICK_PHRASE = "你好啊！吃過飯了嗎";
+    // 初始狀態文字 (已更改為 "Hello World")
+    const INITIAL_PHRASE = "Hello World"; 
+
+    // 延遲計時器，用於控制狀態復原
+    let statusTimeout;
 
     /**
-     * 語音朗讀 "Hello!"
+     * 語音朗讀指定的文字
+     * @param {string} text 要朗讀的文字
      */
-    function speakHello() {
+    function speakText(text) {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel(); // 取消任何正在進行的語音
             
-            // 選擇中文聲音 (如果系統支援)
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // 選擇中文聲音 (優先 zh-TW 台灣中文)
             const voices = window.speechSynthesis.getVoices();
-            const preferredVoice = voices.find(voice => voice.lang.startsWith('zh'));
+            // 尋找 zh-TW 語音
+            let preferredVoice = voices.find(voice => voice.lang.toLowerCase() === 'zh-tw');
+            
+            if (!preferredVoice) {
+                 // 如果找不到 zh-TW，則嘗試任何中文 (zh)
+                 preferredVoice = voices.find(voice => voice.lang.toLowerCase().startsWith('zh'));
+            }
             
             if (preferredVoice) {
                 utterance.voice = preferredVoice;
+                utterance.lang = preferredVoice.lang;
+                console.log(`TTS Voice selected: ${preferredVoice.name} (${preferredVoice.lang})`);
             } else {
-                 // 如果找不到中文，嘗試英文，確保能發聲
+                 // 找不到中文，則切換到英文
                  utterance.lang = 'en-US';
+                 console.warn("未找到中文語音，將使用英文語音。");
             }
-            utterance.rate = 1.0; // 語速
+            utterance.rate = 1.0; 
 
             window.speechSynthesis.speak(utterance);
         } else {
@@ -177,13 +195,23 @@
      * 處理笑臉點擊事件
      */
     function handleSmileClick() {
-        // 1. 更新狀態顯示
-        statusDisplay.textContent = "Hello";
+        // 1. 清除任何未完成的狀態復原定時器
+        clearTimeout(statusTimeout);
+
+        // 2. 更新狀態顯示 (單次即時反饋)
+        statusDisplay.textContent = CLICK_PHRASE;
+        statusDisplay.style.color = '#fcd34d'; // 琥珀黃
         
-        // 2. 播放語音
-        speakHello();
+        // 3. 播放語音
+        speakText(CLICK_PHRASE);
+
+        // 4. 5秒後恢復初始狀態
+        statusTimeout = setTimeout(() => {
+            statusDisplay.textContent = INITIAL_PHRASE;
+            statusDisplay.style.color = '#60a5fa'; // 藍色 for initial status
+        }, 5000);
     }
-    
+
     // 綁定點擊事件
     smileButton.addEventListener('click', handleSmileClick);
 
@@ -197,6 +225,24 @@
     smileButton.addEventListener('touchend', () => {
         smileButton.classList.remove('active');
     });
+
+    // 頁面載入完成後設定初始狀態
+    window.onload = () => {
+        statusDisplay.textContent = INITIAL_PHRASE;
+        statusDisplay.style.color = '#60a5fa'; // 藍色 for initial status (原標題顏色)
+        
+        // 確保在 onload 後能立即取得語音清單
+        if ('speechSynthesis' in window) {
+            speechSynthesis.onvoiceschanged = () => {
+                console.log("TTS voices loaded.");
+                // 可選：重新執行一次 speakText 確保語音選取正確
+            };
+            // 如果語音已經載入，手動觸發一次
+            if (speechSynthesis.getVoices().length > 0) {
+                 console.log("TTS voices already available.");
+            }
+        }
+    };
 
 </script>
 </body>
