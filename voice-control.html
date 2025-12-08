@@ -1,108 +1,107 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>BLE 語音控制 (Mobile)</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* 確保全螢幕高度和柔軟的背景色 */
-    body { 
-        background-color: #1f2937; 
-        color: #f9fafb; 
-        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-        display: flex; 
-        justify-content: center; 
-        align-items: center; 
-        min-height: 100vh; 
-        margin: 0; 
-        padding: 1rem;
-    }
-    .container-wrap { 
-        max-width: 400px; 
-        width: 100%; 
-        padding: 20px; 
-        background-color: #1f2937; /* 與 body 背景一致 */
-        border-radius: 1rem;
-        box-shadow: 10px 10px 20px #171d26, -10px -10px 20px #273142;
-    }
-    
-    /* 頂部控制列 */
-    .top{width:100%;display:flex;gap:8px;align-items:center; max-width: 520px; margin-bottom: 20px;}
-    button{padding:10px 14px;border-radius:12px;border:none;background:#4f46e5;color:white;font-weight:700;box-shadow: 3px 3px 6px #1a202c, -3px -3px 6px #273142; transition: all 0.15s ease-in-out; white-space: nowrap;}
-    button:hover { background: #3730a3; box-shadow: 5px 5px 10px #1a202c, -5px -5px 10px #273142;}
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>BLE 語音控制 (Mobile)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+/* 確保全螢幕高度和柔軟的背景色 */
+body {
+background-color: #1f2937;
+color: #f9fafb;
+font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+display: flex;
+justify-content: center;
+align-items: center;
+min-height: 100vh;
+margin: 0;
+padding: 1rem;
+}
+.container-wrap {
+max-width: 400px;
+width: 100%;
+padding: 20px;
+background-color: #1f2937; /* 與 body 背景一致 */
+border-radius: 1rem;
+box-shadow: 10px 10px 20px #171d26, -10px -10px 20px #273142;
+}
+/* 頂部控制列 */
+.top{width:100%;display:flex;gap:8px;align-items:center; max-width: 520px; margin-bottom: 20px;}
+button{padding:10px 14px;border-radius:12px;border:none;background:#4f46e5;color:white;font-weight:700;box-shadow: 3px 3px 6px #1a202c, -3px -3px 6px #273142; transition: all 0.15s ease-in-out; white-space: nowrap;}
+button:hover { background: #3730a3; box-shadow: 5px 5px 10px #1a202c, -5px -5px 10px #273142;}
 
-    #status{flex:1;text-align:center;font-weight:700;color:#f9fafb; padding: 10px; background: #2d3748; border-radius: 12px; box-shadow: inset 3px 3px 6px #1a202c, inset -3px -3px 6px #273142;}
+#status{flex:1;text-align:center;font-weight:700;color:#f9fafb; padding: 10px; background: #2d3748; border-radius: 12px; box-shadow: inset 3px 3px 6px #1a202c, inset -3px -3px 6px #273142;}
 
-    /* 狀態文字 */
-    #main-status { font-weight: 700; text-shadow: 0 0 5px rgba(79, 70, 229, 0.5); }
-    .info{font-size:14px;color:#9ca3af; margin-top: 20px;}
+/* 狀態文字 */
+#main-status { font-weight: 700; text-shadow: 0 0 5px rgba(79, 70, 229, 0.5); }
+.info{font-size:14px;color:#9ca3af; margin-top: 20px;}
 
-    /* 新增語音控制按鈕樣式 */
-    #btnSpeech {
-        background-color: #ef4444; /* 紅色 */
-        color: white;
-        font-size: 1.25rem;
-        padding: 1.5rem;
-        width: 100%;
-        height: 150px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-top: 20px;
-        box-shadow: 5px 5px 10px #1a202c, -5px -5px 10px #273142;
-        animation: pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
-    }
-    #btnSpeech.listening {
-        background-color: #10b981; /* 綠色 */
-        box-shadow: 0 0 10px #10b981, 0 0 20px #10b981;
-        animation: none;
-    }
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: .5; }
-    }
+/* 新增語音控制按鈕樣式 */
+#btnSpeech {
+background-color: #ef4444; /* 紅色 */
+color: white;
+font-size: 1.25rem;
+padding: 1.5rem;
+width: 100%;
+height: 150px;
+display: flex;
+align-items: center;
+justify-content: center;
+margin-top: 20px;
+box-shadow: 5px 5px 10px #1a202c, -5px -5px 10px #273142;
+animation: pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+#btnSpeech.listening {
+background-color: #10b981; /* 綠色 */
+box-shadow: 0 0 10px #10b981, 0 0 20px #10b981;
+animation: none;
+}
+@keyframes pulse {
+0%, 100% { opacity: 1; }
+50% { opacity: .5; }
+}
 
-    #speech-result {
-        min-height: 2.5rem;
-        padding: 10px;
-        background: #2d3748;
-        border-radius: 8px;
-        margin-top: 15px;
-        font-style: italic;
-    }
-  </style>
+#speech-result {
+min-height: 2.5rem;
+padding: 10px;
+background: #2d3748;
+border-radius: 8px;
+margin-top: 15px;
+font-style: italic;
+}
+</style>
 </head>
 <body class="p-4">
-    <div class="container-wrap">
+<div class="container-wrap">
+    
+<h1 class="text-3xl font-extrabold text-center text-indigo-400 mb-6">🎙️ BLE 語音控制</h1>
+
+<div class="top">
+<button id="btnConnect" class="flex-grow">連線 BLE</button>
+<div id="status">未連線</div>
+</div>
+
+<button id="btnSpeech">
+點擊開始語音控制
+</button>
+
+<div id="speech-result" class="text-center text-gray-400">
+說出: 前進 | 後退 | 左轉 | 右轉 | 停止
+</div>
+
+<div class="text-center space-y-2 mt-4">
+<p class="text-xl">目前命令: <span id="main-status" class="text-green-400">靜止</span></p>
+<p class="text-xs text-gray-500">
+T (速度): <span id="val_t">0</span> | S (轉向): <span id="val_s">0</span>
+</p>
+</div>
         
-        <h1 class="text-3xl font-extrabold text-center text-indigo-400 mb-6">🎙️ BLE 語音控制</h1>
+<div class="info text-center">
+Payload 格式：T ($-255$ 到 $255$), S ($-255$ 到 $255$), 以字串 "T,S" 傳輸。
+</div>
 
-        <div class="top">
-            <button id="btnConnect" class="flex-grow">連線 BLE</button>
-            <div id="status">未連線</div>
-        </div>
-
-                <button id="btnSpeech">
-            點擊開始語音控制
-        </button>
-
-                <div id="speech-result" class="text-center text-gray-400">
-            說出: 前進 | 後退 | 左轉 | 右轉 | 停止
-        </div>
-
-        <div class="text-center space-y-2 mt-4">
-            <p class="text-xl">目前命令: <span id="main-status" class="text-green-400">靜止</span></p>
-            <p class="text-xs text-gray-500">
-                T (速度): <span id="val_t">0</span> | S (轉向): <span id="val_s">0</span>
-            </p>
-        </div>
-        
-        <div class="info text-center">
-            Payload 格式：T ($-255$ 到 $255$), S ($-255$ 到 $255$), 以字串 "T,S" 傳輸。
-        </div>
-
-    </div>
+</div>
 
 <script>
 // --- BLE & Control Configuration ---
@@ -113,12 +112,12 @@ const MAX_CONTROL_VALUE = 255; 
 
 // 語音命令對應的馬達控制值 (T, S)
 const COMMANDS = {
-    "前進": {t: MAX_CONTROL_VALUE, s: 0, status: "前進中", color: "text-green-400"},
-    "後退": {t: -MAX_CONTROL_VALUE, s: 0, status: "後退中", color: "text-orange-400"},
-    "左轉": {t: 0, s: -MAX_CONTROL_VALUE, status: "左轉中", color: "text-blue-400"},
-    "右轉": {t: 0, s: MAX_CONTROL_VALUE, status: "右轉中", color: "text-blue-400"},
-    "停止": {t: 0, s: 0, status: "靜止", color: "text-red-400"},
-    "停": {t: 0, s: 0, status: "靜止", color: "text-red-400"}, // 增加「停」作為別名
+"前進": {t: MAX_CONTROL_VALUE, s: 0, status: "前進中", color: "text-green-400"},
+"後退": {t: -MAX_CONTROL_VALUE, s: 0, status: "後退中", color: "text-orange-400"},
+"左轉": {t: 0, s: -MAX_CONTROL_VALUE, status: "左轉中", color: "text-blue-400"},
+"右轉": {t: 0, s: MAX_CONTROL_VALUE, status: "右轉中", color: "text-blue-400"},
+"停止": {t: 0, s: 0, status: "靜止", color: "text-red-400"},
+"停": {t: 0, s: 0, status: "靜止", color: "text-red-400"}, // 增加「停」作為別名
 };
 const COMMAND_KEYWORDS = Object.keys(COMMANDS);
 
@@ -142,202 +141,203 @@ let lastPayload = {t: 0, s: 0}; // 儲存上次發送的 T, S 值
 // --- Helper Functions ---
 
 /**
- * 更新馬達數值並發送命令
- * @param {number} t 速度值 (-255 到 255)
- * @param {number} s 轉向值 (-255 到 255)
- * @param {string} statusText 顯示在 UI 上的命令狀態
- * @param {string} statusColor 狀態文字顏色
- */
+* 更新馬達數值並發送命令
+* @param {number} t 速度值 (-255 到 255)
+* @param {number} s 轉向值 (-255 到 255)
+* @param {string} statusText 顯示在 UI 上的命令狀態
+* @param {string} statusColor 狀態文字顏色
+*/
 async function updateMotorValues(t, s, statusText, statusColor) {
-    lastPayload.t = t;
-    lastPayload.s = s;
+lastPayload.t = t;
+lastPayload.s = s;
 
-    // 更新 UI 顯示
-    valTEl.textContent = t; 
-    valSEl.textContent = s; 
-    mainStatusEl.textContent = statusText;
-    mainStatusEl.className = `font-bold ${statusColor}`;
+// 更新 UI 顯示
+valTEl.textContent = t; 
+valSEl.textContent = s; 
+mainStatusEl.textContent = statusText;
+mainStatusEl.className = `font-bold ${statusColor}`;
 
-    // 立即發送控制命令
-    await sendControl();
+// 立即發送控制命令
+await sendControl();
 }
 
 /**
- * 處理語音辨識的結果
- */
+* 處理語音辨識的結果
+*/
 function processSpeechResult(transcript) {
-    speechResultEl.textContent = `辨識結果: ${transcript}`;
+speechResultEl.textContent = `辨識結果: ${transcript}`;
 
-    // 檢查是否包含任何命令關鍵字
-    for (const keyword of COMMAND_KEYWORDS) {
-        if (transcript.includes(keyword)) {
-            const command = COMMANDS[keyword];
-            updateMotorValues(command.t, command.s, command.status, command.color);
-            speechResultEl.textContent = `✅ 命令執行: ${keyword}`;
-            return; // 找到第一個命令就執行並返回
-        }
-    }
+// 檢查是否包含任何命令關鍵字
+for (const keyword of COMMAND_KEYWORDS) {
+if (transcript.includes(keyword)) {
+const command = COMMANDS[keyword];
+updateMotorValues(command.t, command.s, command.status, command.color);
+speechResultEl.textContent = `✅ 命令執行: ${keyword}`;
+return; // 找到第一個命令就執行並返回
+}
+}
 
-    // 如果沒有匹配的命令
-    speechResultEl.textContent = `❌ 無效命令: ${transcript} (請重試)`;
-    updateMotorValues(0, 0, "靜止", "text-red-400"); // 無效命令時停止馬達
+// 如果沒有匹配的命令
+speechResultEl.textContent = `❌ 無效命令: ${transcript} (請重試)`;
+updateMotorValues(0, 0, "靜止", "text-red-400"); // 無效命令時停止馬達
 }
 
 
 // --- Web Speech API (Speech Recognition) ---
 
+// 為了更廣泛的瀏覽器相容性，使用前綴
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
 let isListening = false;
 
 
 function startSpeechRecognition() {
-    if (!SpeechRecognition) {
-        alert("❌ 您的瀏覽器不支援 Web Speech API (語音辨識)。請使用 Chrome 或 Edge 瀏覽器。");
-        return;
-    }
+if (!SpeechRecognition) {
+alert("❌ 您的瀏覽器不支援 Web Speech API (語音辨識)。請使用 Chrome 或 Edge 瀏覽器。");
+return;
+}
     
-    if (!device || !device.gatt.connected) {
-        statusEl.textContent = '請先連線 BLE 裝置。';
-        return;
-    }
+if (!device || !device.gatt.connected) {
+statusEl.textContent = '請先連線 BLE 裝置。';
+return;
+}
 
-    if (isListening) {
-        recognition.stop(); // 如果正在聽，則停止
-        return;
-    }
+if (isListening) {
+recognition.stop(); // 如果正在聽，則停止
+return;
+}
 
-    if (!recognition) {
-        recognition = new SpeechRecognition();
-        recognition.continuous = false; // 只聽一個指令
-        recognition.lang = 'zh-Hant'; // 設定為繁體中文
+if (!recognition) {
+recognition = new SpeechRecognition();
+recognition.continuous = false; // 只聽一個指令
+recognition.lang = 'zh-Hant'; // 設定為繁體中文 (或 'cmn-Hant-TW' 依據平台)
+recognition.interimResults = false; // 只返回最終結果
 
-        recognition.onstart = () => {
-            isListening = true;
-            btnSpeech.textContent = "請說話... (點擊停止)";
-            btnSpeech.classList.add('listening');
-            speechResultEl.textContent = "👂 正在聆聽...";
-        };
+recognition.onstart = () => {
+isListening = true;
+btnSpeech.textContent = "請說話... (點擊停止)";
+btnSpeech.classList.add('listening');
+speechResultEl.textContent = "👂 正在聆聽...";
+};
 
-        recognition.onresult = (event) => {
-            // 取得辨識結果中最高的信賴度文字
-            const transcript = event.results[0][0].transcript;
-            processSpeechResult(transcript);
-        };
+recognition.onresult = (event) => {
+// 取得辨識結果中最高的信賴度文字
+const transcript = event.results[0][0].transcript;
+processSpeechResult(transcript);
+};
 
-        recognition.onerror = (event) => {
-            console.error('Speech recognition error:', event.error);
-            speechResultEl.textContent = `❌ 語音錯誤: ${event.error}`;
-            stopListeningUI();
-        };
+recognition.onerror = (event) => {
+console.error('Speech recognition error:', event.error);
+speechResultEl.textContent = `❌ 語音錯誤: ${event.error}`;
+stopListeningUI();
+};
 
-        recognition.onend = () => {
-            stopListeningUI();
-        };
-    }
+recognition.onend = () => {
+stopListeningUI();
+};
+}
     
-    function stopListeningUI() {
-        isListening = false;
-        btnSpeech.textContent = "點擊開始語音控制";
-        btnSpeech.classList.remove('listening');
-    }
+function stopListeningUI() {
+isListening = false;
+btnSpeech.textContent = "點擊開始語音控制";
+btnSpeech.classList.remove('listening');
+}
 
-    recognition.start();
+recognition.start();
 }
 
 btnSpeech.addEventListener('click', startSpeechRecognition);
 
 
-// --- BLE Connection Logic (Modified to be simplified) ---
+// --- BLE Connection Logic ---
 
 function onDisconnect() {
-    statusEl.textContent = '❌ 已斷線';
-    btnConnect.textContent = '連線 BLE';
-    updateMotorValues(0, 0, "靜止", "text-red-400"); // 斷線時停止馬達
-    if (device) device.removeEventListener('gattserverdisconnected', onDisconnect);
-    device = null;
-    characteristic = null;
+statusEl.textContent = '❌ 已斷線';
+btnConnect.textContent = '連線 BLE';
+updateMotorValues(0, 0, "靜止", "text-red-400"); // 斷線時停止馬達
+if (device) device.removeEventListener('gattserverdisconnected', onDisconnect);
+device = null;
+characteristic = null;
 }
 
 async function acquireDevice() {
-    // 嘗試快速重連或掃描
-    statusEl.textContent = '掃描中...';
-    const newDevice = await navigator.bluetooth.requestDevice({
-        filters:[{ namePrefix: 'esp32' }],
-        optionalServices: [SERVICE_UUID] 
-    });
+statusEl.textContent = '掃描中 (過濾: esp32)...';
+// 由於 CHARACTERISTIC_UUID 已被修改，這裡必須確保 SERVICE_UUID 是正確的。
+const newDevice = await navigator.bluetooth.requestDevice({
+filters:[{ namePrefix: 'esp32' }],
+optionalServices: [SERVICE_UUID] 
+});
     
-    localStorage.setItem(DEVICE_ID_KEY, newDevice.id);
-    return newDevice;
+localStorage.setItem(DEVICE_ID_KEY, newDevice.id);
+return newDevice;
 }
 
 
 async function connectBLE(){
-    if (!navigator.bluetooth) {
-        statusEl.textContent = '❌ 瀏覽器不支援 Web Bluetooth。';
-        return;
-    }
+if (!navigator.bluetooth) {
+statusEl.textContent = '❌ 瀏覽器不支援 Web Bluetooth。';
+return;
+}
     
-    // 處理已連線狀態下的按鈕點擊 (斷開連線)
-    if (device && device.gatt && device.gatt.connected) {
-        statusEl.textContent = '中斷連線中...';
-        device.gatt.disconnect();
-        return;
-    }
+// 處理已連線狀態下的按鈕點擊 (斷開連線)
+if (device && device.gatt && device.gatt.connected) {
+statusEl.textContent = '中斷連線中...';
+device.gatt.disconnect();
+return;
+}
 
-    try{
-        device = await acquireDevice();
-        if (!device) throw new Error("裝置未連線或未找到。");
+try{
+device = await acquireDevice();
+if (!device) throw new Error("裝置未連線或未找到。");
 
-        statusEl.textContent = `連線到 ${device.name}...`;
+statusEl.textContent = `連線到 ${device.name}...`;
 
-        device.removeEventListener('gattserverdisconnected', onDisconnect);
-        device.addEventListener('gattserverdisconnected', onDisconnect);
+device.removeEventListener('gattserverdisconnected', onDisconnect);
+device.addEventListener('gattserverdisconnected', onDisconnect);
 
-        const server = await device.gatt.connect();
-        const service = await server.getPrimaryService(SERVICE_UUID);
-        characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID); 
+const server = await device.gatt.connect();
+const service = await server.getPrimaryService(SERVICE_UUID);
+characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID); 
         
-        statusEl.textContent = '✅ 已連線: ' + device.name;
-        btnConnect.textContent = '斷開'; 
+statusEl.textContent = '✅ 已連線: ' + device.name;
+btnConnect.textContent = '斷開'; 
 
-    }catch(err){
-        console.error('BLE 連線失敗:', err);
-        statusEl.textContent = `❌ 連線失敗 (${err.message.slice(0, 30)}...)`;
-        btnConnect.textContent = '連線 BLE';
-        if (device && (!device.gatt || !device.gatt.connected)) {
-            device = null;
-            localStorage.removeItem(DEVICE_ID_KEY);
-        }
-    }
+}catch(err){
+console.error('BLE 連線失敗:', err);
+statusEl.textContent = `❌ 連線失敗 (${err.message.slice(0, 30)}...)`;
+btnConnect.textContent = '連線 BLE';
+if (device && (!device.gatt || !device.gatt.connected)) {
+device = null;
+localStorage.removeItem(DEVICE_ID_KEY);
+}
+}
 }
 
 
 /**
- * 向 ESP32 傳送控制指令
- * Payload 格式：整數 "T,S" 字串
- */
+* 向 ESP32 傳送控制指令 (T,S)
+*/
 async function sendControl(){
-  if(!characteristic || !device || !device.gatt.connected) {
-    statusEl.textContent = '未連線或已斷線，無法傳送命令。';
-    return;
-  }
-  
-  const t_int = lastPayload.t;
-  const s_int = lastPayload.s;
-  
-  // 建立 payload 格式: T,S (例如: "200,0")
-  const payload = `${t_int},${s_int}`;
-  
-  try{
-    await characteristic.writeValue(new TextEncoder().encode(payload));
-  }catch(err){
-    console.warn('send failed (可能已斷線):', err.message);
-    // 如果傳送失敗，觸發斷線處理
-    if (device && device.gatt && !device.gatt.connected) {
-        onDisconnect();
-    }
-  }
+if(!characteristic || !device || !device.gatt.connected) {
+statusEl.textContent = '未連線或已斷線，無法傳送命令。';
+return;
+}
+    
+const t_int = lastPayload.t;
+const s_int = lastPayload.s;
+    
+// 建立 payload 格式: T,S (例如: "255,0")
+const payload = `${t_int},${s_int}`;
+    
+try{
+await characteristic.writeValue(new TextEncoder().encode(payload));
+}catch(err){
+console.warn('send failed (可能已斷線):', err.message);
+// 如果傳送失敗，觸發斷線處理
+if (device && device.gatt && !device.gatt.connected) {
+onDisconnect();
+}
+}
 }
 
 // --- Initialization ---
