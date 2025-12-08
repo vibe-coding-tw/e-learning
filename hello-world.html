@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Gemini TTS 笑臉按鈕 (iOS 播放優化)</title>
+  <title>Gemini TTS 笑臉按鈕 (最終 iOS 優化)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* 核心深色主題樣式 */
@@ -37,7 +37,7 @@
         margin: 0 auto 30px auto; 
         border-radius: 50%;
         cursor: pointer;
-        background: #374151; /* 較淺的深灰色作為基底 */
+        background: #374151;
         /* 外凸陰影 */
         box-shadow: 
             8px 8px 16px #1a222c, 
@@ -102,7 +102,7 @@
         margin: 0 0 30px 0; 
         background: transparent; 
         border-radius: 12px; 
-        font-size: 1.25rem; /* 狀態文字變小 */
+        font-size: 1.25rem; 
         font-weight: 700;
         display: flex;
         justify-content: center;
@@ -112,7 +112,7 @@
     
     /* Hello World 初始狀態 - 字體變大 */
     #statusDisplay.initial-status {
-        font-size: 2rem; /* Hello World 字體變大 */
+        font-size: 2rem;
     }
 
 
@@ -198,8 +198,6 @@
 
     let statusTimeout;
     let isSpeaking = false; 
-    
-    // 關鍵變數：AudioContext 必須被單獨管理，以便在使用者點擊時恢復 (resume) 狀態。
     let audioContext = null; 
 
     // ========================================================================
@@ -238,6 +236,21 @@
         }
         return bytes.buffer;
     }
+    
+    /**
+     * [關鍵改動] Helper function: Converts a Blob to an ArrayBuffer using Promise/Await.
+     * 避免使用 FileReader.onload 異步回呼，保持與點擊事件的同步性。
+     * @param {Blob} blob 
+     * @returns {Promise<ArrayBuffer>} 
+     */
+    function blobToArrayBuffer(blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = (error) => reject(new Error("FileReader 讀取失敗: " + error.target.error));
+            reader.readAsArrayBuffer(blob);
+        });
+    }
 
     /**
      * Helper function: Converts PCM 16-bit audio data into a WAV Blob.
@@ -263,34 +276,34 @@
         }
         
         /* 1. RIFF Chunk */
-        writeString(view, offset, 'RIFF'); offset += 4; // Chunk ID
-        view.setUint32(offset, 36 + dataLength, true); offset += 4; // Chunk Size
-        writeString(view, offset, 'WAVE'); offset += 4; // Format
+        writeString(view, offset, 'RIFF'); offset += 4;
+        view.setUint32(offset, 36 + dataLength, true); offset += 4;
+        writeString(view, offset, 'WAVE'); offset += 4;
 
         /* 2. fmt Chunk (Format) */
-        writeString(view, offset, 'fmt '); offset += 4; // Sub-chunk 1 ID
-        view.setUint32(offset, 16, true); offset += 4; // Sub-chunk 1 Size (16 for PCM)
-        view.setUint16(offset, 1, true); offset += 2; // Audio Format (1 = PCM)
-        view.setUint16(offset, numChannels, true); offset += 2; // Number of Channels
-        view.setUint32(offset, sampleRate, true); offset += 4; // Sample Rate
-        view.setUint32(offset, byteRate, true); offset += 4; // Byte Rate
-        view.setUint16(offset, blockAlign, true); offset += 2; // Block Align
-        view.setUint16(offset, bitsPerSample, true); offset += 2; // Bits per Sample
+        writeString(view, offset, 'fmt '); offset += 4;
+        view.setUint32(offset, 16, true); offset += 4;
+        view.setUint16(offset, 1, true); offset += 2;
+        view.setUint16(offset, numChannels, true); offset += 2;
+        view.setUint32(offset, sampleRate, true); offset += 4;
+        view.setUint32(offset, byteRate, true); offset += 4;
+        view.setUint16(offset, blockAlign, true); offset += 2;
+        view.setUint16(offset, bitsPerSample, true); offset += 2;
 
         /* 3. data Chunk */
-        writeString(view, offset, 'data'); offset += 4; // Sub-chunk 2 ID
-        view.setUint32(offset, dataLength, true); offset += 4; // Sub-chunk 2 Size
+        writeString(view, offset, 'data'); offset += 4;
+        view.setUint32(offset, dataLength, true); offset += 4;
 
         /* Write PCM data (Int16) */
         for (let i = 0; i < pcm16.length; i++) {
-            view.setInt16(offset + i * 2, pcm16[i], true); // true for little-endian
+            view.setInt16(offset + i * 2, pcm16[i], true);
         }
 
         return new Blob([buffer], { type: 'audio/wav' });
     }
 
     // ========================================================================
-    // TTS Logic and Playback (Web Audio API with explicit resume)
+    // TTS Logic and Playback (Fully Awaited for iOS)
     // ========================================================================
 
     /**
@@ -326,32 +339,23 @@
         let attempt = 0;
         const maxRetries = 3;
 
-        // 帶有指數退避的 API 呼叫邏輯
+        // API 呼叫 (含指數退避)
         while (attempt < maxRetries) {
-            // [API CALL LOGIC remains the same]
             try {
                 response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-
-                if (response.ok) {
-                    break; 
-                } else if (response.status === 429 && attempt < maxRetries - 1) {
+                if (response.ok) { break; } 
+                else if (response.status === 429 && attempt < maxRetries - 1) {
                     const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
-                    console.warn(`API 頻率限制，將於 ${delay / 1000} 秒後重試...`);
                     await new Promise(resolve => setTimeout(resolve, delay));
                     attempt++;
-                } else {
-                    throw new Error(`API 錯誤: ${response.statusText}`);
-                }
+                } else { throw new Error(`API 錯誤: ${response.statusText}`); }
             } catch (error) {
-                if (attempt === maxRetries - 1) {
-                    throw error; 
-                }
+                if (attempt === maxRetries - 1) { throw error; }
                 const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
-                console.warn(`Fetch 失敗，將於 ${delay / 1000} 秒後重試...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
                 attempt++;
             }
@@ -366,12 +370,16 @@
         const audioData = part?.inlineData?.data;
         const mimeType = part?.inlineData?.mimeType;
 
-        if (audioData && mimeType && mimeType.startsWith("audio/L16")) {
-            const rateMatch = mimeType.match(/rate=(\d+)/);
-            if (!rateMatch) throw new Error("無法從 MIME Type 中提取取樣率。");
-            
-            const sampleRate = parseInt(rateMatch[1], 10);
-            
+        if (!audioData || !mimeType || !mimeType.startsWith("audio/L16")) {
+            throw new Error("API 回應中缺少或格式不正確的音訊數據。");
+        }
+        
+        const rateMatch = mimeType.match(/rate=(\d+)/);
+        if (!rateMatch) throw new Error("無法從 MIME Type 中提取取樣率。");
+        const sampleRate = parseInt(rateMatch[1], 10);
+        
+        // --- [核心 iOS 播放優化區塊開始] ---
+        try {
             // 1. PCM 數據處理
             const pcmData = base64ToArrayBuffer(audioData);
             const pcm16 = new Int16Array(pcmData);
@@ -379,57 +387,46 @@
             // 2. 轉換為 WAV Blob
             const wavBlob = pcmToWav(pcm16, sampleRate);
             
-            // 3. Web Audio API 播放
-            const reader = new FileReader();
-
-            reader.onload = async (e) => {
-                const arrayBuffer = e.target.result;
-
-                try {
-                    // 使用點擊事件中傳入的已啟動 AudioContext
-                    const audioBuffer = await activeAudioContext.decodeAudioData(arrayBuffer);
-                    
-                    const source = activeAudioContext.createBufferSource();
-                    source.buffer = audioBuffer;
-                    source.connect(activeAudioContext.destination);
-
-                    source.onended = () => {
-                        // 清理狀態
-                        isSpeaking = false;
-                        smileButton.classList.remove('disabled');
-                        loadingSpinner.classList.remove('visible');
-                        
-                        // 恢復初始狀態
-                        statusTimeout = setTimeout(() => { 
-                            statusDisplay.textContent = INITIAL_PHRASE;
-                            statusDisplay.style.color = '#60a5fa'; 
-                            statusDisplay.classList.add('initial-status'); 
-                        }, 7000); 
-                    };
-
-                    source.start(0);
-
-                } catch (error) {
-                    console.error("Web Audio 解碼或播放失敗:", error);
-                    // 播放失敗，執行錯誤清理邏輯
-                    isSpeaking = false;
-                    smileButton.classList.remove('disabled');
-                    loadingSpinner.classList.remove('visible');
-                    statusDisplay.textContent = "播放失敗 (Web Audio 錯誤)";
-                    statusDisplay.style.color = '#f87171'; 
-                    statusTimeout = setTimeout(() => { 
-                        statusDisplay.textContent = INITIAL_PHRASE;
-                        statusDisplay.style.color = '#60a5fa'; 
-                        statusDisplay.classList.add('initial-status');
-                    }, 3000); 
-                }
-            };
+            // 3. **關鍵：等待 Blob 轉換為 ArrayBuffer (取代異步回呼)**
+            const arrayBuffer = await blobToArrayBuffer(wavBlob); 
             
-            reader.readAsArrayBuffer(wavBlob);
+            // 4. **關鍵：在連續的 async 流程中解碼並播放**
+            const audioBuffer = await activeAudioContext.decodeAudioData(arrayBuffer);
+            
+            const source = activeAudioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(activeAudioContext.destination);
 
-        } else {
-            throw new Error("API 回應中缺少或格式不正確的音訊數據。");
+            source.onended = () => {
+                isSpeaking = false;
+                smileButton.classList.remove('disabled');
+                loadingSpinner.classList.remove('visible');
+                
+                statusTimeout = setTimeout(() => { 
+                    statusDisplay.textContent = INITIAL_PHRASE;
+                    statusDisplay.style.color = '#60a5fa'; 
+                    statusDisplay.classList.add('initial-status'); 
+                }, 7000); 
+            };
+
+            // 5. 啟動播放
+            source.start(0);
+
+        } catch (error) {
+            console.error("Web Audio 播放流程失敗 (解碼或播放):", error);
+            // 播放失敗，執行錯誤清理邏輯
+            isSpeaking = false;
+            smileButton.classList.remove('disabled');
+            loadingSpinner.classList.remove('visible');
+            statusDisplay.textContent = "播放失敗 (Web Audio 錯誤)";
+            statusDisplay.style.color = '#f87171'; 
+            statusTimeout = setTimeout(() => { 
+                statusDisplay.textContent = INITIAL_PHRASE;
+                statusDisplay.style.color = '#60a5fa'; 
+                statusDisplay.classList.add('initial-status');
+            }, 3000); 
         }
+        // --- [核心 iOS 播放優化區塊結束] ---
     }
 
 
@@ -439,7 +436,6 @@
 
     /**
      * Handles the click/touch event on the smiley button.
-     * 核心優化：確保 AudioContext 在點擊的同步範圍內被建立和恢復 (resume)。
      */
     function handleSmileClick() {
         if (isSpeaking) {
@@ -450,10 +446,19 @@
         const ctx = getAudioContext();
         if (!ctx) return; 
 
-        // 檢查狀態並強制恢復 (iOS Safari 必需)
+        // 2. 檢查狀態並強制恢復 (iOS Safari 必需)
         if (ctx.state === 'suspended') {
-             // 必須在使用者互動中呼叫 resume()
-            ctx.resume().catch(e => console.error("AudioContext resume failed:", e));
+            // 必須在使用者互動中呼叫 resume()
+            ctx.resume().then(() => {
+                console.log("AudioContext 成功恢復。");
+            }).catch(e => {
+                console.error("AudioContext 恢復失敗:", e);
+                // 如果恢復失敗，我們應該阻止後續的 speakText 執行
+                if(statusDisplay.textContent !== CLICK_PHRASE) { // 避免覆蓋正在生成的文字
+                    statusDisplay.textContent = "音訊啟動失敗，請再試一次。"; 
+                    statusDisplay.style.color = '#f87171'; 
+                }
+            });
         }
 
         // 清除舊的狀態恢復計時器
@@ -471,13 +476,13 @@
             }
         }, 300);
 
-        // 傳入已啟動的 AudioContext
+        // 傳入已啟動的 AudioContext，開始異步 API 流程
         speakText(CLICK_PHRASE, ctx)
             .then(() => {
-                console.log("TTS 生成成功。");
+                console.log("TTS 流程啟動成功。");
             })
             .catch(error => {
-                console.error("TTS 生成失敗:", error);
+                console.error("TTS 總流程失敗:", error);
                 // 錯誤處理：恢復狀態
                 statusDisplay.textContent = "語音失敗 (API 錯誤)";
                 statusDisplay.style.color = '#f87171'; 
@@ -494,10 +499,10 @@
         
     }
 
-    // 1. 核心動作：使用 click 事件
+    // 核心動作：使用 click 事件
     smileButton.addEventListener('click', handleSmileClick); 
 
-    // 2. 視覺回饋：使用 pointerdown/up 處理按鈕的內凹視覺效果
+    // 視覺回饋：使用 pointerdown/up 處理按鈕的內凹視覺效果
     smileButton.addEventListener('pointerdown', (e) => {
         if (isSpeaking) return;
         e.preventDefault();
