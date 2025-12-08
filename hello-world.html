@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Gemini TTS 笑臉按鈕</title>
+  <title>Gemini TTS 笑臉按鈕 (跨瀏覽器優化)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* 核心深色主題樣式 */
@@ -65,7 +65,6 @@
     .face-svg {
         width: 80%;
         height: 80%;
-        /* 移除 fill 和 stroke 覆蓋，讓 SVG 內部定義的顏色生效 (黃臉黑線) */
     }
     
     /* 載入指示器 */
@@ -156,7 +155,7 @@
 
         <!-- 笑臉按鈕 -->
         <div id="smileButton" role="button" aria-label="Say Hello">
-            <!-- SVG 笑臉圖形 - 已更新為您提供的樣式 (黃臉黑五官) -->
+            <!-- SVG 笑臉圖形 -->
             <svg class="face-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                 <!-- 臉部圓形 (黃色) -->
                 <circle cx="50" cy="50" r="48" fill="#FFDA00"/>
@@ -179,6 +178,9 @@
     </div>
 
 <script>
+    // ========================================================================
+    // DOM Elements & Configuration
+    // ========================================================================
     const smileButton = document.getElementById('smileButton');
     const statusDisplay = document.getElementById('statusDisplay');
     const loadingSpinner = document.getElementById('loadingSpinner');
@@ -195,7 +197,11 @@
     const VOICE_NAME = "Kore"; 
 
     let statusTimeout;
-    let isSpeaking = false;
+    let isSpeaking = false; // 鎖定狀態，防止重複點擊
+
+    // ========================================================================
+    // Audio Utility Functions (No change needed - essential for cross-browser WAV playback)
+    // ========================================================================
 
     /**
      * Helper function: Converts a Base64 string to an ArrayBuffer.
@@ -263,15 +269,20 @@
         return new Blob([buffer], { type: 'audio/wav' });
     }
 
+    // ========================================================================
+    // TTS Logic and Playback (Optimized for Cross-Browser)
+    // ========================================================================
+
     /**
      * Generates and plays audio using the Gemini TTS API.
      * @param {string} text The text to synthesize.
      */
     async function speakText(text) {
+        // 在 handleSmileClick 中已檢查 isSpeaking，這裡再次檢查是為了防禦性編程。
         if (isSpeaking) return;
 
         isSpeaking = true;
-        smileButton.classList.add('disabled');
+        smileButton.classList.add('disabled'); // 禁用按鈕，防止在生成和播放期間被再次點擊
         loadingSpinner.classList.add('visible');
         statusDisplay.classList.remove('initial-status'); // 移除 Hello World 的大字體
 
@@ -295,7 +306,7 @@
         let attempt = 0;
         const maxRetries = 3;
 
-        // Exponential backoff retry logic
+        // Exponential backoff retry logic for robust API call
         while (attempt < maxRetries) {
             try {
                 response = await fetch(apiUrl, {
@@ -307,6 +318,7 @@
                 if (response.ok) {
                     break; 
                 } else if (response.status === 429 && attempt < maxRetries - 1) {
+                    // Rate limit handling
                     const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
                     console.warn(`API Rate limit exceeded. Retrying in ${delay / 1000}s...`);
                     await new Promise(resolve => setTimeout(resolve, delay));
@@ -316,7 +328,7 @@
                 }
             } catch (error) {
                 if (attempt === maxRetries - 1) {
-                    throw error; 
+                    throw error; // Last attempt, rethrow error
                 }
                 const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
                 console.warn(`Fetch Failed. Retrying in ${delay / 1000}s...`);
@@ -334,50 +346,63 @@
         const audioData = part?.inlineData?.data;
         const mimeType = part?.inlineData?.mimeType;
 
+        // 確保 MIME Type 是預期的 PCM 格式並包含 Sample Rate
         if (audioData && mimeType && mimeType.startsWith("audio/L16")) {
             const rateMatch = mimeType.match(/rate=(\d+)/);
             if (!rateMatch) throw new Error("Could not extract sample rate from MIME Type.");
             
             const sampleRate = parseInt(rateMatch[1], 10);
             
-            // 1. Base64 -> ArrayBuffer -> Int16Array
+            // 1. PCM 數據處理
             const pcmData = base64ToArrayBuffer(audioData);
             const pcm16 = new Int16Array(pcmData);
             
-            // 2. PCM -> WAV Blob
+            // 2. 轉換為 WAV Blob (這是確保跨瀏覽器兼容性的關鍵步驟)
             const wavBlob = pcmToWav(pcm16, sampleRate);
             const audioUrl = URL.createObjectURL(wavBlob);
             
-            // 3. Playback
+            // 3. 播放
             const audio = new Audio(audioUrl);
             
             audio.onended = () => {
+                // 播放結束，解除鎖定和禁用狀態
                 isSpeaking = false;
                 smileButton.classList.remove('disabled');
                 loadingSpinner.classList.remove('visible');
-                URL.revokeObjectURL(audioUrl); 
+                URL.revokeObjectURL(audioUrl); // 釋放 Blob URL 資源
 
                 // 在語音播放結束後，等待 7 秒恢復初始狀態
                 statusTimeout = setTimeout(() => { 
                     statusDisplay.textContent = INITIAL_PHRASE;
                     statusDisplay.style.color = '#60a5fa'; 
                     statusDisplay.classList.add('initial-status'); // 恢復 Hello World 的大字體
-                }, 7000); // 7000 毫秒 = 7 秒
+                }, 7000); 
             };
 
             audio.onerror = (e) => {
                  console.error("Audio playback error:", e);
+                 // 發生錯誤，解除鎖定和禁用狀態
                  isSpeaking = false;
                  smileButton.classList.remove('disabled');
                  loadingSpinner.classList.remove('visible');
                  URL.revokeObjectURL(audioUrl);
             }
             
+            // 呼叫 play()，這是必須由使用者手勢直接觸發的
             audio.play().catch(e => {
-                console.error("Audio playback blocked (requires user interaction):", e);
+                // 如果播放被阻止 (通常發生在行動裝置，如果手勢連結不夠直接)，會進入這裡
+                console.error("Audio playback blocked (requires strict user interaction):", e);
                 isSpeaking = false;
                 smileButton.classList.remove('disabled');
                 loadingSpinner.classList.remove('visible');
+                // 由於播放失敗，需要恢復狀態顯示
+                statusDisplay.textContent = "播放被阻止 (請再試一次)";
+                statusDisplay.style.color = '#f87171'; 
+                statusTimeout = setTimeout(() => { 
+                    statusDisplay.textContent = INITIAL_PHRASE;
+                    statusDisplay.style.color = '#60a5fa'; 
+                    statusDisplay.classList.add('initial-status');
+                }, 3000); 
             });
 
         } else {
@@ -388,9 +413,13 @@
 
     /**
      * Handles the click/touch event on the smiley button.
+     * 使用 click 事件確保跨瀏覽器對使用者手勢的識別最為可靠。
      */
-    function handleSmileClick(event) {
-        if (isSpeaking) return;
+    function handleSmileClick() {
+        if (isSpeaking) {
+             console.log("Still speaking or loading, ignoring click.");
+             return;
+        }
 
         // 清除舊的狀態恢復計時器 (如果存在)
         clearTimeout(statusTimeout);
@@ -407,20 +436,21 @@
             })
             .catch(error => {
                 console.error("TTS Generation Failed:", error);
+                // 錯誤處理：恢復狀態
                 statusDisplay.textContent = "語音失敗 (API 錯誤)";
                 statusDisplay.style.color = '#f87171'; 
                 isSpeaking = false;
                 smileButton.classList.remove('disabled');
                 loadingSpinner.classList.remove('visible');
-                // 失敗時，立即啟動一個短暫的計時器，讓錯誤訊息停留一下，然後恢復初始狀態
+                // 失敗時，讓錯誤訊息停留一下，然後恢復初始狀態
                 statusTimeout = setTimeout(() => { 
                     statusDisplay.textContent = INITIAL_PHRASE;
                     statusDisplay.style.color = '#60a5fa'; 
-                    statusDisplay.classList.add('initial-status'); // 恢復 Hello World 的大字體
-                }, 3000); // 錯誤訊息停留 3 秒
+                    statusDisplay.classList.add('initial-status'); 
+                }, 3000); 
             });
             
-        // Show the intended phrase quickly after generation starts
+        // 快速顯示即將播放的文字，提供更即時的回饋
         setTimeout(() => {
             if(statusDisplay.textContent === "正在生成語音...") {
                 statusDisplay.textContent = CLICK_PHRASE;
@@ -429,18 +459,19 @@
         
     }
 
-    // Event Bindings
-    smileButton.addEventListener('click', handleSmileClick);
+    // ========================================================================
+    // Event Bindings (Optimized)
+    // ========================================================================
+    
+    // 1. 核心動作：使用 click 事件，它適用於所有裝置 (滑鼠點擊或觸控結束)
+    smileButton.addEventListener('click', handleSmileClick); 
 
+    // 2. 視覺回饋：使用 pointerdown/up 來處理按鈕的內凹視覺效果
     smileButton.addEventListener('pointerdown', (e) => {
+        // 僅處理視覺效果。實際的語音生成由 'click' 事件觸發。
         if (isSpeaking) return;
         e.preventDefault();
         smileButton.classList.add('active');
-        // Only call handleSmileClick on pointerdown for touch devices to be responsive
-        // The desktop click will be handled by the 'click' event
-        if (e.pointerType !== 'mouse') {
-            handleSmileClick(e);
-        }
     });
     
     smileButton.addEventListener('pointerup', () => {
@@ -456,7 +487,7 @@
     window.onload = () => {
         statusDisplay.textContent = INITIAL_PHRASE;
         statusDisplay.style.color = '#60a5fa'; 
-        statusDisplay.classList.add('initial-status'); // 確保初始狀態是大字體
+        statusDisplay.classList.add('initial-status'); 
         isSpeaking = false;
         smileButton.classList.remove('disabled');
         loadingSpinner.classList.remove('visible');
