@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web BLE 馬達組態設定</title>
+    <title>Web BLE 馬達組態設定 (7 參數)</title>
     <!-- 載入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 使用 Inter 字體 -->
@@ -11,74 +11,112 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            background-color: #1f2937; /* 深色背景 */
+            color: #f9fafb;
+        }
+        #app {
+            background-color: #374151; /* 卡片背景 */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+        .input-field {
+            @apply mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2;
         }
     </style>
 </head>
 <body class="p-4 md:p-8 min-h-screen flex items-center justify-center">
 
-    <div id="app" class="bg-white p-6 md:p-10 rounded-xl shadow-2xl w-full max-w-lg">
-        <h1 class="text-3xl font-extrabold text-gray-800 mb-6 border-b pb-2">馬達 BLE 組態設定</h1>
+    <div id="app" class="p-6 md:p-10 rounded-xl w-full max-w-xl">
+        <h1 class="text-3xl font-extrabold text-indigo-400 mb-6 border-b border-gray-600 pb-2">
+            馬達 BLE 組態設定 (7 參數)
+        </h1>
 
         <!-- 1. 連線區塊 -->
-        <div class="bg-blue-50 p-4 rounded-lg mb-6 border border-blue-200">
-            <h2 class="text-xl font-semibold text-blue-800 mb-3 flex items-center">
+        <div class="bg-gray-700 p-4 rounded-lg mb-6 border border-indigo-400">
+            <h2 class="text-xl font-semibold text-indigo-300 mb-3 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" />
                 </svg>
                 連線狀態
             </h2>
-            <p id="status" class="text-lg font-medium text-gray-700 mb-4">未連線</p>
-            <button id="connectButton" onclick="connectBLE()" class="w-full py-3 px-4 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition duration-150 shadow-md active:shadow-none">
+            <p id="status" class="text-lg font-medium text-red-400 mb-4">未連線</p>
+            <button id="connectButton" onclick="connectBLE()" class="w-full py-3 px-4 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition duration-150 shadow-lg active:shadow-none">
                 連線到 BLE 裝置
             </button>
         </div>
 
         <!-- 2. 組態輸入區塊 -->
-        <div class="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+        <div class="bg-gray-700 p-4 rounded-lg mb-6 border border-gray-600">
+            <h2 class="text-xl font-semibold text-gray-200 mb-4 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37h.003z" />
                 </svg>
-                馬達參數
+                馬達參數 (<span class="text-yellow-400">MotorConfig_t</span>)
             </h2>
-            <div class="space-y-4">
-                <label class="block">
-                    <span class="text-sm font-medium text-gray-700">最大速度 (Max Speed, 0-255)</span>
-                    <input type="number" id="maxSpeed" value="255" min="0" max="255" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2" placeholder="0-255">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- controlTimeoutMs -->
+                <label class="block md:col-span-2">
+                    <span class="text-sm font-medium text-gray-400">controlTimeoutMs (控制超時時間, ms)</span>
+                    <input type="number" id="timeoutMs" value="1000" min="100" class="input-field" placeholder="unsigned long">
                 </label>
-                <label class="block">
-                    <span class="text-sm font-medium text-gray-700">最小速度 (Min Speed, 0-255)</span>
-                    <input type="number" id="minSpeed" value="50" min="0" max="255" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2" placeholder="0-255">
-                </label>
-                <label class="block">
-                    <span class="text-sm font-medium text-gray-700">加速度斜坡時間 (Ramp Time, ms)</span>
-                    <input type="number" id="rampTime" value="100" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2" placeholder="毫秒">
-                </label>
+                
+                <!-- 轉向 (T - Turning) 參數 -->
+                <div class="md:col-span-1 border-t pt-2 border-gray-600">
+                    <h3 class="font-bold text-base text-yellow-300 mb-2">轉向參數 (T)</h3>
+                    <label class="block mb-2">
+                        <span class="text-sm font-medium text-gray-400">pwmEffectiveLimitT (PWM 上限)</span>
+                        <input type="number" id="limitT" value="255" min="0" max="255" class="input-field">
+                    </label>
+                    <label class="block mb-2">
+                        <span class="text-sm font-medium text-gray-400">rampAccelStepT (加速度步進)</span>
+                        <input type="number" id="stepT" value="10" min="1" class="input-field">
+                    </label>
+                    <label class="block mb-2">
+                        <span class="text-sm font-medium text-gray-400">pwmStartKickT (啟動脈衝)</span>
+                        <input type="number" id="kickT" value="50" min="0" class="input-field">
+                    </label>
+                </div>
+
+                <!-- 速度 (S - Speed) 參數 -->
+                <div class="md:col-span-1 border-t pt-2 border-gray-600">
+                    <h3 class="font-bold text-base text-yellow-300 mb-2">速度參數 (S)</h3>
+                    <label class="block mb-2">
+                        <span class="text-sm font-medium text-gray-400">pwmEffectiveLimitS (PWM 上限)</span>
+                        <input type="number" id="limitS" value="255" min="0" max="255" class="input-field">
+                    </label>
+                    <label class="block mb-2">
+                        <span class="text-sm font-medium text-gray-400">rampAccelStepS (加速度步進)</span>
+                        <input type="number" id="stepS" value="5" min="1" class="input-field">
+                    </label>
+                    <label class="block mb-2">
+                        <span class="text-sm font-medium text-gray-400">pwmStartKickS (啟動脈衝)</span>
+                        <input type="number" id="kickS" value="50" min="0" class="input-field">
+                    </label>
+                </div>
             </div>
-            <button id="sendButton" onclick="sendMotorConfig()" class="w-full mt-6 py-3 px-4 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition duration-150 shadow-md active:shadow-none disabled:bg-gray-400" disabled>
+            
+            <button id="sendButton" onclick="sendMotorConfig()" class="w-full mt-6 py-3 px-4 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition duration-150 shadow-md active:shadow-none disabled:bg-gray-500 disabled:cursor-not-allowed">
                 🚀 傳送組態設定
             </button>
         </div>
 
         <!-- 3. 日誌輸出區塊 -->
-        <div class="bg-white p-4 rounded-lg border border-gray-300">
-            <h2 class="text-xl font-semibold text-gray-800 mb-3 flex items-center">
+        <div class="bg-gray-800 p-4 rounded-lg border border-gray-600">
+            <h2 class="text-xl font-semibold text-gray-200 mb-3 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 操作日誌
             </h2>
-            <pre id="log" class="text-sm text-gray-600 bg-gray-100 p-3 rounded-md h-32 overflow-y-auto whitespace-pre-wrap"></pre>
+            <pre id="log" class="text-sm text-gray-400 bg-gray-900 p-3 rounded-md h-32 overflow-y-auto whitespace-pre-wrap"></pre>
         </div>
         
     </div>
 
     <script>
         // --- BLE UUIDs (請根據您的硬體修改這些值) ---
-        // 建議使用 128-bit UUIDs 或標準的 16-bit UUIDs (例如 Nordic UART Service)
-        const MOTOR_CONFIG_SERVICE_UUID = '0000ffe0-0000-1000-8000-00805f9b34fb'; // 範例服務 UUID (e.g., Generic Access Service or custom)
-        const CONFIG_CHARACTERISTIC_UUID = '0000ffe1-0000-1000-8000-00805f9b34fb'; // 範例特徵值 UUID (e.g., TX/Write characteristic)
+        // 建議使用 128-bit UUIDs 或標準的 16-bit UUIDs
+        const MOTOR_CONFIG_SERVICE_UUID = '0000ffe0-0000-1000-8000-00805f9b34fb'; 
+        const CONFIG_CHARACTERISTIC_UUID = '0000ffe1-0000-1000-8000-00805f9b34fb'; 
 
         // --- DOM 元素快取 ---
         const statusElement = document.getElementById('status');
@@ -99,8 +137,12 @@
             const timestamp = new Date().toLocaleTimeString();
             const logEntry = document.createElement('div');
             logEntry.textContent = `[${timestamp}] ${message}`;
-            logEntry.className = isError ? 'text-red-600' : 'text-gray-700';
+            logEntry.className = isError ? 'text-red-400' : 'text-gray-400';
             logElement.prepend(logEntry); // 最新訊息放在最上面
+            // 限制日誌條目數量以保持性能
+            while (logElement.children.length > 50) {
+                logElement.removeChild(logElement.lastChild);
+            }
         }
 
         /**
@@ -110,7 +152,7 @@
          */
         function updateStatus(newStatus, isConnected) {
             statusElement.textContent = newStatus;
-            statusElement.className = isConnected ? 'text-lg font-medium text-green-600 mb-4' : 'text-lg font-medium text-red-600 mb-4';
+            statusElement.className = isConnected ? 'text-lg font-medium text-green-400 mb-4' : 'text-lg font-medium text-red-400 mb-4';
             sendButton.disabled = !isConnected;
             connectButton.textContent = isConnected ? '已連線 (點擊斷開)' : '連線到 BLE 裝置';
             if (isConnected) {
@@ -172,10 +214,10 @@
                 motorConfigCharacteristic = await service.getCharacteristic(CONFIG_CHARACTERISTIC_UUID);
 
                 logMessage('特徵值就緒. 連線成功!', false);
-                updateStatus(`連線至: ${bleDevice.name}`, true);
+                updateStatus(`連線至: ${bleDevice.name || 'Unknown Device'}`, true);
 
             } catch (error) {
-                logMessage(`連線失敗: ${error.message}`, true);
+                logMessage(`連線失敗: ${error.message || '未知錯誤'}`, true);
                 updateStatus('連線錯誤', false);
                 bleDevice = null;
                 motorConfigCharacteristic = null;
@@ -191,16 +233,28 @@
                 return;
             }
 
-            // 讀取 UI 上的參數值
-            const maxSpeed = document.getElementById('maxSpeed').value;
-            const minSpeed = document.getElementById('minSpeed').value;
-            const rampTime = document.getElementById('rampTime').value;
-
-            // 構造數據字串 (例如: "C:255,50,100")
-            // 協議格式: C:<MaxSpeed>,<MinSpeed>,<RampTime>
-            const configString = `C:${maxSpeed},${minSpeed},${rampTime}`;
+            // --- 收集 7 個參數 ---
+            const timeoutMs = document.getElementById('timeoutMs').value || "0";
+            const limitT = document.getElementById('limitT').value || "0";
+            const stepT = document.getElementById('stepT').value || "0";
+            const kickT = document.getElementById('kickT').value || "0";
+            const limitS = document.getElementById('limitS').value || "0";
+            const stepS = document.getElementById('stepS').value || "0";
+            const kickS = document.getElementById('kickS').value || "0";
             
-            logMessage(`準備傳送組態: ${configString}`);
+            // 驗證所有欄位是否為數字
+            const values = [timeoutMs, limitT, stepT, kickT, limitS, stepS, kickS];
+            if (values.some(v => isNaN(parseInt(v)))) {
+                logMessage('錯誤：所有組態參數必須是數字。', true);
+                return;
+            }
+
+            // --- 構造新的數據字串 ---
+            // 協議格式: M:<v1>,<v2>,<v3>,<v4>,<v5>,<v6>,<v7>
+            // M:controlTimeoutMs,pwmEffectiveLimitT,rampAccelStepT,pwmStartKickT,pwmEffectiveLimitS,rampAccelStepS,pwmStartKickS
+            const configString = `M:${timeoutMs},${limitT},${stepT},${kickT},${limitS},${stepS},${kickS}`;
+            
+            logMessage(`準備傳送 7 參數組態: ${configString}`);
             sendButton.disabled = true;
 
             try {
@@ -214,7 +268,7 @@
                 logMessage(`✅ 成功傳送組態數據: ${configString}`, false);
 
             } catch (error) {
-                logMessage(`❌ 傳送失敗: ${error.message}`, true);
+                logMessage(`❌ 傳送失敗: ${error.message || '寫入錯誤'}`, true);
             } finally {
                 sendButton.disabled = false;
             }
@@ -230,15 +284,12 @@
             } else {
                 logMessage('目前沒有連線可以斷開。', true);
             }
-            updateStatus('已斷線', false);
-            bleDevice = null;
-            motorConfigCharacteristic = null;
         }
 
         // 檢查瀏覽器是否支援 Web BLE
         window.onload = () => {
             if (!('bluetooth' in navigator)) {
-                updateStatus('瀏覽器不支援 Web BLE。請使用 Chrome 或 Edge。', false);
+                updateStatus('瀏覽器不支援 Web BLE。請使用 Chrome 或 Edge (HTTPS)。', false);
                 connectButton.disabled = true;
                 logMessage('瀏覽器不支援 Web BLE.', true);
             } else {
