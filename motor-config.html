@@ -139,44 +139,48 @@
                 MotorConfig_t 參數 (共 28 Bytes)
             </p>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- controlTimeoutMs (unsigned long, 4 bytes) -->
-                <div class="space-y-1">
+            <div class="grid grid-cols-1 gap-4">
+                <!-- controlTimeoutMs (unsigned long, 4 bytes) - 獨立一行，放大寬度 -->
+                <div class="space-y-1 col-span-1">
                     <label for="controlTimeoutMs" class="block text-sm font-medium text-gray-400">controlTimeoutMs (ms)</label>
                     <input type="number" id="controlTimeoutMs" value="1000" min="0" required>
                 </div>
+            </div>
 
-                <!-- pwmEffectiveLimitT (int, 4 bytes) -->
+            <!-- 其餘 6 個欄位，二二並排 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <!-- 1. pwmEffectiveLimitT (int, 4 bytes) -->
                 <div class="space-y-1">
                     <label for="pwmEffectiveLimitT" class="block text-sm font-medium text-gray-400">pwmEffectiveLimitT</label>
                     <input type="number" id="pwmEffectiveLimitT" value="255" min="0" required>
                 </div>
 
-                <!-- rampAccelStepT (int, 4 bytes) -->
+                <!-- 2. rampAccelStepT (int, 4 bytes) -->
                 <div class="space-y-1">
                     <label for="rampAccelStepT" class="block text-sm font-medium text-gray-400">rampAccelStepT</label>
                     <input type="number" id="rampAccelStepT" value="10" min="0" required>
                 </div>
 
-                <!-- pwmStartKickT (int, 4 bytes) -->
+                <!-- 3. pwmStartKickT (int, 4 bytes) -->
                 <div class="space-y-1">
                     <label for="pwmStartKickT" class="block text-sm font-medium text-gray-400">pwmStartKickT</label>
                     <input type="number" id="pwmStartKickT" value="50" min="0" required>
                 </div>
 
-                <!-- pwmEffectiveLimitS (int, 4 bytes) -->
+                <!-- 4. pwmEffectiveLimitS (int, 4 bytes) -->
                 <div class="space-y-1">
                     <label for="pwmEffectiveLimitS" class="block text-sm font-medium text-gray-400">pwmEffectiveLimitS</label>
                     <input type="number" id="pwmEffectiveLimitS" value="255" min="0" required>
                 </div>
 
-                <!-- rampAccelStepS (int, 4 bytes) -->
+                <!-- 5. rampAccelStepS (int, 4 bytes) -->
                 <div class="space-y-1">
                     <label for="rampAccelStepS" class="block text-sm font-medium text-gray-400">rampAccelStepS</label>
                     <input type="number" id="rampAccelStepS" value="10" min="0" required>
                 </div>
 
-                <!-- pwmStartKickS (int, 4 bytes) -->
+                <!-- 6. pwmStartKickS (int, 4 bytes) -->
                 <div class="space-y-1">
                     <label for="pwmStartKickS" class="block text-sm font-medium text-gray-400">pwmStartKickS</label>
                     <input type="number" id="pwmStartKickS" value="50" min="0" required>
@@ -201,9 +205,9 @@
 <script>
 // --- BLE Configuration (使用新的 UUID) ---
 // 馬達配置服務 UUID
-const MOTOR_CONFIG_SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c0ffee00dead'; 
+const MOTOR_SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c0ffee00dead'; 
 // 配置特徵值 UUID (用於讀取和寫入 28-byte 結構體)
-const CONFIG_CHARACTERISTIC_UUID = '4fafc203-1fb5-459e-8fcc-c0ffee02dead'; 
+const MOTOR_CHARACTERISTIC_UUID = '4fafc203-1fb5-459e-8fcc-c0ffee02dead'; 
 
 const DEVICE_ID_KEY = 'ble_motor_config_device_id'; 
 const LITTLE_ENDIAN = true; // C/C++ on ESP32 is typically little-endian
@@ -219,13 +223,13 @@ const btnSend = document.getElementById('btnSend');
 
 // 欄位 ID 陣列 (用於迭代和打包數據)
 const PARAM_IDS = [
-    { id: 'controlTimeoutMs', type: 'Uint32', offset: 0 }, // unsigned long
-    { id: 'pwmEffectiveLimitT', type: 'Int32', offset: 4 }, // int
-    { id: 'rampAccelStepT', type: 'Int32', offset: 8 }, // int
-    { id: 'pwmStartKickT', type: 'Int32', offset: 12 }, // int
-    { id: 'pwmEffectiveLimitS', type: 'Int32', offset: 16 }, // int
-    { id: 'rampAccelStepS', type: 'Int32', offset: 20 }, // int
-    { id: 'pwmStartKickS', type: 'Int32', offset: 24 }  // int
+    { id: 'controlTimeoutMs', type: 'Uint32', offset: 0 }, // unsigned long (4 bytes)
+    { id: 'pwmEffectiveLimitT', type: 'Int32', offset: 4 }, // int (4 bytes)
+    { id: 'rampAccelStepT', type: 'Int32', offset: 8 }, // int (4 bytes)
+    { id: 'pwmStartKickT', type: 'Int32', offset: 12 }, // int (4 bytes)
+    { id: 'pwmEffectiveLimitS', type: 'Int32', offset: 16 }, // int (4 bytes)
+    { id: 'rampAccelStepS', type: 'Int32', offset: 20 }, // int (4 bytes)
+    { id: 'pwmStartKickS', type: 'Int32', offset: 24 }  // int (4 bytes)
     // 總共 28 bytes
 ];
 
@@ -260,11 +264,11 @@ function updateUI(isConnected) {
     if (isConnected) {
         btnConnect.querySelector('span').textContent = '斷開';
         btnSend.disabled = false;
-        btnSend.querySelector('span').textContent = '傳送設定至裝置';
+        btnSend.textContent = '傳送設定至裝置';
     } else {
         btnConnect.querySelector('span').textContent = '連線 BLE';
         btnSend.disabled = true;
-        btnSend.querySelector('span').textContent = '讀取/傳送 馬達組態設定';
+        btnSend.textContent = '讀取/傳送 馬達組態設定';
     }
 }
 
@@ -289,8 +293,8 @@ async function acquireDevice() {
         // 使用 filters 確保只顯示預期的裝置名稱
         const newDevice = await navigator.bluetooth.requestDevice({
             filters:[{ namePrefix: 'esp32' }],
-            // 請求我們的配置服務 UUID
-            optionalServices: [MOTOR_CONFIG_SERVICE_UUID] 
+            // 請求我們的配置服務 UUID (使用正確的常數名稱)
+            optionalServices: [MOTOR_SERVICE_UUID] 
         });
         
         localStorage.setItem(DEVICE_ID_KEY, newDevice.id);
@@ -322,13 +326,18 @@ async function readConfig() {
         
         // 確保讀到的長度正確 (28 bytes)
         if (value.byteLength !== 28) {
-            throw new Error(`讀取數據長度錯誤: ${value.byteLength} bytes (預期 28 bytes)`);
+            // 即使長度不對，也嘗試讀取並警告，防止程式崩潰
+            logStatus(`⚠️ 讀取數據長度錯誤: ${value.byteLength} bytes (預期 28 bytes)`, 'error');
+            return;
         }
 
         // 依據 PARAM_IDS 陣列解析數據並填入輸入框
         PARAM_IDS.forEach(param => {
             let val;
             const element = document.getElementById(param.id);
+
+            // 檢查 offset 是否在 DataView 範圍內
+            if (param.offset + 4 > dataView.byteLength) return;
 
             if (param.type === 'Uint32') {
                 val = dataView.getUint32(param.offset, LITTLE_ENDIAN);
@@ -379,10 +388,10 @@ async function connectBLE(){
         const server = await device.gatt.connect();
         
         // 取得馬達配置服務
-        const service = await server.getPrimaryService(MOTOR_CONFIG_SERVICE_UUID);
+        const service = await server.getPrimaryService(MOTOR_SERVICE_UUID);
         
         // 取得配置特徵值
-        config_characteristic = await service.getCharacteristic(CONFIG_CHARACTERISTIC_UUID); 
+        config_characteristic = await service.getCharacteristic(MOTOR_CHARACTERISTIC_UUID); 
         
         logStatus('✅ 已連線: ' + device.name, 'success');
         updateUI(true);
@@ -414,7 +423,6 @@ async function sendConfig(){
     // 總共 28 bytes (7 * 4-byte 欄位)
     const buffer = new ArrayBuffer(28); 
     const dataView = new DataView(buffer);
-    let offset = 0;
 
     try{
         // 1. 建立 28-byte 數據包
@@ -428,6 +436,7 @@ async function sendConfig(){
             
             // 使用 DataView 寫入 4-byte 整數 (有/無符號)
             if (param.type === 'Uint32') {
+                // 為了處理超出標準 JS 數字安全範圍的大數，雖然 long long 可能超出，但一般 unsigned long 尚可接受
                 dataView.setUint32(param.offset, value, LITTLE_ENDIAN);
             } else { // Int32
                 dataView.setInt32(param.offset, value, LITTLE_ENDIAN);
