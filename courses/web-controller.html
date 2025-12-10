@@ -14,9 +14,14 @@
         }
         .card {
             background-color: #374151; /* 卡片背景 */
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
         }
-        /* 搖桿 Canvas 樣式 */
+        /* 搖桿 Canvas 樣式容器 */
+        #joystickContainer {
+            width: 100%;
+            max-width: 300px; /* 限制最大寬度 */
+            aspect-ratio: 1 / 1; /* 保持正方形 */
+        }
         #joystickCanvas {
             border: 2px solid #60a5fa;
             border-radius: 50%;
@@ -44,7 +49,7 @@
         }
         .status-dot.connected {
             background-color: #10b981; /* 綠色 */
-            box-shadow: 0 0 5px #10b981;
+            box-shadow: 0 0 8px #10b981;
         }
         .status-dot.disconnected {
             background-color: #f87171; /* 紅色 */
@@ -55,7 +60,7 @@
 
     <div class="container mx-auto max-w-xl p-6 card rounded-2xl">
         <h1 class="text-3xl font-extrabold mb-4 text-center text-indigo-400">ESP32-C3 遙控器</h1>
-        <p class="text-center text-gray-300 mb-6">使用 Web BLE 或 Wi-Fi 發送控制指令</p>
+        <p class="text-center text-gray-300 mb-6">使用 Web BLE 或 Wi-Fi 發送控制指令 (CMD, Command, Value)</p>
 
         <!-- 狀態與模式切換 -->
         <div class="flex flex-col sm:flex-row justify-between items-center mb-6 p-3 bg-gray-700 rounded-lg">
@@ -66,7 +71,7 @@
             
             <div class="flex items-center space-x-3 mt-3 sm:mt-0">
                 <label for="modeSwitch" class="text-sm font-medium">通訊模式:</label>
-                <select id="modeSwitch" class="p-1 rounded bg-gray-800 text-white text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                <select id="modeSwitch" class="p-1 rounded bg-gray-800 text-white text-sm focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer">
                     <option value="BLE">藍牙 (BLE)</option>
                     <option value="WiFi">Wi-Fi (HTTP GET)</option>
                 </select>
@@ -89,14 +94,14 @@
             </button>
         </div>
         
-        <!-- 虛擬搖桿 Canvas -->
-        <div class="flex justify-center items-center mb-8">
-            <canvas id="joystickCanvas" width="280" height="280"></canvas>
+        <!-- 虛擬搖桿 Canvas 容器 -->
+        <div id="joystickContainer" class="mx-auto flex justify-center items-center mb-8 rounded-full">
+            <canvas id="joystickCanvas"></canvas>
         </div>
 
         <!-- 指令顯示區 -->
         <div class="p-3 bg-gray-800 rounded-lg">
-            <span class="text-xs font-mono text-gray-400">最後發送指令:</span>
+            <span class="text-xs font-mono text-gray-400">最後發送指令 (Command, Value):</span>
             <div id="commandDisplay" class="font-mono text-lg text-yellow-400 mt-1 break-words">CMD, S, 0</div>
         </div>
         
@@ -104,10 +109,10 @@
 
     <!-- 訊息提示 Modal -->
     <div id="messageModal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center p-4 z-50">
-        <div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-sm w-full">
+        <div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-sm w-full border-t-4 border-red-500">
             <h3 id="modalTitle" class="text-xl font-bold mb-3 text-red-400"></h3>
             <p id="modalMessage" class="text-gray-300 text-sm mb-4"></p>
-            <button id="closeModalButton" class="w-full py-2 bg-indigo-600 rounded-lg text-white font-bold hover:bg-indigo-700">
+            <button id="closeModalButton" class="w-full py-2 bg-indigo-600 rounded-lg text-white font-bold hover:bg-indigo-700 transition duration-150">
                 確定
             </button>
         </div>
@@ -139,14 +144,14 @@
         const commandDisplay = document.getElementById('commandDisplay');
         const connectionStatusDot = document.getElementById('connectionStatusDot');
         const connectionStatusText = document.getElementById('connectionStatusText');
+        const joystickContainer = document.getElementById('joystickContainer');
 
         const canvas = document.getElementById('joystickCanvas');
         const ctx = canvas.getContext('2d');
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-        const maxRadius = centerX - 20; // 搖桿移動的最大半徑
-        const stickRadius = 20; // 搖桿手柄的半徑
         
+        // 搖桿幾何參數 (動態計算)
+        let centerX, centerY, maxRadius, stickRadius; 
+
         // 狀態變數
         let currentMode = modeSwitch.value;
         let device = null;
@@ -162,6 +167,24 @@
         // =========================================================================
 
         /**
+         * 處理 Canvas 響應式佈局並重新計算幾何參數
+         */
+        function resizeCanvas() {
+            // 獲取容器寬度，並將 Canvas 設為相同尺寸的正方形
+            const size = joystickContainer.offsetWidth;
+            canvas.width = size;
+            canvas.height = size;
+
+            centerX = canvas.width / 2;
+            centerY = canvas.height / 2;
+            maxRadius = centerX * 0.8; // 80% 的半徑作為可移動範圍
+            stickRadius = centerX * 0.1; // 10% 的半徑作為搖桿手柄大小
+
+            // 重新繪製搖桿到中心點
+            drawJoystick(centerX, centerY);
+        }
+
+        /**
          * 顯示訊息提示 Modal
          * @param {string} title - 標題
          * @param {string} message - 訊息內容
@@ -170,7 +193,12 @@
         function showMessage(title, message, color = 'text-red-400') {
             const modal = document.getElementById('messageModal');
             document.getElementById('modalTitle').textContent = title;
-            document.getElementById('modalTitle').className = `text-xl font-bold mb-3 ${color}`;
+            // 移除舊的顏色類別並設定新的
+            document.getElementById('modalTitle').className = `text-xl font-bold mb-3 ${color}`; 
+            // 調整 Modal 邊框顏色
+            modal.querySelector('.bg-gray-800').classList.remove('border-red-500', 'border-green-500', 'border-indigo-500');
+            modal.querySelector('.bg-gray-800').classList.add(color.replace('text', 'border'));
+
             document.getElementById('modalMessage').textContent = message;
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -194,6 +222,14 @@
                 connectionStatusDot.classList.add('disconnected');
                 connectionStatusText.textContent = text;
             }
+            // 更新 BLE 按鈕文字
+            if (currentMode === 'BLE') {
+                connectButton.textContent = isConnected ? "斷開連線" : "連線至 BLE 裝置";
+                connectButton.classList.toggle('bg-indigo-600', !isConnected);
+                connectButton.classList.toggle('hover:bg-indigo-700', !isConnected);
+                connectButton.classList.toggle('bg-red-600', isConnected);
+                connectButton.classList.toggle('hover:bg-red-700', isConnected);
+            }
         }
 
         /**
@@ -203,6 +239,13 @@
          */
         function drawJoystick(x, y) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 繪製邊界圓 (最大移動範圍)
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, maxRadius, 0, Math.PI * 2, false);
+            ctx.strokeStyle = '#60a5fa'; 
+            ctx.lineWidth = 2;
+            ctx.stroke();
 
             // 繪製中心點 (Home)
             ctx.beginPath();
@@ -214,12 +257,12 @@
             ctx.beginPath();
             ctx.arc(x, y, stickRadius, 0, Math.PI * 2, false);
             ctx.fillStyle = '#60a5fa'; // 藍色
+            ctx.shadowColor = 'rgba(96, 165, 250, 0.5)';
+            ctx.shadowBlur = 15;
             ctx.fill();
+            ctx.shadowBlur = 0; // 清除陰影
         }
         
-        // 初始化搖桿繪製
-        drawJoystick(centerX, centerY);
-
         // =========================================================================
         // 3. API 數據轉換邏輯 (核心)
         // =========================================================================
@@ -229,6 +272,7 @@
          * @param {number} x - 相對於中心的 X 座標 (-maxRadius to +maxRadius)
          * @param {number} y - 相對於中心的 Y 座標 (-maxRadius to +maxRadius)
          * @returns {string} 格式化的 API 指令字串
+         * * 遵循 API 規範: CMD, [F/B/L/R/S], Value(0-255)
          */
         function coordinateToCommand(x, y) {
             const distance = Math.sqrt(x * x + y * y);
@@ -243,14 +287,16 @@
             speed = Math.round(speed);
 
             // 搖桿方向判斷
-            const angle = Math.atan2(-y, x) * (180 / Math.PI); // -y 因為 Canvas 的 Y 軸向下
+            // Math.atan2(y, x) 傳回弧度，範圍 -PI 到 PI。
+            // 轉換為角度，並使用 -y (Canvas Y 軸向下，需要反轉)
+            const angle = Math.atan2(-y, x) * (180 / Math.PI); 
             
             let command = 'S';
             let value = 0;
 
-            // 判斷運動模式 (前進/後退/原地旋轉)
+            // 判斷運動模式 (前進/後退/原地旋轉) - 45度分區
             if (angle > -45 && angle <= 45) {
-                // 右側 (原地右轉)
+                // 右前方/右側 (原地右轉)
                 command = 'R';
                 value = speed;
             } else if (angle > 45 && angle <= 135) {
@@ -261,8 +307,8 @@
                 // 下側 (向後移動)
                 command = 'B';
                 value = speed;
-            } else {
-                // 左側 (原地左轉)
+            } else { // angle > 135 或 angle <= -135
+                // 左後方/左側 (原地左轉)
                 command = 'L';
                 value = speed;
             }
@@ -286,7 +332,11 @@
             commandDisplay.textContent = commandString;
             
             if (currentMode === 'BLE') {
-                if (!characteristic) {
+                if (!characteristic || !device || !device.gatt.connected) {
+                    // 如果正在拖曳，則強制停止
+                    if (isDragging) {
+                        stopDrag();
+                    }
                     updateConnectionStatus(false, "BLE 未連線或特性值不可用");
                     return;
                 }
@@ -297,7 +347,15 @@
                     await characteristic.writeValue(data);
                 } catch (error) {
                     console.error('BLE 寫入失敗:', error);
-                    updateConnectionStatus(false, "BLE 寫入錯誤");
+                    // 寫入失敗通常表示連線中斷
+                    updateConnectionStatus(false, "BLE 寫入錯誤/連線已中斷");
+                    // 觸發連線中斷事件，讓 UI 復原
+                    if (device && device.gatt && device.gatt.connected) {
+                         device.gatt.disconnect();
+                    } else {
+                         // 如果連線狀態已經錯誤，則手動停止搖桿
+                         stopDrag(); 
+                    }
                 }
 
             } else if (currentMode === 'WiFi') {
@@ -318,11 +376,12 @@
                         if (!response.ok) {
                             throw new Error(`HTTP 錯誤: ${response.status}`);
                         }
+                        updateConnectionStatus(true, `Wi-Fi IP: ${wifiIP} (OK)`);
                     } catch (error) {
                         console.error('Wi-Fi 請求失敗:', error);
                         // 僅在非停止指令失敗時顯示錯誤 (避免持續彈窗)
                         if (cmd !== 'S') {
-                            updateConnectionStatus(false, "Wi-Fi 連線錯誤");
+                            updateConnectionStatus(false, "Wi-Fi 連線錯誤或 IP 不可達");
                         }
                     }
                 }
@@ -340,6 +399,9 @@
          */
         function handleMove(clientX, clientY) {
             const rect = canvas.getBoundingClientRect();
+            // 確保 Canvas 寬度已被設定，否則使用默認值 (防止在 resizeCanvas 之前運行)
+            if (centerX === undefined) return; 
+
             let x = clientX - rect.left - centerX; // 相對於中心的 X 座標
             let y = clientY - rect.top - centerY;  // 相對於中心的 Y 座標
 
@@ -364,14 +426,16 @@
          * 開始拖曳
          */
         function startDrag(e) {
-            if (currentMode === 'BLE' && !characteristic) {
-                showMessage("連線錯誤", "請先連線至 BLE 裝置。");
+            // 預檢連線狀態
+            if (currentMode === 'BLE' && (!characteristic || !device || !device.gatt.connected)) {
+                showMessage("連線錯誤", "請先連線至 BLE 裝置。", 'text-red-400');
                 return;
             }
             if (currentMode === 'WiFi' && !wifiIP) {
-                showMessage("設定錯誤", "請輸入有效的 Wi-Fi IP 位址。");
+                showMessage("設定錯誤", "請輸入有效的 Wi-Fi IP 位址。", 'text-red-400');
                 return;
             }
+            if (sendTimer) return; // 防止重複啟動定時器
 
             e.preventDefault();
             isDragging = true;
@@ -415,8 +479,22 @@
             currentMode = e.target.value;
             bleControl.classList.toggle('hidden', currentMode !== 'BLE');
             wifiControl.classList.toggle('hidden', currentMode !== 'WiFi');
-            // 清除連線狀態
-            updateConnectionStatus(false, currentMode === 'BLE' ? "未連線" : "已設定 IP");
+            
+            // 清除連線/設定狀態
+            if (currentMode === 'BLE') {
+                 // 強制斷開 BLE 連線，避免狀態混亂
+                if (device && device.gatt.connected) {
+                    device.gatt.disconnect();
+                } else {
+                    updateConnectionStatus(false, "未連線");
+                }
+            } else if (currentMode === 'WiFi') {
+                if (wifiIP) {
+                    updateConnectionStatus(true, `已設定 IP: ${wifiIP}`);
+                } else {
+                    updateConnectionStatus(false, "請設定 IP");
+                }
+            }
             
             // 確保搖桿停止發送
             stopDrag(); 
@@ -425,13 +503,17 @@
         // Wi-Fi IP 設定事件
         wifiConnectButton.addEventListener('click', () => {
             const ip = ipAddressInput.value.trim();
-            if (ip) {
+            // 簡單的 IP 格式檢查 (至少包含數字和點)
+            const ipRegex = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
+
+            if (ip && ipRegex.test(ip)) {
                 wifiIP = ip;
                 updateConnectionStatus(true, `Wi-Fi IP: ${ip}`);
                 showMessage("設定成功", `已將 Wi-Fi IP 設定為: ${ip}`, 'text-green-400');
             } else {
                 wifiIP = '';
-                updateConnectionStatus(false, "請輸入 IP 位址");
+                updateConnectionStatus(false, "請輸入有效的 IP 位址");
+                showMessage("設定錯誤", "請輸入有效的 IP 位址 (例如: 192.168.4.1)", 'text-red-400');
             }
         });
 
@@ -444,7 +526,7 @@
             }
             
             if (!navigator.bluetooth) {
-                showMessage("瀏覽器不支援", "您的瀏覽器不支援 Web Bluetooth API，請使用 Chrome 或 Edge (HTTPS 環境)。");
+                showMessage("瀏覽器不支援", "您的瀏覽器不支援 Web Bluetooth API，請使用 Chrome 或 Edge (HTTPS 環境)。", 'text-red-400');
                 return;
             }
             
@@ -458,10 +540,12 @@
                 updateConnectionStatus(false, "正在連線...");
 
                 // 註冊連線中斷事件
-                device.addEventListener('gattserverdisconnected', () => {
+                device.addEventListener('gattserverdisconnected', (event) => {
+                    const disconnectedDevice = event.target;
+                    console.log(`裝置 ${disconnectedDevice.name} 連線已中斷。`);
                     updateConnectionStatus(false, "連線已中斷");
                     characteristic = null;
-                    stopDrag(); 
+                    stopDrag(); // 確保搖桿停止發送指令
                 });
 
                 // 2. 連線 GATT Server
@@ -473,14 +557,13 @@
                 // 4. 獲取 Characteristic
                 characteristic = await service.getCharacteristic(BLE_CHARACTERISTIC_UUID);
                 
-                updateConnectionStatus(true, `已連線: ${device.name}`);
-                connectButton.textContent = "斷開連線";
+                updateConnectionStatus(true, `已連線: ${device.name || 'Unknown Device'}`);
                 
             } catch (error) {
                 console.error('BLE 連線失敗:', error);
                 updateConnectionStatus(false, "連線失敗");
                 characteristic = null;
-                showMessage("連線失敗", error.message);
+                showMessage("連線失敗", error.message || "無法連線至指定的 BLE 裝置。", 'text-red-400');
             }
         });
 
@@ -504,6 +587,8 @@
         
         canvas.addEventListener('touchmove', (e) => {
             if (!isDragging) return;
+            // 阻止觸控滾動或放大
+            e.preventDefault(); 
             handleMove(e.touches[0].clientX, e.touches[0].clientY);
         });
 
@@ -511,8 +596,19 @@
         document.addEventListener('touchend', stopDrag);
         document.addEventListener('touchcancel', stopDrag);
         
-        // 初始化模式顯示
-        modeSwitch.dispatchEvent(new Event('change'));
+        // =========================================================================
+        // 6. 初始化
+        // =========================================================================
+        
+        // 視窗載入與尺寸改變時，重新調整 Canvas 大小
+        window.addEventListener('load', () => {
+            resizeCanvas();
+            // 首次載入時，根據 modeSwitch 初始值設定 UI
+            modeSwitch.dispatchEvent(new Event('change'));
+        });
+        window.addEventListener('resize', resizeCanvas);
+        
+        
     </script>
 </body>
 </html>
