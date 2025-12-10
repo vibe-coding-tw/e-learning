@@ -35,8 +35,8 @@
         position: relative; 
         width: 90vw; /* 讓搖桿盡量大 */
         max-width: 350px;
-        padding-top: 90vw; 
-        max-height: 350px;
+        /* FIX: 設置 padding-top: 100% (相對寬度) 確保元素為正方形，解決拉伸問題 */
+        padding-top: 100%; 
         margin: 0 auto; 
         border-radius: 50%; 
         background: linear-gradient(145deg, #181d24, #2c3645); /* 柔和內凹效果 */
@@ -82,11 +82,11 @@
         background:#4f46e5; /* 靛藍色 */
         color:white;
         font-weight:700;
-        box-shadow: 3px 3px 6px #1a202c, -3px -3px 6px #273142; 
+        box-shadow: 3px 3px 6px #0b0f15, -3px -3px 6px #313f51; 
         transition: all 0.15s ease-in-out;
         cursor: pointer;
     }
-    button:hover { background: #3730a3; box-shadow: 5px 5px 10px #1a202c, -5px -5px 10px #273142;}
+    button:hover { background: #3730a3; box-shadow: 5px 5px 10px #0b0f15, -5px -5px 10px #313f51;}
     button:active { transform: scale(0.98); }
 
     #status{
@@ -108,16 +108,8 @@
 
     #main-status { font-weight: 700; text-shadow: 0 0 5px rgba(79, 70, 229, 0.5); }
     .info{font-size:14px;color:#9ca3af; margin-top: 20px;}
-
-    /* 響應式調整搖桿大小 */
-    @media (max-width: 640px) {
-        #joystick {
-            width: 80vw;
-            padding-top: 80vw;
-            max-width: 300px;
-            max-height: 300px;
-        }
-    }
+    
+    /* 移除針對搖桿尺寸的媒體查詢，因為主樣式已處理正方形比例 */
   </style>
 </head>
 <body class="p-4">
@@ -152,14 +144,12 @@
 <script>
 // --- BLE & Control Configuration ---
 // 請確保這些 UUID 與您的 ESP32 程式碼設定一致
-// 警告: 您提供的程式碼中，Service UUID 和 Characteristic UUID 相同，這在標準 BLE 
-// 應用中是不常見的。請檢查您的硬體程式碼。
 const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c0ffee00dead'; 
 const CHARACTERISTIC_UUID = '4fafc201-1fb5-459e-8fcc-c0ffee01feed'; 
 const DEVICE_ID_KEY = 'ble_joystick_device_id'; 
 const MAX_CONTROL_VALUE = 255; 
 // 搖桿 Deadzone (控制值 T/S 的絕對值小於此值時設為 0)
-const DEADZONE_PWM = 15; // 稍微調小 Deadzone 以增加靈敏度
+const DEADZONE_PWM = 15; 
 const SEND_INTERVAL_MS = 60; // 60ms 週期性發送，約 16.6 FPS
 
 // --- DOM Elements ---

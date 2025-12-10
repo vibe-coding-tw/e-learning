@@ -19,7 +19,11 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
         }
         .input-field {
-            @apply mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2;
+            /* 調整輸入框樣式以適應深色模式 */
+            @apply mt-1 block w-full rounded-lg border-gray-600 bg-gray-700 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 placeholder-gray-400 transition duration-150;
+        }
+        .button-style {
+             @apply py-3 px-4 font-bold rounded-lg transition duration-150 shadow-md active:shadow-none disabled:bg-gray-500 disabled:cursor-not-allowed;
         }
     </style>
 </head>
@@ -44,7 +48,7 @@
             </button>
         </div>
 
-        <!-- 2. 組態輸入區塊 -->
+        <!-- 2. 組態輸入與操作區塊 -->
         <div class="bg-gray-700 p-4 rounded-lg mb-6 border border-gray-600">
             <h2 class="text-xl font-semibold text-gray-200 mb-4 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -94,9 +98,15 @@
                 </div>
             </div>
             
-            <button id="sendButton" onclick="sendMotorConfig()" class="w-full mt-6 py-3 px-4 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition duration-150 shadow-md active:shadow-none disabled:bg-gray-500 disabled:cursor-not-allowed">
-                🚀 傳送組態設定
-            </button>
+            <!-- 讀取與傳送按鈕群組 -->
+            <div class="flex space-x-4 mt-6">
+                <button id="readButton" onclick="readMotorConfig()" class="w-1/2 button-style bg-yellow-600 hover:bg-yellow-700">
+                    ⬇️ 讀取當前組態
+                </button>
+                <button id="sendButton" onclick="sendMotorConfig()" class="w-1/2 button-style bg-green-600 hover:bg-green-700">
+                    🚀 傳送組態設定
+                </button>
+            </div>
         </div>
 
         <!-- 3. 日誌輸出區塊 -->
@@ -123,6 +133,7 @@
         const logElement = document.getElementById('log');
         const connectButton = document.getElementById('connectButton');
         const sendButton = document.getElementById('sendButton');
+        const readButton = document.getElementById('readButton'); // 新增讀取按鈕快取
 
         // --- BLE 狀態變數 ---
         let motorConfigCharacteristic = null;
@@ -154,6 +165,7 @@
             statusElement.textContent = newStatus;
             statusElement.className = isConnected ? 'text-lg font-medium text-green-400 mb-4' : 'text-lg font-medium text-red-400 mb-4';
             sendButton.disabled = !isConnected;
+            readButton.disabled = !isConnected; // 啟用/禁用讀取按鈕
             connectButton.textContent = isConnected ? '已連線 (點擊斷開)' : '連線到 BLE 裝置';
             if (isConnected) {
                 connectButton.onclick = disconnectBLE;
@@ -216,11 +228,67 @@
                 logMessage('特徵值就緒. 連線成功!', false);
                 updateStatus(`連線至: ${bleDevice.name || 'Unknown Device'}`, true);
 
+                // 5. 連線成功後，立即讀取一次當前參數
+                await readMotorConfig(); 
+
             } catch (error) {
                 logMessage(`連線失敗: ${error.message || '未知錯誤'}`, true);
                 updateStatus('連線錯誤', false);
                 bleDevice = null;
                 motorConfigCharacteristic = null;
+            }
+        }
+
+        /**
+         * 讀取馬達組態數據並更新 UI 輸入欄位
+         */
+        async function readMotorConfig() {
+            if (!motorConfigCharacteristic) {
+                logMessage('錯誤：尚未連線或特徵值不可用。', true);
+                return;
+            }
+            
+            logMessage('正在從 BLE 裝置讀取組態數據...');
+            readButton.disabled = true;
+
+            try {
+                // 1. 讀取特徵值
+                const value = await motorConfigCharacteristic.readValue();
+
+                // 2. 將 DataView 轉換為字串 (UTF-8)
+                const decoder = new TextDecoder('utf-8');
+                const configString = decoder.decode(value);
+                
+                logMessage(`✅ 成功讀取到原始數據: ${configString}`);
+
+                // 3. 解析字串: 預期格式 M:v1,v2,v3,v4,v5,v6,v7
+                // 假設 v1=controlTimeoutMs, v2=limitT, v3=stepT, v4=kickT, v5=limitS, v6=stepS, v7=kickS
+                if (configString.startsWith('M:') && configString.includes(',')) {
+                    const dataPart = configString.substring(2); // 移除 "M:"
+                    const values = dataPart.split(',').map(v => parseInt(v.trim()));
+
+                    if (values.length === 7 && values.every(v => !isNaN(v))) {
+                        // 4. 更新 UI 輸入欄位
+                        document.getElementById('timeoutMs').value = values[0];
+                        document.getElementById('limitT').value = values[1];
+                        document.getElementById('stepT').value = values[2];
+                        document.getElementById('kickT').value = values[3];
+                        document.getElementById('limitS').value = values[4];
+                        document.getElementById('stepS').value = values[5];
+                        document.getElementById('kickS').value = values[6];
+
+                        logMessage('參數解析成功並已更新 UI 欄位。', false);
+                    } else {
+                        logMessage(`❌ 數據解析錯誤：預期 7 個數字參數，但得到 ${values.length} 個或包含非數字。`, true);
+                    }
+                } else {
+                    logMessage('❌ 數據格式不符預期 (應為 M:v1,v2,...)。請檢查裝置回傳格式是否正確。', true);
+                }
+
+            } catch (error) {
+                logMessage(`❌ 讀取失敗: ${error.message || '讀取錯誤'}`, true);
+            } finally {
+                readButton.disabled = false;
             }
         }
 
