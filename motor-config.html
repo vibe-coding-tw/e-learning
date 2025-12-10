@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web BLE 馬達組態設定</title>
+    <!-- 載入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 使用 Inter 字體 -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex items-center justify-center">
+
+    <div id="app" class="bg-white p-6 md:p-10 rounded-xl shadow-2xl w-full max-w-lg">
+        <h1 class="text-3xl font-extrabold text-gray-800 mb-6 border-b pb-2">馬達 BLE 組態設定</h1>
+
+        <!-- 1. 連線區塊 -->
+        <div class="bg-blue-50 p-4 rounded-lg mb-6 border border-blue-200">
+            <h2 class="text-xl font-semibold text-blue-800 mb-3 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" />
+                </svg>
+                連線狀態
+            </h2>
+            <p id="status" class="text-lg font-medium text-gray-700 mb-4">未連線</p>
+            <button id="connectButton" onclick="connectBLE()" class="w-full py-3 px-4 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition duration-150 shadow-md active:shadow-none">
+                連線到 BLE 裝置
+            </button>
+        </div>
+
+        <!-- 2. 組態輸入區塊 -->
+        <div class="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37h.003z" />
+                </svg>
+                馬達參數
+            </h2>
+            <div class="space-y-4">
+                <label class="block">
+                    <span class="text-sm font-medium text-gray-700">最大速度 (Max Speed, 0-255)</span>
+                    <input type="number" id="maxSpeed" value="255" min="0" max="255" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2" placeholder="0-255">
+                </label>
+                <label class="block">
+                    <span class="text-sm font-medium text-gray-700">最小速度 (Min Speed, 0-255)</span>
+                    <input type="number" id="minSpeed" value="50" min="0" max="255" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2" placeholder="0-255">
+                </label>
+                <label class="block">
+                    <span class="text-sm font-medium text-gray-700">加速度斜坡時間 (Ramp Time, ms)</span>
+                    <input type="number" id="rampTime" value="100" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2" placeholder="毫秒">
+                </label>
+            </div>
+            <button id="sendButton" onclick="sendMotorConfig()" class="w-full mt-6 py-3 px-4 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition duration-150 shadow-md active:shadow-none disabled:bg-gray-400" disabled>
+                🚀 傳送組態設定
+            </button>
+        </div>
+
+        <!-- 3. 日誌輸出區塊 -->
+        <div class="bg-white p-4 rounded-lg border border-gray-300">
+            <h2 class="text-xl font-semibold text-gray-800 mb-3 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                操作日誌
+            </h2>
+            <pre id="log" class="text-sm text-gray-600 bg-gray-100 p-3 rounded-md h-32 overflow-y-auto whitespace-pre-wrap"></pre>
+        </div>
+        
+    </div>
+
+    <script>
+        // --- BLE UUIDs (請根據您的硬體修改這些值) ---
+        // 建議使用 128-bit UUIDs 或標準的 16-bit UUIDs (例如 Nordic UART Service)
+        const MOTOR_CONFIG_SERVICE_UUID = '0000ffe0-0000-1000-8000-00805f9b34fb'; // 範例服務 UUID (e.g., Generic Access Service or custom)
+        const CONFIG_CHARACTERISTIC_UUID = '0000ffe1-0000-1000-8000-00805f9b34fb'; // 範例特徵值 UUID (e.g., TX/Write characteristic)
+
+        // --- DOM 元素快取 ---
+        const statusElement = document.getElementById('status');
+        const logElement = document.getElementById('log');
+        const connectButton = document.getElementById('connectButton');
+        const sendButton = document.getElementById('sendButton');
+
+        // --- BLE 狀態變數 ---
+        let motorConfigCharacteristic = null;
+        let bleDevice = null;
+        
+        /**
+         * 寫入日誌訊息到 UI 介面
+         * @param {string} message 要寫入的訊息
+         * @param {boolean} isError 是否為錯誤訊息
+         */
+        function logMessage(message, isError = false) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logEntry.className = isError ? 'text-red-600' : 'text-gray-700';
+            logElement.prepend(logEntry); // 最新訊息放在最上面
+        }
+
+        /**
+         * 更新連線狀態顯示與按鈕啟用狀態
+         * @param {string} newStatus 新的狀態文字
+         * @param {boolean} isConnected 是否已連線
+         */
+        function updateStatus(newStatus, isConnected) {
+            statusElement.textContent = newStatus;
+            statusElement.className = isConnected ? 'text-lg font-medium text-green-600 mb-4' : 'text-lg font-medium text-red-600 mb-4';
+            sendButton.disabled = !isConnected;
+            connectButton.textContent = isConnected ? '已連線 (點擊斷開)' : '連線到 BLE 裝置';
+            if (isConnected) {
+                connectButton.onclick = disconnectBLE;
+                connectButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+                connectButton.classList.add('bg-red-600', 'hover:bg-red-700');
+            } else {
+                connectButton.onclick = connectBLE;
+                connectButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+                connectButton.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+            }
+        }
+        
+        /**
+         * 處理 GATT 斷開連線事件
+         * @param {Event} event 斷開連線事件
+         */
+        function onDisconnected(event) {
+            const device = event.target;
+            logMessage(`裝置 "${device.name}" 已斷開連線。`, true);
+            updateStatus('已斷線', false);
+            bleDevice = null;
+            motorConfigCharacteristic = null;
+        }
+
+        /**
+         * 執行 BLE 連線流程
+         */
+        async function connectBLE() {
+            if (bleDevice && bleDevice.gatt.connected) {
+                disconnectBLE();
+                return;
+            }
+
+            logMessage('開始掃描 BLE 裝置...');
+            updateStatus('正在掃描...', false);
+
+            try {
+                // 1. 請求裝置
+                bleDevice = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: [MOTOR_CONFIG_SERVICE_UUID] }],
+                    optionalServices: [MOTOR_CONFIG_SERVICE_UUID]
+                });
+
+                logMessage(`找到裝置: ${bleDevice.name}. 正在連線...`);
+                bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+
+                // 2. 連線到 GATT 伺服器
+                const server = await bleDevice.gatt.connect();
+
+                logMessage('已連線到 GATT 伺服器. 正在尋找服務...');
+
+                // 3. 獲取服務
+                const service = await server.getPrimaryService(MOTOR_CONFIG_SERVICE_UUID);
+
+                logMessage('找到馬達組態服務. 正在尋找特徵值...');
+
+                // 4. 獲取特徵值
+                motorConfigCharacteristic = await service.getCharacteristic(CONFIG_CHARACTERISTIC_UUID);
+
+                logMessage('特徵值就緒. 連線成功!', false);
+                updateStatus(`連線至: ${bleDevice.name}`, true);
+
+            } catch (error) {
+                logMessage(`連線失敗: ${error.message}`, true);
+                updateStatus('連線錯誤', false);
+                bleDevice = null;
+                motorConfigCharacteristic = null;
+            }
+        }
+
+        /**
+         * 傳送馬達組態數據到 BLE 裝置
+         */
+        async function sendMotorConfig() {
+            if (!motorConfigCharacteristic) {
+                logMessage('錯誤：尚未連線或特徵值不可用。', true);
+                return;
+            }
+
+            // 讀取 UI 上的參數值
+            const maxSpeed = document.getElementById('maxSpeed').value;
+            const minSpeed = document.getElementById('minSpeed').value;
+            const rampTime = document.getElementById('rampTime').value;
+
+            // 構造數據字串 (例如: "C:255,50,100")
+            // 協議格式: C:<MaxSpeed>,<MinSpeed>,<RampTime>
+            const configString = `C:${maxSpeed},${minSpeed},${rampTime}`;
+            
+            logMessage(`準備傳送組態: ${configString}`);
+            sendButton.disabled = true;
+
+            try {
+                // 將字串轉換為 Uint8Array (Bytes)
+                const encoder = new TextEncoder();
+                const data = encoder.encode(configString);
+
+                // 寫入特徵值
+                await motorConfigCharacteristic.writeValue(data);
+
+                logMessage(`✅ 成功傳送組態數據: ${configString}`, false);
+
+            } catch (error) {
+                logMessage(`❌ 傳送失敗: ${error.message}`, true);
+            } finally {
+                sendButton.disabled = false;
+            }
+        }
+
+        /**
+         * 斷開 BLE 連線
+         */
+        function disconnectBLE() {
+            if (bleDevice && bleDevice.gatt.connected) {
+                bleDevice.gatt.disconnect();
+                logMessage('手動斷開連線...');
+            } else {
+                logMessage('目前沒有連線可以斷開。', true);
+            }
+            updateStatus('已斷線', false);
+            bleDevice = null;
+            motorConfigCharacteristic = null;
+        }
+
+        // 檢查瀏覽器是否支援 Web BLE
+        window.onload = () => {
+            if (!('bluetooth' in navigator)) {
+                updateStatus('瀏覽器不支援 Web BLE。請使用 Chrome 或 Edge。', false);
+                connectButton.disabled = true;
+                logMessage('瀏覽器不支援 Web BLE.', true);
+            } else {
+                logMessage('Web BLE 支援檢查通過。');
+            }
+        };
+
+    </script>
+</body>
+</html>
