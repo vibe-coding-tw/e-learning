@@ -22,7 +22,7 @@
         -webkit-tap-highlight-color: transparent; /* 移除點擊高亮 */
     }
     .container-wrap { 
-        max-width: 450px; /* 稍微寬一點 */
+        max-width: 450px; /* 限制容器最大寬度 */
         width: 100%; 
         padding: 24px; 
         background-color: #1f2937; /* 卡片背景色 */
@@ -33,10 +33,11 @@
     /* 搖桿圓盤樣式 (pad/joystick) */
     #joystick { 
         position: relative; 
-        width: 90vw; /* 讓搖桿盡量大 */
-        max-width: 350px;
-        /* FIX: 設置 padding-top: 100% (相對寬度) 確保元素為正方形，解決拉伸問題 */
-        padding-top: 100%; 
+        /* FIX: 修正手機變形問題。使用 min() 確保搖桿尺寸不會超過寬度(90vw)或高度(90vh)的 90%，
+           同時也限制最大尺寸為 350px，從而確保搖桿始終是一個不被壓縮的完美正方形。 */
+        width: min(90vw, 90vh, 350px); 
+        height: 0; /* 設置為 0 配合 padding-top */
+        padding-top: 100%; /* 確保是完美的正方形 (寬度=高度) */
         margin: 0 auto; 
         border-radius: 50%; 
         background: linear-gradient(145deg, #181d24, #2c3645); /* 柔和內凹效果 */
@@ -108,8 +109,6 @@
 
     #main-status { font-weight: 700; text-shadow: 0 0 5px rgba(79, 70, 229, 0.5); }
     .info{font-size:14px;color:#9ca3af; margin-top: 20px;}
-    
-    /* 移除針對搖桿尺寸的媒體查詢，因為主樣式已處理正方形比例 */
   </style>
 </head>
 <body class="p-4">
@@ -183,6 +182,7 @@ let rect, centerX, centerY, maxRadius;
  */
 function updateConnectionStatus(text, state) {
     statusEl.textContent = text;
+    // 移除舊的類別並添加新的類別
     statusEl.className = 'flex-1 text-center font-bold p-2 rounded-xl transition-colors duration-500';
     
     switch (state) {
@@ -207,6 +207,7 @@ function updateConnectionStatus(text, state) {
  * 重新計算搖桿區域的尺寸和中心點
  */
 function resize() {
+    // 獲取搖桿內部區域的實際尺寸
     rect = joystickInner.getBoundingClientRect();
     // 搖桿區域的中心點座標 (相對於整個視窗)
     centerX = rect.left + rect.width / 2;
@@ -215,7 +216,9 @@ function resize() {
     maxRadius = rect.width / 2;
 }
 
+// 監聽窗口大小改變和滾動事件 (防止視圖變動導致中心點偏移)
 window.addEventListener('resize', resize);
+window.addEventListener('scroll', resize); 
 // 初始調用 resize 確保尺寸計算正確
 resize(); 
 
@@ -289,7 +292,7 @@ function updateMotorValues(rawX, rawY) {
 function resetThumbPosition() {
     thumb.style.left = '50%';
     thumb.style.top = '50%';
-    // 確保 transform 仍在，這樣才能維持置中
+    // 確保 transform 仍在，維持置中
     thumb.style.transform = 'translate(-50%, -50%)'; 
     thumb.classList.remove('active');
 }
@@ -335,19 +338,15 @@ function handleMove(e) {
         offsetY = maxRadius * Math.sin(angle);
     }
     
-    // 將位移量轉換為 Thumb 的 CSS 座標 (以左上角為起點)
-    const thumbX = centerX + offsetX;
-    const thumbY = centerY + offsetY; 
-
-    // 直接使用絕對座標定位，然後用 translate(-50%, -50%) 置中 Thumb
-    // 這裡我們需要的是搖桿相對於 Inner 的位置，而不是絕對視窗位置
+    // 計算 Thumb 相對於 Inner 區域中心的相對位置
     const thumbRelativeX = maxRadius + offsetX;
     const thumbRelativeY = maxRadius + offsetY;
 
+    // 使用絕對定位設定 Thumb 的左上角座標
     thumb.style.left = `${thumbRelativeX}px`;
     thumb.style.top = `${thumbRelativeY}px`;
 
-    // 更新馬達值 (注意: Y 軸向上為正，但瀏覽器座標 Y 軸向下為正，所以需反轉 offsetY)
+    // 更新馬達值 (注意: 瀏覽器座標 Y 軸向下為正，馬達 Y 軸向上為正，所以需反轉 offsetY)
     updateMotorValues(offsetX, -offsetY);
 }
 
@@ -355,7 +354,8 @@ function handleMove(e) {
  * 處理搖桿開始事件 (Mousedown 或 Touchstart)
  */
 function handleStart(e) {
-    e.preventDefault(); // 阻止瀏覽器預設行為
+    // 由於我們使用 pointerdown，它已經統一處理了 mouse 和 touch
+    e.preventDefault(); 
     if (!isConnected) {
         updateConnectionStatus('請先連線到 BLE 裝置', 'disconnected');
         return;
