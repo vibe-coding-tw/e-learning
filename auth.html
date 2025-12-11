@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>【付費驗證】VS Code, Copilot, PlatformIO 安裝設定課程</title>
     <style>
-        /* 基礎樣式 */
+        /* 基礎樣式 (不變) */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: #f4f7f9; 
@@ -34,10 +34,8 @@
             font-size: 1.8em;
         }
         
-        /* 表單樣式 */
-        .verification-form {
-            margin-top: 20px;
-        }
+        /* 表單樣式 (不變) */
+        .verification-form { margin-top: 20px; }
         .verification-form input[type="text"] {
             width: calc(100% - 20px);
             padding: 12px 10px;
@@ -55,7 +53,7 @@
         .verification-form button {
             width: 100%;
             padding: 12px 20px;
-            background-color: #007bff; /* 藍色按鈕 */
+            background-color: #007bff; 
             color: white;
             border: none;
             border-radius: 8px;
@@ -68,33 +66,15 @@
             background-color: #0056b3;
         }
 
-        /* 訊息與連結樣式 */
+        /* 訊息與連結樣式 (不變) */
         #message {
             margin-top: 20px;
             font-weight: bold;
-            color: #dc3545; /* 預設為紅色錯誤訊息 */
+            color: #dc3545; 
         }
+        /* 由於是自動跳轉，此區塊可以保持隱藏或移除 */
         #course-link-section {
-            display: none; /* 預設隱藏 */
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #d4edda; /* 成功後的淺綠色背景 */
-            border: 3px solid #28a745;
-            border-radius: 10px;
-        }
-        .course-link {
-            display: block; 
-            padding: 15px 20px; 
-            background-color: #28a745; /* 主題色綠色按鈕 */
-            color: white; 
-            text-decoration: none; 
-            border-radius: 8px; 
-            font-weight: bold; 
-            font-size: 1.2em;
-            transition: background-color 0.3s; 
-        }
-        .course-link:hover {
-            background-color: #1e7e34;
+            display: none; 
         }
     </style>
 </head>
@@ -102,21 +82,21 @@
     <div class="container">
         <h1>🔑 課程存取權限驗證</h1>
 
-        <p>請輸入您在購買課程後收到的 <b>專屬課程驗證碼</b>，以解鎖 Google Classroom 連結。</p>
+        <p>請輸入您在購買課程後收到的 <b>專屬課程驗證碼</b>，系統將於驗證成功後自動跳轉。</p>
 
         <div class="verification-form">
             <input type="text" id="verification-code" placeholder="請在此輸入驗證碼" maxlength="20">
-            <button onclick="verifyPayment()">驗證並解鎖課程</button>
+            <button onclick="verifyPayment()">驗證並進入課程</button>
         </div>
 
         <div id="message"></div>
 
         <div id="course-link-section">
             <p style="color: #28a745; font-size: 1.1em; margin-bottom: 15px;">
-                🎉 <b>驗證成功！</b> 點擊下方連結即可加入課程：
+                🎉 <b>驗證成功！</b>
             </p>
             <a class="course-link" 
-               href="https://classroom.google.com/c/B2-L00?cjc=SETUPENV" 
+               href="#" 
                target="_blank">
                 👉 進入 Google Classroom 課程：安裝設定
             </a>
@@ -127,31 +107,38 @@
         // 🚨 注意：實際應用中，這個密碼應由後端服務檢查，以確保安全。
         const CORRECT_CODE = "VIBE2025"; 
         
+        // 1. 定義目標課程連結
+        const COURSE_URL = "https://classroom.google.com/c/B2-L00?cjc=SETUPENV"; 
+        
         function verifyPayment() {
             const inputElement = document.getElementById("verification-code");
             const messageElement = document.getElementById("message");
-            const linkSection = document.getElementById("course-link-section");
             
-            const enteredCode = inputElement.value.toUpperCase().trim(); // 忽略大小寫和空格
+            const enteredCode = inputElement.value.toUpperCase().trim();
             
             // 重置樣式
             messageElement.textContent = "";
-            linkSection.style.display = "none";
             inputElement.style.borderColor = "#ccc";
 
             if (enteredCode === CORRECT_CODE) {
                 // 驗證成功
-                messageElement.textContent = "";
-                linkSection.style.display = "block";
+                messageElement.textContent = "✅ 驗證碼正確！正在為您自動導航至課程頁面...";
+                messageElement.style.color = "#28a745"; // 綠色成功訊息
                 inputElement.style.borderColor = "#28a745";
                 
-                // (可選) 在成功後停用輸入和按鈕
+                // 2. 核心改動：使用 setTimeout 延遲後強制跳轉
+                // 延遲 1.5 秒，給使用者一個確認成功的時間
+                setTimeout(() => {
+                    window.location.href = COURSE_URL; 
+                }, 1500); 
+
+                // 停用輸入和按鈕
                 inputElement.disabled = true;
                 document.querySelector(".verification-form button").disabled = true;
 
             } else {
                 // 驗證失敗
-                messageElement.textContent = "驗證碼錯誤。請確認您的輸入無誤，或聯繫客服。";
+                messageElement.textContent = "❌ 驗證碼錯誤。請確認您的輸入無誤，或聯繫客服。";
                 messageElement.style.color = "#dc3545";
                 inputElement.style.borderColor = "#dc3545";
             }
