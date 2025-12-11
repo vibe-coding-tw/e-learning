@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>進階課程：影像處理、辨識與 AI 應用</title>
+    <style>
+        /* 基礎樣式 - 繼承自入門課程的視覺風格 */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: auto; }
+        h1 { color: #dc3545; /* 紅色作為進階課程的主題色 */ text-align: center; margin-bottom: 30px; }
+        .lesson-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        
+        /* 課程卡片連結包裹層樣式 */
+        .lesson-link-wrapper {
+            text-decoration: none; 
+            color: inherit; 
+            display: block;
+        }
+
+        /* 課程卡片樣式 */
+        .lesson-card { 
+            background-color: #fff; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
+            overflow: hidden; 
+            transition: transform 0.3s ease, box-shadow 0.3s ease; 
+            height: 100%; 
+            cursor: pointer; 
+        }
+        .lesson-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12); 
+            background-color: #fff0f0; /* 懸停時使用淺紅色反饋 */
+        }
+        .lesson-header { background-color: #fff0f0; padding: 15px 20px; border-bottom: 2px solid #dc3545; }
+        .lesson-header h2 { margin: 0; font-size: 1.25em; color: #dc3545; }
+        .lesson-body { padding: 20px; }
+        .lesson-icon { width: 50px; height: 50px; background-color: #dc3545; color: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2em; margin-bottom: 15px; }
+        .phase-tag { display: inline-block; background-color: #6c757d; color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 0.8em; margin-bottom: 10px; }
+        .core-content { margin-top: 15px; font-size: 0.9em; color: #555;}
+        .core-content ul { list-style: disc; padding-left: 20px; margin: 5px 0 0 0; }
+        .duration { font-style: italic; color: #666; margin-top: 5px; font-size: 0.9em; display: block; }
+        .click-hint { display: block; text-align: center; margin-top: 20px; color: #dc3545; font-weight: bold; font-size: 0.9em;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👁️ 進階課程：影像處理、辨識與 AI 應用</h1>
+
+        <div class="lesson-grid">
+            
+            <a href="https://classroom.google.com/c/C3-L01?cjc=S3CAM01" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 1 課：S3-CAM 模組與 MJPEG 串流原理 <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="Camera Icon">📷</div>
+                        <span class="phase-tag">I. 視覺影像串流</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>S3-CAM 硬體規格：鏡頭、感光元件與連接埠介紹。</li>
+                                <li>MJPEG 串流：講解影像壓縮與連續幀傳輸原理。</li>
+                                <li>實作：建立 ESP32 CAM 的 Web Server，提供 `/stream` 影像串流接口。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://classroom.google.com/c/C3-L02?cjc=FPV002" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 2 課：Web App FPV 影像接收與呈現 <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="Video Icon">📹</div>
+                        <span class="phase-tag">I. 視覺影像串流</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>HTML 影像標籤：學習如何在 Web 界面中嵌入即時影像源。</li>
+                                <li>低延遲優化：調整 S3-CAM 韌體的解析度與幀率，優化 FPV 體驗。</li>
+                                <li>實作：在 Web App 界面上，顯示 S3-CAM 傳來的即時影像。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://classroom.google.com/c/C3-L03?cjc=JSON003" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 3 課：數據雙向回傳：BLE Notify 與 JSON 處理 <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="Data Icon">📊</div>
+                        <span class="phase-tag">II. 雙向數據通訊</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>BLE Notify：理解 S3 如何主動回傳數據給 App。</li>
+                                <li>JSON 格式：學習 S3 回傳的電量、AI 結果等 JSON 格式。</li>
+                                <li>實作：Web App 接收 JSON 字串並解析，顯示在界面上（如電量指示）。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://classroom.google.com/c/C3-L04?cjc=SENSOR04" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 4 課：外部感測器整合與數據融合回傳 <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="Sensor Icon">🔊</div>
+                        <span class="phase-tag">II. 雙向數據通訊</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>感測器介紹：整合超音波 (距離) 或紅外線 (循線) 感測器。</li>
+                                <li>數據融合：將感測器數據編碼到 S3 的 JSON 回傳包中。</li>
+                                <li>實作：在 App 上實時顯示與障礙物的距離，為自動控制做準備。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://classroom.google.com/c/C3-L05?cjc=TINYM05" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 5 課：邊緣運算：MicroPython/TinyML 基礎 <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="AI Icon">🧠</div>
+                        <span class="phase-tag">III. AI 視覺與應用</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>TinyML 概念：在 S3 上運行輕量級機器學習模型（如分類、目標偵測）。</li>
+                                <li>S3-CAM 的 DSP/NN 加速單元應用：簡介如何利用硬件加速進行影像預處理。</li>
+                                <li>API 實作：建立 API 讓 App 可以開啟/關閉特定的 AI 模式 (e.g., AI,START,Detection)。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://classroom.google.com/c/C3-L06?cjc=LINE006" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 6 課：基於視覺的循線與顏色追蹤 <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="Vision Icon">⚫</div>
+                        <span class="phase-tag">III. AI 視覺與應用</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>影像處理基礎：在 S3 韌體中實現灰階轉換、二值化、邊緣偵測。</li>
+                                <li>循線演算法：計算影像中的線條中心點，並轉換為馬達轉向指令。</li>
+                                <li>實作：完成基於 S3-CAM 視覺的自動循線功能。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://classroom.google.com/c/C3-L07?cjc=DASH007" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 7 課：數據儀表板 (Dashboard) 設計與動態更新 <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="Dashboard Icon">📈</div>
+                        <span class="phase-tag">IV. 數據應用與創新</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>WebSocket 簡介：學習用於即時數據傳輸的 WebSocket 協定。</li>
+                                <li>圖表函式庫：應用 Chart.js 或類似函式庫，展示速度、電量歷史曲線。</li>
+                                <li>實作：建立一個 App 數據儀表板，即時接收並視覺化 S3 回傳的數據。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://classroom.google.com/c/C3-L08?cjc=TRACK08" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 8 課：目標物體識別與追蹤 (Object Tracking) 邏輯 <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="Target Icon">🎯</div>
+                        <span class="phase-tag">IV. 數據應用與創新</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>目標檢測模型應用：介紹常見的邊緣檢測模型（如 YOLO-tiny）。</li>
+                                <li>追蹤算法：學習如何根據目標物的影像座標，計算並輸出追蹤運動指令。</li>
+                                <li>實作：在 S3 上運行一個簡單的物體識別模型，並追蹤一個指定顏色的目標物。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://classroom.google.com/c/C3-L09?cjc=VOICE09" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 9 課：語音/手勢識別介面 (選修擴展) <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="Voice Icon">🎤</div>
+                        <span class="phase-tag">V. 綜合應用與畢業專題</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>Web Speech API：在 Web App 中啟用語音輸入功能。</li>
+                                <li>語音指令解析：將語音轉換為文字，並解析成控制指令。</li>
+                                <li>實作：透過語音說出「Go Forward」，實現車輛前進。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://classroom.google.com/c/C3-L10?cjc=FINAL010" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 10 課：畢業專題：全棧無人車系統展示 <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="Project Icon">🏆</div>
+                        <span class="phase-tag">V. 綜合應用與畢業專題</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>系統整合：將前端 App、BLE/Wi-Fi 通訊與 S3-CAM 視覺 AI 完整整合。</li>
+                                <li>專題設計：選擇一個進階功能（如自動泊車、人臉跟隨）進行實作與測試。</li>
+                                <li>最終展示：成果發表、代碼審查與系統優化。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+    </div>
+</body>
+</html>

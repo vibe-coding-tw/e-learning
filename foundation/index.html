@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基礎課程：馬達控制、通訊與 OTA 實作</title>
+    <style>
+        /* 基礎樣式 - 繼承自入門課程的視覺風格 */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: auto; }
+        h1 { color: #28a745; /* 綠色作為基礎課程的主題色 */ text-align: center; margin-bottom: 30px; }
+        .lesson-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        
+        /* 課程卡片連結包裹層樣式 */
+        .lesson-link-wrapper {
+            text-decoration: none; 
+            color: inherit; 
+            display: block;
+        }
+
+        /* 課程卡片樣式 */
+        .lesson-card { 
+            background-color: #fff; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
+            overflow: hidden; 
+            transition: transform 0.3s ease, box-shadow 0.3s ease; 
+            height: 100%; 
+            cursor: pointer; 
+        }
+        .lesson-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12); 
+            background-color: #e9fff0; /* 懸停時使用淺綠色反饋 */
+        }
+        .lesson-header { background-color: #e9fff0; padding: 15px 20px; border-bottom: 2px solid #28a745; }
+        .lesson-header h2 { margin: 0; font-size: 1.25em; color: #28a745; }
+        .lesson-body { padding: 20px; }
+        .lesson-icon { width: 50px; height: 50px; background-color: #28a745; color: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2em; margin-bottom: 15px; }
+        .phase-tag { display: inline-block; background-color: #6c757d; color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 0.8em; margin-bottom: 10px; }
+        .core-content { margin-top: 15px; font-size: 0.9em; color: #555;}
+        .core-content ul { list-style: disc; padding-left: 20px; margin: 5px 0 0 0; }
+        .duration { font-style: italic; color: #666; margin-top: 5px; font-size: 0.9em; display: block; }
+        .click-hint { display: block; text-align: center; margin-top: 20px; color: #28a745; font-weight: bold; font-size: 0.9em;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚙️ 基礎課程：馬達控制、通訊與 OTA 實作</h1>
+
+        <div class="lesson-grid">
+            
+            <a href="https://classroom.google.com/c/B2-L01?cjc=ENV001" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 1 課：開發環境設定與硬體導覽 <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="Setup Icon">🖥️</div>
+                        <span class="phase-tag">I. 準備與基礎 I/O</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>軟體安裝：VS Code、PlatformIO IDE 安裝與設定。</li>
+                                <li>硬體概觀：認識 ESP32、直流馬達、驅動模組（H 橋）及車體結構。</li>
+                                <li>PlatformIO 專案結構：學習 `platformio.ini` 配置與檔案組織。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://classroom.google.com/c/B2-L02?cjc=IO002" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 2 課：C/C++ 基礎語法與數位類比 I/O <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="Code Icon">💻</div>
+                        <span class="phase-tag">I. 準備與基礎 I/O</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>Arduino 框架：`setup()` 與 `loop()` 函式、資料型別。</li>
+                                <li>數位 I/O：`pinMode()` 與 `digitalWrite()` 應用，控制 LED 燈。</li>
+                                <li>類比 I/O：`analogRead()` 應用，了解感測器數據讀取。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://classroom.google.com/c/B2-L03?cjc=PWM003" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 3 課：PWM 原理與單馬達速度控制 <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="Motor Icon">🔋</div>
+                        <span class="phase-tag">II. 核心馬達控制</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>H 橋驅動原理：學習馬達正轉、反轉與煞車邏輯。</li>
+                                <li>PWM (脈衝寬度調變)：介紹 ESP32 的 PWM (LEDC) 函式。</li>
+                                <li>實作：使用 PWM 調整單一馬達速度。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://classroom.google.com/c/B2-L04?cjc=DIFF004" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 4 課：差速驅動原理與運動 API 實現 <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="API Icon">🚗</div>
+                        <span class="phase-tag">II. 核心馬達控制</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>差速驅動：講解車輛轉向的原理（左右馬達速度差異）。</li>
+                                <li>基礎 API 設計：實現 CMD, F, V (前進)、CMD, R, V (右轉) 等指令的解析邏輯。</li>
+                                <li>實作：撰寫統一的馬達控制函式，執行複雜運動。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://classroom.google.com/c/B2-L05?cjc=BLE_S05" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 5 課：藍牙低功耗伺服器 (BLE Server) 實作 <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="BLE Server Icon">📡</div>
+                        <span class="phase-tag">III. 通訊與回饋</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>GATT 協定：講解 Service、Characteristic 與 Descriptor 概念。</li>
+                                <li>BLE 伺服器建構：使用 ESP32 BLE 函式庫，建立服務與特性值。</li>
+                                <li>數據接收：實作 `onWrite` 回呼函式，接收手機端發來的控制指令字串。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://classroom.google.com/c/B2-L06?cjc=ENCODER06" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 6 課：光電編碼器與速度即時回饋 <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="Feedback Icon">🔄</div>
+                        <span class="phase-tag">III. 通訊與回饋</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>編碼器原理：了解光電編碼器如何輸出脈衝訊號。</li>
+                                <li>中斷 (Interrupts)：學習使用中斷來精確計數編碼器的脈衝。</li>
+                                <li>實作：讀取馬達脈衝數，計算當前輪子的 RPM 或線速度。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://classroom.google.com/c/B2-L07?cjc=PID007" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 7 課：PID 閉迴路控制基礎 (速度穩定) <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="PID Icon">🔬</div>
+                        <span class="phase-tag">IV. 進階控制與穩定性</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>閉迴路概念：區分開迴路與閉迴路控制。</li>
+                                <li>PID 理論：講解比例 (P)、積分 (I)、微分 (D) 三項的意義與作用。</li>
+                                <li>實作：撰寫 PID 函式，應用於馬達定速行駛。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://classroom.google.com/c/B2-L08?cjc=HTTP008" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 8 課：Wi-Fi (AP) 模式與 HTTP Web Server <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="Web Server Icon">🌐</div>
+                        <span class="phase-tag">IV. 進階控制與穩定性</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>ESP32 Wi-Fi 模式：設定為 SoftAP 模式，建立專屬熱點。</li>
+                                <li>Web Server：建立輕量級 HTTP 伺服器，並處理 GET 請求。</li>
+                                <li>實作：設計 `/control?cmd=X&val=Y` 格式的 URL 接口，讓瀏覽器發送運動指令。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://classroom.google.com/c/B2-L09?cjc=OTA009" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 9 課：OTA 無線更新架構與實務 <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="Update Icon">⬆️</div>
+                        <span class="phase-tag">V. 韌體架構與維護</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>雙分區架構：講解 Launcher App (備援) 與 User App (工作) 的邏輯。</li>
+                                <li>Launcher App：實作 Launcher 邏輯，檢查並啟動 OTA 服務。</li>
+                                <li>實作：使用 PlatformIO 進行 `espota` 無線更新流程。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+            <a href="https://classroom.google.com/c/B2-L10?cjc=FINAL010" target="_blank" class="lesson-link-wrapper">
+                <div class="lesson-card">
+                    <div class="lesson-header">
+                        <h2>第 10 課：專案整合、除錯與優化 <span class="duration">(3H)</span></h2>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-icon" title="Integrate Icon">🌟</div>
+                        <span class="phase-tag">V. 韌體架構與維護</span>
+                        <div class="core-content">
+                            <strong>核心內容：</strong>
+                            <ul>
+                                <li>雙模式指令：整合 BLE 與 Wi-Fi 接收邏輯，確保指令都能呼叫 PID 控制。</li>
+                                <li>錯誤處理：增加通訊中斷、馬達故障等錯誤訊息的處理機制。</li>
+                                <li>專案優化：調整 PID 參數、優化程式碼效率，並進行最終測試與展示。</li>
+                            </ul>
+                        </div>
+                        <span class="click-hint">點擊卡片進入 Google Classroom</span>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+    </div>
+</body>
+</html>
