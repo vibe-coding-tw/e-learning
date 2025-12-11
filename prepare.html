@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>課程準備：開發環境安裝與電腦規格建議</title>
+    <style>
+        /* 基礎樣式 */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f4f7f9; 
+            color: #333; 
+            margin: 0; 
+            padding: 20px; 
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: auto; 
+        }
+        h1 { 
+            color: #28a745; /* 主題色：綠色 */
+            text-align: center; 
+            margin-bottom: 30px; 
+            padding-bottom: 10px;
+            border-bottom: 3px solid #e9fff0;
+        }
+        
+        /* 資訊卡片樣式 */
+        .info-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
+            gap: 30px; 
+            margin-top: 30px;
+        }
+        .info-card { 
+            background-color: #fff; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
+            overflow: hidden; 
+            padding: 25px;
+            height: 100%;
+        }
+        .card-header { 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 20px; 
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .card-header h2 { 
+            margin: 0; 
+            font-size: 1.5em; 
+            color: #28a745; 
+        }
+        .card-icon { 
+            width: 40px; 
+            height: 40px; 
+            background-color: #28a745; 
+            color: #fff; 
+            border-radius: 50%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 1.5em; 
+            margin-right: 15px;
+        }
+        
+        /* 內容列表樣式 */
+        .content-list { 
+            list-style: none; 
+            padding: 0; 
+            margin: 0; 
+        }
+        .content-list li { 
+            padding: 10px 0; 
+            border-bottom: 1px dashed #f0f0f0; 
+            font-size: 1em;
+            display: flex;
+            align-items: flex-start;
+        }
+        .content-list li:last-child { 
+            border-bottom: none; 
+        }
+        .check-mark {
+            color: #28a745;
+            font-weight: bold;
+            font-size: 1.2em;
+            line-height: 1.5;
+            margin-right: 10px;
+        }
+
+        /* 圖片與規格樣式 */
+        .hardware-img-wrapper {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .hardware-img {
+            max-width: 80%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .spec-item {
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        .spec-item strong {
+            display: block;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        .note {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.95em;
+            border-left: 5px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛠️ 開始課程前：環境準備與電腦規格建議</h1>
+
+        <div class="info-grid">
+            
+            <div class="info-card">
+                <div class="card-header">
+                    <div class="card-icon">📦</div>
+                    <h2>必備軟硬體清單</h2>
+                </div>
+                <div class="hardware-img-wrapper">
+                    <img src="https://i.imgur.com/your-esp32-c3-image.png" alt="ESP32-C3 SuperMini 主控板" class="hardware-img">
+                    [cite_start]<p style="font-size: 0.85em; color: #666; margin-top: 10px;">ESP32-C3 SuperMini 主控板 [cite: 132]</p>
+                </div>
+                <ul class="content-list">
+                    [cite_start]<li><span class="check-mark">✔️</span> ESP32-C3 SuperMini 主控板 [cite: 14]</li>
+                    [cite_start]<li><span class="check-mark">✔️</span> USB Type-C 傳輸線 (用於連接主控板與電腦) [cite: 15]</li>
+                    [cite_start]<li><span class="check-mark">✔️</span> Visual Studio Code (VS Code) 程式碼編輯器 [cite: 4]</li>
+                    [cite_start]<li><span class="check-mark">✔️</span> PlatformIO IDE 擴充功能 [cite: 6]</li>
+                    [cite_start]<li><span class="check-mark">✔️</span> GitHub 帳號 (用於 GitHub Copilot) [cite: 13]</li>
+                    [cite_start]<li><span class="check-mark">✔️</span> GitHub Copilot 服務 (需訂閱並啟用擴充功能) [cite: 57, 62]</li>
+                </ul>
+                <div class="note">
+                    [cite_start]<strong>💡 注意：</strong> GitHub Copilot 需要穩定的網路連線，並建議在 GitHub 網站上啟用訂閱服務後，再於 VS Code 中登入授權 [cite: 56, 57, 66]。
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="card-header">
+                    <div class="card-icon">💻</div>
+                    <h2>電腦規格：最低需求 (可運行)</h2>
+                </div>
+                [cite_start]<p style="color: #6c757d; font-style: italic;">此規格可順利安裝所有工具並進行基本開發，Copilot 體驗可能偶有延遲 [cite: 20, 21]。</p>
+                
+                <div class="spec-item">
+                    <strong>作業系統：</strong>
+                    [cite_start]Windows 10/11 (64-bit)、macOS 12 或更新版本 [cite: 22]
+                </div>
+                <div class="spec-item">
+                    <strong>處理器 (CPU)：</strong>
+                    [cite_start]Intel Core i3 或 AMD Ryzen 3 雙核心處理器 [cite: 23]
+                </div>
+                <div class="spec-item">
+                    <strong>記憶體 (RAM)：</strong>
+                    [cite_start]至少 **8 GB** [cite: 24]
+                </div>
+                <div class="spec-item">
+                    <strong>儲存空間：</strong>
+                    [cite_start]至少 5 GB 可用空間，建議使用 **SSD** (固態硬碟) [cite: 25]
+                </div>
+                <div class="spec-item">
+                    <strong>網路連線：</strong>
+                    [cite_start]穩定的寬頻網路連線 [cite: 26]
+                </div>
+                <div class="note">
+                    [cite_start]<strong>🚀 關鍵建議：</strong> 8 GB 記憶體是基本門檻，但確保擁有 **SSD** 對於提升程式載入和編譯速度至關重要 [cite: 25, 35]。
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="card-header">
+                    <div class="card-icon">🚀</div>
+                    <h2>電腦規格：建議規格 (流暢體驗)</h2>
+                </div>
+                [cite_start]<p style="color: #6c757d; font-style: italic;">此規格能確保您在開發過程中，同時享受即時 AI 輔助且操作順暢 [cite: 27, 28]。</p>
+                
+                <div class="spec-item">
+                    <strong>作業系統：</strong>
+                    [cite_start]Windows 11 (64-bit)、macOS 14 (Sonoma) 或更新版本 [cite: 29]
+                </div>
+                <div class="spec-item">
+                    <strong>處理器 (CPU)：</strong>
+                    [cite_start]Intel Core i5 或 AMD Ryzen 5 四核心處理器或更高版本 [cite: 30]
+                </div>
+                <div class="spec-item">
+                    <strong>記憶體 (RAM)：</strong>
+                    [cite_start]**16 GB** 或更高 [cite: 31]
+                </div>
+                <div class="spec-item">
+                    <strong>儲存空間：</strong>
+                    [cite_start]**256 GB 或更大容量的 SSD** [cite: 32]
+                </div>
+                <div class="spec-item">
+                    <strong>網路連線：</strong>
+                    [cite_start]穩定且高速的寬頻連線 [cite: 33]
+                </div>
+                <div class="note" style="background-color: #d4edda; color: #155724; border-left: 5px solid #28a745;">
+                    [cite_start]強烈建議選擇 <strong>16 GB 記憶體</strong> 的電腦，這能確保您同時處理多個應用程式和複雜專案時，獲得最佳開發體驗 [cite: 31, 35]。
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>
