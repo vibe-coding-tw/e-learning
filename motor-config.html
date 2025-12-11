@@ -143,7 +143,8 @@
                 <!-- controlTimeoutMs (unsigned long, 4 bytes) - 獨立一行，放大寬度 -->
                 <div class="space-y-1 col-span-1">
                     <label for="controlTimeoutMs" class="block text-sm font-medium text-gray-400">controlTimeoutMs (ms)</label>
-                    <input type="number" id="controlTimeoutMs" value="1000" min="0" required>
+                    <!-- 初始值設定為空，連線後由裝置讀取，或由使用者輸入 -->
+                    <input type="number" id="controlTimeoutMs" value="" min="0" required placeholder="例如: 1000">
                 </div>
             </div>
 
@@ -153,37 +154,37 @@
                 <!-- 1左. pwmEffectiveLimitS (int, 4 bytes) -->
                 <div class="space-y-1">
                     <label for="pwmEffectiveLimitS" class="block text-sm font-medium text-gray-400">pwmEffectiveLimitS</label>
-                    <input type="number" id="pwmEffectiveLimitS" value="255" min="0" required>
+                    <input type="number" id="pwmEffectiveLimitS" value="" min="0" required placeholder="例如: 255">
                 </div>
 
                 <!-- 1右. pwmEffectiveLimitT (int, 4 bytes) -->
                 <div class="space-y-1">
                     <label for="pwmEffectiveLimitT" class="block text-sm font-medium text-gray-400">pwmEffectiveLimitT</label>
-                    <input type="number" id="pwmEffectiveLimitT" value="255" min="0" required>
+                    <input type="number" id="pwmEffectiveLimitT" value="" min="0" required placeholder="例如: 255">
                 </div>
 
                 <!-- 2左. rampAccelStepS (int, 4 bytes) -->
                 <div class="space-y-1">
                     <label for="rampAccelStepS" class="block text-sm font-medium text-gray-400">rampAccelStepS</label>
-                    <input type="number" id="rampAccelStepS" value="10" min="0" required>
+                    <input type="number" id="rampAccelStepS" value="" min="0" required placeholder="例如: 10">
                 </div>
 
                 <!-- 2右. rampAccelStepT (int, 4 bytes) -->
                 <div class="space-y-1">
                     <label for="rampAccelStepT" class="block text-sm font-medium text-gray-400">rampAccelStepT</label>
-                    <input type="number" id="rampAccelStepT" value="10" min="0" required>
+                    <input type="number" id="rampAccelStepT" value="" min="0" required placeholder="例如: 10">
                 </div>
 
                 <!-- 3左. pwmStartKickS (int, 4 bytes) -->
                 <div class="space-y-1">
                     <label for="pwmStartKickS" class="block text-sm font-medium text-gray-400">pwmStartKickS</label>
-                    <input type="number" id="pwmStartKickS" value="50" min="0" required>
+                    <input type="number" id="pwmStartKickS" value="" min="0" required placeholder="例如: 50">
                 </div>
 
                 <!-- 3右. pwmStartKickT (int, 4 bytes) -->
                 <div class="space-y-1">
                     <label for="pwmStartKickT" class="block text-sm font-medium text-gray-400">pwmStartKickT</label>
-                    <input type="number" id="pwmStartKickT" value="50" min="0" required>
+                    <input type="number" id="pwmStartKickT" value="" min="0" required placeholder="例如: 50">
                 </div>
 
             </div>
@@ -274,11 +275,26 @@ function updateUI(isConnected) {
 }
 
 /**
+ * 清空所有組態設定欄位的值
+ */
+function clearInputFields() {
+    PARAM_IDS.forEach(param => {
+        const element = document.getElementById(param.id);
+        if (element) {
+            // 將值清空，表示目前沒有來自裝置的有效數據
+            element.value = ""; 
+        }
+    });
+}
+
+/**
  * 處理 BLE 斷線
  */
 function onDisconnect() {
     logStatus('❌ 已斷線', 'error');
     updateUI(false);
+    // V1.0.1 修正: 連線斷開時清空欄位值
+    clearInputFields(); 
     if (device) device.removeEventListener('gattserverdisconnected', onDisconnect);
     device = null;
     config_characteristic = null;
@@ -404,9 +420,10 @@ async function connectBLE(){
         console.error('BLE 連線失敗:', err);
         logStatus(`❌ 連線失敗 (${err.message.slice(0, 30)}...)`, 'error');
         updateUI(false);
-        // 清理殘留的 device 引用
+        // 清理殘留的 device 引用並清空欄位
         if (device && (!device.gatt || !device.gatt.connected)) {
             device = null;
+            clearInputFields(); // 確保連線失敗時也清空
         }
     }
 }
@@ -472,6 +489,9 @@ if (!navigator.bluetooth) {
     logStatus('❌ 瀏覽器不支援 Web Bluetooth。', 'error');
     btnConnect.disabled = true;
     btnConnect.querySelector('span').textContent = "不支援";
+} else {
+    // 初始狀態：清空欄位，等待連線
+    clearInputFields(); 
 }
 </script>
 </body>
