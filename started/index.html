@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>入門課程：Web App 遙控器設計與 Web BLE 整合</title>
+    <style>
+        /* 基礎樣式 */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: auto; }
+        h1 { color: #007bff; text-align: center; margin-bottom: 30px; }
+        .lesson-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        
+        /* 課程卡片樣式 */
+        .lesson-card { background-color: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); overflow: hidden; transition: transform 0.3s ease; }
+        .lesson-card:hover { transform: translateY(-5px); box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12); }
+        .lesson-header { background-color: #e9f0ff; padding: 15px 20px; border-bottom: 2px solid #007bff; }
+        .lesson-header h2 { margin: 0; font-size: 1.25em; color: #007bff; }
+        .lesson-body { padding: 20px; }
+        .lesson-icon { width: 50px; height: 50px; background-color: #007bff; color: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2em; margin-bottom: 15px; }
+        .phase-tag { display: inline-block; background-color: #6c757d; color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 0.8em; margin-bottom: 10px; }
+        .core-content { margin-top: 15px; font-size: 0.9em; }
+        .core-content ul { list-style: disc; padding-left: 20px; margin: 5px 0 0 0; }
+        .duration { font-style: italic; color: #666; margin-top: 5px; font-size: 0.9em; }
+        .classroom-link { display: block; text-align: center; margin-top: 20px; padding: 10px 15px; background-color: #1a73e8; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: background-color 0.3s; }
+        .classroom-link:hover { background-color: #155cb8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 入門課程：Web App 遙控器設計與 Web BLE 整合 (共 10 堂)</h1>
+
+        <div class="lesson-grid">
+            
+            <div class="lesson-card">
+                <div class="lesson-header">
+                    <h2>第 1 課：HTML/Tailwind CSS 快速入門與 UI/UX 基礎 <span class="duration">(3H)</span></h2>
+                </div>
+                <div class="lesson-body">
+                    <div class="lesson-icon" title="UI/UX Icon">🎨</div>
+                    <span class="phase-tag">I. Web App 基礎與 BLE 連線</span>
+                    <div class="core-content">
+                        <strong>核心內容：</strong>
+                        <ul>
+                            [cite_start]<li>基礎佈局（Flexbox/Grid）與 Tailwind CSS 應用 [cite: 3]。</li>
+                            [cite_start]<li>遙控器響應式界面設計、行動端觸控考量 [cite: 3]。</li>
+                            [cite_start]<li>實作單一 HTML 檔案，設計連線與狀態顯示區塊 [cite: 3]。</li>
+                        </ul>
+                    </div>
+                    <a class="classroom-link" href="https://classroom.google.com/c/A1-L01?cjc=UIX001" target="_blank">👉 點此進入 Google Classroom 課程</a>
+                </div>
+            </div>
+
+            <div class="lesson-card">
+                <div class="lesson-header">
+                    <h2>第 2 課：Web BLE 客戶端連線邏輯實作 <span class="duration">(3H)</span></h2>
+                </div>
+                <div class="lesson-body">
+                    <div class="lesson-icon" title="Bluetooth Icon">🔗</div>
+                    <span class="phase-tag">I. Web App 基礎與 BLE 連線</span>
+                    <div class="core-content">
+                        <strong>核心內容：</strong>
+                        <ul>
+                            [cite_start]<li>介紹 JavaScript Web BLE API：`navigator.bluetooth` 與權限模型 [cite: 3]。</li>
+                            [cite_start]<li>實作 `requestDevice`、`gatt.connect`、服務與特徵值 (UUID) 處理 [cite: 3]。</li>
+                            [cite_start]<li>實現連線/斷開按鈕功能，使用 JS 監聽連線狀態 [cite: 3]。</li>
+                        </ul>
+                    </div>
+                    <a class="classroom-link" href="https://classroom.google.com/c/A1-L02?cjc=BLE002" target="_blank">👉 點此進入 Google Classroom 課程</a>
+                </div>
+            </div>
+
+            <div class="lesson-card">
+                <div class="lesson-header">
+                    <h2>第 3 課：基礎按鈕控制與 API 數據格式化 <span class="duration">(3H)</span></h2>
+                </div>
+                <div class="lesson-body">
+                    <div class="lesson-icon" title="Control Icon">🕹️</div>
+                    <span class="phase-tag">II. 按鈕控制與 API 數據封包</span>
+                    <div class="core-content">
+                        <strong>核心內容：</strong>
+                        <ul>
+                            [cite_start]<li>數據封包設計：將按鈕事件轉換為 API 字串格式（如 CMD, F, 180） [cite: 3]。</li>
+                            [cite_start]<li>Web BLE 寫入實作：使用 `characteristic.writeValue` 發送指令 [cite: 3]。</li>
+                            [cite_start]<li>實作前、後、左、右、停止五個按鈕，實現馬達基本控制 [cite: 3]。</li>
+                        </ul>
+                    </div>
+                    <a class="classroom-link" href="https://classroom.google.com/c/A1-L03?cjc=CMD003" target="_blank">👉 點此進入 Google Classroom 課程</a>
+                </div>
+            </div>
+
+            <div class="lesson-card">
+                <div class="lesson-header">
+                    <h2>第 4 課：觸控事件優化：長按與放開 <span class="duration">(3H)</span></h2>
+                </div>
+                <div class="lesson-body">
+                    <div class="lesson-icon" title="Touch Icon">👆</div>
+                    <span class="phase-tag">II. 按鈕控制與 API 數據封包</span>
+                    <div class="core-content">
+                        <strong>核心內容：</strong>
+                        <ul>
+                            [cite_start]<li>區分原生觸控事件：`mousedown/mouseup` 和 `touchstart/touchend` [cite: 3]。</li>
+                            [cite_start]<li>實現長按發送持續移動指令，放開發送停止指令（使用 `setInterval`） [cite: 3]。</li>
+                            [cite_start]<li>利用觸控事件優化控制按鈕的靈敏度與即時性 [cite: 3]。</li>
+                        </ul>
+                    </div>
+                    <a class="classroom-link" href="https://classroom.google.com/c/A1-L04?cjc=TOUCH04" target="_blank">👉 點此進入 Google Classroom 課程</a>
+                </div>
+            </div>
+
+            <div class="lesson-card">
+                <div class="lesson-header">
+                    <h2>第 5 課：虛擬搖桿 UI 製作與座標擷取 <span class="duration">(3H)</span></h2>
+                </div>
+                <div class="lesson-body">
+                    <div class="lesson-icon" title="Canvas Icon">🎛️</div>
+                    <span class="phase-tag">III. 虛擬搖桿與精細化控制</span>
+                    <div class="core-content">
+                        <strong>核心內容：</strong>
+                        <ul>
+                            [cite_start]<li>使用 HTML `Canvas` 製作搖桿畫布區域和手柄（使用 JS 繪圖） [cite: 3]。</li>
+                            [cite_start]<li>學習在搖桿拖曳時，即時擷取 X/Y 座標並限制移動範圍 [cite: 3]。</li>
+                            [cite_start]<li>實作搖桿手柄在畫布內跟隨移動，並在鬆手時自動回到中心 [cite: 3]。</li>
+                        </ul>
+                    </div>
+                    <a class="classroom-link" href="https://classroom.google.com/c/A1-L05?cjc=JOYSTICK5" target="_blank">👉 點此進入 Google Classroom 課程</a>
+                </div>
+            </div>
+
+            <div class="lesson-card">
+                <div class="lesson-header">
+                    <h2>第 6 課：搖桿座標到 API 指令的數學轉換 <span class="duration">(3H)</span></h2>
+                </div>
+                <div class="lesson-body">
+                    <div class="lesson-icon" title="Math Icon">🔢</div>
+                    <span class="phase-tag">III. 虛擬搖桿與精細化控制</span>
+                    <div class="core-content">
+                        <strong>核心內容：</strong>
+                        <ul>
+                            [cite_start]<li>線性映射原理：將畫布 X/Y 像素範圍，轉換為速度/轉向數值範圍（0-255） [cite: 3]。</li>
+                            [cite_start]<li>差速數據計算：建立將 X/Y 座標轉換為速度/轉向指令 (CMD, F, V 等) 的 JS 邏輯 [cite: 3]。</li>
+                            [cite_start]<li>實作將 X/Y 座標轉換為 API 數據的 JS 函式 [cite: 3]。</li>
+                        </ul>
+                    </div>
+                    <a class="classroom-link" href="https://classroom.google.com/c/A1-L06?cjc=MATH006" target="_blank">👉 點此進入 Google Classroom 課程</a>
+                </div>
+            </div>
+
+            <div class="lesson-card">
+                <div class="lesson-header">
+                    <h2>第 7 課：定時器與連續數據發送 <span class="duration">(3H)</span></h2>
+                </div>
+                <div class="lesson-body">
+                    <div class="lesson-icon" title="Timer Icon">⏱️</div>
+                    <span class="phase-tag">III. 虛擬搖桿與精細化控制</span>
+                    <div class="core-content">
+                        <strong>核心內容：</strong>
+                        <ul>
+                            [cite_start]<li>介紹 `setInterval` 與 `requestAnimationFrame` 在即時控制中的作用 [cite: 3]。</li>
+                            [cite_start]<li>設定 `setInterval` (如 50ms 間隔)，週期性呼叫搖桿數據發送程序 [cite: 3]。</li>
+                            [cite_start]<li>整合搖桿、轉換邏輯與定時器，實現流暢、低延遲的 BLE 搖桿控制 [cite: 3]。</li>
+                        </ul>
+                    </div>
+                    <a class="classroom-link" href="https://classroom.google.com/c/A1-L07?cjc=TIMER07" target="_blank">👉 點此進入 Google Classroom 課程</a>
+                </div>
+            </div>
+
+            <div class="lesson-card">
+                <div class="lesson-header">
+                    <h2>第 8 課：Wi-Fi (HTTP) 通訊與 Fetch API <span class="duration">(3H)</span></h2>
+                </div>
+                <div class="lesson-body">
+                    <div class="lesson-icon" title="WiFi Icon">📶</div>
+                    <span class="phase-tag">IV. Wi-Fi 通訊與雙模式整合</span>
+                    <div class="core-content">
+                        <strong>核心內容：</strong>
+                        <ul>
+                            [cite_start]<li>介紹現代 JS 的 `fetch` 用於發送 HTTP 請求 [cite: 3]。</li>
+                            [cite_start]<li>學習構造主控板要求的 HTTP GET 請求 URL（如 `http://[IP]/control?cmd=F&val=180`） [cite: 3]。</li>
+                            [cite_start]<li>實作 Wi-Fi 模式下的測試按鈕，發送 HTTP 請求控制主控板 [cite: 3]。</li>
+                        </ul>
+                    </div>
+                    <a class="classroom-link" href="https://classroom.google.com/c/A1-L08?cjc=WIFI008" target="_blank">👉 點此進入 Google Classroom 課程</a>
+                </div>
+            </div>
+
+            <div class="lesson-card">
+                <div class="lesson-header">
+                    <h2>第 9 課：雙模式遙控器設計與狀態切換 <span class="duration">(3H)</span></h2>
+                </div>
+                <div class="lesson-body">
+                    <div class="lesson-icon" title="Toggle Icon">🔄</div>
+                    <span class="phase-tag">IV. Wi-Fi 通訊與雙模式整合</span>
+                    <div class="core-content">
+                        <strong>核心內容：</strong>
+                        <ul>
+                            [cite_start]<li>設計一個可切換的界面，容納 BLE 連線和 Wi-Fi 設定 (IP 輸入) [cite: 3]。</li>
+                            [cite_start]<li>學習使用 JS 變數追蹤當前模式（BLE 或 Wi-Fi） [cite: 3]。</li>
+                            [cite_start]<li>實作根據當前模式，控制指令透過 BLE 或 Wi-Fi 發送的邏輯 [cite: 3]。</li>
+                        </ul>
+                    </div>
+                    <a class="classroom-link" href="https://classroom.google.com/c/A1-L09?cjc=DUAL009" target="_blank">👉 點此進入 Google Classroom 課程</a>
+                </div>
+            </div>
+
+            <div class="lesson-card">
+                <div class="lesson-header">
+                    <h2>第 10 課：專案優化、錯誤處理與最終展示 <span class="duration">(3H)</span></h2>
+                </div>
+                <div class="lesson-body">
+                    <div class="lesson-icon" title="Final Project Icon">✅</div>
+                    <span class="phase-tag">V. 綜合應用與除錯</span>
+                    <div class="core-content">
+                        <strong>核心內容：</strong>
+                        <ul>
+                            [cite_start]<li>錯誤處理：增加連線錯誤、Web BLE 不可用、`fetch` 失敗等錯誤提示 [cite: 3]。</li>
+                            [cite_start]<li>界面優化：最終界面美化、搖桿參數微調、響應式優化 [cite: 3]。</li>
+                            [cite_start]<li>專案總結：畢業作品展示與分享 [cite: 3]。</li>
+                        </ul>
+                    </div>
+                    <a class="classroom-link" href="https://classroom.google.com/c/A1-L10?cjc=FINAL010" target="_blank">👉 點此進入 Google Classroom 課程</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>
