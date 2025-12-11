@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>【付費驗證】VS Code, Copilot, PlatformIO 安裝設定課程</title>
     <style>
-        /* 基礎樣式 (不變) */
+        /* 基礎樣式 (為保持風格一致，僅保留必要部分) */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: #f4f7f9; 
@@ -34,7 +34,7 @@
             font-size: 1.8em;
         }
         
-        /* 表單樣式 (不變) */
+        /* 表單樣式 */
         .verification-form { margin-top: 20px; }
         .verification-form input[type="text"] {
             width: calc(100% - 20px);
@@ -66,13 +66,13 @@
             background-color: #0056b3;
         }
 
-        /* 訊息與連結樣式 (不變) */
+        /* 訊息樣式 */
         #message {
             margin-top: 20px;
             font-weight: bold;
             color: #dc3545; 
         }
-        /* 由於是自動跳轉，此區塊可以保持隱藏或移除 */
+        /* 由於是自動跳轉，此區塊被移除 */
         #course-link-section {
             display: none; 
         }
@@ -91,24 +91,35 @@
 
         <div id="message"></div>
 
-        <div id="course-link-section">
-            <p style="color: #28a745; font-size: 1.1em; margin-bottom: 15px;">
-                🎉 <b>驗證成功！</b>
-            </p>
-            <a class="course-link" 
-               href="#" 
-               target="_blank">
-                👉 進入 Google Classroom 課程：安裝設定
-            </a>
         </div>
-    </div>
 
     <script>
         // 🚨 注意：實際應用中，這個密碼應由後端服務檢查，以確保安全。
         const CORRECT_CODE = "VIBE2025"; 
         
-        // 1. 定義目標課程連結
-        const COURSE_URL = "https://classroom.google.com/c/B2-L00?cjc=SETUPENV"; 
+        // 1. 宣告 COURSE_URL 變數用於儲存動態連結
+        let COURSE_URL = '';
+
+        // 頁面載入時，自動解析 URL 參數
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedUrl = urlParams.get('url'); // 取得名為 'url' 的參數值
+            const messageElement = document.getElementById("message");
+
+            if (encodedUrl) {
+                // 對參數進行解碼，得到原始的課程連結
+                COURSE_URL = decodeURIComponent(encodedUrl);
+            } else {
+                // 如果 URL 參數丟失，設置一個錯誤頁面，並顯示錯誤訊息
+                COURSE_URL = 'error.html'; 
+                messageElement.textContent = "❌ 嚴重錯誤：課程連結資訊丟失，請返回主頁重試。";
+                messageElement.style.color = "#dc3545";
+                
+                // 禁用輸入和按鈕，防止嘗試驗證
+                document.getElementById("verification-code").disabled = true;
+                document.querySelector(".verification-form button").disabled = true;
+            }
+        };
         
         function verifyPayment() {
             const inputElement = document.getElementById("verification-code");
@@ -120,22 +131,25 @@
             messageElement.textContent = "";
             inputElement.style.borderColor = "#ccc";
 
-            if (enteredCode === CORRECT_CODE) {
+            // 檢查課程 URL 是否有效，並且驗證碼正確
+            if (COURSE_URL !== 'error.html' && enteredCode === CORRECT_CODE) {
                 // 驗證成功
                 messageElement.textContent = "✅ 驗證碼正確！正在為您自動導航至課程頁面...";
                 messageElement.style.color = "#28a745"; // 綠色成功訊息
                 inputElement.style.borderColor = "#28a745";
                 
-                // 2. 核心改動：使用 setTimeout 延遲後強制跳轉
-                // 延遲 1.5 秒，給使用者一個確認成功的時間
-                setTimeout(() => {
-                    window.location.href = COURSE_URL; 
-                }, 1500); 
-
                 // 停用輸入和按鈕
                 inputElement.disabled = true;
                 document.querySelector(".verification-form button").disabled = true;
+                
+                // 2. 核心改動：使用 setTimeout 延遲後強制跳轉到動態 COURSE_URL
+                setTimeout(() => {
+                    window.location.href = COURSE_URL; 
+                }, 1500); // 延遲 1.5 秒讓使用者看到成功訊息
 
+            } else if (COURSE_URL === 'error.html') {
+                // 如果課程 URL 丟失，不做任何處理
+                // 錯誤訊息已在 window.onload 設置
             } else {
                 // 驗證失敗
                 messageElement.textContent = "❌ 驗證碼錯誤。請確認您的輸入無誤，或聯繫客服。";
