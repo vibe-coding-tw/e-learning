@@ -13,6 +13,16 @@
             transform: translateY(-3px);
             box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
         }
+        /* 統一移除按鈕樣式 */
+        .remove-cart-item-btn {
+            color: #ef4444; /* red-500 */
+            font-size: 0.75rem; /* text-xs */
+            transition: color 0.2s;
+        }
+        .remove-cart-item-btn:hover {
+            text-decoration: underline;
+            color: #b91c1c; /* red-700 */
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -33,8 +43,8 @@
             <h2 class="text-3xl font-extrabold text-gray-800 border-b pb-4 mb-6">🛒 您的購物車 (待結帳項目)</h2>
             
             <div id="unpaid-items" class="space-y-4">
-                <p id="empty-cart-msg" class="text-gray-500 italic">購物車是空的！請回到課程頁面選購。</p>
-            </div>
+                </div>
+            <p id="empty-cart-msg" class="text-gray-500 italic text-center pt-4">購物車是空的！請回到課程頁面選購。</p>
             
             <div id="cart-summary" class="mt-8 pt-4 border-t-2 border-dashed border-gray-200">
                 <div class="flex justify-between items-center text-2xl font-bold text-gray-800">
@@ -55,7 +65,7 @@
                 <div id="auth-status-loading" class="text-indigo-600">
                     <p>請點擊右上角「登入」按鈕，檢查您的課程權限。</p>
                 </div>
-                </div>
+            </div>
         </section>
 
     </main>
@@ -63,7 +73,7 @@
     <script type="module">
         // 1. 匯入必要的 Firebase 函式 (使用您指定的 12.6.0 版本)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
+        // import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
         
         // 匯入 Auth 和 Functions SDK
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
@@ -83,13 +93,12 @@
 
         // 3. 初始化 Firebase 服務
         const app = initializeApp(firebaseConfig);
-        // const analytics = getAnalytics(app); // 除非有追蹤需求，否則可以註解掉
         const auth = getAuth(app);           
         
         // 請將 'asia-east1' 替換為您的 Cloud Function 部署地區
         const functions = getFunctions(app, 'asia-east1'); 
         
-        // 🚨 這是新的 Cloud Function 名稱，用於查詢用戶已授權的課程列表
+        // Cloud Function 名稱
         const getAuthorizedCourses = httpsCallable(functions, 'getAuthorizedCourses');
 
 
@@ -97,52 +106,76 @@
         // A. 購物車項目渲染邏輯
         // ===============================================
 
+        // 購物車容器
+        const unpaidItemsContainer = document.getElementById('unpaid-items');
+        const emptyMsg = document.getElementById('empty-cart-msg');
+        const cartTotalElement = document.getElementById('cart-total');
+        const checkoutBtn = document.getElementById('checkout-btn');
+
+        /**
+         * 移除購物車項目的核心邏輯 (不再作為 window 上的全域函式)
+         * @param {string} productId - 要移除的產品 ID
+         */
+        function removeFromCart(productId) {
+            let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
+            delete cart[productId];
+            localStorage.setItem('vibeCodingCart', JSON.stringify(cart));
+            renderCartItems(); // 重新渲染頁面
+        }
+
+        /**
+         * 渲染購物車所有項目
+         */
         function renderCartItems() {
             const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
-            const unpaidItemsContainer = document.getElementById('unpaid-items');
-            const emptyMsg = document.getElementById('empty-cart-msg');
             let total = 0;
             
+            // 清除現有的 HTML 內容
             unpaidItemsContainer.innerHTML = ''; 
 
             if (Object.keys(cart).length === 0) {
                 emptyMsg.style.display = 'block';
-                document.getElementById('cart-total').textContent = '0';
-                document.getElementById('checkout-btn').disabled = true;
+                cartTotalElement.textContent = '0';
+                checkoutBtn.disabled = true;
                 return;
             } else {
                 emptyMsg.style.display = 'none';
             }
 
             for (const [id, item] of Object.entries(cart)) {
-                const itemTotal = item.price * item.quantity;
+                // 確保價格是數字，提高健壯性
+                const price = parseFloat(item.price) || 0;
+                const quantity = parseInt(item.quantity) || 1;
+
+                const itemTotal = price * quantity;
                 total += itemTotal;
 
-                const itemHTML = `
-                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-md border">
-                        <div>
-                            <p class="font-semibold text-gray-800">${item.name}</p>
-                            <p class="text-xs text-gray-500">產品代號: ${id}</p>
-                        </div>
-                        <div class="text-right">
-                             <p class="font-bold text-indigo-600">${itemTotal} 元</p>
-                             <button class="text-red-500 text-xs hover:underline" data-product-id="${id}" onclick="removeFromCart('${id}')">移除</button>
-                        </div>
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'flex justify-between items-center bg-gray-50 p-3 rounded-md border';
+                itemDiv.innerHTML = `
+                    <div>
+                        <p class="font-semibold text-gray-800">${item.name}</p>
+                        <p class="text-xs text-gray-500">產品代號: ${id}</p>
+                    </div>
+                    <div class="text-right">
+                         <p class="font-bold text-indigo-600">${itemTotal.toLocaleString()} 元</p>
+                         <button class="remove-cart-item-btn" data-product-id="${id}">移除</button>
                     </div>
                 `;
-                unpaidItemsContainer.innerHTML += itemHTML;
+                unpaidItemsContainer.appendChild(itemDiv);
             }
 
-            document.getElementById('cart-total').textContent = total.toLocaleString();
-            document.getElementById('checkout-btn').disabled = (total === 0);
-        }
+            // 總金額輸出
+            cartTotalElement.textContent = total.toLocaleString();
+            checkoutBtn.disabled = (total === 0);
 
-        // 定義移除購物車項目的函式 (供按鈕點擊使用)
-        window.removeFromCart = function(productId) {
-            let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
-            delete cart[productId];
-            localStorage.setItem('vibeCodingCart', JSON.stringify(cart));
-            renderCartItems(); // 重新渲染頁面
+            // 🚨 修正點 1: 在渲染結束後，統一為所有移除按鈕綁定事件
+            document.querySelectorAll('.remove-cart-item-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const productId = event.currentTarget.dataset.productId;
+                    removeFromCart(productId);
+                });
+            });
         }
 
         // 頁面載入時，先渲染購物車內容
@@ -165,7 +198,8 @@
 
         async function handleLogout() {
             await signOut(auth);
-            alert("已登出。");
+            // 登出後重新渲染，以便更新課程中心狀態
+            onAuthStateChanged(auth, () => {}); 
         }
 
         async function renderAuthorizedLessons(user) {
@@ -193,7 +227,7 @@
                                 <p class="text-sm text-gray-500">代號: ${course.courseId} / 教室代碼: ${course.classCode || 'N/A'}</p>
                             </div>
                             <a href="${course.redirectUrl || '#'}" target="_blank" 
-                                class="text-white py-2 px-4 rounded ${buttonClass}"
+                                class="text-white py-2 px-4 rounded ${buttonClass} min-w-[100px] text-center"
                                 ${course.redirectUrl ? '' : 'disabled'}>
                                 進入課程
                             </a>
@@ -232,17 +266,22 @@
         // ===============================================
         // C. 付款按鈕邏輯 (這裡僅為模擬，需替換為實際支付介面導向)
         // ===============================================
-        document.getElementById('checkout-btn').addEventListener('click', () => {
-            const total = document.getElementById('cart-total').textContent.replace(/,/g, '');
-            if (parseInt(total) > 0) {
+        checkoutBtn.addEventListener('click', () => {
+            const totalText = cartTotalElement.textContent.replace(/,/g, '').trim();
+            const total = parseInt(totalText);
+
+            if (total > 0) {
+                // 檢查是否已登入
+                if (!auth.currentUser) {
+                    alert("請先登入才能進行付款！");
+                    handleLogin(); // 嘗試引導登入
+                    return;
+                }
+                
                 alert(`模擬付款流程：您將支付 ${total} 元。`);
                 
-                // 🚨 這裡應替換為導向到您的第三方支付介面（綠界/支付寶/Stripe 等）
-                // 模擬付款成功後，通常是後端 Webhook 更新 paid_users，然後前端清空購物車
-                
-                // 模擬清空購物車 (完成交易後)
-                // localStorage.removeItem('vibeCodingCart'); 
-                // renderCartItems();
+                // 🚨 這裡應替換為導向到您的第三方支付介面
+                // 建議：將購物車內容 (JSON.stringify(cart)) 作為參數傳遞給後端，由後端發起支付請求。
             }
         });
         
