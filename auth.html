@@ -20,12 +20,12 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
         
-        // **您需要額外匯入 Auth 和 Functions SDK**
+        // 匯入 Auth 和 Functions SDK
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
 
-        // 2. 您的 Firebase 配置 (已更新)
+        // 2. 您的 Firebase 配置
         const firebaseConfig = {
             apiKey: "AIzaSyBv2fciGdUD4CifE1fH3hnzzamPdrvjjN8",
             authDomain: "onlinelearning-b5cfc.firebaseapp.com",
@@ -38,14 +38,11 @@
 
         // 3. 初始化 Firebase 服務
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app); // 初始化 Analytics
-        const auth = getAuth(app);           // 初始化 Authentication
+        const analytics = getAnalytics(app); 
+        const auth = getAuth(app);           
         
-        // 初始化 Functions 服務 (請替換為您的 Cloud Function 部署地區)
-        // 假設您部署在 'asia-east1'，如果不是，請修改。
+        // 請將 'asia-east1' 替換為您的 Cloud Function 部署地區
         const functions = getFunctions(app, 'asia-east1'); 
-        
-        // 綁定後端 Cloud Function 名稱
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
 
         // 更新狀態訊息
@@ -56,47 +53,46 @@
         const urlParams = new URLSearchParams(window.location.search);
         const encodedTargetUrl = urlParams.get('url');
 
+        // 檢查目標 URL 參數是否存在
         if (!encodedTargetUrl) {
              document.getElementById('status-message').textContent = "錯誤：缺少目標課程連結參數。";
+             // 導向購物車頁面 (路徑已替換為同一層)
              window.location.href = 'cart.html?error=invalid_link';
-             return;
-        }
-
-        // 監聽用戶登入狀態：Firebase Auth 的標準流程
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // 已登入：執行 API 驗證
-                document.getElementById('status-message').textContent = `已登入：${user.email}，正在驗證課程權限...`;
-                await startAuthorizationFlow(user);
-            } else {
-                // 未登入：引導用戶登入
-                document.getElementById('status-message').textContent = "偵測到您尚未登入，請使用 Google 帳號登入。";
-                
-                // 執行 Google 登入彈窗
-                const provider = new GoogleAuthProvider();
-                try {
-                     await signInWithPopup(auth, provider);
-                     // 登入成功後，onAuthStateChanged 會自動再次觸發
-                } catch (error) {
-                     // 處理用戶關閉彈窗或登入失敗
-                     console.error("登入失敗:", error);
-                     document.getElementById('status-message').textContent = "登入失敗或已取消，將導回購物車。";
-                     
-                     setTimeout(() => {
-                         window.location.href = 'cart.html?error=login_failed';
-                     }, 2000);
+        } else {
+            // 如果 URL 參數正確，開始監聽登入狀態
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    // 已登入：執行 API 驗證
+                    document.getElementById('status-message').textContent = `已登入：${user.email}，正在驗證課程權限...`;
+                    await startAuthorizationFlow(user);
+                } else {
+                    // 未登入：引導用戶登入
+                    document.getElementById('status-message').textContent = "偵測到您尚未登入，請使用 Google 帳號登入。";
+                    
+                    const provider = new GoogleAuthProvider();
+                    try {
+                        await signInWithPopup(auth, provider);
+                        // 登入成功後，onAuthStateChanged 會自動再次觸發
+                    } catch (error) {
+                        console.error("登入失敗:", error);
+                        document.getElementById('status-message').textContent = "登入失敗或已取消，將導回購物車。";
+                        
+                        setTimeout(() => {
+                            // 導向購物車頁面 (路徑已替換為同一層)
+                            window.location.href = 'cart.html?error=login_failed';
+                        }, 2000);
+                    }
                 }
-            }
-        });
-
-        // 呼叫 Cloud Function 進行後端驗證
+            });
+        }
+        
+        // 呼叫 Cloud Function 進行後端驗證 (在函式內部，return 語句是合法的)
         async function startAuthorizationFlow(user) {
-            // 由於目標 URL 來自前端，我們需要從 URL 中解析或假設 courseId
-            // 這裡沿用假設：C1
+            // 這裡假設所有課程都使用 ID: C1 (您需要根據實際情況修改)
             const courseId = 'C1'; 
 
             try {
-                // 呼叫後端 API，Firebase 會自動將當前登入用戶的 ID Token 傳遞給後端 Function
+                // 呼叫後端 API
                 const result = await checkAuthFunction({ 
                     courseId: courseId,
                     targetUrl: encodedTargetUrl
@@ -112,22 +108,22 @@
                     window.location.href = redirectUrl;
                 } else {
                     document.getElementById('status-message').textContent = `❌ 權限不足，請先購買課程。`;
-                    // 導向購物車頁面 (由後端回傳的路徑，通常是購物車)
+                    
+                    // 注意：這裡假設您的 Cloud Function 後端也會回傳 'cart.html'
                     setTimeout(() => {
                          window.location.href = redirectUrl;
                     }, 2000);
                 }
 
             } catch (error) {
-                // 處理網路連線、Function 內部錯誤等
                 console.error("API 呼叫失敗:", error);
                 document.getElementById('status-message').textContent = "系統錯誤，無法驗證權限，請聯絡管理員。";
                 setTimeout(() => {
+                    // 導向購物車頁面 (路徑已替換為同一層)
                     window.location.href = 'cart.html?error=system_error';
                 }, 3000);
             }
         }
-
     </script>
 </body>
 </html>
