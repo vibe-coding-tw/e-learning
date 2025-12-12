@@ -5,8 +5,9 @@
     <title>課程授權驗證中...</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: sans-serif; text-align: center; padding-top: 50px; }
-        .loading { font-size: 1.2em; color: #1a73e8; }
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; background-color: #f4f7f9; }
+        .loading { font-size: 1.2em; color: #1a73e8; background-color: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); max-width: 400px; margin: 50px auto; }
+        #status-message { margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -18,9 +19,6 @@
     <script type="module">
         // 1. 匯入必要的 Firebase 函式 (使用您指定的 12.6.0 版本)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
-        
-        // 匯入 Auth 和 Functions SDK
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
@@ -32,42 +30,49 @@
             projectId: "onlinelearning-b5cfc",
             storageBucket: "onlinelearning-b5cfc.firebasestorage.app",
             messagingSenderId: "505254683984",
-            appId: "1:505254683984:web:9653dfa4eef5489cedf855",
+            appId: "1:505254683984:web:9653dfa4eef54899cedf855", // 假設這是您的 app id
             measurementId: "G-P5LQ23Y31Q"
         };
 
         // 3. 初始化 Firebase 服務
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app); 
         const auth = getAuth(app);           
         
         // 請將 'asia-east1' 替換為您的 Cloud Function 部署地區
         const functions = getFunctions(app, 'asia-east1'); 
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
 
+        // 定義購物車路徑 (同一層目錄)
+        const CART_URL = 'cart.html'; 
+
         // 更新狀態訊息
-        document.getElementById('status-message').textContent = "服務已連線，檢查登入狀態...";
+        const statusMessageElement = document.getElementById('status-message');
+        statusMessageElement.textContent = "服務已連線，檢查登入狀態...";
 
 
         // 4. 授權流程的核心邏輯
         const urlParams = new URLSearchParams(window.location.search);
+        
+        // 獲取課程 ID (假設課程頁面現在傳遞了這個參數，例如: auth.html?url=...&id=C2_L1)
+        // 🚨 這是邏輯優化點，您需要確保所有課程頁面的跳轉連結都加上 &id=CourseID
+        const courseId = urlParams.get('id') || 'C_DEFAULT'; 
         const encodedTargetUrl = urlParams.get('url');
 
         // 檢查目標 URL 參數是否存在
         if (!encodedTargetUrl) {
-             document.getElementById('status-message').textContent = "錯誤：缺少目標課程連結參數。";
-             // 導向購物車頁面 (路徑已替換為同一層)
-             window.location.href = 'cart.html?error=invalid_link';
+             statusMessageElement.textContent = "錯誤：缺少目標課程連結參數。";
+             // 修正點 1: 導向同一層目錄的 cart.html
+             window.location.href = `${CART_URL}?error=invalid_link`;
         } else {
             // 如果 URL 參數正確，開始監聽登入狀態
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     // 已登入：執行 API 驗證
-                    document.getElementById('status-message').textContent = `已登入：${user.email}，正在驗證課程權限...`;
-                    await startAuthorizationFlow(user);
+                    statusMessageElement.textContent = `已登入：${user.email}，正在驗證課程權限...`;
+                    await startAuthorizationFlow(user, courseId, encodedTargetUrl);
                 } else {
                     // 未登入：引導用戶登入
-                    document.getElementById('status-message').textContent = "偵測到您尚未登入，請使用 Google 帳號登入。";
+                    statusMessageElement.textContent = "偵測到您尚未登入，請使用 Google 帳號登入。";
                     
                     const provider = new GoogleAuthProvider();
                     try {
@@ -75,11 +80,11 @@
                         // 登入成功後，onAuthStateChanged 會自動再次觸發
                     } catch (error) {
                         console.error("登入失敗:", error);
-                        document.getElementById('status-message').textContent = "登入失敗或已取消，將導回購物車。";
+                        statusMessageElement.textContent = "登入失敗或已取消，將導回購物車。";
                         
                         setTimeout(() => {
-                            // 導向購物車頁面 (路徑已替換為同一層)
-                            window.location.href = 'cart.html?error=login_failed';
+                            // 修正點 2: 導向同一層目錄的 cart.html
+                            window.location.href = `${CART_URL}?error=login_failed`;
                         }, 2000);
                     }
                 }
@@ -87,29 +92,27 @@
         }
         
         // 呼叫 Cloud Function 進行後端驗證 (在函式內部，return 語句是合法的)
-        async function startAuthorizationFlow(user) {
-            // 這裡假設所有課程都使用 ID: C1 (您需要根據實際情況修改)
-            const courseId = 'C1'; 
-
+        async function startAuthorizationFlow(user, courseId, encodedTargetUrl) {
+            
             try {
-                // 呼叫後端 API
+                // 呼叫後端 API，傳入實際的 courseId
                 const result = await checkAuthFunction({ 
                     courseId: courseId,
                     targetUrl: encodedTargetUrl
                 });
 
                 const status = result.data.status;
-                const redirectUrl = result.data.redirectUrl;
+                const redirectUrl = result.data.redirectUrl; // 應是已解碼的最終 URL 或 cart.html
 
-                document.getElementById('status-message').textContent = `驗證狀態: ${status}，正在導向...`;
+                statusMessageElement.textContent = `驗證狀態: ${status}，正在導向...`;
 
                 if (status === 'AUTHORIZED') {
-                    document.getElementById('status-message').textContent = `✅ 權限通過！跳轉至課程：${decodeURIComponent(redirectUrl)}`;
-                    window.location.href = redirectUrl;
+                    statusMessageElement.textContent = `✅ 權限通過！跳轉至課程...`;
+                    window.location.href = redirectUrl; // 導向課程連結
                 } else {
-                    document.getElementById('status-message').textContent = `❌ 權限不足，請先購買課程。`;
+                    statusMessageElement.textContent = `❌ 權限不足，請先購買課程。`;
                     
-                    // 注意：這裡假設您的 Cloud Function 後端也會回傳 'cart.html'
+                    // 修正點 3: 確保這裡導向的是 Cloud Function 回傳的路徑（預期是 cart.html）
                     setTimeout(() => {
                          window.location.href = redirectUrl;
                     }, 2000);
@@ -117,10 +120,10 @@
 
             } catch (error) {
                 console.error("API 呼叫失敗:", error);
-                document.getElementById('status-message').textContent = "系統錯誤，無法驗證權限，請聯絡管理員。";
+                statusMessageElement.textContent = "系統錯誤，無法驗證權限，請聯絡管理員。";
                 setTimeout(() => {
-                    // 導向購物車頁面 (路徑已替換為同一層)
-                    window.location.href = 'cart.html?error=system_error';
+                    // 修正點 4: 導向同一層目錄的 cart.html
+                    window.location.href = `${CART_URL}?error=system_error`;
                 }, 3000);
             }
         }

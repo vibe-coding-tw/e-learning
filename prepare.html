@@ -4,19 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>安裝課程：VS Code, Copilot, PlatformIO 環境設定</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 基礎樣式 */
+        /* 基礎樣式 (使用 Tailwind 的 reset) */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: #f4f7f9; 
             color: #333; 
-            margin: 0; 
-            padding: 20px; 
         }
         .container { 
             max-width: 1200px; 
             margin: auto; 
         }
+        /* 頁面標題樣式 */
         h1 { 
             color: #28a745; /* 主題色：綠色 */
             text-align: center; 
@@ -25,13 +25,6 @@
             border-bottom: 3px solid #e9fff0;
         }
 
-        /* 課程卡片連結包裹層樣式 (使整個卡片可點擊) */
-        .lesson-link-wrapper {
-            text-decoration: none; /* 移除連結下劃線 */
-            color: inherit; /* 繼承文字顏色 */
-            display: block;
-        }
-        
         /* 資訊卡片網格佈局 */
         .info-grid { 
             display: grid; 
@@ -49,9 +42,11 @@
             padding: 25px;
             height: 100%;
             transition: transform 0.3s ease, box-shadow 0.3s ease; 
+            display: flex;
+            flex-direction: column;
         }
-        /* 連結卡片懸停效果 */
-        .lesson-link-wrapper:hover .info-card { 
+        /* 連結/課程卡片懸停效果 */
+        .course-card:hover { 
             transform: translateY(-5px); 
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12); 
             background-color: #e9fff0; /* 懸停時使用淺綠色反饋 */
@@ -88,6 +83,7 @@
             list-style: none; 
             padding: 0; 
             margin: 0; 
+            flex-grow: 1; /* 讓列表佔滿空間 */
         }
         .content-list li { 
             padding: 10px 0; 
@@ -129,53 +125,64 @@
             margin-bottom: 3px;
         }
         .note {
-            background-color: #fff3cd;
-            color: #856404;
             padding: 15px;
             border-radius: 8px;
             margin-top: 20px;
             font-size: 0.95em;
-            border-left: 5px solid #ffc107;
         }
-        .click-hint { 
-            display: block; 
-            text-align: center; 
+        
+        /* 動態按鈕樣式 */
+        .action-btn { 
             margin-top: 20px; 
-            color: #1a73e8; 
+            width: 100%; 
+            padding: 10px; 
+            border-radius: 6px; 
             font-weight: bold; 
-            font-size: 0.9em;
+            transition: background-color 0.2s;
+            cursor: pointer;
         }
     </style>
 </head>
-<body>
+<body class="p-5">
     <div class="container">
-        <h1>🛠️ 安裝課程：VS Code, Copilot, PlatformIO 環境設定</h1>
+        <header class="flex justify-between items-center py-4 px-0 border-b mb-6">
+            <h1 class="text-3xl font-bold text-green-600">🛠️ 安裝課程：VS Code, Copilot, PlatformIO 環境設定</h1>
+            <div id="auth-status" class="text-sm">
+                <span id="user-display" class="text-gray-600">訪客模式</span>
+                <button id="login-btn" class="ml-3 bg-indigo-500 hover:bg-indigo-600 text-white text-sm py-1 px-3 rounded">登入</button>
+            </div>
+        </header>
 
         <div class="info-grid">
             
-            <a href="auth.html?url=https%3A%2F%2Fclassroom.google.com%2Fc%2FODM1OTE3OTYwMTkw%3Fcjc%3D72uyaadl" target="_blank" class="lesson-link-wrapper">
-                <div class="info-card">
-                    <div class="card-header">
-                        <div class="card-icon">IDE</div>
-                        <h2>開發環境安裝與設定</h2>
-                    </div>
-                    <p style="color: #6c757d; font-style: italic;">本課程目標是將所有開發元件整合到您的電腦中。</p>
-                    
-                    <div class="hardware-img-wrapper">
-                        
-                        <p style="font-size: 0.85em; color: #666; margin-top: 10px;">整合 PlatformIO 的 VS Code 開發介面</p>
-                    </div>
-                    
-                    <ul class="content-list">
-                        <li><span class="check-mark">🖥️</span> <b>VS Code：</b> 作為所有程式碼的核心編輯器。</li>
-                        <li><span class="check-mark">🔌</span> <b>PlatformIO：</b> 處理所有編譯、燒錄和專案管理。</li>
-                        <li><span class="check-mark">🤖</span> <b>GitHub Copilot：</b> 提供即時的 AI 程式碼建議。</li>
-                    </ul>
-                    <div class="note" style="background-color: #d4edda; color: #155724; border-left: 5px solid #28a745;">
-                        <b>重要：</b> 點擊此卡片，即可進入 <b>Google Classroom</b> 進行詳細的安裝設定步驟。
-                    </div>
+            <div class="info-card course-card"
+                 id="lesson-C1_SETUP" 
+                 data-course-id="C1_SETUP" 
+                 data-course-name="開發環境安裝與設定" 
+                 data-course-price="0"
+                 data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl"> 
+                 <div class="card-header">
+                    <div class="card-icon">IDE</div>
+                    <h2>開發環境安裝與設定</h2>
                 </div>
-            </a>
+                <p style="color: #6c757d; font-style: italic;">本課程目標是將所有開發元件整合到您的電腦中。</p>
+                
+                <div class="hardware-img-wrapper">
+                    <p style="font-size: 0.85em; color: #666; margin-top: 10px;">整合 PlatformIO 的 VS Code 開發介面</p>
+                </div>
+                
+                <ul class="content-list">
+                    <li><span class="check-mark">🖥️</span> <b>VS Code：</b> 作為所有程式碼的核心編輯器。</li>
+                    <li><span class="check-mark">🔌</span> <b>PlatformIO：</b> 處理所有編譯、燒錄和專案管理。</li>
+                    <li><span class="check-mark">🤖</span> <b>GitHub Copilot：</b> 提供即時的 AI 程式碼建議。</li>
+                </ul>
+                <div class="note" style="background-color: #d4edda; color: #155724; border-left: 5px solid #28a745;">
+                    <b>重要：</b> 點擊下方按鈕，即可進入 <b>Google Classroom</b> 進行詳細的安裝設定步驟。
+                </div>
+                <button id="action-btn-C1_SETUP" class="action-btn bg-gray-400 text-white" disabled>
+                    載入中...
+                </button>
+            </div>
 
             <div class="info-card">
                 <div class="card-header">
@@ -204,7 +211,7 @@
                     <b style="display: block; color: #333; margin-bottom: 3px;">網路連線：</b>
                     穩定的寬頻網路連線
                 </div>
-                <div class="note">
+                <div class="note" style="background-color: #fff3cd; color: #856404; border-left: 5px solid #ffc107;">
                     <b>🚀 關鍵建議：</b> 8 GB 記憶體是基本門檻，但確保擁有 <b>SSD</b> 對於提升程式載入和編譯速度至關重要。
                 </div>
             </div>
@@ -243,5 +250,160 @@
 
         </div>
     </div>
+
+    <script type="module">
+        // 1. 匯入必要的 Firebase 函式 (使用您指定的 12.6.0 版本)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
+
+
+        // 2. 您的 Firebase 配置 (請替換為您的真實配置)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBv2fciGdUD4CifE1fH3hnzzamPdrvjjN8",
+            authDomain: "onlinelearning-b5cfc.firebaseapp.com",
+            projectId: "onlinelearning-b5cfc",
+            storageBucket: "onlinelearning-b5cfc.firebasestorage.app",
+            messagingSenderId: "505254683984",
+            appId: "1:505254683984:web:9653dfa4eef54899cedf855",
+            measurementId: "G-P5LQ23Y31Q"
+        };
+
+        // 3. 初始化 Firebase 服務
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);           
+        const functions = getFunctions(app, 'asia-east1'); 
+        
+        // 假定您會用這個 Cloud Function 檢查授權，即使是免費課程也通過它來處理重定向
+        const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
+
+        // ❗ 修正點 1: 購物車路徑定義 (同一層目錄)
+        const CART_URL = 'cart.html'; 
+        // 授權中轉頁面路徑 (同一層目錄)
+        const AUTH_URL = 'auth.html'; 
+
+        // ===============================================
+        // A. 登入/登出邏輯
+        // ===============================================
+        async function handleLogin() {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error("登入失敗:", error);
+            }
+        }
+
+        async function handleLogout() {
+            await signOut(auth);
+        }
+
+        // ===============================================
+        // B. 動態按鈕狀態更新核心邏輯
+        // ===============================================
+        
+        // 取得唯一的課程卡片
+        const lessonCard = document.getElementById('lesson-C1_SETUP');
+
+        /**
+         * 根據授權狀態更新單一課程卡片的按鈕
+         */
+        function updateCardAction(cardElement, status) {
+            const btn = cardElement.querySelector('.action-btn');
+            const courseId = cardElement.dataset.courseId;
+            const classroomUrl = cardElement.dataset.classroomUrl;
+
+            // 清除所有舊的事件監聽器
+            btn.onclick = null; 
+            btn.disabled = false;
+            btn.textContent = '';
+
+            if (status === 'AUTHORIZED') {
+                // 狀態 1: 已授權 (已付費或免費) -> 進入課程
+                btn.textContent = '✅ 進入課程內容';
+                btn.className = 'action-btn bg-green-600 hover:bg-green-700 text-white';
+                btn.onclick = () => {
+                    // 導向同一層目錄的 auth.html 進行二次驗證
+                    window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}`;
+                };
+            } else if (status === 'UNAUTHORIZED') {
+                // 狀態 2: 未授權 (理論上此免費課程不會出現此狀態，但作為錯誤處理)
+                btn.textContent = '⛔ 登入後即可進入 (錯誤狀態)';
+                btn.className = 'action-btn bg-red-600 hover:bg-red-700 text-white';
+                btn.onclick = () => window.location.reload(); // 點擊重試
+            } else if (status === 'NOT_LOGGED_IN') {
+                // 狀態 3: 未登入 -> 提示登入
+                btn.textContent = '👤 請先登入以進入課程 (免費)';
+                btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
+                btn.onclick = handleLogin; // 點擊按鈕觸發登入
+            } else if (status === 'LOADING') {
+                // 狀態 4: 載入中
+                btn.textContent = '權限檢查中...';
+                btn.className = 'action-btn bg-gray-400 text-white';
+                btn.disabled = true;
+            } else if (status === 'ERROR') {
+                // 錯誤狀態
+                btn.textContent = '錯誤: 點擊重新載入';
+                btn.className = 'action-btn bg-red-600 hover:bg-red-700 text-white';
+                btn.onclick = () => window.location.reload();
+            }
+        }
+
+        /**
+         * 檢查單一課程的授權狀態 (針對免費課程，Cloud Function 應回傳 AUTHORIZED)
+         */
+        async function checkLessonAuthorization(cardElement, user) {
+            updateCardAction(cardElement, 'LOADING');
+
+            const courseId = cardElement.dataset.courseId;
+            const classroomUrl = cardElement.dataset.classroomUrl;
+
+            try {
+                // 呼叫 Cloud Function 檢查授權
+                const result = await checkAuthFunction({ 
+                    courseId: courseId, 
+                    targetUrl: encodeURIComponent(classroomUrl) 
+                });
+
+                const status = result.data.status; 
+                
+                // 更新按鈕狀態
+                // 預期 Cloud Function 會回傳 AUTHORIZED (因為是免費課程)
+                updateCardAction(cardElement, status);
+
+            } catch (error) {
+                console.error(`課程 ${courseId} 授權檢查失敗:`, error);
+                // 檢查失敗，預設導向錯誤狀態
+                updateCardAction(cardElement, 'ERROR');
+            }
+        }
+
+        // ----------------------------------------------------
+        // C. 總體授權流程控制器
+        // ----------------------------------------------------
+        onAuthStateChanged(auth, (user) => {
+            const userDisplay = document.getElementById('user-display');
+            const loginBtn = document.getElementById('login-btn');
+
+            if (user) {
+                // 1. 已登入：更新 UI，並檢查課程的授權狀態
+                userDisplay.textContent = `您好, ${user.displayName || user.email}`;
+                loginBtn.textContent = '登出';
+                loginBtn.onclick = handleLogout;
+                
+                // 檢查安裝課程授權 (預期會被 Cloud Function 視為 AUTHORIZED)
+                checkLessonAuthorization(lessonCard, user); 
+
+            } else {
+                // 2. 未登入：更新 UI，將課程按鈕設定為「請先登入」
+                userDisplay.textContent = '訪客模式';
+                loginBtn.textContent = '登入';
+                loginBtn.onclick = handleLogin;
+                
+                updateCardAction(lessonCard, 'NOT_LOGGED_IN');
+            }
+        });
+
+    </script>
 </body>
 </html>
