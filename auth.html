@@ -16,38 +16,43 @@
     </div>
 
     <script type="module">
-        // 1. 匯入必要的 Firebase 函式
-        // 基礎：initializeApp
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js"; 
+        // 1. 匯入必要的 Firebase 函式 (使用您指定的 12.6.0 版本)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
         
-        // 驗證：getAuth
-        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
-        
-        // Functions：getFunctions, httpsCallable (用於呼叫後端 API)
-        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-functions.js";
+        // **您需要額外匯入 Auth 和 Functions SDK**
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
 
-        // 2. 您的 Firebase 配置
+        // 2. 您的 Firebase 配置 (已更新)
         const firebaseConfig = {
-            apiKey: "AIzaSyDeNFLKlqayaJk8C0hwV4514tCy02iRUiE",
-            authDomain: "coffee-spark-ai-barista-184bd.firebaseapp.com",
-            projectId: "coffee-spark-ai-barista-184bd",
-            storageBucket: "coffee-spark-ai-barista-184bd.firebasestorage.app",
-            messagingSenderId: "980857404578",
-            appId: "1:980857404578:web:b4ce557fdf9ab1bca76bfb"
+            apiKey: "AIzaSyBv2fciGdUD4CifE1fH3hnzzamPdrvjjN8",
+            authDomain: "onlinelearning-b5cfc.firebaseapp.com",
+            projectId: "onlinelearning-b5cfc",
+            storageBucket: "onlinelearning-b5cfc.firebasestorage.app",
+            messagingSenderId: "505254683984",
+            appId: "1:505254683984:web:9653dfa4eef5489cedf855",
+            measurementId: "G-P5LQ23Y31Q"
         };
 
         // 3. 初始化 Firebase 服務
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const functions = getFunctions(app, 'asia-east1'); // **請將地區替換為您的 Cloud Function 部署地區**
+        const analytics = getAnalytics(app); // 初始化 Analytics
+        const auth = getAuth(app);           // 初始化 Authentication
+        
+        // 初始化 Functions 服務 (請替換為您的 Cloud Function 部署地區)
+        // 假設您部署在 'asia-east1'，如果不是，請修改。
+        const functions = getFunctions(app, 'asia-east1'); 
+        
+        // 綁定後端 Cloud Function 名稱
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
 
         // 更新狀態訊息
         document.getElementById('status-message').textContent = "服務已連線，檢查登入狀態...";
 
 
-        // 4. 授權流程的核心邏輯 (請參考上一個回覆的邏輯)
+        // 4. 授權流程的核心邏輯
         const urlParams = new URLSearchParams(window.location.search);
         const encodedTargetUrl = urlParams.get('url');
 
@@ -57,25 +62,26 @@
              return;
         }
 
-        // 監聽用戶登入狀態
+        // 監聽用戶登入狀態：Firebase Auth 的標準流程
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 // 已登入：執行 API 驗證
                 document.getElementById('status-message').textContent = `已登入：${user.email}，正在驗證課程權限...`;
                 await startAuthorizationFlow(user);
             } else {
-                // 未登入：強制用戶登入
+                // 未登入：引導用戶登入
                 document.getElementById('status-message').textContent = "偵測到您尚未登入，請使用 Google 帳號登入。";
                 
                 // 執行 Google 登入彈窗
                 const provider = new GoogleAuthProvider();
                 try {
                      await signInWithPopup(auth, provider);
-                     // 登入成功後，onAuthStateChanged 會再次觸發，進入上面的 if (user) 區塊
+                     // 登入成功後，onAuthStateChanged 會自動再次觸發
                 } catch (error) {
+                     // 處理用戶關閉彈窗或登入失敗
                      console.error("登入失敗:", error);
-                     document.getElementById('status-message').textContent = "登入失敗，請檢查網路或授權狀態。";
-                     // 登入失敗導回購物車
+                     document.getElementById('status-message').textContent = "登入失敗或已取消，將導回購物車。";
+                     
                      setTimeout(() => {
                          window.location.href = 'cart.html?error=login_failed';
                      }, 2000);
@@ -85,10 +91,12 @@
 
         // 呼叫 Cloud Function 進行後端驗證
         async function startAuthorizationFlow(user) {
-            // 這裡假設所有課程都使用 ID: C1 (您需要根據實際情況修改)
+            // 由於目標 URL 來自前端，我們需要從 URL 中解析或假設 courseId
+            // 這裡沿用假設：C1
             const courseId = 'C1'; 
 
             try {
+                // 呼叫後端 API，Firebase 會自動將當前登入用戶的 ID Token 傳遞給後端 Function
                 const result = await checkAuthFunction({ 
                     courseId: courseId,
                     targetUrl: encodedTargetUrl
@@ -97,20 +105,21 @@
                 const status = result.data.status;
                 const redirectUrl = result.data.redirectUrl;
 
-                document.getElementById('status-message').textContent = `驗證成功，正在導向課程...`;
+                document.getElementById('status-message').textContent = `驗證狀態: ${status}，正在導向...`;
 
                 if (status === 'AUTHORIZED') {
-                    document.getElementById('status-message').textContent = `✅ 權限通過，即將跳轉。`;
+                    document.getElementById('status-message').textContent = `✅ 權限通過！跳轉至課程：${decodeURIComponent(redirectUrl)}`;
                     window.location.href = redirectUrl;
                 } else {
                     document.getElementById('status-message').textContent = `❌ 權限不足，請先購買課程。`;
-                    // 導向購物車頁面
+                    // 導向購物車頁面 (由後端回傳的路徑，通常是購物車)
                     setTimeout(() => {
                          window.location.href = redirectUrl;
                     }, 2000);
                 }
 
             } catch (error) {
+                // 處理網路連線、Function 內部錯誤等
                 console.error("API 呼叫失敗:", error);
                 document.getElementById('status-message').textContent = "系統錯誤，無法驗證權限，請聯絡管理員。";
                 setTimeout(() => {
