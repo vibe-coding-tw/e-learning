@@ -347,6 +347,9 @@
         // 呼叫後端授權檢查 Function (與 auth.html 使用同一個 Function)
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
 
+        // 購物車路徑定義 (根據您的最新要求：上一層目錄)
+        const CART_URL = '../cart.html'; 
+
         // ===============================================
         // A. 購物車核心邏輯
         // ===============================================
@@ -365,7 +368,8 @@
             } else {
                  alert(`「${productName}」已在購物車中！`);
             }
-            window.location.href = 'cart.html'; // 導向購物車確認
+            // ❗ 修正：導向上一層目錄的 cart.html
+            window.location.href = CART_URL; 
         }
 
         // ===============================================
@@ -406,7 +410,7 @@
             const coursePrice = cardElement.dataset.coursePrice;
             const classroomUrl = cardElement.dataset.classroomUrl;
 
-            // 清除舊的事件監聽器
+            // 清除所有舊的事件監聽器
             btn.onclick = null; 
             btn.disabled = false;
 
@@ -416,6 +420,7 @@
                 btn.className = 'action-btn bg-blue-600 hover:bg-blue-700 text-white';
                 btn.onclick = () => {
                     // 導向 auth.html 進行二次驗證，確保連結不會被直接分享
+                    // 假設 auth.html 和當前頁面在同一目錄
                     window.location.href = `auth.html?url=${encodeURIComponent(classroomUrl)}`;
                 };
             } else if (status === 'UNAUTHORIZED' || status === 'NOT_LOGGED_IN') {
@@ -453,7 +458,6 @@
                 // 呼叫 Cloud Function 檢查授權
                 const result = await checkAuthFunction({ 
                     courseId: courseId, 
-                    // 這裡的 targetUrl 僅是傳入後端參數，並不影響前端按鈕狀態
                     targetUrl: encodeURIComponent(classroomUrl) 
                 });
 
@@ -465,7 +469,7 @@
             } catch (error) {
                 console.error(`課程 ${courseId} 授權檢查失敗:`, error);
                 // 檢查失敗，預設導向購物車（未授權狀態）
-                updateCardAction(cardElement, 'ERROR');
+                updateCardAction(cardElement, 'UNAUTHORIZED');
             }
         }
 
