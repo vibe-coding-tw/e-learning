@@ -3,16 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vibe Coding 購物車與課程中心</title>
+    <title>Vibe Coding 待結帳項目</title> 
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .lesson-card {
-            transition: transform 0.2s;
-        }
-        .lesson-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-        }
         /* 統一移除按鈕樣式 */
         .remove-cart-item-btn {
             color: #ef4444; /* red-500 */
@@ -29,7 +22,7 @@
 
     <header class="bg-white shadow-md p-4 sticky top-0 z-10">
         <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-indigo-600">Vibe Coding 課程中心</h1>
+            <h1 class="text-2xl font-bold text-indigo-600">Vibe Coding 線上學習</h1> 
             <div id="auth-status" class="text-sm text-gray-600">
                 <span id="user-display">請登入</span>
                 <button id="login-btn" class="ml-3 bg-indigo-500 hover:bg-indigo-600 text-white text-xs py-1 px-3 rounded">登入 / 註冊</button>
@@ -40,7 +33,7 @@
     <main class="max-w-4xl mx-auto p-6">
         
         <section class="bg-white p-6 rounded-lg shadow-xl mb-10">
-            <h2 class="text-3xl font-extrabold text-gray-800 border-b pb-4 mb-6">🛒 您的購物車 (待結帳項目)</h2>
+            <h2 class="text-3xl font-extrabold text-gray-800 border-b pb-4 mb-6">待結帳項目</h2>
             
             <div id="unpaid-items" class="space-y-4">
                 </div>
@@ -57,27 +50,14 @@
             </div>
         </section>
 
-        
-        <section class="bg-white p-6 rounded-lg shadow-xl">
-            <h2 class="text-3xl font-extrabold text-gray-800 border-b pb-4 mb-6">✅ 已付款項目 (課程中心)</h2>
-            
-            <div id="authorized-lessons" class="space-y-4">
-                <div id="auth-status-loading" class="text-indigo-600">
-                    <p>請點擊右上角「登入」按鈕，檢查您的課程權限。</p>
-                </div>
-            </div>
-        </section>
-
-    </main>
+        </main>
 
     <script type="module">
-        // 1. 匯入必要的 Firebase 函式 (使用您指定的 12.6.0 版本)
+        // 1. 匯入必要的 Firebase 函式 (只保留 Auth)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
-        // import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
-        
-        // 匯入 Auth 和 Functions SDK
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
+        
+        // 這裡不再需要 getFunctions/httpsCallable，因為我們移除了授權課程中心功能。
 
 
         // 2. 您的 Firebase 配置
@@ -95,11 +75,9 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);           
         
-        // 請將 'asia-east1' 替換為您的 Cloud Function 部署地區
-        const functions = getFunctions(app, 'asia-east1'); 
-        
-        // Cloud Function 名稱
-        const getAuthorizedCourses = httpsCallable(functions, 'getAuthorizedCourses');
+        // 刪除 Cloud Function 相關變數，因為已不需要：
+        // const functions = getFunctions(app, 'asia-east1'); 
+        // const getAuthorizedCourses = httpsCallable(functions, 'getAuthorizedCourses');
 
 
         // ===============================================
@@ -113,14 +91,14 @@
         const checkoutBtn = document.getElementById('checkout-btn');
 
         /**
-         * 移除購物車項目的核心邏輯 (不再作為 window 上的全域函式)
+         * 移除購物車項目的核心邏輯 
          * @param {string} productId - 要移除的產品 ID
          */
         function removeFromCart(productId) {
             let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             delete cart[productId];
             localStorage.setItem('vibeCodingCart', JSON.stringify(cart));
-            renderCartItems(); // 重新渲染頁面
+            renderCartItems(); // 重新渲染頁面，實現即時刷新
         }
 
         /**
@@ -130,7 +108,6 @@
             const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             let total = 0;
             
-            // 清除現有的 HTML 內容
             unpaidItemsContainer.innerHTML = ''; 
 
             if (Object.keys(cart).length === 0) {
@@ -169,7 +146,7 @@
             cartTotalElement.textContent = total.toLocaleString();
             checkoutBtn.disabled = (total === 0);
 
-            // 🚨 修正點 1: 在渲染結束後，統一為所有移除按鈕綁定事件
+            // 綁定移除按鈕事件
             document.querySelectorAll('.remove-cart-item-btn').forEach(button => {
                 button.addEventListener('click', (event) => {
                     const productId = event.currentTarget.dataset.productId;
@@ -183,7 +160,7 @@
 
 
         // ===============================================
-        // B. 身份驗證與課程中心邏輯
+        // B. 身份驗證邏輯
         // ===============================================
         
         async function handleLogin() {
@@ -198,52 +175,11 @@
 
         async function handleLogout() {
             await signOut(auth);
-            // 登出後重新渲染，以便更新課程中心狀態
+            // 登出後重新渲染狀態
             onAuthStateChanged(auth, () => {}); 
         }
-
-        async function renderAuthorizedLessons(user) {
-            const lessonsContainer = document.getElementById('authorized-lessons');
-            lessonsContainer.innerHTML = '<p class="text-indigo-600">正在查詢您的課程權限...</p>';
-
-            try {
-                // 呼叫 Cloud Function 取得用戶的授權課程列表
-                const result = await getAuthorizedCourses(); 
-                const courses = result.data.courses || [];
-                
-                if (courses.length === 0) {
-                    lessonsContainer.innerHTML = '<p class="text-gray-500">您目前沒有已授權的課程。請先購買！</p>';
-                    return;
-                }
-                
-                let lessonsHTML = '';
-                courses.forEach(course => {
-                    const buttonClass = course.redirectUrl ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-400 cursor-not-allowed';
-                    
-                    lessonsHTML += `
-                        <div class="lesson-card flex justify-between items-center p-4 bg-white border rounded-lg shadow-sm">
-                            <div class="flex flex-col">
-                                <p class="font-semibold text-gray-800">${course.name}</p>
-                                <p class="text-sm text-gray-500">代號: ${course.courseId} / 教室代碼: ${course.classCode || 'N/A'}</p>
-                            </div>
-                            <a href="${course.redirectUrl || '#'}" target="_blank" 
-                                class="text-white py-2 px-4 rounded ${buttonClass} min-w-[100px] text-center"
-                                ${course.redirectUrl ? '' : 'disabled'}>
-                                進入課程
-                            </a>
-                        </div>
-                    `;
-                });
-
-                lessonsContainer.innerHTML = lessonsHTML;
-
-            } catch (error) {
-                console.error("獲取授權課程失敗:", error);
-                lessonsContainer.innerHTML = '<p class="text-red-500">查詢課程權限時發生錯誤，請聯絡管理員。</p>';
-            }
-        }
         
-        // 監聽登入狀態變化
+        // 監聽登入狀態變化 (只用於更新頂部 UI)
         onAuthStateChanged(auth, (user) => {
             const userDisplay = document.getElementById('user-display');
             const loginBtn = document.getElementById('login-btn');
@@ -253,18 +189,16 @@
                 userDisplay.textContent = `您好, ${user.displayName || user.email}`;
                 loginBtn.textContent = '登出';
                 loginBtn.onclick = handleLogout;
-                renderAuthorizedLessons(user); // 檢查已付款課程
             } else {
                 // 未登入
                 userDisplay.textContent = '訪客模式';
                 loginBtn.textContent = '登入 / 註冊';
                 loginBtn.onclick = handleLogin;
-                document.getElementById('authorized-lessons').innerHTML = '<p class="text-gray-500">請登入以查看您的已付款課程。</p>';
             }
         });
 
         // ===============================================
-        // C. 付款按鈕邏輯 (這裡僅為模擬，需替換為實際支付介面導向)
+        // C. 付款按鈕邏輯
         // ===============================================
         checkoutBtn.addEventListener('click', () => {
             const totalText = cartTotalElement.textContent.replace(/,/g, '').trim();
@@ -280,8 +214,7 @@
                 
                 alert(`模擬付款流程：您將支付 ${total} 元。`);
                 
-                // 🚨 這裡應替換為導向到您的第三方支付介面
-                // 建議：將購物車內容 (JSON.stringify(cart)) 作為參數傳遞給後端，由後端發起支付請求。
+                // 實作：導向到第三方支付介面
             }
         });
         
