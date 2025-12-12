@@ -277,7 +277,7 @@
         // 假定您會用這個 Cloud Function 檢查授權，即使是免費課程也通過它來處理重定向
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
 
-        // ❗ 修正點 1: 購物車路徑定義 (同一層目錄)
+        // 購物車路徑定義 (同一層目錄)
         const CART_URL = 'cart.html'; 
         // 授權中轉頁面路徑 (同一層目錄)
         const AUTH_URL = 'auth.html'; 
@@ -323,8 +323,9 @@
                 btn.textContent = '✅ 進入課程內容';
                 btn.className = 'action-btn bg-green-600 hover:bg-green-700 text-white';
                 btn.onclick = () => {
-                    // 導向同一層目錄的 auth.html 進行二次驗證
-                    window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}`;
+                    // 🚨 修正點：在 URL 中新增 courseId 參數，以符合 auth.html 的要求
+                    const redirectUrl = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}`;
+                    window.location.href = redirectUrl;
                 };
             } else if (status === 'UNAUTHORIZED') {
                 // 狀態 2: 未授權 (理論上此免費課程不會出現此狀態，但作為錯誤處理)
@@ -368,7 +369,6 @@
                 const status = result.data.status; 
                 
                 // 更新按鈕狀態
-                // 預期 Cloud Function 會回傳 AUTHORIZED (因為是免費課程)
                 updateCardAction(cardElement, status);
 
             } catch (error) {
