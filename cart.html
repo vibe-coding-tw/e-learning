@@ -200,6 +200,31 @@
         // ===============================================
         // C. 付款按鈕邏輯
         // ===============================================
+        // C. 付款按鈕邏輯 (修正後的程式碼)
+checkoutBtn.addEventListener('click', () => {
+    const totalText = cartTotalElement.textContent.replace(/,/g, '').trim();
+    const total = parseInt(totalText);
+
+    if (total <= 0) {
+        alert("購物車為空，無法結帳。");
+        return;
+    }
+
+    if (!auth.currentUser) {
+        alert("請先登入才能進行付款！");
+        // 建議自動跳出登入視窗
+        handleLogin(); 
+        return;
+    }
+    
+    // 獲取購物車內容和當前用戶
+    const cartItems = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
+    const user = auth.currentUser;
+
+    // 呼叫 Cloud Function 處理 Line Pay 請求
+    handleLinePayCheckout(user, total, cartItems);
+});
+/*
         checkoutBtn.addEventListener('click', () => {
             const totalText = cartTotalElement.textContent.replace(/,/g, '').trim();
             const total = parseInt(totalText);
@@ -217,7 +242,7 @@
                 // 實作：導向到第三方支付介面
             }
         });
-        
+*/        
     </script>
 </body>
 </html>

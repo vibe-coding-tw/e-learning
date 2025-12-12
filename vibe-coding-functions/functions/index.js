@@ -79,3 +79,42 @@ exports.checkPaymentAuthorization = functions.https.onCall(async (data, context)
         );
     }
 });
+
+// 假設您在 Firebase 服務中重新引入了 Functions SDK
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
+// ... 初始化 app 和 functions ...
+const functions = getFunctions(app, 'asia-east1'); 
+const initLinePay = httpsCallable(functions, 'initiateLinePayPayment'); // 🚨 新增的 Cloud Function 名稱
+
+/**
+ * 處理與後端的 Line Pay 結帳流程
+ */
+async function handleLinePayCheckout(user, total, cartItems) {
+    checkoutBtn.disabled = true;
+    checkoutBtn.textContent = '📞 正在建立 Line Pay 交易...';
+    
+    try {
+        const response = await initLinePay({
+            amount: total,
+            userId: user.uid,
+            cartDetails: cartItems, // 傳遞詳細購物車內容給後端
+            // 讓後端知道付款成功後，要將用戶導回哪個頁面
+            confirmUrl: window.location.origin + '/payment-confirm.html' 
+        });
+
+        // 成功建立交易
+        if (response.data && response.data.webPaymentUrl) {
+            console.log("Line Pay 交易建立成功，正在導向...");
+            // 導向 Line Pay 官方付款頁面
+            window.location.href = response.data.webPaymentUrl;
+        } else {
+            throw new Error(response.data.message || 'Line Pay 建立失敗。');
+        }
+
+    } catch (error) {
+        console.error("Line Pay 結帳失敗:", error);
+        alert(`結帳失敗：${error.message}，請稍後再試。`);
+        checkoutBtn.disabled = false;
+        checkoutBtn.textContent = '💳 前往付款';
+    }
+}
