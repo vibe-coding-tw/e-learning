@@ -53,7 +53,7 @@
 
         if (!encodedTargetUrl) {
              document.getElementById('status-message').textContent = "錯誤：缺少目標課程連結參數。";
-             window.location.href = '../dynamic_shopping_cart.html?error=invalid_link';
+             window.location.href = 'cart.html?error=invalid_link';
              return;
         }
 
@@ -77,7 +77,7 @@
                      document.getElementById('status-message').textContent = "登入失敗，請檢查網路或授權狀態。";
                      // 登入失敗導回購物車
                      setTimeout(() => {
-                         window.location.href = '../dynamic_shopping_cart.html?error=login_failed';
+                         window.location.href = 'cart.html?error=login_failed';
                      }, 2000);
                 }
             }
@@ -114,7 +114,7 @@
                 console.error("API 呼叫失敗:", error);
                 document.getElementById('status-message').textContent = "系統錯誤，無法驗證權限，請聯絡管理員。";
                 setTimeout(() => {
-                    window.location.href = '../dynamic_shopping_cart.html?error=system_error';
+                    window.location.href = 'cart.html?error=system_error';
                 }, 3000);
             }
         }
