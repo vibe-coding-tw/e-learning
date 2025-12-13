@@ -349,6 +349,9 @@
 
         // 購物車路徑定義 (根據您的最新要求：上一層目錄)
         const CART_URL = '../cart.html'; 
+        // 授權中轉頁路徑定義 (假設在同一目錄)
+        const AUTH_URL = 'auth.html'; 
+
 
         // ===============================================
         // A. 購物車核心邏輯
@@ -368,7 +371,7 @@
             } else {
                  alert(`「${productName}」已在購物車中！`);
             }
-            // ❗ 修正：導向上一層目錄的 cart.html
+            // 導向購物車頁面
             window.location.href = CART_URL; 
         }
 
@@ -409,6 +412,7 @@
             const courseName = cardElement.dataset.courseName;
             const coursePrice = cardElement.dataset.coursePrice;
             const classroomUrl = cardElement.dataset.classroomUrl;
+            const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`; // 格式化價格
 
             // 清除所有舊的事件監聽器
             btn.onclick = null; 
@@ -420,16 +424,21 @@
                 btn.className = 'action-btn bg-blue-600 hover:bg-blue-700 text-white';
                 btn.onclick = () => {
                     // 導向 auth.html 進行二次驗證，確保連結不會被直接分享
-                    // 假設 auth.html 和當前頁面在同一目錄
-                    window.location.href = `auth.html?url=${encodeURIComponent(classroomUrl)}`;
+                    const redirectUrl = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}`;
+                    window.location.href = redirectUrl;
                 };
-            } else if (status === 'UNAUTHORIZED' || status === 'NOT_LOGGED_IN') {
-                // 狀態 2 & 3: 未授權或未登入 -> 加入購物車
-                btn.textContent = '🛒 加入購物車 (NT$ ' + coursePrice + ')';
+            } else if (status === 'UNAUTHORIZED') {
+                // 狀態 2: 已登入但未付費 -> 加入購物車
+                btn.textContent = `🛒 加入購物車 (${priceText})`;
                 btn.className = 'action-btn bg-green-600 hover:bg-green-700 text-white';
                 btn.onclick = () => {
                     addToCart(courseId, courseName, coursePrice); 
                 };
+            } else if (status === 'NOT_LOGGED_IN') {
+                // 狀態 3: 未登入 -> 引導登入 (點擊後應觸發登入流程)
+                btn.textContent = `👤 登入後可購買 (${priceText})`;
+                btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
+                btn.onclick = handleLogin;
             } else if (status === 'LOADING') {
                 // 狀態 4: 載入中
                 btn.textContent = '權限檢查中...';
@@ -449,6 +458,9 @@
          * @param {object} user - Firebase User 物件
          */
         async function checkLessonAuthorization(cardElement, user) {
+            // 已在 onAuthStateChanged 中處理了未登入狀態，這裡只處理已登入情況
+            if (!user) return; 
+
             updateCardAction(cardElement, 'LOADING');
 
             const courseId = cardElement.dataset.courseId;
@@ -468,7 +480,7 @@
 
             } catch (error) {
                 console.error(`課程 ${courseId} 授權檢查失敗:`, error);
-                // 檢查失敗，預設導向購物車（未授權狀態）
+                // 檢查失敗，預設導向未授權狀態
                 updateCardAction(cardElement, 'UNAUTHORIZED');
             }
         }
@@ -490,7 +502,7 @@
                     checkLessonAuthorization(card, user);
                 });
             } else {
-                // 2. 未登入：更新 UI，將所有課程按鈕設定為「加入購物車」
+                // 2. 未登入：更新 UI，將所有課程按鈕設定為「未登入」狀態
                 userDisplay.textContent = '訪客模式';
                 loginBtn.textContent = '登入';
                 loginBtn.onclick = handleLogin;
