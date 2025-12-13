@@ -35,8 +35,13 @@
         <section class="bg-white p-6 rounded-lg shadow-xl mb-10">
             <h2 class="text-3xl font-extrabold text-gray-800 border-b pb-4 mb-6">待結帳項目</h2>
             
+            <div id="auth-error-message" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+                <p class="font-bold">登入失敗通知</p>
+                <p id="error-details">您的登入嘗試失敗，原因可能為瀏覽器阻擋。我們已切換到「頁面重新導向」方式，請重新點擊登入。</p>
+            </div>
+            
             <div id="unpaid-items" class="space-y-4">
-                </div>
+            </div>
             <p id="empty-cart-msg" class="text-gray-500 italic text-center pt-4">購物車是空的！請回到課程頁面選購。</p>
             
             <div id="cart-summary" class="mt-8 pt-4 border-t-2 border-dashed border-gray-200">
@@ -53,11 +58,11 @@
         </main>
 
     <script type="module">
-        // 1. 匯入必要的 Firebase 函式 (只保留 Auth)
+        // 1. 匯入必要的 Firebase 函式 (將 signInWithPopup 改為 signInWithRedirect，並新增 getRedirectResult)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
-        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-        
-        // 這裡不再需要 getFunctions/httpsCallable，因為我們移除了授權課程中心功能。
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithRedirect, signOut, getRedirectResult } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        // 重新引入 Functions SDK 以便 Line Pay 呼叫
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
 
         // 2. 您的 Firebase 配置
@@ -73,13 +78,10 @@
 
         // 3. 初始化 Firebase 服務
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);           
+        const auth = getAuth(app);    
+        const functions = getFunctions(app, 'asia-east1'); 
+        const initLinePay = httpsCallable(functions, 'initiateLinePayPayment');
         
-        // 刪除 Cloud Function 相關變數，因為已不需要：
-        // const functions = getFunctions(app, 'asia-east1'); 
-        // const getAuthorizedCourses = httpsCallable(functions, 'getAuthorizedCourses');
-
-
         // ===============================================
         // A. 購物車項目渲染邏輯
         // ===============================================
@@ -89,6 +91,9 @@
         const emptyMsg = document.getElementById('empty-cart-msg');
         const cartTotalElement = document.getElementById('cart-total');
         const checkoutBtn = document.getElementById('checkout-btn');
+        const authErrorMessage = document.getElementById('auth-error-message');
+        const errorDetails = document.getElementById('error-details');
+
 
         /**
          * 移除購物車項目的核心邏輯 
@@ -160,16 +165,22 @@
 
 
         // ===============================================
-        // B. 身份驗證邏輯
+        // B. 身份驗證邏輯 (使用 Redirect 解決彈窗問題)
         // ===============================================
         
+        /**
+         * 處理登入，改為頁面重新導向
+         */
         async function handleLogin() {
             const provider = new GoogleAuthProvider();
             try {
-                await signInWithPopup(auth, provider);
+                // 🚨 關鍵修正：從 signInWithPopup 改為 signInWithRedirect
+                await signInWithRedirect(auth, provider);
+                // 執行後頁面會跳轉到 Google 認證頁面
             } catch (error) {
                 console.error("登入失敗:", error);
-                alert("登入失敗，請稍後再試。");
+                authErrorMessage.style.display = 'block';
+                errorDetails.textContent = `登入失敗：${error.message}。請檢查您的網路連線或瀏覽器設定。`;
             }
         }
 
@@ -179,6 +190,29 @@
             onAuthStateChanged(auth, () => {}); 
         }
         
+        /**
+         * 處理登入回傳結果 (必須在頁面頂部執行)
+         */
+        async function handleRedirectResult() {
+            try {
+                // 嘗試獲取從 Google 重新導向回來的結果
+                const result = await getRedirectResult(auth);
+                if (result) {
+                    // 登入成功，onAuthStateChanged 會被觸發
+                    console.log("登入成功 (Redirect Result):", result.user.displayName);
+                    authErrorMessage.style.display = 'none';
+                }
+            } catch (error) {
+                // 登入失敗處理
+                console.error("登入失敗 (Redirect Error):", error);
+                authErrorMessage.style.display = 'block';
+                errorDetails.textContent = `登入失敗：${error.message}。我們已使用重新導向方式，請再次嘗試登入。`;
+            }
+        }
+
+        // 頁面載入時立即檢查是否有重新導向結果
+        handleRedirectResult();
+
         // 監聽登入狀態變化 (只用於更新頂部 UI)
         onAuthStateChanged(auth, (user) => {
             const userDisplay = document.getElementById('user-display');
@@ -200,89 +234,65 @@
         // ===============================================
         // C. 付款按鈕邏輯
         // ===============================================
-        // C. 付款按鈕邏輯 (修正後的程式碼)
-checkoutBtn.addEventListener('click', () => {
-    const totalText = cartTotalElement.textContent.replace(/,/g, '').trim();
-    const total = parseInt(totalText);
 
-    if (total <= 0) {
-        alert("購物車為空，無法結帳。");
-        return;
-    }
-
-    if (!auth.currentUser) {
-        alert("請先登入才能進行付款！");
-        // 建議自動跳出登入視窗
-        handleLogin(); 
-        return;
-    }
-    
-    // 獲取購物車內容和當前用戶
-    const cartItems = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
-    const user = auth.currentUser;
-
-    // 呼叫 Cloud Function 處理 Line Pay 請求
-    handleLinePayCheckout(user, total, cartItems);
-});
-
-// 假設您在 Firebase 服務中重新引入了 Functions SDK
-import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
-// ... 初始化 app 和 functions ...
-const functions = getFunctions(app, 'asia-east1'); 
-const initLinePay = httpsCallable(functions, 'initiateLinePayPayment'); // 🚨 新增的 Cloud Function 名稱
-
-/**
- * 處理與後端的 Line Pay 結帳流程
- */
-async function handleLinePayCheckout(user, total, cartItems) {
-    checkoutBtn.disabled = true;
-    checkoutBtn.textContent = '📞 正在建立 Line Pay 交易...';
-    
-    try {
-        const response = await initLinePay({
-            amount: total,
-            userId: user.uid,
-            cartDetails: cartItems, // 傳遞詳細購物車內容給後端
-            // 讓後端知道付款成功後，要將用戶導回哪個頁面
-            confirmUrl: window.location.origin + '/payment-confirm.html' 
-        });
-
-        // 成功建立交易
-        if (response.data && response.data.webPaymentUrl) {
-            console.log("Line Pay 交易建立成功，正在導向...");
-            // 導向 Line Pay 官方付款頁面
-            window.location.href = response.data.webPaymentUrl;
-        } else {
-            throw new Error(response.data.message || 'Line Pay 建立失敗。');
-        }
-
-    } catch (error) {
-        console.error("Line Pay 結帳失敗:", error);
-        alert(`結帳失敗：${error.message}，請稍後再試。`);
-        checkoutBtn.disabled = false;
-        checkoutBtn.textContent = '💳 前往付款';
-    }
-}
-
-/*
         checkoutBtn.addEventListener('click', () => {
             const totalText = cartTotalElement.textContent.replace(/,/g, '').trim();
             const total = parseInt(totalText);
 
-            if (total > 0) {
-                // 檢查是否已登入
-                if (!auth.currentUser) {
-                    alert("請先登入才能進行付款！");
-                    handleLogin(); // 嘗試引導登入
-                    return;
-                }
-                
-                alert(`模擬付款流程：您將支付 ${total} 元。`);
-                
-                // 實作：導向到第三方支付介面
+            if (total <= 0) {
+                alert("購物車為空，無法結帳。");
+                return;
             }
+
+            if (!auth.currentUser) {
+                alert("請先登入才能進行付款！頁面將跳轉至登入流程...");
+                // 建議自動引導登入（此時會觸發頁面跳轉）
+                handleLogin(); 
+                return;
+            }
+            
+            // 獲取購物車內容和當前用戶
+            const cartItems = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
+            const user = auth.currentUser;
+
+            // 呼叫 Cloud Function 處理 Line Pay 請求
+            handleLinePayCheckout(user, total, cartItems);
         });
-*/        
+
+        /**
+         * 處理與後端的 Line Pay 結帳流程
+         * 🚨 注意：此功能需要後端 Cloud Function (initiateLinePayPayment) 支援
+         */
+        async function handleLinePayCheckout(user, total, cartItems) {
+            checkoutBtn.disabled = true;
+            checkoutBtn.textContent = '📞 正在建立 Line Pay 交易...';
+            
+            try {
+                const response = await initLinePay({
+                    amount: total,
+                    userId: user.uid,
+                    cartDetails: cartItems, // 傳遞詳細購物車內容給後端
+                    // 讓後端知道付款成功後，要將用戶導回哪個頁面
+                    confirmUrl: window.location.origin + '/payment-confirm.html' 
+                });
+
+                // 成功建立交易
+                if (response.data && response.data.webPaymentUrl) {
+                    console.log("Line Pay 交易建立成功，正在導向...");
+                    // 導向 Line Pay 官方付款頁面
+                    window.location.href = response.data.webPaymentUrl;
+                } else {
+                    throw new Error(response.data.message || 'Line Pay 建立失敗。');
+                }
+
+            } catch (error) {
+                console.error("Line Pay 結帳失敗:", error);
+                alert(`結帳失敗：${error.message}，請稍後再試。`);
+                checkoutBtn.disabled = false;
+                checkoutBtn.textContent = '💳 前往付款';
+            }
+        }
+        
     </script>
 </body>
 </html>

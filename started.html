@@ -46,7 +46,7 @@
         }
     </style>
 </head>
-<body class="p-5">
+<body class="p-5" style="display:none;"> 
     <div class="container mx-auto">
         <header class="flex justify-between items-center py-4 px-0 border-b mb-6">
             <h1 class="text-3xl font-bold text-indigo-600">📱 入門課程：Web App 遙控器設計與 Web BLE 整合</h1>
@@ -57,7 +57,6 @@
         </header>
 
         <div class="lesson-grid">
-
             <div class="lesson-card" 
                  id="lesson-C1_L1" 
                  data-course-id="C1_L1" 
@@ -322,13 +321,13 @@
     </div>
 
     <script type="module">
-        // 1. 匯入必要的 Firebase 函式 (使用您指定的 12.6.0 版本)
+        // 1. 匯入必要的 Firebase 函式 (使用您指定的 12.6.0 版本，替換為 Redirect 相關函式)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
-        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithRedirect, signOut, getRedirectResult } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
 
-        // 2. 您的 Firebase 配置 (與 cart.html, auth.html 保持一致)
+        // 2. 您的 Firebase 配置 (保持不變)
         const firebaseConfig = {
             apiKey: "AIzaSyBv2fciGdUD4CifE1fH3hnzzamPdrvjjN8",
             authDomain: "onlinelearning-b5cfc.firebaseapp.com",
@@ -342,19 +341,17 @@
         // 3. 初始化 Firebase 服務
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);           
-        const functions = getFunctions(app, 'asia-east1'); // ⚠️ 請確保地區正確
+        const functions = getFunctions(app, 'asia-east1'); 
         
-        // 呼叫後端授權檢查 Function (與 auth.html 使用同一個 Function)
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
 
-        // 購物車路徑定義 (根據您的最新要求：上一層目錄)
         const CART_URL = '../cart.html'; 
-        // 授權中轉頁路徑定義 (假設在同一目錄)
         const AUTH_URL = 'auth.html'; 
-
+        
+        const bodyElement = document.body; // 獲取 body 元素用於顯示
 
         // ===============================================
-        // A. 購物車核心邏輯
+        // A. 購物車核心邏輯 (保持不變)
         // ===============================================
         function addToCart(productId, productName, productPrice) {
             let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
@@ -376,15 +373,21 @@
         }
 
         // ===============================================
-        // B. 登入/登出邏輯
+        // B. 登入/登出邏輯 (改用 Redirect 解決彈窗問題)
         // ===============================================
+        
+        /**
+         * 處理登入，改為頁面重新導向
+         */
         async function handleLogin() {
             const provider = new GoogleAuthProvider();
             try {
-                // 登入後，onAuthStateChanged 會自動觸發權限檢查
-                await signInWithPopup(auth, provider);
+                // 🚨 關鍵修正：從 signInWithPopup 改為 signInWithRedirect
+                await signInWithRedirect(auth, provider);
+                // 執行後頁面會跳轉到 Google 認證頁面
             } catch (error) {
                 console.error("登入失敗:", error);
+                // 可以在這裡顯示一個提示訊息，但因為頁面會跳轉，通常不需要
             }
         }
 
@@ -392,6 +395,27 @@
             await signOut(auth);
             // 登出後，onAuthStateChanged 會自動觸發，重設按鈕狀態
         }
+
+        /**
+         * 處理登入回傳結果 (必須在頁面頂部執行)
+         */
+        async function handleRedirectResult() {
+            try {
+                // 嘗試獲取從 Google 重新導向回來的結果
+                const result = await getRedirectResult(auth);
+                if (result) {
+                    // 登入成功，onAuthStateChanged 會被觸發
+                    console.log("登入成功 (Redirect Result):", result.user.displayName);
+                }
+            } catch (error) {
+                // 登入失敗處理
+                console.error("登入失敗 (Redirect Error):", error);
+                alert(`登入失敗：${error.message}。請嘗試重新登入。`);
+            }
+        }
+        
+        // 頁面載入時立即檢查是否有重新導向結果
+        handleRedirectResult();
 
 
         // ===============================================
@@ -403,8 +427,6 @@
 
         /**
          * 根據授權狀態更新單一課程卡片的按鈕
-         * @param {HTMLElement} cardElement - 課程卡片的 DOM 元素
-         * @param {string} status - 狀態: 'AUTHORIZED', 'UNAUTHORIZED', 'NOT_LOGGED_IN', 'LOADING'
          */
         function updateCardAction(cardElement, status) {
             const btn = cardElement.querySelector('.action-btn');
@@ -412,9 +434,8 @@
             const courseName = cardElement.dataset.courseName;
             const coursePrice = cardElement.dataset.coursePrice;
             const classroomUrl = cardElement.dataset.classroomUrl;
-            const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`; // 格式化價格
+            const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`; 
 
-            // 清除所有舊的事件監聽器
             btn.onclick = null; 
             btn.disabled = false;
 
@@ -423,7 +444,6 @@
                 btn.textContent = '✅ 進入課程內容';
                 btn.className = 'action-btn bg-blue-600 hover:bg-blue-700 text-white';
                 btn.onclick = () => {
-                    // 導向 auth.html 進行二次驗證，確保連結不會被直接分享
                     const redirectUrl = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}`;
                     window.location.href = redirectUrl;
                 };
@@ -435,10 +455,10 @@
                     addToCart(courseId, courseName, coursePrice); 
                 };
             } else if (status === 'NOT_LOGGED_IN') {
-                // 狀態 3: 未登入 -> 引導登入 (點擊後應觸發登入流程)
+                // 狀態 3: 未登入 -> 引導登入
                 btn.textContent = `👤 登入後可購買 (${priceText})`;
                 btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
-                btn.onclick = handleLogin;
+                btn.onclick = handleLogin; // 點擊觸發頁面跳轉
             } else if (status === 'LOADING') {
                 // 狀態 4: 載入中
                 btn.textContent = '權限檢查中...';
@@ -454,11 +474,8 @@
 
         /**
          * 檢查單一課程的授權狀態
-         * @param {HTMLElement} cardElement
-         * @param {object} user - Firebase User 物件
          */
         async function checkLessonAuthorization(cardElement, user) {
-            // 已在 onAuthStateChanged 中處理了未登入狀態，這裡只處理已登入情況
             if (!user) return; 
 
             updateCardAction(cardElement, 'LOADING');
@@ -467,20 +484,16 @@
             const classroomUrl = cardElement.dataset.classroomUrl;
 
             try {
-                // 呼叫 Cloud Function 檢查授權
                 const result = await checkAuthFunction({ 
                     courseId: courseId, 
                     targetUrl: encodeURIComponent(classroomUrl) 
                 });
 
                 const status = result.data.status; 
-                
-                // 更新按鈕狀態
                 updateCardAction(cardElement, status);
 
             } catch (error) {
                 console.error(`課程 ${courseId} 授權檢查失敗:`, error);
-                // 檢查失敗，預設導向未授權狀態
                 updateCardAction(cardElement, 'UNAUTHORIZED');
             }
         }
@@ -511,6 +524,9 @@
                     updateCardAction(card, 'NOT_LOGGED_IN');
                 });
             }
+            
+            // 狀態確認完畢後，顯示 body 內容
+            bodyElement.style.display = 'block';
         });
 
     </script>
