@@ -47,12 +47,29 @@
     </style>
 </head>
 <body class="p-5" style="display:none;"> 
+
+    <div id="loading-overlay" class="fixed inset-0 bg-white flex flex-col justify-center items-center z-50">
+        <svg class="animate-spin -ml-1 mr-3 h-10 w-10 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="mt-4 text-gray-700">正在檢查登入狀態與課程授權...</p>
+    </div>
     <div class="container mx-auto">
         <header class="flex justify-between items-center py-4 px-0 border-b mb-6">
             <h1 class="text-3xl font-bold text-indigo-600">📱 入門課程：Web App 遙控器設計與 Web BLE 整合</h1>
-            <div id="auth-status" class="text-sm">
-                <span id="user-display" class="text-gray-600">訪客模式</span>
-                <button id="login-btn" class="ml-3 bg-indigo-500 hover:bg-indigo-600 text-white text-sm py-1 px-3 rounded">登入</button>
+            <div class="flex items-center space-x-4">
+                
+                <a href="../cart.html" class="text-gray-600 hover:text-indigo-600 transition duration-150 relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
+                    </svg>
+                    </a>
+
+                <div id="auth-status" class="text-sm flex items-center">
+                    <span id="user-display" class="text-gray-600">訪客模式</span>
+                    <button id="login-btn" class="ml-3 bg-indigo-500 hover:bg-indigo-600 text-white text-sm py-1 px-3 rounded">登入</button>
+                </div>
             </div>
         </header>
 
@@ -321,13 +338,13 @@
     </div>
 
     <script type="module">
-        // 1. 匯入必要的 Firebase 函式 (使用您指定的 12.6.0 版本，替換為 Redirect 相關函式)
+        // 1. 匯入必要的 Firebase 函式
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithRedirect, signOut, getRedirectResult } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
 
-        // 2. 您的 Firebase 配置 (保持不變)
+        // 2. 您的 Firebase 配置 
         const firebaseConfig = {
             apiKey: "AIzaSyBv2fciGdUD4CifE1fH3hnzzamPdrvjjN8",
             authDomain: "onlinelearning-b5cfc.firebaseapp.com",
@@ -348,10 +365,12 @@
         const CART_URL = '../cart.html'; 
         const AUTH_URL = 'auth.html'; 
         
-        const bodyElement = document.body; // 獲取 body 元素用於顯示
+        const bodyElement = document.body; 
+        // 🚨 新增：取得載入提示區塊
+        const loadingOverlay = document.getElementById('loading-overlay');
 
         // ===============================================
-        // A. 購物車核心邏輯 (保持不變)
+        // A. 購物車核心邏輯
         // ===============================================
         function addToCart(productId, productName, productPrice) {
             let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
@@ -368,53 +387,42 @@
             } else {
                  alert(`「${productName}」已在購物車中！`);
             }
-            // 導向購物車頁面
             window.location.href = CART_URL; 
         }
 
         // ===============================================
-        // B. 登入/登出邏輯 (改用 Redirect 解決彈窗問題)
+        // B. 登入/登出邏輯 (使用 Redirect)
         // ===============================================
         
-        /**
-         * 處理登入，改為頁面重新導向
-         */
         async function handleLogin() {
             const provider = new GoogleAuthProvider();
             try {
-                // 🚨 關鍵修正：從 signInWithPopup 改為 signInWithRedirect
+                // 點擊登入後，先顯示載入提示
+                loadingOverlay.style.display = 'flex';
                 await signInWithRedirect(auth, provider);
-                // 執行後頁面會跳轉到 Google 認證頁面
             } catch (error) {
                 console.error("登入失敗:", error);
-                // 可以在這裡顯示一個提示訊息，但因為頁面會跳轉，通常不需要
+                loadingOverlay.style.display = 'none'; // 失敗時隱藏載入提示
+                alert("登入流程啟動失敗，請稍後再試。");
             }
         }
 
         async function handleLogout() {
             await signOut(auth);
-            // 登出後，onAuthStateChanged 會自動觸發，重設按鈕狀態
         }
 
-        /**
-         * 處理登入回傳結果 (必須在頁面頂部執行)
-         */
         async function handleRedirectResult() {
             try {
-                // 嘗試獲取從 Google 重新導向回來的結果
                 const result = await getRedirectResult(auth);
                 if (result) {
-                    // 登入成功，onAuthStateChanged 會被觸發
                     console.log("登入成功 (Redirect Result):", result.user.displayName);
                 }
             } catch (error) {
-                // 登入失敗處理
                 console.error("登入失敗 (Redirect Error):", error);
                 alert(`登入失敗：${error.message}。請嘗試重新登入。`);
             }
         }
         
-        // 頁面載入時立即檢查是否有重新導向結果
         handleRedirectResult();
 
 
@@ -422,12 +430,8 @@
         // C. 動態按鈕狀態更新核心邏輯
         // ===============================================
         
-        // 取得所有課程卡片
         const lessonCards = document.querySelectorAll('.lesson-card');
 
-        /**
-         * 根據授權狀態更新單一課程卡片的按鈕
-         */
         function updateCardAction(cardElement, status) {
             const btn = cardElement.querySelector('.action-btn');
             const courseId = cardElement.dataset.courseId;
@@ -440,7 +444,6 @@
             btn.disabled = false;
 
             if (status === 'AUTHORIZED') {
-                // 狀態 1: 已授權 (已付費) -> 進入課程
                 btn.textContent = '✅ 進入課程內容';
                 btn.className = 'action-btn bg-blue-600 hover:bg-blue-700 text-white';
                 btn.onclick = () => {
@@ -448,33 +451,26 @@
                     window.location.href = redirectUrl;
                 };
             } else if (status === 'UNAUTHORIZED') {
-                // 狀態 2: 已登入但未付費 -> 加入購物車
                 btn.textContent = `🛒 加入購物車 (${priceText})`;
                 btn.className = 'action-btn bg-green-600 hover:bg-green-700 text-white';
                 btn.onclick = () => {
                     addToCart(courseId, courseName, coursePrice); 
                 };
             } else if (status === 'NOT_LOGGED_IN') {
-                // 狀態 3: 未登入 -> 引導登入
                 btn.textContent = `👤 登入後可購買 (${priceText})`;
                 btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
-                btn.onclick = handleLogin; // 點擊觸發頁面跳轉
+                btn.onclick = handleLogin;
             } else if (status === 'LOADING') {
-                // 狀態 4: 載入中
                 btn.textContent = '權限檢查中...';
                 btn.className = 'action-btn bg-gray-400 text-white';
                 btn.disabled = true;
             } else if (status === 'ERROR') {
-                // 錯誤狀態
                 btn.textContent = '錯誤: 點擊重新載入';
                 btn.className = 'action-btn bg-red-600 hover:bg-red-700 text-white';
                 btn.onclick = () => window.location.reload();
             }
         }
 
-        /**
-         * 檢查單一課程的授權狀態
-         */
         async function checkLessonAuthorization(cardElement, user) {
             if (!user) return; 
 
@@ -506,7 +502,6 @@
             const loginBtn = document.getElementById('login-btn');
 
             if (user) {
-                // 1. 已登入：更新 UI，並檢查所有課程的授權狀態
                 userDisplay.textContent = `您好, ${user.displayName || user.email}`;
                 loginBtn.textContent = '登出';
                 loginBtn.onclick = handleLogout;
@@ -515,7 +510,6 @@
                     checkLessonAuthorization(card, user);
                 });
             } else {
-                // 2. 未登入：更新 UI，將所有課程按鈕設定為「未登入」狀態
                 userDisplay.textContent = '訪客模式';
                 loginBtn.textContent = '登入';
                 loginBtn.onclick = handleLogin;
@@ -525,7 +519,8 @@
                 });
             }
             
-            // 狀態確認完畢後，顯示 body 內容
+            // 🚨 修正點 2: 狀態確認完畢後，隱藏載入提示，並顯示 body 內容
+            loadingOverlay.style.display = 'none';
             bodyElement.style.display = 'block';
         });
 
