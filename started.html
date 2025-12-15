@@ -498,6 +498,15 @@
         // D. 總體授權流程控制器
         // ----------------------------------------------------
         onAuthStateChanged(auth, (user) => {
+            // 💥 新增的診斷日誌 💥
+            console.log("--- Firebase Auth State Changed ---");
+            if (user) {
+                console.log("用戶已登入 (User is logged in):", user.uid, user.displayName, user.email);
+            } else {
+                console.log("用戶未登入 (User is NOT logged in)");
+            }
+            console.log("----------------------------------");
+            // 💥 結束 💥
             const userDisplay = document.getElementById('user-display');
             const loginBtn = document.getElementById('login-btn');
 
