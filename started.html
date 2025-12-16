@@ -60,11 +60,11 @@
             <h1 class="text-3xl font-bold text-indigo-600">📱 入門課程：Web App 遙控器設計與 Web BLE 整合</h1>
             <div class="flex items-center space-x-4">
                 
-                <a href="../cart.html" class="text-gray-600 hover:text-indigo-600 transition duration-150 relative">
+                <a href="cart.html" class="text-gray-600 hover:text-indigo-600 transition duration-150 relative">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
                     </svg>
-                    </a>
+                </a>
 
                 <div id="auth-status" class="text-sm flex items-center">
                     <span id="user-display" class="text-gray-600">訪客模式</span>
@@ -338,6 +338,28 @@
     </div>
 
     <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "firebase/app";
+        import { getAnalytics } from "firebase/analytics";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+            apiKey: "AIzaSyBv2fciGdUD4CifE1fH3hnzzamPdrvjjN8",
+            authDomain: "onlinelearning-b5cfc.firebaseapp.com",
+            projectId: "onlinelearning-b5cfc",
+            storageBucket: "onlinelearning-b5cfc.firebasestorage.app",
+            messagingSenderId: "505254683984",
+            appId: "1:505254683984:web:031af498f936c0deedf855",
+            measurementId: "G-0DNEBM6CG4"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+/*
         // 1. 匯入必要的 Firebase 函式
         // 🚨 建議改為官方穩定版 (例如 v10.x.x 或 v11.x.x)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js"; 
@@ -361,12 +383,13 @@
 
         // 3. 初始化 Firebase 服務
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);           
+        const auth = getAuth(app);
+*/
         const functions = getFunctions(app, 'asia-east1'); 
         
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
 
-        const CART_URL = '../cart.html'; 
+        const CART_URL = 'cart.html'; 
         const AUTH_URL = 'auth.html'; 
         
         const bodyElement = document.body; 
