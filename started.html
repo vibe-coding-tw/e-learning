@@ -341,7 +341,7 @@
 
         // 1. 匯入必要的 Firebase 函式
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
-        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
         // 2. Firebase 配置
@@ -388,16 +388,10 @@
         // ===============================================        
         async function handleLogin() {
             const provider = new GoogleAuthProvider();
-            provider.clientId = "505254683984-3l1n60kvsvo8ci06kkjmhkneu75fp5di.apps.googleusercontent.com";
             try {
-                // 點擊登入後，先顯示載入提示
-                loginBtn.disabled = true; 
-                loadingOverlay.style.display = 'flex';
-                await signInWithRedirect(auth, provider);
+                await signInWithPopup(auth, provider);
             } catch (error) {
                 console.error("登入失敗:", error);
-                loadingOverlay.style.display = 'none'; // 失敗時隱藏載入提示
-                alert("登入流程啟動失敗，請稍後再試。");
             }
         }
 

@@ -169,16 +169,12 @@
         /**
          * 處理登入，改為頁面重新導向
          */
-        async function handleLogin() {
+         async function handleLogin() {
             const provider = new GoogleAuthProvider();
             try {
-                // 🚨 關鍵修正：從 signInWithPopup 改為 signInWithRedirect
-                await signInWithRedirect(auth, provider);
-                // 執行後頁面會跳轉到 Google 認證頁面
+                await signInWithPopup(auth, provider);
             } catch (error) {
                 console.error("登入失敗:", error);
-                authErrorMessage.style.display = 'block';
-                errorDetails.textContent = `登入失敗：${error.message}。請檢查您的網路連線或瀏覽器設定。`;
             }
         }
 
