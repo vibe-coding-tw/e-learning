@@ -339,9 +339,13 @@
 
     <script type="module">
         // 1. 匯入必要的 Firebase 函式
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
-        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithRedirect, signOut, getRedirectResult } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
+        // 🚨 建議改為官方穩定版 (例如 v10.x.x 或 v11.x.x)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js"; 
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithRedirect, signOut, getRedirectResult } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-functions.js";
+        //import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
+        //import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithRedirect, signOut, getRedirectResult } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        //import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
 
         // 2. 您的 Firebase 配置 
@@ -392,12 +396,12 @@
 
         // ===============================================
         // B. 登入/登出邏輯 (使用 Redirect)
-        // ===============================================
-        
+        // ===============================================        
         async function handleLogin() {
             const provider = new GoogleAuthProvider();
             try {
                 // 點擊登入後，先顯示載入提示
+                loginBtn.disabled = true; 
                 loadingOverlay.style.display = 'flex';
                 await signInWithRedirect(auth, provider);
             } catch (error) {
@@ -423,7 +427,7 @@
             }
         }
         
-        //handleRedirectResult();
+        handleRedirectResult();
 
 
         // ===============================================
@@ -490,7 +494,14 @@
 
             } catch (error) {
                 console.error(`課程 ${courseId} 授權檢查失敗:`, error);
-                updateCardAction(cardElement, 'UNAUTHORIZED');
+                //updateCardAction(cardElement, 'UNAUTHORIZED');
+                // 🚨 修正點：錯誤可能來自網路、Functions 錯誤，不應一律視為 UNAUTHORIZED
+                if (error.code) { // 檢查 Firebase Functions 錯誤碼
+                    updateCardAction(cardElement, 'ERROR');
+                } else {
+                    // 可能是網路錯誤，可以重試
+                    updateCardAction(cardElement, 'ERROR'); 
+                }
             }
         }
 
@@ -507,6 +518,7 @@
             }
             console.log("----------------------------------");
             // 💥 結束 💥
+            loginBtn.disabled = false; // 恢復按鈕
             const userDisplay = document.getElementById('user-display');
             const loginBtn = document.getElementById('login-btn');
 
