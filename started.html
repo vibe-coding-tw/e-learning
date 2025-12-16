@@ -32,7 +32,7 @@
         .phase-tag { display: inline-block; background-color: #6c757d; color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 0.8em; margin-bottom: 10px; }
         .core-content { margin-top: 15px; font-size: 0.9em; color: #555; flex-grow: 1;}
         .core-content ul { list-style: disc; padding-left: 20px; margin: 5px 0 0 0; }
-        .duration { font-style: italic; color: #666; margin-top: 5px; font-size: 0.9em; display: block; }
+        .duration { font-style: italic; color: #666; margin-top: 5px; font-size: 0.9em; }
         
         /* 動態按鈕樣式 */
         .action-btn { 
@@ -402,37 +402,25 @@
             const courseName = cardElement.dataset.courseName;
             const coursePrice = cardElement.dataset.coursePrice;
             const classroomUrl = cardElement.dataset.classroomUrl;
-            const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`; 
+            const isFreeCourse = parseInt(coursePrice, 10) === 0; // 判斷是否為免費課程
 
             btn.onclick = null; 
             btn.disabled = false;
 
-            if (status === 'AUTHORIZED') {
+            if (status === 'AUTHORIZED' || (status !== 'NOT_LOGGED_IN' && isFreeCourse)) {
                 btn.textContent = '✅ 進入課程內容';
                 btn.className = 'action-btn bg-blue-600 hover:bg-blue-700 text-white';
                 btn.onclick = () => {
                     const redirectUrl = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}`;
                     window.location.href = redirectUrl;
                 };
-            } else if (status === 'UNAUTHORIZED' || status === 'NOT_LOGGED_IN') {
+            } else if (status === 'UNAUTHORIZED' || (status === 'NOT_LOGGED_IN' && !isFreeCourse)) {
                 // 狀態 2 & 3: 未授權或未登入 -> 加入購物車
                 btn.textContent = '🛒 加入購物車 (NT$ ' + coursePrice + ')';
                 btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
                 btn.onclick = () => {
                     addToCart(courseId, courseName, coursePrice); 
                 };
-/*
-            } else if (status === 'UNAUTHORIZED') {
-                btn.textContent = `🛒 加入購物車 (${priceText})`;
-                btn.className = 'action-btn bg-green-600 hover:bg-green-700 text-white';
-                btn.onclick = () => {
-                    addToCart(courseId, courseName, coursePrice); 
-                };
-            } else if (status === 'NOT_LOGGED_IN') {
-                btn.textContent = `👤 登入後可購買 (${priceText})`;
-                btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
-                btn.onclick = handleLogin;
-*/                
             } else if (status === 'LOADING') {
                 btn.textContent = '權限檢查中...';
                 btn.className = 'action-btn bg-gray-400 text-white';
