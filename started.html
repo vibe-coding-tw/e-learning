@@ -422,6 +422,45 @@
         }
 
         // ===============================================
+        // B. 登入/登出邏輯 (使用 Redirect) - 採用純 OAuth 導向
+        // ===============================================
+
+// 必須確認這個網址是您的網站網址
+const REDIRECT_URI = 'https://onlinelearning-b5cfc.firebaseapp.com/__/auth/handler';
+
+async function handleLogin() {
+    // 1. 顯示載入提示
+    loadingOverlay.style.display = 'flex';
+
+    // 2. 構造 Firebase 期望的 redirect URL
+    const firebaseAuthHandlerURL = new URL('https://onlinelearning-b5cfc.firebaseapp.com/__/auth/handler');
+    firebaseAuthHandlerURL.searchParams.set('apiKey', firebaseConfig.apiKey);
+    firebaseAuthHandlerURL.searchParams.set('appName', '[DEFAULT]');
+    firebaseAuthHandlerURL.searchParams.set('authType', 'signInViaRedirect');
+    firebaseAuthHandlerURL.searchParams.set('redirectUrl', 'https://vibe-coding.tw/started.html'); // 登入成功後回來的地址
+    firebaseAuthHandlerURL.searchParams.set('v', '12.6.0'); // SDK版本
+
+    // 3. 構造 Google 登入的標準 OAuth URL
+    const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
+
+    const params = new URLSearchParams({
+        client_id: '505254683984-3l1n60kvsvo8ci06kkjmhkneu75fp5di.apps.googleusercontent.com', // 💥 您的新 Client ID 💥
+        redirect_uri: REDIRECT_URI,
+        response_type: 'code',
+        scope: 'openid email profile',
+        // 為了模擬 Firebase 的狀態，我們將重定向回 Firebase 處理器
+        state: btoa(JSON.stringify({
+            'state': 'oauth_client',
+            'redirectUrl': 'https://vibe-coding.tw/started.html'
+        })),
+        prompt: 'select_account'
+    });
+
+    // 4. 執行導向
+    window.location.href = `${GOOGLE_AUTH_URL}?${params.toString()}`;
+}
+/*
+        // ===============================================
         // B. 登入/登出邏輯 (使用 Redirect)
         // ===============================================        
         async function handleLogin() {
@@ -457,7 +496,7 @@
         
         handleRedirectResult();
 
-
+*/
         // ===============================================
         // C. 動態按鈕狀態更新核心邏輯
         // ===============================================
