@@ -33,7 +33,7 @@
         .phase-tag { display: inline-block; background-color: #6c757d; color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 0.8em; margin-bottom: 10px; }
         .core-content { margin-top: 15px; font-size: 0.9em; color: #555; flex-grow: 1;}
         .core-content ul { list-style: disc; padding-left: 20px; margin: 5px 0 0 0; }
-        .duration { font-style: italic; color: #666; margin-top: 5px; font-size: 0.9em; display: block; }
+        .duration { font-style: italic; color: #666; margin-top: 5px; font-size: 0.9em; }
         
         /* 動態按鈕樣式 */
         .action-btn { 
@@ -297,8 +297,8 @@
                  id="lesson-C2_L10" 
                  data-course-id="C2_L10" 
                  data-course-name="專案整合、除錯與優化" 
-                 data-course-price="1290"
-                 data-classroom-url="https://classroom.google.com/c/xxx...&lesson=L10">
+                 data-course-price="0"
+                 data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl"> 
                 <div class="lesson-header">
                     <h2>第 10 課：專案整合、除錯與優化 <span class="duration">(3H)</span></h2>
                 </div>
@@ -402,19 +402,20 @@
             const courseName = cardElement.dataset.courseName;
             const coursePrice = cardElement.dataset.coursePrice;
             const classroomUrl = cardElement.dataset.classroomUrl;
+            const isFreeCourse = parseInt(coursePrice, 10) === 0; // 判斷是否為免費課程
 
             // 清除所有舊的事件監聽器
             btn.onclick = null; 
             btn.disabled = false;
 
-            if (status === 'AUTHORIZED') {
+            if (status === 'AUTHORIZED' || (status !== 'NOT_LOGGED_IN' && isFreeCourse)) {
                 // 狀態 1: 已授權 (已付費) -> 進入課程
                 btn.textContent = '✅ 進入課程內容';
                 btn.className = 'action-btn bg-green-600 hover:bg-green-700 text-white';
                 btn.onclick = () => {
                     window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}`;
                 };
-            } else if (status === 'UNAUTHORIZED' || status === 'NOT_LOGGED_IN') {
+            } else if (status === 'UNAUTHORIZED' || (status === 'NOT_LOGGED_IN' && !isFreeCourse)) {
                 // 狀態 2 & 3: 未授權或未登入 -> 加入購物車
                 btn.textContent = '🛒 加入購物車 (NT$ ' + coursePrice + ')';
                 btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
