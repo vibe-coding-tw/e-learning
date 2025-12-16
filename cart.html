@@ -60,7 +60,7 @@
     <script type="module">
         // 1. 匯入必要的 Firebase 函式
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
-        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithRedirect, signOut, getRedirectResult } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
 
@@ -184,29 +184,6 @@
             onAuthStateChanged(auth, () => {}); 
         }
         
-        /**
-         * 處理登入回傳結果 (必須在頁面頂部執行)
-         */
-        async function handleRedirectResult() {
-            try {
-                // 嘗試獲取從 Google 重新導向回來的結果
-                const result = await getRedirectResult(auth);
-                if (result) {
-                    // 登入成功，onAuthStateChanged 會被觸發
-                    console.log("登入成功 (Redirect Result):", result.user.displayName);
-                    authErrorMessage.style.display = 'none';
-                }
-            } catch (error) {
-                // 登入失敗處理
-                console.error("登入失敗 (Redirect Error):", error);
-                authErrorMessage.style.display = 'block';
-                errorDetails.textContent = `登入失敗：${error.message}。我們已使用重新導向方式，請再次嘗試登入。`;
-            }
-        }
-
-        // 頁面載入時立即檢查是否有重新導向結果
-        handleRedirectResult();
-
         // 監聽登入狀態變化 (只用於更新頂部 UI)
         onAuthStateChanged(auth, (user) => {
             const userDisplay = document.getElementById('user-display');

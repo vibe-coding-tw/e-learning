@@ -341,7 +341,7 @@
 
         // 1. 匯入必要的 Firebase 函式
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
-        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
         // 2. Firebase 配置
@@ -398,20 +398,6 @@
         async function handleLogout() {
             await signOut(auth);
         }
-
-        async function handleRedirectResult() {
-            try {
-                const result = await getRedirectResult(auth);
-                if (result) {
-                    console.log("登入成功 (Redirect Result):", result.user.displayName);
-                }
-            } catch (error) {
-                console.error("登入失敗 (Redirect Error):", error);
-                alert(`登入失敗：${error.message}。請嘗試重新登入。`);
-            }
-        }
-        
-        handleRedirectResult();
 
         // ===============================================
         // C. 動態按鈕狀態更新核心邏輯
@@ -522,10 +508,11 @@
                     updateCardAction(card, 'NOT_LOGGED_IN');
                 });
             }
-            
+/*            
             // 🚨 修正點 2: 狀態確認完畢後，隱藏載入提示，並顯示 body 內容
             loadingOverlay.style.display = 'none';
             bodyElement.style.display = 'block';
+*/            
         });
 
     </script>
