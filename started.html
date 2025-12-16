@@ -46,16 +46,7 @@
         }
     </style>
 </head>
-<body class="p-5" style="display:none;"> 
-
-    <div id="loading-overlay" class="fixed inset-0 bg-white flex flex-col justify-center items-center z-50">
-        <svg class="animate-spin -ml-1 mr-3 h-10 w-10 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <p class="mt-4 text-gray-700">正在檢查登入狀態與課程授權...</p>
-    </div>
-    <div class="container mx-auto">
+<body class="p-5"> <div class="container mx-auto">
         <header class="flex justify-between items-center py-4 px-0 border-b mb-6">
             <h1 class="text-3xl font-bold text-indigo-600">📱 入門課程：Web App 遙控器設計與 Web BLE 整合</h1>
             <div class="flex items-center space-x-4">
@@ -384,7 +375,7 @@
         }
 
         // ===============================================
-        // B. 登入/登出邏輯 (使用 Redirect)
+        // B. 登入/登出邏輯 (使用 Pop-up)
         // ===============================================        
         async function handleLogin() {
             const provider = new GoogleAuthProvider();
@@ -463,12 +454,10 @@
 
             } catch (error) {
                 console.error(`課程 ${courseId} 授權檢查失敗:`, error);
-                //updateCardAction(cardElement, 'UNAUTHORIZED');
-                // 🚨 修正點：錯誤可能來自網路、Functions 錯誤，不應一律視為 UNAUTHORIZED
-                if (error.code) { // 檢查 Firebase Functions 錯誤碼
+                // 錯誤處理維持與 basic.html 類似的風格 (將錯誤碼視為未授權或重新載入)
+                if (error.code) { 
                     updateCardAction(cardElement, 'ERROR');
                 } else {
-                    // 可能是網路錯誤，可以重試
                     updateCardAction(cardElement, 'ERROR'); 
                 }
             }
@@ -479,16 +468,9 @@
         // ----------------------------------------------------
         const userDisplay = document.getElementById('user-display');
         const loginBtn = document.getElementById('login-btn');
+        // 💥 修正 3: 移除所有關於 bodyElement 和 loadingOverlay 的控制邏輯
         onAuthStateChanged(auth, (user) => {
-            // 💥 新增的診斷日誌 💥
-            console.log("--- Firebase Auth State Changed ---");
-            if (user) {
-                console.log("用戶已登入 (User is logged in):", user.uid, user.displayName, user.email);
-            } else {
-                console.log("用戶未登入 (User is NOT logged in)");
-            }
-            console.log("----------------------------------");
-            // 💥 結束 💥
+            
             loginBtn.disabled = false; // 恢復按鈕
 
             if (user) {
@@ -508,11 +490,6 @@
                     updateCardAction(card, 'NOT_LOGGED_IN');
                 });
             }
-/*            
-            // 🚨 修正點 2: 狀態確認完畢後，隱藏載入提示，並顯示 body 內容
-            loadingOverlay.style.display = 'none';
-            bodyElement.style.display = 'block';
-*/            
         });
 
     </script>
