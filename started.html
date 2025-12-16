@@ -508,6 +508,8 @@
         // ----------------------------------------------------
         // D. 總體授權流程控制器
         // ----------------------------------------------------
+        const userDisplay = document.getElementById('user-display');
+        const loginBtn = document.getElementById('login-btn');
         onAuthStateChanged(auth, (user) => {
             // 💥 新增的診斷日誌 💥
             console.log("--- Firebase Auth State Changed ---");
@@ -519,8 +521,6 @@
             console.log("----------------------------------");
             // 💥 結束 💥
             loginBtn.disabled = false; // 恢復按鈕
-            const userDisplay = document.getElementById('user-display');
-            const loginBtn = document.getElementById('login-btn');
 
             if (user) {
                 userDisplay.textContent = `您好, ${user.displayName || user.email}`;
