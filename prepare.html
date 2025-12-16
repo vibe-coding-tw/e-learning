@@ -325,9 +325,8 @@
         // C. 動態按鈕狀態更新核心邏輯
         // ===============================================
         
-        const lessonCard = document.getElementById('lesson-C1_SETUP');
-        const coursePrice = lessonCard.dataset.coursePrice; 
-        const isFreeCourse = parseInt(coursePrice, 10) === 0; // 判斷是否為免費課程
+        //const lessonCard = document.getElementById('lesson-C1_SETUP');
+        const lessonCards = document.querySelectorAll('.lesson-card');
 
         /**
          * 根據授權狀態更新單一課程卡片的按鈕
@@ -335,9 +334,11 @@
         function updateCardAction(cardElement, status) {
             const btn = cardElement.querySelector('.action-btn');
             const courseId = cardElement.dataset.courseId;
+            const courseName = cardElement.dataset.courseName;
+            const coursePrice = cardElement.dataset.coursePrice;
             const classroomUrl = cardElement.dataset.classroomUrl;
+            const isFreeCourse = parseInt(coursePrice, 10) === 0; // 判斷是否為免費課程
             const priceText = `NT$ ${parseInt(cardElement.dataset.coursePrice, 10).toLocaleString()}`; 
-
 
             // 清除所有舊的事件監聽器
             btn.onclick = null; 
