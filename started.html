@@ -463,12 +463,8 @@
 
             } catch (error) {
                 console.error(`課程 ${courseId} 授權檢查失敗:`, error);
-                // 錯誤處理維持與 basic.html 類似的風格 (將錯誤碼視為未授權或重新載入)
-                if (error.code) { 
-                    updateCardAction(cardElement, 'ERROR');
-                } else {
-                    updateCardAction(cardElement, 'ERROR'); 
-                }
+                // 檢查失敗，預設導向購物車（未授權狀態）
+                updateCardAction(cardElement, 'UNAUTHORIZED');
             }
         }
 
