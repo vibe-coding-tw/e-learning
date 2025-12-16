@@ -326,6 +326,14 @@
                     const redirectUrl = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}`;
                     window.location.href = redirectUrl;
                 };
+            } else if (status === 'UNAUTHORIZED' || status === 'NOT_LOGGED_IN') {
+                // 狀態 2 & 3: 未授權或未登入 -> 加入購物車
+                btn.textContent = '🛒 加入購物車 (NT$ ' + coursePrice + ')';
+                btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
+                btn.onclick = () => {
+                    addToCart(courseId, courseName, coursePrice); 
+                };
+/*                
             } else if (status === 'UNAUTHORIZED') {
                 // 狀態 2: 未授權 (理論上此免費課程不會出現此狀態，但作為錯誤處理)
                 btn.textContent = '⛔ 登入後即可進入 (錯誤狀態)';
@@ -336,6 +344,7 @@
                 btn.textContent = '👤 請先登入以進入課程 (免費)';
                 btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
                 btn.onclick = handleLogin; // 點擊按鈕觸發登入
+*/                
             } else if (status === 'LOADING') {
                 // 狀態 4: 載入中
                 btn.textContent = '權限檢查中...';
