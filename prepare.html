@@ -147,9 +147,18 @@
     <div class="container">
         <header class="flex justify-between items-center py-4 px-0 border-b mb-6">
             <h1 class="text-3xl font-bold text-green-600">🛠️ 安裝課程：VS Code, Copilot, PlatformIO 環境設定</h1>
-            <div id="auth-status" class="text-sm">
-                <span id="user-display" class="text-gray-600">訪客模式</span>
-                <button id="login-btn" class="ml-3 bg-indigo-500 hover:bg-indigo-600 text-white text-sm py-1 px-3 rounded">登入</button>
+            <div class="flex items-center space-x-4">
+                
+                <a href="cart.html" class="text-gray-600 hover:text-green-600 transition duration-150 relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
+                    </svg>
+                </a>
+                
+                <div id="auth-status" class="text-sm flex items-center">
+                    <span id="user-display" class="text-gray-600">訪客模式</span>
+                    <button id="login-btn" class="ml-3 bg-indigo-500 hover:bg-indigo-600 text-white text-sm py-1 px-3 rounded">登入</button>
+                </div>
             </div>
         </header>
 
@@ -258,7 +267,7 @@
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
 
-        // 2. 您的 Firebase 配置 (請替換為您的真實配置)
+        // 2. 您的 Firebase 配置
         const firebaseConfig = {
           apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
           authDomain: "e-learning-942f7.firebaseapp.com",
@@ -273,16 +282,34 @@
         const auth = getAuth(app);           
         const functions = getFunctions(app, 'asia-east1'); 
         
-        // 假定您會用這個 Cloud Function 檢查授權，即使是免費課程也通過它來處理重定向
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
 
-        // 購物車路徑定義 (同一層目錄)
         const CART_URL = 'cart.html'; 
-        // 授權中轉頁面路徑 (同一層目錄)
         const AUTH_URL = 'auth.html'; 
 
         // ===============================================
-        // A. 登入/登出邏輯
+        // A. 購物車核心邏輯 (重新加入)
+        // ===============================================
+        function addToCart(productId, productName, productPrice) {
+            let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
+            const priceNum = parseInt(productPrice, 10);
+            
+            if (!cart[productId]) {
+                cart[productId] = { 
+                    name: productName, 
+                    price: priceNum, 
+                    quantity: 1 
+                };
+                localStorage.setItem('vibeCodingCart', JSON.stringify(cart));
+                alert(`「${productName}」已加入購物車！`);
+            } else {
+                 alert(`「${productName}」已在購物車中！`);
+            }
+            window.location.href = CART_URL; 
+        }
+
+        // ===============================================
+        // B. 登入/登出邏輯
         // ===============================================
         async function handleLogin() {
             const provider = new GoogleAuthProvider();
@@ -298,11 +325,12 @@
         }
 
         // ===============================================
-        // B. 動態按鈕狀態更新核心邏輯
+        // C. 動態按鈕狀態更新核心邏輯
         // ===============================================
         
-        // 取得唯一的課程卡片
         const lessonCard = document.getElementById('lesson-C1_SETUP');
+        const coursePrice = lessonCard.dataset.coursePrice; 
+        const isFreeCourse = parseInt(coursePrice, 10) === 0; // 判斷是否為免費課程
 
         /**
          * 根據授權狀態更新單一課程卡片的按鈕
@@ -311,6 +339,8 @@
             const btn = cardElement.querySelector('.action-btn');
             const courseId = cardElement.dataset.courseId;
             const classroomUrl = cardElement.dataset.classroomUrl;
+            const priceText = `NT$ ${parseInt(cardElement.dataset.coursePrice, 10).toLocaleString()}`; 
+
 
             // 清除所有舊的事件監聽器
             btn.onclick = null; 
@@ -318,40 +348,52 @@
             btn.textContent = '';
 
             if (status === 'AUTHORIZED') {
-                // 狀態 1: 已授權 (已付費或免費) -> 進入課程
+                // 狀態 1: 已授權 (已登入且被 Cloud Function 認證) -> 進入課程
                 btn.textContent = '✅ 進入課程內容';
                 btn.className = 'action-btn bg-green-600 hover:bg-green-700 text-white';
                 btn.onclick = () => {
-                    // 🚨 修正點：在 URL 中新增 courseId 參數，以符合 auth.html 的要求
                     const redirectUrl = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}`;
                     window.location.href = redirectUrl;
                 };
-            } else if (status === 'UNAUTHORIZED' || status === 'NOT_LOGGED_IN') {
-                // 狀態 2 & 3: 未授權或未登入 -> 加入購物車
-                btn.textContent = '🛒 加入購物車 (NT$ ' + coursePrice + ')';
-                btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
-                btn.onclick = () => {
-                    addToCart(courseId, courseName, coursePrice); 
-                };
-/*                
             } else if (status === 'UNAUTHORIZED') {
-                // 狀態 2: 未授權 (理論上此免費課程不會出現此狀態，但作為錯誤處理)
-                btn.textContent = '⛔ 登入後即可進入 (錯誤狀態)';
-                btn.className = 'action-btn bg-red-600 hover:bg-red-700 text-white';
-                btn.onclick = () => window.location.reload(); // 點擊重試
+                // 狀態 2: 已登入但未購買 (收費課程會出現)
+                
+                if (isFreeCourse) {
+                    // 針對免費課程，如果已登入但 Cloud Function 回傳 UNAUTHORIZED，視為錯誤
+                    btn.textContent = '⛔ 授權失敗 (請聯繫客服)';
+                    btn.className = 'action-btn bg-red-600 hover:bg-red-700 text-white';
+                    btn.onclick = () => window.location.reload(); 
+                } else {
+                    // 收費課程：引導加入購物車
+                    btn.textContent = `🛒 加入購物車 (${priceText})`;
+                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
+                    btn.onclick = () => {
+                        addToCart(courseId, cardElement.dataset.courseName, cardElement.dataset.coursePrice); 
+                    };
+                }
+
             } else if (status === 'NOT_LOGGED_IN') {
-                // 狀態 3: 未登入 -> 提示登入
-                btn.textContent = '👤 請先登入以進入課程 (免費)';
-                btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
-                btn.onclick = handleLogin; // 點擊按鈕觸發登入
-*/                
+                // 狀態 3: 未登入
+                
+                if (isFreeCourse) {
+                    // 免費課程：引導登入
+                    btn.textContent = '👤 請先登入以進入課程 (免費)';
+                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
+                    btn.onclick = handleLogin; 
+                } else {
+                    // 收費課程：引導登入（與 started.html 風格一致）
+                    btn.textContent = `👤 登入後可購買 (${priceText})`;
+                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
+                    btn.onclick = handleLogin; 
+                }
+
             } else if (status === 'LOADING') {
                 // 狀態 4: 載入中
                 btn.textContent = '權限檢查中...';
                 btn.className = 'action-btn bg-gray-400 text-white';
                 btn.disabled = true;
             } else if (status === 'ERROR') {
-                // 錯誤狀態
+                // 狀態 5: 錯誤 (與 started.html 一致，高診斷性)
                 btn.textContent = '錯誤: 點擊重新載入';
                 btn.className = 'action-btn bg-red-600 hover:bg-red-700 text-white';
                 btn.onclick = () => window.location.reload();
@@ -359,9 +401,15 @@
         }
 
         /**
-         * 檢查單一課程的授權狀態 (針對免費課程，Cloud Function 應回傳 AUTHORIZED)
+         * 檢查單一課程的授權狀態
          */
         async function checkLessonAuthorization(cardElement, user) {
+            // 只有登入後才檢查授權
+            if (!user) {
+                updateCardAction(cardElement, 'NOT_LOGGED_IN');
+                return;
+            }
+
             updateCardAction(cardElement, 'LOADING');
 
             const courseId = cardElement.dataset.courseId;
@@ -381,33 +429,34 @@
 
             } catch (error) {
                 console.error(`課程 ${courseId} 授權檢查失敗:`, error);
-                // 檢查失敗，預設導向購物車（未授權狀態）
-                updateCardAction(cardElement, 'UNAUTHORIZED');
+                // 檢查失敗，使用 ERROR 狀態 (高診斷性)
+                updateCardAction(cardElement, 'ERROR'); 
             }
         }
 
         // ----------------------------------------------------
-        // C. 總體授權流程控制器
+        // D. 總體授權流程控制器 
         // ----------------------------------------------------
         onAuthStateChanged(auth, (user) => {
             const userDisplay = document.getElementById('user-display');
             const loginBtn = document.getElementById('login-btn');
 
             if (user) {
-                // 1. 已登入：更新 UI，並檢查課程的授權狀態
+                // 1. 已登入
                 userDisplay.textContent = `您好, ${user.displayName || user.email}`;
                 loginBtn.textContent = '登出';
                 loginBtn.onclick = handleLogout;
                 
-                // 檢查安裝課程授權 (預期會被 Cloud Function 視為 AUTHORIZED)
+                // 檢查課程授權
                 checkLessonAuthorization(lessonCard, user); 
 
             } else {
-                // 2. 未登入：更新 UI，將課程按鈕設定為「請先登入」
+                // 2. 未登入
                 userDisplay.textContent = '訪客模式';
                 loginBtn.textContent = '登入';
                 loginBtn.onclick = handleLogin;
                 
+                // 顯示未登入狀態
                 updateCardAction(lessonCard, 'NOT_LOGGED_IN');
             }
         });
