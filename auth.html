@@ -5,7 +5,6 @@
     <title>課程授權驗證中...</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        /* 樣式部分不變 */
         body { font-family: sans-serif; text-align: center; padding-top: 50px; background-color: #f4f7f9; }
         .loading { font-size: 1.2em; color: #1a73e8; background-color: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); max-width: 400px; margin: 50px auto; }
         #status-message { margin-top: 15px; font-weight: bold; }
@@ -47,6 +46,7 @@
         const statusMessageElement = document.getElementById('status-message');
         statusMessageElement.textContent = "服務已連線，檢查登入狀態...";
 
+
         // 5. 授權流程的核心邏輯
         const urlParams = new URLSearchParams(window.location.search);
         
@@ -55,13 +55,14 @@
         const encodedTargetUrl = urlParams.get('url');
         const targetUrl = encodedTargetUrl ? decodeURIComponent(encodedTargetUrl) : null;
         
-        // 💥 新增：獲取課程價格，並判斷是否為免費 (價格為 0)
+        // 💥 修正：獲取課程價格，並判斷是否為免費 (價格為 '0')
         const coursePrice = urlParams.get('price');
-        const isFreeCourse = coursePrice === '0'; // 使用字串 '0' 檢查
+        const isFreeCourse = coursePrice === '0'; 
 
-        // 檢查目標 URL 參數是否存在
-        if (!encodedTargetUrl || !courseId || coursePrice === null) {
-             statusMessageElement.textContent = "錯誤：缺少目標課程連結、課程 ID 或價格參數。";
+
+        // 檢查核心參數是否存在 (coursePrice 遺失時不視為錯誤，因為它可以走 CF 檢查，但 courseId 和 url 必須有)
+        if (!encodedTargetUrl || !courseId) {
+             statusMessageElement.textContent = "錯誤：缺少目標課程連結或課程 ID 參數。";
              setTimeout(() => {
                  window.location.href = `${CART_URL}?error=invalid_link`;
              }, 2000);
@@ -96,16 +97,16 @@
         // 呼叫 Cloud Function 進行後端驗證 (或跳過)
         async function startAuthorizationFlow(user, courseId, encodedTargetUrl, targetUrl, isFreeCourse) {
             
-            // 💥 修正 1：如果價格為 0，直接導向
-            if (isFreeCourse) {
+            // 💥 修正 1：如果價格明確為 '0' (來自 basic.html)，直接導向
+            if (isFreeCourse) { 
                 statusMessageElement.textContent = `🎉 免費課程 (價格為 0)，直接跳轉至課程...`;
                 setTimeout(() => {
                     window.location.href = targetUrl; 
                 }, 1000);
-                return; // 免費課程流程結束
+                return; 
             }
 
-            // --- 收費課程才會走到這裡 ---
+            // --- 收費課程 (價格 > 0 或 price 參數遺失) 才會走到這裡 ---
             try {
                 // 呼叫後端 API，傳入實際的 courseId
                 const result = await checkAuthFunction({ 
