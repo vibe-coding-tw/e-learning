@@ -99,9 +99,10 @@
             
             // 💥 修正 1：如果價格明確為 '0' (來自 basic.html)，直接導向
             if (isFreeCourse) { 
-                statusMessageElement.textContent = `🎉 免費課程 (價格為 0)，直接跳轉至課程...`;
+                statusMessageElement.textContent = `🎉 直接跳轉至免費課程...`;
                 setTimeout(() => {
-                    window.location.href = targetUrl; 
+                    //window.location.href = targetUrl; 
+                    window.open(targetUrl, '_blank');
                 }, 1000);
                 return; 
             }
@@ -122,7 +123,8 @@
                 if (status === 'AUTHORIZED') {
                     statusMessageElement.textContent = `✅ 權限通過！跳轉至課程...`;
                     setTimeout(() => {
-                        window.location.href = redirectUrl; // 導向課程連結
+                        //window.location.href = redirectUrl; // 導向課程連結
+                        window.open(targetUrl, '_blank');
                     }, 1000);
                 } else {
                     statusMessageElement.textContent = `❌ 權限不足，請先購買課程。`;
