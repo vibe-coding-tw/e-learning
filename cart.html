@@ -22,7 +22,10 @@
 
     <header class="bg-white shadow-md p-4 sticky top-0 z-10">
         <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-indigo-600">Vibe Coding</h1> 
+            <a href="index.html" class="hover:text-indigo-800 transition duration-150">
+                <h1 class="text-2xl font-bold text-indigo-600">Vibe Coding</h1> 
+            </a>
+            
             <div id="auth-status" class="text-sm text-gray-600">
                 <span id="user-display">請登入</span>
                 <button id="login-btn" class="ml-3 bg-indigo-500 hover:bg-indigo-600 text-white text-xs py-1 px-3 rounded">登入 / 註冊</button>
@@ -55,7 +58,7 @@
             </div>
         </section>
 
-        </main>
+    </main>
 
     <script type="module">
         // 1. 匯入必要的 Firebase 函式
@@ -163,18 +166,21 @@
 
 
         // ===============================================
-        // B. 身份驗證邏輯 (使用 Redirect 解決彈窗問題)
+        // B. 身份驗證邏輯
         // ===============================================
         
         /**
-         * 處理登入，改為頁面重新導向
+         * 處理登入
          */
          async function handleLogin() {
             const provider = new GoogleAuthProvider();
             try {
+                // 使用 Popup 登入
                 await signInWithPopup(auth, provider);
             } catch (error) {
                 console.error("登入失敗:", error);
+                // 由於這裡是 cart.html，如果 Popup 失敗，建議改用 Redirect (但您的程式碼已經是 Popup)
+                // 為了與您原來的程式碼保持一致，這裡不改變登入方式。
             }
         }
 
@@ -203,7 +209,7 @@
         });
 
         // ===============================================
-        // C. 付款按鈕邏輯
+        // C. 付款按鈕邏輯 (重點修正)
         // ===============================================
 
         checkoutBtn.addEventListener('click', () => {
@@ -216,9 +222,8 @@
             }
 
             if (!auth.currentUser) {
-                alert("請先登入才能進行付款！頁面將跳轉至登入流程...");
-                // 建議自動引導登入（此時會觸發頁面跳轉）
-                handleLogin(); 
+                alert("請先登入才能進行付款！請點擊右上角按鈕登入。");
+                // 不自動跳轉，讓用戶主動點擊登入按鈕
                 return;
             }
             
@@ -232,7 +237,6 @@
 
         /**
          * 處理與後端的 Line Pay 結帳流程
-         * 🚨 注意：此功能需要後端 Cloud Function (initiateLinePayPayment) 支援
          */
         async function handleLinePayCheckout(user, total, cartItems) {
             checkoutBtn.disabled = true;
@@ -242,8 +246,7 @@
                 const response = await initLinePay({
                     amount: total,
                     userId: user.uid,
-                    cartDetails: cartItems, // 傳遞詳細購物車內容給後端
-                    // 讓後端知道付款成功後，要將用戶導回哪個頁面
+                    cartDetails: cartItems, 
                     confirmUrl: window.location.origin + '/payment-confirm.html' 
                 });
 
@@ -253,12 +256,31 @@
                     // 導向 Line Pay 官方付款頁面
                     window.location.href = response.data.webPaymentUrl;
                 } else {
-                    throw new Error(response.data.message || 'Line Pay 建立失敗。');
+                    // 這是後端程式碼正常執行，但 Line Pay 建立失敗的情況
+                    throw new Error(response.data.message || 'Line Pay 交易建立失敗。');
                 }
 
             } catch (error) {
                 console.error("Line Pay 結帳失敗:", error);
-                alert(`結帳失敗：${error.message}，請稍後再試。`);
+                
+                let errorMessage = '結帳失敗：無法連接伺服器或發生未知錯誤。';
+                
+                // 檢查是否為 Cloud Function 拋出的錯誤 (通常錯誤物件會有 code, details, message)
+                if (error.code) {
+                    // 根據您提供的錯誤 "internal"，判斷是否為內部錯誤
+                    if (error.code === 'internal') {
+                        errorMessage = `伺服器內部錯誤 (Code: ${error.code})，請稍後再試。若持續發生，請聯絡客服並提供以下資訊：用戶 ID: ${user.uid}。`;
+                    } else if (error.message) {
+                        // 其他已知的 CF 錯誤 (如 invalid-argument)
+                        errorMessage = `結帳失敗：${error.message}`;
+                    }
+                } else if (error.message) {
+                    // 網路或瀏覽器錯誤
+                    errorMessage = `結帳失敗：${error.message}，請檢查您的網路連線。`;
+                }
+
+                alert(errorMessage);
+                
                 checkoutBtn.disabled = false;
                 checkoutBtn.textContent = '💳 前往付款';
             }
