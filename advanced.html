@@ -336,7 +336,6 @@
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
-
         // 2. 您的 Firebase 配置 
         const firebaseConfig = {
           apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
@@ -382,9 +381,6 @@
         // ===============================================
         // B. 購物車確認流程 (與 basic.html 保持一致)
         // ===============================================
-        /**
-         * 處理加入購物車的確認對話框流程：先檢查，不存在才確認。
-         */
         function handleAddToCartConfirmation(courseId, courseName, coursePrice) {
             const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             
@@ -397,16 +393,11 @@
             // 2. 只有當商品不存在時，才執行 confirm 步驟
             const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`;
             
-            const isConfirmed = confirm(`您確定要將課程「${courseName}」加入購物車嗎？\n\n價格：${priceText}\n\n[確定] 加入購物車並停留在原頁面\n[取消] 放棄操作`);
+            const isConfirmed = confirm(`您確定要將課程「${courseName}」加入購物車嗎？\n\n價格：${priceText}`);
 
             if (isConfirmed) {
                 // 如果使用者按下「確定」
                 const result = addToCart(courseId, courseName, coursePrice);
-                
-                if (result.success) {
-                    // 成功加入後給出提示，並停留在原頁面
-                    alert(result.message + "\n\n您可以繼續瀏覽或點擊右上角購物車圖標前往結帳。");
-                } 
             } 
         }
 
