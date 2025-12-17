@@ -6,6 +6,8 @@
     <title>基礎課程：馬達控制、通訊與 OTA 實作</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* 樣式部分不變 */
+        /* ... (略) ... */
         /* 基礎樣式 (使用 Tailwind 的 reset) */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f9; color: #333; }
         
@@ -159,8 +161,7 @@
                     <div class="core-content">
                         <strong>核心內容：</strong>
                         <ul>
-                            <li>差速驅動：講解車輛轉向的原理（左右馬達速度差異）。
-                            </li>
+                            <li>差速驅動：講解車輛轉向的原理（左右馬達速度差異）。</li>
                             <li>基礎 API 設計：實現 CMD, F, V (前進)、CMD, R, V (右轉) 等指令的解析邏輯。</li>
                             <li>實作：撰寫統一的馬達控制函式，執行複雜運動。</li>
                         </ul>
@@ -186,8 +187,7 @@
                     <div class="core-content">
                         <strong>核心內容：</strong>
                         <ul>
-                            <li>GATT 協定：講解 Service、Characteristic 與 Descriptor 概念。
-                            </li>
+                            <li>GATT 協定：講解 Service、Characteristic 與 Descriptor 概念。</li>
                             <li>BLE 伺服器建構：使用 ESP32 BLE 函式庫，建立服務與特性值。</li>
                             <li>數據接收：實作 `onWrite` 回呼函式，接收手機端發來的控制指令字串。</li>
                         </ul>
@@ -213,8 +213,7 @@
                     <div class="core-content">
                         <strong>核心內容：</strong>
                         <ul>
-                            <li>編碼器原理：了解光電編碼器如何輸出脈衝訊號。
-                            </li>
+                            <li>編碼器原理：了解光電編碼器如何輸出脈衝訊號。</li>
                             <li>中斷 (Interrupts)：學習使用中斷來精確計數編碼器的脈衝。</li>
                             <li>實作：讀取馬達脈衝數，計算當前輪子的 RPM 或線速度。</li>
                         </ul>
@@ -241,11 +240,7 @@
                         <strong>核心內容：</strong>
                         <ul>
                             <li>閉迴路概念：區分開迴路與閉迴路控制。</li>
-                            <li>PID 理論：講解比例 (P)、積分 (I)、微分 (D) 三項的意義與作用。
-                            
-
-[Image of PID controller block diagram]
-</li>
+                            <li>PID 理論：講解比例 (P)、積分 (I)、微分 (D) 三項的意義與作用。</li>
                             <li>實作：撰寫 PID 函式，應用於馬達定速行駛。</li>
                         </ul>
                     </div>
@@ -400,7 +395,7 @@
 
 
         // ===============================================
-        // C. 動態按鈕狀態更新核心邏輯 (優化免費課程未登入狀態)
+        // C. 動態按鈕狀態更新核心邏輯
         // ===============================================
         
         // 取得所有課程卡片
@@ -423,12 +418,13 @@
             btn.disabled = false;
 
             if (status === 'AUTHORIZED') {
-                // 狀態 1: 已授權 (已付費或免費快速路徑) -> 進入課程
+                // 狀態 1: 已授權 -> 進入課程
                 btn.textContent = '✅ 進入課程內容';
                 btn.className = 'action-btn bg-green-600 hover:bg-green-700 text-white';
                 btn.onclick = () => {
-                    // 導向 auth.html 進行最終驗證和重定向
-                    window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}`;
+                    // 💥 修正 2: 傳遞 courseId，確保 auth.html 能判斷是否為免費課程
+                    window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`;
+                    //window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}`;
                 };
             } else if (status === 'UNAUTHORIZED') {
                 // 狀態 2: 已登入但未購買 (主要針對收費課程)
@@ -450,7 +446,7 @@
                 // 狀態 3: 未登入
 
                 if (isFreeCourse) {
-                    // 💥 優化點：免費課程未登入時，引導登入
+                    // 免費課程：引導登入
                     btn.textContent = '👤 請先登入以進入課程 (免費)';
                     btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
                     btn.onclick = handleLogin;
@@ -469,10 +465,21 @@
                 btn.className = 'action-btn bg-gray-400 text-white';
                 btn.disabled = true;
             } else if (status === 'ERROR') {
-                // 錯誤狀態 (與 Cloud Function 呼叫失敗時一致)
-                btn.textContent = '錯誤: 點擊重新載入';
-                btn.className = 'action-btn bg-red-600 hover:bg-red-700 text-white';
-                btn.onclick = () => window.location.reload();
+                // 錯誤狀態
+                
+                if (isFreeCourse) {
+                    // 免費課程：與 NOT_LOGGED_IN 邏輯相同，引導登入
+                    btn.textContent = '👤 請先登入以進入課程 (免費)';
+                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
+                    btn.onclick = handleLogin;
+                } else {
+                    // 💥 修正 1.1: 收費課程 CF 檢查失敗，導向 UNAUTHORIZED (加入購物車)
+                    btn.textContent = `🛒 加入購物車 (${priceText})`;
+                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
+                    btn.onclick = () => {
+                        addToCart(courseId, courseName, coursePrice); 
+                    };
+                }
             }
         }
 
@@ -486,14 +493,15 @@
             const classroomUrl = cardElement.dataset.classroomUrl;
             const isFreeCourse = parseInt(cardElement.dataset.coursePrice, 10) === 0;
 
-            // 💥 修正 1: 免費課程且使用者已登入，直接視為 AUTHORIZED
+            // 💥 免費課程且使用者已登入，直接視為 AUTHORIZED (跳過 CF)
             if (isFreeCourse) {
                 updateCardAction(cardElement, 'AUTHORIZED');
                 return; 
             }
 
+            // --- 收費課程才會走到這裡 ---
             try {
-                // 呼叫 Cloud Function 檢查授權 (僅對收費課程執行)
+                // 呼叫 Cloud Function 檢查授權 
                 const result = await checkAuthFunction({ 
                     courseId: courseId, 
                     targetUrl: encodeURIComponent(classroomUrl) 
@@ -506,8 +514,9 @@
 
             } catch (error) {
                 console.error(`課程 ${courseId} 授權檢查失敗:`, error);
-                // 檢查失敗，預設導向購物車（未授權狀態），但為了高診斷性，我們用 ERROR
-                updateCardAction(cardElement, 'ERROR');
+                
+                // 💥 修正 1.2: CF 呼叫失敗，收費課程導向 UNAUTHORIZED (加入購物車)
+                updateCardAction(cardElement, 'UNAUTHORIZED');
             }
         }
 
@@ -525,7 +534,7 @@
                 loginBtn.onclick = handleLogout;
                 
                 lessonCards.forEach(card => {
-                    checkLessonAuthorization(card, user); // 這裡會自動跳過免費課程的 Cloud Function 呼叫
+                    checkLessonAuthorization(card, user);
                 });
             } else {
                 // 2. 未登入：更新 UI，並將所有課程按鈕設定為 NOT_LOGGED_IN
@@ -534,7 +543,6 @@
                 loginBtn.onclick = handleLogin;
                 
                 lessonCards.forEach(card => {
-                    // NOT_LOGGED_IN 狀態會在 updateCardAction 中根據價格區分引導登入或加入購物車
                     updateCardAction(card, 'NOT_LOGGED_IN');
                 });
             }
