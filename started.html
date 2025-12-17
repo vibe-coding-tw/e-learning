@@ -6,7 +6,7 @@
     <title>入門課程：Web App 遙控器設計與 Web BLE 整合</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 基礎樣式 (使用 Tailwind 的 reset) */
+        /* 基礎樣式 */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f9; color: #333; }
         
         /* 課程網格與卡片 */
@@ -24,11 +24,12 @@
         .lesson-card:hover { 
             transform: translateY(-5px); 
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12); 
+            background-color: #e9f0ff; /* 改變懸停顏色以匹配主題 */
         }
-        .lesson-header { background-color: #e9f0ff; padding: 15px 20px; border-bottom: 2px solid #007bff; }
-        .lesson-header h2 { margin: 0; font-size: 1.25em; color: #007bff; }
+        .lesson-header { background-color: #e9f0ff; padding: 15px 20px; border-bottom: 2px solid #3b82f6; } /* 改用 Tailwind Blue-500 */
+        .lesson-header h2 { margin: 0; font-size: 1.25em; color: #3b82f6; }
         .lesson-body { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
-        .lesson-icon { width: 50px; height: 50px; background-color: #007bff; color: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2em; margin-bottom: 15px; }
+        .lesson-icon { width: 50px; height: 50px; background-color: #3b82f6; color: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2em; margin-bottom: 15px; }
         .phase-tag { display: inline-block; background-color: #6c757d; color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 0.8em; margin-bottom: 10px; }
         .core-content { margin-top: 15px; font-size: 0.9em; color: #555; flex-grow: 1;}
         .core-content ul { list-style: disc; padding-left: 20px; margin: 5px 0 0 0; }
@@ -89,219 +90,51 @@
                 </div>
             </div>
 
-            <div class="lesson-card" 
-                 id="lesson-C1_L2" 
-                 data-course-id="C1_L2" 
-                 data-course-name="Web BLE 客戶端連線邏輯" 
-                 data-course-price="1200"
-                 data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl&lesson=L2">
-                <div class="lesson-header">
-                    <h2>第 2 課：Web BLE 客戶端連線邏輯實作 <span class="duration">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="Bluetooth Icon">🔗</div>
-                    <span class="phase-tag">I. Web App 基礎與 BLE 連線</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>介紹 JavaScript Web BLE API：`navigator.bluetooth` 與權限模型。</li>
-                            <li>實作 `requestDevice`、`gatt.connect`、服務與特徵值 (UUID) 處理。</li>
-                            <li>實現連線/斷開按鈕功能，使用 JS 監聽連線狀態。</li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C1_L2" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
+            <div class="lesson-card" id="lesson-C1_L2" data-course-id="C1_L2" data-course-name="Web BLE 客戶端連線邏輯" data-course-price="1200" data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl&lesson=L2">
+                <div class="lesson-header"><h2>第 2 課：Web BLE 客戶端連線邏輯實作 <span class="duration">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Bluetooth Icon">🔗</div><span class="phase-tag">I. Web App 基礎與 BLE 連線</span><div class="core-content"><strong>核心內容：</strong><ul><li>介紹 JavaScript Web BLE API：`navigator.bluetooth` 與權限模型。</li><li>實作 `requestDevice`、`gatt.connect`、服務與特徵值 (UUID) 處理。</li><li>實現連線/斷開按鈕功能，使用 JS 監聽連線狀態。</li></ul></div><button id="action-btn-C1_L2" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
             
-            <div class="lesson-card" 
-                 id="lesson-C1_L3" 
-                 data-course-id="C1_L3" 
-                 data-course-name="基礎按鈕控制與 API 數據格式化" 
-                 data-course-price="1200"
-                 data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl&lesson=L3">
-                <div class="lesson-header">
-                    <h2>第 3 課：基礎按鈕控制與 API 數據格式化 <span class="duration">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="Control Icon">🕹️</div>
-                    <span class="phase-tag">II. 按鈕控制與 API 數據封包</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>數據封包設計：將按鈕事件轉換為 API 字串格式（如 CMD, F, 180）。</li>
-                            <li>Web BLE 寫入實作：使用 `characteristic.writeValue` 發送指令。</li>
-                            <li>實作前、後、左、右、停止五個按鈕，實現馬達基本控制。</li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C1_L3" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
+            <div class="lesson-card" id="lesson-C1_L3" data-course-id="C1_L3" data-course-name="基礎按鈕控制與 API 數據格式化" data-course-price="1200" data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl&lesson=L3">
+                <div class="lesson-header"><h2>第 3 課：基礎按鈕控制與 API 數據格式化 <span class="duration">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Control Icon">🕹️</div><span class="phase-tag">II. 按鈕控制與 API 數據封包</span><div class="core-content"><strong>核心內容：</strong><ul><li>數據封包設計：將按鈕事件轉換為 API 字串格式（如 CMD, F, 180）。</li><li>Web BLE 寫入實作：使用 `characteristic.writeValue` 發送指令。</li></ul></div><button id="action-btn-C1_L3" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
             
-            <div class="lesson-card" 
-                 id="lesson-C1_L4" 
-                 data-course-id="C1_L4" 
-                 data-course-name="觸控事件優化：長按與放開" 
-                 data-course-price="1200"
-                 data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl&lesson=L4">
-                <div class="lesson-header">
-                    <h2>第 4 課：觸控事件優化：長按與放開 <span class="duration">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="Touch Icon">👆</div>
-                    <span class="phase-tag">II. 按鈕控制與 API 數據封包</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>區分原生觸控事件：`mousedown/mouseup` 和 `touchstart/touchend`。</li>
-                            <li>實現長按發送持續移動指令，放開發送停止指令（使用 `setInterval`）。</li>
-                            <li>利用觸控事件優化控制按鈕的靈敏度與即時性。</li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C1_L4" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
+            <div class="lesson-card" id="lesson-C1_L4" data-course-id="C1_L4" data-course-name="觸控事件優化：長按與放開" data-course-price="1200" data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl&lesson=L4">
+                <div class="lesson-header"><h2>第 4 課：觸控事件優化：長按與放開 <span class="duration">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Touch Icon">👆</div><span class="phase-tag">II. 按鈕控制與 API 數據封包</span><div class="core-content"><strong>核心內容：</strong><ul><li>區分原生觸控事件：`mousedown/mouseup` 和 `touchstart/touchend`。</li><li>實現長按發送持續移動指令，放開發送停止指令（使用 `setInterval`）。</li></ul></div><button id="action-btn-C1_L4" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
 
-            <div class="lesson-card" 
-                 id="lesson-C1_L5" 
-                 data-course-id="C1_L5" 
-                 data-course-name="虛擬搖桿 UI 製作與座標擷取" 
-                 data-course-price="1200"
-                 data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl&lesson=L5">
-                <div class="lesson-header">
-                    <h2>第 5 課：虛擬搖桿 UI 製作與座標擷取 <span class="duration">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="Canvas Icon">🎛️</div>
-                    <span class="phase-tag">III. 虛擬搖桿與精細化控制</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>使用 HTML `Canvas` 製作搖桿畫布區域和手柄（使用 JS 繪圖）。</li>
-                            <li>學習在搖桿拖曳時，即時擷取 X/Y 座標並限制移動範圍。</li>
-                            <li>實作搖桿手柄在畫布內跟隨移動，並在鬆手時自動回到中心。</li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C1_L5" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
+            <div class="lesson-card" id="lesson-C1_L5" data-course-id="C1_L5" data-course-name="虛擬搖桿 UI 製作與座標擷取" data-course-price="1200" data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl&lesson=L5">
+                <div class="lesson-header"><h2>第 5 課：虛擬搖桿 UI 製作與座標擷取 <span class="duration">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Canvas Icon">🎛️</div><span class="phase-tag">III. 虛擬搖桿與精細化控制</span><div class="core-content"><strong>核心內容：</strong><ul><li>使用 HTML `Canvas` 製作搖桿畫布區域和手柄（使用 JS 繪圖）。</li><li>實作搖桿手柄在畫布內跟隨移動，並在鬆手時自動回到中心。</li></ul></div><button id="action-btn-C1_L5" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
 
-            <div class="lesson-card" 
-                 id="lesson-C1_L6" 
-                 data-course-id="C1_L6" 
-                 data-course-name="搖桿座標到 API 指令的數學轉換" 
-                 data-course-price="1200"
-                 data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl&lesson=L6">
-                <div class="lesson-header">
-                    <h2>第 6 課：搖桿座標到 API 指令的數學轉換 <span class="duration">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="Math Icon">🔢</div>
-                    <span class="phase-tag">III. 虛擬搖桿與精細化控制</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>線性映射原理：將畫布 X/Y 像素範圍，轉換為速度/轉向數值範圍（0-255）。</li>
-                            <li>差速數據計算：建立將 X/Y 座標轉換為速度/轉向指令 (CMD, F, V 等) 的 JS 邏輯。</li>
-                            <li>實作將 X/Y 座標轉換為 API 數據的 JS 函式。</li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C1_L6" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
+            <div class="lesson-card" id="lesson-C1_L6" data-course-id="C1_L6" data-course-name="搖桿座標到 API 指令的數學轉換" data-course-price="1200" data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl&lesson=L6">
+                <div class="lesson-header"><h2>第 6 課：搖桿座標到 API 指令的數學轉換 <span class="duration">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Math Icon">🔢</div><span class="phase-tag">III. 虛擬搖桿與精細化控制</span><div class="core-content"><strong>核心內容：</strong><ul><li>線性映射原理：將畫布 X/Y 像素範圍，轉換為速度/轉向數值範圍（0-255）。</li><li>差速數據計算：建立將 X/Y 座標轉換為速度/轉向指令 (CMD, F, V 等) 的 JS 邏輯。</li></ul></div><button id="action-btn-C1_L6" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
 
-            <div class="lesson-card" 
-                 id="lesson-C1_L7" 
-                 data-course-id="C1_L7" 
-                 data-course-name="定時器與連續數據發送" 
-                 data-course-price="1200"
-                 data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl&lesson=L7">
-                <div class="lesson-header">
-                    <h2>第 7 課：定時器與連續數據發送 <span class="duration">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="Timer Icon">⏱️</div>
-                    <span class="phase-tag">III. 虛擬搖桿與精細化控制</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>介紹 `setInterval` 與 `requestAnimationFrame` 在即時控制中的作用。</li>
-                            <li>設定 `setInterval` (如 50ms 間隔)，週期性呼叫搖桿數據發送程序。</li>
-                            <li>整合搖桿、轉換邏輯與定時器，實現流暢、低延遲的 BLE 搖桿控制。</li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C1_L7" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
+            <div class="lesson-card" id="lesson-C1_L7" data-course-id="C1_L7" data-course-name="定時器與連續數據發送" data-course-price="1200" data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl&lesson=L7">
+                <div class="lesson-header"><h2>第 7 課：定時器與連續數據發送 <span class="duration">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Timer Icon">⏱️</div><span class="phase-tag">III. 虛擬搖桿與精細化控制</span><div class="core-content"><strong>核心內容：</strong><ul><li>介紹 `setInterval` 與 `requestAnimationFrame` 在即時控制中的作用。</li><li>設定 `setInterval` (如 50ms 間隔)，週期性呼叫搖桿數據發送程序。</li></ul></div><button id="action-btn-C1_L7" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
 
-            <div class="lesson-card" 
-                 id="lesson-C1_L8" 
-                 data-course-id="C1_L8" 
-                 data-course-name="Wi-Fi (HTTP) 通訊與 Fetch API" 
-                 data-course-price="1200"
-                 data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl&lesson=L8">
-                <div class="lesson-header">
-                    <h2>第 8 課：Wi-Fi (HTTP) 通訊與 Fetch API <span class="duration">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="WiFi Icon">📶</div>
-                    <span class="phase-tag">IV. Wi-Fi 通訊與雙模式整合</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>介紹現代 JS 的 `fetch` 用於發送 HTTP 請求。</li>
-                            <li>學習構造主控板要求的 HTTP GET 請求 URL（如 `http://[IP]/control?cmd=F&val=180`）。</li>
-                            <li>實作 Wi-Fi 模式下的測試按鈕，發送 HTTP 請求控制主控板。</li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C1_L8" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
+            <div class="lesson-card" id="lesson-C1_L8" data-course-id="C1_L8" data-course-name="Wi-Fi (HTTP) 通訊與 Fetch API" data-course-price="1200" data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl&lesson=L8">
+                <div class="lesson-header"><h2>第 8 課：Wi-Fi (HTTP) 通訊與 Fetch API <span class="duration">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="WiFi Icon">📶</div><span class="phase-tag">IV. Wi-Fi 通訊與雙模式整合</span><div class="core-content"><strong>核心內容：</strong><ul><li>介紹現代 JS 的 `fetch` 用於發送 HTTP 請求。</li><li>實作 Wi-Fi 模式下的測試按鈕，發送 HTTP 請求控制主控板。</li></ul></div><button id="action-btn-C1_L8" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
 
-            <div class="lesson-card" 
-                 id="lesson-C1_L9" 
-                 data-course-id="C1_L9" 
-                 data-course-name="雙模式遙控器設計與狀態切換" 
-                 data-course-price="1200"
-                 data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl&lesson=L9">
-                <div class="lesson-header">
-                    <h2>第 9 課：雙模式遙控器設計與狀態切換 <span class="duration">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="Toggle Icon">🔄</div>
-                    <span class="phase-tag">IV. Wi-Fi 通訊與雙模式整合</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>設計一個可切換的界面，容納 BLE 連線和 Wi-Fi 設定 (IP 輸入)。</li>
-                            <li>學習使用 JS 變數追蹤當前模式（BLE 或 Wi-Fi）。</li>
-                            <li>實作根據當前模式，控制指令透過 BLE 或 Wi-Fi 發送的邏輯。</li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C1_L9" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
+            <div class="lesson-card" id="lesson-C1_L9" data-course-id="C1_L9" data-course-name="雙模式遙控器設計與狀態切換" data-course-price="1200" data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl&lesson=L9">
+                <div class="lesson-header"><h2>第 9 課：雙模式遙控器設計與狀態切換 <span class="duration">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Toggle Icon">🔄</div><span class="phase-tag">IV. Wi-Fi 通訊與雙模式整合</span><div class="core-content"><strong>核心內容：</strong><ul><li>設計一個可切換的界面，容納 BLE 連線和 Wi-Fi 設定 (IP 輸入)。</li><li>實作根據當前模式，控制指令透過 BLE 或 Wi-Fi 發送的邏輯。</li></ul></div><button id="action-btn-C1_L9" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
 
             <div class="lesson-card" 
                  id="lesson-C1_L10" 
                  data-course-id="C1_L10" 
                  data-course-name="專案優化、錯誤處理與最終展示" 
-                 data-course-price="1200"
+                 data-course-price="0"
                  data-classroom-url="https://classroom.google.com/c/ODM1OTE3OTYwMTkw?cjc=72uyaadl&lesson=L10">
                 <div class="lesson-header">
                     <h2>第 10 課：專案優化、錯誤處理與最終展示 <span class="duration">(3H)</span></h2>
@@ -352,29 +185,64 @@
         const AUTH_URL = 'auth.html'; 
 
         // ===============================================
-        // A. 購物車核心邏輯
+        // A. 購物車核心邏輯 (僅處理存儲，無提示/跳轉)
         // ===============================================
         function addToCart(productId, productName, productPrice) {
             let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             const priceNum = parseInt(productPrice, 10);
             
-            if (!cart[productId]) {
-                cart[productId] = { 
-                    name: productName, 
-                    price: priceNum, 
-                    quantity: 1 
-                };
-                localStorage.setItem('vibeCodingCart', JSON.stringify(cart));
-                alert(`「${productName}」已加入購物車！`);
-            } else {
-                 alert(`「${productName}」已在購物車中！`);
+            // 檢查商品是否已存在
+            if (cart[productId]) {
+                return { success: false, message: `「${productName}」已在購物車中！` };
             }
-            window.location.href = CART_URL; 
+            
+            // 將商品加入購物車
+            cart[productId] = { 
+                name: productName, 
+                price: priceNum, 
+                quantity: 1 
+            };
+            localStorage.setItem('vibeCodingCart', JSON.stringify(cart));
+            
+            return { success: true, message: `「${productName}」已成功加入購物車！` };
         }
 
+
         // ===============================================
-        // B. 登入/登出邏輯 (使用 Pop-up)
-        // ===============================================        
+        // B. 購物車確認流程 (與 basic.html 保持一致)
+        // ===============================================
+        /**
+         * 處理加入購物車的確認對話框流程：先檢查，不存在才確認。
+         */
+        function handleAddToCartConfirmation(courseId, courseName, coursePrice) {
+            const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
+            
+            // 1. 預先檢查購物車，如果已存在，只彈出 alert 提醒
+            if (cart[courseId]) {
+                alert(`⚠️ 「${courseName}」已在購物車中！`);
+                return; // 結束函式，停留在原頁面
+            }
+            
+            // 2. 只有當商品不存在時，才執行 confirm 步驟
+            const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`;
+            
+            const isConfirmed = confirm(`您確定要將課程「${courseName}」加入購物車嗎？\n\n價格：${priceText}\n\n[確定] 加入購物車並停留在原頁面\n[取消] 放棄操作`);
+
+            if (isConfirmed) {
+                // 如果使用者按下「確定」
+                const result = addToCart(courseId, courseName, coursePrice);
+                
+                if (result.success) {
+                    // 成功加入後給出提示，並停留在原頁面
+                    alert(result.message + "\n\n您可以繼續瀏覽或點擊右上角購物車圖標前往結帳。");
+                } 
+            } 
+        }
+
+
+        // ===============================================
+        // C. 登入/登出邏輯 (不變)
+        // ===============================================
         async function handleLogin() {
             const provider = new GoogleAuthProvider();
             try {
@@ -389,55 +257,115 @@
         }
 
         // ===============================================
-        // C. 動態按鈕狀態更新核心邏輯
+        // D. 動態按鈕狀態更新核心邏輯
         // ===============================================
         
         const lessonCards = document.querySelectorAll('.lesson-card');
 
+        /**
+         * 根據授權狀態更新單一課程卡片的按鈕
+         */
         function updateCardAction(cardElement, status) {
             const btn = cardElement.querySelector('.action-btn');
             const courseId = cardElement.dataset.courseId;
             const courseName = cardElement.dataset.courseName;
-            const coursePrice = cardElement.dataset.coursePrice;
+            const coursePrice = cardElement.dataset.coursePrice; // 關鍵：價格參數
             const classroomUrl = cardElement.dataset.classroomUrl;
-            const isFreeCourse = parseInt(coursePrice, 10) === 0; // 判斷是否為免費課程
+            const isFreeCourse = parseInt(coursePrice, 10) === 0; 
+            const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`; 
 
+            // 清除所有舊的事件監聽器
             btn.onclick = null; 
             btn.disabled = false;
 
-            if (status === 'AUTHORIZED' || (status !== 'NOT_LOGGED_IN' && isFreeCourse)) {
+            if (status === 'AUTHORIZED') {
+                // 狀態 1: 已授權 -> 進入課程
                 btn.textContent = '✅ 進入課程內容';
                 btn.className = 'action-btn bg-blue-600 hover:bg-blue-700 text-white';
                 btn.onclick = () => {
-                    const redirectUrl = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}`;
-                    window.location.href = redirectUrl;
+                    // 傳遞 courseId 和 coursePrice 給 auth.html 
+                    window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`;
                 };
-            } else if (status === 'UNAUTHORIZED' || (status === 'NOT_LOGGED_IN' && !isFreeCourse)) {
-                // 狀態 2 & 3: 未授權或未登入 -> 加入購物車
-                btn.textContent = '🛒 加入購物車 (NT$ ' + coursePrice + ')';
-                btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
-                btn.onclick = () => {
-                    addToCart(courseId, courseName, coursePrice); 
-                };
+            } else if (status === 'UNAUTHORIZED') {
+                // 狀態 2: 已登入但未購買 (主要針對收費課程)
+                
+                if (isFreeCourse) {
+                    // 免費課程出現 UNAUTHORIZED 視為異常
+                    btn.textContent = '⛔ 授權錯誤 (請聯繫客服)';
+                    btn.className = 'action-btn bg-red-600 hover:bg-red-700 text-white';
+                    btn.onclick = () => window.location.reload(); 
+                } else {
+                    // 收費課程：引導加入購物車 (點擊後進入確認流程)
+                    btn.textContent = `🛒 加入購物車 (${priceText})`;
+                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
+                    btn.onclick = () => {
+                        handleAddToCartConfirmation(courseId, courseName, coursePrice); 
+                    };
+                }
+            } else if (status === 'NOT_LOGGED_IN') {
+                // 狀態 3: 未登入
+
+                if (isFreeCourse) {
+                    // 免費課程：引導登入
+                    btn.textContent = '👤 請先登入以進入課程 (免費)';
+                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
+                    btn.onclick = handleLogin;
+                } else {
+                    // 收費課程：引導加入購物車 (點擊後進入確認流程)
+                    btn.textContent = `🛒 加入購物車 (${priceText})`;
+                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
+                    btn.onclick = () => {
+                        handleAddToCartConfirmation(courseId, courseName, coursePrice); 
+                    };
+                }
+
             } else if (status === 'LOADING') {
+                // 狀態 4: 載入中
                 btn.textContent = '權限檢查中...';
                 btn.className = 'action-btn bg-gray-400 text-white';
                 btn.disabled = true;
             } else if (status === 'ERROR') {
-                btn.textContent = '錯誤: 點擊重新載入';
-                btn.className = 'action-btn bg-red-600 hover:bg-red-700 text-white';
-                btn.onclick = () => window.location.reload();
+                // 錯誤狀態 (收費課程 CF 檢查失敗，導向 UNAUTHORIZED 流程)
+                
+                if (isFreeCourse) {
+                    // 免費課程：與 NOT_LOGGED_IN 邏輯相同，引導登入
+                    btn.textContent = '👤 請先登入以進入課程 (免費)';
+                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
+                    btn.onclick = handleLogin;
+                } else {
+                    // 收費課程：導向 UNAUTHORIZED (加入購物車確認)
+                    btn.textContent = `🛒 加入購物車 (${priceText})`;
+                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
+                    btn.onclick = () => {
+                        handleAddToCartConfirmation(courseId, courseName, coursePrice); 
+                    };
+                }
             }
         }
 
+        /**
+         * 檢查單一課程的授權狀態 (優化：免費課程跳過 Cloud Function)
+         */
         async function checkLessonAuthorization(cardElement, user) {
-            if (!user) return; 
-
             updateCardAction(cardElement, 'LOADING');
 
             const courseId = cardElement.dataset.courseId;
             const classroomUrl = cardElement.dataset.classroomUrl;
+            const isFreeCourse = parseInt(cardElement.dataset.coursePrice, 10) === 0;
 
+            // 💥 修正：免費課程且使用者已登入，直接視為 AUTHORIZED (跳過 CF)
+            if (isFreeCourse && user) {
+                updateCardAction(cardElement, 'AUTHORIZED');
+                return; 
+            }
+            
+            // 💥 修正：如果未登入，不需要呼叫 CF，直接導向 NOT_LOGGED_IN
+            if (!user) {
+                updateCardAction(cardElement, 'NOT_LOGGED_IN');
+                return;
+            }
+
+            // --- 收費課程才會走到這裡 (呼叫 CF) ---
             try {
                 const result = await checkAuthFunction({ 
                     courseId: courseId, 
@@ -449,20 +377,18 @@
 
             } catch (error) {
                 console.error(`課程 ${courseId} 授權檢查失敗:`, error);
-                // 檢查失敗，預設導向購物車（未授權狀態）
+                
+                // CF 呼叫失敗，收費課程導向 UNAUTHORIZED (加入購物車)
                 updateCardAction(cardElement, 'UNAUTHORIZED');
             }
         }
 
         // ----------------------------------------------------
-        // D. 總體授權流程控制器
+        // E. 總體授權流程控制器 
         // ----------------------------------------------------
-        const userDisplay = document.getElementById('user-display');
-        const loginBtn = document.getElementById('login-btn');
-        // 💥 修正 3: 移除所有關於 bodyElement 和 loadingOverlay 的控制邏輯
         onAuthStateChanged(auth, (user) => {
-            
-            loginBtn.disabled = false; // 恢復按鈕
+            const userDisplay = document.getElementById('user-display');
+            const loginBtn = document.getElementById('login-btn');
 
             if (user) {
                 userDisplay.textContent = `您好, ${user.displayName || user.email}`;
@@ -478,7 +404,8 @@
                 loginBtn.onclick = handleLogin;
                 
                 lessonCards.forEach(card => {
-                    updateCardAction(card, 'NOT_LOGGED_IN');
+                    // 修正：未登入時，直接設定狀態，讓 updateCardAction 處理免費/收費課程
+                    updateCardAction(card, 'NOT_LOGGED_IN'); 
                 });
             }
         });

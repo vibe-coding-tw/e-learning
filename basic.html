@@ -158,11 +158,8 @@
 
 
         // ===============================================
-        // B. 購物車確認流程 (最終修訂版：預先檢查)
+        // B. 購物車確認流程
         // ===============================================
-        /**
-         * 處理加入購物車的確認對話框流程
-         */
         function handleAddToCartConfirmation(courseId, courseName, coursePrice) {
             const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             
@@ -175,20 +172,13 @@
             // 修正 2: 只有當商品不存在時，才執行 confirm 步驟
             const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`;
             
-            const isConfirmed = confirm(`您確定要將課程「${courseName}」加入購物車嗎？\n\n價格：${priceText}\n\n[確定] 加入購物車並停留在原頁面\n[取消] 放棄操作`);
+            const isConfirmed = confirm(`您確定要將課程「${courseName}」加入購物車嗎？\n\n價格：${priceText}`);
 
             if (isConfirmed) {
                 // 如果使用者按下「確定」
                 const result = addToCart(courseId, courseName, coursePrice);
-                
-                if (result.success) {
-                    // 成功加入後給出提示，並停留在原頁面
-                    alert(result.message + "\n\n您可以繼續瀏覽或點擊右上角購物車圖標前往結帳。");
-                } 
-                // 這裡無需處理 else，因為預先檢查已經保證了 success 是 true
             } 
         }
-
 
         // ===============================================
         // C. 登入/登出邏輯 (不變)
@@ -205,7 +195,6 @@
         async function handleLogout() {
             await signOut(auth);
         }
-
 
         // ===============================================
         // D. 動態按鈕狀態更新核心邏輯
