@@ -166,6 +166,24 @@
           width: 100%;
           height: auto;
         }
+
+        .advanced-car-crop-wrapper {
+          /*width: 300px;         /* 1. 設定你想要的顯示寬度 */
+          overflow: hidden;     /* 2. 核心：切掉超出範圍的內容 */
+          display: block;
+          position: relative;
+        }
+      
+        /* 使用 padding-top 來精確控制比例。
+           如果原圖是 1:1，裁剪後高度為 53%，則 padding-top 設為 53%
+        */
+        .advanced-car-crop-wrapper::before {
+          content: "";
+          display: block;
+          padding-top: 77%;
+        }
+      
+
       </style>
       
 </head>
@@ -268,7 +286,7 @@
                 <p style="color: #6c757d; font-style: italic;">本程式開發平台適用於入門、基礎、及進階課程使用。</p>
                 
                 <div class="hardware-img-wrapper">
-                    <div style="padding-top: 77%;">
+                    <div class="advanced-car-crop-wrapper">
                         <img src="https://www.kidstoylover.com/cdn/shop/files/1_adc99452-bd07-49f0-95a1-a5d7990ed0f5.jpg?v=1715839568&width=1445" style="clip-path: inset(0 0 23% 0); ">
                     </div>
                     <p style="font-size: 0.85em; color: #666; margin-top: 10px;">進階款</p>
