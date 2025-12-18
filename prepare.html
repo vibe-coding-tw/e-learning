@@ -142,6 +142,32 @@
             cursor: pointer;
         }
     </style>
+    <style>
+        .basic-car-crop-wrapper {
+          width: 300px;         /* 1. 設定你想要的顯示寬度 */
+          overflow: hidden;     /* 2. 核心：切掉超出範圍的內容 */
+          display: block;
+          position: relative;
+        }
+      
+        /* 使用 padding-top 來精確控制比例。
+           如果原圖是 1:1，裁剪後高度為 53%，則 padding-top 設為 53%
+        */
+        .basic-car-crop-wrapper::before {
+          content: "";
+          display: block;
+          padding-top: 53%;    /* 這裡填寫 (100 - 22 - 25)% */
+        }
+      
+        .basic-car-crop-wrapper img {
+          position: absolute;
+          top: -22%;           /* 3. 核心：將圖片往上推 22%，切掉頂部 */
+          left: 0;
+          width: 100%;
+          height: auto;
+        }
+      </style>
+      
 </head>
 <body class="p-5">
     <div class="container">
@@ -207,6 +233,10 @@
                 <p style="color: #6c757d; font-style: italic;">本程式開發平台適用於入門、及基礎課程使用。</p>
                 
                 <div class="hardware-img-wrapper">
+                    <div class="basic-car-crop-wrapper">
+                        <img src="https://down-tw.img.susercontent.com/file/tw-11134208-81ztp-me1d6y243mdjc3">
+                    </div>
+                
                     <img src="https://down-tw.img.susercontent.com/file/tw-11134208-81ztp-me1d6y243mdjc3" style="clip-path: inset(22% 0 25% 0);">
                     <p style="font-size: 0.85em; color: #666; margin-top: 10px;">入門款</p>
                 </div>
