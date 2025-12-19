@@ -203,11 +203,15 @@
                 <p style="color: #6c757d; font-style: italic;">本課程目標是將所有開發元件整合到您的電腦中。</p>
                 
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">VS Code：</b>
+                    <b style="display: block; color: #333; margin-bottom: 3px;">Google 帳戶申請：</b>
+                    有了 Google 帳戶，你可以使用多項 Google 產品。
+                </div>
+                <div class="spec-item">
+                    <b style="display: block; color: #333; margin-bottom: 3px;">安裝 VS Code：</b>
                     作為所有程式碼的核心編輯器。
                 </div>
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">PlatformIO：</b>
+                    <b style="display: block; color: #333; margin-bottom: 3px;">安裝 PlatformIO：</b>
                     處理所有編譯、燒錄和專案管理。
                 </div>
                 <div class="spec-item">
@@ -224,20 +228,20 @@
 
             <div class="info-card course-card"
                  data-course-id="esp32-c3" 
-                 data-course-name="程式開發平台入門款" 
+                 data-course-name="基本款程式開發平台" 
                  data-course-price="1600"
                  data-classroom-url="https://vibe-coding.tw/esp32-c3.html"> 
                  <div class="card-header">
                     <div class="card-icon">Basic</div>
-                    <h2>Vibe Racer 程式開發平台入門款</h2>
+                    <h2>基本款程式開發平台</h2>
                 </div>
-                <p style="color: #6c757d; font-style: italic;">本程式開發平台適用於入門、及基礎課程使用。</p>
+                <p style="color: #6c757d; font-style: italic;">本基本款程式開發平台適用於入門、基礎課程使用。</p>
                 
                 <div class="hardware-img-wrapper">
                     <div class="basic-car-crop-wrapper">
                         <img src="https://down-tw.img.susercontent.com/file/tw-11134208-81ztp-me1d6y243mdjc3">
                     </div>
-                    <p style="font-size: 0.85em; color: #666; margin-top: 10px;">入門款</p>
+                    <p style="font-size: 0.85em; color: #666; margin-top: 10px;">基本款</p>
                 </div>
                 
                 <div class="spec-item">
@@ -259,14 +263,14 @@
 
             <div class="info-card course-card"
                  data-course-id="esp32-s3" 
-                 data-course-name="程式開發平台進階款" 
+                 data-course-name="進階款程式開發平台" 
                  data-course-price="3600"
                  data-classroom-url="https://vibe-coding.tw/esp32-s3.html"> 
                  <div class="card-header">
                     <div class="card-icon">Advanced</div>
-                    <h2>Vibe Racer 程式開發平台進階款</h2>
+                    <h2>進階款程式開發平台</h2>
                 </div>
-                <p style="color: #6c757d; font-style: italic;">本程式開發平台適用於入門、基礎、及進階課程使用。</p>
+                <p style="color: #6c757d; font-style: italic;">本進階款程式開發平台適用於入門、基礎、及進階課程使用。</p>
                 
                 <div class="hardware-img-wrapper">
                     <img src="https://www.kidstoylover.com/cdn/shop/files/1_adc99452-bd07-49f0-95a1-a5d7990ed0f5.jpg?v=1715839568&width=1445" style="clip-path: inset(0 0 23% 0); margin-bottom: -23%;">
@@ -371,9 +375,7 @@
         // 1. 匯入必要的 Firebase 函式
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-        // 即使是免費課程，仍保留 Functions 的匯入，以遵循 basic.html 的通用結構
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
-
 
         // 2. 您的 Firebase 配置 (請替換為您的真實配置)
         const firebaseConfig = {
@@ -529,7 +531,7 @@
         }
 
         /**
-         * 檢查單一課程的授權狀態 (與 basic.html 邏輯一致)
+         * 檢查單一課程的授權狀態
          */
         async function checkLessonAuthorization(cardElement, user) {
             updateCardAction(cardElement, 'LOADING');
@@ -550,7 +552,7 @@
                 return; 
             }
 
-            // --- 收費課程 (此頁面不應有) 才會走到這裡 (呼叫 CF) ---
+            // --- 收費課程才會走到這裡 (呼叫 CF) ---
             try {
                 const result = await checkAuthFunction({ 
                     courseId: courseId, 
