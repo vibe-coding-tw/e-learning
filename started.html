@@ -5,12 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>入門課程：Web App 遙控器設計與 Web BLE 整合</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <style>
         /* 基礎樣式 */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f9; color: #333; }
+        body { 
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f7fafc; /* Consistent light gray background */
+            color: #333; 
+        }
         
+        /* Navigation styles (from reference) */
+        .dropdown:hover .dropdown-menu {
+            display: block;
+        }
+
         /* 課程網格與卡片 */
-        .lesson-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .lesson-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 2rem; }
         .lesson-card { 
             background-color: #fff; 
             border-radius: 12px; 
@@ -20,20 +30,20 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            border-top: 4px solid #3b82f6; /* Consistent top border highlight */
         }
         .lesson-card:hover { 
             transform: translateY(-5px); 
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12); 
-            background-color: #e9f0ff; /* 改變懸停顏色以匹配主題 */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
-        .lesson-header { background-color: #e9f0ff; padding: 15px 20px; border-bottom: 2px solid #3b82f6; } /* 改用 Tailwind Blue-500 */
-        .lesson-header h2 { margin: 0; font-size: 1.25em; color: #3b82f6; }
+        .lesson-header { background-color: #e9f0ff; padding: 15px 20px; border-bottom: 1px solid #e5e7eb; }
+        .lesson-header h2 { margin: 0; font-size: 1.25em; color: #1e3a8a; font-weight: 700; }
         .lesson-body { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
         .lesson-icon { width: 50px; height: 50px; background-color: #3b82f6; color: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2em; margin-bottom: 15px; }
-        .phase-tag { display: inline-block; background-color: #6c757d; color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 0.8em; margin-bottom: 10px; }
-        .core-content { margin-top: 15px; font-size: 0.9em; color: #555; flex-grow: 1;}
+        .phase-tag { display: inline-block; background-color: #64748b; color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 0.8em; margin-bottom: 10px; }
+        .core-content { margin-top: 15px; font-size: 0.9em; color: #4b5563; flex-grow: 1;}
         .core-content ul { list-style: disc; padding-left: 20px; margin: 5px 0 0 0; }
-        .duration { font-style: italic; color: #666; margin-top: 5px; font-size: 0.9em; }
+        .duration { font-style: italic; color: #6b7280; margin-top: 5px; font-size: 0.9em; }
         
         /* 動態按鈕樣式 */
         .action-btn { 
@@ -41,26 +51,93 @@
             width: 100%; 
             padding: 10px; 
             border-radius: 6px; 
-            font-weight: bold; 
+            font-weight: 600; 
             transition: background-color 0.2s;
             cursor: pointer;
         }
     </style>
 </head>
-<body class="p-5"> <div class="container mx-auto">
-        <header class="flex justify-between items-center py-4 px-0 border-b mb-6">
-            <h1 class="text-3xl font-bold text-indigo-600">📱 入門課程：Web App 遙控器設計與 Web BLE 整合</h1>
-            <div class="flex items-center space-x-4">                
-                <a href="cart.html" class="text-gray-600 hover:text-indigo-600 transition duration-150 relative">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
-                    </svg>
+<body class="flex flex-col min-h-screen">
+
+    <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="index.html" class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
+                    <span>🚀</span> Vibe Coding
                 </a>
-                <div id="auth-status" class="text-sm flex items-center">
-                    <span id="user-display" class="text-gray-600">訪客模式</span>
-                    <button id="login-btn" class="ml-3 bg-indigo-500 hover:bg-indigo-600 text-white text-sm py-1 px-3 rounded">登入</button>
+
+                <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
+                    <div class="relative dropdown group">
+                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
+                            課程連結 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
+                            <a href="prepare.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">課前準備</a>
+                            <a href="started.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">入門課程</a>
+                            <a href="basic.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">基礎實作</a>
+                            <a href="advanced.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">進階應用</a>
+                        </div>
+                    </div>
+
+                    <div class="relative dropdown group">
+                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
+                            組態設定 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
+                            <a href="wifi-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">WiFi 設定</a>
+                            <a href="motor-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">馬達設定</a>
+                        </div>
+                    </div>
+
+                    <a href="about.html" class="hover:text-cyan-600 transition">關於我們</a>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <a href="cart.html" class="text-gray-600 hover:text-cyan-600 transition duration-150 relative" title="前往購物車">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
+                        </svg>
+                    </a>
+                    
+                    <div id="auth-status" class="text-sm flex items-center">
+                        <span id="user-display" class="text-gray-600 hidden md:inline mr-2">訪客</span>
+                        <button id="login-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">登入</button>
+                    </div>
+
+                    <div class="md:hidden ml-2">
+                        <button id="mobile-menu-btn" class="text-gray-600 focus:outline-none p-2 border rounded hover:bg-gray-100">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-100 mt-2">
+                <div class="flex flex-col space-y-3 pt-4 font-medium text-gray-600">
+                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
+                        <p class="text-xs text-gray-400 mb-1 uppercase">課程連結</p>
+                        <a href="prepare.html" class="block py-1 hover:text-cyan-600">課前準備</a>
+                        <a href="started.html" class="block py-1 hover:text-cyan-600">入門課程</a>
+                        <a href="basic.html" class="block py-1 hover:text-cyan-600">基礎實作</a>
+                        <a href="advanced.html" class="block py-1 hover:text-cyan-600">進階應用</a>
+                    </div>
+
+                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
+                        <p class="text-xs text-gray-400 mb-1 uppercase">組態設定</p>
+                        <a href="wifi-config.html" class="block py-1 hover:text-cyan-600">WiFi 設定</a>
+                        <a href="motor-config.html" class="block py-1 hover:text-cyan-600">馬達設定</a>
+                    </div>
+
+                    <a href="about.html" class="hover:text-cyan-600 pl-2">關於我們</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8 flex-grow">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl font-bold text-gray-800">📱 入門課程：Web App 遙控器設計與 Web BLE 整合</h1>
+            <div class="w-20 h-1 bg-cyan-500 mx-auto mt-4 rounded"></div>
         </header>
 
         <div class="lesson-grid">
@@ -71,11 +148,11 @@
                  data-course-price="1200"
                  data-classroom-url="https://classroom.google.com/c/MTIwMDA5MzE2NjFa?cjc=ydb63bg">
                 <div class="lesson-header">
-                    <h2>第 1 課：We App 快速入門與 UI/UX 設計 <span class="duration">(3H)</span></h2>
+                    <h2>第 1 課：We App 快速入門與 UI/UX 設計 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2>
                 </div>
                 <div class="lesson-body">
                     <div class="lesson-icon" title="UI/UX Icon">🎨</div>
-                    <span class="phase-tag">I. Web App 基礎與 BLE 連線</span>
+                    <span class="phase-tag self-start">I. Web App 基礎與 BLE 連線</span>
                     <div class="core-content">
                         <strong>核心內容：</strong>
                         <ul>
@@ -91,10 +168,10 @@
             </div>
 
             <div class="lesson-card" id="lesson-C1_L2" data-course-id="a45cwlak" data-course-name="Web BLE 客戶端連線邏輯" data-course-price="1200" data-classroom-url="https://classroom.google.com/c/ODM2MDU1NDE1NTg2?cjc=a45cwlak">
-                <div class="lesson-header"><h2>第 2 課：Web BLE 客戶端連線邏輯實作 <span class="duration">(3H)</span></h2></div>
+                <div class="lesson-header"><h2>第 2 課：Web BLE 客戶端連線邏輯實作 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
                 <div class="lesson-body">
                     <div class="lesson-icon" title="Bluetooth Icon">🔗</div>
-                    <span class="phase-tag">I. Web App 基礎與 BLE 連線</span>
+                    <span class="phase-tag self-start">I. Web App 基礎與 BLE 連線</span>
                     <div class="core-content">
                         <strong>核心內容：</strong>
                         <ul>
@@ -107,38 +184,38 @@
             </div>
             
             <div class="lesson-card" id="lesson-C1_L3" data-course-id="a7smdfeq" data-course-name="基礎按鈕控制與 API 數據格式化" data-course-price="1200" data-classroom-url="https://classroom.google.com/c/ODIxNTU0MDcyODMy?cjc=a7smdfeq">
-                <div class="lesson-header"><h2>第 3 課：基礎按鈕控制與 API 數據格式化 <span class="duration">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Control Icon">🕹️</div><span class="phase-tag">II. 按鈕控制與 API 數據封包</span><div class="core-content"><strong>核心內容：</strong><ul><li>數據封包設計：將按鈕事件轉換為 API 字串格式（如 CMD, F, 180）。</li><li>Web BLE 寫入實作：使用 `characteristic.writeValue` 發送指令。</li></ul></div><button id="action-btn-C1_L3" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
+                <div class="lesson-header"><h2>第 3 課：基礎按鈕控制與 API 數據格式化 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Control Icon">🕹️</div><span class="phase-tag self-start">II. 按鈕控制與 API 數據封包</span><div class="core-content"><strong>核心內容：</strong><ul><li>數據封包設計：將按鈕事件轉換為 API 字串格式（如 CMD, F, 180）。</li><li>Web BLE 寫入實作：使用 `characteristic.writeValue` 發送指令。</li></ul></div><button id="action-btn-C1_L3" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
             
             <div class="lesson-card" id="lesson-C1_L4" data-course-id="hkdq5j3m" data-course-name="觸控事件優化：長按與放開" data-course-price="1200" data-classroom-url="https://classroom.google.com/c/ODIxNTU0NDk5MzE5?cjc=hkdq5j3m">
-                <div class="lesson-header"><h2>第 4 課：觸控事件優化：長按與放開 <span class="duration">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Touch Icon">👆</div><span class="phase-tag">II. 按鈕控制與 API 數據封包</span><div class="core-content"><strong>核心內容：</strong><ul><li>區分原生觸控事件：`mousedown/mouseup` 和 `touchstart/touchend`。</li><li>實現長按發送持續移動指令，放開發送停止指令（使用 `setInterval`）。</li></ul></div><button id="action-btn-C1_L4" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
+                <div class="lesson-header"><h2>第 4 課：觸控事件優化：長按與放開 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Touch Icon">👆</div><span class="phase-tag self-start">II. 按鈕控制與 API 數據封包</span><div class="core-content"><strong>核心內容：</strong><ul><li>區分原生觸控事件：`mousedown/mouseup` 和 `touchstart/touchend`。</li><li>實現長按發送持續移動指令，放開發送停止指令（使用 `setInterval`）。</li></ul></div><button id="action-btn-C1_L4" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
 
             <div class="lesson-card" id="lesson-C1_L5" data-course-id="io5rxgxl" data-course-name="虛擬搖桿 UI 製作與座標擷取" data-course-price="1200" data-classroom-url="https://classroom.google.com/c/ODIxNzY4MjMzMDQ4?cjc=io5rxgxl">
-                <div class="lesson-header"><h2>第 5 課：虛擬搖桿 UI 製作與座標擷取 <span class="duration">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Canvas Icon">🎛️</div><span class="phase-tag">III. 虛擬搖桿與精細化控制</span><div class="core-content"><strong>核心內容：</strong><ul><li>使用 HTML `Canvas` 製作搖桿畫布區域和手柄（使用 JS 繪圖）。</li><li>實作搖桿手柄在畫布內跟隨移動，並在鬆手時自動回到中心。</li></ul></div><button id="action-btn-C1_L5" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
+                <div class="lesson-header"><h2>第 5 課：虛擬搖桿 UI 製作與座標擷取 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Canvas Icon">🎛️</div><span class="phase-tag self-start">III. 虛擬搖桿與精細化控制</span><div class="core-content"><strong>核心內容：</strong><ul><li>使用 HTML `Canvas` 製作搖桿畫布區域和手柄（使用 JS 繪圖）。</li><li>實作搖桿手柄在畫布內跟隨移動，並在鬆手時自動回到中心。</li></ul></div><button id="action-btn-C1_L5" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
 
             <div class="lesson-card" id="lesson-C1_L6" data-course-id="bee4arc4" data-course-name="搖桿座標到 API 指令的數學轉換" data-course-price="1200" data-classroom-url="https://classroom.google.com/c/ODIxNzY4NDM1NzU0?cjc=bee4arc4">
-                <div class="lesson-header"><h2>第 6 課：搖桿座標到 API 指令的數學轉換 <span class="duration">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Math Icon">🔢</div><span class="phase-tag">III. 虛擬搖桿與精細化控制</span><div class="core-content"><strong>核心內容：</strong><ul><li>線性映射原理：將畫布 X/Y 像素範圍，轉換為速度/轉向數值範圍（0-255）。</li><li>差速數據計算：建立將 X/Y 座標轉換為速度/轉向指令 (CMD, F, V 等) 的 JS 邏輯。</li></ul></div><button id="action-btn-C1_L6" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
+                <div class="lesson-header"><h2>第 6 課：搖桿座標到 API 指令的數學轉換 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Math Icon">🔢</div><span class="phase-tag self-start">III. 虛擬搖桿與精細化控制</span><div class="core-content"><strong>核心內容：</strong><ul><li>線性映射原理：將畫布 X/Y 像素範圍，轉換為速度/轉向數值範圍（0-255）。</li><li>差速數據計算：建立將 X/Y 座標轉換為速度/轉向指令 (CMD, F, V 等) 的 JS 邏輯。</li></ul></div><button id="action-btn-C1_L6" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
 
             <div class="lesson-card" id="lesson-C1_L7" data-course-id="ks3fg46c" data-course-name="定時器與連續數據發送" data-course-price="1200" data-classroom-url="https://classroom.google.com/c/ODM2NzU4NzczMDc3?cjc=ks3fg46c">
-                <div class="lesson-header"><h2>第 7 課：定時器與連續數據發送 <span class="duration">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Timer Icon">⏱️</div><span class="phase-tag">III. 虛擬搖桿與精細化控制</span><div class="core-content"><strong>核心內容：</strong><ul><li>介紹 `setInterval` 與 `requestAnimationFrame` 在即時控制中的作用。</li><li>設定 `setInterval` (如 50ms 間隔)，週期性呼叫搖桿數據發送程序。</li></ul></div><button id="action-btn-C1_L7" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
+                <div class="lesson-header"><h2>第 7 課：定時器與連續數據發送 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Timer Icon">⏱️</div><span class="phase-tag self-start">III. 虛擬搖桿與精細化控制</span><div class="core-content"><strong>核心內容：</strong><ul><li>介紹 `setInterval` 與 `requestAnimationFrame` 在即時控制中的作用。</li><li>設定 `setInterval` (如 50ms 間隔)，週期性呼叫搖桿數據發送程序。</li></ul></div><button id="action-btn-C1_L7" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
 
             <div class="lesson-card" id="lesson-C1_L8" data-course-id="r7cnaf4t" data-course-name="Wi-Fi (HTTP) 通訊與 Fetch API" data-course-price="1200" data-classroom-url="https://classroom.google.com/c/ODM2NzU2NjA4NjMx?cjc=r7cnaf4t">
-                <div class="lesson-header"><h2>第 8 課：Wi-Fi (HTTP) 通訊與 Fetch API <span class="duration">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="WiFi Icon">📶</div><span class="phase-tag">IV. Wi-Fi 通訊與雙模式整合</span><div class="core-content"><strong>核心內容：</strong><ul><li>介紹現代 JS 的 `fetch` 用於發送 HTTP 請求。</li><li>實作 Wi-Fi 模式下的測試按鈕，發送 HTTP 請求控制主控板。</li></ul></div><button id="action-btn-C1_L8" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
+                <div class="lesson-header"><h2>第 8 課：Wi-Fi (HTTP) 通訊與 Fetch API <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="WiFi Icon">📶</div><span class="phase-tag self-start">IV. Wi-Fi 通訊與雙模式整合</span><div class="core-content"><strong>核心內容：</strong><ul><li>介紹現代 JS 的 `fetch` 用於發送 HTTP 請求。</li><li>實作 Wi-Fi 模式下的測試按鈕，發送 HTTP 請求控制主控板。</li></ul></div><button id="action-btn-C1_L8" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
 
             <div class="lesson-card" id="lesson-C1_L9" data-course-id="wlilo4dc" data-course-name="雙模式遙控器設計與狀態切換" data-course-price="1200" data-classroom-url="https://classroom.google.com/c/ODM2NzU4NzI3MDY5?cjc=wlilo4dc">
-                <div class="lesson-header"><h2>第 9 課：雙模式遙控器設計與狀態切換 <span class="duration">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Toggle Icon">🔄</div><span class="phase-tag">IV. Wi-Fi 通訊與雙模式整合</span><div class="core-content"><strong>核心內容：</strong><ul><li>設計一個可切換的界面，容納 BLE 連線和 Wi-Fi 設定 (IP 輸入)。</li><li>實作根據當前模式，控制指令透過 BLE 或 Wi-Fi 發送的邏輯。</li></ul></div><button id="action-btn-C1_L9" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
+                <div class="lesson-header"><h2>第 9 課：雙模式遙控器設計與狀態切換 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Toggle Icon">🔄</div><span class="phase-tag self-start">IV. Wi-Fi 通訊與雙模式整合</span><div class="core-content"><strong>核心內容：</strong><ul><li>設計一個可切換的界面，容納 BLE 連線和 Wi-Fi 設定 (IP 輸入)。</li><li>實作根據當前模式，控制指令透過 BLE 或 Wi-Fi 發送的邏輯。</li></ul></div><button id="action-btn-C1_L9" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
 
             <div class="lesson-card" 
@@ -148,11 +225,11 @@
                  data-course-price="0"
                  data-classroom-url="https://classroom.google.com/c/ODIxNzY4MzIyNjgy?cjc=idzxwgbc">
                 <div class="lesson-header">
-                    <h2>第 10 課：專案優化、錯誤處理與最終展示 <span class="duration">(3H)</span></h2>
+                    <h2>第 10 課：專案優化、錯誤處理與最終展示 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2>
                 </div>
                 <div class="lesson-body">
                     <div class="lesson-icon" title="Final Project Icon">✅</div>
-                    <span class="phase-tag">V. 綜合應用與除錯</span>
+                    <span class="phase-tag self-start">V. 綜合應用與除錯</span>
                     <div class="core-content">
                         <strong>核心內容：</strong>
                         <ul>
@@ -169,6 +246,37 @@
             
         </div>
     </div>
+
+    <footer class="bg-gray-800 py-8 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <div class="flex justify-center space-x-6 mb-6 text-gray-400">
+                <a href="prepare.html" class="hover:text-white">課前準備</a>
+                <a href="started.html" class="hover:text-white">入門課程</a>
+                <a href="basic.html" class="hover:text-white">基礎實作</a>
+                <a href="advanced.html" class="hover:text-white">進階應用</a>
+                <a href="about.html" class="hover:text-white">關於我們</a>
+            </div>
+            
+            <div class="border-t border-gray-700 pt-6">
+                <p class="text-gray-500 text-sm mb-2">&copy; 2025 Vibe Coding. All rights reserved.</p>
+                <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6 text-sm text-gray-400">
+                    <span>營業人名稱：文經出版社有限公司</span>
+                    <span class="hidden md:inline">|</span>
+                    <span>統一編號：12376121</span>
+                    <span class="hidden md:inline">|</span>
+                    <span>課程合作洽談：info@vibe-coding.tw</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+        });
+    </script>
 
     <script type="module">
 
@@ -239,6 +347,8 @@
             if (isConfirmed) {
                 // 如果使用者按下「確定」
                 const result = addToCart(courseId, courseName, coursePrice);
+                alert(`🛒 「${courseName}」已加入購物車，請前往結帳頁面！`);
+                window.location.href = CART_URL;
             } 
         }
 
@@ -283,7 +393,7 @@
             if (status === 'AUTHORIZED') {
                 // 狀態 1: 已授權 -> 進入課程
                 btn.textContent = '✅ 進入課程內容';
-                btn.className = 'action-btn bg-blue-600 hover:bg-blue-700 text-white';
+                btn.className = 'action-btn bg-green-600 hover:bg-green-700 text-white';
                 btn.onclick = () => {
                     // 傳遞 courseId 和 coursePrice 給 auth.html 
                     window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`;
@@ -394,6 +504,7 @@
 
             if (user) {
                 userDisplay.textContent = `您好, ${user.displayName || user.email}`;
+                userDisplay.classList.remove('hidden'); // 確保顯示
                 loginBtn.textContent = '登出';
                 loginBtn.onclick = handleLogout;
                 
@@ -401,7 +512,9 @@
                     checkLessonAuthorization(card, user);
                 });
             } else {
-                userDisplay.textContent = '訪客模式';
+                userDisplay.textContent = '訪客';
+                userDisplay.classList.add('hidden'); // 手機版隱藏訪客文字
+                userDisplay.classList.remove('md:inline'); // 電腦版顯示
                 loginBtn.textContent = '登入';
                 loginBtn.onclick = handleLogin;
                 
