@@ -5,35 +5,107 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>基礎課程：馬達控制、通訊與 OTA 實作</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    
     <style>
-        /* 基礎樣式 */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f9; color: #333; }
+        /* 基礎樣式 (使用 Tailwind 的 reset) */
+        body { 
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f7fafc; /* 與主頁一致的淺灰 */
+            color: #333; 
+        }
         
+        /* 頁面標題樣式 (與 prepare.html 一致) */
+        .page-header h1 { 
+            color: #1e3a8a; 
+            text-align: center; 
+            margin-bottom: 10px; 
+        }
+        .section-title-underline {
+            height: 4px;
+            width: 80px;
+            background-color: #06b6d4; 
+            margin: 0 auto 2rem;
+            border-radius: 2px;
+        }
+
         /* 課程網格與卡片 */
-        .lesson-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .lesson-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 30px; 
+            margin-top: 2rem;
+        }
         .lesson-card { 
             background-color: #fff; 
             border-radius: 12px; 
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             transition: transform 0.3s ease, box-shadow 0.3s ease; 
             height: 100%; 
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            border-top: 4px solid #28a745; /* 基礎課程維持綠色調 */
         }
         .lesson-card:hover { 
             transform: translateY(-5px); 
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12); 
-            background-color: #e9fff0; 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
-        .lesson-header { background-color: #e9fff0; padding: 15px 20px; border-bottom: 2px solid #28a745; }
-        .lesson-header h2 { margin: 0; font-size: 1.25em; color: #28a745; }
-        .lesson-body { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
-        .lesson-icon { width: 50px; height: 50px; background-color: #28a745; color: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2em; margin-bottom: 15px; }
-        .phase-tag { display: inline-block; background-color: #6c757d; color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 0.8em; margin-bottom: 10px; }
-        .core-content { margin-top: 15px; font-size: 0.9em; color: #555; flex-grow: 1;}
-        .core-content ul { list-style: disc; padding-left: 20px; margin: 5px 0 0 0; }
-        .duration { font-style: italic; color: #666; margin-top: 5px; font-size: 0.9em; }
+        .lesson-header { 
+            background-color: #e9fff0; 
+            padding: 15px 20px; 
+            border-bottom: 1px solid #e5e7eb; 
+        }
+        .lesson-header h2 { 
+            margin: 0; 
+            font-size: 1.25em; 
+            color: #166534; /* 深綠色標題 */
+            font-weight: 700;
+        }
+        .lesson-body { 
+            padding: 20px; 
+            flex-grow: 1; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .lesson-icon { 
+            width: 50px; 
+            height: 50px; 
+            background-color: #28a745; 
+            color: #fff; 
+            border-radius: 50%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 2em; 
+            margin-bottom: 15px; 
+        }
+        .phase-tag { 
+            display: inline-block; 
+            background-color: #64748b; 
+            color: #fff; 
+            padding: 5px 10px; 
+            border-radius: 5px; 
+            font-size: 0.8em; 
+            margin-bottom: 10px; 
+        }
+        .core-content { 
+            margin-top: 15px; 
+            font-size: 0.9em; 
+            color: #4b5563; 
+            flex-grow: 1;
+        }
+        .core-content ul { 
+            list-style: disc; 
+            padding-left: 20px; 
+            margin: 5px 0 0 0; 
+        }
+        .duration { 
+            font-style: italic; 
+            color: #6b7280; 
+            margin-top: 5px; 
+            font-size: 0.9em; 
+        }
         
         /* 動態按鈕樣式 */
         .action-btn { 
@@ -41,72 +113,165 @@
             width: 100%; 
             padding: 10px; 
             border-radius: 6px; 
-            font-weight: bold; 
+            font-weight: 600; 
             transition: background-color 0.2s;
             cursor: pointer;
         }
+
+        /* 下拉選單樣式 */
+        .dropdown:hover .dropdown-menu {
+            display: block;
+        }
     </style>
 </head>
-<body class="p-5">
-    <div class="container mx-auto">
-        <header class="flex justify-between items-center py-4 px-0 border-b mb-6">
-            <h1 class="text-3xl font-bold text-green-600">⚙️ 基礎課程：馬達控制、通訊與 OTA 實作</h1>
-            <div class="flex items-center space-x-4">                
-                <a href="cart.html" class="text-gray-600 hover:text-indigo-600 transition duration-150 relative">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
-                    </svg>
+<body class="flex flex-col min-h-screen">
+
+    <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="index.html" class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
+                    <span>🚀</span> Vibe Coding
                 </a>
-                <div id="auth-status" class="text-sm flex items-center">
-                    <span id="user-display" class="text-gray-600">訪客模式</span>
-                    <button id="login-btn" class="ml-3 bg-indigo-500 hover:bg-indigo-600 text-white text-sm py-1 px-3 rounded">登入</button>
+
+                <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
+                    <a href="prepare.html" class="hover:text-cyan-600 transition">課前準備</a>
+                    <a href="started.html" class="hover:text-cyan-600 transition">入門課程</a>
+                    <a href="basic.html" class="text-cyan-600 font-bold">基礎實作</a>
+                    <a href="advanced.html" class="hover:text-cyan-600 transition">進階應用</a>
+                    
+                    <div class="relative dropdown group">
+                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
+                            組態設定 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
+                            <a href="wifi-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">WiFi 設定</a>
+                            <a href="motor-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">馬達設定</a>
+                        </div>
+                    </div>
+
+                    <a href="about.html" class="hover:text-cyan-600 transition">關於我們</a>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <a href="cart.html" class="text-gray-600 hover:text-cyan-600 transition duration-150 relative" title="前往購物車">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
+                        </svg>
+                    </a>
+                    
+                    <div id="auth-status" class="text-sm flex items-center">
+                        <span id="user-display" class="text-gray-600 hidden md:inline mr-2">訪客</span>
+                        <button id="login-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">登入</button>
+                    </div>
+
+                    <div class="md:hidden ml-2">
+                        <button id="mobile-menu-btn" class="text-gray-600 focus:outline-none p-2 border rounded hover:bg-gray-100">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </header>
+
+            <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-100 mt-2">
+                <div class="flex flex-col space-y-3 pt-4 font-medium text-gray-600">
+                    <a href="prepare.html" class="hover:text-cyan-600 pl-2">課前準備</a>
+                    <a href="started.html" class="hover:text-cyan-600 pl-2">入門課程</a>
+                    <a href="basic.html" class="text-cyan-600 font-bold pl-2">基礎實作</a>
+                    <a href="advanced.html" class="hover:text-cyan-600 pl-2">進階應用</a>
+                    
+                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
+                        <p class="text-xs text-gray-400 mb-1 uppercase">組態設定</p>
+                        <a href="wifi-config.html" class="block py-1 hover:text-cyan-600">WiFi 設定</a>
+                        <a href="motor-config.html" class="block py-1 hover:text-cyan-600">馬達設定</a>
+                    </div>
+
+                    <a href="about.html" class="hover:text-cyan-600 pl-2">關於我們</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8 flex-grow">
+        
+        <div class="page-header text-center mb-10">
+            <h1 class="text-3xl font-bold text-gray-800">⚙️ 基礎課程：馬達控制、通訊與 OTA 實作</h1>
+            <div class="section-title-underline"></div>
+        </div>
 
         <div class="lesson-grid">
             <div class="lesson-card" id="lesson-C2_L1" data-course-id="rs7hx3nf" data-course-name="開發環境設定與硬體導覽" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODM2Nzk0MzYzODQx?cjc=rs7hx3nf">
-                <div class="lesson-header"><h2>第 1 課：開發環境設定與硬體導覽 <span class="duration">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Setup Icon">🖥️</div><span class="phase-tag">I. 準備與基礎 I/O</span><div class="core-content"><strong>核心內容：</strong><ul><li>軟體安裝：VS Code、PlatformIO IDE 安裝與設定。</li><li>硬體概觀：認識 ESP32、直流馬達、驅動模組（H 橋）及車體結構。</li></ul></div><button id="action-btn-C2_L1" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
+                <div class="lesson-header"><h2>第 1 課：開發環境設定與硬體導覽 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Setup Icon">🖥️</div><span class="phase-tag self-start">I. 準備與基礎 I/O</span><div class="core-content"><strong>核心內容：</strong><ul><li>軟體安裝：VS Code、PlatformIO IDE 安裝與設定。</li><li>硬體概觀：認識 ESP32、直流馬達、驅動模組（H 橋）及車體結構。</li></ul></div><button id="action-btn-C2_L1" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
             <div class="lesson-card" id="lesson-C2_L2" data-course-id="pxyzdlw3" data-course-name="基礎語法與數位類比 I/O" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODM2Nzk0NjQxNTI5?cjc=pxyzdlw3">
-                <div class="lesson-header"><h2>第 2 課：C/C++ 基礎語法與數位類比 I/O <span class="duration">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Code Icon">💻</div><span class="phase-tag">I. 準備與基礎 I/O</span><div class="core-content"><strong>核心內容：</strong><ul><li>Arduino 框架：`setup()` 與 `loop()` 函式。</li><li>數位 I/O：控制 LED 燈。</li></ul></div><button id="action-btn-C2_L2" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
+                <div class="lesson-header"><h2>第 2 課：C/C++ 基礎語法與數位類比 I/O <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Code Icon">💻</div><span class="phase-tag self-start">I. 準備與基礎 I/O</span><div class="core-content"><strong>核心內容：</strong><ul><li>Arduino 框架：`setup()` 與 `loop()` 函式。</li><li>數位 I/O：控制 LED 燈。</li></ul></div><button id="action-btn-C2_L2" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
             <div class="lesson-card" id="lesson-C2_L3" data-course-id="oz66t3sj" data-course-name="PWM 原理與馬達速度控制" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODM2Nzk1MDIyMjY1?cjc=oz66t3sj">
-                <div class="lesson-header"><h2>第 3 課：PWM 原理與單馬達速度控制 <span class="duration">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Motor Icon">🔋</div><span class="phase-tag">II. 核心馬達控制</span><div class="core-content"><strong>核心內容：</strong><ul><li>H 橋驅動原理。</li><li>PWM (脈衝寬度調變)：LEDC 函式。</li></ul></div><button id="action-btn-C2_L3" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
+                <div class="lesson-header"><h2>第 3 課：PWM 原理與單馬達速度控制 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Motor Icon">🔋</div><span class="phase-tag self-start">II. 核心馬達控制</span><div class="core-content"><strong>核心內容：</strong><ul><li>H 橋驅動原理。</li><li>PWM (脈衝寬度調變)：LEDC 函式。</li></ul></div><button id="action-btn-C2_L3" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
             <div class="lesson-card" id="lesson-C2_L4" data-course-id="j3mwykug" data-course-name="差速驅動原理與運動 API 實現" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODM2NzkwOTE2MjUw?cjc=j3mwykug">
-                <div class="lesson-header"><h2>第 4 課：差速驅動原理與運動 API 實現 <span class="duration">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="API Icon">🚗</div><span class="phase-tag">II. 核心馬達控制</span><div class="core-content"><strong>核心內容：</strong><ul><li>差速驅動：車輛轉向原理。</li><li>基礎 API 設計：實現運動指令解析。</li></ul></div><button id="action-btn-C2_L4" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
+                <div class="lesson-header"><h2>第 4 課：差速驅動原理與運動 API 實現 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="API Icon">🚗</div><span class="phase-tag self-start">II. 核心馬達控制</span><div class="core-content"><strong>核心內容：</strong><ul><li>差速驅動：車輛轉向原理。</li><li>基礎 API 設計：實現運動指令解析。</li></ul></div><button id="action-btn-C2_L4" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
             <div class="lesson-card" id="lesson-C2_L5" data-course-id="r6muo2ss" data-course-name="藍牙低功耗伺服器 (BLE Server) 實作" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODE4Njg0OTQ0NjI0?cjc=r6muo2ss">
-                <div class="lesson-header"><h2>第 5 課：藍牙低功耗伺服器 (BLE Server) 實作 <span class="duration">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="BLE Server Icon">📡</div><span class="phase-tag">III. 通訊與回饋</span><div class="core-content"><strong>核心內容：</strong><ul><li>GATT 協定：Service、Characteristic。</li><li>數據接收：接收手機端控制指令。</li></ul></div><button id="action-btn-C2_L5" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
+                <div class="lesson-header"><h2>第 5 課：藍牙低功耗伺服器 (BLE Server) 實作 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="BLE Server Icon">📡</div><span class="phase-tag self-start">III. 通訊與回饋</span><div class="core-content"><strong>核心內容：</strong><ul><li>GATT 協定：Service、Characteristic。</li><li>數據接收：接收手機端控制指令。</li></ul></div><button id="action-btn-C2_L5" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
             <div class="lesson-card" id="lesson-C2_L6" data-course-id="ymharko2" data-course-name="光電編碼器與速度即時回饋" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODM2Nzk2OTU0OTk2?cjc=ymharko2">
-                <div class="lesson-header"><h2>第 6 課：光電編碼器與速度即時回饋 <span class="duration">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Feedback Icon">🔄</div><span class="phase-tag">III. 通訊與回饋</span><div class="core-content"><strong>核心內容：</strong><ul><li>編碼器原理：輸出脈衝訊號。</li><li>中斷 (Interrupts)：精確計數脈衝。</li></ul></div><button id="action-btn-C2_L6" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
+                <div class="lesson-header"><h2>第 6 課：光電編碼器與速度即時回饋 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Feedback Icon">🔄</div><span class="phase-tag self-start">III. 通訊與回饋</span><div class="core-content"><strong>核心內容：</strong><ul><li>編碼器原理：輸出脈衝訊號。</li><li>中斷 (Interrupts)：精確計數脈衝。</li></ul></div><button id="action-btn-C2_L6" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
             <div class="lesson-card" id="lesson-C2_L7" data-course-id="obozjtoq" data-course-name="PID 閉迴路控制基礎 (速度穩定)" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODM2Nzk2MTY5Njg5?cjc=obozjtoq">
-                <div class="lesson-header"><h2>第 7 課：PID 閉迴路控制基礎 (速度穩定) <span class="duration">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="PID Icon">🔬</div><span class="phase-tag">IV. 進階控制與穩定性</span><div class="core-content"><strong>核心內容：</strong><ul><li>閉迴路概念。</li><li>PID 理論：P、I、D 三項的意義。</li></ul></div><button id="action-btn-C2_L7" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
+                <div class="lesson-header"><h2>第 7 課：PID 閉迴路控制基礎 (速度穩定) <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="PID Icon">🔬</div><span class="phase-tag self-start">IV. 進階控制與穩定性</span><div class="core-content"><strong>核心內容：</strong><ul><li>閉迴路概念。</li><li>PID 理論：P、I、D 三項的意義。</li></ul></div><button id="action-btn-C2_L7" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
             <div class="lesson-card" id="lesson-C2_L8" data-course-id="e4zfhzx6" data-course-name="Wi-Fi (AP) 模式與 HTTP Web Server" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODM2Nzk1ODk4Njcw?cjc=e4zfhzx6">
-                <div class="lesson-header"><h2>第 8 課：Wi-Fi (AP) 模式與 HTTP Web Server <span class="duration">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Web Server Icon">🌐</div><span class="phase-tag">IV. 進階控制與穩定性</span><div class="core-content"><strong>核心內容：</strong><ul><li>ESP32 Wi-Fi 模式：設定為 SoftAP 模式。</li><li>Web Server：建立輕量級 HTTP 伺服器。</li></ul></div><button id="action-btn-C2_L8" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
+                <div class="lesson-header"><h2>第 8 課：Wi-Fi (AP) 模式與 HTTP Web Server <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Web Server Icon">🌐</div><span class="phase-tag self-start">IV. 進階控制與穩定性</span><div class="core-content"><strong>核心內容：</strong><ul><li>ESP32 Wi-Fi 模式：設定為 SoftAP 模式。</li><li>Web Server：建立輕量級 HTTP 伺服器。</li></ul></div><button id="action-btn-C2_L8" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
             <div class="lesson-card" id="lesson-C2_L9" data-course-id="3dsinq2j" data-course-name="OTA 無線更新架構與實務" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODM2Nzk2NTc4MDMw?cjc=3dsinq2j">
-                <div class="lesson-header"><h2>第 9 課：OTA 無線更新架構與實務 <span class="duration">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Update Icon">⬆️</div><span class="phase-tag">V. 韌體架構與維護</span><div class="core-content"><strong>核心內容：</strong><ul><li>雙分區架構：Launcher App 與 User App。</li><li>Launcher App：實作 Launcher 邏輯。</li></ul></div><button id="action-btn-C2_L9" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
+                <div class="lesson-header"><h2>第 9 課：OTA 無線更新架構與實務 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Update Icon">⬆️</div><span class="phase-tag self-start">V. 韌體架構與維護</span><div class="core-content"><strong>核心內容：</strong><ul><li>雙分區架構：Launcher App 與 User App。</li><li>Launcher App：實作 Launcher 邏輯。</li></ul></div><button id="action-btn-C2_L9" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
             <div class="lesson-card" id="lesson-C2_L10" data-course-id="7uz37pj6" data-course-name="專案整合、除錯與優化" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODM2Nzk3MTY1NTgw?cjc=7uz37pj6"> 
-                <div class="lesson-header"><h2>第 10 課：專案整合、除錯與優化 <span class="duration">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Integrate Icon">🌟</div><span class="phase-tag">V. 韌體架構與維護</span><div class="core-content"><strong>核心內容：</strong><ul><li>雙模式指令整合。</li><li>錯誤處理機制。</li></ul></div><button id="action-btn-C2_L10" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
+                <div class="lesson-header"><h2>第 10 課：專案整合、除錯與優化 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
+                <div class="lesson-body"><div class="lesson-icon" title="Integrate Icon">🌟</div><span class="phase-tag self-start">V. 韌體架構與維護</span><div class="core-content"><strong>核心內容：</strong><ul><li>雙模式指令整合。</li><li>錯誤處理機制。</li></ul></div><button id="action-btn-C2_L10" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
             </div>
         </div>
     </div>
+
+    <footer class="bg-gray-800 py-8 border-t border-gray-700 mt-10">
+        <div class="container mx-auto px-4 text-center">
+            <div class="flex justify-center space-x-6 mb-6 text-gray-400">
+                <a href="prepare.html" class="hover:text-white">課前準備</a>
+                <a href="started.html" class="hover:text-white">入門課程</a>
+                <a href="basic.html" class="hover:text-white">基礎實作</a>
+                <a href="advanced.html" class="hover:text-white">進階應用</a>
+                <a href="about.html" class="hover:text-white">關於我們</a>
+            </div>
+            
+            <div class="border-t border-gray-700 pt-6">
+                <p class="text-gray-500 text-sm mb-2">&copy; 2025 Vibe Coding. All rights reserved.</p>
+                <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6 text-sm text-gray-400">
+                    <span>營業人名稱：文經出版社有限公司</span>
+                    <span class="hidden md:inline">|</span>
+                    <span>統一編號：12376121</span>
+                    <span class="hidden md:inline">|</span>
+                    <span>課程合作洽談：info@vibe-coding.tw</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+        });
+    </script>
 
     <script type="module">
 
@@ -158,18 +323,18 @@
 
 
         // ===============================================
-        // B. 購物車確認流程
+        // B. 購物車確認流程 (與 basic.html 保持一致)
         // ===============================================
         function handleAddToCartConfirmation(courseId, courseName, coursePrice) {
             const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             
-            // 修正 1: 預先檢查購物車，如果已存在，只彈出 alert 提醒
+            // 1. 預先檢查購物車，如果已存在，只彈出 alert 提醒
             if (cart[courseId]) {
                 alert(`⚠️ 「${courseName}」已在購物車中！`);
                 return; // 結束函式，停留在原頁面
             }
             
-            // 修正 2: 只有當商品不存在時，才執行 confirm 步驟
+            // 2. 只有當商品不存在時，才執行 confirm 步驟
             const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`;
             
             const isConfirmed = confirm(`您確定要將課程「${courseName}」加入購物車嗎？\n\n價格：${priceText}`);
@@ -177,6 +342,8 @@
             if (isConfirmed) {
                 // 如果使用者按下「確定」
                 const result = addToCart(courseId, courseName, coursePrice);
+                alert(`🛒 「${courseName}」已加入購物車，請前往結帳頁面！`); 
+                window.location.href = CART_URL; // 保持 basic.html 的行為 (如果商品是收費的)
             } 
         }
 
@@ -209,7 +376,7 @@
             const btn = cardElement.querySelector('.action-btn');
             const courseId = cardElement.dataset.courseId;
             const courseName = cardElement.dataset.courseName;
-            const coursePrice = cardElement.dataset.coursePrice; 
+            const coursePrice = cardElement.dataset.coursePrice; // 關鍵：價格參數
             const classroomUrl = cardElement.dataset.classroomUrl;
             const isFreeCourse = parseInt(coursePrice, 10) === 0; 
             const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`; 
@@ -284,7 +451,7 @@
         }
 
         /**
-         * 檢查單一課程的授權狀態 
+         * 檢查單一課程的授權狀態 (優化：免費課程跳過 Cloud Function)
          */
         async function checkLessonAuthorization(cardElement, user) {
             updateCardAction(cardElement, 'LOADING');
@@ -293,10 +460,16 @@
             const classroomUrl = cardElement.dataset.classroomUrl;
             const isFreeCourse = parseInt(cardElement.dataset.coursePrice, 10) === 0;
 
-            // 免費課程且使用者已登入，直接視為 AUTHORIZED (跳過 CF)
-            if (isFreeCourse) {
+            // 💥 修正：免費課程且使用者已登入，直接視為 AUTHORIZED (跳過 CF)
+            if (isFreeCourse && user) {
                 updateCardAction(cardElement, 'AUTHORIZED');
                 return; 
+            }
+            
+            // 💥 修正：如果未登入，不需要呼叫 CF，直接導向 NOT_LOGGED_IN
+            if (!user) {
+                updateCardAction(cardElement, 'NOT_LOGGED_IN');
+                return;
             }
 
             // --- 收費課程才會走到這裡 (呼叫 CF) ---
@@ -326,6 +499,7 @@
 
             if (user) {
                 userDisplay.textContent = `您好, ${user.displayName || user.email}`;
+                userDisplay.classList.remove('hidden'); // 確保顯示
                 loginBtn.textContent = '登出';
                 loginBtn.onclick = handleLogout;
                 
@@ -333,12 +507,15 @@
                     checkLessonAuthorization(card, user);
                 });
             } else {
-                userDisplay.textContent = '訪客模式';
+                userDisplay.textContent = '訪客';
+                userDisplay.classList.add('hidden'); // 手機版隱藏訪客文字
+                userDisplay.classList.remove('md:inline'); // 電腦版顯示
                 loginBtn.textContent = '登入';
                 loginBtn.onclick = handleLogin;
                 
                 lessonCards.forEach(card => {
-                    updateCardAction(card, 'NOT_LOGGED_IN');
+                    // 修正：未登入時，直接設定狀態，讓 updateCardAction 處理免費/收費課程
+                    updateCardAction(card, 'NOT_LOGGED_IN'); 
                 });
             }
         });
