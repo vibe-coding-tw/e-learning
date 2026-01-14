@@ -1,265 +1,256 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Vibe Racer</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;700&family=Noto+Sans+TC:wght@400;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
-  
-  <style>
-    /* 4. 字體排版優化 */
-    :root {
-        --font-heading: 'Exo 2', sans-serif;
-        --font-body: 'Noto Sans TC', sans-serif;
-        --font-code: 'JetBrains Mono', monospace;
-    }
-
-    body {
-        font-family: var(--font-body);
-        /* 背景：深邃宇宙科技感 */
-        background-color: #000;
-        background-image: 
-            radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-            radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
-            radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
-        color: #e5e7eb;
-        min-height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 0;
-        padding: 20px;
-        line-height: 1.6; /* 加大行高 */
-    }
-
-    /* 容器樣式 */
-    .glass-panel {
-        max-width: 500px;
-        width: 100%;
-        padding: 40px;
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 24px;
-        box-shadow: 0 0 80px rgba(0, 0, 0, 0.8);
-        position: relative;
-    }
-
-    /* 品牌標題 */
-    .brand-title {
-        font-family: var(--font-heading);
-        font-weight: 700;
-        letter-spacing: 0.05em; /* 加大字距 */
-        background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    /* --- 1. 卡片懸浮流光效果 (Flowing Border) --- */
-    .glow-card {
-        position: relative;
-        background: rgba(20, 20, 20, 0.6);
-        border-radius: 12px;
-        z-index: 1;
-        overflow: hidden;
-        transition: transform 0.2s ease;
-    }
-    
-    .glow-card::before {
-        content: "";
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: conic-gradient(
-            transparent, 
-            transparent, 
-            transparent, 
-            #818cf8 
-        );
-        animation: rotate 4s linear infinite;
-        opacity: 0; /* 預設隱藏 */
-        transition: opacity 0.3s ease;
-        z-index: -1;
-    }
-
-    .glow-card:hover {
-        transform: scale(1.01);
-    }
-    
-    .glow-card:hover::before {
-        opacity: 1; /* 懸浮時顯示流光 */
-    }
-
-    .glow-card-content {
-        position: relative;
-        background: #0f172a; /* 遮擋中間，只露出邊框 */
-        border-radius: 11px; /* 比外層小一點 */
-        margin: 1px; /* 留出邊框寬度 */
-        height: calc(100% - 2px);
-        display: flex;
-        align-items: center;
-        padding: 16px 20px;
-    }
-
-    @keyframes rotate {
-        100% { transform: rotate(360deg); }
-    }
-
-    /* --- 2. 學習路徑圖 (Roadmap / Subway Map) --- */
-    .roadmap-container {
-        position: relative;
-        margin: 20px 0;
-        padding-left: 20px; /* 留出左側線條空間 */
-    }
-
-    /* 路徑線 */
-    .roadmap-line {
-        position: absolute;
-        left: 7px;
-        top: 20px;
-        bottom: 20px;
-        width: 2px;
-        background: linear-gradient(to bottom, #3b82f6, #8b5cf6, #ec4899);
-        z-index: 0;
-        box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
-    }
-
-    /* 路徑節點 (Dots) */
-    .roadmap-dot {
-        position: absolute;
-        left: -17px; /* 調整位置以對齊線條 */
-        top: 50%;
-        transform: translateY(-50%);
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: #0f172a;
-        border: 2px solid #8b5cf6;
-        z-index: 2;
-        box-shadow: 0 0 10px rgba(139, 92, 246, 0.8);
-    }
-    
-    /* 針對不同階段的節點顏色 */
-    .dot-start { border-color: #3b82f6; box-shadow: 0 0 8px #3b82f6; }
-    .dot-basic { border-color: #8b5cf6; box-shadow: 0 0 8px #8b5cf6; }
-    .dot-advance { border-color: #ec4899; box-shadow: 0 0 8px #ec4899; }
-
-    /* 一般功能按鈕 (非學習路徑) */
-    .util-btn {
-        display: flex;
-        align-items: center;
-        width: 100%;
-        padding: 14px 20px;
-        margin-bottom: 10px;
-        border-radius: 12px;
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.1);
-        color: #94a3b8;
-        font-weight: 500; /* Regular ~ Medium */
-        transition: all 0.2s;
-    }
-    .util-btn:hover {
-        background: rgba(255,255,255,0.1);
-        color: #fff;
-        border-color: rgba(255,255,255,0.3);
-    }
-
-    /* 字體微調 */
-    h1 { letter-spacing: 0.02em; }
-    p { letter-spacing: 0.05em; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Coding 市場分析與商業計畫</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7fafc; /* 淺灰色背景 */
+        }
+        .hero-bg {
+            /* 科技感深藍漸變 */
+            background-image: linear-gradient(to right, #1e3a8a, #06b6d4); 
+            color: white;
+        }
+        .vibe-card {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-top: 5px solid #06b6d4; /* 頂部強調色 */
+        }
+        .vibe-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .tech-icon {
+            /* 讓圖示更有立體感 */
+            filter: drop-shadow(0 4px 4px rgba(6, 182, 212, 0.7));
+        }
+        .section-title-underline {
+            height: 4px;
+            width: 80px;
+            background-color: #06b6d4;
+            margin: 0 auto 3rem;
+            border-radius: 2px;
+        }
+        /* 下拉選單樣式 */
+        .dropdown:hover .dropdown-menu {
+            display: block;
+        }
+    </style>
 </head>
 <body>
 
-    <div class="glass-panel">
-        
-        <div class="text-center mb-10">
-            <h1 class="text-5xl brand-title mb-2">Vibe Racer</h1>
-            <p class="text-slate-400 text-xs font-bold tracking-[0.2em] uppercase">智能載具全端開發指南</p>
+    <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="#" class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
+                    <span>🚀</span> Vibe Coding
+                </a>
+
+                <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
+                    <a href="prepare.html" class="hover:text-cyan-600 transition">課前準備</a>
+                    <a href="started.html" class="hover:text-cyan-600 transition">入門課程</a>
+                    <a href="basic.html" class="hover:text-cyan-600 transition">基礎實作</a>
+                    <a href="advanced.html" class="hover:text-cyan-600 transition">進階應用</a>
+                    
+                    <div class="relative dropdown group">
+                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
+                            組態設定 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
+                            <a href="wifi-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">WiFi 設定</a>
+                            <a href="motor-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">馬達設定</a>
+                        </div>
+                    </div>
+
+                    <a href="introducing.html" class="hover:text-cyan-600 transition">關於我們</a>
+                </div>
+
+                <div class="md:hidden">
+                    <button class="text-gray-600 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                </div>
+            </div>
         </div>
+    </nav>
 
-        <a href="prepare.html" class="util-btn group">
-            <span class="mr-3 text-yellow-500">⚠️</span>
-            <span class="group-hover:text-yellow-400 transition-colors">上課前應要準備的事情</span>
-        </a>
+    <header class="hero-bg py-16 sm:py-24 rounded-b-[3rem] shadow-2xl relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-64 h-64 bg-white opacity-5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
+        <div class="absolute bottom-0 right-0 w-96 h-96 bg-cyan-400 opacity-10 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl"></div>
 
-        <div class="my-6">
-            <p class="text-xs text-slate-500 font-bold mb-4 ml-1 tracking-widest uppercase">Learning Roadmap</p>
+        <div class="container mx-auto px-4 text-center relative z-10">
+            <h1 class="text-4xl sm:text-6xl font-extrabold mb-4 animate-pulse tracking-tight">
+                Vibe Coding
+            </h1>
+            <h2 class="text-xl sm:text-3xl font-light mb-8 text-cyan-200">
+                瞄準台灣 STEM/AI 教育市場的藍海策略
+            </h2>
             
-            <div class="roadmap-container">
-                <div class="roadmap-line"></div>
+            <div class="mb-8 max-w-sm mx-auto p-2 bg-white/10 backdrop-blur-sm rounded-xl shadow-lg border border-white/20">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSn2zZn3SPhLGxHFRcR-Tz_4-iBAAjQFztFyg&s" alt="台灣教育科技市場增長趨勢示意圖" class="w-full h-auto rounded-lg">
+                <p class="text-xs text-cyan-100 mt-2">執行摘要：我們正在彌合程式教育與實際應用的鴻溝。</p>
+            </div>
+            
+            <p class="text-lg text-blue-50 max-w-4xl mx-auto mb-10 leading-relaxed">
+                本方案專注於提供創新且具體可見的 <b>Physical AI </b> 教育。透過實作、AI 輔助程式與業界標準的技術，我們不僅教授程式，更培養 AI 時代不可或缺的<b>邏輯思維與創造力</b>。
+            </p>
+            <a href="#market-strategy" class="inline-block bg-yellow-400 text-gray-900 font-bold py-4 px-10 rounded-full text-lg hover:bg-yellow-300 transition duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl">
+                深入了解核心策略 👇
+            </a>
+        </div>
+    </header>
 
-                <div class="mb-4 relative">
-                    <span class="roadmap-dot dot-start"></span>
-                    <a href="started.html" class="glow-card block text-decoration-none">
-                        <div class="glow-card-content justify-between group">
-                            <div>
-                                <h3 class="text-blue-400 text-xs font-bold uppercase mb-1 tracking-wider">Level 1</h3>
-                                <span class="text-white font-bold text-lg">UI/UX 設計與 API</span>
-                            </div>
-                            <svg class="w-5 h-5 text-slate-500 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                        </div>
-                    </a>
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <h3 class="text-3xl font-bold text-center mb-4 text-gray-800">
+                Vibe Coding 核心價值主張
+            </h3>
+            <div class="section-title-underline"></div>
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="p-8 text-center vibe-card rounded-2xl bg-white border border-gray-50">
+                    <div class="text-6xl mb-6 text-cyan-500 tech-icon">🛠️</div>
+                    <h4 class="text-xl font-bold mb-3 text-gray-800">實作與專案導向</h4>
+                    <p class="text-gray-600 leading-relaxed">
+                        彌合抽象程式概念與具體應用鴻溝，每堂課都有看得見、摸得著的成果。
+                    </p>
                 </div>
-
-                <div class="mb-4 relative">
-                    <span class="roadmap-dot dot-basic"></span>
-                    <a href="basic.html" class="glow-card block text-decoration-none">
-                        <div class="glow-card-content justify-between group">
-                            <div>
-                                <h3 class="text-purple-400 text-xs font-bold uppercase mb-1 tracking-wider">Level 2</h3>
-                                <span class="text-white font-bold text-lg">馬達控制與 OTA</span>
-                            </div>
-                            <svg class="w-5 h-5 text-slate-500 group-hover:text-purple-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                        </div>
-                    </a>
+                <div class="p-8 text-center vibe-card rounded-2xl bg-white border border-gray-50">
+                    <div class="text-6xl mb-6 text-cyan-500 tech-icon">🧠</div>
+                    <h4 class="text-xl font-bold mb-3 text-gray-800">AI 輔助程式生成</h4>
+                    <p class="text-gray-600 leading-relaxed">
+                        運用 AI 輔助工具降低學習門檻，讓學員專注於邏輯與設計，而非語法細節。
+                    </p>
                 </div>
-
-                <div class="relative">
-                    <span class="roadmap-dot dot-advance"></span>
-                    <a href="advanced.html" class="glow-card block text-decoration-none">
-                        <div class="glow-card-content justify-between group">
-                            <div>
-                                <h3 class="text-pink-400 text-xs font-bold uppercase mb-1 tracking-wider">Level 3</h3>
-                                <span class="text-white font-bold text-lg">影像辨識與 AI</span>
-                            </div>
-                            <svg class="w-5 h-5 text-slate-500 group-hover:text-pink-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                        </div>
-                    </a>
+                <div class="p-8 text-center vibe-card rounded-2xl bg-white border border-gray-50">
+                    <div class="text-6xl mb-6 text-cyan-500 tech-icon">💡</div>
+                    <h4 class="text-xl font-bold mb-3 text-gray-800">培養 AI 關鍵能力</h4>
+                    <p class="text-gray-600 leading-relaxed">
+                        著重於邏輯思維、問題解決與<b>創造力</b>，為未來職場打下堅實基礎。
+                    </p>
+                </div>
+                <div class="p-8 text-center vibe-card rounded-2xl bg-white border border-gray-50">
+                    <div class="text-6xl mb-6 text-cyan-500 tech-icon">🚀</div>
+                    <h4 class="text-xl font-bold mb-3 text-gray-800">Physical AI 精神</h4>
+                    <p class="text-gray-600 leading-relaxed">
+                        強調 Physical AI 獨特的「實作」精神，讓學員在實作中體驗開發樂趣。
+                    </p>
                 </div>
             </div>
         </div>
+    </section>
+    
+    <section id="market-strategy" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h3 class="text-3xl font-bold text-center mb-4 text-gray-800">
+                市場分析與商業策略
+            </h3>
+            <div class="section-title-underline"></div>
 
-        <div class="mt-8 grid grid-cols-2 gap-3">
-            <a href="wifi-config.html" class="util-btn justify-center flex-col py-4 h-full text-center hover:bg-emerald-900/30 hover:border-emerald-500/50 hover:text-emerald-400">
-                <svg class="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg>
-                <span class="text-sm">WiFi 設定</span>
-            </a>
+            <div class="grid lg:grid-cols-2 gap-12">
+                <div class="p-8 bg-white rounded-2xl shadow-lg border-l-8 border-teal-500 hover:shadow-xl transition duration-300">
+                    <h4 class="text-2xl font-bold text-teal-700 mb-6 flex items-center">
+                        <span class="text-4xl mr-4">📈</span> 台灣教育科技市場機遇
+                    </h4>
+                    <ul class="space-y-4 text-lg text-gray-700">
+                        <li class="flex items-start"><span class="text-teal-500 mr-2">●</span><span><b>政府強力推動：</b> 國家對 <b>STEM/AI 教育</b>有明確且積極的推動政策。</span></li>
+                        <li class="flex items-start"><span class="text-teal-500 mr-2">●</span><span><b>家長意願高漲：</b> 台灣家長對培養孩子未來競爭力的意願非常高。</span></li>
+                        <li class="flex items-start"><span class="text-teal-500 mr-2">●</span><span><b>資源缺口明顯：</b> 學校現有在酷達、Physical AI 相關領域的教育資源不足，形成巨大市場需求。</span></li>
+                        <li class="flex items-start"><span class="text-teal-500 mr-2">●</span><span><b>市場趨勢穩健：</b> K-12 程式設計教育市場正處於穩健成長期。</span></li>
+                    </ul>
+                    <p class="mt-6 text-sm text-gray-400 italic">
+                        *數據來源：Vibe Coding 市場分析與商業計畫書 (執行摘要)*
+                    </p>
+                </div>
 
-            <a href="motor-config.html" class="util-btn justify-center flex-col py-4 h-full text-center hover:bg-cyan-900/30 hover:border-cyan-500/50 hover:text-cyan-400">
-                <svg class="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
-                <span class="text-sm">馬達組態</span>
-            </a>
+                <div class="p-8 bg-white rounded-2xl shadow-lg border-l-8 border-indigo-500 hover:shadow-xl transition duration-300">
+                    <h4 class="text-2xl font-bold text-indigo-700 mb-6 flex items-center">
+                        <span class="text-4xl mr-4">🎯</span> 雙軌市場進入與差異化策略
+                    </h4>
+                    <ul class="space-y-4 text-lg text-gray-700">
+                        <li class="flex items-start"><span class="text-indigo-500 mr-2">●</span><span><b>B2C 直接招生：</b> 透過社群行銷與口碑，鎖定對教育高投資意願的個人消費者。</span></li>
+                        <li class="flex items-start"><span class="text-indigo-500 mr-2">●</span><span><b>B2B 機構合作：</b> 與<b>國小</b>、<b>補習班</b>、<b>安親班</b>等教育機構合作，導入課程體系。</span></li>
+                        <li class="flex items-start"><span class="text-indigo-500 mr-2">●</span><span><b>關鍵差異化：</b> 強調課程的實作性和 AI 輔助，並提供<b>師資培訓</b>，給予合作夥伴全面支持。</span></li>
+                        <li class="flex items-start"><span class="text-indigo-500 mr-2">●</span><span><b>盈利途徑：</b> 課程費用、B2B 服務合約、硬體套件銷售。</span></li>
+                    </ul>
+                </div>
+            </div>
+            
         </div>
+    </section>
 
-        <a href="introducing.html" class="util-btn mt-3 justify-center text-sm text-slate-500 hover:text-white">
-            關於我們
-        </a>
-
-        <div class="mt-10 pt-6 border-t border-slate-800 text-center">
-            <div class="flex flex-col gap-1 text-[11px] text-slate-500 font-mono tracking-wide">
-                <p>Copyright © 2026 Vibe Racer</p>
-                <div class="flex justify-center gap-3 mt-1">
-                    <span>營業人：<span class="text-slate-300">文經出版社有限公司</span></span>
-                    <span>統編：<span class="text-slate-300">12376121</span></span>
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-4 text-center">
+            <h3 class="text-3xl font-bold mb-4 text-gray-800">
+                Vibe Coding 的目標客群 (TA)
+            </h3>
+            <div class="section-title-underline"></div>
+            <div class="max-w-4xl mx-auto">
+                <p class="text-xl text-gray-600 mb-10 leading-relaxed">
+                    本方案主要鎖定<b>注重 Physical AI 實作</b>的相關教育，強調培養他們在 AI 時代的<b>實作</b>與<b>程式邏輯</b>核心能力。
+                </p>
+                <div class="grid sm:grid-cols-2 gap-8 text-left">
+                    <div class="p-6 bg-green-50 rounded-xl shadow-md border border-green-100 hover:shadow-lg transition">
+                        <h4 class="text-xl font-bold text-green-700 mb-4 border-b border-green-200 pb-2">✅ 產品亮點</h4>
+                        <ul class="list-disc pl-5 text-gray-700 space-y-2">
+                            <li>教學方法符合現代教育最佳實踐 (Project-Based Learning)。</li>
+                            <li>課程成果具體可見，提高學員成就感與學習興趣。</li>
+                            <li>導入 Vibe coding 技術，與市場上其他基礎課程形成差異。</li>
+                            <li>實例展示：<a href="https://vibe-coding.tw/examples/joystick.html" class="text-green-600 underline font-bold hover:text-green-800" target="_blank">BLE 搖桿實例</a></li>
+                        </ul>
+                    </div>
+                    <div class="p-6 bg-red-50 rounded-xl shadow-md border border-red-100 hover:shadow-lg transition">
+                        <h4 class="text-xl font-bold text-red-700 mb-4 border-b border-red-200 pb-2">❌ 我們不只是 (排除市場競爭者)</h4>
+                        <ul class="list-disc pl-5 text-gray-700 space-y-2">
+                            <li>不只是單純的拖拉式程式積木教學，避免缺乏深度。</li>
+                            <li>不只停留在抽象理論，確保有實際硬體操作。</li>
+                            <li>不是無法提供師資培訓與系統化教材支持的單一產品。</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
+    </section>
 
-    </div>
+    <section id="contact" class="py-20 bg-gray-900 text-white relative overflow-hidden">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        
+        <div class="container mx-auto px-4 text-center relative z-10">
+            <h3 class="text-3xl sm:text-4xl font-bold mb-6 text-cyan-300">
+                與我們合作，共創 AI 教育藍圖
+            </h3>
+            <p class="text-xl mb-10 opacity-80 max-w-2xl mx-auto">
+                無論是 B2C 招生、B2B 課程導入或硬體採購，立即與 Vibe Coding 團隊聯繫。
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="#" class="inline-block bg-yellow-400 text-gray-900 font-bold py-4 px-12 rounded-full text-xl hover:bg-yellow-300 transition duration-300 transform hover:scale-105 shadow-2xl">
+                    📥 合作洽談
+                </a>
+                <a href="introducing.html" class="inline-block bg-transparent border-2 border-white text-white font-bold py-4 px-12 rounded-full text-xl hover:bg-white hover:text-gray-900 transition duration-300 transform hover:scale-105">
+                    📖 了解更多
+                </a>
+            </div>
+            <p class="mt-6 text-sm opacity-60">
+                (請透過上方按鈕或頁腳 B2B 資訊聯繫)
+            </p>
+        </div>
+    </section>
+
+    <footer class="bg-gray-800 py-8 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <div class="flex justify-center space-x-6 mb-4 text-gray-400">
+                <a href="prepare.html" class="hover:text-white">課前準備</a>
+                <a href="started.html" class="hover:text-white">入門課程</a>
+                <a href="basic.html" class="hover:text-white">基礎實作</a>
+                <a href="introducing.html" class="hover:text-white">關於我們</a>
+            </div>
+            <p class="text-gray-500 text-sm">&copy; 2025 Vibe Coding. All rights reserved. | 課程合作洽談請聯絡 B2B 部門 (Email: info@vibe-coding.tw)</p>
+        </div>
+    </footer>
+
 </body>
 </html>
