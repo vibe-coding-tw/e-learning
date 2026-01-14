@@ -5,27 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>安裝課程：VS Code, Copilot, PlatformIO 環境設定</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    
     <style>
         /* 基礎樣式 (使用 Tailwind 的 reset) */
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #f4f7f9; 
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f7fafc; /* 與主頁一致的淺灰 */
             color: #333; 
         }
         .container { 
             max-width: 1200px; 
             margin: auto; 
         }
+        
         /* 頁面標題樣式 */
-        h1 { 
-            color: #28a745; /* 主題色：綠色 */
+        .page-header h1 { 
+            color: #1e3a8a; /* 深藍色，呼應主色調 */
             text-align: center; 
-            margin-bottom: 30px; 
-            padding-bottom: 10px;
-            border-bottom: 3px solid #e9fff0;
+            margin-bottom: 10px; 
+        }
+        .section-title-underline {
+            height: 4px;
+            width: 80px;
+            background-color: #06b6d4; /* 青色底線 */
+            margin: 0 auto 2rem;
+            border-radius: 2px;
         }
 
-        /* 資訊卡片網格佈局 (等同 basic.html 的 lesson-grid) */
+        /* 資訊卡片網格佈局 */
         .info-grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
@@ -33,23 +41,23 @@
             margin-top: 30px;
         }
         
-        /* 資訊卡片樣式 (等同 basic.html 的 lesson-card) */
+        /* 資訊卡片樣式 */
         .info-card { 
             background-color: #fff; 
             border-radius: 12px; 
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             overflow: hidden; 
             padding: 25px;
             height: 100%;
             transition: transform 0.3s ease, box-shadow 0.3s ease; 
             display: flex;
             flex-direction: column;
+            border-top: 4px solid #06b6d4; /* 統一的頂部強調色 */
         }
         /* 連結/課程卡片懸停效果 */
         .course-card:hover { 
             transform: translateY(-5px); 
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12); 
-            background-color: #e9fff0; /* 懸停時使用淺綠色反饋 */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             cursor: pointer;
         }
 
@@ -63,67 +71,36 @@
         .card-header h2 { 
             margin: 0; 
             font-size: 1.5em; 
-            color: #28a745; 
+            color: #1f2937; /* 標題深灰色 */
+            font-weight: 700;
         }
         .card-icon { 
             width: 40px; 
             height: 40px; 
-            background-color: #28a745; 
-            color: #fff; 
+            background-color: #e0f2fe; /* 淺藍底 */
+            color: #0284c7; /* 深藍字 */
             border-radius: 50%; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            font-size: 1.5em; 
+            font-size: 1.2em; 
             margin-right: 15px;
+            font-weight: bold;
         }
         
         /* 內容列表樣式 */
-        .content-list { 
-            list-style: none; 
-            padding: 0; 
-            margin: 0; 
-            flex-grow: 1; /* 讓列表佔滿空間 */
-        }
-        .content-list li { 
-            padding: 10px 0; 
-            border-bottom: 1px dashed #f0f0f0; 
-            font-size: 1em;
-            display: flex;
-            align-items: flex-start;
-        }
-        .content-list li:last-child { 
-            border-bottom: none; 
-        }
-        .check-mark {
-            color: #28a745;
-            font-weight: bold;
-            font-size: 1.2em;
-            line-height: 1.5;
-            margin-right: 10px;
-        }
-
-        /* 圖片與規格樣式 */
-        .hardware-img-wrapper {
-            text-align: center;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-        .hardware-img {
-            max-width: 80%;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
         .spec-item {
             margin-bottom: 15px;
-            line-height: 1.4;
+            line-height: 1.5;
+            color: #4b5563; /* 內文灰色 */
         }
         .spec-item strong {
             display: block;
-            color: #333;
+            color: #111827; /* 重點黑色 */
             margin-bottom: 3px;
         }
+        
+        /* 提示框樣式 */
         .note {
             padding: 15px;
             border-radius: 8px;
@@ -133,61 +110,127 @@
         
         /* 動態按鈕樣式 */
         .action-btn { 
-            margin-top: 20px; 
+            margin-top: auto; /* 推到底部 */
             width: 100%; 
-            padding: 10px; 
-            border-radius: 6px; 
-            font-weight: bold; 
-            transition: background-color 0.2s;
+            padding: 12px; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            transition: all 0.2s;
             cursor: pointer;
+            text-align: center;
         }
-    </style>
-    <style>
+
+        /* 圖片與規格樣式 */
+        .hardware-img-wrapper {
+            text-align: center;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        .hardware-img-wrapper img {
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* 圖片裁切樣式 */
         .basic-car-crop-wrapper {
-          /*width: 300px;         /* 1. 設定你想要的顯示寬度 */
-          overflow: hidden;     /* 2. 核心：切掉超出範圍的內容 */
+          overflow: hidden;     
           display: block;
           position: relative;
+          border-radius: 8px;
         }
-      
-        /* 使用 padding-top 來精確控制比例。
-           如果原圖是 1:1，裁剪後高度為 53%，則 padding-top 設為 53%
-        */
         .basic-car-crop-wrapper::before {
           content: "";
           display: block;
-          padding-top: 73%;    /* 這裡填寫 (100 - 22 - 25)% */
+          padding-top: 73%;    
         }
-      
         .basic-car-crop-wrapper img {
           position: absolute;
-          top: -42%;           /* 3. 核心：將圖片往上推 22%，切掉頂部 */
+          top: -42%;           
           left: 0;
           width: 100%;
           height: auto;
         }
 
-      </style>
-      
+        /* 下拉選單樣式 (與主頁一致) */
+        .dropdown:hover .dropdown-menu {
+            display: block;
+        }
+    </style>
 </head>
-<body class="p-5">
-    <div class="container">
-        <header class="flex justify-between items-center py-4 px-0 border-b mb-6">
-            <h1 class="text-3xl font-bold text-green-600">🛠️ 上課前應該準備的事項</h1>
-            <div class="flex items-center space-x-4">
-                
-                <a href="cart.html" class="text-gray-600 hover:text-green-600 transition duration-150 relative">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
-                    </svg>
+<body class="flex flex-col min-h-screen">
+
+    <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="index.html" class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
+                    <span>🚀</span> Vibe Coding
                 </a>
-                
-                <div id="auth-status" class="text-sm flex items-center">
-                    <span id="user-display" class="text-gray-600">訪客模式</span>
-                    <button id="login-btn" class="ml-3 bg-indigo-500 hover:bg-indigo-600 text-white text-sm py-1 px-3 rounded">登入</button>
+
+                <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
+                    <a href="prepare.html" class="text-cyan-600 font-bold">課前準備</a>
+                    <a href="started.html" class="hover:text-cyan-600 transition">入門課程</a>
+                    <a href="basic.html" class="hover:text-cyan-600 transition">基礎實作</a>
+                    <a href="advanced.html" class="hover:text-cyan-600 transition">進階應用</a>
+                    
+                    <div class="relative dropdown group">
+                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
+                            組態設定 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
+                            <a href="wifi-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">WiFi 設定</a>
+                            <a href="motor-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">馬達設定</a>
+                        </div>
+                    </div>
+
+                    <a href="about.html" class="hover:text-cyan-600 transition">關於我們</a>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <a href="cart.html" class="text-gray-600 hover:text-cyan-600 transition duration-150 relative" title="前往購物車">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
+                        </svg>
+                    </a>
+                    
+                    <div id="auth-status" class="text-sm flex items-center">
+                        <span id="user-display" class="text-gray-600 hidden md:inline mr-2">訪客</span>
+                        <button id="login-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">登入</button>
+                    </div>
+
+                    <div class="md:hidden ml-2">
+                        <button id="mobile-menu-btn" class="text-gray-600 focus:outline-none p-2 border rounded hover:bg-gray-100">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </header>
+
+            <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-100 mt-2">
+                <div class="flex flex-col space-y-3 pt-4 font-medium text-gray-600">
+                    <a href="prepare.html" class="text-cyan-600 font-bold pl-2">課前準備</a>
+                    <a href="started.html" class="hover:text-cyan-600 pl-2">入門課程</a>
+                    <a href="basic.html" class="hover:text-cyan-600 pl-2">基礎實作</a>
+                    <a href="advanced.html" class="hover:text-cyan-600 pl-2">進階應用</a>
+                    
+                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
+                        <p class="text-xs text-gray-400 mb-1 uppercase">組態設定</p>
+                        <a href="wifi-config.html" class="block py-1 hover:text-cyan-600">WiFi 設定</a>
+                        <a href="motor-config.html" class="block py-1 hover:text-cyan-600">馬達設定</a>
+                    </div>
+
+                    <a href="about.html" class="hover:text-cyan-600 pl-2">關於我們</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-10 px-4 flex-grow">
+        
+        <div class="page-header text-center mb-10">
+            <h1 class="text-3xl font-bold text-gray-800">🛠️ 上課前應該準備的事項</h1>
+            <div class="section-title-underline"></div>
+            <p class="text-gray-600 max-w-2xl mx-auto">為了確保您的學習體驗順暢，請在上課前完成以下軟體安裝與硬體準備。我們會引導您一步步完成。</p>
+        </div>
 
         <div class="info-grid">
             
@@ -200,28 +243,28 @@
                     <div class="card-icon">IDE</div>
                     <h2>開發環境安裝與設定</h2>
                 </div>
-                <p style="color: #6c757d; font-style: italic;">本課程目標是將所有開發元件整合到您的電腦中。</p>
+                <p class="text-gray-500 italic mb-4 text-sm">本課程目標是將所有開發元件整合到您的電腦中。</p>
                 
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">Google 帳戶申請：</b>
+                    <strong>Google 帳戶申請：</strong>
                     有了 Google 帳戶，你可以使用多項 Google 產品。
                 </div>
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">安裝 VS Code：</b>
+                    <strong>安裝 VS Code：</strong>
                     作為所有程式碼的核心編輯器。
                 </div>
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">安裝 PlatformIO：</b>
+                    <strong>安裝 PlatformIO：</strong>
                     處理所有編譯、燒錄和專案管理。
                 </div>
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">GitHub Copilot：</b>
+                    <strong>GitHub Copilot：</strong>
                     提供即時的 AI 程式碼建議。
                 </div>
-                <div class="note" style="background-color: #d4edda; color: #155724; border-left: 5px solid #28a745;">
+                <div class="note bg-green-50 text-green-800 border-l-4 border-green-500">
                     <b>重要：</b> 點擊下方按鈕，即可進入 <b>Google Classroom</b> 進行詳細的安裝設定步驟。
                 </div>
-                <button id="action-btn-C1_SETUP" class="action-btn bg-gray-400 text-white" disabled>
+                <button class="action-btn bg-gray-400 text-white mt-auto" disabled>
                     載入中...
                 </button>
             </div>
@@ -235,28 +278,25 @@
                     <div class="card-icon">Basic</div>
                     <h2>基本款程式開發平台</h2>
                 </div>
-                <p style="color: #6c757d; font-style: italic;">本基本款程式開發平台適用於入門、基礎課程使用。</p>
+                <p class="text-gray-500 italic mb-4 text-sm">本基本款程式開發平台適用於入門、基礎課程使用。</p>
                 
                 <div class="hardware-img-wrapper">
                     <div class="basic-car-crop-wrapper">
-                        <img src="https://down-tw.img.susercontent.com/file/tw-11134208-81ztp-me1d6y243mdjc3">
+                        <img src="https://down-tw.img.susercontent.com/file/tw-11134208-81ztp-me1d6y243mdjc3" alt="基本款 ESP32-C3">
                     </div>
-                    <p style="font-size: 0.85em; color: #666; margin-top: 10px;">基本款</p>
+                    <p class="text-xs text-gray-400 mt-2">基本款</p>
                 </div>
                 
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">CPU：</b>
-                    ESP32-C3。
+                    <strong>CPU：</strong> ESP32-C3
                 </div>
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">Memory：</b>
-                    320K。
+                    <strong>Memory：</strong> 320K
                 </div>
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">Flash：</b>
-                    4M。
+                    <strong>Flash：</strong> 4M
                 </div>
-                <button id="action-btn-esp32-c3" class="action-btn bg-gray-400 text-white" disabled>
+                <button class="action-btn bg-gray-400 text-white mt-auto" disabled>
                     載入中...
                 </button>
             </div>
@@ -267,29 +307,26 @@
                  data-course-price="3600"
                  data-classroom-url="https://vibe-coding.tw/esp32-s3.html"> 
                  <div class="card-header">
-                    <div class="card-icon">Advanced</div>
+                    <div class="card-icon">Pro</div>
                     <h2>進階款程式開發平台</h2>
                 </div>
-                <p style="color: #6c757d; font-style: italic;">本進階款程式開發平台適用於入門、基礎、及進階課程使用。</p>
+                <p class="text-gray-500 italic mb-4 text-sm">本進階款程式開發平台適用於入門、基礎、及進階課程使用。</p>
                 
                 <div class="hardware-img-wrapper">
-                    <img src="https://www.kidstoylover.com/cdn/shop/files/1_adc99452-bd07-49f0-95a1-a5d7990ed0f5.jpg?v=1715839568&width=1445" style="clip-path: inset(0 0 23% 0); margin-bottom: -23%;">
-                    <p style="font-size: 0.85em; color: #666; margin-top: 10px;">進階款</p>
+                    <img src="https://www.kidstoylover.com/cdn/shop/files/1_adc99452-bd07-49f0-95a1-a5d7990ed0f5.jpg?v=1715839568&width=1445" style="clip-path: inset(0 0 23% 0); margin-bottom: -23%;" alt="進階款 ESP32-S3">
+                    <p class="text-xs text-gray-400 mt-2">進階款</p>
                 </div>
                 
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">CPU：</b>
-                    ESP32-S3。
+                    <strong>CPU：</strong> ESP32-S3
                 </div>
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">Memory：</b>
-                    8M。
+                    <strong>Memory：</strong> 8M
                 </div>
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">Flash：</b>
-                    16M。
+                    <strong>Flash：</strong> 16M
                 </div>
-                <button id="action-btn-esp32-s3" class="action-btn bg-gray-400 text-white" disabled>
+                <button class="action-btn bg-gray-400 text-white mt-auto" disabled>
                     載入中...
                 </button>
             </div>
@@ -303,100 +340,115 @@
                     <div class="card-icon">WiFi</div>
                     <h2>WiFi & 馬達組態設定</h2>
                 </div>
-                <p style="color: #6c757d; font-style: italic;">本課程是在說明如何設定 WiFi 及 Motor。</p>
+                <p class="text-gray-500 italic mb-4 text-sm">本課程是在說明如何設定 WiFi 及 Motor。</p>
                 
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">WiFi 設定：</b>
+                    <strong>WiFi 設定：</strong>
                     設定 WiFi 的 SSID 和 Password，可以連上當地的無線網路。
                 </div>
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">Motor 設定：</b>
+                    <strong>Motor 設定：</strong>
                     設定前進/後退加速馬達及左轉/右轉轉速馬達的參數。
                 </div>
-                <div class="note" style="background-color: #d4edda; color: #155724; border-left: 5px solid #28a745;">
+                <div class="note bg-green-50 text-green-800 border-l-4 border-green-500">
                     <b>重要：</b> 點擊下方按鈕，即可進入 <b>Google Classroom</b> 進行詳細的安裝設定步驟。
                 </div>
-                <button id="action-btn-C1_SETUP" class="action-btn bg-gray-400 text-white" disabled>
+                <button class="action-btn bg-gray-400 text-white mt-auto" disabled>
                     載入中...
                 </button>
             </div>
 
-            <div class="info-card">
+            <div class="info-card border-t-4 border-yellow-400">
                 <div class="card-header">
-                    <div class="card-icon">💻</div>
-                    <h2>電腦規格：最低需求 (可運行)</h2>
+                    <div class="card-icon bg-yellow-100 text-yellow-600">💻</div>
+                    <h2>電腦規格：最低需求</h2>
                 </div>
-                <p style="color: #6c757d; font-style: italic;">此規格可順利安裝所有工具並進行基本開發，Copilot 體驗可能偶有延遲。</p>
+                <p class="text-gray-500 italic mb-4 text-sm">此規格可順利安裝所有工具並進行基本開發。</p>
                 
                 <div class="hardware-img-wrapper">
-                    <img src="https://www.apple.com/v/macbook-air/x/images/overview/hero/hero_static__c9sislzzicq6_large.png">
-                    <p style="font-size: 0.85em; color: #666; margin-top: 10px;">入門電腦</p>
+                    <img src="https://www.apple.com/v/macbook-air/x/images/overview/hero/hero_static__c9sislzzicq6_large.png" alt="入門電腦">
+                    <p class="text-xs text-gray-400 mt-2">入門電腦示意</p>
                 </div>
                 
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">作業系統：</b>
-                    Windows 10/11 (64-bit)、macOS 12 或更新版本
+                    <strong>OS：</strong> Windows 10/11 (64-bit)、macOS 12+
                 </div>
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">處理器 (CPU)：</b>
-                    Intel Core i3 或 AMD Ryzen 3 雙核心處理器
+                    <strong>CPU：</strong> Intel Core i3 / AMD Ryzen 3
                 </div>
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">記憶體 (RAM)：</b>
-                    至少 <b>8 GB</b>
+                    <strong>RAM：</strong> 至少 <b>8 GB</b>
                 </div>
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">儲存空間：</b>
-                    至少 5 GB 可用空間，建議使用 <b>SSD</b> (固態硬碟)
+                    <strong>Disk：</strong> 至少 5 GB 可用空間，建議 <b>SSD</b>
                 </div>
-                <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">網路連線：</b>
-                    穩定的寬頻網路連線
-                </div>
-                <div class="note" style="background-color: #fff3cd; color: #856404; border-left: 5px solid #ffc107;">
+                <div class="note bg-yellow-50 text-yellow-800 border-l-4 border-yellow-400">
                     <b>🚀 關鍵建議：</b> 8 GB 記憶體是基本門檻，但確保擁有 <b>SSD</b> 對於提升程式載入和編譯速度至關重要。
                 </div>
             </div>
 
-            <div class="info-card">
+            <div class="info-card border-t-4 border-blue-500">
                 <div class="card-header">
-                    <div class="card-icon">🚀</div>
-                    <h2>電腦規格：建議規格 (流暢體驗)</h2>
+                    <div class="card-icon bg-blue-100 text-blue-600">🚀</div>
+                    <h2>電腦規格：建議規格</h2>
                 </div>
-                <p style="color: #6c757d; font-style: italic;">此規格能確保您在開發過程中，同時享受即時 AI 輔助且操作順暢。</p>
+                <p class="text-gray-500 italic mb-4 text-sm">此規格能確保您享受即時 AI 輔助且操作順暢。</p>
                 
                 <div class="hardware-img-wrapper">
-                    <img src="https://www.fetnet.net/content/dam/fetnet/user_resource/cbu/images/life-circle/tech/2023/01/mac/mac-8.jpg">
-                    <p style="font-size: 0.85em; color: #666; margin-top: 10px;">進階電腦</p>
+                    <img src="https://www.fetnet.net/content/dam/fetnet/user_resource/cbu/images/life-circle/tech/2023/01/mac/mac-8.jpg" alt="進階電腦">
+                    <p class="text-xs text-gray-400 mt-2">進階電腦示意</p>
                 </div>
                 
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">作業系統：</b>
-                    Windows 11 (64-bit)、macOS 14 (Sonoma) 或更新版本
+                    <strong>OS：</strong> Windows 11、macOS 14+
                 </div>
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">處理器 (CPU)：</b>
-                    Intel Core i5 或 AMD Ryzen 5 四核心處理器或更高版本
+                    <strong>CPU：</strong> Intel Core i5 / AMD Ryzen 5 或以上
                 </div>
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">記憶體 (RAM)：</b>
-                    <b>16 GB</b> 或更高
+                    <strong>RAM：</strong> <b>16 GB</b> 或更高
                 </div>
                 <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">儲存空間：</b>
-                    <b>256 GB 或更大容量的 SSD</b>
+                    <strong>Disk：</strong> <b>256 GB SSD</b> 或更大
                 </div>
-                <div class="spec-item">
-                    <b style="display: block; color: #333; margin-bottom: 3px;">網路連線：</b>
-                    穩定且高速的寬頻連線
-                </div>
-                <div class="note" style="background-color: #d4edda; color: #155724; border-left: 5px solid #28a745;">
+                <div class="note bg-green-50 text-green-800 border-l-4 border-green-500">
                     強烈建議選擇 <b>16 GB 記憶體</b> 的電腦，這能確保您同時處理多個應用程式和複雜專案時，獲得最佳開發體驗。
                 </div>
             </div>
 
         </div>
     </div>
+
+    <footer class="bg-gray-800 py-8 border-t border-gray-700 mt-10">
+        <div class="container mx-auto px-4 text-center">
+            <div class="flex justify-center space-x-6 mb-6 text-gray-400">
+                <a href="prepare.html" class="hover:text-white">課前準備</a>
+                <a href="started.html" class="hover:text-white">入門課程</a>
+                <a href="basic.html" class="hover:text-white">基礎實作</a>
+                <a href="advanced.html" class="hover:text-white">進階應用</a>
+                <a href="about.html" class="hover:text-white">關於我們</a>
+            </div>
+            
+            <div class="border-t border-gray-700 pt-6">
+                <p class="text-gray-500 text-sm mb-2">&copy; 2025 Vibe Coding. All rights reserved.</p>
+                <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6 text-sm text-gray-400">
+                    <span>營業人名稱：文經出版社有限公司</span>
+                    <span class="hidden md:inline">|</span>
+                    <span>統一編號：12376121</span>
+                    <span class="hidden md:inline">|</span>
+                    <span>課程合作洽談：info@vibe-coding.tw</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+        });
+    </script>
 
     <script type="module">
         // 1. 匯入必要的 Firebase 函式
@@ -511,7 +563,7 @@
             if (status === 'AUTHORIZED') {
                 // 狀態 1: 已授權 -> 進入課程
                 btn.textContent = '✅ 進入課程內容';
-                btn.className = 'action-btn bg-green-600 hover:bg-green-700 text-white';
+                btn.className = 'action-btn bg-green-600 hover:bg-green-700 text-white mt-auto';
                 btn.onclick = () => {
                     // 傳遞 courseId 和 coursePrice 給 auth.html 
                     window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`;
@@ -522,12 +574,12 @@
                 if (isFreeCourse) {
                     // 免費課程出現 UNAUTHORIZED/ERROR 視為異常或未登入
                     btn.textContent = '👤 請先登入以進入課程 (免費)';
-                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
+                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white mt-auto';
                     btn.onclick = handleLogin;
                 } else {
                     // 收費課程：引導加入購物車 (點擊後進入確認流程)
                     btn.textContent = `🛒 加入購物車 (${priceText})`;
-                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
+                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white mt-auto';
                     btn.onclick = () => {
                         handleAddToCartConfirmation(courseId, courseName, coursePrice); 
                     };
@@ -538,12 +590,12 @@
                 if (isFreeCourse) {
                     // 免費課程：引導登入
                     btn.textContent = '👤 請先登入以進入課程 (免費)';
-                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
+                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white mt-auto';
                     btn.onclick = handleLogin;
                 } else {
                     // 收費課程：引導加入購物車 (點擊後進入確認流程)
                     btn.textContent = `🛒 加入購物車 (${priceText})`;
-                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
+                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white mt-auto';
                     btn.onclick = () => {
                         handleAddToCartConfirmation(courseId, courseName, coursePrice); 
                     };
@@ -552,7 +604,7 @@
             } else if (status === 'LOADING') {
                 // 狀態 4: 載入中
                 btn.textContent = '權限檢查中...';
-                btn.className = 'action-btn bg-gray-400 text-white';
+                btn.className = 'action-btn bg-gray-400 text-white mt-auto';
                 btn.disabled = true;
             } 
         }
@@ -605,7 +657,8 @@
             const loginBtn = document.getElementById('login-btn');
 
             if (user) {
-                userDisplay.textContent = `您好, ${user.displayName || user.email}`;
+                userDisplay.textContent = user.displayName || user.email;
+                userDisplay.classList.remove('hidden'); // 確保顯示
                 loginBtn.textContent = '登出';
                 loginBtn.onclick = handleLogout;
                 
@@ -613,7 +666,10 @@
                     checkLessonAuthorization(card, user);
                 });
             } else {
-                userDisplay.textContent = '訪客模式';
+                userDisplay.textContent = '訪客';
+                userDisplay.classList.add('hidden'); // 手機版隱藏訪客文字
+                userDisplay.classList.remove('md:inline'); // 電腦版顯示
+                
                 loginBtn.textContent = '登入';
                 loginBtn.onclick = handleLogin;
                 
