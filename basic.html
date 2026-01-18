@@ -179,16 +179,6 @@
 </head>
 <body>
 
-    <script>
-        // 使用 fetch 去讀取旁邊的 lessons.json 檔案
-        fetch('./lessons.json')
-            .then(response => response.json()) // 把文字轉成 JSON 物件
-            .then(data => {
-                // 資料讀取成功後，呼叫渲染函數
-                renderLessons(data);
-            })
-            .catch(error => console.error('資料讀取失敗:', error));
-    </script>
 </body>
 <body class="flex flex-col min-h-screen">
 
@@ -272,6 +262,17 @@
         </div>
 
         <div id="lesson-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6"></div>
+        <script>
+            // 使用 fetch 去讀取旁邊的 lessons.json 檔案
+            fetch('./lessons.json')
+                .then(response => response.json()) // 把文字轉成 JSON 物件
+                .then(data => {
+                    // 資料讀取成功後，呼叫渲染函數
+                    renderLessons(data);
+                })
+                .catch(error => console.error('資料讀取失敗:', error));
+        </script>
+
         <div id="video-overlay"></div>
     
         <div class="lesson-grid">
@@ -432,6 +433,10 @@
             }).join('');
 
             container.innerHTML = html;
+
+            if (typeof window.updateAuthUI === 'function') {
+                window.updateAuthUI();
+            }
         }
 
         // 用來記錄是否正在監聽全螢幕變化，避免重複綁定
@@ -511,7 +516,6 @@
     </script>
 
     <script type="module">
-
         // 1. 匯入必要的 Firebase 函式
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
@@ -604,7 +608,7 @@
         // D. 動態按鈕狀態更新核心邏輯
         // ===============================================
         
-        const lessonCards = document.querySelectorAll('.lesson-card');
+        //const lessonCards = document.querySelectorAll('.lesson-card');
 
         /**
          * 根據授權狀態更新單一課程卡片的按鈕
@@ -725,6 +729,24 @@
                 // CF 呼叫失敗，收費課程導向 UNAUTHORIZED (加入購物車)
                 updateCardAction(cardElement, 'UNAUTHORIZED');
             }
+        }
+
+        // ===============================================
+        // ★ 新增：全域更新函式 (讓 renderLessons 可以呼叫)
+        // ===============================================
+        window.updateAuthUI = function() {
+            // 1. 重新抓取現在頁面上「所有」的卡片 (包含剛生成的)
+            const currentCards = document.querySelectorAll('.lesson-card');
+            const user = auth.currentUser; // 獲取當前使用者
+
+            // 2. 對每一張卡片重新執行權限檢查
+            currentCards.forEach(card => {
+                if (user) {
+                    checkLessonAuthorization(card, user);
+                } else {
+                    updateCardAction(card, 'NOT_LOGGED_IN');
+                }
+            });
         }
 
         // ----------------------------------------------------
