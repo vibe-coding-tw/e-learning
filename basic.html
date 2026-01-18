@@ -177,6 +177,20 @@
         }
     </style>
 </head>
+<body>
+    <div id="lesson-container"></div>
+
+    <script>
+        // 使用 fetch 去讀取旁邊的 lessons.json 檔案
+        fetch('./lessons.json')
+            .then(response => response.json()) // 把文字轉成 JSON 物件
+            .then(data => {
+                // 資料讀取成功後，呼叫渲染函數
+                renderLessons(data);
+            })
+            .catch(error => console.error('資料讀取失敗:', error));
+    </script>
+</body>
 <body class="flex flex-col min-h-screen">
 
     <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
