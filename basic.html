@@ -279,6 +279,7 @@
                     <button id="action-btn-C2_L1" class="action-btn bg-gray-400 text-white" disabled>載入中...</button>
                 </div>
             </div>
+
             <div class="lesson-card" id="lesson-C2_L9" data-course-id="3dsinq2j" data-course-name="OTA 無線更新架構與實務" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODM2Nzk2NTc4MDMw?cjc=3dsinq2j">
                 <div class="lesson-header"><h2>第 2 課：OTA 無線更新架構與實務 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
                 <div class="lesson-body"><div class="lesson-icon" title="Update Icon">⬆️</div><span class="phase-tag self-start">V. 韌體架構與維護</span><div class="core-content"><strong>核心內容：</strong><ul><li>雙分區架構：Launcher App 與 User App。</li><li>Launcher App：實作 Launcher 邏輯。</li></ul></div><button id="action-btn-C2_L9" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
@@ -431,62 +432,70 @@
             container.innerHTML = ''; // 清空內容 (重要！這樣聲音才會停)
             container.style.display = 'none';
         }
-/*        
-         function playFullScreenVideo(videoId) {
-            const container = document.getElementById('video-overlay');
-            
-            // 【關鍵修正 1】先讓容器顯示出來 (Display: block)
-            // 如果它是 hidden，iframe 無法正確渲染，就會出現黑屏
-            container.style.display = 'block';
 
-            // 寫入 iframe
-            container.innerHTML = `
-                <iframe 
-                    id="yt-player-frame"
-                    src="https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1" 
-                    title="YouTube video player" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                    allowfullscreen>
-                </iframe>
-            `;
-            
-            const iframe = document.getElementById('yt-player-frame');
+        function renderLessons(lessons) {
+            const container = document.getElementById('lesson-container'); // 假設有一個容器
+    
+            const html = lessons.map(lesson => {
+                // 1. 處理核心內容列表 (li)
+                const contentListHtml = lesson.coreContent
+                    .map(item => `<li>${item}</li>`)
+                    .join('');
 
-            // 請求全螢幕 (針對 iframe 元素)
-            if (iframe.requestFullscreen) {
-                iframe.requestFullscreen();
-            } else if (iframe.webkitRequestFullscreen) { 
-                iframe.webkitRequestFullscreen();
-            } else if (iframe.msRequestFullscreen) { 
-                iframe.msRequestFullscreen();
-            }
+                // 2. 判斷是否有影片 ID，有的話顯示預覽按鈕，沒有則不顯示
+                const videoButtonHtml = lesson.videoId ? `
+                    <button onclick="playFullScreenVideo('${lesson.videoId}')" 
+                        class="flex-1 py-2 px-3 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+                        課程預覽
+                    </button>` : '';
 
-            // 綁定退出監聽
-            document.addEventListener('fullscreenchange', exitHandler);
-            document.addEventListener('webkitfullscreenchange', exitHandler); // Chrome, Safari, Opera
-            document.addEventListener('mozfullscreenchange', exitHandler);    // Firefox
-            document.addEventListener('MSFullscreenChange', exitHandler);     // IE/Edge
-        
-            function exitHandler() {
-                // 檢查是否沒有全螢幕元素了 (代表使用者按了 Esc)
-                if (!document.fullscreenElement && 
-                    !document.webkitIsFullScreen && 
-                    !document.mozFullScreen && 
-                    !document.msFullscreenElement) {
+                // 3. 調整按鈕寬度樣式 (如果沒有影片按鈕，載入按鈕應該要是 w-full，否則可以是 flex-1)
+                const loadButtonClass = lesson.videoId ? 'flex-1' : 'w-full';
+
+                return `
+                    <div class="lesson-card w-full max-w-md border border-gray-200 rounded-lg shadow-lg bg-white p-5 mb-6" 
+                         id="${lesson.id}" 
+                         data-course-id="${lesson.courseId}" 
+                         data-course-name="${lesson.title}" 
+                         data-course-price="${lesson.price}" 
+                         data-classroom-url="${lesson.classroomUrl}">
+                
+                        <div class="lesson-header mb-4 border-b pb-3">
+                            <h2 class="text-xl font-bold text-gray-800 flex justify-between items-start gap-2">
+                                <span>${lesson.lessonLabel}：${lesson.title}</span>
+                                <span class="shrink-0 text-sm font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">(${lesson.duration})</span>
+                            </h2>
+                        </div>
+
+                        <div class="lesson-body space-y-4">
+                            <div class="flex items-center gap-3"> 
+                                <div class="lesson-icon text-4xl bg-blue-50 p-2 rounded-lg">${lesson.icon}</div>                        
+                                <span class="phase-tag bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-1 rounded">
+                                    ${lesson.tagText}
+                                </span>
+                            </div>
+
+                            <div class="core-content text-sm text-gray-600">
+                                <strong class="text-gray-900 block mb-1">核心內容：</strong>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    ${contentListHtml}
+                                </ul>
+                            </div>
                     
-                    // 【關鍵修正 2】清理工作
-                    container.innerHTML = '';        // 清空 iframe 以停止聲音
-                    container.style.display = 'none'; // 再次隱藏容器
-                    
-                    // 移除監聽器，保持乾淨
-                    document.removeEventListener('fullscreenchange', exitHandler);
-                    document.removeEventListener('webkitfullscreenchange', exitHandler);
-                    document.removeEventListener('mozfullscreenchange', exitHandler);
-                    document.removeEventListener('MSFullscreenChange', exitHandler);
-                }
-            }
+                            <div class="flex gap-2 mt-4">
+                                ${videoButtonHtml}
+                                <button id="action-btn-${lesson.id}" class="${loadButtonClass} py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>
+                                    載入中...
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
         }
-*/            
     </script>
 
     <script type="module">
