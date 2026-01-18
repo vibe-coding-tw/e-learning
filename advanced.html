@@ -8,552 +8,224 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     
     <style>
-        /* 基礎樣式 (使用 Tailwind 的 reset) */
-        body { 
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #f7fafc; /* 與主頁一致的淺灰 */
-            color: #333; 
-        }
-        
-        /* 下拉選單樣式 */
-        .dropdown:hover .dropdown-menu {
-            display: block;
-        }
+        /* 基礎樣式 */
+        body { font-family: 'Inter', sans-serif; background-color: #f7fafc; color: #333; }
+        .page-header h1 { color: #991b1b; text-align: center; margin-bottom: 10px; }
+        /* 標題底線改為紅色 */
+        .section-title-underline { height: 4px; width: 80px; background-color: #dc3545; margin: 0 auto 2rem; border-radius: 2px; }
 
-        /* 課程網格與卡片 */
-        .lesson-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-            gap: 30px; 
-            margin-top: 2rem;
-        }
+        /* 卡片樣式 */
         .lesson-card { 
-            background-color: #fff; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            background-color: #fff; border-radius: 12px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
             transition: transform 0.3s ease, box-shadow 0.3s ease; 
-            height: 100%; 
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            border-top: 4px solid #dc3545; /* 進階課程維持紅色調 */
+            height: 100%; display: flex; flex-direction: column; overflow: hidden;
+            /* 頂部邊框改為紅色 */
+            border-top: 4px solid #dc3545; 
         }
-        .lesson-card:hover { 
-            transform: translateY(-5px); 
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-        .lesson-header { 
-            background-color: #fff0f0; 
-            padding: 15px 20px; 
-            border-bottom: 1px solid #e5e7eb; 
-        }
-        .lesson-header h2 { 
-            margin: 0; 
-            font-size: 1.25em; 
-            color: #991b1b; /* 深紅色標題 */
-            font-weight: 700;
-        }
-        .lesson-body { 
-            padding: 20px; 
-            flex-grow: 1; 
-            display: flex; 
-            flex-direction: column; 
-        }
-        .lesson-icon { 
-            width: 50px; 
-            height: 50px; 
-            background-color: #dc3545; 
-            color: #fff; 
-            border-radius: 50%; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            font-size: 2em; 
-            margin-bottom: 15px; 
-        }
-        .phase-tag { 
-            display: inline-block; 
-            background-color: #64748b; 
-            color: #fff; 
-            padding: 5px 10px; 
-            border-radius: 5px; 
-            font-size: 0.8em; 
-            margin-bottom: 10px; 
-        }
-        .core-content { 
-            margin-top: 15px; 
-            font-size: 0.9em; 
-            color: #4b5563; 
-            flex-grow: 1;
-        }
-        .core-content ul { 
-            list-style: disc; 
-            padding-left: 20px; 
-            margin: 5px 0 0 0; 
-        }
-        .duration { 
-            font-style: italic; 
-            color: #6b7280; 
-            margin-top: 5px; 
-            font-size: 0.9em; 
-        }
+        .lesson-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
         
-        /* 動態按鈕樣式 */
+        /* 卡片標題背景改為淺紅 */
+        .lesson-header { background-color: #fff0f0; padding: 15px 20px; border-bottom: 1px solid #e5e7eb; }
+        /* 卡片標題文字改為深紅 */
+        .lesson-header h2 { margin: 0; font-size: 1.25em; color: #991b1b; font-weight: 700; }
+        
+        .lesson-body { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
+        
+        /* Icon 背景改為紅色 */
+        .lesson-icon { width: 50px; height: 50px; background-color: #dc3545; color: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2em; margin-bottom: 15px; }
+
+        /* 移除強制寬度，交給 Tailwind 控制 */
         .action-btn { 
-            margin-top: 20px; 
-            width: 100%; 
             padding: 10px; 
             border-radius: 6px; 
             font-weight: 600; 
             transition: background-color 0.2s;
             cursor: pointer;
         }
+
+        /* 播放器與其他樣式 */
+        #video-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background-color: black; }
+        #video-overlay iframe { width: 100%; height: 100%; border: none; }
+        .close-video-btn { position: absolute; top: 20px; right: 20px; z-index: 10000; background-color: rgba(0,0,0,0.6); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 50px; padding: 8px 16px; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 5px; backdrop-filter: blur(4px); }
         
-        /* 頁面標題樣式 */
-        .page-header h1 { 
-            color: #dc3545; 
-            text-align: center; 
-            margin-bottom: 10px; 
-        }
-        .section-title-underline {
-            height: 4px;
-            width: 80px;
-            background-color: #dc3545; 
-            margin: 0 auto 2rem;
-            border-radius: 2px;
+        /* 下拉選單 */
+        .dropdown:hover .dropdown-menu { display: block; }
+
+        @media (max-width: 768px) {
+            .close-video-btn { top: 15px; right: 15px; padding: 10px 20px; font-size: 18px; }
         }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
 
+<body class="flex flex-col min-h-screen">
     <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center py-4">
                 <a href="index.html" class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
                     <span>🚀</span> Vibe Coding
                 </a>
-
                 <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
-                    <div class="relative dropdown group">
-                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            課程連結 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="prepare.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">課前準備</a>
-                            <a href="started.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">入門課程</a>
-                            <a href="basic.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">基礎實作</a>
-                            <a href="advanced.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">進階應用</a>
-                        </div>
-                    </div>
-
-                    <div class="relative dropdown group">
-                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            組態設定 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="wifi-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">WiFi 設定</a>
-                            <a href="motor-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">馬達設定</a>
-                        </div>
-                    </div>
-
-                    <a href="about.html" class="hover:text-cyan-600 transition">關於我們</a>
+                    <a href="started.html" class="hover:text-cyan-600 transition">入門課程</a>
+                    <a href="basic.html" class="hover:text-cyan-600 transition">基礎實作</a>
+                    <a href="advanced.html" class="text-cyan-600 font-bold transition">進階應用</a>
+                    <a href="cart.html" class="hover:text-cyan-600 transition">購物車</a>
                 </div>
-
                 <div class="flex items-center space-x-4">
-                    <a href="cart.html" class="text-gray-600 hover:text-cyan-600 transition duration-150 relative" title="前往購物車">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
-                        </svg>
-                    </a>
-                    
                     <div id="auth-status" class="text-sm flex items-center">
                         <span id="user-display" class="text-gray-600 hidden md:inline mr-2">訪客</span>
                         <button id="login-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">登入</button>
                     </div>
-
-                    <div class="md:hidden ml-2">
-                        <button id="mobile-menu-btn" class="text-gray-600 focus:outline-none p-2 border rounded hover:bg-gray-100">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-100 mt-2">
-                <div class="flex flex-col space-y-3 pt-4 font-medium text-gray-600">
-                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
-                        <p class="text-xs text-gray-400 mb-1 uppercase">課程連結</p>
-                        <a href="prepare.html" class="block py-1 hover:text-cyan-600">課前準備</a>
-                        <a href="started.html" class="block py-1 hover:text-cyan-600">入門課程</a>
-                        <a href="basic.html" class="block py-1 hover:text-cyan-600">基礎實作</a>
-                        <a href="advanced.html" class="block py-1 hover:text-cyan-600">進階應用</a>
-                    </div>
-
-                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
-                        <p class="text-xs text-gray-400 mb-1 uppercase">組態設定</p>
-                        <a href="wifi-config.html" class="block py-1 hover:text-cyan-600">WiFi 設定</a>
-                        <a href="motor-config.html" class="block py-1 hover:text-cyan-600">馬達設定</a>
-                    </div>
-
-                    <a href="about.html" class="hover:text-cyan-600 pl-2">關於我們</a>
                 </div>
             </div>
         </div>
     </nav>
 
     <div class="container mx-auto px-4 py-8 flex-grow">
-        
         <div class="page-header text-center mb-10">
             <h1 class="text-3xl font-bold text-gray-800">👁️ 進階課程：影像處理、辨識與 AI 應用</h1>
             <div class="section-title-underline"></div>
         </div>
 
-        <div class="lesson-grid">
-            
-            <div class="lesson-card" 
-                 id="lesson-C3_L1" 
-                 data-course-id="w4lrkqmk" 
-                 data-course-name="Camera 模組與 MJPEG 串流原理" 
-                 data-course-price="1800"
-                 data-classroom-url="https://classroom.google.com/c/ODM2Nzk3OTM1MjQz?cjc=w4lrkqmk">
-                <div class="lesson-header">
-                    <h2>第 1 課：S3-CAM 模組與 MJPEG 串流原理 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="Camera Icon">📷</div>
-                    <span class="phase-tag self-start">I. 視覺影像串流</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>S3-CAM 硬體規格：鏡頭、感光元件與連接埠介紹。</li>
-                            <li>MJPEG 串流：講解影像壓縮與連續幀傳輸原理。</li>
-                            <li>實作：建立 ESP32 CAM 的 Web Server，提供 `/stream` 影像串流接口。</li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C3_L1" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
+        <div id="lesson-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
             </div>
 
-            <div class="lesson-card" 
-                 id="lesson-C3_L2" 
-                 data-course-id="gsxqu555" 
-                 data-course-name="Web App FPV 影像接收與呈現" 
-                 data-course-price="1800"
-                 data-classroom-url="https://classroom.google.com/c/ODM2Nzk1MDQ2OTE1?cjc=gsxqu555">
-                <div class="lesson-header">
-                    <h2>第 2 課：Web App FPV 影像接收與呈現 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="Video Icon">📹</div>
-                    <span class="phase-tag self-start">I. 視覺影像串流</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>HTML 影像標籤：學習如何在 Web 界面中嵌入即時影像源。</li>
-                            <li>低延遲優化：調整 S3-CAM 韌體的解析度與幀率，優化 FPV 體驗。</li>
-                            <li>實作：在 Web App 界面上，顯示 S3-CAM 傳來的即時影像。</li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C3_L2" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
-            </div>
-
-            <div class="lesson-card" 
-                 id="lesson-C3_L3" 
-                 data-course-id="6vkgyarq" 
-                 data-course-name="數據雙向回傳：BLE Notify 與 JSON 處理" 
-                 data-course-price="1800"
-                 data-classroom-url="https://classroom.google.com/c/ODM2Nzk4MjA5Mjg5?cjc=6vkgyarq">
-                <div class="lesson-header">
-                    <h2>第 3 課：數據雙向回傳：BLE Notify 與 JSON 處理 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="Data Icon">📊</div>
-                    <span class="phase-tag self-start">II. 雙向數據通訊</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>BLE Notify：理解 S3 如何主動回傳數據給 App。</li>
-                            <li>JSON 格式：學習 S3 回傳的電量、AI 結果等 JSON 格式。</li>
-                            <li>實作：Web App 接收 JSON 字串並解析，顯示在界面上（如電量指示）。</li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C3_L3" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
-            </div>
-
-            <div class="lesson-card" 
-                 id="lesson-C3_L4" 
-                 data-course-id="744jkruq" 
-                 data-course-name="外部感測器整合與數據融合回傳" 
-                 data-course-price="1800"
-                 data-classroom-url="https://classroom.google.com/c/ODM2Nzk4MjI4Njc0?cjc=744jkruq">
-                <div class="lesson-header">
-                    <h2>第 4 課：外部感測器整合與數據融合回傳 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="Sensor Icon">🔊</div>
-                    <span class="phase-tag self-start">II. 雙向數據通訊</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>感測器介紹：整合超音波 (距離) 或紅外線 (循線) 感測器。</li>
-                            <li>數據融合：將感測器數據編碼到 S3 的 JSON 回傳包中。</li>
-                            <li>實作：在 App 上實時顯示與障礙物的距離，為自動控制做準備。</li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C3_L4" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
-            </div>
-
-            <div class="lesson-card" 
-                 id="lesson-C3_L5" 
-                 data-course-id="744owic6" 
-                 data-course-name="邊緣運算：MicroPython/TinyML 基礎" 
-                 data-course-price="1800"
-                 data-classroom-url="https://classroom.google.com/c/ODM2Nzk4Njg0ODc0?cjc=744owic6">
-                <div class="lesson-header">
-                    <h2>第 5 課：邊緣運算：MicroPython/TinyML 基礎 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="AI Icon">🧠</div>
-                    <span class="phase-tag self-start">III. AI 視覺與應用</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>TinyML 概念：在 S3 上運行輕量級機器學習模型（如分類、目標偵測）。</li>
-                            <li>S3-CAM 的 DSP/NN 加速單元應用：簡介如何利用硬件加速進行影像預處理。</li>
-                            <li>API 實作：建立 API 讓 App 可以開啟/關閉特定的 AI 模式 (e.g., AI,START,Detection)。
-                            </li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C3_L5" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
-            </div>
-
-            <div class="lesson-card" 
-                 id="lesson-C3_L6" 
-                 data-course-id="l43mutzi" 
-                 data-course-name="基於視覺的循線與顏色追蹤" 
-                 data-course-price="1800"
-                 data-classroom-url="https://classroom.google.com/c/ODM2Nzk4OTYwOTA4?cjc=l43mutzi">
-                <div class="lesson-header">
-                    <h2>第 6 課：基於視覺的循線與顏色追蹤 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="Vision Icon">⚫</div>
-                    <span class="phase-tag self-start">III. AI 視覺與應用</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>影像處理基礎：在 S3 韌體中實現灰階轉換、二值化、邊緣偵測。</li>
-                            <li>循線演算法：計算影像中的線條中心點，並轉換為馬達轉向指令。</li>
-                            <li>實作：完成基於 S3-CAM 視覺的自動循線功能。</li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C3_L6" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
-            </div>
-
-            <div class="lesson-card" 
-                 id="lesson-C3_L7" 
-                 data-course-id="dd4vhggm" 
-                 data-course-name="數據儀表板 (Dashboard) 設計與動態更新" 
-                 data-course-price="1800"
-                 data-classroom-url="https://classroom.google.com/c/ODM2Nzk2MzIwNTU3?cjc=dd4vhggm">
-                <div class="lesson-header">
-                    <h2>第 7 課：數據儀表板 (Dashboard) 設計與動態更新 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="Dashboard Icon">📈</div>
-                    <span class="phase-tag self-start">IV. 數據應用與創新</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>WebSocket 簡介：學習用於即時數據傳輸的 WebSocket 協定。</li>
-                            <li>圖表函式庫：應用 Chart.js 或類似函式庫，展示速度、電量歷史曲線。</li>
-                            <li>實作：建立一個 App 數據儀表板，即時接收並視覺化 S3 回傳的數據。</li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C3_L7" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
-            </div>
-
-            <div class="lesson-card" 
-                 id="lesson-C3_L8" 
-                 data-course-id="tlngmbhv" 
-                 data-course-name="目標物體識別與追蹤 (Object Tracking) 邏輯" 
-                 data-course-price="1800"
-                 data-classroom-url="https://classroom.google.com/c/ODM2ODAwNzE4NzY4?cjc=tlngmbhv">
-                <div class="lesson-header">
-                    <h2>第 8 課：目標物體識別與追蹤 (Object Tracking) 邏輯 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="Target Icon">🎯</div>
-                    <span class="phase-tag self-start">IV. 數據應用與創新</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>目標檢測模型應用：介紹常見的邊緣檢測模型（如 YOLO-tiny）。</li>
-                            <li>追蹤算法：學習如何根據目標物的影像座標，計算並輸出追蹤運動指令。</li>
-                            <li>實作：在 S3 上運行一個簡單的物體識別模型，並追蹤一個指定顏色的目標物。</li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C3_L8" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
-            </div>
-
-            <div class="lesson-card" 
-                 id="lesson-C3_L9" 
-                 data-course-id="ncq3xrvj" 
-                 data-course-name="語音/手勢識別介面 (選修擴展)" 
-                 data-course-price="1800"
-                 data-classroom-url="https://classroom.google.com/c/ODM2ODAwNDg4NzMz?cjc=ncq3xrvj">
-                <div class="lesson-header">
-                    <h2>第 9 課：語音/手勢識別介面 (選修擴展) <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="Voice Icon">🎤</div>
-                    <span class="phase-tag self-start">V. 綜合應用與畢業專題</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>Web Speech API：在 Web App 中啟用語音輸入功能。</li>
-                            <li>語音指令解析：將語音轉換為文字，並解析成控制指令。</li>
-                            <li>實作：透過語音說出「Go Forward」，實現車輛前進。</li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C3_L9" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
-            </div>
-
-            <div class="lesson-card" id="lesson-C2_L4" data-course-id="j3mwykug" data-course-name="差速驅動原理與運動 API 實現" data-course-price="1800" data-classroom-url="https://classroom.google.com/c/ODM2NzkwOTE2MjUw?cjc=j3mwykug">
-                <div class="lesson-header"><h2>第 10 課：差速驅動原理與運動 API 實現 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="API Icon">🚗</div><span class="phase-tag self-start">II. 核心馬達控制</span><div class="core-content"><strong>核心內容：</strong><ul><li>差速驅動：車輛轉向原理。</li><li>基礎 API 設計：實現運動指令解析。</li></ul></div><button id="action-btn-C2_L4" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
-            </div>
-            <div class="lesson-card" id="lesson-C2_L6" data-course-id="ymharko2" data-course-name="光電編碼器與速度即時回饋" data-course-price="1800" data-classroom-url="https://classroom.google.com/c/ODM2Nzk2OTU0OTk2?cjc=ymharko2">
-                <div class="lesson-header"><h2>第 11 課：光電編碼器與速度即時回饋 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Feedback Icon">🔄</div><span class="phase-tag self-start">III. 通訊與回饋</span><div class="core-content"><strong>核心內容：</strong><ul><li>編碼器原理：輸出脈衝訊號。</li><li>中斷 (Interrupts)：精確計數脈衝。</li></ul></div><button id="action-btn-C2_L6" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
-            </div>
-            <div class="lesson-card" id="lesson-C2_L7" data-course-id="obozjtoq" data-course-name="PID 閉迴路控制基礎 (速度穩定)" data-course-price="1800" data-classroom-url="https://classroom.google.com/c/ODM2Nzk2MTY5Njg5?cjc=obozjtoq">
-                <div class="lesson-header"><h2>第 12 課：PID 閉迴路控制基礎 (速度穩定) <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="PID Icon">🔬</div><span class="phase-tag self-start">IV. 進階控制與穩定性</span><div class="core-content"><strong>核心內容：</strong><ul><li>閉迴路概念。</li><li>PID 理論：P、I、D 三項的意義。</li></ul></div><button id="action-btn-C2_L7" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
-            </div>
-            <div class="lesson-card" id="lesson-C2_L10" data-course-id="7uz37pj6" data-course-name="專案整合、除錯與優化" data-course-price="1800" data-classroom-url="https://classroom.google.com/c/ODM2Nzk3MTY1NTgw?cjc=7uz37pj6"> 
-                <div class="lesson-header"><h2>第 13 課：專案整合、除錯與優化 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Integrate Icon">🌟</div><span class="phase-tag self-start">V. 韌體架構與維護</span><div class="core-content"><strong>核心內容：</strong><ul><li>雙模式指令整合。</li><li>錯誤處理機制。</li></ul></div><button id="action-btn-C2_L10" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
-            </div>
-            <div class="lesson-card" 
-                 id="lesson-C1_L10" 
-                 data-course-id="idzxwgbc" 
-                 data-course-name="專案優化、錯誤處理與最終展示" 
-                 data-course-price="1800"
-                 data-classroom-url="https://classroom.google.com/c/ODIxNzY4MzIyNjgy?cjc=idzxwgbc">
-                <div class="lesson-header">
-                    <h2>第 14 課：專案優化、錯誤處理與最終展示 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="Final Project Icon">✅</div>
-                    <span class="phase-tag self-start">V. 綜合應用與除錯</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>錯誤處理：增加連線錯誤、Web BLE 不可用、`fetch` 失敗等錯誤提示。</li>
-                            <li>界面優化：最終界面美化、搖桿參數微調、響應式優化。</li>
-                            <li>專案總結：畢業作品展示與分享。</li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C1_L10" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
-            </div>
-            
-            <div class="lesson-card" 
-                 id="lesson-C3_L10" 
-                 data-course-id="kjcimtkm" 
-                 data-course-name="畢業專題：全棧無人車系統展示" 
-                 data-course-price="1800"
-                 data-classroom-url="https://classroom.google.com/c/ODM2Nzk4NjUwMjMx?cjc=kjcimtkm">
-                <div class="lesson-header">
-                    <h2>第 15 課：畢業專題：全棧無人車系統展示 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2>
-                </div>
-                <div class="lesson-body">
-                    <div class="lesson-icon" title="Project Icon">🏆</div>
-                    <span class="phase-tag self-start">V. 綜合應用與畢業專題</span>
-                    <div class="core-content">
-                        <strong>核心內容：</strong>
-                        <ul>
-                            <li>系統整合：將前端 App、BLE/Wi-Fi 通訊與 S3-CAM 視覺 AI 完整整合。</li>
-                            <li>專題設計：選擇一個進階功能（如自動泊車、人臉跟隨）進行實作與測試。</li>
-                            <li>最終展示：成果發表、代碼審查與系統優化。</li>
-                        </ul>
-                    </div>
-                    <button id="action-btn-C3_L10" class="action-btn bg-gray-400 text-white" disabled>
-                        載入中...
-                    </button>
-                </div>
-            </div>
-
-        </div>
+        <div id="video-overlay"></div>
     </div>
 
     <footer class="bg-gray-800 py-8 border-t border-gray-700 mt-10">
-        <div class="container mx-auto px-4 text-center">
-            <div class="flex justify-center space-x-6 mb-6 text-gray-400">
-                <a href="prepare.html" class="hover:text-white">課前準備</a>
-                <a href="started.html" class="hover:text-white">入門課程</a>
-                <a href="basic.html" class="hover:text-white">基礎實作</a>
-                <a href="advanced.html" class="hover:text-white">進階應用</a>
-                <a href="about.html" class="hover:text-white">關於我們</a>
-            </div>
-            
-            <div class="border-t border-gray-700 pt-6">
-                <p class="text-gray-500 text-sm mb-2">&copy; 2025 Vibe Coding. All rights reserved.</p>
-                <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6 text-sm text-gray-400">
-                    <span>營業人名稱：文經出版社有限公司</span>
-                    <span class="hidden md:inline">|</span>
-                    <span>統一編號：12376121</span>
-                    <span class="hidden md:inline">|</span>
-                    <span>課程合作洽談：info@vibe-coding.tw</span>
-                </div>
-            </div>
+        <div class="container mx-auto px-4 text-center text-gray-400">
+            <p>&copy; 2025 Vibe Coding. All rights reserved.</p>
         </div>
     </footer>
 
     <script>
-        const btn = document.getElementById('mobile-menu-btn');
-        const menu = document.getElementById('mobile-menu');
-        btn.addEventListener('click', () => {
-            menu.classList.toggle('hidden');
-        });
+        // 讀取 JSON 資料
+        fetch('./lessons.json')
+            .then(response => response.json())
+            .then(data => {
+                // ★ 這裡指定讀取 'advanced' 分類
+                renderLessons(data, 'advanced');
+            })
+            .catch(error => console.error('資料讀取失敗:', error));
+
+        function renderLessons(lessons, filterCategory) {
+            const container = document.getElementById('lesson-container');
+            
+            // 過濾課程
+            const targetLessons = filterCategory === 'all' 
+                ? lessons 
+                : lessons.filter(item => item.category === filterCategory);
+
+            if (targetLessons.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-500 w-full col-span-3">目前此分類尚無課程。</p>`;
+                return;
+            }
+
+            const html = targetLessons.map(lesson => {
+                const contentListHtml = lesson.coreContent.map(item => `<li>${item}</li>`).join('');
+                
+                const priceDisplay = parseInt(lesson.price) === 0 
+                    ? '免費' 
+                    : `NT$ ${parseInt(lesson.price).toLocaleString()}`;
+
+                const videoButtonHtml = lesson.videoId ? `
+                    <button onclick="playFullScreenVideo('${lesson.videoId}')" 
+                        class="flex-1 py-2 px-3 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+                        課程預覽
+                    </button>` : '';
+
+                const loadButtonClass = lesson.videoId ? 'flex-1' : 'w-full';
+
+                return `
+                    <div class="lesson-card"
+                         id="${lesson.id}" 
+                         data-course-id="${lesson.courseId}" 
+                         data-course-name="${lesson.title}" 
+                         data-course-price="${lesson.price}" 
+                         data-classroom-url="${lesson.classroomUrl}">
+                
+                        <div class="lesson-header mb-4 border-b pb-3">
+                            <h2 class="text-xl font-bold text-gray-800 flex justify-between items-start gap-2">
+                                <span>${lesson.lessonLabel}：${lesson.title}</span>
+                                <span class="shrink-0 text-sm font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">(${lesson.duration})</span>
+                            </h2>
+                        </div>
+
+                        <div class="lesson-body flex flex-col h-full">
+                            <div class="flex items-center gap-3 mb-4"> 
+                                <div class="lesson-icon text-4xl bg-blue-50 p-2 rounded-lg">${lesson.icon}</div>                        
+                                <span class="phase-tag bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-1 rounded">
+                                    ${lesson.tagText}
+                                </span>
+                            </div>
+
+                            <div class="core-content text-sm text-gray-600 flex-grow">
+                                <strong class="text-gray-900 block mb-1">核心內容：</strong>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    ${contentListHtml}
+                                </ul>
+                            </div>
+                            
+                            <div class="mt-4 pt-2 border-t border-gray-100 text-right">
+                                <span class="text-2xl font-bold text-indigo-600 tracking-tight">${priceDisplay}</span>
+                            </div>
+
+                            <div class="flex gap-2 mt-3">
+                                ${videoButtonHtml}
+                                <button class="action-btn ${loadButtonClass} py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>
+                                    載入中...
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+
+            if (typeof window.updateAuthUI === 'function') {
+                window.updateAuthUI();
+            }
+        }
+
+        // --- 影片播放器邏輯 ---
+        let isListenerAttached = false;
+        function playFullScreenVideo(videoId) {
+            const container = document.getElementById('video-overlay');
+            container.style.display = 'block';
+            container.innerHTML = `
+                <button class="close-video-btn" onclick="forceCloseVideo()">✕ 關閉影片</button>
+                <iframe id="yt-player-frame" src="https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1" allowfullscreen></iframe>
+            `;
+            const iframe = document.getElementById('yt-player-frame');
+            if (iframe.requestFullscreen) iframe.requestFullscreen();
+            
+            if (!isListenerAttached) {
+                document.addEventListener('fullscreenchange', checkFullscreenStatus);
+                isListenerAttached = true;
+            }
+        }
+        function forceCloseVideo() {
+             if (document.exitFullscreen) document.exitFullscreen().catch(() => cleanupVideo());
+             else cleanupVideo();
+        }
+        function checkFullscreenStatus() {
+            if (!document.fullscreenElement) cleanupVideo();
+        }
+        function cleanupVideo() {
+            const container = document.getElementById('video-overlay');
+            container.innerHTML = '';
+            container.style.display = 'none';
+        }
     </script>
 
     <script type="module">
-        // 1. 匯入必要的 Firebase 函式
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
-        // 2. 您的 Firebase 配置 
         const firebaseConfig = {
           apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
           authDomain: "e-learning-942f7.firebaseapp.com",
@@ -563,238 +235,113 @@
           appId: "1:878397058574:web:28aaa07a291ee3baab165f"
         };
 
-        // 3. 初始化 Firebase 服務
-        const app = initializeApp(firebaseConfig);
+        const app = initializeApp(firebaseConfig);        
         const auth = getAuth(app);           
         const functions = getFunctions(app, 'asia-east1');         
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
         const CART_URL = 'cart.html'; 
         const AUTH_URL = 'auth.html'; 
 
-        // ===============================================
-        // A. 購物車核心邏輯 (僅處理存儲，無提示/跳轉)
-        // ===============================================
         function addToCart(productId, productName, productPrice) {
             let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
-            const priceNum = parseInt(productPrice, 10);
-            
-            // 檢查商品是否已存在
-            if (cart[productId]) {
-                return { success: false, message: `「${productName}」已在購物車中！` };
-            }
-            
-            // 將商品加入購物車
-            cart[productId] = { 
-                name: productName, 
-                price: priceNum, 
-                quantity: 1 
-            };
+            if (cart[productId]) return { success: false };
+            cart[productId] = { name: productName, price: parseInt(productPrice, 10), quantity: 1 };
             localStorage.setItem('vibeCodingCart', JSON.stringify(cart));
-            
-            return { success: true, message: `「${productName}」已成功加入購物車！` };
+            return { success: true };
         }
 
-
-        // ===============================================
-        // B. 購物車確認流程
-        // ===============================================
-        function handleAddToCartConfirmation(courseId, courseName, coursePrice) {
+        window.handleAddToCartConfirmation = function(courseId, courseName, coursePrice) {
             const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
-            
-            // 1. 預先檢查購物車，如果已存在，只彈出 alert 提醒
-            if (cart[courseId]) {
-                alert(`⚠️ 「${courseName}」已在購物車中！`);
-                return; // 結束函式，停留在原頁面
-            }
-            
-            // 2. 只有當商品不存在時，才執行 confirm 步驟
-            const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`;
-            
-            const isConfirmed = confirm(`您確定要將課程「${courseName}」加入購物車嗎？\n\n價格：${priceText}`);
-
-            if (isConfirmed) {
-                // 如果使用者按下「確定」
-                const result = addToCart(courseId, courseName, coursePrice);
-                alert(`🛒 「${courseName}」已加入購物車，請前往結帳頁面！`);
-                window.location.href = CART_URL; // 跳轉到購物車頁面
+            if (cart[courseId]) { alert(`⚠️ 「${courseName}」已在購物車中！`); return; }
+            if (confirm(`您確定要將課程「${courseName}」加入購物車嗎？`)) {
+                addToCart(courseId, courseName, coursePrice);
+                alert(`🛒 已加入購物車！`); 
+                window.location.href = CART_URL; 
             } 
         }
 
-        // ===============================================
-        // C. 登入/登出邏輯 (不變)
-        // ===============================================
-        async function handleLogin() {
-            const provider = new GoogleAuthProvider();
-            try {
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                console.error("登入失敗:", error);
-            }
-        }
+        window.handleLogin = async () => { await signInWithPopup(auth, new GoogleAuthProvider()); };
+        window.handleLogout = async () => { await signOut(auth); };
 
-        async function handleLogout() {
-            await signOut(auth);
-        }
-
-
-        // ===============================================
-        // D. 動態按鈕狀態更新核心邏輯
-        // ===============================================
-        
-        // 取得所有課程卡片
-        const lessonCards = document.querySelectorAll('.lesson-card');
-
-        /**
-         * 根據授權狀態更新單一課程卡片的按鈕
-         */
         function updateCardAction(cardElement, status) {
             const btn = cardElement.querySelector('.action-btn');
+            if (!btn) return; 
+
             const courseId = cardElement.dataset.courseId;
             const courseName = cardElement.dataset.courseName;
             const coursePrice = cardElement.dataset.coursePrice;
             const classroomUrl = cardElement.dataset.classroomUrl;
-            const isFreeCourse = parseInt(coursePrice, 10) === 0; // 判斷是否為免費課程
-            const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`; 
 
-            // 清除所有舊的事件監聽器
+            // 檢查旁邊是否有影片按鈕，以決定寬度
+            const parentFlex = btn.parentElement; 
+            const hasVideoButton = parentFlex.children.length > 1;
+            const widthClass = hasVideoButton ? 'flex-1' : 'w-full';
+
             btn.onclick = null; 
             btn.disabled = false;
 
             if (status === 'AUTHORIZED') {
-                // 狀態 1: 已授權 -> 進入課程
                 btn.textContent = '✅ 進入課程內容';
-                btn.className = 'action-btn bg-red-600 hover:bg-red-700 text-white'; // 進階課程使用紅色系
-                btn.onclick = () => {
-                    // 傳遞 courseId 和 coursePrice 給 auth.html 
-                    window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`;
-                };
-            } else if (status === 'UNAUTHORIZED') {
-                // 狀態 2: 已登入但未購買 (主要針對收費課程)
-                
-                if (isFreeCourse) {
-                    // 免費課程出現 UNAUTHORIZED 視為異常
-                    btn.textContent = '⛔ 授權錯誤 (請聯繫客服)';
-                    btn.className = 'action-btn bg-red-600 hover:bg-red-700 text-white';
-                    btn.onclick = () => window.location.reload(); 
-                } else {
-                    // 收費課程：引導加入購物車 (點擊後進入確認流程)
-                    btn.textContent = `🛒 加入購物車 (${priceText})`;
-                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
-                    btn.onclick = () => {
-                        handleAddToCartConfirmation(courseId, courseName, coursePrice); 
-                    };
-                }
-            } else if (status === 'NOT_LOGGED_IN') {
-                // 狀態 3: 未登入
-
-                if (isFreeCourse) {
-                    // 免費課程：引導登入
-                    btn.textContent = '👤 請先登入以進入課程 (免費)';
-                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
-                    btn.onclick = handleLogin;
-                } else {
-                    // 收費課程：引導加入購物車 (點擊後進入確認流程)
-                    btn.textContent = `🛒 加入購物車 (${priceText})`;
-                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
-                    btn.onclick = () => {
-                        handleAddToCartConfirmation(courseId, courseName, coursePrice); 
-                    };
-                }
+                // ★ 這裡改為紅色 (bg-red-600)
+                btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-red-600 hover:bg-red-700 text-white font-medium transition`;
+                btn.onclick = () => { window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`; };
+            } else if (status === 'NOT_LOGGED_IN' || status === 'UNAUTHORIZED' || status === 'ERROR') {
+                btn.textContent = `🛒 加入購物車`;
+                btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
+                btn.onclick = () => window.handleAddToCartConfirmation(courseId, courseName, coursePrice);
 
             } else if (status === 'LOADING') {
-                // 狀態 4: 載入中
-                btn.textContent = '權限檢查中...';
-                btn.className = 'action-btn bg-gray-400 text-white';
+                btn.textContent = '載入中...';
+                btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-gray-400 text-white font-medium cursor-not-allowed`;
                 btn.disabled = true;
-            } else if (status === 'ERROR') {
-                // 錯誤狀態 (CF 檢查失敗，收費課程導向 UNAUTHORIZED 流程)
-                
-                if (isFreeCourse) {
-                    // 免費課程：與 NOT_LOGGED_IN 邏輯相同，引導登入
-                    btn.textContent = '👤 請先登入以進入課程 (免費)';
-                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
-                    btn.onclick = handleLogin;
-                } else {
-                    // 收費課程：導向 UNAUTHORIZED (加入購物車確認)
-                    btn.textContent = `🛒 加入購物車 (${priceText})`;
-                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
-                    btn.onclick = () => {
-                        handleAddToCartConfirmation(courseId, courseName, coursePrice); 
-                    };
-                }
             }
         }
 
-        /**
-         * 檢查單一課程的授權狀態 (優化：免費課程跳過 Cloud Function)
-         */
         async function checkLessonAuthorization(cardElement, user) {
             updateCardAction(cardElement, 'LOADING');
-
             const courseId = cardElement.dataset.courseId;
             const classroomUrl = cardElement.dataset.classroomUrl;
-            const isFreeCourse = parseInt(cardElement.dataset.coursePrice, 10) === 0;
 
-            // 修正：免費課程且使用者已登入，直接視為 AUTHORIZED (跳過 CF)
-            if (isFreeCourse && user) {
-                updateCardAction(cardElement, 'AUTHORIZED');
-                return; 
-            }
-            
-            // 修正：如果未登入，不需要呼叫 CF
-            if (!user) {
-                updateCardAction(cardElement, 'NOT_LOGGED_IN');
-                return;
-            }
-
-            // --- 收費課程才會走到這裡 (呼叫 CF) ---
             try {
-                const result = await checkAuthFunction({ 
-                    courseId: courseId, 
-                    targetUrl: encodeURIComponent(classroomUrl) 
-                });
-
-                const status = result.data.status; 
-                
-                // 更新按鈕狀態
-                updateCardAction(cardElement, status);
-
+                const result = await checkAuthFunction({ courseId: courseId, targetUrl: encodeURIComponent(classroomUrl) });
+                updateCardAction(cardElement, result.data.status);
             } catch (error) {
-                console.error(`課程 ${courseId} 授權檢查失敗:`, error);
-                
-                // CF 呼叫失敗，收費課程導向 UNAUTHORIZED (加入購物車)
+                console.error(`授權檢查失敗:`, error);
                 updateCardAction(cardElement, 'UNAUTHORIZED');
             }
         }
 
-        // ----------------------------------------------------
-        // E. 總體授權流程控制器
-        // ----------------------------------------------------
+        window.updateAuthUI = function() {
+            const currentCards = document.querySelectorAll('.lesson-card'); 
+            const user = auth.currentUser;
+
+            currentCards.forEach(card => {
+                if (user) {
+                    checkLessonAuthorization(card, user);
+                } else {
+                    updateCardAction(card, 'NOT_LOGGED_IN');
+                }
+            });
+        }
+
         onAuthStateChanged(auth, (user) => {
             const userDisplay = document.getElementById('user-display');
             const loginBtn = document.getElementById('login-btn');
 
             if (user) {
-                // 1. 已登入：更新 UI，並檢查所有課程的授權狀態
-                userDisplay.textContent = `您好, ${user.displayName || user.email}`;
+                userDisplay.textContent = `您好, ${user.displayName || '使用者'}`;
+                userDisplay.classList.remove('hidden');
                 loginBtn.textContent = '登出';
-                loginBtn.onclick = handleLogout;
-                
-                lessonCards.forEach(card => {
-                    checkLessonAuthorization(card, user);
-                });
+                loginBtn.onclick = window.handleLogout;
             } else {
-                // 2. 未登入：更新 UI，將所有課程按鈕設定為 NOT_LOGGED_IN 狀態
-                userDisplay.textContent = '訪客模式';
+                userDisplay.textContent = '訪客';
+                userDisplay.classList.add('hidden');
                 loginBtn.textContent = '登入';
-                loginBtn.onclick = handleLogin;
-                
-                lessonCards.forEach(card => {
-                    updateCardAction(card, 'NOT_LOGGED_IN');
-                });
+                loginBtn.onclick = window.handleLogin;
             }
-        });
 
+            window.updateAuthUI();
+        });
     </script>
 </body>
 </html>
