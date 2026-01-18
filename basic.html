@@ -8,379 +8,93 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     
     <style>
-        /* 基礎樣式 (使用 Tailwind 的 reset) */
-        body { 
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #f7fafc; /* 與主頁一致的淺灰 */
-            color: #333; 
-        }
-        
-        /* 頁面標題樣式 (與 prepare.html 一致) */
-        .page-header h1 { 
-            color: #1e3a8a; 
-            text-align: center; 
-            margin-bottom: 10px; 
-        }
-        .section-title-underline {
-            height: 4px;
-            width: 80px;
-            background-color: #06b6d4; 
-            margin: 0 auto 2rem;
-            border-radius: 2px;
-        }
+        /* 基礎樣式 */
+        body { font-family: 'Inter', sans-serif; background-color: #f7fafc; color: #333; }
+        .page-header h1 { color: #1e3a8a; text-align: center; margin-bottom: 10px; }
+        .section-title-underline { height: 4px; width: 80px; background-color: #06b6d4; margin: 0 auto 2rem; border-radius: 2px; }
 
-        /* 課程網格與卡片 */
-        .lesson-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-            gap: 30px; 
-            margin-top: 2rem;
-        }
+        /* 卡片樣式 */
         .lesson-card { 
-            background-color: #fff; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            background-color: #fff; border-radius: 12px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
             transition: transform 0.3s ease, box-shadow 0.3s ease; 
-            height: 100%; 
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            border-top: 4px solid #28a745; /* 基礎課程維持綠色調 */
+            height: 100%; display: flex; flex-direction: column; overflow: hidden;
+            border-top: 4px solid #28a745; 
         }
-        .lesson-card:hover { 
-            transform: translateY(-5px); 
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-        .lesson-header { 
-            background-color: #e9fff0; 
-            padding: 15px 20px; 
-            border-bottom: 1px solid #e5e7eb; 
-        }
-        .lesson-header h2 { 
-            margin: 0; 
-            font-size: 1.25em; 
-            color: #166534; /* 深綠色標題 */
-            font-weight: 700;
-        }
-        .lesson-body { 
-            padding: 20px; 
-            flex-grow: 1; 
-            display: flex; 
-            flex-direction: column; 
-        }
-        .lesson-icon { 
-            width: 50px; 
-            height: 50px; 
-            background-color: #28a745; 
-            color: #fff; 
-            border-radius: 50%; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            font-size: 2em; 
-            margin-bottom: 15px; 
-        }
-        .phase-tag { 
-            display: inline-block; 
-            background-color: #64748b; 
-            color: #fff; 
-            padding: 5px 10px; 
-            border-radius: 5px; 
-            font-size: 0.8em; 
-            margin-bottom: 10px; 
-        }
-        .core-content { 
-            margin-top: 15px; 
-            font-size: 0.9em; 
-            color: #4b5563; 
-            flex-grow: 1;
-        }
-        .core-content ul { 
-            list-style: disc; 
-            padding-left: 20px; 
-            margin: 5px 0 0 0; 
-        }
-        .duration { 
-            font-style: italic; 
-            color: #6b7280; 
-            margin-top: 5px; 
-            font-size: 0.9em; 
-        }
+        .lesson-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .lesson-header { background-color: #e9fff0; padding: 15px 20px; border-bottom: 1px solid #e5e7eb; }
+        .lesson-header h2 { margin: 0; font-size: 1.25em; color: #166534; font-weight: 700; }
+        .lesson-body { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
         
-        /* 動態按鈕樣式 */
-        .action-btn { 
-            margin-top: 20px; 
-            width: 100%; 
-            padding: 10px; 
-            border-radius: 6px; 
-            font-weight: 600; 
-            transition: background-color 0.2s;
-            cursor: pointer;
-        }
-
-        /* 下拉選單樣式 */
-        .dropdown:hover .dropdown-menu {
-            display: block;
-        }
-
-        /* 隱藏播放器容器，直到被觸發 */
-        /*
-        #video-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 0; height: 0;
-            z-index: -1;
-        }
-        */
-        #video-overlay {
-            display: none; 
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 9999;
-            background-color: black; 
-        }
+        /* 播放器與其他樣式 */
+        #video-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background-color: black; }
+        #video-overlay iframe { width: 100%; height: 100%; border: none; }
+        .close-video-btn { position: absolute; top: 20px; right: 20px; z-index: 10000; background-color: rgba(0,0,0,0.6); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 50px; padding: 8px 16px; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 5px; backdrop-filter: blur(4px); }
         
-        /* 確保 iframe 充滿容器 */
-        #video-overlay iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
+        /* 下拉選單 */
+        .dropdown:hover .dropdown-menu { display: block; }
 
-        /* 新增：自訂關閉按鈕樣式 */
-        .close-video-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 10000; /* 確保在 iframe 上方 */
-            background-color: rgba(0, 0, 0, 0.6); /* 半透明黑底 */
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50px;
-            padding: 8px 16px;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            backdrop-filter: blur(4px); /* 毛玻璃效果 */
-        }
-        
-        /* 手機版優化：讓按鈕更大，比較好按 */
         @media (max-width: 768px) {
-            .close-video-btn {
-                top: 15px;
-                right: 15px;
-                padding: 10px 20px; /* 加大觸控範圍 */
-                font-size: 18px;
-            }
+            .close-video-btn { top: 15px; right: 15px; padding: 10px 20px; font-size: 18px; }
         }
     </style>
 </head>
-<body>
 
-</body>
 <body class="flex flex-col min-h-screen">
-
     <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center py-4">
                 <a href="index.html" class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
                     <span>🚀</span> Vibe Coding
                 </a>
-
                 <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
-                    <div class="relative dropdown group">
-                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            課程連結 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="prepare.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">課前準備</a>
-                            <a href="started.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">入門課程</a>
-                            <a href="basic.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">基礎實作</a>
-                            <a href="advanced.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">進階應用</a>
-                        </div>
-                    </div>
-
-                    <div class="relative dropdown group">
-                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            組態設定 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="wifi-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">WiFi 設定</a>
-                            <a href="motor-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">馬達設定</a>
-                        </div>
-                    </div>
-
-                    <a href="about.html" class="hover:text-cyan-600 transition">關於我們</a>
+                    <a href="basic.html" class="hover:text-cyan-600 transition">基礎實作</a>
+                    <a href="cart.html" class="hover:text-cyan-600 transition">購物車</a>
                 </div>
-
                 <div class="flex items-center space-x-4">
-                    <a href="cart.html" class="text-gray-600 hover:text-cyan-600 transition duration-150 relative" title="前往購物車">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
-                        </svg>
-                    </a>
-                    
                     <div id="auth-status" class="text-sm flex items-center">
                         <span id="user-display" class="text-gray-600 hidden md:inline mr-2">訪客</span>
                         <button id="login-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">登入</button>
                     </div>
-
-                    <div class="md:hidden ml-2">
-                        <button id="mobile-menu-btn" class="text-gray-600 focus:outline-none p-2 border rounded hover:bg-gray-100">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-100 mt-2">
-                <div class="flex flex-col space-y-3 pt-4 font-medium text-gray-600">
-                    <a href="prepare.html" class="hover:text-cyan-600 pl-2">課前準備</a>
-                    <a href="started.html" class="hover:text-cyan-600 pl-2">入門課程</a>
-                    <a href="basic.html" class="text-cyan-600 font-bold pl-2">基礎實作</a>
-                    <a href="advanced.html" class="hover:text-cyan-600 pl-2">進階應用</a>
-                    
-                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
-                        <p class="text-xs text-gray-400 mb-1 uppercase">組態設定</p>
-                        <a href="wifi-config.html" class="block py-1 hover:text-cyan-600">WiFi 設定</a>
-                        <a href="motor-config.html" class="block py-1 hover:text-cyan-600">馬達設定</a>
-                    </div>
-
-                    <a href="about.html" class="hover:text-cyan-600 pl-2">關於我們</a>
                 </div>
             </div>
         </div>
     </nav>
 
     <div class="container mx-auto px-4 py-8 flex-grow">
-        
         <div class="page-header text-center mb-10">
             <h1 class="text-3xl font-bold text-gray-800">⚙️ 基礎課程：馬達控制、通訊與 OTA 實作</h1>
             <div class="section-title-underline"></div>
         </div>
 
-        <div id="lesson-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6"></div>
-        <script>
-            // 使用 fetch 去讀取旁邊的 lessons.json 檔案
-            fetch('./lessons.json')
-                .then(response => response.json()) // 把文字轉成 JSON 物件
-                .then(data => {
-                    // 資料讀取成功後，呼叫渲染函數
-                    renderLessons(data);
-                })
-                .catch(error => console.error('資料讀取失敗:', error));
-        </script>
+        <div id="lesson-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+            </div>
 
         <div id="video-overlay"></div>
-    
-        <div class="lesson-grid">
-
-            <div class="lesson-card" id="lesson-C2_L1" data-course-id="rs7hx3nf" data-course-name="開發環境設定與硬體導覽" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODM2Nzk0MzYzODQx?cjc=rs7hx3nf">
-                <div class="lesson-header"><h2>第 1 課：開發環境設定與硬體導覽 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
-                <div class="lesson-body">
-                    <div class="flex items-center gap-3"> 
-                        <div class="lesson-icon text-4xl bg-blue-50 p-2 rounded-lg">🖥️</div>                        
-                        <span class="phase-tag bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-1 rounded">
-                            在探討微控制器（Microcontroller Unit, MCU）如何感知世界之前，我們必須先從本體論的角度理解物理訊號的本質。我們所處的宇宙，在宏觀尺度下是連續的（Continuous）。
-                        </span>
-                    </div>
-                    <div class="core-content"><strong>核心內容：</strong><ul><li>軟體安裝：VS Code、PlatformIO IDE 安裝與設定。</li><li>硬體概觀：認識 ESP32、直流馬達、驅動模組（H 橋）及車體結構。</li></ul></div>
-                    <button onclick="playFullScreenVideo('FZdPlTtfniM')" 
-                        class="flex-1 py-2 px-3 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
-                        課程預覽
-                    </button>
-                    <button id="action-btn-C2_L1" class="action-btn bg-gray-400 text-white" disabled>載入中...</button>
-                </div>
-            </div>
-
-            <div class="lesson-card" id="lesson-C2_L9" data-course-id="3dsinq2j" data-course-name="OTA 無線更新架構與實務" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODM2Nzk2NTc4MDMw?cjc=3dsinq2j">
-                <div class="lesson-header"><h2>第 2 課：OTA 無線更新架構與實務 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Update Icon">⬆️</div><span class="phase-tag self-start">V. 韌體架構與維護</span><div class="core-content"><strong>核心內容：</strong><ul><li>雙分區架構：Launcher App 與 User App。</li><li>Launcher App：實作 Launcher 邏輯。</li></ul></div><button id="action-btn-C2_L9" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
-            </div>
-            <div class="lesson-card" id="lesson-C2_L2" data-course-id="pxyzdlw3" data-course-name="基礎語法與數位類比 I/O" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODM2Nzk0NjQxNTI5?cjc=pxyzdlw3">
-                <div class="lesson-header"><h2>第 3 課：C/C++ 基礎語法與數位類比 I/O <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Code Icon">💻</div><span class="phase-tag self-start">I. 準備與基礎 I/O</span><div class="core-content"><strong>核心內容：</strong><ul><li>Arduino 框架：`setup()` 與 `loop()` 函式。</li><li>數位 I/O：控制 LED 燈。</li></ul></div><button id="action-btn-C2_L2" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
-            </div>
-            <div class="lesson-card" id="lesson-C2_L3" data-course-id="oz66t3sj" data-course-name="PWM 原理與馬達速度控制" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODM2Nzk1MDIyMjY1?cjc=oz66t3sj">
-                <div class="lesson-header"><h2>第 4 課：PWM 原理與單馬達速度控制 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Motor Icon">🔋</div><span class="phase-tag self-start">II. 核心馬達控制</span><div class="core-content"><strong>核心內容：</strong><ul><li>H 橋驅動原理。</li><li>PWM (脈衝寬度調變)：LEDC 函式。</li></ul></div><button id="action-btn-C2_L3" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
-            </div>
-            <div class="lesson-card" id="lesson-C2_L5" data-course-id="r6muo2ss" data-course-name="藍牙低功耗伺服器 (BLE Server) 實作" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODE4Njg0OTQ0NjI0?cjc=r6muo2ss">
-                <div class="lesson-header"><h2>第 5 課：藍牙低功耗伺服器 (BLE Server) 實作 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="BLE Server Icon">📡</div><span class="phase-tag self-start">III. 通訊與回饋</span><div class="core-content"><strong>核心內容：</strong><ul><li>GATT 協定：Service、Characteristic。</li><li>數據接收：接收手機端控制指令。</li></ul></div><button id="action-btn-C2_L5" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
-            </div>
-            <div class="lesson-card" id="lesson-C1_L6" data-course-id="bee4arc4" data-course-name="搖桿座標到 API 指令的數學轉換" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODIxNzY4NDM1NzU0?cjc=bee4arc4">
-                <div class="lesson-header"><h2>第 6 課：搖桿座標到 API 指令的數學轉換 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Math Icon">🔢</div><span class="phase-tag self-start">III. 虛擬搖桿與精細化控制</span><div class="core-content"><strong>核心內容：</strong><ul><li>線性映射原理：將畫布 X/Y 像素範圍，轉換為速度/轉向數值範圍（0-255）。</li><li>差速數據計算：建立將 X/Y 座標轉換為速度/轉向指令 (CMD, F, V 等) 的 JS 邏輯。</li></ul></div><button id="action-btn-C1_L6" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
-            </div>
-
-            <div class="lesson-card" id="lesson-C1_L7" data-course-id="ks3fg46c" data-course-name="定時器與連續數據發送" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODM2NzU4NzczMDc3?cjc=ks3fg46c">
-                <div class="lesson-header"><h2>第 7 課：定時器與連續數據發送 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Timer Icon">⏱️</div><span class="phase-tag self-start">III. 虛擬搖桿與精細化控制</span><div class="core-content"><strong>核心內容：</strong><ul><li>介紹 `setInterval` 與 `requestAnimationFrame` 在即時控制中的作用。</li><li>設定 `setInterval` (如 50ms 間隔)，週期性呼叫搖桿數據發送程序。</li></ul></div><button id="action-btn-C1_L7" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
-            </div>
-
-            <div class="lesson-card" id="lesson-C1_L8" data-course-id="r7cnaf4t" data-course-name="Wi-Fi (HTTP) 通訊與 Fetch API" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODM2NzU2NjA4NjMx?cjc=r7cnaf4t">
-                <div class="lesson-header"><h2>第 8 課：Wi-Fi (HTTP) 通訊與 Fetch API <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="WiFi Icon">📶</div><span class="phase-tag self-start">IV. Wi-Fi 通訊與雙模式整合</span><div class="core-content"><strong>核心內容：</strong><ul><li>介紹現代 JS 的 `fetch` 用於發送 HTTP 請求。</li><li>實作 Wi-Fi 模式下的測試按鈕，發送 HTTP 請求控制主控板。</li></ul></div><button id="action-btn-C1_L8" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
-            </div>
-
-            <div class="lesson-card" id="lesson-C2_L8" data-course-id="e4zfhzx6" data-course-name="Wi-Fi (AP) 模式與 HTTP Web Server" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODM2Nzk1ODk4Njcw?cjc=e4zfhzx6">
-                <div class="lesson-header"><h2>第 9 課：Wi-Fi (AP) 模式與 HTTP Web Server <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Web Server Icon">🌐</div><span class="phase-tag self-start">IV. 進階控制與穩定性</span><div class="core-content"><strong>核心內容：</strong><ul><li>ESP32 Wi-Fi 模式：設定為 SoftAP 模式。</li><li>Web Server：建立輕量級 HTTP 伺服器。</li></ul></div><button id="action-btn-C2_L8" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
-            </div>
-
-            <div class="lesson-card" id="lesson-C1_L9" data-course-id="wlilo4dc" data-course-name="雙模式遙控器設計與狀態切換" data-course-price="1500" data-classroom-url="https://classroom.google.com/c/ODM2NzU4NzI3MDY5?cjc=wlilo4dc">
-                <div class="lesson-header"><h2>第 10 課：雙模式遙控器設計與狀態切換 <span class="duration text-sm font-normal text-gray-500">(3H)</span></h2></div>
-                <div class="lesson-body"><div class="lesson-icon" title="Toggle Icon">🔄</div><span class="phase-tag self-start">IV. Wi-Fi 通訊與雙模式整合</span><div class="core-content"><strong>核心內容：</strong><ul><li>設計一個可切換的界面，容納 BLE 連線和 Wi-Fi 設定 (IP 輸入)。</li><li>實作根據當前模式，控制指令透過 BLE 或 Wi-Fi 發送的邏輯。</li></ul></div><button id="action-btn-C1_L9" class="action-btn bg-gray-400 text-white" disabled>載入中...</button></div>
-            </div>
-
-        </div>
     </div>
 
     <footer class="bg-gray-800 py-8 border-t border-gray-700 mt-10">
-        <div class="container mx-auto px-4 text-center">
-            <div class="flex justify-center space-x-6 mb-6 text-gray-400">
-                <a href="prepare.html" class="hover:text-white">課前準備</a>
-                <a href="started.html" class="hover:text-white">入門課程</a>
-                <a href="basic.html" class="hover:text-white">基礎實作</a>
-                <a href="advanced.html" class="hover:text-white">進階應用</a>
-                <a href="about.html" class="hover:text-white">關於我們</a>
-            </div>
-            
-            <div class="border-t border-gray-700 pt-6">
-                <p class="text-gray-500 text-sm mb-2">&copy; 2025 Vibe Coding. All rights reserved.</p>
-                <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6 text-sm text-gray-400">
-                    <span>營業人名稱：文經出版社有限公司</span>
-                    <span class="hidden md:inline">|</span>
-                    <span>統一編號：12376121</span>
-                    <span class="hidden md:inline">|</span>
-                    <span>課程合作洽談：info@vibe-coding.tw</span>
-                </div>
-            </div>
+        <div class="container mx-auto px-4 text-center text-gray-400">
+            <p>&copy; 2025 Vibe Coding. All rights reserved.</p>
         </div>
     </footer>
 
     <script>
-        const btn = document.getElementById('mobile-menu-btn');
-        const menu = document.getElementById('mobile-menu');
-        btn.addEventListener('click', () => {
-            menu.classList.toggle('hidden');
-        });
-        
+        // 讀取 JSON 資料
+        fetch('./lessons.json')
+            .then(response => response.json())
+            .then(data => {
+                renderLessons(data);
+            })
+            .catch(error => console.error('資料讀取失敗:', error));
+
         function renderLessons(lessons) {
-            const container = document.getElementById('lesson-container'); // 假設有一個容器
-            container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6";
-
+            const container = document.getElementById('lesson-container');
+            
+            // 生成 HTML
             const html = lessons.map(lesson => {
-                // 1. 處理核心內容列表 (li)
-                const contentListHtml = lesson.coreContent
-                    .map(item => `<li>${item}</li>`)
-                    .join('');
-
-                // 2. 判斷是否有影片 ID，有的話顯示預覽按鈕，沒有則不顯示
+                const contentListHtml = lesson.coreContent.map(item => `<li>${item}</li>`).join('');
+                
                 const videoButtonHtml = lesson.videoId ? `
                     <button onclick="playFullScreenVideo('${lesson.videoId}')" 
                         class="flex-1 py-2 px-3 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
@@ -388,7 +102,6 @@
                         課程預覽
                     </button>` : '';
 
-                // 3. 調整按鈕寬度樣式 (如果沒有影片按鈕，載入按鈕應該要是 w-full，否則可以是 flex-1)
                 const loadButtonClass = lesson.videoId ? 'flex-1' : 'w-full';
 
                 return `
@@ -423,7 +136,7 @@
                     
                             <div class="flex gap-2 mt-4">
                                 ${videoButtonHtml}
-                                <button id="action-btn-${lesson.id}" class="${loadButtonClass} py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>
+                                <button class="action-btn ${loadButtonClass} py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>
                                     載入中...
                                 </button>
                             </div>
@@ -434,94 +147,48 @@
 
             container.innerHTML = html;
 
+            // ★ 通知 Firebase 模組：HTML 已經準備好了，請檢查按鈕狀態
             if (typeof window.updateAuthUI === 'function') {
                 window.updateAuthUI();
             }
         }
 
-        // 用來記錄是否正在監聽全螢幕變化，避免重複綁定
+        // --- 影片播放器邏輯 ---
         let isListenerAttached = false;
-
         function playFullScreenVideo(videoId) {
             const container = document.getElementById('video-overlay');
             container.style.display = 'block';
-
-            // 【關鍵修改】在插入 iframe 的同時，也插入一個自訂的關閉按鈕
             container.innerHTML = `
-                <button class="close-video-btn" onclick="forceCloseVideo()">
-                    ✕ 關閉影片
-                </button>
-                <iframe 
-                    id="yt-player-frame"
-                    src="https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1" 
-                    title="YouTube video player" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                    allowfullscreen>
-                </iframe>
+                <button class="close-video-btn" onclick="forceCloseVideo()">✕ 關閉影片</button>
+                <iframe id="yt-player-frame" src="https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1" allowfullscreen></iframe>
             `;
-            
             const iframe = document.getElementById('yt-player-frame');
-
-            // 請求全螢幕
-            if (iframe.requestFullscreen) {
-                iframe.requestFullscreen();
-            } else if (iframe.webkitRequestFullscreen) { 
-                iframe.webkitRequestFullscreen();
-            } else if (iframe.msRequestFullscreen) { 
-                iframe.msRequestFullscreen();
-            }
-
-            // 綁定「物理」全螢幕變化監聽 (例如按 Esc 或手機返回鍵)
+            if (iframe.requestFullscreen) iframe.requestFullscreen();
+            
             if (!isListenerAttached) {
                 document.addEventListener('fullscreenchange', checkFullscreenStatus);
-                document.addEventListener('webkitfullscreenchange', checkFullscreenStatus);
-                document.addEventListener('mozfullscreenchange', checkFullscreenStatus);
-                document.addEventListener('MSFullscreenChange', checkFullscreenStatus);
                 isListenerAttached = true;
             }
         }
-
-        // 當按下畫面上那個「X 關閉影片」按鈕時觸發
         function forceCloseVideo() {
-            // 嘗試透過 API 退出全螢幕
-            if (document.exitFullscreen) {
-                document.exitFullscreen().catch(err => {
-                    // 如果因為某些原因失敗 (例如已經不是全螢幕模式)，直接執行清理
-                    cleanupVideo();
-                });
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            } else {
-                // 如果瀏覽器不支援標準 API，直接清理
-                cleanupVideo();
-            }
+             if (document.exitFullscreen) document.exitFullscreen().catch(() => cleanupVideo());
+             else cleanupVideo();
         }
-
-        // 監聽器：檢查是否已經退出全螢幕
         function checkFullscreenStatus() {
-            if (!document.fullscreenElement && 
-                !document.webkitIsFullScreen && 
-                !document.mozFullScreen && 
-                !document.msFullscreenElement) {
-                cleanupVideo();
-            }
+            if (!document.fullscreenElement) cleanupVideo();
         }
-
-        // 清理畫面：隱藏容器、移除 iframe
         function cleanupVideo() {
             const container = document.getElementById('video-overlay');
-            container.innerHTML = ''; // 清空內容 (重要！這樣聲音才會停)
+            container.innerHTML = '';
             container.style.display = 'none';
         }
     </script>
 
     <script type="module">
-        // 1. 匯入必要的 Firebase 函式
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
-        // 2. Firebase 配置
         const firebaseConfig = {
           apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
           authDomain: "e-learning-942f7.firebaseapp.com",
@@ -531,7 +198,6 @@
           appId: "1:878397058574:web:28aaa07a291ee3baab165f"
         };
 
-        // 3. 初始化 Firebase 服務
         const app = initializeApp(firebaseConfig);        
         const auth = getAuth(app);           
         const functions = getFunctions(app, 'asia-east1');         
@@ -539,207 +205,85 @@
         const CART_URL = 'cart.html'; 
         const AUTH_URL = 'auth.html'; 
 
-        // ===============================================
-        // A. 購物車核心邏輯 (僅處理存儲，無提示/跳轉)
-        // ===============================================
+        // 購物車邏輯
         function addToCart(productId, productName, productPrice) {
             let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
-            const priceNum = parseInt(productPrice, 10);
-            
-            // 檢查商品是否已存在
-            if (cart[productId]) {
-                return { success: false, message: `「${productName}」已在購物車中！` };
-            }
-            
-            // 將商品加入購物車
-            cart[productId] = { 
-                name: productName, 
-                price: priceNum, 
-                quantity: 1 
-            };
+            if (cart[productId]) return { success: false };
+            cart[productId] = { name: productName, price: parseInt(productPrice, 10), quantity: 1 };
             localStorage.setItem('vibeCodingCart', JSON.stringify(cart));
-            
-            return { success: true, message: `「${productName}」已成功加入購物車！` };
+            return { success: true };
         }
 
-
-        // ===============================================
-        // B. 購物車確認流程 (與 basic.html 保持一致)
-        // ===============================================
-        function handleAddToCartConfirmation(courseId, courseName, coursePrice) {
+        window.handleAddToCartConfirmation = function(courseId, courseName, coursePrice) {
             const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
-            
-            // 1. 預先檢查購物車，如果已存在，只彈出 alert 提醒
-            if (cart[courseId]) {
-                alert(`⚠️ 「${courseName}」已在購物車中！`);
-                return; // 結束函式，停留在原頁面
-            }
-            
-            // 2. 只有當商品不存在時，才執行 confirm 步驟
-            const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`;
-            
-            const isConfirmed = confirm(`您確定要將課程「${courseName}」加入購物車嗎？\n\n價格：${priceText}`);
-
-            if (isConfirmed) {
-                // 如果使用者按下「確定」
-                const result = addToCart(courseId, courseName, coursePrice);
-                alert(`🛒 「${courseName}」已加入購物車，請前往結帳頁面！`); 
-                window.location.href = CART_URL; // 保持 basic.html 的行為 (如果商品是收費的)
+            if (cart[courseId]) { alert(`⚠️ 「${courseName}」已在購物車中！`); return; }
+            if (confirm(`您確定要將課程「${courseName}」加入購物車嗎？`)) {
+                addToCart(courseId, courseName, coursePrice);
+                alert(`🛒 已加入購物車！`); 
+                window.location.href = CART_URL; 
             } 
         }
 
-        // ===============================================
-        // C. 登入/登出邏輯 (不變)
-        // ===============================================
-        async function handleLogin() {
-            const provider = new GoogleAuthProvider();
-            try {
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                console.error("登入失敗:", error);
-            }
-        }
+        // 登入登出
+        window.handleLogin = async () => { await signInWithPopup(auth, new GoogleAuthProvider()); };
+        window.handleLogout = async () => { await signOut(auth); };
 
-        async function handleLogout() {
-            await signOut(auth);
-        }
-
-        // ===============================================
-        // D. 動態按鈕狀態更新核心邏輯
-        // ===============================================
-        
-        //const lessonCards = document.querySelectorAll('.lesson-card');
-
-        /**
-         * 根據授權狀態更新單一課程卡片的按鈕
-         */
+        // 單一卡片更新邏輯
         function updateCardAction(cardElement, status) {
             const btn = cardElement.querySelector('.action-btn');
+            if (!btn) return; // 安全檢查
+
             const courseId = cardElement.dataset.courseId;
             const courseName = cardElement.dataset.courseName;
-            const coursePrice = cardElement.dataset.coursePrice; // 關鍵：價格參數
+            const coursePrice = cardElement.dataset.coursePrice;
             const classroomUrl = cardElement.dataset.classroomUrl;
-            const isFreeCourse = parseInt(coursePrice, 10) === 0; 
             const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`; 
 
-            // 清除所有舊的事件監聽器
             btn.onclick = null; 
             btn.disabled = false;
 
             if (status === 'AUTHORIZED') {
-                // 狀態 1: 已授權 -> 進入課程
                 btn.textContent = '✅ 進入課程內容';
-                btn.className = 'action-btn bg-green-600 hover:bg-green-700 text-white';
-                btn.onclick = () => {
-                    // 傳遞 courseId 和 coursePrice 給 auth.html 
-                    window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`;
-                };
-            } else if (status === 'UNAUTHORIZED') {
-                // 狀態 2: 已登入但未購買 (主要針對收費課程)
+                btn.className = 'action-btn w-full py-2 px-3 rounded-md bg-green-600 hover:bg-green-700 text-white font-medium transition';
+                btn.onclick = () => { window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`; };
+            } else if (status === 'NOT_LOGGED_IN' || status === 'UNAUTHORIZED' || status === 'ERROR') {
+                btn.textContent = `🛒 加入購物車 (${priceText})`;
+                btn.className = 'action-btn w-full py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition';
                 
-                if (isFreeCourse) {
-                    // 免費課程出現 UNAUTHORIZED 視為異常
-                    btn.textContent = '⛔ 授權錯誤 (請聯繫客服)';
-                    btn.className = 'action-btn bg-red-600 hover:bg-red-700 text-white';
-                    btn.onclick = () => window.location.reload(); 
+                // 判斷點擊行為
+                if (status === 'NOT_LOGGED_IN') {
+                    // 如果未登入，點擊購物車前先提示登入，或直接導向購物車確認(視需求，這裡保持您的邏輯：確認購物車)
+                     btn.onclick = () => window.handleAddToCartConfirmation(courseId, courseName, coursePrice);
                 } else {
-                    // 收費課程：引導加入購物車 (點擊後進入確認流程)
-                    btn.textContent = `🛒 加入購物車 (${priceText})`;
-                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
-                    btn.onclick = () => {
-                        handleAddToCartConfirmation(courseId, courseName, coursePrice); 
-                    };
-                }
-            } else if (status === 'NOT_LOGGED_IN') {
-                // 狀態 3: 未登入
-
-                if (isFreeCourse) {
-                    // 免費課程：引導登入
-                    btn.textContent = '👤 請先登入以進入課程 (免費)';
-                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
-                    btn.onclick = handleLogin;
-                } else {
-                    // 收費課程：引導加入購物車 (點擊後進入確認流程)
-                    btn.textContent = `🛒 加入購物車 (${priceText})`;
-                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
-                    btn.onclick = () => {
-                        handleAddToCartConfirmation(courseId, courseName, coursePrice); 
-                    };
+                     btn.onclick = () => window.handleAddToCartConfirmation(courseId, courseName, coursePrice);
                 }
 
             } else if (status === 'LOADING') {
-                // 狀態 4: 載入中
-                btn.textContent = '權限檢查中...';
-                btn.className = 'action-btn bg-gray-400 text-white';
+                btn.textContent = '載入中...';
+                btn.className = 'action-btn w-full py-2 px-3 rounded-md bg-gray-400 text-white font-medium cursor-not-allowed';
                 btn.disabled = true;
-            } else if (status === 'ERROR') {
-                // 錯誤狀態 (收費課程 CF 檢查失敗，導向 UNAUTHORIZED 流程)
-                
-                if (isFreeCourse) {
-                    // 免費課程：與 NOT_LOGGED_IN 邏輯相同，引導登入
-                    btn.textContent = '👤 請先登入以進入課程 (免費)';
-                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
-                    btn.onclick = handleLogin;
-                } else {
-                    // 收費課程：導向 UNAUTHORIZED (加入購物車確認)
-                    btn.textContent = `🛒 加入購物車 (${priceText})`;
-                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white';
-                    btn.onclick = () => {
-                        handleAddToCartConfirmation(courseId, courseName, coursePrice); 
-                    };
-                }
             }
         }
 
-        /**
-         * 檢查單一課程的授權狀態 (優化：免費課程跳過 Cloud Function)
-         */
         async function checkLessonAuthorization(cardElement, user) {
             updateCardAction(cardElement, 'LOADING');
-
             const courseId = cardElement.dataset.courseId;
             const classroomUrl = cardElement.dataset.classroomUrl;
-            const isFreeCourse = parseInt(cardElement.dataset.coursePrice, 10) === 0;
 
-            // 💥 修正：免費課程且使用者已登入，直接視為 AUTHORIZED (跳過 CF)
-            if (isFreeCourse && user) {
-                updateCardAction(cardElement, 'AUTHORIZED');
-                return; 
-            }
-            
-            // 💥 修正：如果未登入，不需要呼叫 CF，直接導向 NOT_LOGGED_IN
-            if (!user) {
-                updateCardAction(cardElement, 'NOT_LOGGED_IN');
-                return;
-            }
-
-            // --- 收費課程才會走到這裡 (呼叫 CF) ---
             try {
-                const result = await checkAuthFunction({ 
-                    courseId: courseId, 
-                    targetUrl: encodeURIComponent(classroomUrl) 
-                });
-
-                const status = result.data.status; 
-                updateCardAction(cardElement, status);
-
+                const result = await checkAuthFunction({ courseId: courseId, targetUrl: encodeURIComponent(classroomUrl) });
+                updateCardAction(cardElement, result.data.status);
             } catch (error) {
-                console.error(`課程 ${courseId} 授權檢查失敗:`, error);
-                
-                // CF 呼叫失敗，收費課程導向 UNAUTHORIZED (加入購物車)
+                console.error(`授權檢查失敗:`, error);
                 updateCardAction(cardElement, 'UNAUTHORIZED');
             }
         }
 
-        // ===============================================
-        // ★ 新增：全域更新函式 (讓 renderLessons 可以呼叫)
-        // ===============================================
+        // ★★★ 全域更新函式 (解決 Race Condition) ★★★
         window.updateAuthUI = function() {
-            // 1. 重新抓取現在頁面上「所有」的卡片 (包含剛生成的)
-            const currentCards = document.querySelectorAll('.lesson-card');
-            const user = auth.currentUser; // 獲取當前使用者
+            const currentCards = document.querySelectorAll('.lesson-card'); // 重新抓取現有的卡片
+            const user = auth.currentUser;
 
-            // 2. 對每一張卡片重新執行權限檢查
             currentCards.forEach(card => {
                 if (user) {
                     checkLessonAuthorization(card, user);
@@ -749,36 +293,26 @@
             });
         }
 
-        // ----------------------------------------------------
-        // E. 總體授權流程控制器 
-        // ----------------------------------------------------
+        // 監聽登入狀態改變
         onAuthStateChanged(auth, (user) => {
             const userDisplay = document.getElementById('user-display');
             const loginBtn = document.getElementById('login-btn');
 
             if (user) {
-                userDisplay.textContent = `您好, ${user.displayName || user.email}`;
-                userDisplay.classList.remove('hidden'); // 確保顯示
+                userDisplay.textContent = `您好, ${user.displayName || '使用者'}`;
+                userDisplay.classList.remove('hidden');
                 loginBtn.textContent = '登出';
-                loginBtn.onclick = handleLogout;
-                
-                lessonCards.forEach(card => {
-                    checkLessonAuthorization(card, user);
-                });
+                loginBtn.onclick = window.handleLogout;
             } else {
                 userDisplay.textContent = '訪客';
-                userDisplay.classList.add('hidden'); // 手機版隱藏訪客文字
-                userDisplay.classList.remove('md:inline'); // 電腦版顯示
+                userDisplay.classList.add('hidden');
                 loginBtn.textContent = '登入';
-                loginBtn.onclick = handleLogin;
-                
-                lessonCards.forEach(card => {
-                    // 修正：未登入時，直接設定狀態，讓 updateCardAction 處理免費/收費課程
-                    updateCardAction(card, 'NOT_LOGGED_IN'); 
-                });
+                loginBtn.onclick = window.handleLogin;
             }
-        });
 
+            // ★ 狀態改變時，主動更新介面
+            window.updateAuthUI();
+        });
     </script>
 </body>
 </html>
