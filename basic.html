@@ -25,6 +25,8 @@
         .lesson-header { background-color: #e9fff0; padding: 15px 20px; border-bottom: 1px solid #e5e7eb; }
         .lesson-header h2 { margin: 0; font-size: 1.25em; color: #166534; font-weight: 700; }
         .lesson-body { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
+        
+        /* 移除這裡原本的 action-btn 寬度設定，交給 Tailwind 控制 */
         .action-btn { 
             padding: 10px; 
             border-radius: 6px; 
@@ -32,6 +34,7 @@
             transition: background-color 0.2s;
             cursor: pointer;
         }
+
         /* 播放器與其他樣式 */
         #video-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background-color: black; }
         #video-overlay iframe { width: 100%; height: 100%; border: none; }
@@ -74,7 +77,7 @@
         </div>
 
         <div id="lesson-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-            </div>
+        </div>
 
         <div id="video-overlay"></div>
     </div>
@@ -97,11 +100,9 @@
         function renderLessons(lessons) {
             const container = document.getElementById('lesson-container');
             
-            // 生成 HTML
             const html = lessons.map(lesson => {
                 const contentListHtml = lesson.coreContent.map(item => `<li>${item}</li>`).join('');
                 
-                // 處理價格顯示格式
                 const priceDisplay = parseInt(lesson.price) === 0 
                     ? '免費' 
                     : `NT$ ${parseInt(lesson.price).toLocaleString()}`;
@@ -162,13 +163,11 @@
 
             container.innerHTML = html;
 
-            // ★ 通知 Firebase 模組
             if (typeof window.updateAuthUI === 'function') {
                 window.updateAuthUI();
             }
         }
 
-        // --- 影片播放器邏輯 ---
         let isListenerAttached = false;
         function playFullScreenVideo(videoId) {
             const container = document.getElementById('video-overlay');
@@ -239,11 +238,10 @@
             } 
         }
 
-        // 登入登出
         window.handleLogin = async () => { await signInWithPopup(auth, new GoogleAuthProvider()); };
         window.handleLogout = async () => { await signOut(auth); };
 
-        // 單一卡片更新邏輯
+        // ★★★ 修正這裡：單一卡片更新邏輯 ★★★
         function updateCardAction(cardElement, status) {
             const btn = cardElement.querySelector('.action-btn');
             if (!btn) return; 
@@ -253,25 +251,31 @@
             const coursePrice = cardElement.dataset.coursePrice;
             const classroomUrl = cardElement.dataset.classroomUrl;
 
+            // 【關鍵修正】檢查按鈕的父層有幾個孩子
+            // 如果父層 children > 1，代表有一個影片按鈕 + 一個操作按鈕，所以用 flex-1 (一人一半)
+            // 否則用 w-full (獨佔全寬)
+            const parentFlex = btn.parentElement; 
+            const hasVideoButton = parentFlex.children.length > 1;
+            const widthClass = hasVideoButton ? 'flex-1' : 'w-full';
+
             btn.onclick = null; 
             btn.disabled = false;
 
             if (status === 'AUTHORIZED') {
                 btn.textContent = '✅ 進入課程內容';
-                btn.className = 'action-btn w-full py-2 px-3 rounded-md bg-green-600 hover:bg-green-700 text-white font-medium transition';
+                // 使用變數 widthClass 來取代寫死的 w-full
+                btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-green-600 hover:bg-green-700 text-white font-medium transition`;
                 btn.onclick = () => { window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`; };
             } else if (status === 'NOT_LOGGED_IN' || status === 'UNAUTHORIZED' || status === 'ERROR') {
-                
-                // ★ 修改處：這裡移除了 (NT$ ...) 的顯示，因為上面已經有大標題了
                 btn.textContent = `🛒 加入購物車`;
-                
-                btn.className = 'action-btn w-full py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition';
-                
+                // 使用變數 widthClass 來取代寫死的 w-full
+                btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
                 btn.onclick = () => window.handleAddToCartConfirmation(courseId, courseName, coursePrice);
 
             } else if (status === 'LOADING') {
                 btn.textContent = '載入中...';
-                btn.className = 'action-btn w-full py-2 px-3 rounded-md bg-gray-400 text-white font-medium cursor-not-allowed';
+                // 使用變數 widthClass 來取代寫死的 w-full
+                btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-gray-400 text-white font-medium cursor-not-allowed`;
                 btn.disabled = true;
             }
         }
