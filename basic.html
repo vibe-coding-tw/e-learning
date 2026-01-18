@@ -146,6 +146,35 @@
             height: 100%;
             border: none;
         }
+
+        /* 新增：自訂關閉按鈕樣式 */
+        .close-video-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10000; /* 確保在 iframe 上方 */
+            background-color: rgba(0, 0, 0, 0.6); /* 半透明黑底 */
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            padding: 8px 16px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            backdrop-filter: blur(4px); /* 毛玻璃效果 */
+        }
+        
+        /* 手機版優化：讓按鈕更大，比較好按 */
+        @media (max-width: 768px) {
+            .close-video-btn {
+                top: 15px;
+                right: 15px;
+                padding: 10px 20px; /* 加大觸控範圍 */
+                font-size: 18px;
+            }
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -359,11 +388,86 @@
         btn.addEventListener('click', () => {
             menu.classList.toggle('hidden');
         });
-
+        
         /**
          * 建立並全螢幕播放指定的 YouTube 影片
          * @param {string} videoId - YouTube 影片 ID (例如 FZdPlTtfniM)
          */
+        // 用來記錄是否正在監聽全螢幕變化，避免重複綁定
+        let isListenerAttached = false;
+
+        function playFullScreenVideo(videoId) {
+            const container = document.getElementById('video-overlay');
+            container.style.display = 'block';
+
+            // 【關鍵修改】在插入 iframe 的同時，也插入一個自訂的關閉按鈕
+            container.innerHTML = `
+                <button class="close-video-btn" onclick="forceCloseVideo()">
+                    ✕ 關閉影片
+                </button>
+                <iframe 
+                    id="yt-player-frame"
+                    src="https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1" 
+                    title="YouTube video player" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    allowfullscreen>
+                </iframe>
+            `;
+            
+            const iframe = document.getElementById('yt-player-frame');
+
+            // 請求全螢幕
+            if (iframe.requestFullscreen) {
+                iframe.requestFullscreen();
+            } else if (iframe.webkitRequestFullscreen) { 
+                iframe.webkitRequestFullscreen();
+            } else if (iframe.msRequestFullscreen) { 
+                iframe.msRequestFullscreen();
+            }
+
+            // 綁定「物理」全螢幕變化監聽 (例如按 Esc 或手機返回鍵)
+            if (!isListenerAttached) {
+                document.addEventListener('fullscreenchange', checkFullscreenStatus);
+                document.addEventListener('webkitfullscreenchange', checkFullscreenStatus);
+                document.addEventListener('mozfullscreenchange', checkFullscreenStatus);
+                document.addEventListener('MSFullscreenChange', checkFullscreenStatus);
+                isListenerAttached = true;
+            }
+        }
+
+        // 當按下畫面上那個「X 關閉影片」按鈕時觸發
+        function forceCloseVideo() {
+            // 嘗試透過 API 退出全螢幕
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(err => {
+                    // 如果因為某些原因失敗 (例如已經不是全螢幕模式)，直接執行清理
+                    cleanupVideo();
+                });
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else {
+                // 如果瀏覽器不支援標準 API，直接清理
+                cleanupVideo();
+            }
+        }
+
+        // 監聽器：檢查是否已經退出全螢幕
+        function checkFullscreenStatus() {
+            if (!document.fullscreenElement && 
+                !document.webkitIsFullScreen && 
+                !document.mozFullScreen && 
+                !document.msFullscreenElement) {
+                cleanupVideo();
+            }
+        }
+
+        // 清理畫面：隱藏容器、移除 iframe
+        function cleanupVideo() {
+            const container = document.getElementById('video-overlay');
+            container.innerHTML = ''; // 清空內容 (重要！這樣聲音才會停)
+            container.style.display = 'none';
+        }
+/*        
          function playFullScreenVideo(videoId) {
             const container = document.getElementById('video-overlay');
             
@@ -418,6 +522,7 @@
                 }
             }
         }
+*/            
     </script>
 
     <script type="module">
