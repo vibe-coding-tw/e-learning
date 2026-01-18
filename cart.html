@@ -18,6 +18,7 @@
         }
     </style>
 </head>
+
 <body class="bg-gray-50 min-h-screen">
     <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4">
@@ -94,8 +95,7 @@
         </div>
     </nav>
 
-    <main class="max-w-4xl mx-auto p-6">
-        
+    <main class="max-w-4xl mx-auto p-6">        
         <section class="bg-white p-6 rounded-lg shadow-xl mb-10">
             <h2 class="text-3xl font-extrabold text-gray-800 border-b pb-4 mb-6">待結帳項目</h2>
             
@@ -142,6 +142,14 @@
             </div>
         </div>
     </footer>
+
+    <script>
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+        });
+    </script>
 
     <script type="module">
         // 1. 匯入必要的 Firebase 函式
@@ -367,8 +375,7 @@
                 checkoutBtn.disabled = false;
                 checkoutBtn.textContent = '💳 前往付款';
             }
-        }
-        
+        }        
     </script>
 </body>
 </html>
