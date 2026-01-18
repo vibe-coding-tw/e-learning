@@ -95,6 +95,11 @@
             const html = lessons.map(lesson => {
                 const contentListHtml = lesson.coreContent.map(item => `<li>${item}</li>`).join('');
                 
+                // 處理價格顯示格式
+                const priceDisplay = parseInt(lesson.price) === 0 
+                    ? '免費' 
+                    : `NT$ ${parseInt(lesson.price).toLocaleString()}`;
+
                 const videoButtonHtml = lesson.videoId ? `
                     <button onclick="playFullScreenVideo('${lesson.videoId}')" 
                         class="flex-1 py-2 px-3 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
@@ -119,22 +124,26 @@
                             </h2>
                         </div>
 
-                        <div class="lesson-body space-y-4">
-                            <div class="flex items-center gap-3"> 
+                        <div class="lesson-body flex flex-col h-full">
+                            <div class="flex items-center gap-3 mb-4"> 
                                 <div class="lesson-icon text-4xl bg-blue-50 p-2 rounded-lg">${lesson.icon}</div>                        
                                 <span class="phase-tag bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-1 rounded">
                                     ${lesson.tagText}
                                 </span>
                             </div>
 
-                            <div class="core-content text-sm text-gray-600">
+                            <div class="core-content text-sm text-gray-600 flex-grow">
                                 <strong class="text-gray-900 block mb-1">核心內容：</strong>
                                 <ul class="list-disc pl-4 space-y-1">
                                     ${contentListHtml}
                                 </ul>
                             </div>
-                    
-                            <div class="flex gap-2 mt-4">
+                            
+                            <div class="mt-4 pt-2 border-t border-gray-100 text-right">
+                                <span class="text-2xl font-bold text-indigo-600 tracking-tight">${priceDisplay}</span>
+                            </div>
+
+                            <div class="flex gap-2 mt-3">
                                 ${videoButtonHtml}
                                 <button class="action-btn ${loadButtonClass} py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>
                                     載入中...
@@ -147,7 +156,7 @@
 
             container.innerHTML = html;
 
-            // ★ 通知 Firebase 模組：HTML 已經準備好了，請檢查按鈕狀態
+            // ★ 通知 Firebase 模組
             if (typeof window.updateAuthUI === 'function') {
                 window.updateAuthUI();
             }
@@ -231,13 +240,12 @@
         // 單一卡片更新邏輯
         function updateCardAction(cardElement, status) {
             const btn = cardElement.querySelector('.action-btn');
-            if (!btn) return; // 安全檢查
+            if (!btn) return; 
 
             const courseId = cardElement.dataset.courseId;
             const courseName = cardElement.dataset.courseName;
             const coursePrice = cardElement.dataset.coursePrice;
             const classroomUrl = cardElement.dataset.classroomUrl;
-            const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`; 
 
             btn.onclick = null; 
             btn.disabled = false;
@@ -247,16 +255,13 @@
                 btn.className = 'action-btn w-full py-2 px-3 rounded-md bg-green-600 hover:bg-green-700 text-white font-medium transition';
                 btn.onclick = () => { window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`; };
             } else if (status === 'NOT_LOGGED_IN' || status === 'UNAUTHORIZED' || status === 'ERROR') {
-                btn.textContent = `🛒 加入購物車 (${priceText})`;
+                
+                // ★ 修改處：這裡移除了 (NT$ ...) 的顯示，因為上面已經有大標題了
+                btn.textContent = `🛒 加入購物車`;
+                
                 btn.className = 'action-btn w-full py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition';
                 
-                // 判斷點擊行為
-                if (status === 'NOT_LOGGED_IN') {
-                    // 如果未登入，點擊購物車前先提示登入，或直接導向購物車確認(視需求，這裡保持您的邏輯：確認購物車)
-                     btn.onclick = () => window.handleAddToCartConfirmation(courseId, courseName, coursePrice);
-                } else {
-                     btn.onclick = () => window.handleAddToCartConfirmation(courseId, courseName, coursePrice);
-                }
+                btn.onclick = () => window.handleAddToCartConfirmation(courseId, courseName, coursePrice);
 
             } else if (status === 'LOADING') {
                 btn.textContent = '載入中...';
@@ -279,9 +284,8 @@
             }
         }
 
-        // ★★★ 全域更新函式 (解決 Race Condition) ★★★
         window.updateAuthUI = function() {
-            const currentCards = document.querySelectorAll('.lesson-card'); // 重新抓取現有的卡片
+            const currentCards = document.querySelectorAll('.lesson-card'); 
             const user = auth.currentUser;
 
             currentCards.forEach(card => {
@@ -293,7 +297,6 @@
             });
         }
 
-        // 監聽登入狀態改變
         onAuthStateChanged(auth, (user) => {
             const userDisplay = document.getElementById('user-display');
             const loginBtn = document.getElementById('login-btn');
@@ -310,7 +313,6 @@
                 loginBtn.onclick = window.handleLogin;
             }
 
-            // ★ 狀態改變時，主動更新介面
             window.updateAuthUI();
         });
     </script>
