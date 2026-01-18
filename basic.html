@@ -93,14 +93,26 @@
         fetch('./lessons.json')
             .then(response => response.json())
             .then(data => {
-                renderLessons(data);
+                renderLessons(data, 'basic');
             })
             .catch(error => console.error('資料讀取失敗:', error));
 
-        function renderLessons(lessons) {
+        function renderLessons(lessons, filterCategory) {
             const container = document.getElementById('lesson-container');
             
-            const html = lessons.map(lesson => {
+            const targetLessons = filterCategory === 'all' 
+                ? lessons 
+                : lessons.filter(item => item.category === filterCategory);
+
+            // 如果過濾後沒有資料，可以顯示一個提示 (選用)
+            if (targetLessons.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-500 w-full col-span-3">目前此分類尚無課程。</p>`;
+                return;
+            }
+
+            // 接下來用 targetLessons 來跑 map，而不是原本的 lessons
+            const html = targetLessons.map(lesson => {
+            //const html = lessons.map(lesson => {
                 const contentListHtml = lesson.coreContent.map(item => `<li>${item}</li>`).join('');
                 
                 const priceDisplay = parseInt(lesson.price) === 0 
