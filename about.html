@@ -3,32 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vibe Coding 教學網站</title>
+    <title>關於付費與購買 - Vibe Coding</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f7fafc; /* 淺灰色背景 */
+            background-color: #f7fafc;
         }
-        .hero-bg {
-            /* 科技感深藍漸變 */
-            background-image: linear-gradient(to right, #1e3a8a, #06b6d4); 
-            color: white;
-        }
+        /* Card Style - Consistent with FAQ page */
         .vibe-card {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
             transition: transform 0.3s, box-shadow 0.3s;
-            border-top: 5px solid #06b6d4; /* 頂部強調色 */
+            border-top: 5px solid #06b6d4; /* Default Teal highlight */
+            padding: 2rem;
+            height: 100%;
         }
         .vibe-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-        .tech-icon {
-            /* 讓圖示更有立體感 */
-            filter: drop-shadow(0 4px 4px rgba(6, 182, 212, 0.7));
-        }
+        
+        /* Section Header */
         .section-title-underline {
             height: 4px;
             width: 80px;
@@ -36,13 +34,18 @@
             margin: 0 auto 3rem;
             border-radius: 2px;
         }
-        /* 下拉選單樣式 */
+
+        /* Specific Highlights */
+        .highlight-line { color: #00B900; font-weight: bold; } /* LINE Green */
+        .highlight-warning { color: #e11d48; font-weight: bold; } /* Warning Red */
+
+        /* Dropdown Menu */
         .dropdown:hover .dropdown-menu {
             display: block;
         }
     </style>
 </head>
-<body>
+<body class="flex flex-col min-h-screen">
 
     <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4">
@@ -74,7 +77,16 @@
                         </div>
                     </div>
 
-                    <a href="about.html" class="hover:text-cyan-600 transition">關於我們</a>
+                    <div class="relative dropdown group">
+                        <button class="flex items-center text-cyan-600 font-bold transition cursor-pointer py-2">
+                            關於我們 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
+                            <a href="faq.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">課程常見問題</a>
+                            <a href="about.html" class="block px-4 py-2 bg-cyan-50 text-cyan-700">關於付費與購買</a>
+                            <a href="collaboration.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">合作事宜</a>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="md:hidden">
@@ -86,65 +98,108 @@
         </div>
     </nav>
 
-    <section id="market-strategy" class="py-20 bg-gray-50">
-        <div class="container mx-auto px-4">
-            <h3 class="text-3xl font-bold text-center mb-4 text-gray-800">
-                市場分析與商業策略
-            </h3>
-            <div class="section-title-underline"></div>
+    <header class="bg-white py-12">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-4">關於付費與購買</h1>
+            <p class="text-lg text-gray-500">Payment & Purchase Policy</p>
+            <div class="section-title-underline mt-6"></div>
+        </div>
+    </header>
 
-            <div class="grid lg:grid-cols-2 gap-12">
-                <div class="p-8 bg-white rounded-2xl shadow-lg border-l-8 border-teal-500 hover:shadow-xl transition duration-300">
-                    <h4 class="text-2xl font-bold text-teal-700 mb-6 flex items-center">
-                        <span class="text-4xl mr-4">📈</span> 台灣教育科技市場機遇
-                    </h4>
-                    <ul class="space-y-4 text-lg text-gray-700">
-                        <li class="flex items-start"><span class="text-teal-500 mr-2">●</span><span><b>政府強力推動：</b> 國家對 <b>STEM/AI 教育</b>有明確且積極的推動政策。</span></li>
-                        <li class="flex items-start"><span class="text-teal-500 mr-2">●</span><span><b>家長意願高漲：</b> 台灣家長對培養孩子未來競爭力的意願非常高。</span></li>
-                        <li class="flex items-start"><span class="text-teal-500 mr-2">●</span><span><b>資源缺口明顯：</b> 學校現有在酷達、Physical AI 相關領域的教育資源不足，形成巨大市場需求。</span></li>
-                        <li class="flex items-start"><span class="text-teal-500 mr-2">●</span><span><b>市場趨勢穩健：</b> K-12 程式設計教育市場正處於穩健成長期。</span></li>
-                    </ul>
-                    <p class="mt-6 text-sm text-gray-400 italic">
-                        *數據來源：Vibe Coding 市場分析與商業計畫書 (執行摘要)*
+    <main class="flex-grow container mx-auto px-4 pb-20">
+        <div class="grid gap-8 max-w-4xl mx-auto">
+
+            <section class="vibe-card border-t-[5px] border-green-500">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <span class="bg-green-100 text-green-600 rounded-full w-10 h-10 flex items-center justify-center mr-3 text-lg">1</span>
+                    付費方式
+                </h2>
+                <div class="prose text-gray-600 leading-relaxed">
+                    <p class="mb-4">
+                        目前我們提供 <span class="highlight-line">LINE PAY</span> 作為主要的付款方式。
                     </p>
-                </div>
-
-                <div class="p-8 bg-white rounded-2xl shadow-lg border-l-8 border-indigo-500 hover:shadow-xl transition duration-300">
-                    <h4 class="text-2xl font-bold text-indigo-700 mb-6 flex items-center">
-                        <span class="text-4xl mr-4">🎯</span> 雙軌市場進入與差異化策略
-                    </h4>
-                    <ul class="space-y-4 text-lg text-gray-700">
-                        <li class="flex items-start"><span class="text-indigo-500 mr-2">●</span><span><b>B2C 直接招生：</b> 透過社群行銷與口碑，鎖定對教育高投資意願的個人消費者。</span></li>
-                        <li class="flex items-start"><span class="text-indigo-500 mr-2">●</span><span><b>B2B 機構合作：</b> 與<b>國小</b>、<b>補習班</b>、<b>安親班</b>等教育機構合作，導入課程體系。</span></li>
-                        <li class="flex items-start"><span class="text-indigo-500 mr-2">●</span><span><b>關鍵差異化：</b> 強調課程的實作性和 AI 輔助，並提供<b>師資培訓</b>，給予合作夥伴全面支持。</span></li>
-                        <li class="flex items-start"><span class="text-indigo-500 mr-2">●</span><span><b>盈利途徑：</b> 課程費用、B2B 服務合約、硬體套件銷售。</span></li>
+                    <ul class="list-disc pl-5 space-y-2 mb-4">
+                        <li>選擇以 LINE Pay 付款，系統將自動跳轉至外部的「LINE Pay 付款頁面」進行結帳。</li>
+                        <li>請依照指示登入您的 LINE ID 並完成支付流程。</li>
                     </ul>
+                    <div class="bg-green-50 p-4 rounded-lg flex items-start gap-3">
+                        <span class="text-2xl">💡</span>
+                        <p class="text-sm text-green-800">
+                            更多關於支付的詳細資訊，請參考 <a href="https://pay.line.me/portal/tw/main" target="_blank" class="underline font-bold hover:text-green-600">LINE Pay 官方支付說明</a>。
+                        </p>
+                    </div>
                 </div>
-            </div>
-            
-        </div>
-    </section>
+            </section>
 
-    <section id="contact" class="py-20 bg-gray-900 text-white relative overflow-hidden">
-        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-        
-        <div class="container mx-auto px-4 text-center relative z-10">
-            <h3 class="text-3xl sm:text-4xl font-bold mb-6 text-cyan-300">
-                與我們合作，共創 AI 教育藍圖
-            </h3>
-            <p class="text-xl mb-10 opacity-80 max-w-2xl mx-auto">
-                無論是 B2C 招生、B2B 課程導入或硬體採購，立即與 Vibe Coding 團隊聯繫。
-            </p>
-            <div class="flex flex-col sm:flex-row justify-center gap-4">
-                <a href="#" class="inline-block bg-yellow-400 text-gray-900 font-bold py-4 px-12 rounded-full text-xl hover:bg-yellow-300 transition duration-300 transform hover:scale-105 shadow-2xl">
-                    📥 合作洽談
-                </a>
-                <a href="#" class="inline-block bg-transparent border-2 border-white text-white font-bold py-4 px-12 rounded-full text-xl hover:bg-white hover:text-gray-900 transition duration-300 transform hover:scale-105">
-                    📖 了解更多
-                </a>
-            </div>
+            <section class="vibe-card border-t-[5px] border-red-500">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <span class="bg-red-100 text-red-600 rounded-full w-10 h-10 flex items-center justify-center mr-3 text-lg">2</span>
+                    請問如何退費？
+                </h2>
+                <div class="text-gray-600 leading-relaxed space-y-4">
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4">
+                        <p class="font-bold text-red-700 mb-1">⚠️ 重要權益說明</p>
+                        <p class="text-sm text-red-600">
+                            購買後系統會立刻開通會員購課資料，也會直接給予課程內容觀看權限，故<span class="underline">不適用七天鑑賞期</span>。一旦販售後恕不接受退換貨服務。
+                        </p>
+                    </div>
+                    
+                    <p>
+                        我們在課程頁面皆有提供 <span class="font-bold text-gray-800">「課程預覽」</span> 功能，歡迎您多加利用，評估課程內容是否符合需求後再行購買。
+                    </p>
+                    
+                    <p>
+                        如果您對課程內容有任何疑問，歡迎在購買前透過客服聯繫我們。我們會盡可能提供方向與回覆，協助您做出最適合的決定！
+                    </p>
+                    
+                    <div class="mt-4 pt-4 border-t border-gray-100">
+                        <p class="font-bold text-gray-700">聯絡客服：</p>
+                        <a href="mailto:rover.chen@vibe-coding.tw" class="text-cyan-600 hover:text-cyan-800 font-medium flex items-center gap-2 mt-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            rover.chen@vibe-coding.tw
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="vibe-card border-t-[5px] border-indigo-500">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <span class="bg-indigo-100 text-indigo-600 rounded-full w-10 h-10 flex items-center justify-center mr-3 text-lg">3</span>
+                    購買課程方式
+                </h2>
+                <div class="text-gray-600 leading-relaxed">
+                    <p class="mb-6">課程皆須於註冊會員後才可購買，建議您於購買前先完成 <a href="#" class="text-indigo-600 underline hover:text-indigo-800">網站註冊並登入</a>。</p>
+                    
+                    <div class="space-y-6">
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold">1</div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-1">選擇課程與加入購物車</h4>
+                                <p class="text-sm">登入後，瀏覽並選擇您欲購買的課程。點選畫面上方的 <span class="bg-gray-100 px-2 py-1 rounded text-xs font-bold text-indigo-700">🛒 加入購物車</span> 按鈕。</p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold">2</div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-1">確認訂單與付款</h4>
+                                <p class="text-sm">進入結帳頁面，確認購買項目及金額無誤後，點選 <span class="bg-green-100 px-2 py-1 rounded text-xs font-bold text-green-700">前往付款</span> 即可開始 LINE Pay 付款流程。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 bg-gray-300 text-white rounded-full flex items-center justify-center font-bold">3</div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-1">開始上課</h4>
+                                <p class="text-sm">付款完成後，系統會自動開通權限。回到課程頁面，按鈕將變更為「進入課程內容」，點擊即可開始學習。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
         </div>
-    </section>
+    </main>
 
     <footer class="bg-gray-800 py-8 border-t border-gray-700">
         <div class="container mx-auto px-4 text-center">
@@ -152,8 +207,7 @@
                 <a href="prepare.html" class="hover:text-white">課前準備</a>
                 <a href="started.html" class="hover:text-white">入門課程</a>
                 <a href="basic.html" class="hover:text-white">基礎實作</a>
-                <a href="advance.html" class="hover:text-white">進階應用</a>
-                <a href="about.html" class="hover:text-white">關於我們</a>
+                <a href="advanced.html" class="hover:text-white">進階應用</a>
             </div>
             <p class="text-gray-500 text-sm">&copy; 2025 Vibe Coding. All rights reserved. | 課程合作洽談請聯絡 B2B 部門 (Email: info@vibe-coding.tw)</p>
         </div>
