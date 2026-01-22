@@ -43,7 +43,7 @@ function getCurrentTime() {
 }
 
 // ==========================================
-// Firebase Cloud Function (正規 .env 版)
+// Firebase Cloud Function (支援動態商品名稱版)
 // ==========================================
 
 exports.initiatePayment = onCall({ 
@@ -51,19 +51,14 @@ exports.initiatePayment = onCall({
     cors: true,
 }, async (request) => {
 
-    // ★★★ 修正重點：從 process.env 讀取變數 ★★★
-    // 這裡定義變數，確保下方主程式能抓到
     const MERCHANT_ID = process.env.ECPAY_MERCHANT_ID;
     const HASH_KEY = process.env.ECPAY_HASH_KEY;
     const HASH_IV = process.env.ECPAY_HASH_IV;
     const API_URL = process.env.ECPAY_API_URL;
 
-    console.log("開始執行 initiatePayment (使用 .env 配置)..."); 
-
-    // 防呆機制：如果 .env 沒讀到，在 Log 印出警告
     if (!MERCHANT_ID || !HASH_KEY) {
-        console.error("嚴重錯誤：讀取不到 .env 環境變數，請檢查部署設定。");
-        throw new HttpsError('internal', '伺服器配置錯誤 (Missing Env Vars)');
+        console.error("嚴重錯誤：讀取不到 .env 環境變數");
+        throw new HttpsError('internal', '伺服器配置錯誤');
     }
 
     if (!request.auth) {
@@ -71,12 +66,34 @@ exports.initiatePayment = onCall({
     }
 
     try {
-        const { amount, returnUrl } = request.data;
+        // ★★★ 1. 這裡多接收一個 cartDetails 參數 ★★★
+        const { amount, returnUrl, cartDetails } = request.data;
         const finalAmount = parseInt(amount, 10);
         const orderNumber = `VIBE${Date.now()}`; 
         const tradeDate = getCurrentTime();
 
-        console.log(`準備建立訂單: ${orderNumber}, 金額: ${finalAmount}`);
+        // ★★★ 2. 動態產生商品名稱字串 ★★★
+        let itemNameStr = 'Vibe Coding 線上課程'; // 預設值
+        
+        if (cartDetails && Object.keys(cartDetails).length > 0) {
+            const names = [];
+            // 遍歷購物車物件
+            Object.values(cartDetails).forEach(item => {
+                // 組合格式：課程名稱 x 數量 (例如: Python入門 x 1)
+                // 移除可能破壞格式的特殊符號
+                const cleanName = (item.name || '未知課程').replace(/[#&]/g, ' '); 
+                names.push(`${cleanName} x ${item.quantity || 1}`);
+            });
+            // 用 # 串接所有商品 (綠界規定)
+            itemNameStr = names.join('#');
+            
+            // 綠界限制 ItemName 最長 200 字，超過截斷
+            if (itemNameStr.length > 190) {
+                itemNameStr = itemNameStr.substring(0, 190) + '...';
+            }
+        }
+
+        console.log(`建立訂單: ${orderNumber}, 商品: ${itemNameStr}`);
 
         const ecpayParams = {
             MerchantID: MERCHANT_ID,
@@ -85,7 +102,7 @@ exports.initiatePayment = onCall({
             PaymentType: 'aio',
             TotalAmount: finalAmount,
             TradeDesc: 'VibeCodingCourse', 
-            ItemName: 'Vibe Coding 線上課程', 
+            ItemName: itemNameStr, // ★★★ 3. 使用動態產生的名稱 ★★★
             ReturnURL: returnUrl, 
             ClientBackURL: returnUrl || "", 
             ChoosePayment: 'ALL', 
@@ -99,6 +116,7 @@ exports.initiatePayment = onCall({
             amount: finalAmount,
             status: "PENDING",
             gateway: "ECPAY",
+            items: cartDetails, // 這裡也存一份完整的 JSON 到資料庫方便查詢
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
 

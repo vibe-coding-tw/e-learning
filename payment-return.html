@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>付款結果 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .dropdown:hover .dropdown-menu { display: block; }
+        
+        /* 動畫效果 */
+        .check-icon {
+            animation: scaleIn 0.5s ease-out forwards;
+        }
+        @keyframes scaleIn {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="index.html" class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
+                    <span>🚀</span> Vibe Coding
+                </a>
+                <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
+                    <a href="started.html" class="hover:text-cyan-600">開始上課</a>
+                    <a href="faq.html" class="hover:text-cyan-600">常見問題</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow flex items-center justify-center p-6">
+        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-lg w-full text-center border-t-8 border-green-500">
+            
+            <div class="flex justify-center mb-6">
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center check-icon">
+                    <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">付款成功！</h1>
+            <p class="text-gray-500 mb-6">感謝您的購買，您的課程權限已開通。</p>
+
+            <div class="bg-gray-50 rounded-lg p-4 mb-8 text-left text-sm text-gray-600 border border-gray-100">
+                <p class="mb-2"><strong>訂單狀態：</strong> <span class="text-green-600 font-bold">已付款</span></p>
+                <p class="mb-2"><strong>下一步：</strong> 您現在可以前往課程頁面開始學習。</p>
+                <p><strong>注意：</strong> 若您剛完成付款，權限開通可能需要 1-2 分鐘的系統處理時間。</p>
+            </div>
+
+            <div class="space-y-3">
+                <a href="started.html" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition shadow-lg hover:shadow-xl">
+                    🎓 立即開始上課
+                </a>
+                <a href="index.html" class="block w-full bg-white hover:bg-gray-50 text-gray-600 font-bold py-3 rounded-lg border border-gray-200 transition">
+                    回首頁
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 py-6 text-center text-gray-400 text-sm">
+        &copy; 2025 Vibe Coding. All rights reserved.
+    </footer>
+
+    <script type="module">
+        // 1. 匯入 Firebase (僅用於監聽登入狀態以更新 UI，非必要可省略，但為了體驗一致性建議保留)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
+            authDomain: "e-learning-942f7.firebaseapp.com",
+            projectId: "e-learning-942f7",
+            storageBucket: "e-learning-942f7.firebasestorage.app",
+            messagingSenderId: "878397058574",
+            appId: "1:878397058574:web:28aaa07a291ee3baab165f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // ==========================================
+        // 核心邏輯：清空購物車
+        // ==========================================
+        function clearCart() {
+            // 檢查是否還有購物車資料
+            const cart = localStorage.getItem('vibeCodingCart');
+            if (cart) {
+                console.log("付款完成，正在清空本地購物車...");
+                localStorage.removeItem('vibeCodingCart');
+            }
+        }
+
+        // 當頁面載入時執行
+        window.addEventListener('DOMContentLoaded', () => {
+            clearCart();
+            
+            // 檢查網址參數 (綠界可能會帶參數回來，例如 RtnCode)
+            const urlParams = new URLSearchParams(window.location.search);
+            const rtnCode = urlParams.get('RtnCode');
+            const rtnMsg = urlParams.get('RtnMsg');
+            
+            // 簡單的錯誤處理 (如果綠界顯示交易失敗但還是導回來這裡)
+            // 注意：RtnCode 1 代表成功
+            if (rtnCode && rtnCode !== '1') {
+                document.querySelector('h1').textContent = '付款處理異常';
+                document.querySelector('h1').classList.replace('text-gray-800', 'text-red-600');
+                document.querySelector('.check-icon').classList.replace('bg-green-100', 'bg-red-100');
+                document.querySelector('.check-icon svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>';
+                document.querySelector('.check-icon svg').classList.replace('text-green-600', 'text-red-600');
+                document.querySelector('p.text-gray-500').textContent = `錯誤代碼: ${rtnMsg || '未知錯誤'}，請聯絡客服。`;
+            }
+        });
+    </script>
+</body>
+</html>
