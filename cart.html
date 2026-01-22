@@ -320,86 +320,66 @@
             handlePaymentCheckout(user, total, cartItems);
         });
 
+        // ... (前面的程式碼不變)
+
         /**
-         * 處理付款結帳流程
-         * 1. 呼叫後端 Cloud Function (傳送金額、使用者資訊)
-         * 2. 後端使用 HashKey/IV 進行 AES 加密與 SHA 雜湊
-         * 3. 接收後端回傳的 TradeInfo 與 TradeSha
-         * 4. 建立表單並自動送出至金流平台
+         * 處理付款結帳流程 (綠界版)
          */
-        async function handlePaymentCheckout(user, total, cartItems) {
+         async function handlePaymentCheckout(user, total, cartItems) {
             checkoutBtn.disabled = true;
-            checkoutBtn.textContent = '🔒 正在建立安全連線...';
+            checkoutBtn.textContent = '🔒 正在連接綠界金流...';
             
             try {
-                // 呼叫後端取得加密後的交易參數
                 const response = await initiatePayment({
                     amount: total,
                     userId: user.uid,
-                    email: user.email,
                     cartDetails: cartItems, 
                     // 設定交易完成後的返回網址
-                    returnUrl: window.location.origin + '/payment-return.html',
-                    notifyUrl: window.location.origin + '/api/payment-notify' // 需對應後端 webhook
+                    returnUrl: window.location.origin + '/payment-return.html'
                 });
 
                 const data = response.data;
 
-                // 檢查是否成功取得金流參數
-                if (data && data.TradeInfo && data.TradeSha) {
-                    console.log("交易參數取得成功，正在跳轉至金流頁面...");
-                    checkoutBtn.textContent = '🚀 正在前往付款頁面...';
+                if (data && data.paymentParams) {
+                    console.log("取得綠界參數成功，正在跳轉...");
+                    checkoutBtn.textContent = '🚀 前往付款頁面...';
                     
-                    // 執行表單提交
-                    submitNewebPayForm(data);
+                    // 執行綠界表單提交
+                    submitECPayForm(data.paymentParams, data.apiUrl);
                 } else {
-                    throw new Error(data.message || '無法取得交易參數。');
+                    throw new Error('無法取得交易參數。');
                 }
 
             } catch (error) {
                 console.error("結帳失敗:", error);
-                let errorMessage = '結帳失敗：無法連接伺服器或發生未知錯誤。';
-                if (error.message) {
-                    errorMessage = `結帳失敗：${error.message}`;
-                }
-                alert(errorMessage);
+                alert(`結帳失敗：${error.message}`);
                 checkoutBtn.disabled = false;
                 checkoutBtn.textContent = '💳 前往付款';
             }
         }    
 
         /**
-         * 動態建立並送出藍新金流表單
-         * @param {Object} paymentData - 包含 MerchantID, TradeInfo, TradeSha, Version
+         * 建立並送出綠界 (ECPay) 表單
          */
-        function submitNewebPayForm(paymentData) {
+        function submitECPayForm(params, apiUrl) {
             const form = document.createElement('form');
             form.method = 'post';
-            // 正式環境 URL: https://core.newebpay.com/MPG/mpg_gateway
-            // 測試環境 URL: https://ccore.newebpay.com/MPG/mpg_gateway
-            // 請根據您的環境設定確保後端回傳正確的 apiUrl，或在此固定
-            form.action = paymentData.apiUrl || 'https://core.newebpay.com/MPG/mpg_gateway'; 
+            form.action = apiUrl; // 綠界的 API 網址
             
-            const fields = {
-                MerchantID: MERCHANT_ID, // 使用您提供的商店代號
-                TradeInfo: paymentData.TradeInfo,
-                TradeSha: paymentData.TradeSha,
-                Version: paymentData.Version || '2.0'
-            };
-
-            for (const key in fields) {
-                if (fields.hasOwnProperty(key)) {
+            // 將後端回傳的所有參數轉為 hidden input
+            for (const key in params) {
+                if (params.hasOwnProperty(key)) {
                     const input = document.createElement('input');
                     input.type = 'hidden';
                     input.name = key;
-                    input.value = fields[key];
+                    input.value = params[key];
                     form.appendChild(input);
                 }
             }
 
             paymentFormContainer.appendChild(form);
             form.submit();
-        }    
+        }
     </script>
 </body>
 </html>

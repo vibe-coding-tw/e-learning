@@ -1,118 +1,121 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
-const { defineString } = require("firebase-functions/params");
 const admin = require("firebase-admin");
-const crypto = require("crypto"); // Node.js 內建加密模組
+const crypto = require("crypto");
 
 admin.initializeApp();
 
 // ==========================================
-// 藍新金流加密核心邏輯
+// 綠界 (ECPay) CheckMacValue 產生邏輯
 // ==========================================
+function generateCheckMacValue(params, hashKey, hashIV) {
+    // 1. 將參數依照 Key 的字母順序排序 (A-Z)
+    const sortedKeys = Object.keys(params).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+    
+    // 2. 組合成 Query String
+    let rawString = sortedKeys.map(key => `${key}=${params[key]}`).join('&');
+    
+    // 3. 前後加上 HashKey 與 HashIV
+    rawString = `HashKey=${hashKey}&${rawString}&HashIV=${hashIV}`;
+    
+    // 4. 進行 URL Encode 並轉換特殊字元 (綠界要求的特殊規則)
+    let encodedString = encodeURIComponent(rawString).toLowerCase();
+    
+    // 綠界特規：將某些被 encode 的符號轉回原本的符號或綠界指定的符號
+    encodedString = encodedString
+        .replace(/%2d/g, '-')
+        .replace(/%5f/g, '_')
+        .replace(/%2e/g, '.')
+        .replace(/%21/g, '!')
+        .replace(/%2a/g, '*')
+        .replace(/%28/g, '(')
+        .replace(/%29/g, ')')
+        .replace(/%20/g, '+'); // 空白轉成 +
 
-// 1. AES 加密 (將交易資料加密)
-function encryptAES(data, key, iv) {
-    const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
-    let encrypted = cipher.update(data, "utf8", "hex");
-    encrypted += cipher.final("hex");
-    return encrypted;
+    // 5. SHA256 加密並轉大寫
+    return crypto.createHash('sha256').update(encodedString).digest('hex').toUpperCase();
 }
 
-// 2. SHA256 雜湊 (產生檢查碼)
-function encryptSHA256(data) {
-    return crypto.createHash("sha256").update(data).digest("hex").toUpperCase();
-}
+// 獲取當前時間格式 yyyy/MM/dd HH:mm:ss
+function getCurrentTime() {
+    const now = new Date();
+    // 調整為台灣時間 (UTC+8)
+    const offset = 8; 
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const date = new Date(utc + (3600000 * offset));
 
-// 3. 將物件轉換為 URL Query String (例如: Item=A&Amt=100...)
-function genDataChain(order) {
-    return Object.keys(order)
-        .filter((key) => order[key] !== undefined && order[key] !== "") // 過濾空值
-        .map((key) => `${key}=${encodeURIComponent(order[key])}`) // 進行 URL 編碼
-        .join("&");
+    const year = date.getFullYear();
+    const month = ('0' + (date.getMonth() + 1)).slice(-2);
+    const day = ('0' + date.getDate()).slice(-2);
+    const hours = ('0' + date.getHours()).slice(-2);
+    const minutes = ('0' + date.getMinutes()).slice(-2);
+    const seconds = ('0' + date.getSeconds()).slice(-2);
+    
+    return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
 }
 
 // ==========================================
-// Firebase Cloud Function: initiatePayment
+// Firebase Cloud Function
 // ==========================================
 
 exports.initiatePayment = onCall(async (request) => {
-    // 1. 驗證使用者是否登入
     if (!request.auth) {
         throw new HttpsError('unauthenticated', '請先登入會員。');
     }
 
-    // 2. 獲取前端傳來的資料
-    const { amount, email, cartDetails, returnUrl, notifyUrl } = request.data;
+    const { amount, cartDetails, returnUrl } = request.data;
     
-    // 3. 從環境變數 (.env) 讀取金鑰
-    const MERCHANT_ID = process.env.NEWEBPAY_MERCHANT_ID;
-    const HASH_KEY = process.env.NEWEBPAY_HASH_KEY;
-    const HASH_IV = process.env.NEWEBPAY_HASH_IV;
-    const API_URL = process.env.NEWEBPAY_API_URL;
-    const VERSION = process.env.NEWEBPAY_VERSION;
+    // 讀取環境變數
+    const MERCHANT_ID = process.env.ECPAY_MERCHANT_ID;
+    const HASH_KEY = process.env.ECPAY_HASH_KEY;
+    const HASH_IV = process.env.ECPAY_HASH_IV;
+    const API_URL = process.env.ECPAY_API_URL;
 
-    if (!MERCHANT_ID || !HASH_KEY || !HASH_IV) {
-        throw new HttpsError('failed-precondition', '伺服器金流設定缺失，請聯絡管理員。');
+    if (!MERCHANT_ID || !HASH_KEY) {
+        throw new HttpsError('failed-precondition', '伺服器設定缺失。');
     }
 
-    // 4. 產生訂單編號 (格式: VIBE + 時間戳記 + 隨機數)
-    // 藍新要求訂單編號不能重複且長度有限制
-    const timeStamp = Date.now();
-    const orderNumber = `VIBE${timeStamp}`;
+    const orderNumber = `VIBE${Date.now()}`; // 產生不重複訂單號
+    const tradeDate = getCurrentTime();
 
     try {
-        // 5. 準備要加密的交易參數 (TradeInfo)
-        // 這裡僅列出必要欄位，更多欄位請參考藍新文件
-        const orderParams = {
+        // 1. 準備綠界需要的參數 (不包含 CheckMacValue)
+        const ecpayParams = {
             MerchantID: MERCHANT_ID,
-            RespondType: "JSON",
-            TimeStamp: Math.floor(timeStamp / 1000), // Unix timestamp (秒)
-            Version: VERSION,
-            MerchantOrderNo: orderNumber,
-            Amt: amount,
-            ItemDesc: "Vibe Coding 課程商品", // 商品描述，不能太長
-            Email: email || "",
-            LoginType: 0, // 0: 不需登入藍新會員
-            ReturnURL: returnUrl, // 支付完成返回網址
-            NotifyURL: notifyUrl, // 背景支付通知網址
-            CREDIT: 1, // 開啟信用卡
-            WEBATM: 1, // 開啟 WebATM
-            VACC: 1    // 開啟 ATM 轉帳
+            MerchantTradeNo: orderNumber,
+            MerchantTradeDate: tradeDate,
+            PaymentType: 'aio',
+            TotalAmount: amount.toString(),
+            TradeDesc: 'VibeCodingCourse', // 交易描述
+            ItemName: 'Vibe Coding 線上課程', // 商品名稱 (多筆可用 # 分隔)
+            ReturnURL: returnUrl, // 付款完成通知網址 (Server-to-Server)
+            ClientBackURL: returnUrl, // 付款完成後導回前端的網址 (Client redirect)
+            ChoosePayment: 'ALL', // 所有付款方式
+            EncryptType: '1', // 固定為 1 (SHA256)
         };
 
-        // 6. 執行加密流程
-        // 步驟 A: 將參數轉為 Query String
-        const dataChain = genDataChain(orderParams);
-        
-        // 步驟 B: AES 加密 -> 得到 TradeInfo
-        const tradeInfo = encryptAES(dataChain, HASH_KEY, HASH_IV);
-        
-        // 步驟 C: 產生檢查碼 -> 得到 TradeSha
-        // 格式: HashKey=xxx&TradeInfo=xxx&HashIV=xxx
-        const shaString = `HashKey=${HASH_KEY}&${tradeInfo}&HashIV=${HASH_IV}`;
-        const tradeSha = encryptSHA256(shaString);
+        // 2. 計算 CheckMacValue
+        const checkMacValue = generateCheckMacValue(ecpayParams, HASH_KEY, HASH_IV);
 
-        // 7. (選用) 將訂單先存入 Firebase Firestore 以便後續對帳
+        // 3. 將 CheckMacValue 加入參數
+        ecpayParams.CheckMacValue = checkMacValue;
+
+        // 4. (選用) 寫入資料庫
         await admin.firestore().collection("orders").doc(orderNumber).set({
             uid: request.auth.uid,
             amount: amount,
-            status: "PENDING", // 待付款
-            items: cartDetails,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            gateway: "NEWEBPAY"
+            status: "PENDING",
+            gateway: "ECPAY",
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        // 8. 回傳給前端
+        // 5. 回傳給前端
         return {
-            MerchantID: MERCHANT_ID,
-            TradeInfo: tradeInfo,
-            TradeSha: tradeSha,
-            Version: VERSION,
-            apiUrl: API_URL, // 告訴前端要送去哪裡
-            orderNumber: orderNumber
+            paymentParams: ecpayParams,
+            apiUrl: API_URL
         };
 
     } catch (error) {
-        console.error("加密過程發生錯誤:", error);
-        throw new HttpsError('internal', '建立交易失敗: ' + error.message);
+        console.error("綠界參數產生錯誤:", error);
+        throw new HttpsError('internal', error.message);
     }
 });
