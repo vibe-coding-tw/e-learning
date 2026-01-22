@@ -323,7 +323,7 @@
             if (cart[courseId]) { alert(`⚠️ 「${courseName}」已在購物車中！`); return; }
             if (confirm(`您確定要將課程「${courseName}」加入購物車嗎？`)) {
                 addToCart(courseId, courseName, coursePrice);
-                alert(`🛒 已加入購物車！`); 
+                // ★★★ 移除 Alert，直接跳轉 ★★★
                 window.location.href = CART_URL; 
             } 
         }
@@ -385,10 +385,10 @@
             }
 
             try {
-                // ★★★ 重大修正 1：傳送 pageId 而非 courseId (對齊後端) ★★★
+                // 傳送 pageId 而非 courseId (對齊後端)
                 const result = await checkAuthFunction({ pageId: courseId });
                 
-                // ★★★ 重大修正 2：根據回傳的 authorized (boolean) 判斷狀態 ★★★
+                // 根據回傳的 authorized (boolean) 判斷狀態
                 if (result.data && result.data.authorized) {
                      updateCardAction(cardElement, 'AUTHORIZED');
                 } else {
@@ -397,7 +397,6 @@
 
             } catch (error) {
                 console.error(`授權檢查失敗:`, error);
-                // 即使失敗，也要顯示購物車按鈕，避免卡住
                 updateCardAction(cardElement, 'UNAUTHORIZED'); 
             }
         }
