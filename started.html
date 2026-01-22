@@ -129,20 +129,7 @@
                         <a href="basic.html" class="block py-1 hover:text-cyan-600">基礎實作</a>
                         <a href="advanced.html" class="block py-1 hover:text-cyan-600">進階應用</a>
                     </div>
-
-                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
-                        <p class="text-xs text-gray-400 mb-1 uppercase">組態設定</p>
-                        <a href="wifi-config.html" class="block py-1 hover:text-cyan-600">WiFi 設定</a>
-                        <a href="motor-config.html" class="block py-1 hover:text-cyan-600">馬達設定</a>
                     </div>
-
-                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
-                        <p class="text-xs text-gray-400 mb-1 uppercase">關於我們</p>
-                        <a href="faq.html" class="block py-1 hover:text-cyan-600">課程常見問題</a>
-                        <a href="about.html" class="block py-1 hover:text-cyan-600">關於付費與購買</a>
-                        <a href="collaboration.html" class="block py-1 hover:text-cyan-600">合作事宜</a>
-                    </div>
-                </div>
             </div>
         </div>
     </nav>
@@ -154,7 +141,7 @@
         </div>
 
         <div id="lesson-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-            </div>
+        </div>
 
         <div id="video-overlay"></div>
     </div>
@@ -174,8 +161,6 @@
                     <span>營業人名稱：腳丫健康科技有限公司</span>
                     <span class="hidden md:inline">|</span>
                     <span>統一編號：80187668</span>
-                    <span class="hidden md:inline">|</span>
-                    <span>課程合作洽談：info@vibe-coding.tw</span>
                 </div>
             </div>
         </div>
@@ -188,11 +173,9 @@
             menu.classList.toggle('hidden');
         });
 
-        // 讀取 JSON 資料
         fetch('./lessons.json')
             .then(response => response.json())
             .then(data => {
-                // ★ 這裡指定讀取 'started' 分類
                 renderLessons(data, 'started');
             })
             .catch(error => console.error('資料讀取失敗:', error));
@@ -242,7 +225,7 @@
                         <div class="lesson-body flex flex-col h-full">
                             <div class="flex items-center gap-3 mb-4"> 
                                 <div class="lesson-icon text-4xl bg-blue-50 p-2 rounded-lg">${lesson.icon}</div>                        
-                                <span class="phase-tag bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-1 rounded">
+                                <span class="phase-tag bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded">
                                     ${lesson.tagText}
                                 </span>
                             </div>
@@ -255,10 +238,10 @@
                             </div>
                             
                             <div class="mt-4 pt-2 border-t border-gray-100 text-center">
-                                <span class="text-2xl font-bold text-indigo-600 tracking-tight">${priceDisplay}</span>
+                                <span class="text-2xl font-bold text-blue-600 tracking-tight">${priceDisplay}</span>
                             </div>
 
-                            <div class="flex gap-2 mt-3">
+                            <div class="flex gap-2 mt-3 button-group">
                                 ${videoButtonHtml}
                                 <button class="action-btn ${loadButtonClass} py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>
                                     載入中...
@@ -357,11 +340,10 @@
             const coursePrice = cardElement.dataset.coursePrice;
             const classroomUrl = cardElement.dataset.classroomUrl;
             
-            // 入門課程中，如果有免費課程，邏輯會自動處理
             const isFreeCourse = parseInt(coursePrice, 10) === 0;
 
-            const parentFlex = btn.parentElement; 
-            const hasVideoButton = parentFlex.children.length > 1;
+            const buttonGroup = cardElement.querySelector('.button-group');
+            const hasVideoButton = buttonGroup && buttonGroup.children.length > 1;
             const widthClass = hasVideoButton ? 'flex-1' : 'w-full';
 
             btn.onclick = null; 
@@ -369,12 +351,11 @@
 
             if (status === 'AUTHORIZED') {
                 btn.textContent = '✅ 進入課程內容';
-                // ★ 這裡改為藍色 (bg-blue-600)
+                // 藍色主題 (Blue-600)
                 btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium transition`;
                 btn.onclick = () => { window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`; };
             } else if (status === 'NOT_LOGGED_IN' || status === 'UNAUTHORIZED' || status === 'ERROR') {
                 
-                // 針對免費課程的特殊處理
                 if (isFreeCourse && status === 'NOT_LOGGED_IN') {
                     btn.textContent = '👤 請先登入 (免費)';
                     btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
@@ -398,18 +379,26 @@
             const classroomUrl = cardElement.dataset.classroomUrl;
             const isFreeCourse = parseInt(cardElement.dataset.coursePrice, 10) === 0;
 
-            // 免費課程：已登入則直接授權 (不查資料庫)
             if (isFreeCourse && user) {
                 updateCardAction(cardElement, 'AUTHORIZED');
                 return;
             }
 
             try {
-                const result = await checkAuthFunction({ courseId: courseId, targetUrl: encodeURIComponent(classroomUrl) });
-                updateCardAction(cardElement, result.data.status);
+                // ★★★ 重大修正 1：傳送 pageId 而非 courseId (對齊後端) ★★★
+                const result = await checkAuthFunction({ pageId: courseId });
+                
+                // ★★★ 重大修正 2：根據回傳的 authorized (boolean) 判斷狀態 ★★★
+                if (result.data && result.data.authorized) {
+                     updateCardAction(cardElement, 'AUTHORIZED');
+                } else {
+                     updateCardAction(cardElement, 'UNAUTHORIZED');
+                }
+
             } catch (error) {
                 console.error(`授權檢查失敗:`, error);
-                updateCardAction(cardElement, 'UNAUTHORIZED');
+                // 即使失敗，也要顯示購物車按鈕，避免卡住
+                updateCardAction(cardElement, 'UNAUTHORIZED'); 
             }
         }
 
