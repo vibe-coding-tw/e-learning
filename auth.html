@@ -2,148 +2,111 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>課程授權驗證中...</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>課程授權驗證中...</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; padding-top: 50px; background-color: #f4f7f9; }
-        .loading { font-size: 1.2em; color: #1a73e8; background-color: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); max-width: 400px; margin: 50px auto; }
-        #status-message { margin-top: 15px; font-weight: bold; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body>
-    <div class="loading">
-        <p>🔄 正在檢查您的課程權限，請稍候...</p>
-        <p id="status-message">正在連接 Firebase 服務...</p>
+<body class="bg-gray-50 h-screen flex flex-col items-center justify-center">
+
+    <div id="loading-ui" class="text-center">
+        <div class="loader mx-auto mb-4"></div>
+        <h2 class="text-xl font-bold text-gray-700">正在驗證學員身份...</h2>
+        <p class="text-gray-500 mt-2">請稍候，我們正在為您開啟課程內容。</p>
+    </div>
+
+    <div id="error-ui" class="hidden text-center max-w-md p-6 bg-white rounded-lg shadow-lg">
+        <div class="text-red-500 text-5xl mb-4">⚠️</div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">無法存取課程</h2>
+        <p id="error-msg" class="text-gray-600 mb-6">您尚未購買此課程，或權限已過期。</p>
+        <a href="index.html" class="bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 transition">返回首頁</a>
     </div>
 
     <script type="module">
-        // 1. 匯入必要的 Firebase 函式
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
-        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
-
-        // 2. 您的 Firebase 配置
         const firebaseConfig = {
-          apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
-          authDomain: "e-learning-942f7.firebaseapp.com",
-          projectId: "e-learning-942f7",
-          storageBucket: "e-learning-942f7.firebasestorage.app",
-          messagingSenderId: "878397058574",
-          appId: "1:878397058574:web:28aaa07a291ee3baab165f"
+            apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
+            authDomain: "e-learning-942f7.firebaseapp.com",
+            projectId: "e-learning-942f7",
+            storageBucket: "e-learning-942f7.firebasestorage.app",
+            messagingSenderId: "878397058574",
+            appId: "1:878397058574:web:28aaa07a291ee3baab165f"
         };
-        
-        // 3. 靜態配置
-        const CART_URL = 'cart.html'; 
 
-        // 4. 初始化 Firebase 服務
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);           
-        const functions = getFunctions(app, 'asia-east1'); 
+        const auth = getAuth(app);
+        const functions = getFunctions(app, 'asia-east1');
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
 
-        // 更新狀態訊息
-        const statusMessageElement = document.getElementById('status-message');
-        statusMessageElement.textContent = "服務已連線，檢查登入狀態...";
-
-
-        // 5. 授權流程的核心邏輯
-        const urlParams = new URLSearchParams(window.location.search);
-        
-        // 獲取課程 ID、目標 URL
-        const courseId = urlParams.get('id'); 
-        const encodedTargetUrl = urlParams.get('url');
-        const targetUrl = encodedTargetUrl ? decodeURIComponent(encodedTargetUrl) : null;
-        
-        // 💥 修正：獲取課程價格，並判斷是否為免費 (價格為 '0')
-        const coursePrice = urlParams.get('price');
-        const isFreeCourse = coursePrice === '0'; 
-
-
-        // 檢查核心參數是否存在 (coursePrice 遺失時不視為錯誤，因為它可以走 CF 檢查，但 courseId 和 url 必須有)
-        if (!encodedTargetUrl || !courseId) {
-             statusMessageElement.textContent = "錯誤：缺少目標課程連結或課程 ID 參數。";
-             setTimeout(() => {
-                 window.location.href = `${CART_URL}?error=invalid_link`;
-             }, 2000);
-        } else {
-            // 如果 URL 參數正確，開始監聽登入狀態
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    // 已登入：執行授權驗證或直接跳轉
-                    statusMessageElement.textContent = `已登入：${user.email}，正在驗證課程權限...`;
-                    await startAuthorizationFlow(user, courseId, encodedTargetUrl, targetUrl, isFreeCourse);
-                } else {
-                    // 未登入：引導用戶登入
-                    statusMessageElement.textContent = "偵測到您尚未登入，正在引導登入...";
-                    
-                    const provider = new GoogleAuthProvider();
-                    try {
-                        // 嘗試登入 (成功後會重新觸發 onAuthStateChanged)
-                        await signInWithPopup(auth, provider);
-                    } catch (error) {
-                        // 登入失敗或已取消
-                        console.error("登入失敗:", error);
-                        statusMessageElement.textContent = "登入失敗或已取消，將導回購物車。";
-                        
-                        setTimeout(() => {
-                            window.location.href = `${CART_URL}?error=login_failed`;
-                        }, 2000);
-                    }
-                }
-            });
+        function showError(message) {
+            document.getElementById('loading-ui').classList.add('hidden');
+            document.getElementById('error-ui').classList.remove('hidden');
+            if (message) document.getElementById('error-msg').textContent = message;
         }
-        
-        // 呼叫 Cloud Function 進行後端驗證 (或跳過)
-        async function startAuthorizationFlow(user, courseId, encodedTargetUrl, targetUrl, isFreeCourse) {
-            
-            // 💥 修正 1：如果價格明確為 '0' (來自 basic.html)，直接導向
-            if (isFreeCourse) { 
-                statusMessageElement.textContent = `🎉 直接跳轉至免費課程...`;
-                setTimeout(() => {
-                    window.location.href = targetUrl; 
-                    //window.open(targetUrl, '_blank');
-                }, 1000);
-                return; 
+
+        async function verifyAndRedirect(user) {
+            // 1. 解析網址參數
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetUrl = urlParams.get('url'); // 真實課程網址 (Google Classroom / YouTube)
+            const courseId = urlParams.get('id');   // 課程 ID
+            const price = urlParams.get('price');   // 價格 (判斷是否為免費課)
+
+            if (!targetUrl || !courseId) {
+                showError("參數錯誤：找不到課程連結。");
+                return;
             }
 
-            // --- 收費課程 (價格 > 0 或 price 參數遺失) 才會走到這裡 ---
+            // 2. 如果是免費課程，直接跳轉
+            if (parseInt(price) === 0) {
+                console.log("免費課程，直接跳轉...");
+                window.location.replace(decodeURIComponent(targetUrl));
+                return;
+            }
+
+            // 3. 付費課程：呼叫後端二次驗證
             try {
-                // 呼叫後端 API，傳入實際的 courseId
-                const result = await checkAuthFunction({ 
-                    courseId: courseId,
-                    targetUrl: encodedTargetUrl // 傳遞 encoded URL 給 CF
-                });
-
-                const status = result.data.status;
-                const redirectUrl = result.data.redirectUrl; 
-
-                statusMessageElement.textContent = `驗證狀態: ${status}，正在導向...`;
-
-                if (status === 'AUTHORIZED') {
-                    statusMessageElement.textContent = `✅ 權限通過！跳轉至課程...`;
-                    setTimeout(() => {
-                        //window.location.href = redirectUrl; // 導向課程連結
-                        window.open(targetUrl, '_blank');
-                    }, 1000);
+                const result = await checkAuthFunction({ pageId: courseId });
+                
+                if (result.data && result.data.authorized) {
+                    // 驗證成功！跳轉到真實內容
+                    // decodeURIComponent 解碼網址，例如把 %3A 變回 :
+                    window.location.replace(decodeURIComponent(targetUrl));
                 } else {
-                    statusMessageElement.textContent = `❌ 權限不足，請先購買課程。`;
-                    
-                    setTimeout(() => {
-                         // 導向 Cloud Function 回傳的路徑 (預期是 cart.html)
-                         window.location.href = redirectUrl;
-                    }, 2000);
+                    showError("系統查無您的購買紀錄，請確認是否已登入正確帳號。");
                 }
-
             } catch (error) {
-                // API 呼叫失敗，導向購物車
-                console.error("收費課程 API 呼叫失敗:", error);
-                statusMessageElement.textContent = "系統錯誤，無法驗證權限，請聯絡管理員。";
-                setTimeout(() => {
-                    window.location.href = `${CART_URL}?error=system_error`;
-                }, 3000);
+                console.error(error);
+                showError("伺服器連線錯誤，請稍後再試。");
             }
         }
+
+        // 監聽登入狀態
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                verifyAndRedirect(user);
+            } else {
+                // 如果沒登入，保留一點時間讓 Firebase 嘗試自動登入，若真的沒登入則導回登入頁或顯示錯誤
+                setTimeout(() => {
+                    if (!auth.currentUser) {
+                        alert("請先登入會員");
+                        window.location.href = "index.html"; 
+                    }
+                }, 1000);
+            }
+        });
     </script>
 </body>
 </html>

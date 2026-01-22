@@ -110,45 +110,49 @@ exports.initiatePayment = onCall({
     }
 });
 
+// ... (前面的 initiatePayment 與其他程式碼保持不變，只修改最下方的 checkPaymentAuthorization)
+
 // ==========================================
-// 2. 檢查權限 (checkPaymentAuthorization) ★★★ 新增這個 ★★★
+// 2. 檢查權限 (精確檢查版)
 // ==========================================
 exports.checkPaymentAuthorization = onCall({ 
-    region: "asia-east1", // 確保跟前端呼叫的區域一致
+    region: "asia-east1", 
     cors: true,
 }, async (request) => {
     
     if (!request.auth) {
-        // 使用者沒登入，直接回傳沒權限
         return { authorized: false, message: "User not logged in" };
     }
 
     const uid = request.auth.uid;
-    const { pageId } = request.data; // 前端可能會傳它是哪一頁 (例如 'basic')
+    const { pageId } = request.data; // 這是前端傳來的課程 ID (例如 started-01)
 
     try {
-        // 查詢該用戶所有訂單
+        // 1. 抓取該用戶所有狀態為 "PENDING" 或 "SUCCESS" 的訂單
         const ordersSnapshot = await admin.firestore().collection("orders")
             .where("uid", "==", uid)
+            .where("status", "in", ["SUCCESS", "PENDING"]) // 只找付款成功或待付款的
             .get();
 
         if (ordersSnapshot.empty) {
             return { authorized: false, message: "No orders found" };
         }
 
-        // 檢查是否有「成功」或「處理中」的訂單
-        // 在正式環境，您應該只檢查 'SUCCESS' 或 'PAID'
-        // 但因為我們還沒寫綠界的 "回傳接收 (Webhook)"，訂單狀態會一直是 PENDING
-        // 為了讓您現在能測試看到內容，我們先允許 'PENDING'
-        const hasValidOrder = ordersSnapshot.docs.some(doc => {
+        // 2. ★★★ 修正重點：深入檢查訂單內容 (items) 是否包含這個 pageId ★★★
+        let hasCourse = false;
+        
+        ordersSnapshot.forEach(doc => {
             const data = doc.data();
-            return data.status === "SUCCESS" || data.status === "PENDING";
+            // 檢查 items 物件中是否有這個課程 ID 的 key
+            if (data.items && data.items[pageId]) {
+                hasCourse = true;
+            }
         });
 
-        if (hasValidOrder) {
+        if (hasCourse) {
             return { authorized: true };
         } else {
-            return { authorized: false, message: "No valid payment found" };
+            return { authorized: false, message: "Course not found in orders" };
         }
 
     } catch (error) {
