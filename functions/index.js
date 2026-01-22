@@ -8,19 +8,18 @@ admin.initializeApp();
 // 綠界 (ECPay) CheckMacValue 產生邏輯
 // ==========================================
 function generateCheckMacValue(params, hashKey, hashIV) {
-    // 1. 將參數依照 Key 的字母順序排序 (A-Z)
-    const sortedKeys = Object.keys(params).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-    
-    // 2. 組合成 Query String
-    let rawString = sortedKeys.map(key => `${key}=${params[key]}`).join('&');
-    
-    // 3. 前後加上 HashKey 與 HashIV
+    const filteredParams = {};
+    Object.keys(params).forEach(key => {
+        if (key !== 'CheckMacValue' && params[key] !== undefined && params[key] !== null && params[key] !== '') {
+            filteredParams[key] = params[key];
+        }
+    });
+
+    const sortedKeys = Object.keys(filteredParams).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+    let rawString = sortedKeys.map(key => `${key}=${filteredParams[key]}`).join('&');
     rawString = `HashKey=${hashKey}&${rawString}&HashIV=${hashIV}`;
     
-    // 4. 進行 URL Encode 並轉換特殊字元 (綠界要求的特殊規則)
     let encodedString = encodeURIComponent(rawString).toLowerCase();
-    
-    // 綠界特規：將某些被 encode 的符號轉回原本的符號或綠界指定的符號
     encodedString = encodedString
         .replace(/%2d/g, '-')
         .replace(/%5f/g, '_')
@@ -29,93 +28,87 @@ function generateCheckMacValue(params, hashKey, hashIV) {
         .replace(/%2a/g, '*')
         .replace(/%28/g, '(')
         .replace(/%29/g, ')')
-        .replace(/%20/g, '+'); // 空白轉成 +
+        .replace(/%20/g, '+'); 
 
-    // 5. SHA256 加密並轉大寫
     return crypto.createHash('sha256').update(encodedString).digest('hex').toUpperCase();
 }
 
-// 獲取當前時間格式 yyyy/MM/dd HH:mm:ss
 function getCurrentTime() {
     const now = new Date();
-    // 調整為台灣時間 (UTC+8)
     const offset = 8; 
     const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
     const date = new Date(utc + (3600000 * offset));
-
-    const year = date.getFullYear();
-    const month = ('0' + (date.getMonth() + 1)).slice(-2);
-    const day = ('0' + date.getDate()).slice(-2);
-    const hours = ('0' + date.getHours()).slice(-2);
-    const minutes = ('0' + date.getMinutes()).slice(-2);
-    const seconds = ('0' + date.getSeconds()).slice(-2);
     
-    return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+    return `${date.getFullYear()}/${('0' + (date.getMonth() + 1)).slice(-2)}/${('0' + date.getDate()).slice(-2)} ${('0' + date.getHours()).slice(-2)}:${('0' + date.getMinutes()).slice(-2)}:${('0' + date.getSeconds()).slice(-2)}`;
 }
 
 // ==========================================
-// Firebase Cloud Function
+// Firebase Cloud Function (正規 .env 版)
 // ==========================================
 
-exports.initiatePayment = onCall(async (request) => {
-    if (!request.auth) {
-        throw new HttpsError('unauthenticated', '請先登入會員。');
-    }
+exports.initiatePayment = onCall({ 
+    region: "asia-east1", 
+    cors: true,
+}, async (request) => {
 
-    const { amount, cartDetails, returnUrl } = request.data;
-    
-    // 讀取環境變數
+    // ★★★ 修正重點：從 process.env 讀取變數 ★★★
+    // 這裡定義變數，確保下方主程式能抓到
     const MERCHANT_ID = process.env.ECPAY_MERCHANT_ID;
     const HASH_KEY = process.env.ECPAY_HASH_KEY;
     const HASH_IV = process.env.ECPAY_HASH_IV;
     const API_URL = process.env.ECPAY_API_URL;
 
+    console.log("開始執行 initiatePayment (使用 .env 配置)..."); 
+
+    // 防呆機制：如果 .env 沒讀到，在 Log 印出警告
     if (!MERCHANT_ID || !HASH_KEY) {
-        throw new HttpsError('failed-precondition', '伺服器設定缺失。');
+        console.error("嚴重錯誤：讀取不到 .env 環境變數，請檢查部署設定。");
+        throw new HttpsError('internal', '伺服器配置錯誤 (Missing Env Vars)');
     }
 
-    const orderNumber = `VIBE${Date.now()}`; // 產生不重複訂單號
-    const tradeDate = getCurrentTime();
+    if (!request.auth) {
+        throw new HttpsError('unauthenticated', '請先登入會員。');
+    }
 
     try {
-        // 1. 準備綠界需要的參數 (不包含 CheckMacValue)
+        const { amount, returnUrl } = request.data;
+        const finalAmount = parseInt(amount, 10);
+        const orderNumber = `VIBE${Date.now()}`; 
+        const tradeDate = getCurrentTime();
+
+        console.log(`準備建立訂單: ${orderNumber}, 金額: ${finalAmount}`);
+
         const ecpayParams = {
             MerchantID: MERCHANT_ID,
             MerchantTradeNo: orderNumber,
             MerchantTradeDate: tradeDate,
             PaymentType: 'aio',
-            TotalAmount: amount.toString(),
-            TradeDesc: 'VibeCodingCourse', // 交易描述
-            ItemName: 'Vibe Coding 線上課程', // 商品名稱 (多筆可用 # 分隔)
-            ReturnURL: returnUrl, // 付款完成通知網址 (Server-to-Server)
-            ClientBackURL: returnUrl, // 付款完成後導回前端的網址 (Client redirect)
-            ChoosePayment: 'ALL', // 所有付款方式
-            EncryptType: '1', // 固定為 1 (SHA256)
+            TotalAmount: finalAmount,
+            TradeDesc: 'VibeCodingCourse', 
+            ItemName: 'Vibe Coding 線上課程', 
+            ReturnURL: returnUrl, 
+            ClientBackURL: returnUrl || "", 
+            ChoosePayment: 'ALL', 
+            EncryptType: '1', 
         };
 
-        // 2. 計算 CheckMacValue
-        const checkMacValue = generateCheckMacValue(ecpayParams, HASH_KEY, HASH_IV);
+        ecpayParams.CheckMacValue = generateCheckMacValue(ecpayParams, HASH_KEY, HASH_IV);
 
-        // 3. 將 CheckMacValue 加入參數
-        ecpayParams.CheckMacValue = checkMacValue;
-
-        // 4. (選用) 寫入資料庫
         await admin.firestore().collection("orders").doc(orderNumber).set({
             uid: request.auth.uid,
-            amount: amount,
+            amount: finalAmount,
             status: "PENDING",
             gateway: "ECPAY",
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        // 5. 回傳給前端
         return {
             paymentParams: ecpayParams,
             apiUrl: API_URL
         };
 
     } catch (error) {
-        console.error("綠界參數產生錯誤:", error);
-        throw new HttpsError('internal', error.message);
+        console.error("後端發生錯誤:", error);
+        throw new HttpsError('internal', `後端處理失敗: ${error.message}`);
     }
 });
