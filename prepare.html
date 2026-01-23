@@ -8,153 +8,50 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     
     <style>
-        /* 基礎樣式 (使用 Tailwind 的 reset) */
+        /* 基礎樣式 */
         body { 
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #f7fafc; /* 與主頁一致的淺灰 */
+            font-family: 'Inter', 'Segoe UI', sans-serif; 
+            background-color: #f7fafc; 
             color: #333; 
         }
-        .container { 
-            max-width: 1200px; 
-            margin: auto; 
-        }
+        .container { max-width: 1200px; margin: auto; }
         
-        /* 頁面標題樣式 */
-        .page-header h1 { 
-            color: #1e3a8a; /* 深藍色，呼應主色調 */
-            text-align: center; 
-            margin-bottom: 10px; 
-        }
-        .section-title-underline {
-            height: 4px;
-            width: 80px;
-            background-color: #06b6d4; /* 青色底線 */
-            margin: 0 auto 2rem;
-            border-radius: 2px;
-        }
+        .page-header h1 { color: #1e3a8a; text-align: center; margin-bottom: 10px; }
+        /* 標題底線：青色 */
+        .section-title-underline { height: 4px; width: 80px; background-color: #06b6d4; margin: 0 auto 2rem; border-radius: 2px; }
 
-        /* 資訊卡片網格佈局 */
-        .info-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
-            gap: 30px; 
-            margin-top: 30px;
-        }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; margin-top: 30px; }
         
-        /* 資訊卡片樣式 */
         .info-card { 
-            background-color: #fff; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            overflow: hidden; 
-            padding: 25px;
-            height: 100%;
-            transition: transform 0.3s ease, box-shadow 0.3s ease; 
-            display: flex;
-            flex-direction: column;
-            border-top: 4px solid #06b6d4; /* 統一的頂部強調色 */
+            background-color: #fff; border-radius: 12px; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden; padding: 25px; height: 100%;
+            transition: transform 0.3s ease; display: flex; flex-direction: column;
+            /* 頂部邊框：青色 */
+            border-top: 4px solid #06b6d4; 
         }
-        /* 連結/課程卡片懸停效果 */
-        .course-card:hover { 
-            transform: translateY(-5px); 
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            cursor: pointer;
-        }
+        .course-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); cursor: pointer; }
 
-        .card-header { 
-            display: flex; 
-            align-items: center; 
-            margin-bottom: 20px; 
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-        }
-        .card-header h2 { 
-            margin: 0; 
-            font-size: 1.5em; 
-            color: #1f2937; /* 標題深灰色 */
-            font-weight: 700;
-        }
-        .card-icon { 
-            width: 40px; 
-            height: 40px; 
-            background-color: #e0f2fe; /* 淺藍底 */
-            color: #0284c7; /* 深藍字 */
-            border-radius: 50%; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            font-size: 1.2em; 
-            margin-right: 15px;
-            font-weight: bold;
-        }
+        .card-header { display: flex; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .card-header h2 { margin: 0; font-size: 1.5em; color: #1f2937; font-weight: 700; }
+        /* Icon：青色主題 */
+        .card-icon { width: 40px; height: 40px; background-color: #cffafe; color: #0891b2; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.2em; margin-right: 15px; font-weight: bold; }
         
-        /* 內容列表樣式 */
-        .spec-item {
-            margin-bottom: 15px;
-            line-height: 1.5;
-            color: #4b5563; /* 內文灰色 */
-        }
-        .spec-item strong {
-            display: block;
-            color: #111827; /* 重點黑色 */
-            margin-bottom: 3px;
-        }
+        .spec-item { margin-bottom: 15px; line-height: 1.5; color: #4b5563; }
+        .spec-item strong { display: block; color: #111827; margin-bottom: 3px; }
         
-        /* 提示框樣式 */
-        .note {
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            font-size: 0.95em;
-        }
+        .note { padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 0.95em; }
         
-        /* 動態按鈕樣式 */
-        .action-btn { 
-            margin-top: auto; /* 推到底部 */
-            width: 100%; 
-            padding: 12px; 
-            border-radius: 8px; 
-            font-weight: 600; 
-            transition: all 0.2s;
-            cursor: pointer;
-            text-align: center;
-        }
+        .action-btn { margin-top: auto; width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; transition: all 0.2s; cursor: pointer; text-align: center; }
 
-        /* 圖片與規格樣式 */
-        .hardware-img-wrapper {
-            text-align: center;
-            margin-top: 10px;
-            margin-bottom: 20px;
-        }
-        .hardware-img-wrapper img {
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+        .hardware-img-wrapper { text-align: center; margin-top: 10px; margin-bottom: 20px; }
+        .hardware-img-wrapper img { border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
 
-        /* 圖片裁切樣式 */
-        .basic-car-crop-wrapper {
-          overflow: hidden;     
-          display: block;
-          position: relative;
-          border-radius: 8px;
-        }
-        .basic-car-crop-wrapper::before {
-          content: "";
-          display: block;
-          padding-top: 73%;    
-        }
-        .basic-car-crop-wrapper img {
-          position: absolute;
-          top: -42%;           
-          left: 0;
-          width: 100%;
-          height: auto;
-        }
+        .basic-car-crop-wrapper { overflow: hidden; display: block; position: relative; border-radius: 8px; }
+        .basic-car-crop-wrapper::before { content: ""; display: block; padding-top: 73%; }
+        .basic-car-crop-wrapper img { position: absolute; top: -42%; left: 0; width: 100%; height: auto; }
 
-        /* 下拉選單樣式 (與主頁一致) */
-        .dropdown:hover .dropdown-menu {
-            display: block;
-        }
+        .dropdown:hover .dropdown-menu { display: block; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -230,20 +127,7 @@
                         <a href="basic.html" class="block py-1 hover:text-cyan-600">基礎實作</a>
                         <a href="advanced.html" class="block py-1 hover:text-cyan-600">進階應用</a>
                     </div>
-
-                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
-                        <p class="text-xs text-gray-400 mb-1 uppercase">組態設定</p>
-                        <a href="wifi-config.html" class="block py-1 hover:text-cyan-600">WiFi 設定</a>
-                        <a href="motor-config.html" class="block py-1 hover:text-cyan-600">馬達設定</a>
                     </div>
-
-                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
-                        <p class="text-xs text-gray-400 mb-1 uppercase">關於我們</p>
-                        <a href="faq.html" class="block py-1 hover:text-cyan-600">課程常見問題</a>
-                        <a href="about.html" class="block py-1 hover:text-cyan-600">關於付費與購買</a>
-                        <a href="collaboration.html" class="block py-1 hover:text-cyan-600">合作事宜</a>
-                    </div>
-                </div>
             </div>
         </div>
     </nav>
@@ -458,12 +342,10 @@
     </script>
 
     <script type="module">
-        // 1. 匯入必要的 Firebase 函式
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
-        // 2. 您的 Firebase 配置 (請替換為您的真實配置)
         const firebaseConfig = {
           apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
           authDomain: "e-learning-942f7.firebaseapp.com",
@@ -473,7 +355,6 @@
           appId: "1:878397058574:web:28aaa07a291ee3baab165f"
         };
 
-        // 3. 初始化 Firebase 服務
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);           
         const functions = getFunctions(app, 'asia-east1');         
@@ -482,7 +363,7 @@
         const AUTH_URL = 'auth.html'; 
 
         // ===============================================
-        // A. 購物車核心邏輯 (與 basic.html 保持一致，但此頁面不會觸發)
+        // A. 購物車核心邏輯
         // ===============================================
         function addToCart(productId, productName, productPrice) {
             let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
@@ -502,13 +383,9 @@
             return { success: true, message: `「${productName}」已成功加入購物車！` };
         }
 
-        // ===============================================
-        // B. 購物車確認流程 (與 basic.html 保持一致)
-        // ===============================================
         function handleAddToCartConfirmation(courseId, courseName, coursePrice) {
             const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             
-            // 預先檢查購物車，如果已存在，只彈出 alert 提醒
             if (cart[courseId]) {
                 alert(`⚠️ 「${courseName}」已在購物車中！`);
                 return; 
@@ -516,19 +393,15 @@
             
             const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`;
             
-            const isConfirmed = confirm(`您確定要將課程「${courseName}」加入購物車嗎？\n\n價格：${priceText}`);
+            const isConfirmed = confirm(`您確定要將「${courseName}」加入購物車嗎？\n\n價格：${priceText}`);
 
             if (isConfirmed) {
-                // 如果使用者按下「確定」
                 addToCart(courseId, courseName, coursePrice);
-                alert(`🛒 「${courseName}」已加入購物車，請前往結帳頁面！`); 
-                window.location.href = CART_URL; // 保持 basic.html 的行為 (如果商品是收費的)
+                // ★★★ 移除 Alert，直接跳轉 ★★★
+                window.location.href = CART_URL; 
             } 
         }
 
-        // ===============================================
-        // C. 登入/登出邏輯 (與 basic.html 保持一致)
-        // ===============================================
         async function handleLogin() {
             const provider = new GoogleAuthProvider();
             try {
@@ -546,12 +419,8 @@
         // D. 動態按鈕狀態更新核心邏輯
         // ===============================================
         
-        // 使用通用選擇器選擇所有課程卡片
         const lessonCards = document.querySelectorAll('.course-card'); 
 
-        /**
-         * 根據授權狀態更新單一課程卡片的按鈕
-         */
         function updateCardAction(cardElement, status) {
             const btn = cardElement.querySelector('.action-btn');
             if (!btn) return; 
@@ -563,28 +432,22 @@
             const isFreeCourse = parseInt(coursePrice, 10) === 0; 
             const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`; 
 
-            // 清除所有舊的事件監聽器
             btn.onclick = null; 
             btn.disabled = false;
 
             if (status === 'AUTHORIZED') {
-                // 狀態 1: 已授權 -> 進入課程
                 btn.textContent = '✅ 進入課程內容';
-                btn.className = 'action-btn bg-green-600 hover:bg-green-700 text-white mt-auto';
+                // ★ 改為青色 (Cyan-600) 以配合頁面主題
+                btn.className = 'action-btn bg-cyan-600 hover:bg-cyan-700 text-white mt-auto';
                 btn.onclick = () => {
-                    // 傳遞 courseId 和 coursePrice 給 auth.html 
                     window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`;
                 };
             } else if (status === 'UNAUTHORIZED' || status === 'ERROR') {
-                // 狀態 2 & 5: 已登入但未購買 或 CF 檢查失敗
-
                 if (isFreeCourse) {
-                    // 免費課程出現 UNAUTHORIZED/ERROR 視為異常或未登入
-                    btn.textContent = '👤 請先登入以進入課程 (免費)';
+                    btn.textContent = '👤 請先登入 (免費)';
                     btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white mt-auto';
                     btn.onclick = handleLogin;
                 } else {
-                    // 收費課程：引導加入購物車 (點擊後進入確認流程)
                     btn.textContent = `🛒 加入購物車 (${priceText})`;
                     btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white mt-auto';
                     btn.onclick = () => {
@@ -592,15 +455,11 @@
                     };
                 }
             } else if (status === 'NOT_LOGGED_IN') {
-                // 狀態 3: 未登入
-
                 if (isFreeCourse) {
-                    // 免費課程：引導登入
-                    btn.textContent = '👤 請先登入以進入課程 (免費)';
+                    btn.textContent = '👤 請先登入 (免費)';
                     btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white mt-auto';
                     btn.onclick = handleLogin;
                 } else {
-                    // 收費課程：引導加入購物車 (點擊後進入確認流程)
                     btn.textContent = `🛒 加入購物車 (${priceText})`;
                     btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white mt-auto';
                     btn.onclick = () => {
@@ -609,16 +468,12 @@
                 }
 
             } else if (status === 'LOADING') {
-                // 狀態 4: 載入中
-                btn.textContent = '權限檢查中...';
+                btn.textContent = '載入中...';
                 btn.className = 'action-btn bg-gray-400 text-white mt-auto';
                 btn.disabled = true;
             } 
         }
 
-        /**
-         * 檢查單一課程的授權狀態
-         */
         async function checkLessonAuthorization(cardElement, user) {
             updateCardAction(cardElement, 'LOADING');
 
@@ -627,45 +482,41 @@
             const isFreeCourse = parseInt(cardElement.dataset.coursePrice, 10) === 0;
 
             if (!user) {
-                // 1. 未登入
                 updateCardAction(cardElement, 'NOT_LOGGED_IN');
                 return;
             }
 
-            // 免費課程且使用者已登入，直接視為 AUTHORIZED (跳過 CF)
             if (isFreeCourse) {
                 updateCardAction(cardElement, 'AUTHORIZED');
                 return; 
             }
 
-            // --- 收費課程才會走到這裡 (呼叫 CF) ---
             try {
+                // ★★★ 修正點 1：傳送 pageId ★★★
                 const result = await checkAuthFunction({ 
-                    courseId: courseId, 
-                    targetUrl: encodeURIComponent(classroomUrl) 
+                    pageId: courseId
                 });
 
-                const status = result.data.status; 
-                updateCardAction(cardElement, status);
+                // ★★★ 修正點 2：檢查 authorized (boolean) ★★★
+                if (result.data && result.data.authorized) {
+                    updateCardAction(cardElement, 'AUTHORIZED');
+                } else {
+                    updateCardAction(cardElement, 'UNAUTHORIZED');
+                }
 
             } catch (error) {
                 console.error(`課程 ${courseId} 授權檢查失敗:`, error);
-                
-                // CF 呼叫失敗，收費課程導向 UNAUTHORIZED (加入購物車)
                 updateCardAction(cardElement, 'UNAUTHORIZED');
             }
         }
 
-        // ----------------------------------------------------
-        // E. 總體授權流程控制器 (對所有卡片進行迴圈檢查)
-        // ----------------------------------------------------
         onAuthStateChanged(auth, (user) => {
             const userDisplay = document.getElementById('user-display');
             const loginBtn = document.getElementById('login-btn');
 
             if (user) {
                 userDisplay.textContent = user.displayName || user.email;
-                userDisplay.classList.remove('hidden'); // 確保顯示
+                userDisplay.classList.remove('hidden'); 
                 loginBtn.textContent = '登出';
                 loginBtn.onclick = handleLogout;
                 
@@ -674,8 +525,8 @@
                 });
             } else {
                 userDisplay.textContent = '訪客';
-                userDisplay.classList.add('hidden'); // 手機版隱藏訪客文字
-                userDisplay.classList.remove('md:inline'); // 電腦版顯示
+                userDisplay.classList.add('hidden'); 
+                userDisplay.classList.remove('md:inline'); 
                 
                 loginBtn.textContent = '登入';
                 loginBtn.onclick = handleLogin;

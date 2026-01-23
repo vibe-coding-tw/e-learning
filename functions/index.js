@@ -1,11 +1,21 @@
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
 
 admin.initializeApp();
 
 // ==========================================
-// 共用工具函式
+// 共用設定
+// ==========================================
+const MERCHANT_ID = process.env.ECPAY_MERCHANT_ID || "3271550";
+const HASH_KEY = process.env.ECPAY_HASH_KEY || "ekyTDhA4ifnwfRFu";
+const HASH_IV = process.env.ECPAY_HASH_IV || "FnoEMtZFKRg6nUEx";
+// 您的專案 ID (用於組裝 NotifyURL)
+const PROJECT_ID = "e-learning-942f7"; 
+const REGION = "asia-east1";
+
+// ==========================================
+// 工具函式
 // ==========================================
 function generateCheckMacValue(params, hashKey, hashIV) {
     const filteredParams = {};
@@ -45,15 +55,10 @@ function getCurrentTime() {
 // 1. 建立訂單 (initiatePayment)
 // ==========================================
 exports.initiatePayment = onCall({ 
-    region: "asia-east1", 
+    region: REGION, 
     cors: true,
 }, async (request) => {
-    // 讀取環境變數 (若失敗則使用預設值方便測試)
-    const MERCHANT_ID = process.env.ECPAY_MERCHANT_ID || "3271550";
-    const HASH_KEY = process.env.ECPAY_HASH_KEY || "ekyTDhA4ifnwfRFu";
-    const HASH_IV = process.env.ECPAY_HASH_IV || "FnoEMtZFKRg6nUEx";
-    const API_URL = process.env.ECPAY_API_URL || "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5";
-
+    
     if (!request.auth) {
         throw new HttpsError('unauthenticated', '請先登入會員。');
     }
@@ -63,6 +68,10 @@ exports.initiatePayment = onCall({
         const finalAmount = parseInt(amount, 10);
         const orderNumber = `VIBE${Date.now()}`; 
         const tradeDate = getCurrentTime();
+
+        // 這裡設定綠界付款完成後，要背景呼叫的網址 (Webhook)
+        // 格式: https://{地區}-{專案ID}.cloudfunctions.net/paymentNotify
+        const notifyUrl = `https://${REGION}-${PROJECT_ID}.cloudfunctions.net/paymentNotify`;
 
         let itemNameStr = 'Vibe Coding 線上課程';
         if (cartDetails && Object.keys(cartDetails).length > 0) {
@@ -83,7 +92,8 @@ exports.initiatePayment = onCall({
             TotalAmount: finalAmount,
             TradeDesc: 'VibeCodingCourse', 
             ItemName: itemNameStr, 
-            ReturnURL: returnUrl, 
+            ReturnURL: returnUrl,  // 使用者瀏覽器跳轉回來的網址
+            NotifyURL: notifyUrl,  // ★★★ 綠界伺服器背景通知的網址 ★★★
             ClientBackURL: returnUrl || "", 
             ChoosePayment: 'ALL', 
             EncryptType: '1', 
@@ -91,18 +101,21 @@ exports.initiatePayment = onCall({
 
         ecpayParams.CheckMacValue = generateCheckMacValue(ecpayParams, HASH_KEY, HASH_IV);
 
+        // 建立訂單，狀態為 PENDING (待付款)
         await admin.firestore().collection("orders").doc(orderNumber).set({
             uid: request.auth.uid,
             amount: finalAmount,
-            // 注意：正式上線時，這裡應該要是 PENDING，等綠界通知改為 SUCCESS
-            // 但為了讓您現在測試能過，我們先標記這個訂單存在。
             status: "PENDING", 
             gateway: "ECPAY",
             items: cartDetails,
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        return { paymentParams: ecpayParams, apiUrl: API_URL };
+        return { 
+            paymentParams: ecpayParams, 
+            // 如果您在 .env 有設定 ECPAY_API_URL 就用它，沒有就用預設的正式網址
+            apiUrl: process.env.ECPAY_API_URL || "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5" 
+        };
 
     } catch (error) {
         console.error("建立訂單錯誤:", error);
@@ -110,13 +123,57 @@ exports.initiatePayment = onCall({
     }
 });
 
-// ... (前面的 initiatePayment 與其他程式碼保持不變，只修改最下方的 checkPaymentAuthorization)
+// ==========================================
+// 2. 接收綠界付款通知 (paymentNotify) ★★★ 新增 ★★★
+// ==========================================
+// 這是一個 HTTP Function (onRequest)，因為綠界是用傳統 POST Form 傳送資料
+exports.paymentNotify = onRequest({ region: REGION }, async (req, res) => {
+    // 綠界傳送的 Content-Type 是 application/x-www-form-urlencoded
+    const data = req.body; 
+
+    console.log("收到綠界付款通知:", JSON.stringify(data));
+
+    try {
+        // 1. 基本檢查：是否有回傳 RtnCode
+        if (!data || !data.RtnCode) {
+            console.error("無效的通知資料");
+            return res.status(400).send("0|Error");
+        }
+
+        // 2. 檢查交易狀態 (RtnCode === '1' 代表成功)
+        if (data.RtnCode === '1') {
+            const orderId = data.MerchantTradeNo; // 我們的訂單編號
+            
+            // 3. 更新資料庫狀態為 SUCCESS
+            console.log(`訂單 ${orderId} 付款成功，正在更新資料庫...`);
+            
+            await admin.firestore().collection("orders").doc(orderId).update({
+                status: "SUCCESS",
+                paidAt: admin.firestore.FieldValue.serverTimestamp(),
+                ecpayTradeNo: data.TradeNo || "", // 綠界的交易序號
+                paymentDate: data.PaymentDate || ""
+            });
+
+            // 4. 回應綠界我們收到了 (必須回傳 1|OK)
+            return res.status(200).send("1|OK");
+        } else {
+            console.warn(`訂單 ${data.MerchantTradeNo} 付款失敗或模擬付款 (RtnCode: ${data.RtnCode})`);
+            // 即使失敗也要回應 1|OK 避免綠界一直重試，或者您可以選擇更新訂單為 FAILED
+            return res.status(200).send("1|OK");
+        }
+
+    } catch (error) {
+        console.error("處理付款通知失敗:", error);
+        // 如果是伺服器錯誤，回傳錯誤代碼，讓綠界稍後重試
+        return res.status(500).send("0|Internal Error");
+    }
+});
 
 // ==========================================
-// 2. 檢查權限 (精確檢查版)
+// 3. 檢查權限 (checkPaymentAuthorization)
 // ==========================================
 exports.checkPaymentAuthorization = onCall({ 
-    region: "asia-east1", 
+    region: REGION, 
     cors: true,
 }, async (request) => {
     
@@ -125,25 +182,24 @@ exports.checkPaymentAuthorization = onCall({
     }
 
     const uid = request.auth.uid;
-    const { pageId } = request.data; // 這是前端傳來的課程 ID (例如 started-01)
+    const { pageId } = request.data; 
 
     try {
-        // 1. 抓取該用戶所有狀態為 "PENDING" 或 "SUCCESS" 的訂單
+        // ★★★ 修正點：只抓取狀態為 "SUCCESS" (付款成功) 的訂單 ★★★
+        // 我們移除了 "PENDING"，所以只有真正付款成功 (透過 paymentNotify 更新) 的訂單才有效
         const ordersSnapshot = await admin.firestore().collection("orders")
             .where("uid", "==", uid)
-            .where("status", "in", ["SUCCESS", "PENDING"]) // 只找付款成功或待付款的
+            .where("status", "==", "SUCCESS") 
             .get();
 
         if (ordersSnapshot.empty) {
-            return { authorized: false, message: "No orders found" };
+            return { authorized: false, message: "No paid orders found" };
         }
 
-        // 2. ★★★ 修正重點：深入檢查訂單內容 (items) 是否包含這個 pageId ★★★
         let hasCourse = false;
-        
         ordersSnapshot.forEach(doc => {
             const data = doc.data();
-            // 檢查 items 物件中是否有這個課程 ID 的 key
+            // 檢查 items 是否包含此課程
             if (data.items && data.items[pageId]) {
                 hasCourse = true;
             }
@@ -152,7 +208,7 @@ exports.checkPaymentAuthorization = onCall({
         if (hasCourse) {
             return { authorized: true };
         } else {
-            return { authorized: false, message: "Course not found in orders" };
+            return { authorized: false, message: "Course not paid" };
         }
 
     } catch (error) {

@@ -130,20 +130,7 @@
                         <a href="basic.html" class="block py-1 hover:text-cyan-600">基礎實作</a>
                         <a href="advanced.html" class="block py-1 hover:text-cyan-600">進階應用</a>
                     </div>
-
-                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
-                        <p class="text-xs text-gray-400 mb-1 uppercase">組態設定</p>
-                        <a href="wifi-config.html" class="block py-1 hover:text-cyan-600">WiFi 設定</a>
-                        <a href="motor-config.html" class="block py-1 hover:text-cyan-600">馬達設定</a>
                     </div>
-
-                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
-                        <p class="text-xs text-gray-400 mb-1 uppercase">關於我們</p>
-                        <a href="faq.html" class="block py-1 hover:text-cyan-600">課程常見問題</a>
-                        <a href="about.html" class="block py-1 hover:text-cyan-600">關於付費與購買</a>
-                        <a href="collaboration.html" class="block py-1 hover:text-cyan-600">合作事宜</a>
-                    </div>
-                </div>
             </div>
         </div>
     </nav>
@@ -225,6 +212,7 @@
                         課程預覽
                     </button>` : '';
 
+                // ★★★ 修正點：預設按鈕寬度邏輯 ★★★
                 const loadButtonClass = lesson.videoId ? 'flex-1' : 'w-full';
 
                 return `
@@ -260,7 +248,7 @@
                                 <span class="text-2xl font-bold text-indigo-600 tracking-tight">${priceDisplay}</span>
                             </div>
 
-                            <div class="flex gap-2 mt-3">
+                            <div class="flex gap-2 mt-3 button-group">
                                 ${videoButtonHtml}
                                 <button class="action-btn ${loadButtonClass} py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>
                                     載入中...
@@ -343,7 +331,7 @@
             if (cart[courseId]) { alert(`⚠️ 「${courseName}」已在購物車中！`); return; }
             if (confirm(`您確定要將課程「${courseName}」加入購物車嗎？`)) {
                 addToCart(courseId, courseName, coursePrice);
-                alert(`🛒 已加入購物車！`); 
+                // ★★★ 移除 Alert，直接跳轉 ★★★
                 window.location.href = CART_URL; 
             } 
         }
@@ -351,6 +339,7 @@
         window.handleLogin = async () => { await signInWithPopup(auth, new GoogleAuthProvider()); };
         window.handleLogout = async () => { await signOut(auth); };
 
+        // ★★★ 修正這裡：單一卡片更新邏輯 ★★★
         function updateCardAction(cardElement, status) {
             const btn = cardElement.querySelector('.action-btn');
             if (!btn) return; 
@@ -361,7 +350,7 @@
             const classroomUrl = cardElement.dataset.classroomUrl;
 
             // 檢查旁邊是否有影片按鈕，以決定寬度
-            const parentFlex = btn.parentElement; 
+            const parentFlex = btn.parentElement; // .button-group
             const hasVideoButton = parentFlex.children.length > 1;
             const widthClass = hasVideoButton ? 'flex-1' : 'w-full';
 
@@ -370,7 +359,7 @@
 
             if (status === 'AUTHORIZED') {
                 btn.textContent = '✅ 進入課程內容';
-                // ★ 這裡改為紅色 (bg-red-600)
+                // ★ 這裡保持紅色主題 (bg-red-600)
                 btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-red-600 hover:bg-red-700 text-white font-medium transition`;
                 btn.onclick = () => { window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`; };
             } else if (status === 'NOT_LOGGED_IN' || status === 'UNAUTHORIZED' || status === 'ERROR') {
@@ -391,8 +380,16 @@
             const classroomUrl = cardElement.dataset.classroomUrl;
 
             try {
-                const result = await checkAuthFunction({ courseId: courseId, targetUrl: encodeURIComponent(classroomUrl) });
-                updateCardAction(cardElement, result.data.status);
+                // ★★★ 傳送 pageId 而非 courseId (對齊後端) ★★★
+                const result = await checkAuthFunction({ pageId: courseId });
+                
+                // ★★★ 判斷 authorized 布林值 ★★★
+                if (result.data && result.data.authorized) {
+                     updateCardAction(cardElement, 'AUTHORIZED');
+                } else {
+                     updateCardAction(cardElement, 'UNAUTHORIZED');
+                }
+
             } catch (error) {
                 console.error(`授權檢查失敗:`, error);
                 updateCardAction(cardElement, 'UNAUTHORIZED');
