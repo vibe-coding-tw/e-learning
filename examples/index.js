@@ -4,15 +4,34 @@ const crypto = require("crypto");
 
 admin.initializeApp();
 
+// ... (保留最上面的引用與 admin.initializeApp)
+
 // ==========================================
-// 綠界測試環境設定 (Sandbox)
+// ★★★ 修改重點：切換為綠界官方測試帳號 (必過) ★★★
 // ==========================================
-const MERCHANT_ID = "2000132";                // 測試商店代號
-const HASH_KEY = "5294y06JbISpM5x9";          // 測試 HashKey
-const HASH_IV = "v77hoKGq4kWxNNIS";           // 測試 HashIV
-const ECPAY_API_URL = "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5"; // 測試環境網址
+// 測試環境專用商店代號
+const MERCHANT_ID = "2000132"; 
+// 測試環境專用 HashKey
+const HASH_KEY = "5294y06JbISpM5x9"; 
+// 測試環境專用 HashIV
+const HASH_IV = "v77hoKGq4kWxNNIS"; 
+
+// ★★★ 注意：這裡必須改用 Stage (測試) 網址 ★★★
+const ECPAY_API_URL = "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5";
+
 const REGION = "asia-east1";
 
+// ... (中間工具函式 generateCheckMacValue 與 getCurrentTime 保持不變) ...
+
+/*
+// ==========================================
+// 共用設定
+// ==========================================
+const MERCHANT_ID = process.env.ECPAY_MERCHANT_ID || "3271550";
+const HASH_KEY = process.env.ECPAY_HASH_KEY || "ekyTDhA4ifnwfRFu";
+const HASH_IV = process.env.ECPAY_HASH_IV || "FnoEMtZFKRg6nUEx";
+const REGION = "asia-east1";
+*/
 // ==========================================
 // 工具函式
 // ==========================================
@@ -68,17 +87,14 @@ exports.initiatePayment = onCall({
         const orderNumber = `VIBE${Date.now()}`; 
         const tradeDate = getCurrentTime();
 
-        // ★★★ 關鍵修正：這是您在 Google Cloud Console 看到的、正確的、可公開存取的網址 ★★★
-        // 我們之前確認過這個網址在瀏覽器會顯示 1|OK，所以這次一定會過！
-        //const notifyUrl = "https://paymentnotify-878397058574.asia-east1.run.app";
+        // ★★★ 請確認這裡是用您剛剛測試成功 (有顯示 1|OK) 的那個網址 ★★★
+        // (帶有亂碼的通常最穩，例如 b3b7ucfdka-de.a.run.app)
+        //const notifyUrl = `https://paymentnotify-b3b7ucfdka-de.a.run.app`;
+        // ✅ 請改成您之前測試成功 (顯示 1|OK) 的那個網址
+        const notifyUrl = "https://asia-east1-e-learning-942f7.cloudfunctions.net/paymentNotify";
 
-        //console.log(`[測試模式] 建立訂單: ${orderNumber}, NotifyURL: ${notifyUrl}`);
-        
-        // ★★★ 終極修正：使用您的自訂網域 ★★★
-        // 透過 Firebase Hosting Rewrite，這個網址會自動轉導到後端 Function
-        const notifyUrl = "https://vibe-coding.tw/paymentNotify";
+        console.log(`[測試模式] 建立訂單: ${orderNumber}, NotifyURL: ${notifyUrl}`);
 
-        console.log(`[自訂網域模式] 建立訂單: ${orderNumber}, NotifyURL: ${notifyUrl}`);
         let itemNameStr = 'Vibe Coding 線上課程';
         if (cartDetails && Object.keys(cartDetails).length > 0) {
             const names = [];
@@ -118,6 +134,7 @@ exports.initiatePayment = onCall({
 
         return { 
             paymentParams: ecpayParams, 
+            // ★★★ 回傳測試環境的 API 網址 ★★★
             apiUrl: ECPAY_API_URL 
         };
 
@@ -127,6 +144,79 @@ exports.initiatePayment = onCall({
     }
 });
 
+// ... (後面的 paymentNotify 和 checkPaymentAuthorization 保持不變) ...
+/*
+// ==========================================
+// 1. 建立訂單 (initiatePayment)
+// ==========================================
+exports.initiatePayment = onCall({ 
+    region: REGION, 
+    cors: true,
+}, async (request) => {
+    
+    if (!request.auth) {
+        throw new HttpsError('unauthenticated', '請先登入會員。');
+    }
+
+    try {
+        const { amount, returnUrl, cartDetails } = request.data;
+        const finalAmount = parseInt(amount, 10);
+        const orderNumber = `VIBE${Date.now()}`; 
+        const tradeDate = getCurrentTime();
+
+        // ★★★ 修正處：使用您正確的 Cloud Run 網址 ★★★
+        const notifyUrl = `https://paymentnotify-878397058574.asia-east1.run.app`;
+
+        console.log(`建立訂單: ${orderNumber}, NotifyURL: ${notifyUrl}`);
+
+        let itemNameStr = 'Vibe Coding 線上課程';
+        if (cartDetails && Object.keys(cartDetails).length > 0) {
+            const names = [];
+            Object.values(cartDetails).forEach(item => {
+                const cleanName = (item.name || '未知課程').replace(/[#&]/g, ' '); 
+                names.push(`${cleanName} x ${item.quantity || 1}`);
+            });
+            itemNameStr = names.join('#');
+            if (itemNameStr.length > 190) itemNameStr = itemNameStr.substring(0, 190) + '...';
+        }
+
+        const ecpayParams = {
+            MerchantID: MERCHANT_ID,
+            MerchantTradeNo: orderNumber,
+            MerchantTradeDate: tradeDate,
+            PaymentType: 'aio',
+            TotalAmount: finalAmount,
+            TradeDesc: 'VibeCodingCourse', 
+            ItemName: itemNameStr, 
+            ReturnURL: returnUrl,  
+            NotifyURL: notifyUrl, // 這邊就會用到上方正確的網址
+            ClientBackURL: returnUrl || "", 
+            ChoosePayment: 'ALL', 
+            EncryptType: '1', 
+        };
+
+        ecpayParams.CheckMacValue = generateCheckMacValue(ecpayParams, HASH_KEY, HASH_IV);
+
+        await admin.firestore().collection("orders").doc(orderNumber).set({
+            uid: request.auth.uid,
+            amount: finalAmount,
+            status: "PENDING", 
+            gateway: "ECPAY",
+            items: cartDetails,
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        return { 
+            paymentParams: ecpayParams, 
+            apiUrl: process.env.ECPAY_API_URL || "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5" 
+        };
+
+    } catch (error) {
+        console.error("建立訂單錯誤:", error);
+        throw new HttpsError('internal', `後端錯誤: ${error.message}`);
+    }
+});
+*/
 // ==========================================
 // 2. 接收綠界付款通知 (paymentNotify)
 // ==========================================
@@ -136,6 +226,7 @@ exports.paymentNotify = onRequest({ region: REGION }, async (req, res) => {
     console.log("收到綠界請求:", JSON.stringify(data));
 
     try {
+        // 握手測試與空資料處理：回傳 200 OK
         if (!data || !data.RtnCode) {
             console.log("偵測到空資料或握手測試，回傳 1|OK 以通過驗證");
             return res.status(200).send("1|OK");
