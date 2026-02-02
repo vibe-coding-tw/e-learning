@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>學習3：搖桿限位數學與勾股定理應用 - Vibe Coding</title>
-    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
@@ -53,11 +53,12 @@
             </p>
 
             <div class="flex flex-wrap justify-center gap-4">
-                <button onclick="playVideo()"
+                <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/geLlEPK6MY8')"
                     class="resource-btn bg-blue-500 hover:bg-blue-400 text-white px-8 py-4 rounded-full flex items-center gap-3 shadow-lg shadow-blue-500/30 font-bold transition-all">
                     <span>▶️</span> 觀看教學影片
                 </button>
-                <button onclick="openDoc()"
+                <button
+                    onclick="enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vQ2sXMOF430KsULyFkuVLQ91n3F2ptIerKFL3nGHA-wO8lPtgWs_896bLg-PfOmeF5atIDJNpzv6tgB/pub?embedded=true')"
                     class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-8 py-4 rounded-full flex items-center gap-3 backdrop-blur-sm font-bold transition-all">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -294,23 +295,7 @@
         </div>
     </footer>
 
-    <div id="media-overlay" class="fixed inset-0 bg-black z-50 hidden flex flex-col overflow-hidden outline-none"
-        tabindex="-1">
-        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-gray-200 flex justify-center">
-            <iframe id="doc-frame" class="border-0 bg-white shadow-2xl origin-top"
-                style="width: 850px; height: 100%; transition: transform 0.2s ease;" src="">
-            </iframe>
-        </div>
-        <div id="video-wrapper" class="hidden flex-grow w-full bg-black flex justify-center items-center">
-            <iframe id="video-frame" class="w-full h-full" src="" title="Course Video" frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen>
-            </iframe>
-        </div>
-        <button onclick="closeModal()"
-            class="close-video-btn absolute top-5 right-5 text-white bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full backdrop-blur-md transition">✕
-            Close</button>
-    </div>
+    <!-- Media Overlay injected by course-shared.js -->
 
     <!-- Scripts -->
     <script>
@@ -402,91 +387,16 @@
         window.addEventListener('touchend', () => { isDragging = false; });
 
 
-        // --- Media Overlay Logic ---
-        const overlay = document.getElementById('media-overlay');
-        const docWrapper = document.getElementById('doc-wrapper');
-        const videoWrapper = document.getElementById('video-wrapper');
-        let currentMode = null;
-        const BASE_DOC_WIDTH = 850;
+        // --- Standard Media Overlay Logic ---
+        // Injected by course-shared.js
 
-        const RESOURCES = {
+        window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/geLlEPK6MY8",
             doc: "https://docs.google.com/document/d/e/2PACX-1vQ2sXMOF430KsULyFkuVLQ91n3F2ptIerKFL3nGHA-wO8lPtgWs_896bLg-PfOmeF5atIDJNpzv6tgB/pub?embedded=true"
         };
-
-        function openDoc() { openModal('doc'); }
-        function playVideo() { openModal('youtube'); }
-
-        async function openModal(type) {
-            currentMode = type;
-            docWrapper.classList.add('hidden');
-            videoWrapper.classList.add('hidden');
-            overlay.classList.remove('hidden');
-            overlay.focus();
-            document.body.style.overflow = 'hidden';
-
-            try {
-                if (overlay.requestFullscreen) {
-                    await overlay.requestFullscreen();
-                } else if (overlay.webkitRequestFullscreen) {
-                    await overlay.webkitRequestFullscreen();
-                } else if (overlay.mozRequestFullScreen) {
-                    await overlay.mozRequestFullScreen();
-                } else if (overlay.msRequestFullscreen) {
-                    await overlay.msRequestFullscreen();
-                }
-            } catch (err) { console.warn("Fullscreen denied:", err); }
-
-            if (type === 'doc') {
-                docWrapper.classList.remove('hidden');
-                document.getElementById('doc-frame').src = RESOURCES.doc;
-                setTimeout(autoFitZoom, 100);
-            } else if (type === 'youtube') {
-                videoWrapper.classList.remove('hidden');
-                document.getElementById('video-frame').src = RESOURCES.youtube;
-            }
-        }
-
-        function closeModal() {
-            overlay.classList.add('hidden');
-            document.body.style.overflow = '';
-            document.getElementById('video-frame').src = "";
-            document.getElementById('doc-frame').src = "";
-            currentMode = null;
-            if (document.fullscreenElement) document.exitFullscreen();
-        }
-
-        function autoFitZoom() {
-            if (currentMode !== 'doc') return;
-            const availableWidth = docWrapper.clientWidth;
-
-            // On mobile, we want to zoom in to crop out white margins
-            // Doc actual content is usually around 600-700px wide within the 850px page
-            const isMobile = availableWidth < 768;
-            const targetContentWidth = isMobile ? 650 : BASE_DOC_WIDTH + 40;
-
-            let scale = availableWidth / targetContentWidth;
-
-            const iframe = document.getElementById('doc-frame');
-            iframe.style.transform = `scale(${scale})`;
-            iframe.style.transformOrigin = 'top center';
-            iframe.style.height = `${100 / scale}%`;
-            iframe.style.marginBottom = `${-(1 - scale) * 100}%`;
-
-            // Ensure container centers it and allows scrolling
-            docWrapper.classList.add('justify-center');
-
-            // On mobile, we might want to allow horizontal scrolling if the user wants to see the edges
-            // But usually for reading, we want to lock it. 
-            // The current scale ensures the 'content' fits the width.
-        }
-
-        window.addEventListener('resize', () => {
-            if (currentMode === 'doc' && !overlay.classList.contains('hidden')) autoFitZoom();
-        });
-
-        document.addEventListener('keydown', (e) => { if (e.key === "Escape") closeModal(); }, true);
-        document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) closeModal(); });
+    </script>
+    <script src="/course-shared.js"></script>
+    <script>
     </script>
 </body>
 

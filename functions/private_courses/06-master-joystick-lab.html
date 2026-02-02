@@ -5,54 +5,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>虛擬搖桿實驗室：從觸控原理到數學實現 - Vibe Coding</title>
-    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-    <style>
-        .tab-btn {
-            padding-bottom: 0.5rem;
-            color: #6b7280;
-            /* text-gray-500 */
-            border-bottom-width: 2px;
-            border-color: transparent;
-            transition: all 0.2s;
-            font-weight: 500;
-        }
 
-        .tab-btn:hover {
-            color: #0891b2;
-            /* hover:text-cyan-600 */
-        }
-
-        .tab-btn.active {
-            color: #2563eb;
-            /* text-blue-600 */
-            border-color: #2563eb;
-            /* border-blue-600 */
-        }
-    </style>
 </head>
 
 <body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
+    <!-- Navigation (Shared) -->
     <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center py-4">
-                <a href="../index.html"
+                <a href="/index.html"
                     class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
                     <span>🚀</span> Vibe Coding
                 </a>
 
+                <!-- Desktop Menu -->
                 <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
-                    <a href="../prepare.html" class="hover:text-cyan-600 transition">課前準備</a>
-                    <a href="../started.html" class="hover:text-cyan-600 transition">入門課程</a>
-                    <a href="../basic.html" class="hover:text-cyan-600 transition">基礎實作</a>
-                    <a href="../advanced.html" class="hover:text-cyan-600 transition">進階應用</a>
+                    <a href="/prepare.html" class="hover:text-cyan-600 transition">課前準備</a>
+                    <a href="/started.html" class="hover:text-cyan-600 transition">入門課程</a>
+                    <a href="/basic.html" class="hover:text-cyan-600 transition">基礎實作</a>
+                    <a href="/advanced.html" class="hover:text-cyan-600 transition">進階應用</a>
                 </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden text-gray-600 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16m-7 6h7"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
+            <div class="flex flex-col px-4 py-2 space-y-2 font-medium text-gray-600">
+                <a href="/prepare.html" class="block py-2 hover:text-cyan-600 transition">課前準備</a>
+                <a href="/started.html" class="block py-2 hover:text-cyan-600 transition">入門課程</a>
+                <a href="/basic.html" class="block py-2 hover:text-cyan-600 transition">基礎實作</a>
+                <a href="/advanced.html" class="block py-2 hover:text-cyan-600 transition">進階應用</a>
             </div>
         </div>
     </nav>
+    <script>
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        if (mobileBtn && mobileMenu) {
+            mobileBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+    </script>
 
     <!-- Tab Navigation Bar -->
     <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
@@ -83,7 +92,7 @@
         const tabMath = document.getElementById('tab-math');
 
         // Initial Load
-        loadContent('touch-vs-mouse.html');
+        loadContent('06-unit-touch-vs-mouse.html');
 
         function switchTab(tab) {
             // Helper to reset all tabs
@@ -97,13 +106,13 @@
 
             if (tab === 'touch') {
                 currentTabBtn = tabTouch;
-                url = 'touch-vs-mouse.html';
+                url = '06-unit-touch-vs-mouse.html';
             } else if (tab === 'canvas') {
                 currentTabBtn = tabCanvas;
-                url = 'canvas-joystick.html';
+                url = '06-unit-canvas-joystick.html';
             } else if (tab === 'math') {
                 currentTabBtn = tabMath;
-                url = 'joystick-math-limit.html';
+                url = '06-unit-joystick-math.html';
             }
 
             if (currentTabBtn) {

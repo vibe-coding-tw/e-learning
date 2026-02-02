@@ -5,43 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>觸控與滑鼠事件監聽：無人車的雙重操控術 - Vibe Coding</title>
-    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        .touch-manipulation {
-            touch-action: manipulation;
-        }
 
-        .touch-none {
-            touch-action: none;
-        }
-
-        .no-select {
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        /* Custom scrollbar for code blocks */
-        .code-scroll::-webkit-scrollbar {
-            height: 8px;
-        }
-
-        .code-scroll::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-
-        .code-scroll::-webkit-scrollbar-thumb {
-            background: #475569;
-            border-radius: 4px;
-        }
-
-        .code-scroll::-webkit-scrollbar-thumb:hover {
-            background: #64748b;
-        }
-    </style>
 </head>
 
 <body class="bg-indigo-50 font-[Inter] text-gray-800 overscroll-none">
@@ -75,11 +44,12 @@
             </p>
 
             <div class="flex flex-wrap justify-center gap-4">
-                <button onclick="playVideo()"
+                <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/J3lvIeNo-bY')"
                     class="resource-btn bg-indigo-500 hover:bg-indigo-400 text-white px-8 py-4 rounded-full flex items-center gap-3 shadow-lg shadow-indigo-500/30 font-bold transition-all transform hover:-translate-y-1">
                     <span>▶️</span> 觀看教學影片
                 </button>
-                <button onclick="openDoc()"
+                <button
+                    onclick="enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vSYindzefS_LY2Dv-f6CSHuSGbZFLA1fyIdppswvYDosGbXhFvDM1v2DudxdWpN9zGiU1twAd2gwViL/pub?embedded=true')"
                     class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-8 py-4 rounded-full flex items-center gap-3 backdrop-blur-sm font-bold transition-all">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -319,21 +289,7 @@ function <span class="text-yellow-300">getPosition</span>(e) {
     </footer>
 
     <!-- Fullscreen Media Overlay -->
-    <div id="media-overlay" class="fixed inset-0 bg-black z-50 hidden flex flex-col overflow-hidden outline-none"
-        tabindex="-1">
-        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-gray-200 flex justify-center">
-            <iframe id="doc-frame" class="border-0 bg-white shadow-2xl origin-top"
-                style="width: 850px; height: 100%; transition: transform 0.2s ease;" src=""></iframe>
-        </div>
-        <div id="video-wrapper" class="hidden flex-grow w-full bg-black flex justify-center items-center">
-            <iframe id="video-frame" class="w-full h-full" src="" title="Course Video" frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen></iframe>
-        </div>
-        <button onclick="closeModal()"
-            class="close-video-btn absolute top-5 right-5 text-white bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full backdrop-blur-md transition">✕
-            Close</button>
-    </div>
+    <!-- Media Overlay injected by course-shared.js -->
 
     <script>
         // --- Latency Tester Logic ---
@@ -386,99 +342,16 @@ function <span class="text-yellow-300">getPosition</span>(e) {
         });
 
 
-        // --- Media Overlay Logic ---
-        const overlay = document.getElementById('media-overlay');
-        const docWrapper = document.getElementById('doc-wrapper');
-        const videoWrapper = document.getElementById('video-wrapper');
-        let currentMode = null;
-        const BASE_DOC_WIDTH = 850;
+        // --- Standard Media Overlay Logic ---
+        // Injected by course-shared.js
 
-        const RESOURCES = {
+        window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/J3lvIeNo-bY",
             doc: "https://docs.google.com/document/d/e/2PACX-1vSYindzefS_LY2Dv-f6CSHuSGbZFLA1fyIdppswvYDosGbXhFvDM1v2DudxdWpN9zGiU1twAd2gwViL/pub?embedded=true"
         };
-
-        function openDoc() { openModal('doc'); }
-        function playVideo() { openModal('youtube'); }
-
-        async function openModal(type) {
-            currentMode = type;
-            docWrapper.classList.add('hidden');
-            videoWrapper.classList.add('hidden');
-            overlay.classList.remove('hidden');
-            overlay.focus();
-            document.body.style.overflow = 'hidden';
-
-            try {
-                if (overlay.requestFullscreen) {
-                    await overlay.requestFullscreen();
-                } else if (overlay.webkitRequestFullscreen) {
-                    await overlay.webkitRequestFullscreen();
-                } else if (overlay.mozRequestFullScreen) {
-                    await overlay.mozRequestFullScreen();
-                } else if (overlay.msRequestFullscreen) {
-                    await overlay.msRequestFullscreen();
-                }
-            } catch (err) { console.warn("Fullscreen denied:", err); }
-
-            if (type === 'doc') {
-                docWrapper.classList.remove('hidden');
-                document.getElementById('doc-frame').src = RESOURCES.doc;
-                setTimeout(autoFitZoom, 100);
-            } else if (type === 'youtube') {
-                videoWrapper.classList.remove('hidden');
-                document.getElementById('video-frame').src = RESOURCES.youtube;
-            }
-        }
-
-        function closeModal() {
-            overlay.classList.add('hidden');
-            document.body.style.overflow = '';
-            document.getElementById('video-frame').src = "";
-            document.getElementById('doc-frame').src = "";
-            currentMode = null;
-            if (document.fullscreenElement) document.exitFullscreen();
-        }
-
-        function autoFitZoom() {
-            if (currentMode !== 'doc') return;
-            const availableWidth = docWrapper.clientWidth;
-
-            // On mobile, we want to zoom in to crop out white margins
-            // Doc actual content is usually around 600-700px wide within the 850px page
-            const isMobile = availableWidth < 768;
-            const targetContentWidth = isMobile ? 650 : BASE_DOC_WIDTH + 40;
-
-            let scale = availableWidth / targetContentWidth;
-
-            const iframe = document.getElementById('doc-frame');
-            iframe.style.transform = `scale(${scale})`;
-            iframe.style.transformOrigin = 'top center';
-            iframe.style.height = `${100 / scale}%`;
-            iframe.style.marginBottom = `${-(1 - scale) * 100}%`;
-
-            // Ensure container centers it
-            docWrapper.classList.add('justify-center');
-        }
-
-        window.addEventListener('resize', () => {
-            if (currentMode === 'doc' && !overlay.classList.contains('hidden')) autoFitZoom();
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === "Escape") closeModal();
-        }, true); // Use capturing phase to catch event before iframe
-
-        // Optional: Message listener if iframe wants to signal close
-        window.addEventListener('message', (event) => {
-            if (event.data === 'close-modal') closeModal();
-        });
-
-        document.addEventListener('fullscreenchange', () => {
-            if (!document.fullscreenElement) closeModal();
-        });
-        document.addEventListener('webkitfullscreenchange', () => {
-            if (!document.webkitFullscreenElement) closeModal();
-        });
+    </script>
+    <script src="/course-shared.js"></script>
+    <script>
     </script>
 </body>
 

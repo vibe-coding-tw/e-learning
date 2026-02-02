@@ -208,6 +208,19 @@ const LESSONS_URL = "https://e-learning-942f7.web.app/lessons.json";
 
 async function getLessons() {
     const now = Date.now();
+    // 優先嘗試讀取本地檔案 (針對 Local Emulator 開發環境)
+    try {
+        const localPath = path.join(__dirname, "../public/lessons.json");
+        if (fs.existsSync(localPath)) {
+            // 在開發環境不 Cache 或 Cache 時間短一點，這裡直接每次讀取確保最新
+            const data = fs.readFileSync(localPath, "utf8");
+            console.log("Loaded lessons.json from local file");
+            return JSON.parse(data);
+        }
+    } catch (e) {
+        console.warn("Local lessons.json read failed, falling back to URL:", e.message);
+    }
+
     // Cache for 5 minutes (300,000 ms)
     if (cachedLessons && (now - lastFetchTime < 300000)) {
         return cachedLessons;
@@ -239,6 +252,29 @@ exports.checkPaymentAuthorization = functions.region(REGION).https.onRequest(asy
         const requestData = req.body.data || req.body || {};
         const { pageId, fileName } = requestData; // Accept fileName from frontend
 
+        // Helper to generate token with file scope
+        const generateToken = (pid, fname) => {
+            const expiry = Date.now() + 30 * 60 * 1000; // 30 mins
+            // IF fileName is missing, default to "UNDEFINED" (block access), DO NOT use "ANY"
+            const scopePart = fname || "UNDEFINED";
+            const raw = `${pid}|${scopePart}|${expiry}`;
+            const signature = crypto.createHmac('sha256', HASH_KEY).update(raw).digest('hex');
+            return `${raw}|${signature}`;
+        }
+
+        // 1. Load lessons data
+        const lessons = await getLessons();
+        // Find course by pageId (mapping to courseId in JSON)
+        const course = lessons.find(l => l.courseId === pageId);
+
+        // 2. Check if course exists and is free (price === 0) - Prioritize this!
+        if (course && course.price === 0) {
+            console.log(`Course ${pageId} is free, authorizing...`);
+            const token = generateToken(pageId, fileName);
+            return res.status(200).json({ result: { authorized: true, token: token } });
+        }
+
+        // 3. User Auth Check (Only needed for paid courses)
         let uid = null;
         const authHeader = req.headers.authorization;
         if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -255,28 +291,6 @@ exports.checkPaymentAuthorization = functions.region(REGION).https.onRequest(asy
             .where("uid", "==", uid)
             .where("status", "==", "SUCCESS")
             .get();
-
-        // Helper to generate token with file scope
-        const generateToken = (pid, fname) => {
-            const expiry = Date.now() + 30 * 60 * 1000; // 30 mins
-            // IF fileName is missing, default to "UNDEFINED" (block access), DO NOT use "ANY"
-            const scopePart = fname || "UNDEFINED";
-            const raw = `${pid}|${scopePart}|${expiry}`;
-            const signature = crypto.createHmac('sha256', HASH_KEY).update(raw).digest('hex');
-            return `${raw}|${signature}`;
-        }
-
-        // Load lessons data
-        const lessons = await getLessons();
-
-        // Find course by pageId (mapping to courseId in JSON)
-        const course = lessons.find(l => l.courseId === pageId);
-
-        // Check if course exists and is free (price === 0)
-        if (course && course.price === 0) {
-            const token = generateToken(pageId, fileName);
-            return res.status(200).json({ result: { authorized: true, token: token } });
-        }
 
         if (ordersSnapshot.empty) return res.status(200).json({ result: { authorized: false } });
 
@@ -357,23 +371,23 @@ exports.serveCourse = functions.region(REGION).https.onRequest((req, res) => {
         // C. Validate File Scope
         // scopePart IS the allowed filename.
         // Special Exception for Tab Container: getting-started.html can access its children
-        const isGettingStartedGroup = (scopePart === "getting-started.html") &&
-            (fileName === "developer-identity.html" || fileName === "vscode-setup.html" || fileName === "vscode-online.html");
+        const isGettingStartedGroup = (scopePart === "01-master-getting-started.html") &&
+            (fileName === "01-unit-developer-identity.html" || fileName === "01-unit-vscode-setup.html" || fileName === "01-unit-vscode-online.html");
 
-        const isWebAppGroup = (scopePart === "web-app-foundation.html") &&
-            (fileName === "html5-basics.html" || fileName === "flexbox-layout.html" || fileName === "ui-ux-design-standards.html");
+        const isWebAppGroup = (scopePart === "02-master-web-app.html") &&
+            (fileName === "02-unit-html5-basics.html" || fileName === "02-unit-flexbox-layout.html" || fileName === "02-unit-ui-ux-standards.html");
 
-        const isWebBleGroup = (scopePart === "web-ble-master.html") &&
-            (fileName === "web-ble-security.html" || fileName === "ble-async-programming.html" || fileName === "typed-arrays.html");
+        const isWebBleGroup = (scopePart === "03-master-web-ble.html") &&
+            (fileName === "03-unit-ble-security.html" || fileName === "03-unit-ble-async.html" || fileName === "03-unit-typed-arrays.html");
 
-        const isWebRemoteControlGroup = (scopePart === "web-remote-control.html") &&
-            (fileName === "html-css-control-panel.html" || fileName === "data-formatting-json.html" || fileName === "instruction-flow-logic.html");
+        const isWebRemoteControlGroup = (scopePart === "04-master-remote-control.html") &&
+            (fileName === "04-unit-control-panel.html" || fileName === "04-unit-data-json.html" || fileName === "04-unit-flow-logic.html");
 
-        const isTouchEventsGroup = (scopePart === "touch-events-master.html") &&
-            (fileName === "touch-events.html" || fileName === "long-press-logic.html" || fileName === "prevent-default-behavior.html");
+        const isTouchEventsGroup = (scopePart === "05-master-touch-events.html") &&
+            (fileName === "05-unit-touch-basics.html" || fileName === "05-unit-long-press.html" || fileName === "05-unit-prevent-default.html");
 
-        const isJoystickLabGroup = (scopePart.includes("joystick-lab-master") || scopePart === "joystick-lab-master.html") &&
-            (fileName === "touch-vs-mouse.html" || fileName === "canvas-joystick.html" || fileName === "joystick-math-limit.html");
+        const isJoystickLabGroup = (scopePart === "06-master-joystick-lab.html") &&
+            (fileName === "06-unit-touch-vs-mouse.html" || fileName === "06-unit-canvas-joystick.html" || fileName === "06-unit-joystick-math.html");
 
         if (scopePart !== "ANY" && scopePart !== fileName &&
             !isGettingStartedGroup && !isWebAppGroup && !isWebBleGroup &&

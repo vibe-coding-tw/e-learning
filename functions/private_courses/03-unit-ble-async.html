@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JavaScript 非同步編程：操作 BLE 的靈魂 - Vibe Coding</title>
-    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
@@ -44,11 +44,12 @@
             </p>
 
             <div class="flex flex-wrap justify-center gap-4">
-                <button onclick="playVideo()"
+                <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/d81d8eSU3EQ')"
                     class="resource-btn bg-blue-500 hover:bg-blue-400 text-white px-8 py-4 rounded-full flex items-center gap-3 shadow-lg shadow-blue-500/30 font-bold transition-all">
                     <span>▶️</span> 觀看教學影片
                 </button>
-                <button onclick="openDoc()"
+                <button
+                    onclick="enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vSOWL39uyJgCoRn_7zTie-Bf7RKr3wYtp2OnCCvWU0mbv3Ks1jUZ3A0LSWyzK7kBRG9lrOT2zZigM9W/pub?embedded=true')"
                     class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-8 py-4 rounded-full flex items-center gap-3 backdrop-blur-sm font-bold transition-all">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -59,7 +60,7 @@
     <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
         <!-- Module 1: Intuitive Lab -->
-        <section class="module-section mb-16 fade-in-up">
+        <section class="module-section mb-16">
             <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
                 <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
                 <div class="p-8 md:p-12">
@@ -165,7 +166,7 @@
         </section>
 
         <!-- Module 2: Core Principles -->
-        <section class="module-section mb-16 fade-in-up">
+        <section class="module-section mb-16">
             <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
                 <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
                 <div class="p-8 md:p-12">
@@ -312,7 +313,7 @@ navigator.bluetooth.requestDevice({...})
         </section>
 
         <!-- Module 3: Practical Challenge -->
-        <section class="module-section mb-16 fade-in-up">
+        <section class="module-section mb-16">
             <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
                 <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
                 <div class="p-8 md:p-12">
@@ -409,21 +410,7 @@ navigator.bluetooth.requestDevice({...})
         </div>
     </footer>
 
-    <!-- Fullscreen Media Overlay -->
-    <div id="media-overlay" class="fixed inset-0 bg-black z-50 hidden flex flex-col overflow-hidden">
-        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-gray-200 flex justify-center">
-            <iframe id="doc-frame" class="border-0 bg-white shadow-2xl origin-top"
-                style="width: 850px; height: 100%; transition: transform 0.2s ease;" src="">
-            </iframe>
-        </div>
-        <div id="video-wrapper" class="hidden flex-grow w-full bg-black flex justify-center items-center">
-            <iframe id="video-frame" class="w-full h-full" src="" title="Course Video" frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen>
-            </iframe>
-        </div>
-        <button onclick="closeModal()" class="close-video-btn">✕ Close</button>
-    </div>
+    <!-- Media Overlay injected by course-shared.js -->
 
     <!-- Scripts -->
     <script>
@@ -521,109 +508,15 @@ navigator.bluetooth.requestDevice({...})
 
 
         // --- Media Overlay Logic ---
-        const overlay = document.getElementById('media-overlay');
-        const docWrapper = document.getElementById('doc-wrapper');
-        const videoWrapper = document.getElementById('video-wrapper');
-        let currentMode = null;
-        let currentScale = 1.0;
-        const BASE_DOC_WIDTH = 850;
+        // Injected by course-shared.js
 
-        // Placeholders based on prompt context
-        const RESOURCES = {
+        // Define Resources
+        window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/d81d8eSU3EQ",
             doc: "https://docs.google.com/document/d/e/2PACX-1vSOWL39uyJgCoRn_7zTie-Bf7RKr3wYtp2OnCCvWU0mbv3Ks1jUZ3A0LSWyzK7kBRG9lrOT2zZigM9W/pub?embedded=true"
         };
-
-        function openDoc() {
-            openModal('doc');
-        }
-
-        function playVideo() {
-            // Check if we have a real link, otherwise mock it or search?
-            // User requested "Web Bluetooth 與非同步編程的靈魂" video from YouTube.
-            // I'll stick to a placeholder or searched ID if I had one.
-            // Using a generic Vibe Coding video placeholder for now.
-            openModal('youtube');
-        }
-
-        function openModal(type) {
-            currentMode = type;
-            docWrapper.classList.add('hidden');
-            videoWrapper.classList.add('hidden');
-            overlay.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-
-            if (type === 'doc') {
-                docWrapper.classList.remove('hidden');
-                document.getElementById('doc-frame').src = RESOURCES.doc;
-                setTimeout(autoFitZoom, 100);
-            } else if (type === 'youtube') {
-                videoWrapper.classList.remove('hidden');
-                document.getElementById('video-frame').src = RESOURCES.youtube;
-            }
-
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(err => console.log(err));
-            }
-        }
-
-        function closeModal() {
-            overlay.classList.add('hidden');
-            document.body.style.overflow = '';
-            document.getElementById('video-frame').src = "";
-            document.getElementById('doc-frame').src = "";
-
-            if (document.fullscreenElement && document.exitFullscreen) {
-                document.exitFullscreen().catch(err => console.log(err));
-            }
-            currentMode = null;
-        }
-
-        function autoFitZoom() {
-            if (currentMode !== 'doc') return;
-            const availableWidth = docWrapper.clientWidth;
-            let scale = (availableWidth - 20) / BASE_DOC_WIDTH;
-            if (scale < 0.5) scale = 0.5;
-            const iframe = document.getElementById('doc-frame');
-            iframe.style.transform = `scale(${scale})`;
-            iframe.style.height = `${100 / scale}%`;
-            iframe.style.marginBottom = `${-(1 - scale) * 100}%`;
-        }
-
-        window.addEventListener('resize', () => {
-            if (currentMode === 'doc' && !overlay.classList.contains('hidden')) autoFitZoom();
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === "Escape") closeModal();
-        });
-
-        document.addEventListener('fullscreenchange', () => {
-            if (!document.fullscreenElement && !overlay.classList.contains('hidden')) {
-                closeModal();
-            }
-        });
-
-        // --- Animation Observer ---
-        const observerOptions = {
-            root: null,
-            rootMargin: '0px',
-            threshold: 0.1
-        };
-
-        const observer = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.fade-in-up').forEach((el) => {
-            observer.observe(el);
-        });
     </script>
+    <script src="/course-shared.js"></script>
 </body>
 
 </html>

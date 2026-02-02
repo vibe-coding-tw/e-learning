@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>數據格式化：從物件到 JSON | Vibe Coding</title>
-    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap"
@@ -35,11 +35,12 @@
             </p>
 
             <div class="flex flex-wrap justify-center gap-4">
-                <button onclick="playVideo()"
+                <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/KnuXXUo87f0')"
                     class="resource-btn bg-pink-500 hover:bg-pink-400 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-lg font-bold transition">
                     <span>▶️</span> 觀看教學影片
                 </button>
-                <button onclick="openDoc()"
+                <button
+                    onclick="enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vSVkD7iQ2vDjZNg6IzhSnvWfRBNC2T4brsYjTaQ42juKnTAuF4dsts06YoU7nW2Vc5M0BwczuQURKoG/pub?embedded=true')"
                     class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-3 rounded-full flex items-center gap-2 backdrop-blur-sm font-bold transition">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -317,102 +318,17 @@ return JSON.stringify(complexData);</textarea>
         </div>
     </footer>
 
-    <!-- Fullscreen Media Overlay -->
-    <div id="media-overlay" class="fixed inset-0 bg-black z-50 hidden flex flex-col overflow-hidden">
-        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-gray-200 flex justify-center">
-            <iframe id="doc-frame" class="border-0 bg-white shadow-2xl origin-top"
-                style="width: 850px; height: 100%; transition: transform 0.2s ease;" src="">
-            </iframe>
-        </div>
-        <div id="video-wrapper" class="hidden flex-grow w-full bg-black flex justify-center items-center">
-            <iframe id="video-frame" class="w-full h-full" src="" title="Course Video" frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen>
-            </iframe>
-        </div>
-    </div>
+    <!-- Media Overlay injected by course-shared.js -->
 
     <script>
-        // --- Standard Media Overlay Logic ---
-        const overlay = document.getElementById('media-overlay');
-        const docWrapper = document.getElementById('doc-wrapper');
-        const videoWrapper = document.getElementById('video-wrapper');
-        let currentMode = null;
-        let currentScale = 1.0;
-        const BASE_DOC_WIDTH = 850;
-
-        const RESOURCES = {
+        // Define Resources
+        window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/KnuXXUo87f0",
             doc: "https://docs.google.com/document/d/e/2PACX-1vSVkD7iQ2vDjZNg6IzhSnvWfRBNC2T4brsYjTaQ42juKnTAuF4dsts06YoU7nW2Vc5M0BwczuQURKoG/pub?embedded=true"
         };
-
-        function openDoc() {
-            openModal('doc');
-        }
-
-        function playVideo() {
-            openModal('youtube');
-        }
-
-        function openModal(type) {
-            currentMode = type;
-            docWrapper.classList.add('hidden');
-            videoWrapper.classList.add('hidden');
-            overlay.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-
-            if (type === 'doc') {
-                docWrapper.classList.remove('hidden');
-                document.getElementById('doc-frame').src = RESOURCES.doc;
-                setTimeout(autoFitZoom, 100);
-            } else if (type === 'youtube') {
-                videoWrapper.classList.remove('hidden');
-                document.getElementById('video-frame').src = RESOURCES.youtube;
-            }
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(err => console.log(err));
-            }
-        }
-
-        function closeModal() {
-            overlay.classList.add('hidden');
-            document.body.style.overflow = '';
-            document.getElementById('video-frame').src = "";
-            document.getElementById('doc-frame').src = "";
-            if (document.fullscreenElement && document.exitFullscreen) {
-                document.exitFullscreen().catch(err => console.log(err));
-            }
-            currentMode = null;
-        }
-
-        function autoFitZoom() {
-            if (currentMode !== 'doc') return;
-            const availableWidth = docWrapper.clientWidth;
-            let scale = (availableWidth - 20) / BASE_DOC_WIDTH;
-            if (scale < 0.5) scale = 0.5;
-            applyZoom(scale);
-        }
-
-        function applyZoom(scale) {
-            currentScale = scale;
-            const iframe = document.getElementById('doc-frame');
-            iframe.style.transform = `scale(${scale})`;
-            iframe.style.height = `${100 / scale}%`;
-            iframe.style.marginBottom = `${-(1 - scale) * 100}%`;
-        }
-
-        window.addEventListener('resize', () => {
-            if (currentMode === 'doc' && !overlay.classList.contains('hidden')) {
-                autoFitZoom();
-            }
-        });
-
-        document.addEventListener('keydown', function (event) {
-            if (event.key === "Escape") closeModal();
-        });
-        document.addEventListener('fullscreenchange', () => {
-            if (!document.fullscreenElement && !overlay.classList.contains('hidden')) closeModal();
-        });
+    </script>
+    <script src="/course-shared.js"></script>
+    <script>
 
         // --- Lab 1: Interactive JSON Handwriting ---
         const jsonInput = document.getElementById('json-input');

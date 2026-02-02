@@ -7,49 +7,62 @@
     <title>網頁遙控器開發：從 UI 到邏輯 - Vibe Coding</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../style.css">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
+    <link rel="stylesheet" href="/style.css">
 
-        .tab-active {
-            border-bottom: 2px solid #3b82f6;
-            color: #1d4ed8;
-            font-weight: 600;
-        }
-
-        .tab-inactive {
-            color: #6b7280;
-            font-weight: 500;
-        }
-
-        .tab-inactive:hover {
-            color: #374151;
-        }
-    </style>
 </head>
 
 <body class="bg-gray-50 flex flex-col h-screen overflow-hidden">
 
     <!-- Navbar -->
-    <nav class="bg-white border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex">
-                    <div class="flex-shrink-0 flex items-center gap-2">
-                        <span class="text-2xl">🚀</span>
-                        <span class="font-bold text-xl tracking-tight text-gray-900">Vibe Coding</span>
-                    </div>
+    <!-- Navigation (Shared) -->
+    <!-- Navigation (Shared) -->
+    <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="/index.html"
+                    class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
+                    <span>🚀</span> Vibe Coding
+                </a>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
+                    <a href="/prepare.html" class="hover:text-cyan-600 transition">課前準備</a>
+                    <a href="/started.html" class="hover:text-cyan-600 transition">入門課程</a>
+                    <a href="/basic.html" class="hover:text-cyan-600 transition">基礎實作</a>
+                    <a href="/advanced.html" class="hover:text-cyan-600 transition">進階應用</a>
                 </div>
-                <div class="flex items-center">
-                    <span class="text-sm text-gray-500 mr-2">Module:</span>
-                    <span class="text-sm font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded">Web Remote
-                        Control</span>
-                </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden text-gray-600 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16m-7 6h7"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
+            <div class="flex flex-col px-4 py-2 space-y-2 font-medium text-gray-600">
+                <a href="/prepare.html" class="block py-2 hover:text-cyan-600 transition">課前準備</a>
+                <a href="/started.html" class="block py-2 hover:text-cyan-600 transition">入門課程</a>
+                <a href="/basic.html" class="block py-2 hover:text-cyan-600 transition">基礎實作</a>
+                <a href="/advanced.html" class="block py-2 hover:text-cyan-600 transition">進階應用</a>
             </div>
         </div>
     </nav>
+    <script>
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        if (mobileBtn && mobileMenu) {
+            mobileBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+    </script>
 
     <!-- Tab Header -->
     <div class="bg-white shadow-sm z-10">
@@ -80,15 +93,15 @@
         const tabs = {
             unit1: {
                 id: 'tab-unit1',
-                url: 'html-css-control-panel.html'
+                url: '04-unit-control-panel.html'
             },
             unit2: {
                 id: 'tab-unit2',
-                url: 'data-formatting-json.html'
+                url: '04-unit-data-json.html'
             },
             unit3: {
                 id: 'tab-unit3',
-                url: 'instruction-flow-logic.html'
+                url: '04-unit-flow-logic.html'
             }
         };
 
