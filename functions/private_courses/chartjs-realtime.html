@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>即時數據視覺化大師：Chart.js 與 Canvas 的效能之舞</title>
+    <!-- Use local style.css -->
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r17/Stats.min.js"></script>
+</head>
+
+<body id="page-chartjs" class="flex flex-col min-h-screen">
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">🚀 Vibe Coding</div>
+        <ul class="nav-links">
+            <li><a href="../index.html">回首頁</a></li>
+            <li><a href="../basic.html">基礎課程</a></li>
+        </ul>
+        <div class="menu-toggle" id="mobile-menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8 flex-grow max-w-5xl">
+        <div class="page-header text-center mb-12">
+            <h1 class="text-4xl font-extrabold text-slate-800 tracking-tight mb-2">即時數據視覺化大師</h1>
+            <p class="text-lg text-slate-500">探索 Chart.js 與 Canvas 的效能極限</p>
+        </div>
+
+        <!-- 1. 直覺實驗室 -->
+        <div class="section-card section-lab">
+            <h2 class="text-2xl font-bold text-pink-600 mb-4 flex items-center gap-2">
+                <span class="text-3xl">🧪</span> 1. 課前體驗：DOM vs. Canvas 大對決
+            </h2>
+            <p class="mb-6 text-gray-600">
+                網頁繪圖有兩種主要方式：<b>DOM (保留模式)</b> 與 <b>Canvas (立即模式)</b>。
+                試著點擊下方的按鈕，我們將嘗試在畫面上繪製並移動 <b>5,000 個粒子</b>，觀察看看 FPS (每秒幀數) 的變化！
+            </p>
+
+            <div class="flex gap-4 mb-4 justify-center">
+                <button id="btn-dom" onclick="startDOM()"
+                    class="px-6 py-2 bg-pink-500 text-white rounded-full hover:bg-pink-600 transition font-bold shadow-md">
+                    🔴 啟動 DOM 模式 (小心卡頓)
+                </button>
+                <button id="btn-canvas" onclick="startCanvas()"
+                    class="px-6 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition font-bold shadow-md">
+                    🔵 啟動 Canvas 模式
+                </button>
+                <button onclick="stopTest()"
+                    class="px-6 py-2 bg-gray-500 text-white rounded-full hover:bg-gray-600 transition font-bold shadow-md">
+                    ⏹️ 停止
+                </button>
+            </div>
+
+            <div class="relative mb-4">
+                <div id="visual-container">
+                    <div id="dom-container" style="display: none;"></div>
+                    <canvas id="canvas-container" width="800" height="400" style="display: none; width: 100%;"></canvas>
+                </div>
+                <!-- Stats monitor placeholder -->
+                <div id="stats-container" class="absolute top-2 right-2"></div>
+                <div id="status-text"
+                    class="absolute top-2 left-2 bg-white/90 px-3 py-1 rounded shadow text-sm font-mono text-gray-700">
+                    準備就緒</div>
+            </div>
+
+            <div class="bg-pink-50 p-4 rounded-lg border border-pink-100 mt-4">
+                <h3 class="font-bold text-pink-700 mb-2">觀察重點 🧠</h3>
+                <ul class="list-disc list-inside text-gray-700 space-y-1">
+                    <li><b>DOM 模式</b>：瀏覽器必須管理每一個粒子的「狀態」(位置、樣式、事件監聽器)。當數量達到數千時，Layout 和 Paint 的開銷會變得巨大。</li>
+                    <li><b>Canvas 模式</b>：我們只是「命令」瀏覽器在畫布上改變像素顏色。瀏覽器「射後不理」，不記住畫了什麼，因此效能極高。</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 2. 核心原理 -->
+        <div class="section-card section-core">
+            <h2 class="text-2xl font-bold text-blue-600 mb-6 flex items-center gap-2">
+                <span class="text-3xl">📉</span> 2. 核心原理：渲染範式解讀
+            </h2>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-8">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-700 mb-3">渲染架構對比</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm text-left text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3">特性</th>
+                                    <th class="px-4 py-3">保留模式 (Retained)</th>
+                                    <th class="px-4 py-3">立即模式 (Immediate)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-white border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3 font-bold">典型技術</td>
+                                    <td class="px-4 py-3">DOM (HTML), SVG</td>
+                                    <td class="px-4 py-3">HTML5 Canvas, OpenGL</td>
+                                </tr>
+                                <tr class="bg-gray-50 border-b hover:bg-gray-100">
+                                    <td class="px-4 py-3 font-bold">場景模型</td>
+                                    <td class="px-4 py-3">瀏覽器維護所有物件狀態</td>
+                                    <td class="px-4 py-3">開發者直接操作像素</td>
+                                </tr>
+                                <tr class="bg-white border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3 font-bold">渲染負擔</td>
+                                    <td class="px-4 py-3 text-red-500">隨著物件數量線性增加 (重排/重繪)</td>
+                                    <td class="px-4 py-3 text-green-600">恆定 (只看畫布解析度)</td>
+                                </tr>
+                                <tr class="bg-gray-50 hover:bg-gray-100">
+                                    <td class="px-4 py-3 font-bold">適用場景</td>
+                                    <td class="px-4 py-3">一般網頁介面、向量圖</td>
+                                    <td class="px-4 py-3">遊戲、大數據圖表</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                    <h3 class="text-lg font-bold text-gray-700 mb-2">渲染管道 (Pipeline)</h3>
+
+                    <!-- DOM Flow -->
+                    <div class="bg-pink-50 p-4 rounded-lg border border-pink-100 relative overflow-hidden">
+                        <div class="text-xs font-bold text-pink-500 mb-2 uppercase">Retained Mode (DOM)</div>
+                        <div class="flex items-center gap-2 text-sm justify-between">
+                            <div class="bg-white p-2 rounded shadow text-center flex-1">User<br>Code</div>
+                            <span class="text-gray-400">➜</span>
+                            <div class="bg-white p-2 rounded shadow text-center flex-1 border-2 border-red-200">
+                                DOM<br>Tree</div>
+                            <span class="text-gray-400">➜</span>
+                            <div class="bg-white p-2 rounded shadow text-center flex-1 border-2 border-red-200">
+                                Layout<br>& Paint</div>
+                            <span class="text-gray-400">➜</span>
+                            <div class="bg-white p-2 rounded shadow text-center flex-1">Screen</div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">瀏覽器必須記住每一個 DOM 節點。修改一個節點可能觸發全域的 Layout 計算。</p>
+                    </div>
+
+                    <!-- Canvas Flow -->
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        <div class="text-xs font-bold text-blue-500 mb-2 uppercase">Immediate Mode (Canvas)</div>
+                        <div class="flex items-center gap-2 text-sm justify-between">
+                            <div class="bg-white p-2 rounded shadow text-center flex-1">User<br>Code</div>
+                            <span class="text-gray-400">➜</span>
+                            <div class="bg-white p-2 rounded shadow text-center flex-[2] border-2 border-green-200">
+                                Rasterization (Bitblt)</div>
+                            <span class="text-gray-400">➜</span>
+                            <div class="bg-white p-2 rounded shadow text-center flex-1">Screen</div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">直接發送繪圖指令轉化為像素。不保留物件記憶，每一幀都是全新的開始。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 實戰挑戰 -->
+        <div class="section-card section-challenge">
+            <h2 class="text-2xl font-bold text-emerald-600 mb-4 flex items-center gap-2">
+                <span class="text-3xl">🛠️</span> 3. 實戰挑戰：海量數據的降採樣藝術
+            </h2>
+            <p class="mb-6 text-gray-600">
+                如果後端傳來 <b>50,000 筆</b> 監控數據，直接丟給 Chart.js 會發生什麼事？
+                <br>這會導致瀏覽器計算大量 DOM/Canvas 指令，造成嚴重卡頓。
+                我們可以使用 <b>LTTB (Largest Triangle Three Buckets)</b> 演算法，在保留波峰與波谷特徵的前提下，將數據大幅縮減。
+            </p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="md:col-span-2">
+                    <div class="relative h-[300px] w-full">
+                        <canvas id="lttbChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                    <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-100">
+                        <h4 class="font-bold text-emerald-800 mb-2">控制台 🎛️</h4>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-bold text-gray-700 mb-1">原始數據量</label>
+                            <div class="text-xl font-mono text-gray-900">50,000 點</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-bold text-gray-700 mb-1">目標採樣數 (Threshold)</label>
+                            <input type="range" id="thresholdInfo" min="100" max="5000" step="100" value="500"
+                                class="w-full h-2 bg-emerald-200 rounded-lg appearance-none cursor-pointer">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>100 (極簡)</span>
+                                <span id="thresholdVal" class="font-bold text-emerald-600">500</span>
+                                <span>5000 (精細)</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-2">
+                            <button onclick="updateChart(false)"
+                                class="w-full py-2 bg-red-500 text-white rounded hover:bg-red-600 transition text-sm font-bold">
+                                ⚠️ 載入原始數據 (50k)
+                            </button>
+                            <button onclick="updateChart(true)"
+                                class="w-full py-2 bg-emerald-500 text-white rounded hover:bg-emerald-600 transition text-sm font-bold">
+                                ✅ 套用 LTTB 降採樣
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-100 p-4 rounded-lg text-xs font-mono">
+                        <div>渲染耗時: <span id="renderTime" class="font-bold text-gray-900">-</span> ms</div>
+                        <div>實際點數: <span id="pointCount" class="font-bold text-gray-900">-</span> pts</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">🚀 Vibe Coding</div>
+            <p>&copy; 2025 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Init Stats
+        const stats = new Stats();
+        stats.showPanel(0); // 0: fps, 1: ms
+        document.getElementById('stats-container').appendChild(stats.dom);
+        stats.dom.style.position = 'absolute';
+        stats.dom.classList.add('shadow-lg', 'rounded');
+
+        let animationId = null;
+        let particles = [];
+        const COUNT = 5000;
+        const width = 800; // Fixed logic width
+        const height = 400;
+
+        // Init Particles Data
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < COUNT; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.5) * 4
+                });
+            }
+        }
+
+        // Update Physics
+        function updateParticles() {
+            for (let p of particles) {
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < 0 || p.x > width) p.vx *= -1;
+                if (p.y < 0 || p.y > height) p.vy *= -1;
+            }
+        }
+
+        // --- DOM Mode ---
+        function startDOM() {
+            stopTest();
+            document.getElementById('status-text').innerText = `DOM 模式: ${COUNT} 元素 (Layout Thrashing)`;
+            const container = document.getElementById('dom-container');
+            container.style.display = 'block';
+            document.getElementById('canvas-container').style.display = 'none';
+
+            initParticles();
+
+            // Create DOM elements
+            const fragment = document.createDocumentFragment();
+            for (let i = 0; i < COUNT; i++) {
+                const div = document.createElement('div');
+                div.className = 'particle';
+                // Store ref to div in particle object for updates
+                particles[i].el = div;
+                fragment.appendChild(div);
+            }
+            container.appendChild(fragment);
+
+            function loop() {
+                stats.begin();
+                updateParticles();
+
+                // DOM Update (Expensive!)
+                for (let p of particles) {
+                    p.el.style.transform = `translate(${p.x}px, ${p.y}px)`;
+                }
+
+                stats.end();
+                animationId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // --- Canvas Mode ---
+        function startCanvas() {
+            stopTest();
+            document.getElementById('status-text').innerText = `Canvas 模式: ${COUNT} 粒子 (GPU Rasterization)`;
+            const domContainer = document.getElementById('dom-container');
+            domContainer.style.display = 'none';
+            const canvas = document.getElementById('canvas-container');
+            canvas.style.display = 'block';
+
+            // Adjust canvas resolution for retina displays
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = width; // Reset logic size
+            canvas.height = height;
+            // Visual size set by CSS (100%), but let's just keep logic size simple for this demo
+
+            const ctx = canvas.getContext('2d');
+            initParticles();
+
+            function loop() {
+                stats.begin();
+                updateParticles();
+
+                // Canvas Draw
+                ctx.clearRect(0, 0, width, height);
+                ctx.fillStyle = '#3b82f6'; // Blue-500
+                ctx.beginPath();
+                for (let p of particles) {
+                    ctx.moveTo(p.x, p.y);
+                    ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                }
+                ctx.fill();
+
+                stats.end();
+                animationId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        function stopTest() {
+            if (animationId) cancelAnimationFrame(animationId);
+            document.getElementById('dom-container').innerHTML = ''; // Clear DOM
+            document.getElementById('status-text').innerText = '已停止';
+            document.getElementById('dom-container').style.display = 'none';
+            document.getElementById('canvas-container').style.display = 'none';
+        }
+    </script>
+    <!-- Script for LTTB Module -->
+    <script>
+        // --- LTTB Algorithm Implementation ---
+        // Source: Based on Sveinn Steinarsson's implementation
+        function lttb(data, threshold) {
+            const dataLength = data.length;
+            if (threshold >= dataLength || threshold === 0) return data;
+
+            const sampled = [];
+            let sampledIndex = 0;
+
+            // Bucket size. Leave room for start and end data points
+            const every = (dataLength - 2) / (threshold - 2);
+
+            let a = 0; // Initially a is the first point in the triangle
+            let maxAreaPoint, maxArea, area, nextA;
+
+            sampled[sampledIndex++] = data[a]; // Always add the first point
+
+            for (let i = 0; i < threshold - 2; i++) {
+                // Calculate point average for next bucket (containing c)
+                let avgX = 0;
+                let avgY = 0;
+                let avgRangeStart = Math.floor((i + 1) * every) + 1;
+                let avgRangeEnd = Math.floor((i + 2) * every) + 1;
+                avgRangeEnd = avgRangeEnd < dataLength ? avgRangeEnd : dataLength;
+
+                const avgRangeLength = avgRangeEnd - avgRangeStart;
+
+                for (; avgRangeStart < avgRangeEnd; avgRangeStart++) {
+                    avgX += data[avgRangeStart].x * 1; // * 1 enforces Number (value may be date)
+                    avgY += data[avgRangeStart].y * 1;
+                }
+                avgX /= avgRangeLength;
+                avgY /= avgRangeLength;
+
+                // Get the range for this bucket
+                let rangeOffs = Math.floor((i + 0) * every) + 1;
+                let rangeTo = Math.floor((i + 1) * every) + 1;
+
+                // Point a
+                const pointAX = data[a].x * 1; // enforce Number (value may be date)
+                const pointAY = data[a].y * 1;
+
+                maxArea = -1;
+
+                for (; rangeOffs < rangeTo; rangeOffs++) {
+                    // Calculate triangle area over three buckets
+                    area = Math.abs((pointAX - avgX) * (data[rangeOffs].y - pointAY) -
+                        (pointAX - data[rangeOffs].x) * (avgY - pointAY)) * 0.5;
+                    if (area > maxArea) {
+                        maxArea = area;
+                        maxAreaPoint = data[rangeOffs];
+                        nextA = rangeOffs; // Next a is this b
+                    }
+                }
+
+                sampled[sampledIndex++] = maxAreaPoint; // Pick this point from the bucket
+                a = nextA; // This a is the next a (chosen b)
+            }
+
+            sampled[sampledIndex++] = data[dataLength - 1]; // Always add last
+
+            return sampled;
+        }
+
+        // --- Chart.js Setup ---
+        let myChart;
+        const RAW_COUNT = 50000;
+        let rawData = [];
+
+        // Generate noisy sine wave
+        function generateRawData() {
+            rawData = [];
+            for (let i = 0; i < RAW_COUNT; i++) {
+                rawData.push({
+                    x: i,
+                    y: Math.sin(i * 0.05) * 10 + Math.random() * 5 + Math.sin(i * 0.002) * 20
+                });
+            }
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('lttbChart').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: '監控數據',
+                        borderColor: '#2563eb', // blue-600
+                        borderWidth: 1.5,
+                        radius: 0, // No points for performance
+                        data: [], // Init empty
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false, // Performance
+                    interaction: {
+                        mode: 'nearest',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        decimation: { enabled: false } // We do manual LTTB
+                    },
+                    scales: {
+                        x: { type: 'linear', display: true },
+                        y: { display: true }
+                    }
+                }
+            });
+            generateRawData();
+            // Load initial LTTB data
+            updateChart(true);
+        }
+
+        function updateChart(useLTTB) {
+            const start = performance.now();
+            const threshold = parseInt(document.getElementById('thresholdInfo').value);
+
+            let displayData;
+
+            if (useLTTB) {
+                displayData = lttb(rawData, threshold);
+                myChart.data.datasets[0].borderColor = '#10b981'; // Emerald for optimized
+            } else {
+                displayData = rawData;
+                myChart.data.datasets[0].borderColor = '#ef4444'; // Red for danger
+            }
+
+            myChart.data.datasets[0].data = displayData;
+            myChart.update();
+
+            const end = performance.now();
+
+            document.getElementById('renderTime').innerText = (end - start).toFixed(1);
+            document.getElementById('pointCount').innerText = displayData.length;
+        }
+
+        // Logic for Slider
+        const slider = document.getElementById('thresholdInfo');
+        const valDisplay = document.getElementById('thresholdVal');
+        slider.addEventListener('input', (e) => {
+            valDisplay.innerText = e.target.value;
+        });
+        slider.addEventListener('change', () => {
+            // Re-apply LTTB on slider release
+            updateChart(true);
+        });
+
+        // Initialize Module 3 on load
+        window.addEventListener('load', initChart);
+
+    </script>
+</body>
+
+</html>

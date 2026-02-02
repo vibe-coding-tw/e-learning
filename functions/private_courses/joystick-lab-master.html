@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>虛擬搖桿實驗室：從觸控原理到數學實現 - Vibe Coding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        .tab-btn {
+            padding-bottom: 0.5rem;
+            color: #6b7280;
+            /* text-gray-500 */
+            border-bottom-width: 2px;
+            border-color: transparent;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .tab-btn:hover {
+            color: #0891b2;
+            /* hover:text-cyan-600 */
+        }
+
+        .tab-btn.active {
+            color: #2563eb;
+            /* text-blue-600 */
+            border-color: #2563eb;
+            /* border-blue-600 */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+
+    <!-- Navigation (Shared) -->
+    <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="../index.html"
+                    class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
+                    <span>🚀</span> Vibe Coding
+                </a>
+
+                <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
+                    <a href="../prepare.html" class="hover:text-cyan-600 transition">課前準備</a>
+                    <a href="../started.html" class="hover:text-cyan-600 transition">入門課程</a>
+                    <a href="../basic.html" class="hover:text-cyan-600 transition">基礎實作</a>
+                    <a href="../advanced.html" class="hover:text-cyan-600 transition">進階應用</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Tab Navigation Bar -->
+    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar">
+                <button onclick="switchTab('touch')" id="tab-touch" class="tab-btn active whitespace-nowrap py-3">
+                    <span class="mr-2">1️⃣</span> 學習 1：觸控事件 (Touch Events)
+                </button>
+                <button onclick="switchTab('canvas')" id="tab-canvas" class="tab-btn whitespace-nowrap py-3">
+                    <span class="mr-2">2️⃣</span> 學習 2：虛擬搖桿 (Joystick UI)
+                </button>
+                <button onclick="switchTab('math')" id="tab-math" class="tab-btn whitespace-nowrap py-3">
+                    <span class="mr-2">3️⃣</span> 學習 3：限位數學 (Math Logic)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Area (Iframe) -->
+    <div class="flex-grow w-full relative bg-gray-100">
+        <iframe id="content-frame" src="" class="w-full h-full border-0 absolute inset-0"></iframe>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('content-frame');
+        const tabTouch = document.getElementById('tab-touch');
+        const tabCanvas = document.getElementById('tab-canvas');
+        const tabMath = document.getElementById('tab-math');
+
+        // Initial Load
+        loadContent('touch-vs-mouse.html');
+
+        function switchTab(tab) {
+            // Helper to reset all tabs
+            [tabTouch, tabCanvas, tabMath].forEach(t => {
+                t.classList.remove('active');
+            });
+
+            // Activate current tab
+            let currentTabBtn;
+            let url;
+
+            if (tab === 'touch') {
+                currentTabBtn = tabTouch;
+                url = 'touch-vs-mouse.html';
+            } else if (tab === 'canvas') {
+                currentTabBtn = tabCanvas;
+                url = 'canvas-joystick.html';
+            } else if (tab === 'math') {
+                currentTabBtn = tabMath;
+                url = 'joystick-math-limit.html';
+            }
+
+            if (currentTabBtn) {
+                currentTabBtn.classList.add('active');
+                loadContent(url);
+            }
+        }
+
+        function loadContent(url) {
+            // Pass current query parameters to children (e.g., ?token=xyz)
+            const separator = url.includes('?') ? '&' : '?';
+            const query = window.location.search.substring(1);
+
+            iframe.src = query ? `${url}${separator}${query}` : url;
+        }
+
+        // Handle browser back/forward if needed or deep linking hash
+        // Simple implementation for now
+    </script>
+</body>
+
+</html>

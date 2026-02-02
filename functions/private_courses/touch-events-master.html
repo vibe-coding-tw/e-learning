@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>觸控事件優化：長按與放開 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .tab-active {
+            border-bottom: 2px solid #3b82f6;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        .tab-inactive {
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .tab-inactive:hover {
+            color: #374151;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 flex flex-col h-screen overflow-hidden">
+
+    <!-- Navigation (Shared) -->
+    <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="../index.html"
+                    class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
+                    <span>🚀</span> Vibe Coding
+                </a>
+
+                <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
+                    <a href="../prepare.html" class="hover:text-cyan-600 transition">課前準備</a>
+                    <a href="../started.html" class="hover:text-cyan-600 transition">入門課程</a>
+                    <a href="../basic.html" class="hover:text-cyan-600 transition">基礎實作</a>
+                    <a href="../advanced.html" class="hover:text-cyan-600 transition">進階應用</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Tab Header -->
+    <div class="bg-white shadow-sm z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-8" aria-label="Tabs">
+                <button onclick="switchTab('unit1')" id="tab-unit1"
+                    class="tab-active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
+                    Unit 1: 觸控生命週期
+                </button>
+                <button onclick="switchTab('unit2')" id="tab-unit2"
+                    class="tab-inactive whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm hover:border-gray-300 transition-colors duration-200">
+                    Unit 2: 長按邏輯
+                </button>
+                <button onclick="switchTab('unit3')" id="tab-unit3"
+                    class="tab-inactive whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm hover:border-gray-300 transition-colors duration-200">
+                    Unit 3: 防止預設行為
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content (Iframe) -->
+    <main class="flex-grow w-full bg-gray-100 relative">
+        <iframe id="content-frame" src="" class="w-full h-full border-0" title="Course Content"
+            allowfullscreen></iframe>
+    </main>
+
+    <script>
+        const tabs = {
+            unit1: {
+                id: 'tab-unit1',
+                url: 'touch-events.html'
+            },
+            unit2: {
+                id: 'tab-unit2',
+                url: 'long-press-logic.html'
+            },
+            unit3: {
+                id: 'tab-unit3',
+                url: 'prevent-default-behavior.html'
+            }
+        };
+
+        function switchTab(unitKey) {
+            // Update Tab Styles
+            Object.keys(tabs).forEach(key => {
+                const tabEl = document.getElementById(tabs[key].id);
+                if (key === unitKey) {
+                    tabEl.classList.remove('tab-inactive', 'border-transparent', 'hover:border-gray-300');
+                    tabEl.classList.add('tab-active', 'border-blue-500', 'text-blue-700');
+                } else {
+                    tabEl.classList.remove('tab-active', 'border-blue-500', 'text-blue-700');
+                    tabEl.classList.add('tab-inactive', 'border-transparent', 'hover:border-gray-300');
+                }
+            });
+
+            // Update Iframe Source with Query Params (Tokens)
+            const iframe = document.getElementById('content-frame');
+            const url = tabs[unitKey].url;
+            const separator = url.includes('?') ? '&' : '?';
+            const query = window.location.search.substring(1);
+            iframe.src = query ? `${url}${separator}${query}` : url;
+        }
+
+        // Initialize first tab
+        switchTab('unit1');
+    </script>
+</body>
+
+</html>

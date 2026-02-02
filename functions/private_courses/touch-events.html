@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>觸控事件的生命週期：從指尖到搖桿 - Vibe Coding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Touch Action Helpers */
+        .touch-manipulation {
+            touch-action: manipulation;
+        }
+
+        .touch-none {
+            touch-action: none;
+        }
+
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 font-[Inter] text-gray-800 overscroll-none">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-orange-900 via-amber-900 to-slate-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="header-overlay absolute inset-0 bg-gradient-to-r from-orange-900/90 to-amber-800/90 mix-blend-multiply">
+        </div>
+        <!-- Decorative background elements -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 opacity-20">
+            <div
+                class="absolute top-10 left-10 w-64 h-64 bg-orange-500 rounded-full mix-blend-overlay filter blur-3xl animate-pulse">
+            </div>
+            <div class="absolute bottom-10 right-10 w-80 h-80 bg-red-500 rounded-full mix-blend-overlay filter blur-3xl animate-pulse"
+                style="animation-delay: 2s"></div>
+        </div>
+
+        <div class="container mx-auto px-4 relative z-10 pt-10 pb-10 text-center text-white">
+            <div
+                class="badge-header inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/20 text-orange-200 border border-orange-400/30 backdrop-blur-sm mb-8 text-sm font-semibold tracking-wide uppercase">
+                <span class="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span>
+                Touch Event Lifecycle
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight">
+                觸控事件的生命週期：<br class="hidden md:block" />從指尖到搖桿
+            </h1>
+            <p class="text-xl text-orange-100 max-w-2xl mx-auto leading-relaxed mb-10">
+                深入理解 TouchStart、TouchMove、TouchEnd 四大階段，掌握多點觸控與座標運算，打造媲美原生 App 的「零延遲」網頁遙控器。
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="playVideo()"
+                    class="resource-btn bg-orange-500 hover:bg-orange-400 text-white px-8 py-4 rounded-full flex items-center gap-3 shadow-lg shadow-orange-500/30 font-bold transition-all">
+                    <span>▶️</span> 觀看教學影片
+                </button>
+                <button onclick="openDoc()"
+                    class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-8 py-4 rounded-full flex items-center gap-3 backdrop-blur-sm font-bold transition-all">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Intuitive Lab -->
+        <section class="module-section mb-16 fade-in-up">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="section-header-left border-l-4 border-orange-500 pl-6 mb-12">
+                        <span class="text-orange-600 font-bold tracking-wider uppercase text-sm">Module 1: Intuitive
+                            Lab</span>
+                        <h2 class="text-4xl font-bold text-gray-900 mt-2">看見手指的軌跡：觸控實驗室</h2>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-12 items-start">
+                        <!-- Lab Controls/Explanation -->
+                        <div class="space-y-6">
+                            <h3 class="text-2xl font-bold text-gray-800">觸控四大階段</h3>
+                            <p class="text-gray-600 leading-relaxed mb-6">
+                                試著在右側的觸控板上快速點擊、長按滑動，觀察下方的事件紀錄。你會發現觸控事件與滑鼠事件 (`mousedown`) 有著根本的不同。
+                            </p>
+
+                            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 space-y-3">
+                                <div class="flex items-center gap-3">
+                                    <span
+                                        class="bg-green-100 text-green-700 font-mono text-xs px-2 py-1 rounded">touchstart</span>
+                                    <span class="text-sm text-gray-600">手指接觸螢幕瞬間</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span
+                                        class="bg-blue-100 text-blue-700 font-mono text-xs px-2 py-1 rounded">touchmove</span>
+                                    <span class="text-sm text-gray-600">手指在表面滑動</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span
+                                        class="bg-red-100 text-red-700 font-mono text-xs px-2 py-1 rounded">touchend</span>
+                                    <span class="text-sm text-gray-600">手指離開螢幕</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span
+                                        class="bg-gray-200 text-gray-700 font-mono text-xs px-2 py-1 rounded">touchcancel</span>
+                                    <span class="text-sm text-gray-600">系統中斷 (如來電、滑出視窗)</span>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-yellow-50 text-yellow-800 rounded-lg text-sm border border-yellow-100">
+                                <strong>💡 思考挑戰：</strong><br>
+                                為什麼快速點擊時，不僅觸發了 `touchstart`，還有 `click`？它們之間隔了多久？(這就是 300ms 延遲由來)
+                            </div>
+                        </div>
+
+                        <!-- Interactive Visualization -->
+                        <div
+                            class="relative bg-gray-900 rounded-2xl p-6 shadow-2xl border border-gray-800 min-h-[400px] flex flex-col touch-none select-none">
+                            <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                                <h4 class="text-white font-mono font-bold">Touch Playground</h4>
+                                <div id="touch-count"
+                                    class="text-amber-400 font-mono text-xs uppercase bg-amber-900/30 px-3 py-1 rounded-full border border-amber-800">
+                                    Fingers: 0
+                                </div>
+                            </div>
+
+                            <!-- Touch Area -->
+                            <div id="touch-area"
+                                class="flex-grow bg-gray-800 rounded-xl relative overflow-hidden cursor-crosshair border border-gray-700 hover:border-gray-600 transition-colors">
+                                <div
+                                    class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+                                    <span class="text-6xl text-gray-600">TOUCH ME</span>
+                                </div>
+                                <!-- Touch Points will be injected here -->
+                            </div>
+
+                            <!-- Logger -->
+                            <div id="event-log"
+                                class="mt-4 h-32 bg-black rounded-lg p-3 font-mono text-xs text-green-400 overflow-y-auto border border-gray-700 shadow-inner">
+                                <div class="opacity-50">> Waiting for input...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Core Principles -->
+        <section class="module-section mb-16 fade-in-up">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="section-header-left border-l-4 border-amber-500 pl-6 mb-12">
+                        <span class="text-amber-600 font-bold tracking-wider uppercase text-sm">Module 2: Core
+                            Principles</span>
+                        <h2 class="text-4xl font-bold text-gray-900 mt-2">解構 Touch Event 物件</h2>
+                    </div>
+
+                    <!-- Concept 1: Touch Lists -->
+                    <div class="mb-16">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-8 flex items-center gap-3">
+                            <span
+                                class="bg-amber-100 text-amber-600 w-10 h-10 rounded-full flex items-center justify-center text-lg">1</span>
+                            為什麼是陣列？(Touch Lists)
+                        </h3>
+
+                        <div class="grid lg:grid-cols-2 gap-8">
+                            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                                <p class="text-gray-600 mb-4">
+                                    滑鼠游標只有一個，但手指可以有很多個。因此 `e.touches` 回傳的是一個 **TouchList** 陣列。
+                                    在無人車遙控中，我們通常關注以下三個屬性：
+                                </p>
+                                <ul class="space-y-4">
+                                    <li class="flex items-start gap-3">
+                                        <div class="bg-blue-100 p-1 rounded text-blue-600 mt-1">📋</div>
+                                        <div>
+                                            <strong class="text-gray-800">touches</strong>
+                                            <p class="text-sm text-gray-500">當前螢幕上「所有」的手指列表。</p>
+                                        </div>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <div class="bg-indigo-100 p-1 rounded text-indigo-600 mt-1">🎯</div>
+                                        <div>
+                                            <strong class="text-gray-800">targetTouches</strong>
+                                            <p class="text-sm text-gray-500">起始於「當前 DOM 元素」的手指列表（例如：只算按在按鈕上的手指）。</p>
+                                        </div>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <div class="bg-purple-100 p-1 rounded text-purple-600 mt-1">⚡</div>
+                                        <div>
+                                            <strong class="text-gray-800">changedTouches</strong>
+                                            <p class="text-sm text-gray-500">觸發本次事件的那幾根手指（例如：剛放開的那一根）。</p>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <!-- Code Snippet -->
+                            <div class="bg-slate-900 rounded-xl p-6 shadow-xl border border-slate-800">
+                                <div
+                                    class="flex justify-between mb-3 text-sm text-slate-400 font-bold uppercase tracking-wider">
+                                    <span>JavaScript</span>
+                                </div>
+                                <pre
+                                    class="font-mono text-sm leading-relaxed overflow-x-auto p-4 bg-slate-950 rounded-lg text-slate-300">
+box.addEventListener(<span class="text-green-400">'touchmove'</span>, (e) => {
+  <span class="text-gray-500">// 阻止瀏覽器預設捲動</span>
+  e.preventDefault();
+
+  <span class="text-gray-500">// 取得第一根手指</span>
+  const touch = e.<span class="text-yellow-300">touches</span>[0];
+  
+  console.log(
+    <span class="text-cyan-300">`X: ${touch.clientX}, Y: ${touch.clientY}`</span>
+  );
+  
+  <span class="text-gray-500">// 多點觸控：遍歷所有手指</span>
+  for (let i=0; i < e.touches.length; i++) {
+     <span class="text-pink-400">updateJoystick</span>(e.touches[i]);
+  }
+}, { <span class="text-purple-400">passive: false</span> }); <span class="text-gray-500">// 重要！</span></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Concept 2: Prevent Default -->
+                    <div class="grid md:grid-cols-2 gap-8 items-center">
+                        <div class="bg-red-50 border border-red-100 rounded-xl p-8">
+                            <h3 class="text-2xl font-bold text-red-800 mb-4 flex items-center gap-3">
+                                <span
+                                    class="bg-red-200 text-red-700 w-10 h-10 rounded-full flex items-center justify-center text-lg">2</span>
+                                致命傷：瀏覽器預設行為
+                            </h3>
+                            <p class="text-red-700 leading-relaxed mb-4">
+                                當你在玩網頁搖桿時，如果不阻止預設行為，手指一滑，整個網頁就會跟著<strong>捲動</strong>或<strong>縮放</strong>，導致搖桿失控。
+                            </p>
+                            <div class="bg-white p-4 rounded-lg border border-red-200 shadow-sm">
+                                <h4 class="font-bold text-red-600 mb-2">解決方案：</h4>
+                                <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+                                    <li>在 <code>touchmove</code> 中呼叫 <code>e.preventDefault()</code>。</li>
+                                    <li>CSS 設定 <code>touch-action: none;</code> (現代瀏覽器推薦)。</li>
+                                    <li>CSS 設定 <code>user-select: none;</code> 防止選取文字。</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <h3 class="text-xl font-bold text-gray-800">觸控 ID (Identifier) 的重要性</h3>
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                                當你有兩隻手指同時在螢幕上（左手搖桿、右手按鈕），如果只用 `touches[0]`，只要左手一放開，`touches[0]` 就會變成右手，導致搖桿突然瞬移到按鈕位置！
+                            </p>
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                                <strong>正確做法：</strong> 在 `touchstart` 時記錄 `identifier`，後續更新時只更新該 ID 對應的物件。
+                            </p>
+                            <div class="flex gap-2">
+                                <div class="flex-1 bg-gray-100 rounded p-3 text-center">
+                                    <div class="text-2xl mb-1">☝️</div>
+                                    <div class="text-xs font-mono text-gray-500">ID: 0</div>
+                                </div>
+                                <div class="flex-1 bg-gray-100 rounded p-3 text-center">
+                                    <div class="text-2xl mb-1">✌️</div>
+                                    <div class="text-xs font-mono text-gray-500">ID: 1</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Practical Challenge -->
+        <section class="module-section mb-16 fade-in-up">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="section-header-left border-l-4 border-red-500 pl-6 mb-12">
+                        <span class="text-red-600 font-bold tracking-wider uppercase text-sm">Module 3: Practical
+                            Challenge</span>
+                        <h2 class="text-4xl font-bold text-gray-900 mt-2">教室實戰：打造極致靈敏介面</h2>
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <!-- Task 1-1 -->
+                        <div
+                            class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col h-full group">
+                            <div class="bg-gradient-to-r from-orange-500 to-amber-500 h-2"></div>
+                            <div class="p-6 flex-grow">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-xl text-gray-800 group-hover:text-amber-600 transition">作業
+                                        1-1</h3>
+                                    <span class="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded font-bold">45
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-3">「零延遲」按鈕實作</h4>
+                                <p class="text-sm text-gray-600 mb-4 leading-relaxed">
+                                    將原有的 <code>click</code> 事件全部替換為 <code>touchstart</code>。並處理 "Ghost Clicks" (瀏覽器
+                                    300ms 後自動補發的 click)。
+                                </p>
+                                <div class="mt-auto pt-4 border-t border-gray-50">
+                                    <p class="text-xs text-gray-400 font-bold uppercase mb-1">Goal</p>
+                                    <p class="text-sm text-gray-500">按鈕按下瞬間 LED 必須立刻亮起，不能有任何體感延遲。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Task 1-2 -->
+                        <div
+                            class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col h-full group">
+                            <div class="bg-gradient-to-r from-red-500 to-rose-500 h-2"></div>
+                            <div class="p-6 flex-grow">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-xl text-gray-800 group-hover:text-red-600 transition">作業
+                                        1-2</h3>
+                                    <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-3">多指操控：搖桿與按鈕並行</h4>
+                                <p class="text-sm text-gray-600 mb-4 leading-relaxed">
+                                    實作「左手虛擬搖桿，右手鳴笛按鈕」。使用 <code>changedTouches</code> 遍歷陣列，確保左右手操作互不干擾。
+                                </p>
+                                <div class="mt-auto pt-4 border-t border-gray-50">
+                                    <p class="text-xs text-gray-400 font-bold uppercase mb-1">Challenge</p>
+                                    <p class="text-sm text-gray-500">當手指滑出按鈕範圍時，如何觸發 <code>touchend</code> 讓馬達立即停止？</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Task 1-3 -->
+                        <div
+                            class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col h-full group">
+                            <div class="bg-gradient-to-r from-indigo-500 to-blue-500 h-2"></div>
+                            <div class="p-6 flex-grow">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-xl text-gray-800 group-hover:text-indigo-600 transition">
+                                        作業 1-3</h3>
+                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">45
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-3">防誤觸與防縮放安全鎖</h4>
+                                <p class="text-sm text-gray-600 mb-4 leading-relaxed">
+                                    徹底鎖定 Web App 介面，使其表現得像原生 App。防止雙指縮放導致介面崩潰，並加入 CSS 觸控回饋（按壓發光）。
+                                </p>
+                                <div class="mt-auto pt-4 border-t border-gray-50">
+                                    <p class="text-xs text-gray-400 font-bold uppercase mb-1">Outcome</p>
+                                    <p class="text-sm text-gray-500">緊張操作下，介面始終穩定，不會出現瀏覽器選單或縮放。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-900 text-white py-12 border-t border-gray-800">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500">© 2024 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Fullscreen Media Overlay -->
+    <div id="media-overlay" class="fixed inset-0 bg-black z-50 hidden flex flex-col overflow-hidden">
+        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-gray-200 flex justify-center">
+            <iframe id="doc-frame" class="border-0 bg-white shadow-2xl origin-top"
+                style="width: 850px; height: 100%; transition: transform 0.2s ease;" src="">
+            </iframe>
+        </div>
+        <div id="video-wrapper" class="hidden flex-grow w-full bg-black flex justify-center items-center">
+            <iframe id="video-frame" class="w-full h-full" src="" title="Course Video" frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen>
+            </iframe>
+        </div>
+        <button onclick="closeModal()"
+            class="close-video-btn absolute top-5 right-5 text-white bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full backdrop-blur-md transition">✕
+            Close</button>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // --- Interactive Lab: Touch Visualizer ---
+        const touchArea = document.getElementById('touch-area');
+        const eventLog = document.getElementById('event-log');
+        const touchCountLabel = document.getElementById('touch-count');
+
+        // Colors for different fingers to visualize multi-touch
+        const touchColors = ['#ff8800', '#00ccff', '#ff00cc', '#00ff66', '#ffff00'];
+        const activeTouches = new Map(); // identifier -> element
+
+        function log(msg) {
+            const line = document.createElement('div');
+            const time = new Date().toLocaleTimeString().split(' ')[0] + '.' + new Date().getMilliseconds().toString().padStart(3, '0');
+            line.innerHTML = `<span class="opacity-50">[${time}]</span> ${msg}`;
+            eventLog.insertBefore(line, eventLog.firstChild);
+            if (eventLog.children.length > 20) eventLog.lastChild.remove();
+        }
+
+        touchArea.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            log(`👉 <span class="text-green-400">touchstart</span> (${e.changedTouches.length} points)`);
+            updateTouches(e.touches);
+        }, { passive: false });
+
+        touchArea.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            // Dont log move every time, too spammy. Maybe throttle or just update visual
+            updateTouches(e.touches);
+        }, { passive: false });
+
+        touchArea.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            log(`👋 <span class="text-red-400">touchend</span>`);
+            updateTouches(e.touches);
+
+            // Clean up removed points
+            const currentIds = Array.from(e.touches).map(t => t.identifier);
+            activeTouches.forEach((el, id) => {
+                if (!currentIds.includes(id)) {
+                    el.remove();
+                    activeTouches.delete(id);
+                }
+            });
+        }, { passive: false });
+
+        touchArea.addEventListener('touchcancel', (e) => {
+            log(`🚫 <span class="text-gray-400">touchcancel</span>`);
+            activeTouches.forEach(el => el.remove());
+            activeTouches.clear();
+        });
+
+        // Mouse Fallback for PC testing
+        touchArea.addEventListener('mousedown', (e) => {
+            log(`🖱️ <span class="text-gray-400">mousedown (Simulation)</span>`);
+            const point = createTouchPoint(999, e.clientX, e.clientY);
+            activeTouches.set(999, point);
+
+            const onMove = (mv) => {
+                updateTouchPoint(point, mv.clientX, mv.clientY);
+            };
+            const onUp = () => {
+                log(`🖱️ <span class="text-gray-400">mouseup (Simulation)</span>`);
+                point.remove();
+                activeTouches.delete(999);
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onUp);
+                touchCountLabel.innerText = `Fingers: 0`;
+            };
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onUp);
+            touchCountLabel.innerText = `Fingers: 1`;
+        });
+
+        function updateTouches(touches) {
+            touchCountLabel.innerText = `Fingers: ${touches.length}`;
+
+            for (let i = 0; i < touches.length; i++) {
+                const t = touches[i];
+                if (!activeTouches.has(t.identifier)) {
+                    activeTouches.set(t.identifier, createTouchPoint(t.identifier, t.clientX, t.clientY));
+                }
+                updateTouchPoint(activeTouches.get(t.identifier), t.clientX, t.clientY);
+            }
+        }
+
+        function createTouchPoint(id, x, y) {
+            const rect = touchArea.getBoundingClientRect();
+            const relX = x - rect.left;
+            const relY = y - rect.top;
+
+            const el = document.createElement('div');
+            el.className = 'absolute w-12 h-12 rounded-full border-4 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center font-bold text-white text-xs';
+            el.style.backgroundColor = touchColors[id % touchColors.length];
+            el.style.left = relX + 'px';
+            el.style.top = relY + 'px';
+            el.innerText = id;
+            touchArea.appendChild(el);
+
+            // Ripple effect
+            const ripple = document.createElement('div');
+            ripple.className = 'absolute w-full h-full rounded-full animate-ping opacity-75';
+            ripple.style.backgroundColor = touchColors[id % touchColors.length];
+            el.appendChild(ripple);
+
+            return el;
+        }
+
+        function updateTouchPoint(el, x, y) {
+            const rect = touchArea.getBoundingClientRect();
+            // Clamp to box
+            const relX = Math.max(0, Math.min(x - rect.left, rect.width));
+            const relY = Math.max(0, Math.min(y - rect.top, rect.height));
+
+            el.style.left = relX + 'px';
+            el.style.top = relY + 'px';
+        }
+
+
+        // --- Media Overlay Logic ---
+        const overlay = document.getElementById('media-overlay');
+        const docWrapper = document.getElementById('doc-wrapper');
+        const videoWrapper = document.getElementById('video-wrapper');
+        let currentMode = null;
+        const BASE_DOC_WIDTH = 850;
+
+        // Placeholders based on prompt context
+        const RESOURCES = {
+            youtube: "https://www.youtube.com/embed/JMmMUdOfeVU",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vRSKRfWmNlurUSLPL1lYAWfslQfSlgx-sJ76Xc0296CIeoRwpRTsG6b-8w7wuF3_ljgbGsafmnKYZ5h/pub?embedded=true"
+        };
+
+        function openDoc() {
+            // Check if user has specific doc, otherwise standard
+            openModal('doc');
+        }
+
+        function playVideo() {
+            openModal('youtube');
+        }
+
+        async function openModal(type) {
+            currentMode = type;
+            docWrapper.classList.add('hidden');
+            videoWrapper.classList.add('hidden');
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            // Request Fullscreen for immersive experience
+            try {
+                if (document.documentElement.requestFullscreen) {
+                    await document.documentElement.requestFullscreen();
+                } else if (document.documentElement.webkitRequestFullscreen) { /* Safari */
+                    await document.documentElement.webkitRequestFullscreen();
+                } else if (document.documentElement.msRequestFullscreen) { /* IE11 */
+                    await document.documentElement.msRequestFullscreen();
+                }
+            } catch (err) {
+                console.warn("Fullscreen request denied:", err);
+            }
+
+            if (type === 'doc') {
+                docWrapper.classList.remove('hidden');
+                document.getElementById('doc-frame').src = RESOURCES.doc;
+                setTimeout(autoFitZoom, 100);
+            } else if (type === 'youtube') {
+                videoWrapper.classList.remove('hidden');
+                document.getElementById('video-frame').src = RESOURCES.youtube;
+            }
+        }
+
+        function closeModal() {
+            overlay.classList.add('hidden');
+            document.body.style.overflow = '';
+            document.getElementById('video-frame').src = "";
+            document.getElementById('doc-frame').src = "";
+            currentMode = null;
+
+            // Exit Fullscreen
+            if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE11 */
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
+        function autoFitZoom() {
+            if (currentMode !== 'doc') return;
+            const availableWidth = docWrapper.clientWidth;
+            let scale = (availableWidth - 20) / BASE_DOC_WIDTH;
+            if (scale < 0.5) scale = 0.5;
+            const iframe = document.getElementById('doc-frame');
+            iframe.style.transform = `scale(${scale})`;
+            iframe.style.height = `${100 / scale}%`;
+            iframe.style.marginBottom = `${-(1 - scale) * 100}%`;
+        }
+
+        window.addEventListener('resize', () => {
+            if (currentMode === 'doc' && !overlay.classList.contains('hidden')) autoFitZoom();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "Escape") closeModal();
+        });
+
+        // --- Animation Observer ---
+        const observerOptions = { threshold: 0.1 };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        // --- Fullscreen Change Listener ---
+        function onFullscreenChange() {
+            if (!document.fullscreenElement &&
+                !document.webkitFullscreenElement &&
+                !document.msFullscreenElement) {
+                // User pressed Esc or exited fullscreen via UI -> Close the overlay
+                closeModal();
+            }
+        }
+
+        document.addEventListener('fullscreenchange', onFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+        document.addEventListener('mozfullscreenchange', onFullscreenChange);
+        document.addEventListener('MSFullscreenChange', onFullscreenChange);
+    </script>
+</body>
+
+</html>

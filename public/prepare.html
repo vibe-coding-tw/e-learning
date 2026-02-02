@@ -1,118 +1,251 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>安裝課程：VS Code, Copilot, PlatformIO 環境設定</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-    
+
     <style>
         /* 基礎樣式 */
-        body { 
-            font-family: 'Inter', 'Segoe UI', sans-serif; 
-            background-color: #f7fafc; 
-            color: #333; 
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background-color: #f7fafc;
+            color: #333;
         }
-        .container { max-width: 1200px; margin: auto; }
-        
-        .page-header h1 { color: #1e3a8a; text-align: center; margin-bottom: 10px; }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .page-header h1 {
+            color: #1e3a8a;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
         /* 標題底線：青色 */
-        .section-title-underline { height: 4px; width: 80px; background-color: #06b6d4; margin: 0 auto 2rem; border-radius: 2px; }
-
-        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; margin-top: 30px; }
-        
-        .info-card { 
-            background-color: #fff; border-radius: 12px; 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            overflow: hidden; padding: 25px; height: 100%;
-            transition: transform 0.3s ease; display: flex; flex-direction: column;
-            /* 頂部邊框：青色 */
-            border-top: 4px solid #06b6d4; 
+        .section-title-underline {
+            height: 4px;
+            width: 80px;
+            background-color: #06b6d4;
+            margin: 0 auto 2rem;
+            border-radius: 2px;
         }
-        .course-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); cursor: pointer; }
 
-        .card-header { display: flex; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .card-header h2 { margin: 0; font-size: 1.5em; color: #1f2937; font-weight: 700; }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .info-card {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding: 25px;
+            height: 100%;
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            /* 頂部邊框：青色 */
+            border-top: 4px solid #06b6d4;
+        }
+
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .card-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+            color: #1f2937;
+            font-weight: 700;
+        }
+
         /* Icon：青色主題 */
-        .card-icon { width: 40px; height: 40px; background-color: #cffafe; color: #0891b2; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.2em; margin-right: 15px; font-weight: bold; }
-        
-        .spec-item { margin-bottom: 15px; line-height: 1.5; color: #4b5563; }
-        .spec-item strong { display: block; color: #111827; margin-bottom: 3px; }
-        
-        .note { padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 0.95em; }
-        
-        .action-btn { margin-top: auto; width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; transition: all 0.2s; cursor: pointer; text-align: center; }
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #cffafe;
+            color: #0891b2;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2em;
+            margin-right: 15px;
+            font-weight: bold;
+        }
 
-        .hardware-img-wrapper { text-align: center; margin-top: 10px; margin-bottom: 20px; }
-        .hardware-img-wrapper img { border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .spec-item {
+            margin-bottom: 15px;
+            line-height: 1.5;
+            color: #4b5563;
+        }
 
-        .basic-car-crop-wrapper { overflow: hidden; display: block; position: relative; border-radius: 8px; }
-        .basic-car-crop-wrapper::before { content: ""; display: block; padding-top: 73%; }
-        .basic-car-crop-wrapper img { position: absolute; top: -42%; left: 0; width: 100%; height: auto; }
+        .spec-item strong {
+            display: block;
+            color: #111827;
+            margin-bottom: 3px;
+        }
 
-        .dropdown:hover .dropdown-menu { display: block; }
+        .note {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.95em;
+        }
+
+        .action-btn {
+            margin-top: auto;
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .hardware-img-wrapper {
+            text-align: center;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        .hardware-img-wrapper img {
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .basic-car-crop-wrapper {
+            overflow: hidden;
+            display: block;
+            position: relative;
+            border-radius: 8px;
+        }
+
+        .basic-car-crop-wrapper::before {
+            content: "";
+            display: block;
+            padding-top: 73%;
+        }
+
+        .basic-car-crop-wrapper img {
+            position: absolute;
+            top: -42%;
+            left: 0;
+            width: 100%;
+            height: auto;
+        }
+
+        .dropdown:hover .dropdown-menu {
+            display: block;
+        }
     </style>
 </head>
+
 <body class="flex flex-col min-h-screen">
 
     <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center py-4">
-                <a href="index.html" class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
+                <a href="index.html"
+                    class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
                     <span>🚀</span> Vibe Coding
                 </a>
 
                 <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
                     <div class="relative dropdown group">
                         <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            課程連結 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            課程連結 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </button>
-                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
+                        <div
+                            class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
                             <a href="prepare.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">課前準備</a>
                             <a href="started.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">入門課程</a>
                             <a href="basic.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">基礎實作</a>
-                            <a href="advanced.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">進階應用</a>
+                            <a href="advanced.html"
+                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">進階應用</a>
                         </div>
                     </div>
 
                     <div class="relative dropdown group">
                         <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            組態設定 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            組態設定 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </button>
-                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="wifi-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">WiFi 設定</a>
-                            <a href="motor-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">馬達設定</a>
+                        <div
+                            class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
+                            <a href="examples/wifi-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">WiFi
+                                設定</a>
+                            <a href="examples/motor-config.html"
+                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">馬達設定</a>
                         </div>
                     </div>
 
                     <div class="relative dropdown group">
                         <button class="flex items-center text-cyan-600 font-bold transition cursor-pointer py-2">
-                            關於我們 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            關於我們 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </button>
-                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
+                        <div
+                            class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
                             <a href="faq.html" class="block px-4 py-2 bg-cyan-50 text-cyan-700">課程常見問題</a>
-                            <a href="about.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">關於付費與購買</a>
-                            <a href="collaboration.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">合作事宜</a>
+                            <a href="about.html"
+                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">關於付費與購買</a>
+                            <a href="collaboration.html"
+                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">合作事宜</a>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex items-center space-x-4">
-                    <a href="cart.html" class="text-gray-600 hover:text-cyan-600 transition duration-150 relative" title="前往購物車">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
+                    <a href="cart.html" class="text-gray-600 hover:text-cyan-600 transition duration-150 relative"
+                        title="前往購物車">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
                         </svg>
                     </a>
-                    
+
                     <div id="auth-status" class="text-sm flex items-center">
                         <span id="user-display" class="text-gray-600 hidden md:inline mr-2">訪客</span>
-                        <button id="login-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">登入</button>
+                        <button id="login-btn"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">登入</button>
                     </div>
 
                     <div class="md:hidden ml-2">
-                        <button id="mobile-menu-btn" class="text-gray-600 focus:outline-none p-2 border rounded hover:bg-gray-100">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                        <button id="mobile-menu-btn"
+                            class="text-gray-600 focus:outline-none p-2 border rounded hover:bg-gray-100">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -127,13 +260,13 @@
                         <a href="basic.html" class="block py-1 hover:text-cyan-600">基礎實作</a>
                         <a href="advanced.html" class="block py-1 hover:text-cyan-600">進階應用</a>
                     </div>
-                    </div>
+                </div>
             </div>
         </div>
     </nav>
 
     <div class="container py-10 px-4 flex-grow">
-        
+
         <div class="page-header text-center mb-10">
             <h1 class="text-3xl font-bold text-gray-800">🛠️ 上課前應該準備的事項</h1>
             <div class="section-title-underline"></div>
@@ -141,25 +274,23 @@
         </div>
 
         <div class="info-grid">
-            
-            <div class="info-card course-card"
-                 data-course-id="esp32-c3" 
-                 data-course-name="基本款程式開發平台" 
-                 data-course-price="1600"
-                 data-classroom-url="https://vibe-coding.tw/esp32-c3.html"> 
-                 <div class="card-header">
+
+            <div class="info-card course-card" data-course-id="esp32-c3" data-course-name="基本款程式開發平台"
+                data-course-price="1600" data-classroom-url="https://vibe-coding.tw/esp32-c3.html">
+                <div class="card-header">
                     <div class="card-icon">Basic</div>
                     <h2>基本款程式開發平台</h2>
                 </div>
                 <p class="text-gray-500 italic mb-4 text-sm">本基本款程式開發平台適用於入門、基礎課程使用。</p>
-                
+
                 <div class="hardware-img-wrapper">
                     <div class="basic-car-crop-wrapper">
-                        <img src="https://down-tw.img.susercontent.com/file/tw-11134208-81ztp-me1d6y243mdjc3" alt="基本款 ESP32-C3">
+                        <img src="https://down-tw.img.susercontent.com/file/tw-11134208-81ztp-me1d6y243mdjc3"
+                            alt="基本款 ESP32-C3">
                     </div>
                     <p class="text-xs text-gray-400 mt-2">基本款</p>
                 </div>
-                
+
                 <div class="spec-item">
                     <strong>CPU：</strong> ESP32-C3
                 </div>
@@ -174,22 +305,20 @@
                 </button>
             </div>
 
-            <div class="info-card course-card"
-                 data-course-id="esp32-s3" 
-                 data-course-name="進階款程式開發平台" 
-                 data-course-price="3600"
-                 data-classroom-url="https://vibe-coding.tw/esp32-s3.html"> 
-                 <div class="card-header">
+            <div class="info-card course-card" data-course-id="esp32-s3" data-course-name="進階款程式開發平台"
+                data-course-price="3600" data-classroom-url="https://vibe-coding.tw/esp32-s3.html">
+                <div class="card-header">
                     <div class="card-icon">Pro</div>
                     <h2>進階款程式開發平台</h2>
                 </div>
                 <p class="text-gray-500 italic mb-4 text-sm">本進階款程式開發平台適用於入門、基礎、及進階課程使用。</p>
-                
+
                 <div class="hardware-img-wrapper">
-                    <img src="https://www.kidstoylover.com/cdn/shop/files/1_adc99452-bd07-49f0-95a1-a5d7990ed0f5.jpg?v=1715839568&width=1445" style="clip-path: inset(0 0 23% 0); margin-bottom: -23%;" alt="進階款 ESP32-S3">
+                    <img src="https://www.kidstoylover.com/cdn/shop/files/1_adc99452-bd07-49f0-95a1-a5d7990ed0f5.jpg?v=1715839568&width=1445"
+                        style="clip-path: inset(0 0 23% 0); margin-bottom: -23%;" alt="進階款 ESP32-S3">
                     <p class="text-xs text-gray-400 mt-2">進階款</p>
                 </div>
-                
+
                 <div class="spec-item">
                     <strong>CPU：</strong> ESP32-S3
                 </div>
@@ -204,17 +333,14 @@
                 </button>
             </div>
 
-            <div class="info-card course-card"
-                 data-course-id="cvhofqxc" 
-                 data-course-name="WiFi 組態設定" 
-                 data-course-price="0"
-                 data-classroom-url="https://classroom.google.com/c/ODM3MzI0ODQ5MTQy?cjc=cvhofqxc"> 
-                 <div class="card-header">
+            <div class="info-card course-card" data-course-id="cvhofqxc" data-course-name="WiFi 組態設定"
+                data-course-price="0" data-classroom-url="https://classroom.google.com/c/ODM3MzI0ODQ5MTQy?cjc=cvhofqxc">
+                <div class="card-header">
                     <div class="card-icon">WiFi</div>
                     <h2>WiFi 組態設定</h2>
                 </div>
                 <p class="text-gray-500 italic mb-4 text-sm">本課程是在說明如何設定 WiFi。</p>
-                
+
                 <div class="spec-item">
                     <strong>WiFi 設定：</strong>
                     設定 WiFi 的 SSID 和 Password，可以連上當地的無線網路。
@@ -227,17 +353,14 @@
                 </button>
             </div>
 
-            <div class="info-card course-card"
-                 data-course-id="cvhofqxc" 
-                 data-course-name="Motor 馬達組態設定" 
-                 data-course-price="0"
-                 data-classroom-url="https://classroom.google.com/c/ODM3MzI0ODQ5MTQy?cjc=cvhofqxc"> 
-                 <div class="card-header">
+            <div class="info-card course-card" data-course-id="cvhofqxc" data-course-name="Motor 馬達組態設定"
+                data-course-price="0" data-classroom-url="https://classroom.google.com/c/ODM3MzI0ODQ5MTQy?cjc=cvhofqxc">
+                <div class="card-header">
                     <div class="card-icon">Motor</div>
                     <h2>Motor 馬達組態設定</h2>
                 </div>
                 <p class="text-gray-500 italic mb-4 text-sm">本課程是在說明如何設定 Motor。</p>
-                
+
                 <div class="spec-item">
                     <strong>Motor 設定：</strong>
                     設定前進/後退加速馬達及左轉/右轉轉速馬達的參數。
@@ -250,18 +373,21 @@
                 </button>
             </div>
 
+
+
             <div class="info-card border-t-4 border-yellow-400">
                 <div class="card-header">
                     <div class="card-icon bg-yellow-100 text-yellow-600">💻</div>
                     <h2>電腦規格：最低需求</h2>
                 </div>
                 <p class="text-gray-500 italic mb-4 text-sm">此規格可順利安裝所有工具並進行基本開發。</p>
-                
+
                 <div class="hardware-img-wrapper">
-                    <img src="https://www.apple.com/v/macbook-air/x/images/overview/hero/hero_static__c9sislzzicq6_large.png" alt="入門電腦">
+                    <img src="https://www.apple.com/v/macbook-air/x/images/overview/hero/hero_static__c9sislzzicq6_large.png"
+                        alt="入門電腦">
                     <p class="text-xs text-gray-400 mt-2">入門電腦示意</p>
                 </div>
-                
+
                 <div class="spec-item">
                     <strong>OS：</strong> Windows 10/11 (64-bit)、macOS 12+
                 </div>
@@ -285,12 +411,13 @@
                     <h2>電腦規格：建議規格</h2>
                 </div>
                 <p class="text-gray-500 italic mb-4 text-sm">此規格能確保您享受即時 AI 輔助且操作順暢。</p>
-                
+
                 <div class="hardware-img-wrapper">
-                    <img src="https://www.fetnet.net/content/dam/fetnet/user_resource/cbu/images/life-circle/tech/2023/01/mac/mac-8.jpg" alt="進階電腦">
+                    <img src="https://www.fetnet.net/content/dam/fetnet/user_resource/cbu/images/life-circle/tech/2023/01/mac/mac-8.jpg"
+                        alt="進階電腦">
                     <p class="text-xs text-gray-400 mt-2">進階電腦示意</p>
                 </div>
-                
+
                 <div class="spec-item">
                     <strong>OS：</strong> Windows 11、macOS 14+
                 </div>
@@ -319,7 +446,7 @@
                 <a href="basic.html" class="hover:text-white">基礎實作</a>
                 <a href="advanced.html" class="hover:text-white">進階應用</a>
             </div>
-            
+
             <div class="border-t border-gray-700 pt-6">
                 <p class="text-gray-500 text-sm mb-2">&copy; 2025 Vibe Coding. All rights reserved.</p>
                 <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6 text-sm text-gray-400">
@@ -342,25 +469,25 @@
     </script>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
         const firebaseConfig = {
-          apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
-          authDomain: "e-learning-942f7.firebaseapp.com",
-          projectId: "e-learning-942f7",
-          storageBucket: "e-learning-942f7.firebasestorage.app",
-          messagingSenderId: "878397058574",
-          appId: "1:878397058574:web:28aaa07a291ee3baab165f"
+            apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
+            authDomain: "e-learning-942f7.firebaseapp.com",
+            projectId: "e-learning-942f7",
+            storageBucket: "e-learning-942f7.firebasestorage.app",
+            messagingSenderId: "878397058574",
+            appId: "1:878397058574:web:28aaa07a291ee3baab165f"
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);           
-        const functions = getFunctions(app, 'asia-east1');         
+        const auth = getAuth(app);
+        const functions = getFunctions(app, 'asia-east1');
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
-        const CART_URL = 'cart.html'; 
-        const AUTH_URL = 'auth.html'; 
+        const CART_URL = 'cart.html';
+        const AUTH_URL = 'auth.html';
 
         // ===============================================
         // A. 購物車核心邏輯
@@ -368,38 +495,38 @@
         function addToCart(productId, productName, productPrice) {
             let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             const priceNum = parseInt(productPrice, 10);
-            
+
             if (cart[productId]) {
                 return { success: false, message: `「${productName}」已在購物車中！` };
             }
-            
-            cart[productId] = { 
-                name: productName, 
-                price: priceNum, 
-                quantity: 1 
+
+            cart[productId] = {
+                name: productName,
+                price: priceNum,
+                quantity: 1
             };
             localStorage.setItem('vibeCodingCart', JSON.stringify(cart));
-            
+
             return { success: true, message: `「${productName}」已成功加入購物車！` };
         }
 
         function handleAddToCartConfirmation(courseId, courseName, coursePrice) {
             const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
-            
+
             if (cart[courseId]) {
                 alert(`⚠️ 「${courseName}」已在購物車中！`);
-                return; 
+                return;
             }
-            
+
             const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`;
-            
+
             const isConfirmed = confirm(`您確定要將「${courseName}」加入購物車嗎？\n\n價格：${priceText}`);
 
             if (isConfirmed) {
                 addToCart(courseId, courseName, coursePrice);
                 // ★★★ 移除 Alert，直接跳轉 ★★★
-                window.location.href = CART_URL; 
-            } 
+                window.location.href = CART_URL;
+            }
         }
 
         async function handleLogin() {
@@ -418,21 +545,21 @@
         // ===============================================
         // D. 動態按鈕狀態更新核心邏輯
         // ===============================================
-        
-        const lessonCards = document.querySelectorAll('.course-card'); 
+
+        const lessonCards = document.querySelectorAll('.course-card');
 
         function updateCardAction(cardElement, status) {
             const btn = cardElement.querySelector('.action-btn');
-            if (!btn) return; 
+            if (!btn) return;
 
             const courseId = cardElement.dataset.courseId;
             const courseName = cardElement.dataset.courseName;
-            const coursePrice = cardElement.dataset.coursePrice; 
+            const coursePrice = cardElement.dataset.coursePrice;
             const classroomUrl = cardElement.dataset.classroomUrl;
-            const isFreeCourse = parseInt(coursePrice, 10) === 0; 
-            const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`; 
+            const isFreeCourse = parseInt(coursePrice, 10) === 0;
+            const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`;
 
-            btn.onclick = null; 
+            btn.onclick = null;
             btn.disabled = false;
 
             if (status === 'AUTHORIZED') {
@@ -451,7 +578,7 @@
                     btn.textContent = `🛒 加入購物車 (${priceText})`;
                     btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white mt-auto';
                     btn.onclick = () => {
-                        handleAddToCartConfirmation(courseId, courseName, coursePrice); 
+                        handleAddToCartConfirmation(courseId, courseName, coursePrice);
                     };
                 }
             } else if (status === 'NOT_LOGGED_IN') {
@@ -463,7 +590,7 @@
                     btn.textContent = `🛒 加入購物車 (${priceText})`;
                     btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white mt-auto';
                     btn.onclick = () => {
-                        handleAddToCartConfirmation(courseId, courseName, coursePrice); 
+                        handleAddToCartConfirmation(courseId, courseName, coursePrice);
                     };
                 }
 
@@ -471,7 +598,7 @@
                 btn.textContent = '載入中...';
                 btn.className = 'action-btn bg-gray-400 text-white mt-auto';
                 btn.disabled = true;
-            } 
+            }
         }
 
         async function checkLessonAuthorization(cardElement, user) {
@@ -488,12 +615,12 @@
 
             if (isFreeCourse) {
                 updateCardAction(cardElement, 'AUTHORIZED');
-                return; 
+                return;
             }
 
             try {
                 // ★★★ 修正點 1：傳送 pageId ★★★
-                const result = await checkAuthFunction({ 
+                const result = await checkAuthFunction({
                     pageId: courseId
                 });
 
@@ -516,21 +643,21 @@
 
             if (user) {
                 userDisplay.textContent = user.displayName || user.email;
-                userDisplay.classList.remove('hidden'); 
+                userDisplay.classList.remove('hidden');
                 loginBtn.textContent = '登出';
                 loginBtn.onclick = handleLogout;
-                
+
                 lessonCards.forEach(card => {
                     checkLessonAuthorization(card, user);
                 });
             } else {
                 userDisplay.textContent = '訪客';
-                userDisplay.classList.add('hidden'); 
-                userDisplay.classList.remove('md:inline'); 
-                
+                userDisplay.classList.add('hidden');
+                userDisplay.classList.remove('md:inline');
+
                 loginBtn.textContent = '登入';
                 loginBtn.onclick = handleLogin;
-                
+
                 lessonCards.forEach(card => {
                     updateCardAction(card, 'NOT_LOGGED_IN');
                 });
@@ -539,4 +666,5 @@
 
     </script>
 </body>
+
 </html>

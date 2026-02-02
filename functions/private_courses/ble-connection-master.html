@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web BLE 連線大師：非同步的握手藝術</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+
+</head>
+
+<body id="page-ble" class="flex flex-col min-h-screen font-sans bg-slate-50">
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">🚀 Vibe Coding</div>
+        <ul class="nav-links">
+            <li><a href="../index.html">回首頁</a></li>
+            <li><a href="../started.html">入門課程</a></li>
+        </ul>
+        <div class="menu-toggle" id="mobile-menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8 flex-grow max-w-5xl">
+        <div class="page-header text-center mb-12">
+            <h1 class="text-4xl font-extrabold text-slate-800 tracking-tight mb-2">Web BLE 連線大師</h1>
+            <p class="text-lg text-slate-500">掌握非同步 (Async) 的握手藝術，告別連線失敗</p>
+        </div>
+
+        <!-- Module 1: Intuitive Lab -->
+        <div class="section-card section-lab bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mb-8">
+            <h2 class="text-2xl font-bold text-pink-600 mb-4 flex items-center gap-2">
+                <span class="text-3xl">🧪</span> 1. 課前體驗：安全握手實驗室
+            </h2>
+            <p class="mb-6 text-gray-600">
+                藍牙連線就像通過四道安全門。你必須<b>按順序</b>且<b>等待</b>前一道門開啟，才能進入下一道。
+                <br>試著點擊下方的按鈕。如果你點太快（不等跑條結束），連線就會失敗。
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 relative">
+                <!-- Data Flow Arrow -->
+                <div class="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-10 translate-y-[-50%]">
+                </div>
+
+                <!-- Step 1 -->
+                <div id="step-1"
+                    class="step-card border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center bg-white z-10">
+                    <div
+                        class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-xl mb-2 icon-box">
+                        📡</div>
+                    <h3 class="font-bold text-gray-700 text-sm">1. Request</h3>
+                    <div class="text-xs text-gray-500 mb-3 text-center">搜尋裝置</div>
+                    <button onclick="triggerStep(1)"
+                        class="w-full py-2 rounded bg-pink-500 text-white font-bold text-sm hover:bg-pink-600 transition disabled:bg-gray-300 btn-action">
+                        掃描
+                    </button>
+                    <div class="w-full h-1 bg-gray-100 mt-3 rounded overflow-hidden">
+                        <div class="h-full bg-green-500 w-0 progress-bar"></div>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div id="step-2"
+                    class="step-card locked border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center bg-white z-10">
+                    <div
+                        class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-xl mb-2 icon-box">
+                        🤝</div>
+                    <h3 class="font-bold text-gray-700 text-sm">2. Connect</h3>
+                    <div class="text-xs text-gray-500 mb-3 text-center">建立連結</div>
+                    <button onclick="triggerStep(2)" disabled
+                        class="w-full py-2 rounded bg-pink-500 text-white font-bold text-sm hover:bg-pink-600 transition disabled:bg-gray-300 btn-action">
+                        連線
+                    </button>
+                    <div class="w-full h-1 bg-gray-100 mt-3 rounded overflow-hidden">
+                        <div class="h-full bg-green-500 w-0 progress-bar"></div>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div id="step-3"
+                    class="step-card locked border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center bg-white z-10">
+                    <div
+                        class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-xl mb-2 icon-box">
+                        📂</div>
+                    <h3 class="font-bold text-gray-700 text-sm">3. Service</h3>
+                    <div class="text-xs text-gray-500 mb-3 text-center">取得服務</div>
+                    <button onclick="triggerStep(3)" disabled
+                        class="w-full py-2 rounded bg-pink-500 text-white font-bold text-sm hover:bg-pink-600 transition disabled:bg-gray-300 btn-action">
+                        查找
+                    </button>
+                    <div class="w-full h-1 bg-gray-100 mt-3 rounded overflow-hidden">
+                        <div class="h-full bg-green-500 w-0 progress-bar"></div>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div id="step-4"
+                    class="step-card locked border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center bg-white z-10">
+                    <div
+                        class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-xl mb-2 icon-box">
+                        📝</div>
+                    <h3 class="font-bold text-gray-700 text-sm">4. Char</h3>
+                    <div class="text-xs text-gray-500 mb-3 text-center">特徵值寫入</div>
+                    <button onclick="triggerStep(4)" disabled
+                        class="w-full py-2 rounded bg-pink-500 text-white font-bold text-sm hover:bg-pink-600 transition disabled:bg-gray-300 btn-action">
+                        取得
+                    </button>
+                    <div class="w-full h-1 bg-gray-100 mt-3 rounded overflow-hidden">
+                        <div class="h-full bg-green-500 w-0 progress-bar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="lab-message" class="bg-gray-100 p-3 rounded-lg text-sm text-center font-mono text-gray-600">
+                等待操作...
+            </div>
+            <div class="text-center mt-4">
+                <button onclick="resetLab()" class="text-sm text-gray-400 underline hover:text-gray-600">重置實驗</button>
+            </div>
+        </div>
+
+        <!-- Module 2: Core Principles -->
+        <div class="section-card section-core bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mb-8">
+            <h2 class="text-2xl font-bold text-blue-600 mb-6 flex items-center gap-2">
+                <span class="text-3xl">📉</span> 2. 核心原理：通訊協定的權衡
+            </h2>
+
+            <!-- Protocol Table -->
+            <div class="mb-8 overflow-hidden rounded-lg border border-gray-200">
+                <table class="min-w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b">
+                        <tr>
+                            <th class="px-4 py-3">特性</th>
+                            <th class="px-4 py-3 text-blue-600">Bluetooth LE (BLE)</th>
+                            <th class="px-4 py-3 text-purple-600">Wi-Fi (HTTP/WS)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 bg-white">
+                        <tr>
+                            <td class="px-4 py-3 font-bold">連線方式</td>
+                            <td class="px-4 py-3">點對點 (P2P)，無需路由器</td>
+                            <td class="px-4 py-3">需透過 AP (路由器) 或 SoftAP</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 font-bold">數據封包</td>
+                            <td class="px-4 py-3">小封包 (~20 bytes)，即時性高</td>
+                            <td class="px-4 py-3">大封包，適合串流但在區網有延遲</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 font-bold">耗電量</td>
+                            <td class="px-4 py-3 text-green-600">極低 (可跑數月)</td>
+                            <td class="px-4 py-3 text-red-500">高 (耗電快)</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 font-bold">適用場景</td>
+                            <td class="px-4 py-3">即時遙控、傳感器讀值</td>
+                            <td class="px-4 py-3">影像傳輸 (Camera)、大檔傳輸</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Command Lifecycle Animation -->
+            <h3 class="text-lg font-bold text-gray-700 mb-4">指令的生命週期 (Command Lifecycle)</h3>
+            <div
+                class="bg-slate-900 p-6 rounded-xl relative overflow-hidden h-[200px] flex items-center justify-between px-12 md:px-24">
+
+                <!-- Web Side -->
+                <div class="text-center z-10">
+                    <div
+                        class="w-16 h-16 bg-blue-500 rounded-lg flex items-center justify-center text-3xl shadow-lg border-2 border-blue-400">
+                        💻
+                    </div>
+                    <div class="text-white text-xs mt-2 font-bold">Web App</div>
+                </div>
+
+                <!-- Air / Path -->
+                <div class="flex-grow h-1 bg-slate-700 mx-4 relative rounded">
+                    <!-- The Packet -->
+                    <div id="lifecycle-packet"
+                        class="packet top-[50%] left-0 transform -translate-y-[50%] -translate-x-[50%] z-20"></div>
+                </div>
+
+                <!-- ESP32 Side -->
+                <div class="text-center z-10">
+                    <div
+                        class="w-16 h-16 bg-emerald-500 rounded-lg flex items-center justify-center text-3xl shadow-lg border-2 border-emerald-400">
+                        🤖
+                    </div>
+                    <div class="text-white text-xs mt-2 font-bold">ESP32</div>
+                </div>
+
+                <!-- Simulation Controls -->
+                <div class="absolute bottom-4 left-0 w-full text-center">
+                    <div class="inline-flex bg-slate-800 rounded-full p-1 border border-slate-600">
+                        <input type="text" id="cmd-input" value="F,100"
+                            class="bg-transparent text-white px-3 py-1 text-sm outline-none font-mono w-24 text-center"
+                            readonly>
+                        <button onclick="runLifecycle()"
+                            class="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-bold hover:bg-blue-500 transition">
+                            發送指令
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status Overlay -->
+                <div id="lifecycle-status"
+                    class="absolute top-4 left-0 w-full text-center text-slate-400 text-xs font-mono">
+                    等待發送...
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 3: Practical Challenge -->
+        <div class="section-card section-challenge bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-2xl font-bold text-emerald-600 mb-4 flex items-center gap-2">
+                <span class="text-3xl">🛠️</span> 3. 實戰挑戰：非同步陷阱
+            </h2>
+            <p class="mb-6 text-gray-600">
+                下方的程式碼有一個嚴重的 Bug：<b>殭屍車效應</b>。
+                <br>因為沒有等待 Request 完成就想連線，或者沒等待連接就想寫入，導致程式崩潰，車子停不下來。
+                <br><b>任務：點擊虛線框框，補上 `await` 關鍵字，修復這段程式碼。</b>
+            </p>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Code Editor -->
+                <div
+                    class="bg-slate-800 rounded-xl p-6 font-mono text-sm text-gray-300 relative overflow-hidden shadow-inner">
+                    <div
+                        class="absolute top-0 left-0 w-full bg-slate-700 px-4 py-2 text-xs text-gray-400 font-bold flex justify-between">
+                        <span>main.js</span>
+                        <span>JavaScript</span>
+                    </div>
+                    <div class="mt-6 space-y-2">
+                        <div class="code-line group">
+                            <span class="text-purple-400">async function</span> <span
+                                class="text-yellow-400">connectCar</span>() {
+                        </div>
+                        <div class="code-line pl-4 group" onclick="toggleAwait(this)">
+                            <span class="text-blue-400">const</span> device = <span
+                                class="slot missing-await"></span>navigator.bluetooth.requestDevice(...);
+                        </div>
+                        <div class="code-line pl-4 group" onclick="toggleAwait(this)">
+                            <span class="text-blue-400">const</span> server = <span
+                                class="slot missing-await"></span>device.gatt.connect();
+                        </div>
+                        <div class="code-line pl-4 group" onclick="toggleAwait(this)">
+                            <span class="text-blue-400">const</span> service = <span
+                                class="slot missing-await"></span>server.getPrimaryService(UUID);
+                        </div>
+                        <div class="code-line pl-4 group" onclick="toggleAwait(this)">
+                            char = <span class="slot missing-await"></span>service.getCharacteristic(UUID);
+                        </div>
+                        <div class="code-line pl-4">
+                            <span class="text-gray-500">// 連線成功！</span>
+                        </div>
+                        <div class="code-line">}</div>
+                    </div>
+                </div>
+
+                <!-- Result Console -->
+                <div class="flex flex-col justify-between">
+                    <div id="console-output"
+                        class="bg-black rounded-xl p-4 font-mono text-xs h-40 overflow-y-auto mb-4 text-green-400 border border-gray-800">
+                        > System Ready...<br>
+                        > Waiting for code fix...
+                    </div>
+                    <button onclick="runCodeChallenge()"
+                        class="w-full py-3 bg-emerald-500 text-white rounded-xl font-bold shadow-lg hover:bg-emerald-600 transition transform active:scale-95 flex items-center justify-center gap-2">
+                        <span class="text-xl">▶️</span> 執行程式碼
+                    </button>
+                    <p class="text-xs text-gray-500 mt-2 text-center">
+                        提示：每一個涉及硬體通訊的步驟都需要時間，必須等待 (await)。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">🚀 Vibe Coding</div>
+            <p>&copy; 2025 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- Module 1: Intuitive Lab Logic ---
+        let currentStep = 0;
+        let isProcessing = false;
+        // Delays for each step in ms
+        const delays = [800, 1500, 1000, 600];
+
+        function triggerStep(stepIndex) {
+            // Check order
+            if (stepIndex !== currentStep + 1) {
+                if (stepIndex > currentStep + 1) {
+                    showLabMessage(`❌ 錯誤：不能跳關！請先完成步驟 ${currentStep + 1}`, 'text-red-500');
+                }
+                return;
+            }
+
+            if (isProcessing) {
+                showLabMessage('⚠️ 忙碌中：上一步還沒完成！(Async Error)', 'text-orange-500');
+                shakeCard(stepIndex);
+                return;
+            }
+
+            // Start Process
+            isProcessing = true;
+            const card = document.getElementById(`step-${stepIndex}`);
+            const progressBar = card.querySelector('.progress-bar');
+            const btn = card.querySelector('.btn-action');
+
+            card.classList.add('active');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 處理中...';
+
+            showLabMessage(`⏳ 正在執行 Step ${stepIndex}... (awaiting)`, 'text-blue-500');
+
+            // Simulating Async Delay with Animation
+            progressBar.style.transition = `width ${delays[stepIndex - 1]}ms linear`;
+            requestAnimationFrame(() => {
+                progressBar.style.width = '100%';
+            });
+
+            setTimeout(() => {
+                // Success
+                isProcessing = false;
+                currentStep = stepIndex;
+                btn.innerHTML = '✅ 完成';
+                btn.disabled = true;
+
+                card.classList.remove('active');
+                card.classList.add('success');
+
+                showLabMessage(`✅ Step ${stepIndex} 成功！可以進行下一步。`, 'text-green-600');
+
+                // Unlock next step
+                if (stepIndex < 4) {
+                    const nextCard = document.getElementById(`step-${stepIndex + 1}`);
+                    nextCard.classList.remove('locked');
+                    const nextBtn = nextCard.querySelector('.btn-action');
+                    nextBtn.disabled = false;
+                } else {
+                    showLabMessage('🎉 恭喜！完整連線建立成功！', 'text-pink-600 font-bold');
+                    confettiEffect();
+                }
+
+            }, delays[stepIndex - 1]);
+        }
+
+        function showLabMessage(msg, colorClass) {
+            const el = document.getElementById('lab-message');
+            el.innerHTML = msg;
+            el.className = `p-3 rounded-lg text-sm text-center font-mono bg-gray-100 ${colorClass}`;
+        }
+
+        function shakeCard(id) {
+            const card = document.getElementById(`step-${id}`);
+            card.classList.add('animate-pulse', 'border-red-400');
+            setTimeout(() => card.classList.remove('animate-pulse', 'border-red-400'), 500);
+        }
+
+        function resetLab() {
+            currentStep = 0;
+            isProcessing = false;
+            showLabMessage('等待操作...', 'text-gray-600');
+            for (let i = 1; i <= 4; i++) {
+                const card = document.getElementById(`step-${i}`);
+                const bar = card.querySelector('.progress-bar');
+                const btn = card.querySelector('.btn-action');
+
+                // Reset styles
+                card.classList.remove('active', 'success');
+                bar.style.transition = 'none';
+                bar.style.width = '0';
+
+                if (i === 1) {
+                    card.classList.remove('locked');
+                    btn.disabled = false;
+                    btn.innerText = '掃描';
+                } else {
+                    card.classList.add('locked');
+                    btn.disabled = true;
+                    // Reset button text
+                    const texts = ['', '掃描', '連線', '查找', '取得'];
+                    btn.innerText = texts[i];
+                }
+            }
+        }
+
+        // --- Module 2: Lifecycle Animation ---
+        function runLifecycle() {
+            const packet = document.getElementById('lifecycle-packet');
+            const status = document.getElementById('lifecycle-status');
+            const btn = document.querySelector('#lifecycle-packet + button'); // crude selection of button
+
+            packet.style.display = 'block';
+            packet.style.left = '0%';
+
+            // 1. Serialize
+            status.innerText = "1. 序列化 (Serialization)...";
+            status.className = "absolute top-4 left-0 w-full text-center text-blue-400 text-xs font-mono font-bold";
+
+            setTimeout(() => {
+                // 2. Transmit
+                status.innerText = "2. 空中傳輸 (Transmission)...";
+                status.className = "absolute top-4 left-0 w-full text-center text-purple-400 text-xs font-mono font-bold";
+                packet.style.transition = "left 1.5s ease-in-out";
+                packet.style.left = "100%";
+            }, 500);
+
+            setTimeout(() => {
+                // 3. Parse
+                status.innerText = "3. 解析執行 (Execution)!";
+                status.className = "absolute top-4 left-0 w-full text-center text-emerald-400 text-xs font-mono font-bold";
+                packet.style.display = 'none';
+
+                // ESP32 Flash effect
+                const espIcon = document.querySelector('.section-core .bg-emerald-500');
+                espIcon.classList.add('ring-4', 'ring-emerald-300', 'scale-110');
+                setTimeout(() => espIcon.classList.remove('ring-4', 'ring-emerald-300', 'scale-110'), 300);
+
+            }, 2000);
+
+            setTimeout(() => {
+                status.innerText = "等待發送...";
+                status.className = "absolute top-4 left-0 w-full text-center text-slate-400 text-xs font-mono";
+                packet.style.transition = "none";
+                packet.style.left = "0%";
+            }, 3000);
+        }
+
+        // --- Module 3: Challenge Logic ---
+        function toggleAwait(row) {
+            const slot = row.querySelector('.slot');
+            if (!slot) return;
+
+            if (slot.classList.contains('missing-await')) {
+                slot.className = 'slot await-badge';
+                slot.innerText = 'await';
+            } else {
+                slot.className = 'slot missing-await';
+                slot.innerText = '';
+            }
+        }
+
+        function runCodeChallenge() {
+            const slots = document.querySelectorAll('.slot');
+            let missingCount = 0;
+            slots.forEach(s => {
+                if (s.classList.contains('missing-await')) missingCount++;
+            });
+
+            const consoleDiv = document.getElementById('console-output');
+
+            if (missingCount === 0) {
+                consoleDiv.innerHTML += `<div class="text-emerald-300 mt-2">> Code checks passed!<br>> Connection stable.<br>> Car is moving safely. ✅</div>`;
+            } else {
+                consoleDiv.innerHTML += `<div class="text-red-400 mt-2">> ERROR: Unhandled Promise Rejection!<br>> "device" is undefined.<br>> 🧟 ZOMBIE CAR DETECTED! (Crashed)</div>`;
+            }
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        // --- Utils ---
+        function confettiEffect() {
+            const colors = ['#f472b6', '#60a5fa', '#34d399'];
+            for (let i = 0; i < 30; i++) {
+                const el = document.createElement('div');
+                el.style.position = 'fixed';
+                el.style.left = '50%';
+                el.style.top = '50%';
+                el.style.width = '10px';
+                el.style.height = '10px';
+                el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                el.style.transform = `translate(${Math.random() * 300 - 150}px, ${Math.random() * 300 - 150}px)`;
+                el.style.transition = 'all 1s ease-out';
+                el.style.borderRadius = '50%';
+                el.style.zIndex = '9999';
+                document.body.appendChild(el);
+                setTimeout(() => {
+                    el.style.opacity = '0';
+                    setTimeout(() => el.remove(), 100);
+                }, 900);
+            }
+        }
+
+    </script>
+</body>
+
+</html>

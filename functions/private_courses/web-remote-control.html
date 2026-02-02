@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網頁遙控器開發：從 UI 到邏輯 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .tab-active {
+            border-bottom: 2px solid #3b82f6;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        .tab-inactive {
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .tab-inactive:hover {
+            color: #374151;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 flex flex-col h-screen overflow-hidden">
+
+    <!-- Navbar -->
+    <nav class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <span class="text-2xl">🚀</span>
+                        <span class="font-bold text-xl tracking-tight text-gray-900">Vibe Coding</span>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-sm text-gray-500 mr-2">Module:</span>
+                    <span class="text-sm font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded">Web Remote
+                        Control</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Tab Header -->
+    <div class="bg-white shadow-sm z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-8" aria-label="Tabs">
+                <button onclick="switchTab('unit1')" id="tab-unit1"
+                    class="tab-active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
+                    Unit 1: UI 佈局
+                </button>
+                <button onclick="switchTab('unit2')" id="tab-unit2"
+                    class="tab-inactive whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm hover:border-gray-300 transition-colors duration-200">
+                    Unit 2: 數據格式化
+                </button>
+                <button onclick="switchTab('unit3')" id="tab-unit3"
+                    class="tab-inactive whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm hover:border-gray-300 transition-colors duration-200">
+                    Unit 3: 指令流邏輯
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content (Iframe) -->
+    <main class="flex-grow w-full bg-gray-100 relative">
+        <iframe id="content-frame" src="" class="w-full h-full border-0" title="Course Content"></iframe>
+    </main>
+
+    <script>
+        const tabs = {
+            unit1: {
+                id: 'tab-unit1',
+                url: 'html-css-control-panel.html'
+            },
+            unit2: {
+                id: 'tab-unit2',
+                url: 'data-formatting-json.html'
+            },
+            unit3: {
+                id: 'tab-unit3',
+                url: 'instruction-flow-logic.html'
+            }
+        };
+
+        function switchTab(unitKey) {
+            // Update Tab Styles
+            Object.keys(tabs).forEach(key => {
+                const tabEl = document.getElementById(tabs[key].id);
+                if (key === unitKey) {
+                    tabEl.classList.remove('tab-inactive', 'border-transparent', 'hover:border-gray-300');
+                    tabEl.classList.add('tab-active', 'border-blue-500', 'text-blue-700');
+                } else {
+                    tabEl.classList.remove('tab-active', 'border-blue-500', 'text-blue-700');
+                    tabEl.classList.add('tab-inactive', 'border-transparent', 'hover:border-gray-300');
+                }
+            });
+
+            // Update Iframe Source with Query Params (Tokens)
+            const iframe = document.getElementById('content-frame');
+            const url = tabs[unitKey].url;
+            const separator = url.includes('?') ? '&' : '?';
+            const query = window.location.search.substring(1);
+            iframe.src = query ? `${url}${separator}${query}` : url;
+        }
+
+        // Initialize first tab
+        switchTab('unit1');
+    </script>
+</body>
+
+</html>

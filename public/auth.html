@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,9 +15,19 @@
             height: 40px;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
+
 <body class="bg-gray-50 h-screen flex flex-col items-center justify-center">
 
     <div id="loading-ui" class="text-center">
@@ -29,7 +40,8 @@
         <div class="text-red-500 text-5xl mb-4">⚠️</div>
         <h2 class="text-2xl font-bold text-gray-800 mb-2">無法存取課程</h2>
         <p id="error-msg" class="text-gray-600 mb-6">您尚未購買此課程，或權限已過期。</p>
-        <a href="index.html" class="bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 transition">返回首頁</a>
+        <a href="index.html"
+            class="bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 transition">返回首頁</a>
     </div>
 
     <script type="module">
@@ -65,25 +77,43 @@
             const price = urlParams.get('price');   // 價格 (判斷是否為免費課)
 
             if (!targetUrl || !courseId) {
+                alert("錯誤：找不到課程連結或是參數遺失 (Missing URL or ID)");
                 showError("參數錯誤：找不到課程連結。");
                 return;
             }
 
-            // 2. 如果是免費課程，直接跳轉
-            if (parseInt(price) === 0) {
-                console.log("免費課程，直接跳轉...");
-                window.location.replace(decodeURIComponent(targetUrl));
-                return;
-            }
+            // 2. 如果是免費課程，原本直接跳轉，改為同樣經過後端驗證以取得 Token
+            // if (parseInt(price) === 0) { ... }
 
             // 3. 付費課程：呼叫後端二次驗證
             try {
-                const result = await checkAuthFunction({ pageId: courseId });
-                
+                let fileName = "";
+                if (targetUrl) {
+                    const parts = targetUrl.split('/');
+                    fileName = parts[parts.length - 1].split('?')[0];
+                }
+
+                if (!fileName) {
+                    alert("錯誤：無法解析檔案名稱 (Filename missing)");
+                    showError("無法解析課程檔案路徑");
+                    return;
+                }
+
+                const result = await checkAuthFunction({ pageId: courseId, fileName: fileName });
+
                 if (result.data && result.data.authorized) {
-                    // 驗證成功！跳轉到真實內容
-                    // decodeURIComponent 解碼網址，例如把 %3A 變回 :
-                    window.location.replace(decodeURIComponent(targetUrl));
+                    // 驗證成功！
+                    const token = result.data.token;
+                    let finalUrl = decodeURIComponent(targetUrl);
+
+                    // Append token
+                    if (finalUrl.includes('?')) {
+                        finalUrl += `&token=${token}`;
+                    } else {
+                        finalUrl += `?token=${token}`;
+                    }
+
+                    window.location.replace(finalUrl);
                 } else {
                     showError("系統查無您的購買紀錄，請確認是否已登入正確帳號。");
                 }
@@ -102,11 +132,12 @@
                 setTimeout(() => {
                     if (!auth.currentUser) {
                         alert("請先登入會員");
-                        window.location.href = "index.html"; 
+                        window.location.href = "index.html";
                     }
                 }, 1000);
             }
         });
     </script>
 </body>
+
 </html>

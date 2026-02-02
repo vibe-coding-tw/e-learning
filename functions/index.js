@@ -1,6 +1,13 @@
-const functions = require("firebase-functions");
+const functions = require("firebase-functions/v1");
+// Load .env explicitly if not in production/deploy environment or as backup
+if (process.env.NODE_ENV !== 'production' || !process.env.ECPAY_MERCHANT_ID) {
+    require('dotenv').config();
+}
+
 const admin = require("firebase-admin");
 const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
 
 admin.initializeApp();
 
@@ -8,9 +15,9 @@ admin.initializeApp();
 // 從 .env 讀取環境變數
 // ==========================================
 // 這些變數會自動從 functions/.env 檔案中讀取
-const MERCHANT_ID = process.env.MERCHANT_ID;
-const HASH_KEY    = process.env.HASH_KEY;
-const HASH_IV     = process.env.HASH_IV;
+const MERCHANT_ID = process.env.ECPAY_MERCHANT_ID;
+const HASH_KEY = process.env.ECPAY_HASH_KEY;
+const HASH_IV = process.env.ECPAY_HASH_IV;
 const ECPAY_API_URL = process.env.ECPAY_API_URL;
 
 const REGION = "asia-east1";
@@ -36,7 +43,7 @@ function generateCheckMacValue(params, hashKey, hashIV) {
     const sortedKeys = Object.keys(filteredParams).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
     let rawString = sortedKeys.map(key => `${key}=${filteredParams[key]}`).join('&');
     rawString = `HashKey=${hashKey}&${rawString}&HashIV=${hashIV}`;
-    
+
     let encodedString = encodeURIComponent(rawString).toLowerCase();
     encodedString = encodedString
         .replace(/%2d/g, '-')
@@ -46,7 +53,7 @@ function generateCheckMacValue(params, hashKey, hashIV) {
         .replace(/%2a/g, '*')
         .replace(/%28/g, '(')
         .replace(/%29/g, ')')
-        .replace(/%20/g, '+'); 
+        .replace(/%20/g, '+');
 
     return crypto.createHash('sha256').update(encodedString).digest('hex').toUpperCase();
 }
@@ -75,7 +82,7 @@ exports.initiatePayment = functions.region(REGION).https.onRequest(async (req, r
     try {
         console.log("收到 initiatePayment 請求 (.env mode)");
 
-        const requestData = req.body.data || req.body || {}; 
+        const requestData = req.body.data || req.body || {};
         const { amount, returnUrl, cartDetails } = requestData;
 
         // 簡易 Token 驗證
@@ -92,9 +99,9 @@ exports.initiatePayment = functions.region(REGION).https.onRequest(async (req, r
         }
 
         const finalAmount = parseInt(amount, 10) || 100;
-        const orderNumber = `VIBE${Date.now()}`; 
+        const orderNumber = `VIBE${Date.now()}`;
         const tradeDate = getCurrentTime();
-        
+
         // ServerUrl (Webhook)
         const serverUrl = `https://${REGION}-${PROJECT_ID}.cloudfunctions.net/paymentNotify`;
         // ClientUrl (前端)
@@ -106,7 +113,7 @@ exports.initiatePayment = functions.region(REGION).https.onRequest(async (req, r
         if (cartDetails && Object.keys(cartDetails).length > 0) {
             const names = [];
             Object.values(cartDetails).forEach(item => {
-                const cleanName = (item.name || '未知課程').replace(/[#&]/g, ' '); 
+                const cleanName = (item.name || '未知課程').replace(/[#&]/g, ' ');
                 names.push(`${cleanName} x ${item.quantity || 1}`);
             });
             itemNameStr = names.join('#');
@@ -114,28 +121,30 @@ exports.initiatePayment = functions.region(REGION).https.onRequest(async (req, r
         }
 
         const ecpayParams = {
-            MerchantID: MERCHANT_ID, 
-            MerchantTradeNo: orderNumber, 
-            MerchantTradeDate: tradeDate, 
-            PaymentType: 'aio', 
-            TotalAmount: finalAmount, 
-            TradeDesc: 'VibeCodingCourse', 
-            ItemName: itemNameStr, 
-            ReturnURL: serverUrl, 
-            OrderResultURL: clientUrl, 
-            ClientBackURL: clientUrl, 
-            ChoosePayment: 'ALL', 
-            EncryptType: '1', 
+            MerchantID: MERCHANT_ID,
+            MerchantTradeNo: orderNumber,
+            MerchantTradeDate: tradeDate,
+            PaymentType: 'aio',
+            TotalAmount: finalAmount,
+            TradeDesc: 'VibeCodingCourse',
+            ItemName: itemNameStr,
+            ReturnURL: serverUrl,
+            OrderResultURL: clientUrl,
+            ClientBackURL: clientUrl,
+            ChoosePayment: 'ALL',
+            EncryptType: '1',
+            ChoosePayment: 'ALL',
+            EncryptType: '1',
         };
 
         ecpayParams.CheckMacValue = generateCheckMacValue(ecpayParams, HASH_KEY, HASH_IV);
 
         await admin.firestore().collection("orders").doc(orderNumber).set({
-            uid: uid, 
-            amount: finalAmount, 
-            status: "PENDING", 
-            gateway: "ECPAY", 
-            items: cartDetails || {}, 
+            uid: uid,
+            amount: finalAmount,
+            status: "PENDING",
+            gateway: "ECPAY",
+            items: cartDetails || {},
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
@@ -159,27 +168,27 @@ exports.paymentNotify = functions.region(REGION).https.onRequest(async (req, res
     }
 
     try {
-        const data = req.body; 
-        
+        const data = req.body;
+
         // 額外檢查：驗證綠界傳回來的 CheckMacValue 確保安全 (建議加上，但不加也通)
         // 若要加強安全性，可在此處呼叫 generateCheckMacValue(data, HASH_KEY, HASH_IV) 並比對
 
         if (!data) return res.status(200).send('1|OK');
 
         if (data.RtnCode === '1') {
-            const orderId = data.MerchantTradeNo; 
-            const isSimulated = data.SimulatePaid === '1'; 
+            const orderId = data.MerchantTradeNo;
+            const isSimulated = data.SimulatePaid === '1';
 
             await admin.firestore().collection("orders").doc(orderId).update({
-                status: "SUCCESS", 
-                paidAt: admin.firestore.FieldValue.serverTimestamp(), 
-                ecpayTradeNo: data.TradeNo || "", 
+                status: "SUCCESS",
+                paidAt: admin.firestore.FieldValue.serverTimestamp(),
+                ecpayTradeNo: data.TradeNo || "",
                 paymentDate: data.PaymentDate || "",
                 isSimulated: isSimulated,
                 rtnMsg: data.RtnMsg || ""
             });
             console.log(`訂單 ${orderId} 更新成功`);
-        } 
+        }
 
         return res.status(200).send('1|OK');
 
@@ -192,6 +201,33 @@ exports.paymentNotify = functions.region(REGION).https.onRequest(async (req, res
 // ==========================================
 // 3. 檢查權限 (checkPaymentAuthorization)
 // ==========================================
+// Cache for lessons data
+let cachedLessons = null;
+let lastFetchTime = 0;
+const LESSONS_URL = "https://e-learning-942f7.web.app/lessons.json";
+
+async function getLessons() {
+    const now = Date.now();
+    // Cache for 5 minutes (300,000 ms)
+    if (cachedLessons && (now - lastFetchTime < 300000)) {
+        return cachedLessons;
+    }
+    try {
+        console.log("Fetching lessons.json from public URL...");
+        const response = await fetch(LESSONS_URL);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        cachedLessons = await response.json();
+        lastFetchTime = now;
+        return cachedLessons;
+    } catch (error) {
+        console.error("Failed to fetch lessons.json:", error);
+        // If fetch fails, return cached data if available, otherwise empty array
+        return cachedLessons || [];
+    }
+}
+
 exports.checkPaymentAuthorization = functions.region(REGION).https.onRequest(async (req, res) => {
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -200,9 +236,9 @@ exports.checkPaymentAuthorization = functions.region(REGION).https.onRequest(asy
     if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
 
     try {
-        const requestData = req.body.data || req.body || {}; 
-        const { pageId } = requestData;
-        
+        const requestData = req.body.data || req.body || {};
+        const { pageId, fileName } = requestData; // Accept fileName from frontend
+
         let uid = null;
         const authHeader = req.headers.authorization;
         if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -210,7 +246,7 @@ exports.checkPaymentAuthorization = functions.region(REGION).https.onRequest(asy
             try {
                 const decodedToken = await admin.auth().verifyIdToken(idToken);
                 uid = decodedToken.uid;
-            } catch (e) {}
+            } catch (e) { }
         }
 
         if (!uid) return res.status(200).json({ result: { authorized: false, message: "User not logged in" } });
@@ -220,17 +256,148 @@ exports.checkPaymentAuthorization = functions.region(REGION).https.onRequest(asy
             .where("status", "==", "SUCCESS")
             .get();
 
+        // Helper to generate token with file scope
+        const generateToken = (pid, fname) => {
+            const expiry = Date.now() + 30 * 60 * 1000; // 30 mins
+            // IF fileName is missing, default to "UNDEFINED" (block access), DO NOT use "ANY"
+            const scopePart = fname || "UNDEFINED";
+            const raw = `${pid}|${scopePart}|${expiry}`;
+            const signature = crypto.createHmac('sha256', HASH_KEY).update(raw).digest('hex');
+            return `${raw}|${signature}`;
+        }
+
+        // Load lessons data
+        const lessons = await getLessons();
+
+        // Find course by pageId (mapping to courseId in JSON)
+        const course = lessons.find(l => l.courseId === pageId);
+
+        // Check if course exists and is free (price === 0)
+        if (course && course.price === 0) {
+            const token = generateToken(pageId, fileName);
+            return res.status(200).json({ result: { authorized: true, token: token } });
+        }
+
         if (ordersSnapshot.empty) return res.status(200).json({ result: { authorized: false } });
 
         let hasCourse = false;
-        ordersSnapshot.forEach(doc => { 
-            const items = doc.data().items;
-            if (items && items[pageId]) hasCourse = true;
+        const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+        const now = Date.now();
+
+        ordersSnapshot.forEach(doc => {
+            const data = doc.data();
+            const items = data.items;
+
+            // 檢查訂單是否包含此課程
+            if (items && items[pageId]) {
+                // 檢查是否過期 (1年)
+                let orderDate = null;
+                if (data.paymentDate) {
+                    orderDate = new Date(data.paymentDate).getTime();
+                } else if (data.createdAt) {
+                    orderDate = data.createdAt.toDate().getTime();
+                }
+
+                if (orderDate && (now - orderDate < ONE_YEAR_MS)) {
+                    hasCourse = true;
+                }
+            }
         });
 
-        res.status(200).json({ result: { authorized: hasCourse } });
+        if (hasCourse) {
+            const token = generateToken(pageId, fileName);
+            return res.status(200).json({ result: { authorized: true, token: token } });
+        } else {
+            return res.status(200).json({ result: { authorized: false } });
+        }
 
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+});
+
+// ==========================================
+// 4. 安全檔案服務 (serveCourse)
+// ==========================================
+exports.serveCourse = functions.region(REGION).https.onRequest((req, res) => {
+    // 1. Parsing Path (e.g. /courses/ble-connection-master.html)
+    const urlPath = req.path; // /courses/foo.html
+    const fileName = urlPath.replace('/courses/', '');
+
+    // 2. Security Check (Token)
+    const token = req.query.token;
+
+    if (!token) {
+        return res.status(403).send("Access Denied: No token provided.");
+    }
+
+    try {
+        // Token Format: pageId|scopePart|expiry|signature
+        const parts = token.split('|');
+        if (parts.length !== 4) {
+            return res.status(403).send("Access Denied: Invalid token format.");
+        }
+
+        const [pageId, scopePart, expiryStr, signature] = parts;
+        const expiry = parseInt(expiryStr);
+
+        // A. Validate Signature
+        const raw = `${pageId}|${scopePart}|${expiry}`;
+        const expectedSignature = crypto.createHmac('sha256', HASH_KEY).update(raw).digest('hex');
+
+        if (signature !== expectedSignature) {
+            return res.status(403).send("Access Denied: Invalid signature.");
+        }
+
+        // B. Validate Expiry
+        if (Date.now() > expiry) {
+            return res.status(403).send("Access Denied: Token expired.");
+        }
+
+        // C. Validate File Scope
+        // scopePart IS the allowed filename.
+        // Special Exception for Tab Container: getting-started.html can access its children
+        const isGettingStartedGroup = (scopePart === "getting-started.html") &&
+            (fileName === "developer-identity.html" || fileName === "vscode-setup.html" || fileName === "vscode-online.html");
+
+        const isWebAppGroup = (scopePart === "web-app-foundation.html") &&
+            (fileName === "html5-basics.html" || fileName === "flexbox-layout.html" || fileName === "ui-ux-design-standards.html");
+
+        const isWebBleGroup = (scopePart === "web-ble-master.html") &&
+            (fileName === "web-ble-security.html" || fileName === "ble-async-programming.html" || fileName === "typed-arrays.html");
+
+        const isWebRemoteControlGroup = (scopePart === "web-remote-control.html") &&
+            (fileName === "html-css-control-panel.html" || fileName === "data-formatting-json.html" || fileName === "instruction-flow-logic.html");
+
+        const isTouchEventsGroup = (scopePart === "touch-events-master.html") &&
+            (fileName === "touch-events.html" || fileName === "long-press-logic.html" || fileName === "prevent-default-behavior.html");
+
+        const isJoystickLabGroup = (scopePart.includes("joystick-lab-master") || scopePart === "joystick-lab-master.html") &&
+            (fileName === "touch-vs-mouse.html" || fileName === "canvas-joystick.html" || fileName === "joystick-math-limit.html");
+
+        if (scopePart !== "ANY" && scopePart !== fileName &&
+            !isGettingStartedGroup && !isWebAppGroup && !isWebBleGroup &&
+            !isWebRemoteControlGroup && !isTouchEventsGroup && !isJoystickLabGroup) {
+            console.error(`Access Denied Debug: Scope=${scopePart}, File=${fileName}, isJoystick=${isJoystickLabGroup}`);
+            return res.status(403).send(`Access Denied: Token valid for ${scopePart}, but requested ${fileName}. Debug: isJoystick=${isJoystickLabGroup}`);
+        }
+
+        // 3. Serve File
+        const filePath = path.join(__dirname, 'private_courses', fileName);
+
+        // Path Traversal Prevention
+        if (!filePath.startsWith(path.join(__dirname, 'private_courses'))) {
+            return res.status(403).send("Access Denied: Illegal path.");
+        }
+
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).send("File not found.");
+        }
+
+        res.sendFile(filePath);
+
+    } catch (e) {
+        console.error(e);
+        res.status(403).send("Access Denied: Token error.");
     }
 });

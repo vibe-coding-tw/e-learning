@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSV 顏色空間：感知的數學 (The Math of Perception)</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body id="page-hsv" class="flex flex-col min-h-screen">
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">🚀 Vibe Coding</div>
+        <ul class="nav-links">
+            <li><a href="../index.html">回首頁</a></li>
+            <li><a href="../basic.html">基礎課程</a></li>
+        </ul>
+        <div class="menu-toggle" id="mobile-menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8 flex-grow max-w-5xl">
+        <div class="page-header text-center mb-12">
+            <h1 class="text-4xl font-extrabold text-slate-800 tracking-tight mb-2">HSV 顏色空間</h1>
+            <p class="text-lg text-slate-500">電腦視覺中的「絕對感知」 (The Math of Perception)</p>
+        </div>
+
+        <!-- 1. 直覺實驗室 -->
+        <div class="section-card section-lab">
+            <h2 class="text-2xl font-bold text-amber-600 mb-4 flex items-center gap-2">
+                <span class="text-3xl">🧪</span> 1. 課前體驗：光影欺騙模擬器
+            </h2>
+            <p class="mb-6 text-gray-600">
+                人類的大腦會自動補償光影，讓我們覺得「紅色球」在陰影下還是紅色的。
+                但在電腦眼裡，真的是這樣嗎？
+                <br>
+                <span class="font-bold text-amber-700">👉 請嘗試拖曳那顆紅球，從「陽光區 ☀️」移動到「陰影區 🌑」，觀察下方的數據變化！</span>
+            </p>
+
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+
+                <!-- Interaction Zone -->
+                <div class="relative text-center">
+                    <canvas id="shadowCanvas" width="350" height="250"
+                        class="shadow-lg mx-auto cursor-move touch-none"></canvas>
+                    <div
+                        class="absolute top-2 left-1/2 -translate-x-1/2 font-bold text-white drop-shadow-md pointer-events-none">
+                        ☀️ Sunlight ------------------- Shadow 🌑
+                    </div>
+                </div>
+
+                <!-- Data Visualization Zone -->
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                    <h3 class="font-bold text-slate-700 mb-4 text-center">機器人看到的數據 (Live Data)</h3>
+
+                    <!-- RGB Charts -->
+                    <div class="mb-6">
+                        <div class="flex justify-between text-xs font-bold text-slate-500 mb-1">
+                            <span>RGB (劇烈波動 😱)</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar bg-red-500" id="bar-r" style="height: 50%"><span class="val-text"
+                                    id="val-r">0</span><span>R</span></div>
+                            <div class="bar bg-green-500" id="bar-g" style="height: 50%"><span class="val-text"
+                                    id="val-g">0</span><span>G</span></div>
+                            <div class="bar bg-blue-500" id="bar-b" style="height: 50%"><span class="val-text"
+                                    id="val-b">0</span><span>B</span></div>
+                        </div>
+                    </div>
+
+                    <!-- HSV Charts -->
+                    <div>
+                        <div class="flex justify-between text-xs font-bold text-slate-500 mb-1">
+                            <span>HSV (相對穩定 😎)</span>
+                        </div>
+                        <div class="bar-container">
+                            <!-- Hue is 0-360, but max for bar is usually 100%. We'll scale nicely. -->
+                            <!-- Use purple/yellow/cyan for HSV distinctness -->
+                            <div class="bar bg-purple-500" id="bar-h" style="height: 50%"><span class="val-text"
+                                    id="val-h">0</span><span>H (色相)</span></div>
+                            <div class="bar bg-yellow-500" id="bar-s" style="height: 50%"><span class="val-text"
+                                    id="val-s">0</span><span>S (飽和)</span></div>
+                            <div class="bar bg-cyan-500" id="bar-v" style="height: 50%"><span class="val-text"
+                                    id="val-v">0</span><span>V (亮度)</span></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-white rounded border border-slate-100 text-xs text-slate-600">
+                        <p>💡 <b>發現了嗎？</b> 當亮球進入陰影：</p>
+                        <ul class="list-disc list-inside mt-1">
+                            <li><b class="text-red-500">RGB</b> 三者同時暴跌（高度相關）。</li>
+                            <li><b class="text-purple-500">HSV</b> 只有 <b>V (亮度)</b> 下降，<b>H (色相)</b> 幾乎不變！</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 核心原理：維度解構 -->
+        <div class="section-card section-core">
+            <h2 class="text-2xl font-bold text-blue-600 mb-6 flex items-center gap-2">
+                <span class="text-3xl">📉</span> 2. 核心原理：維度解構 (Dimensional Decoupling)
+            </h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <p class="mb-4 text-gray-700">
+                        RGB 的問題在於它把「顏色」和「亮度」混合在一起。如實驗所示，一但變暗，R/G/B 三個數值全變了。
+                        <br><br>
+                        <b>HSV 顏色空間</b> 採用了圓柱坐標系，將這些資訊完美分開：
+                    </p>
+                    <table class="w-full text-sm text-left border-collapse">
+                        <thead>
+                            <tr class="bg-blue-50 text-blue-800">
+                                <th class="p-2 rounded-tl-lg">維度</th>
+                                <th class="p-2">全名</th>
+                                <th class="p-2 rounded-tr-lg">幾何意義 📐</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b">
+                                <td class="p-2 font-bold text-purple-600">H</td>
+                                <td class="p-2">Hue (色相)</td>
+                                <td class="p-2">圓的角度 (0-360°) <br> <span class="text-xs text-gray-500">顏色本體，最穩定</span>
+                                </td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="p-2 font-bold text-yellow-600">S</td>
+                                <td class="p-2">Saturation (飽和)</td>
+                                <td class="p-2">圓的半徑 (0-100%) <br> <span class="text-xs text-gray-500">顏色的純度</span></td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 font-bold text-cyan-600">V</td>
+                                <td class="p-2">Value (亮度)</td>
+                                <td class="p-2">圓柱高度 (0-100%) <br> <span class="text-xs text-gray-500">光的強度，最不穩定</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="bg-blue-50 p-6 rounded-xl flex items-center justify-center">
+                    <!-- Simple CSS/HTML visualization of cylinder concept -->
+                    <div class="relative w-48 h-48">
+                        <!-- Disk -->
+                        <div
+                            class="absolute top-0 left-0 w-full h-full rounded-full border-4 border-slate-300 bg-white shadow-inner flex items-center justify-center overflow-hidden">
+                            <!-- Conic Gradient for Hue -->
+                            <div class="w-full h-full opacity-20"
+                                style="background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);"></div>
+
+                            <!-- Radius Line -->
+                            <div
+                                class="absolute w-1/2 h-0.5 bg-slate-500 origin-left left-1/2 top-1/2 transform -rotate-45">
+                            </div>
+                            <span class="absolute top-1/4 right-1/4 text-xs font-bold text-slate-600">Saturation
+                                (r)</span>
+
+                            <!-- Angle Arc -->
+                            <div
+                                class="absolute w-12 h-12 border-t-2 border-r-2 border-slate-600 rounded-full left-1/2 top-1/2 -mt-6 -ml-6 transform rotate-12">
+                            </div>
+                            <span class="absolute top-4 left-1/2 text-xs font-bold text-purple-600">Hue (θ)</span>
+                        </div>
+                        <!-- Vertical Axis (Value) -->
+                        <div class="absolute -right-8 top-0 h-full w-2 bg-gradient-to-t from-black to-white rounded">
+                        </div>
+                        <span class="absolute -right-20 top-1/2 text-xs font-bold text-cyan-600">Value
+                            (Brightness)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 實戰挑戰：紅色斷點 -->
+        <div class="section-card section-challenge">
+            <h2 class="text-2xl font-bold text-red-600 mb-4 flex items-center gap-2">
+                <span class="text-3xl">🛠️</span> 3. 實戰挑戰：紅色的陷阱 (The Red Discontinuity)
+            </h2>
+            <p class="mb-6 text-gray-600">
+                在 OpenCV 中，為了將 0-360° 塞進 8-bit (0-255) 的整數，Hue 被除以 2，範圍變成 <b>0-180</b>。
+                <br>
+                這導致紅色 (0° 和 360°) 分別變成了 <b>0 和 180</b>。如果你只設 `Lower=0, Upper=10`，你會漏掉深紅色的部分 (170-180)！
+                <br>
+                <span class="font-bold text-red-700">👉 任務：調整滑桿，成功分離出畫面中所有的紅色區域！</span>
+            </p>
+
+            <div class="grid md:grid-cols-2 gap-8 items-start">
+                <!-- Visualizer -->
+                <div class="bg-gray-900 p-4 rounded-lg text-center">
+                    <canvas id="redCanvas" width="300" height="300" class="mx-auto"></canvas>
+                    <div class="text-white mt-2 font-mono text-sm" id="captureStatus">Caught: 0%</div>
+                </div>
+
+                <!-- Controls -->
+                <div class="space-y-6">
+                    <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                        <label class="block text-sm font-bold text-red-800 mb-2">區間 1 (Low Red)</label>
+                        <div class="flex gap-2 text-sm text-gray-600 mb-1">
+                            <span>0</span><input type="range" id="min1" min="0" max="180" value="0"
+                                class="flex-grow"><span id="val-min1">0</span>
+                        </div>
+                        <div class="flex gap-2 text-sm text-gray-600">
+                            <span>0</span><input type="range" id="max1" min="0" max="180" value="10"
+                                class="flex-grow"><span id="val-max1">10</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-pink-50 p-4 rounded-lg border border-pink-100">
+                        <label class="block text-sm font-bold text-pink-800 mb-2">區間 2 (High Red)</label>
+                        <div class="flex gap-2 text-sm text-gray-600 mb-1">
+                            <span>0</span><input type="range" id="min2" min="0" max="180" value="180"
+                                class="flex-grow"><span id="val-min2">180</span>
+                        </div>
+                        <div class="flex gap-2 text-sm text-gray-600">
+                            <span>0</span><input type="range" id="max2" min="0" max="180" value="180"
+                                class="flex-grow"><span id="val-max2">180</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-3 rounded border border-gray-200 text-xs text-gray-500">
+                        <p>💡 <b>提示：</b> 紅色分佈在 Hue 環的兩端。通常需要：</p>
+                        <code
+                            class="block bg-gray-100 p-1 mt-1 rounded text-red-600">mask1 = (0 ~ 10); mask2 = (170 ~ 180);</code>
+                        <code class="block bg-gray-100 p-1 mt-1 rounded text-red-600">final_mask = mask1 | mask2;</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">🚀 Vibe Coding</div>
+            <p>&copy; 2025 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- Lab 1: Shadow Simulator Logic ---
+        const shadowCanvas = document.getElementById('shadowCanvas');
+        const sCtx = shadowCanvas.getContext('2d');
+        const w = shadowCanvas.width;
+        const h = shadowCanvas.height;
+
+        // Ball State
+        let ball = { x: 50, y: h / 2, r: 25, baseColor: { r: 255, g: 50, b: 50 } }; // Red Ball
+        let isDragging = false;
+
+        // RGB to HSV Conversion (0-1, 0-1, 0-1) -> (0-360, 0-100, 0-100)
+        function rgbToHsv(r, g, b) {
+            r /= 255, g /= 255, b /= 255;
+            let max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, v = max;
+            let d = max - min;
+            s = max === 0 ? 0 : d / max;
+
+            if (max === min) {
+                h = 0; // achromatic
+            } else {
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            return [Math.round(h * 360), Math.round(s * 100), Math.round(v * 100)];
+        }
+
+        function drawLab() {
+            // 1. Draw Background (Gradient from Light to Dark)
+            const grad = sCtx.createLinearGradient(0, 0, w, 0);
+            grad.addColorStop(0, '#fef3c7'); // Light Amber
+            grad.addColorStop(0.4, '#d1d5db'); // Gray Transition
+            grad.addColorStop(1, '#1e293b'); // Dark Slate
+            sCtx.fillStyle = grad;
+            sCtx.fillRect(0, 0, w, h);
+
+            // 2. Calculate Lighting Intensity based on X position
+            // 0 -> 1.0 intensity, w -> 0.2 intensity
+            const lighting = Math.max(0.2, 1.0 - (ball.x / w) * 0.8);
+
+            // 3. Draw Ball
+            const currentR = Math.min(255, ball.baseColor.r * lighting);
+            const currentG = Math.min(255, ball.baseColor.g * lighting);
+            const currentB = Math.min(255, ball.baseColor.b * lighting);
+
+            sCtx.beginPath();
+            sCtx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+            sCtx.fillStyle = `rgb(${currentR}, ${currentG}, ${currentB})`;
+            sCtx.fill();
+            sCtx.strokeStyle = 'white';
+            sCtx.lineWidth = 2;
+            sCtx.stroke();
+
+            // 4. Update Charts
+            updateCharts(currentR, currentG, currentB);
+        }
+
+        function updateCharts(r, g, b) {
+            // RGB
+            document.getElementById('bar-r').style.height = `${(r / 255) * 100}%`;
+            document.getElementById('val-r').innerText = Math.round(r);
+            document.getElementById('bar-g').style.height = `${(g / 255) * 100}%`;
+            document.getElementById('val-g').innerText = Math.round(g);
+            document.getElementById('bar-b').style.height = `${(b / 255) * 100}%`;
+            document.getElementById('val-b').innerText = Math.round(b);
+
+            // HSV
+            const [h, s, v] = rgbToHsv(r, g, b);
+            // Hue max 360, but for bar visualization let's just do percentage relative to 360? 
+            // Or maybe just fixed height for stability demo?
+            // Let's scale Hue: 360 -> 100%
+            document.getElementById('bar-h').style.height = `${(h / 360) * 100}%`;
+            document.getElementById('val-h').innerText = h;
+            document.getElementById('bar-s').style.height = `${s}%`;
+            document.getElementById('val-s').innerText = s;
+            document.getElementById('bar-v').style.height = `${v}%`;
+            document.getElementById('val-v').innerText = v;
+        }
+
+        // Interaction
+        shadowCanvas.addEventListener('mousedown', e => {
+            const rect = shadowCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            if (Math.hypot(x - ball.x, y - ball.y) < ball.r) isDragging = true;
+        });
+        window.addEventListener('mouseup', () => isDragging = false);
+        window.addEventListener('mousemove', e => {
+            if (!isDragging) return;
+            const rect = shadowCanvas.getBoundingClientRect();
+            ball.x = Math.max(ball.r, Math.min(w - ball.r, e.clientX - rect.left));
+            // y constrained
+            drawLab();
+        });
+        // Touch support
+        shadowCanvas.addEventListener('touchstart', e => {
+            e.preventDefault();
+            const rect = shadowCanvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            if (Math.hypot(x - ball.x, y - ball.y) < ball.r) isDragging = true;
+        }, { passive: false });
+        shadowCanvas.addEventListener('touchmove', e => {
+            if (!isDragging) return;
+            e.preventDefault();
+            const rect = shadowCanvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            ball.x = Math.max(ball.r, Math.min(w - ball.r, touch.clientX - rect.left));
+            drawLab();
+        }, { passive: false });
+
+
+        // --- Lab 3: Red Discontinuity Logic ---
+        const redCanvas = document.getElementById('redCanvas');
+        const rCtx = redCanvas.getContext('2d');
+        const rangeInputs = ['min1', 'max1', 'min2', 'max2'];
+
+        // Generate a Hue Wheel Image Data
+        function drawHueWheel() {
+            // We want to simulate a collection of points with different Hues
+            // Let's draw a color wheel
+            const w = redCanvas.width;
+            const h = redCanvas.height;
+            const cx = w / 2, cy = h / 2, r = 100;
+
+            // Clear
+            rCtx.fillStyle = '#111827';
+            rCtx.fillRect(0, 0, w, h);
+
+            // Draw Hue Circle
+            for (let angle = 0; angle < 360; angle++) {
+                const rad = angle * Math.PI / 180;
+                const x = cx + Math.cos(rad) * r;
+                const y = cy + Math.sin(rad) * r;
+
+                // Draw a dot
+                rCtx.fillStyle = `hsl(${angle}, 100%, 50%)`;
+                rCtx.beginPath();
+                rCtx.arc(x, y, 4, 0, Math.PI * 2);
+                rCtx.fill();
+            }
+
+            // Draw "Target" regions which are RED
+            // Red is usually 350-360 and 0-10
+            // But let's visualize the "Sector" being selected
+
+            checkCoverage();
+        }
+
+        function checkCoverage() {
+            const min1 = parseInt(document.getElementById('min1').value);
+            const max1 = parseInt(document.getElementById('max1').value);
+            const min2 = parseInt(document.getElementById('min2').value);
+            const max2 = parseInt(document.getElementById('max2').value);
+
+            // Update Labels
+            document.getElementById('val-min1').innerText = min1;
+            document.getElementById('val-max1').innerText = max1;
+            document.getElementById('val-min2').innerText = min2;
+            document.getElementById('val-max2').innerText = max2;
+
+            // Draw selection arcs overlay
+            const cx = redCanvas.width / 2, cy = redCanvas.height / 2, r = 80;
+
+            // Clear inner area
+            rCtx.fillStyle = '#111827';
+            rCtx.beginPath(); rCtx.arc(cx, cy, r - 10, 0, Math.PI * 2); rCtx.fill();
+
+            // Draw Arc 1 (OpenCV H: 0-180 -> Angle: 0-360)
+            drawSector(min1 * 2, max1 * 2, '#ef4444');
+            // Draw Arc 2
+            drawSector(min2 * 2, max2 * 2, '#ec4899');
+
+            // Check success
+            // Target is roughly 340-360 (OpenCV: 170-180) AND 0-20 (OpenCV: 0-10)
+            // A good robust red filter usually covers these.
+            // Let's say user needs to cover 0-10 AND 170-180 at least.
+
+            let score = 0;
+            // Simplified check: do rectangles intersect target? 
+            const hasLow = (min1 <= 5 && max1 >= 10) || (min2 <= 5 && max2 >= 10);
+            const hasHigh = (min1 <= 175 && max1 >= 180) || (min2 <= 175 && max2 >= 180);
+
+            const status = document.getElementById('captureStatus');
+            if (hasLow && hasHigh) {
+                status.innerText = "CAPTURED! 🎉 Perfect Red Filter!";
+                status.style.color = '#4ade80'; // Green
+            } else if (hasLow || hasHigh) {
+                status.innerText = "Partial... You are missing half the red! ⚠️";
+                status.style.color = '#fbbf24'; // Amber
+            } else {
+                status.innerText = "Missed. Adjust ranges to catch red dots.";
+                status.style.color = '#9ca3af'; // Gray
+            }
+        }
+
+        function drawSector(startDeg, endDeg, color) {
+            const cx = redCanvas.width / 2, cy = redCanvas.height / 2, r = 90;
+            if (startDeg >= endDeg) return;
+
+            rCtx.beginPath();
+            rCtx.moveTo(cx, cy);
+            rCtx.arc(cx, cy, r, startDeg * Math.PI / 180, endDeg * Math.PI / 180);
+            rCtx.fillStyle = color;
+            rCtx.globalAlpha = 0.5;
+            rCtx.fill();
+            rCtx.globalAlpha = 1.0;
+        }
+
+        rangeInputs.forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                drawHueWheel();
+            });
+        });
+
+        // Initialize All
+        window.onload = () => {
+            drawLab();
+            drawHueWheel();
+        };
+    </script>
+</body>
+
+</html>

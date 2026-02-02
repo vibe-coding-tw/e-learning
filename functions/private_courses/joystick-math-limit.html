@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>學習3：搖桿限位數學與勾股定理應用 - Vibe Coding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- MathJax for rendering math formulas -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            }
+        };
+    </script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body class="bg-gray-50 font-[Inter] text-gray-800 overscroll-none">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="header-overlay absolute inset-0 bg-gradient-to-r from-blue-900/90 to-indigo-800/90 mix-blend-multiply">
+        </div>
+        <!-- Decorative background elements -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 opacity-20">
+            <div
+                class="absolute top-20 left-20 w-72 h-72 bg-blue-500 rounded-full mix-blend-overlay filter blur-3xl animate-pulse">
+            </div>
+            <div class="absolute bottom-20 right-20 w-96 h-96 bg-indigo-500 rounded-full mix-blend-overlay filter blur-3xl animate-pulse"
+                style="animation-delay: 2s"></div>
+        </div>
+
+        <div class="container mx-auto px-4 relative z-10 pt-10 pb-10 text-center text-white">
+            <div
+                class="badge-header inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/20 text-blue-200 border border-blue-400/30 backdrop-blur-sm mb-8 text-sm font-semibold tracking-wide uppercase">
+                <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                Math & Physics Logic
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight">
+                搖桿限位數學：<br class="hidden md:block" />勾股定理的應用
+            </h1>
+            <p class="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed mb-10">
+                從 \( c = \sqrt{a^2 + b^2} \) 到流暢的虛擬搖桿體驗。<br>理解如何利用基本幾何學與三角函數，打造完美的觸控回饋。
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="playVideo()"
+                    class="resource-btn bg-blue-500 hover:bg-blue-400 text-white px-8 py-4 rounded-full flex items-center gap-3 shadow-lg shadow-blue-500/30 font-bold transition-all">
+                    <span>▶️</span> 觀看教學影片
+                </button>
+                <button onclick="openDoc()"
+                    class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-8 py-4 rounded-full flex items-center gap-3 backdrop-blur-sm font-bold transition-all">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Pythagorean Theorem -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="section-header-left border-l-4 border-blue-500 pl-6 mb-12">
+                        <span class="text-blue-600 font-bold tracking-wider uppercase text-sm">Module 1: The Math</span>
+                        <h2 class="text-4xl font-bold text-gray-900 mt-2">勾股定理與歐幾里得距離</h2>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-800 mb-4">核心公式</h3>
+                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 mb-6">
+                                <div class="text-3xl text-center font-serif text-slate-800 mb-2">
+                                    \( c = \sqrt{a^2 + b^2} \)
+                                </div>
+                                <p class="text-center text-slate-500 text-sm">直角三角形斜邊計算公式</p>
+                            </div>
+
+                            <div class="space-y-6">
+                                <div>
+                                    <h4 class="font-bold text-gray-700 mb-2">控制場景應用：</h4>
+                                    <ul class="space-y-3 text-sm text-gray-600">
+                                        <li class="flex items-start gap-3">
+                                            <span class="font-mono text-blue-600 font-bold">Center</span>
+                                            <span>搖桿底座中心點座標 \((x_0, y_0)\)</span>
+                                        </li>
+                                        <li class="flex items-start gap-3">
+                                            <span class="font-mono text-blue-600 font-bold">Touch</span>
+                                            <span>手指觸碰點座標 \((x_1, y_1)\)</span>
+                                        </li>
+                                        <li class="flex items-start gap-3">
+                                            <span class="font-mono text-blue-600 font-bold">Delta</span>
+                                            <span>X軸與Y軸的偏移量 \(\Delta x, \Delta y\)</span>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="bg-blue-50 text-blue-900 p-4 rounded-lg text-sm border border-blue-100">
+                                    <strong>學習任務：</strong><br>
+                                    給定中心點 \((0,0)\) 與觸控點 \((30, 40)\)，算出手指偏移了多少距離？<br>
+                                    <span class="text-xs text-blue-500 mt-1 block">提示：\(\sqrt{30^2 + 40^2} = \sqrt{900 +
+                                        1600} = \sqrt{2500}\)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Math Canvas -->
+                        <div
+                            class="bg-slate-900 rounded-xl p-6 relative flex flex-col items-center justify-center border border-slate-700 shadow-inner overflow-hidden">
+                            <canvas id="mathCanvas" width="300" height="300" class="cursor-crosshair"></canvas>
+                            <div class="mt-4 flex gap-4 text-xs font-mono text-slate-400">
+                                <div id="val-dx">dx: 0</div>
+                                <div id="val-dy">dy: 0</div>
+                                <div id="val-dist" class="text-yellow-400 font-bold">Distance: 0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Limit Logic -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="section-header-left border-l-4 border-purple-500 pl-6 mb-12">
+                        <span class="text-purple-600 font-bold tracking-wider uppercase text-sm">Module 2: Circular
+                            Clamping</span>
+                        <h2 class="text-4xl font-bold text-gray-900 mt-2">限位邏輯：半徑的限制</h2>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-12">
+                        <div class="space-y-6">
+                            <p class="text-gray-600 leading-relaxed">
+                                為什麼不能直接讓搖桿頭跟著手指跑？如果手指滑太遠，搖桿頭會飛出底座！我們需要實作<strong>圓形限制 (Circular Clamping)</strong>。
+                            </p>
+
+                            <div class="bg-purple-50 p-6 rounded-xl border border-purple-100">
+                                <h4 class="font-bold text-purple-800 mb-3">關鍵邏輯：</h4>
+                                <ol class="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                                    <li>設定搖桿底座半徑為 \(R\) (例如 50px)。</li>
+                                    <li>計算目前距離 \(d = \sqrt{\Delta x^2 + \Delta y^2}\)。</li>
+                                    <li><strong>判斷：</strong>如果 \(d > R\)，則必須縮放位置。</li>
+                                </ol>
+                            </div>
+
+                            <div class="bg-slate-800 rounded-lg p-4 font-mono text-sm text-slate-300 overflow-x-auto">
+                                <div class="text-gray-500 mb-2">// 比例縮放公式</div>
+                                if (distance > maxRadius) {
+                                const ratio = maxRadius / distance;
+                                newX = startX + deltaX * ratio;
+                                newY = startY + deltaY * ratio;
+                                }
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col justify-center items-center">
+                            <div
+                                class="relative w-64 h-64 bg-gray-100 rounded-full border-4 border-dashed border-gray-300 flex items-center justify-center">
+                                <div class="absolute w-full h-[1px] bg-gray-300"></div>
+                                <div class="absolute h-full w-[1px] bg-gray-300"></div>
+
+                                <!-- Visual Representation -->
+                                <div class="absolute w-2 h-2 bg-black rounded-full z-10"></div>
+                                <div
+                                    class="absolute w-[180px] h-1 bg-gradient-to-r from-transparent to-red-400 opacity-50 rotate-45 transform origin-left left-1/2 top-1/2 -mt-0.5">
+                                </div>
+                                <div
+                                    class="absolute w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-lg top-[15%] right-[15%] z-20 animate-bounce">
+                                </div>
+                                <div
+                                    class="absolute w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-lg top-[24%] right-[24%] z-20 opacity-50">
+                                </div>
+
+                                <div class="absolute top-10 right-10 text-xs text-red-500 font-bold bg-white px-1">Touch
+                                </div>
+                                <div class="absolute top-20 right-20 text-xs text-green-600 font-bold bg-white px-1">
+                                    Clamped</div>
+                            </div>
+                            <p class="mt-4 text-xs text-center text-gray-500 max-w-xs">
+                                當觸控點(紅)超出範圍時，系統會計算出圓周上的切點(綠)作為實際位置。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Vector Standardization & Homework -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="section-header-left border-l-4 border-orange-500 pl-6 mb-12">
+                        <span class="text-orange-600 font-bold tracking-wider uppercase text-sm">Module 3:
+                            Normalization</span>
+                        <h2 class="text-4xl font-bold text-gray-900 mt-2">向量標準化與實作任務</h2>
+                    </div>
+
+                    <!-- Theory -->
+                    <div class="mb-12 bg-orange-50 rounded-xl p-8 border border-orange-100">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">預習：速度百分比計算</h3>
+                        <p class="text-gray-600 mb-6">
+                            硬體或 API 通常需要 -1.0 到 1.0 或 0 到 100% 的數值，而不是像素值。我們需要進行<strong>歸一化 (Normalization)</strong>。
+                        </p>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm">
+                            <div class="bg-white p-4 rounded border border-orange-200">
+                                <strong class="block text-orange-700 mb-2">Power (推力):</strong>
+                                <div>\(\text{Power} = \min(\frac{d}{R}, 1.0)\)</div>
+                                <div class="text-gray-500 mt-1">最大值鎖定在 100%。</div>
+                            </div>
+                            <div class="bg-white p-4 rounded border border-orange-200">
+                                <strong class="block text-orange-700 mb-2">Angle (角度):</strong>
+                                <div>\(\theta = \text{atan2}(\Delta y, \Delta x)\)</div>
+                                <div class="text-gray-500 mt-1">計算方向弧度。</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tasks Grid -->
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <!-- Homework 3-1 -->
+                        <div
+                            class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col h-full group hover:shadow-2xl transition-all">
+                            <div class="bg-blue-500 h-2"></div>
+                            <div class="p-6 flex-grow">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-xl text-gray-800">作業 3-1</h3>
+                                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-blue-600 mb-2">搖桿邊界鎖定實作</h4>
+                                <p class="text-sm text-gray-600 mb-4">
+                                    編寫 <code>touchmove</code> 邏輯，利用勾股定理判斷距離，實作防拉出的虛擬搖桿。
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Homework 3-2 -->
+                        <div
+                            class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col h-full group hover:shadow-2xl transition-all">
+                            <div class="bg-purple-500 h-2"></div>
+                            <div class="p-6 flex-grow">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-xl text-gray-800">作業 3-2</h3>
+                                    <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold">45
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-purple-600 mb-2">動態數據顯示</h4>
+                                <p class="text-sm text-gray-600 mb-4">
+                                    在網頁上即時顯示搖桿的「推力百分比」與「旋轉角度」。
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Homework 3-3 -->
+                        <div
+                            class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col h-full group hover:shadow-2xl transition-all">
+                            <div class="bg-orange-500 h-2"></div>
+                            <div class="p-6 flex-grow">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-xl text-gray-800">作業 3-3</h3>
+                                    <span class="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded font-bold">30
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-orange-600 mb-2">搖桿自動回彈</h4>
+                                <p class="text-sm text-gray-600 mb-4">
+                                    實作 <code>touchend</code> 事件，讓搖桿頭在放手後自動平滑歸零 \((0,0)\)。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-900 text-white py-12 border-t border-gray-800">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500">© 2024 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <div id="media-overlay" class="fixed inset-0 bg-black z-50 hidden flex flex-col overflow-hidden outline-none"
+        tabindex="-1">
+        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-gray-200 flex justify-center">
+            <iframe id="doc-frame" class="border-0 bg-white shadow-2xl origin-top"
+                style="width: 850px; height: 100%; transition: transform 0.2s ease;" src="">
+            </iframe>
+        </div>
+        <div id="video-wrapper" class="hidden flex-grow w-full bg-black flex justify-center items-center">
+            <iframe id="video-frame" class="w-full h-full" src="" title="Course Video" frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen>
+            </iframe>
+        </div>
+        <button onclick="closeModal()"
+            class="close-video-btn absolute top-5 right-5 text-white bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full backdrop-blur-md transition">✕
+            Close</button>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // --- Math Canvas Logic ---
+        const mathCanvas = document.getElementById('mathCanvas');
+        const ctx = mathCanvas.getContext('2d');
+        const centerX = mathCanvas.width / 2;
+        const centerY = mathCanvas.height / 2;
+        let mouseX = centerX + 30; // Initial example pos
+        let mouseY = centerY + 40;
+
+        function drawMath() {
+            ctx.clearRect(0, 0, mathCanvas.width, mathCanvas.height);
+
+            // Grid
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(centerX, 0); ctx.lineTo(centerX, mathCanvas.height); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, centerY); ctx.lineTo(mathCanvas.width, centerY); ctx.stroke();
+
+            // Triangle
+            ctx.strokeStyle = '#fbbf24'; // Yellow
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(mouseX, centerY);
+            ctx.lineTo(mouseX, mouseY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Hypotenuse (c)
+            ctx.strokeStyle = '#f472b6'; // Pink
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(mouseX, mouseY);
+            ctx.stroke();
+
+            // Points
+            ctx.fillStyle = '#60a5fa'; // Blue (Center)
+            ctx.beginPath(); ctx.arc(centerX, centerY, 5, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = '#f87171'; // Red (Touch)
+            ctx.beginPath(); ctx.arc(mouseX, mouseY, 6, 0, Math.PI * 2); ctx.fill();
+
+            // Text
+            const dx = mouseX - centerX;
+            const dy = mouseY - centerY; // Canvas Y is down
+            const dist = Math.sqrt(dx * dx + dy * dy).toFixed(1);
+
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '12px monospace';
+            ctx.fillText(`a (dx): ${dx}`, centerX + dx / 2, centerY - 10);
+            ctx.fillText(`b (dy): ${dy}`, mouseX + 10, centerY + dy / 2);
+
+            // Update DOM labels
+            document.getElementById('val-dx').innerText = `dx: ${dx}`;
+            document.getElementById('val-dy').innerText = `dy: ${dy}`;
+            document.getElementById('val-dist').innerText = `d: ${dist}`;
+        }
+
+        drawMath();
+
+        let isDragging = false;
+
+        function updatePos(x, y) {
+            const rect = mathCanvas.getBoundingClientRect();
+            mouseX = Math.round(x - rect.left);
+            mouseY = Math.round(y - rect.top);
+            drawMath();
+        }
+
+        mathCanvas.addEventListener('mousedown', (e) => { isDragging = true; updatePos(e.clientX, e.clientY); });
+        window.addEventListener('mousemove', (e) => { if (isDragging) updatePos(e.clientX, e.clientY); });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+
+        // Touch support
+        mathCanvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isDragging = true;
+            updatePos(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: false });
+        window.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                e.preventDefault();
+                updatePos(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: false });
+        window.addEventListener('touchend', () => { isDragging = false; });
+
+
+        // --- Media Overlay Logic ---
+        const overlay = document.getElementById('media-overlay');
+        const docWrapper = document.getElementById('doc-wrapper');
+        const videoWrapper = document.getElementById('video-wrapper');
+        let currentMode = null;
+        const BASE_DOC_WIDTH = 850;
+
+        const RESOURCES = {
+            youtube: "https://www.youtube.com/embed/geLlEPK6MY8",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vQ2sXMOF430KsULyFkuVLQ91n3F2ptIerKFL3nGHA-wO8lPtgWs_896bLg-PfOmeF5atIDJNpzv6tgB/pub?embedded=true"
+        };
+
+        function openDoc() { openModal('doc'); }
+        function playVideo() { openModal('youtube'); }
+
+        async function openModal(type) {
+            currentMode = type;
+            docWrapper.classList.add('hidden');
+            videoWrapper.classList.add('hidden');
+            overlay.classList.remove('hidden');
+            overlay.focus();
+            document.body.style.overflow = 'hidden';
+
+            try {
+                if (overlay.requestFullscreen) {
+                    await overlay.requestFullscreen();
+                } else if (overlay.webkitRequestFullscreen) {
+                    await overlay.webkitRequestFullscreen();
+                } else if (overlay.mozRequestFullScreen) {
+                    await overlay.mozRequestFullScreen();
+                } else if (overlay.msRequestFullscreen) {
+                    await overlay.msRequestFullscreen();
+                }
+            } catch (err) { console.warn("Fullscreen denied:", err); }
+
+            if (type === 'doc') {
+                docWrapper.classList.remove('hidden');
+                document.getElementById('doc-frame').src = RESOURCES.doc;
+                setTimeout(autoFitZoom, 100);
+            } else if (type === 'youtube') {
+                videoWrapper.classList.remove('hidden');
+                document.getElementById('video-frame').src = RESOURCES.youtube;
+            }
+        }
+
+        function closeModal() {
+            overlay.classList.add('hidden');
+            document.body.style.overflow = '';
+            document.getElementById('video-frame').src = "";
+            document.getElementById('doc-frame').src = "";
+            currentMode = null;
+            if (document.fullscreenElement) document.exitFullscreen();
+        }
+
+        function autoFitZoom() {
+            if (currentMode !== 'doc') return;
+            const availableWidth = docWrapper.clientWidth;
+
+            // On mobile, we want to zoom in to crop out white margins
+            // Doc actual content is usually around 600-700px wide within the 850px page
+            const isMobile = availableWidth < 768;
+            const targetContentWidth = isMobile ? 650 : BASE_DOC_WIDTH + 40;
+
+            let scale = availableWidth / targetContentWidth;
+
+            const iframe = document.getElementById('doc-frame');
+            iframe.style.transform = `scale(${scale})`;
+            iframe.style.transformOrigin = 'top center';
+            iframe.style.height = `${100 / scale}%`;
+            iframe.style.marginBottom = `${-(1 - scale) * 100}%`;
+
+            // Ensure container centers it and allows scrolling
+            docWrapper.classList.add('justify-center');
+
+            // On mobile, we might want to allow horizontal scrolling if the user wants to see the edges
+            // But usually for reading, we want to lock it. 
+            // The current scale ensures the 'content' fits the width.
+        }
+
+        window.addEventListener('resize', () => {
+            if (currentMode === 'doc' && !overlay.classList.contains('hidden')) autoFitZoom();
+        });
+
+        document.addEventListener('keydown', (e) => { if (e.key === "Escape") closeModal(); }, true);
+        document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) closeModal(); });
+    </script>
+</body>
+
+</html>

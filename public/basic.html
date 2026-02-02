@@ -1,112 +1,239 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>基礎課程：馬達控制、通訊與 OTA 實作</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-    
     <style>
         /* 基礎樣式 */
-        body { font-family: 'Inter', sans-serif; background-color: #f7fafc; color: #333; }
-        .page-header h1 { color: #1e3a8a; text-align: center; margin-bottom: 10px; }
-        .section-title-underline { height: 4px; width: 80px; background-color: #06b6d4; margin: 0 auto 2rem; border-radius: 2px; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7fafc;
+            color: #333;
+        }
+
+        .page-header h1 {
+            color: #312e81;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        /* Indigo-900 */
+        /* 標題底線 */
+        .section-title-underline {
+            height: 4px;
+            width: 80px;
+            background-color: #4f46e5;
+            margin: 0 auto 2rem;
+            border-radius: 2px;
+        }
+
+        /* Indigo-600 */
 
         /* 卡片樣式 */
-        .lesson-card { 
-            background-color: #fff; border-radius: 12px; 
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
-            transition: transform 0.3s ease, box-shadow 0.3s ease; 
-            height: 100%; display: flex; flex-direction: column; overflow: hidden;
-            border-top: 4px solid #28a745; 
+        .lesson-card {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            /* 頂部邊框 */
+            border-top: 4px solid #4f46e5;
+            /* Indigo-600 */
         }
-        .lesson-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-        .lesson-header { background-color: #e9fff0; padding: 15px 20px; border-bottom: 1px solid #e5e7eb; }
-        .lesson-header h2 { margin: 0; font-size: 1.25em; color: #166534; font-weight: 700; }
-        .lesson-body { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
-        
-        /* 移除這裡原本的 action-btn 寬度設定，交給 Tailwind 控制 */
-        .action-btn { 
-            padding: 10px; 
-            border-radius: 6px; 
-            font-weight: 600; 
+
+        .lesson-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 卡片標題背景 */
+        .lesson-header {
+            background-color: #eef2ff;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        /* Indigo-50 */
+        /* 卡片標題文字 */
+        .lesson-header h2 {
+            margin: 0;
+            font-size: 1.25em;
+            color: #312e81;
+            font-weight: 700;
+        }
+
+        .lesson-body {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Icon 背景 */
+        .lesson-icon {
+            width: 50px;
+            height: 50px;
+            background-color: #4f46e5;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .action-btn {
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
             transition: background-color 0.2s;
             cursor: pointer;
         }
 
         /* 播放器與其他樣式 */
-        #video-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background-color: black; }
-        #video-overlay iframe { width: 100%; height: 100%; border: none; }
-        .close-video-btn { position: absolute; top: 20px; right: 20px; z-index: 10000; background-color: rgba(0,0,0,0.6); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 50px; padding: 8px 16px; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 5px; backdrop-filter: blur(4px); }
-        
+        #video-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            background-color: black;
+        }
+
+        #video-overlay iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .close-video-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            padding: 8px 16px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            backdrop-filter: blur(4px);
+        }
+
         /* 下拉選單 */
-        .dropdown:hover .dropdown-menu { display: block; }
+        .dropdown:hover .dropdown-menu {
+            display: block;
+        }
 
         @media (max-width: 768px) {
-            .close-video-btn { top: 15px; right: 15px; padding: 10px 20px; font-size: 18px; }
+            .close-video-btn {
+                top: 15px;
+                right: 15px;
+                padding: 10px 20px;
+                font-size: 18px;
+            }
         }
     </style>
 </head>
 
-<body class="flex flex-col min-h-screen">
+<body id="page-basic" class="flex flex-col min-h-screen">
     <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center py-4">
-                <a href="index.html" class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
+                <a href="index.html"
+                    class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
                     <span>🚀</span> Vibe Coding
                 </a>
 
                 <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
                     <div class="relative dropdown group">
                         <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            課程連結 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            課程連結 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </button>
-                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
+                        <div
+                            class="dropdown-menu absolute hidden group-hover:block bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
                             <a href="prepare.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">課前準備</a>
                             <a href="started.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">入門課程</a>
                             <a href="basic.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">基礎實作</a>
-                            <a href="advanced.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">進階應用</a>
+                            <a href="advanced.html"
+                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">進階應用</a>
                         </div>
                     </div>
 
                     <div class="relative dropdown group">
                         <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            組態設定 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            組態設定 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </button>
-                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="wifi-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">WiFi 設定</a>
-                            <a href="motor-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">馬達設定</a>
+                        <div
+                            class="dropdown-menu absolute hidden group-hover:block bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
+                            <a href="examples/wifi-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">WiFi
+                                設定</a>
+                            <a href="examples/motor-config.html"
+                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">馬達設定</a>
                         </div>
                     </div>
 
                     <div class="relative dropdown group">
                         <button class="flex items-center text-cyan-600 font-bold transition cursor-pointer py-2">
-                            關於我們 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            關於我們 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </button>
-                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
+                        <div
+                            class="dropdown-menu absolute hidden group-hover:block bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
                             <a href="faq.html" class="block px-4 py-2 bg-cyan-50 text-cyan-700">課程常見問題</a>
-                            <a href="about.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">關於付費與購買</a>
-                            <a href="collaboration.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">合作事宜</a>
+                            <a href="about.html"
+                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">關於付費與購買</a>
+                            <a href="collaboration.html"
+                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">合作事宜</a>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex items-center space-x-4">
-                    <a href="cart.html" class="text-gray-600 hover:text-cyan-600 transition duration-150 relative" title="前往購物車">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
+                    <a href="cart.html" class="text-gray-600 hover:text-cyan-600 transition duration-150 relative"
+                        title="前往購物車">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
                         </svg>
                     </a>
-                    
+
                     <div id="auth-status" class="text-sm flex items-center">
                         <span id="user-display" class="text-gray-600 hidden md:inline mr-2">訪客</span>
-                        <button id="login-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">登入</button>
+                        <button id="login-btn"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">登入</button>
                     </div>
 
                     <div class="md:hidden ml-2">
-                        <button id="mobile-menu-btn" class="text-gray-600 focus:outline-none p-2 border rounded hover:bg-gray-100">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                        <button id="mobile-menu-btn"
+                            class="text-gray-600 focus:outline-none p-2 border rounded hover:bg-gray-100">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -121,7 +248,7 @@
                         <a href="basic.html" class="block py-1 hover:text-cyan-600">基礎實作</a>
                         <a href="advanced.html" class="block py-1 hover:text-cyan-600">進階應用</a>
                     </div>
-                    </div>
+                </div>
             </div>
         </div>
     </nav>
@@ -146,7 +273,7 @@
                 <a href="basic.html" class="hover:text-white">基礎實作</a>
                 <a href="advanced.html" class="hover:text-white">進階應用</a>
             </div>
-            
+
             <div class="border-t border-gray-700 pt-6">
                 <p class="text-gray-500 text-sm mb-2">&copy; 2025 Vibe Coding. All rights reserved.</p>
                 <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6 text-sm text-gray-400">
@@ -168,7 +295,7 @@
         });
 
         // 讀取 JSON 資料
-        fetch('./lessons.json')
+        fetch('./lessons.json?t=' + new Date().getTime())
             .then(response => response.json())
             .then(data => {
                 renderLessons(data, 'basic');
@@ -177,9 +304,9 @@
 
         function renderLessons(lessons, filterCategory) {
             const container = document.getElementById('lesson-container');
-            
-            const targetLessons = filterCategory === 'all' 
-                ? lessons 
+
+            const targetLessons = filterCategory === 'all'
+                ? lessons
                 : lessons.filter(item => item.category === filterCategory);
 
             // 如果過濾後沒有資料，可以顯示一個提示 (選用)
@@ -190,11 +317,11 @@
 
             // 接下來用 targetLessons 來跑 map，而不是原本的 lessons
             const html = targetLessons.map(lesson => {
-            //const html = lessons.map(lesson => {
+                //const html = lessons.map(lesson => {
                 const contentListHtml = lesson.coreContent.map(item => `<li>${item}</li>`).join('');
-                
-                const priceDisplay = parseInt(lesson.price) === 0 
-                    ? '免費' 
+
+                const priceDisplay = parseInt(lesson.price) === 0
+                    ? '免費'
                     : `NT$ ${parseInt(lesson.price).toLocaleString()}`;
 
                 const videoButtonHtml = lesson.videoId ? `
@@ -268,15 +395,15 @@
             `;
             const iframe = document.getElementById('yt-player-frame');
             if (iframe.requestFullscreen) iframe.requestFullscreen();
-            
+
             if (!isListenerAttached) {
                 document.addEventListener('fullscreenchange', checkFullscreenStatus);
                 isListenerAttached = true;
             }
         }
         function forceCloseVideo() {
-             if (document.exitFullscreen) document.exitFullscreen().catch(() => cleanupVideo());
-             else cleanupVideo();
+            if (document.exitFullscreen) document.exitFullscreen().catch(() => cleanupVideo());
+            else cleanupVideo();
         }
         function checkFullscreenStatus() {
             if (!document.fullscreenElement) cleanupVideo();
@@ -289,25 +416,25 @@
     </script>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
         const firebaseConfig = {
-          apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
-          authDomain: "e-learning-942f7.firebaseapp.com",
-          projectId: "e-learning-942f7",
-          storageBucket: "e-learning-942f7.firebasestorage.app",
-          messagingSenderId: "878397058574",
-          appId: "1:878397058574:web:28aaa07a291ee3baab165f"
+            apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
+            authDomain: "e-learning-942f7.firebaseapp.com",
+            projectId: "e-learning-942f7",
+            storageBucket: "e-learning-942f7.firebasestorage.app",
+            messagingSenderId: "878397058574",
+            appId: "1:878397058574:web:28aaa07a291ee3baab165f"
         };
 
-        const app = initializeApp(firebaseConfig);        
-        const auth = getAuth(app);           
-        const functions = getFunctions(app, 'asia-east1');         
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const functions = getFunctions(app, 'asia-east1');
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
-        const CART_URL = 'cart.html'; 
-        const AUTH_URL = 'auth.html'; 
+        const CART_URL = 'cart.html';
+        const AUTH_URL = 'auth.html?v=' + new Date().getTime(); // Prevent cache
 
         // 購物車邏輯
         function addToCart(productId, productName, productPrice) {
@@ -318,14 +445,14 @@
             return { success: true };
         }
 
-        window.handleAddToCartConfirmation = function(courseId, courseName, coursePrice) {
+        window.handleAddToCartConfirmation = function (courseId, courseName, coursePrice) {
             const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             if (cart[courseId]) { alert(`⚠️ 「${courseName}」已在購物車中！`); return; }
             if (confirm(`您確定要將課程「${courseName}」加入購物車嗎？`)) {
                 addToCart(courseId, courseName, coursePrice);
                 // ★★★ 移除 Alert，直接跳轉 ★★★
-                window.location.href = CART_URL; 
-            } 
+                window.location.href = CART_URL;
+            }
         }
 
         window.handleLogin = async () => { await signInWithPopup(auth, new GoogleAuthProvider()); };
@@ -333,7 +460,7 @@
 
         function updateCardAction(cardElement, status) {
             const btn = cardElement.querySelector('.action-btn');
-            if (!btn) return; 
+            if (!btn) return;
 
             const courseId = cardElement.dataset.courseId;
             const courseName = cardElement.dataset.courseName;
@@ -345,13 +472,13 @@
             const hasVideoButton = buttonGroup && buttonGroup.children.length > 1;
             const widthClass = hasVideoButton ? 'flex-1' : 'w-full';
 
-            btn.onclick = null; 
+            btn.onclick = null;
             btn.disabled = false;
 
             if (status === 'AUTHORIZED') {
                 btn.textContent = '✅ 進入課程內容';
                 btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-green-600 hover:bg-green-700 text-white font-medium transition`;
-                btn.onclick = () => { window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`; };
+                btn.onclick = () => { window.location.href = `${AUTH_URL}&url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`; };
             } else if (status === 'NOT_LOGGED_IN' || status === 'UNAUTHORIZED' || status === 'ERROR') {
                 btn.textContent = `🛒 加入購物車`;
                 btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
@@ -372,23 +499,23 @@
             try {
                 // ★★★ 使用 pageId 呼叫後端 ★★★
                 const result = await checkAuthFunction({ pageId: courseId });
-                
+
                 // ★★★ 判斷 authorized 布林值 ★★★
                 if (result.data && result.data.authorized) {
-                     updateCardAction(cardElement, 'AUTHORIZED');
+                    updateCardAction(cardElement, 'AUTHORIZED');
                 } else {
-                     updateCardAction(cardElement, 'UNAUTHORIZED');
+                    updateCardAction(cardElement, 'UNAUTHORIZED');
                 }
 
             } catch (error) {
                 console.error(`授權檢查失敗:`, error);
                 // 即使失敗，也要顯示購物車按鈕，避免卡住
-                updateCardAction(cardElement, 'UNAUTHORIZED'); 
+                updateCardAction(cardElement, 'UNAUTHORIZED');
             }
         }
 
-        window.updateAuthUI = function() {
-            const currentCards = document.querySelectorAll('.lesson-card'); 
+        window.updateAuthUI = function () {
+            const currentCards = document.querySelectorAll('.lesson-card');
             const user = auth.currentUser;
 
             currentCards.forEach(card => {
@@ -420,4 +547,5 @@
         });
     </script>
 </body>
+
 </html>

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>長按邏輯的實現：定時器的妙用 - Vibe Coding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        .glass-card {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .code-preview::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .code-preview::-webkit-scrollbar-track {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+
+        .code-preview::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 font-[Inter] text-gray-800 overscroll-none">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] opacity-20">
+        </div>
+
+        <!-- Decorative background elements -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+            <div
+                class="absolute top-20 left-10 w-72 h-72 bg-purple-500 rounded-full mix-blend-overlay filter blur-3xl animate-pulse opacity-30">
+            </div>
+            <div class="absolute bottom-10 right-10 w-96 h-96 bg-blue-500 rounded-full mix-blend-overlay filter blur-3xl animate-pulse opacity-30"
+                style="animation-delay: 2s"></div>
+        </div>
+
+        <div class="container mx-auto px-4 relative z-10 pt-10 pb-10 text-center">
+            <div
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 backdrop-blur-sm mb-8 text-sm font-semibold tracking-wide uppercase">
+                <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                Timer Logic & Safety
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight">
+                長按邏輯的實現：<br class="hidden md:block" />定時器的妙用與安全機制
+            </h1>
+            <p class="text-xl text-indigo-100 max-w-2xl mx-auto leading-relaxed mb-10">
+                掌握 setInterval 與 clearInterval 的核心運作，學會如何設計安全、流暢且防抖動的長按控制邏輯，讓你的無人車乖乖聽話。
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="playVideo()"
+                    class="bg-indigo-500 hover:bg-indigo-400 text-white px-8 py-4 rounded-full flex items-center gap-3 shadow-lg shadow-indigo-500/30 font-bold transition-all transform hover:-translate-y-1">
+                    <span>▶️</span> 觀看教學影片
+                </button>
+                <button onclick="openDoc()"
+                    class="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-8 py-4 rounded-full flex items-center gap-3 backdrop-blur-sm font-bold transition-all">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Intuitive Lab -->
+        <section class="mb-16 fade-in-up">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <!-- Concept -->
+                        <div class="flex-1 space-y-6">
+                            <div class="border-l-4 border-indigo-500 pl-6">
+                                <span class="text-indigo-600 font-bold tracking-wider uppercase text-sm">Module 1:
+                                    Intuitive Lab</span>
+                                <h2 class="text-3xl font-bold text-gray-900 mt-2">JS 的心跳：定時器實驗</h2>
+                            </div>
+
+                            <p class="text-gray-600 leading-relaxed">
+                                <code>setInterval</code> 就像一個永不疲倦的節拍器，每隔固定時間就會執行一次任務。而 <code>clearInterval</code>
+                                則是讓它停下來的唯一開關。
+                                試著操作右側的實驗裝置，觀察數字的變化與節奏。
+                            </p>
+
+                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                                <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                    <span class="text-lg">🔑</span> 核心語法
+                                </h3>
+                                <div class="space-y-3 font-mono text-sm">
+                                    <div class="bg-white p-3 rounded border border-slate-200 text-slate-600">
+                                        <span class="text-purple-600">const</span> timer = <span
+                                            class="text-blue-600">setInterval</span>(fn, <span
+                                            class="text-orange-600">1000</span>);
+                                        <div class="text-xs text-slate-400 mt-1">// 每 1000ms 執行一次 fn</div>
+                                    </div>
+                                    <div class="bg-white p-3 rounded border border-slate-200 text-slate-600">
+                                        <span class="text-blue-600">clearInterval</span>(timer);
+                                        <div class="text-xs text-slate-400 mt-1">// 停止指定的 timer ID</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Demo -->
+                        <div
+                            class="flex-1 bg-slate-900 rounded-2xl p-8 shadow-inner flex flex-col items-center justify-center relative overflow-hidden">
+                            <!-- Background Pulse -->
+                            <div id="pulse-bg"
+                                class="absolute inset-0 bg-indigo-500/0 transition-colors duration-100 pointer-events-none">
+                            </div>
+
+                            <div class="text-6xl font-mono font-bold text-white mb-8 z-10 tabular-nums"
+                                id="counter-display">0</div>
+
+                            <div class="flex gap-4 z-10">
+                                <button id="btn-start"
+                                    class="bg-green-500 hover:bg-green-400 text-green-900 font-bold py-3 px-8 rounded-full transition shadow-lg shadow-green-500/20 active:scale-95">
+                                    開始計數 (Start)
+                                </button>
+                                <button id="btn-stop"
+                                    class="bg-red-500 hover:bg-red-400 text-white font-bold py-3 px-8 rounded-full transition shadow-lg shadow-red-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    停止 (Stop)
+                                </button>
+                            </div>
+
+                            <div class="mt-8 font-mono text-xs text-slate-500 text-center z-10">
+                                Timer ID: <span id="timer-id-display" class="text-yellow-400">null</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Core Principles -->
+        <section class="mb-16 fade-in-up">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="border-l-4 border-purple-500 pl-6 mb-10">
+                        <span class="text-purple-600 font-bold tracking-wider uppercase text-sm">Module 2: Core
+                            Principles</span>
+                        <h2 class="text-3xl font-bold text-gray-900 mt-2">長按邏輯的「三部曲」架構</h2>
+                    </div>
+
+                    <div class="grid lg:grid-cols-2 gap-10">
+                        <div class="space-y-8">
+                            <!-- Step 1 -->
+                            <div class="flex gap-4">
+                                <div
+                                    class="flex-shrink-0 w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xl">
+                                    1</div>
+                                <div>
+                                    <h3 class="font-bold text-lg text-gray-800">Start (按下瞬間)</h3>
+                                    <p class="text-gray-600 text-sm mt-1">
+                                        監聽 <code>touchstart</code> 或 <code>mousedown</code> 事件。
+                                        在這裡啟動 <code>setInterval</code>，開始不斷發送指令。
+                                    </p>
+                                </div>
+                            </div>
+                            <!-- Step 2 -->
+                            <div class="flex gap-4">
+                                <div
+                                    class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-xl">
+                                    2</div>
+                                <div>
+                                    <h3 class="font-bold text-lg text-gray-800">Loop (持續長按)</h3>
+                                    <p class="text-gray-600 text-sm mt-1">
+                                        定時器每隔一段時間 (例如 50ms) 執行一次 callback，向 ESP32 發送「前進」指令。
+                                    </p>
+                                </div>
+                            </div>
+                            <!-- Step 3 -->
+                            <div class="flex gap-4">
+                                <div
+                                    class="flex-shrink-0 w-12 h-12 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center font-bold text-xl">
+                                    3</div>
+                                <div>
+                                    <h3 class="font-bold text-lg text-gray-800">Stop (放開手指)</h3>
+                                    <p class="text-gray-600 text-sm mt-1">
+                                        監聽 <code>touchend</code> 或 <code>mouseup</code> 事件。
+                                        <strong class="text-red-500">清除定時器</strong> 並發送最後一次「停止」指令。
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-5">
+                                <h4 class="font-bold text-yellow-800 text-sm mb-2 flex items-center gap-2">⚠️ 危險：Timer
+                                    Stacking (定時器疊加)</h4>
+                                <p class="text-sm text-yellow-800 leading-relaxed">
+                                    如果使用者狂點按鈕，可能會連續觸發多次 Start 而來不及 Stop，導致產生多個「停不下來」的幽靈定時器。
+                                    <br><br>
+                                    <strong>解法：</strong> 在每次 <code>setInterval</code> 之前，先執行一次
+                                    <code>clearInterval</code>。
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Code Example -->
+                        <div class="bg-[#1e293b] rounded-xl overflow-hidden shadow-2xl flex flex-col h-full">
+                            <div
+                                class="bg-[#0f172a] px-4 py-2 flex items-center justify-between border-b border-gray-700">
+                                <span class="text-xs font-mono text-gray-400">long-press.js</span>
+                                <div class="flex gap-1.5">
+                                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                </div>
+                            </div>
+                            <div class="p-6 overflow-auto code-preview flex-grow">
+                                <pre class="font-mono text-sm leading-relaxed text-gray-300">
+<span class="text-purple-400">let</span> timer = <span class="text-blue-400">null</span>;
+
+<span class="text-gray-500">// 1. Start</span>
+<span class="text-blue-400">function</span> <span class="text-yellow-300">startMove</span>() {
+  <span class="text-gray-500">// 防呆：先清除舊的，避免疊加</span>
+  <span class="text-blue-400">if</span> (timer) <span class="text-blue-400">clearInterval</span>(timer);
+
+  console.<span class="text-blue-400">log</span>(<span class="text-green-300">'Move Forward'</span>); <span class="text-gray-500">// 立即執行第一次</span>
+  
+  <span class="text-gray-500">// 2. Loop</span>
+  timer = <span class="text-blue-400">setInterval</span>(() => {
+    console.<span class="text-blue-400">log</span>(<span class="text-green-300">'Move Forward...'</span>);
+    <span class="text-gray-500">// sendCommand('F');</span>
+  }, <span class="text-orange-400">50</span>);
+}
+
+<span class="text-gray-500">// 3. Stop</span>
+<span class="text-blue-400">function</span> <span class="text-yellow-300">stopMove</span>() {
+  <span class="text-blue-400">if</span> (timer) {
+    <span class="text-blue-400">clearInterval</span>(timer);
+    timer = <span class="text-blue-400">null</span>;
+  }
+  console.<span class="text-blue-400">log</span>(<span class="text-red-400">'STOP'</span>);
+  <span class="text-gray-500">// sendCommand('S');</span>
+}
+
+btn.<span class="text-blue-400">addEventListener</span>(<span class="text-green-300">'touchstart'</span>, startMove);
+btn.<span class="text-blue-400">addEventListener</span>(<span class="text-green-300">'touchend'</span>, stopMove);
+</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Practical Challenge -->
+        <section class="mb-16 fade-in-up">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="h-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="border-l-4 border-red-500 pl-6 mb-10">
+                        <span class="text-red-600 font-bold tracking-wider uppercase text-sm">Module 3: Classroom
+                            Battles</span>
+                        <h2 class="text-3xl font-bold text-gray-900 mt-2">教室實戰挑戰</h2>
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <!-- Challenge 1 -->
+                        <div
+                            class="group bg-slate-50 hover:bg-white rounded-xl p-6 border border-slate-200 hover:border-indigo-300 hover:shadow-lg transition-all duration-300">
+                            <div class="flex justify-between items-start mb-4">
+                                <div
+                                    class="bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded text-xs uppercase">
+                                    HW 2-1</div>
+                                <span class="text-slate-400 text-xs font-mono">45 min</span>
+                            </div>
+                            <h3
+                                class="text-lg font-bold text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors">
+                                甜蜜頻率尋找賽</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                                實測不同 setInterval 毫秒數 (10ms ~ 500ms) 對無人車反應的影響。找出一個不卡頓也不會讓 ESP32 當機的「甜蜜點」。
+                            </p>
+                            <div class="text-xs text-indigo-500 font-bold">👉 目標：20ms - 100ms</div>
+                        </div>
+
+                        <!-- Challenge 2 -->
+                        <div
+                            class="group bg-slate-50 hover:bg-white rounded-xl p-6 border border-slate-200 hover:border-purple-300 hover:shadow-lg transition-all duration-300">
+                            <div class="flex justify-between items-start mb-4">
+                                <div
+                                    class="bg-purple-100 text-purple-700 font-bold px-3 py-1 rounded text-xs uppercase">
+                                    HW 2-2</div>
+                                <span class="text-slate-400 text-xs font-mono">60 min</span>
+                            </div>
+                            <h3
+                                class="text-lg font-bold text-slate-800 mb-2 group-hover:text-purple-600 transition-colors">
+                                雙重保險機制</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                                為了防止瀏覽器當機導致車子暴衝，實作安全保護：
+                                1. 前端限時 5 秒自動停止。
+                                2. 斷線偵測 (navigator.onLine)。
+                            </p>
+                            <div class="text-xs text-purple-500 font-bold">👉 目標：極端狀況也能煞車</div>
+                        </div>
+
+                        <!-- Challenge 3 -->
+                        <div
+                            class="group bg-slate-50 hover:bg-white rounded-xl p-6 border border-slate-200 hover:border-pink-300 hover:shadow-lg transition-all duration-300">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="bg-pink-100 text-pink-700 font-bold px-3 py-1 rounded text-xs uppercase">HW
+                                    2-3</div>
+                                <span class="text-slate-400 text-xs font-mono">60 min</span>
+                            </div>
+                            <h3
+                                class="text-lg font-bold text-slate-800 mb-2 group-hover:text-pink-600 transition-colors">
+                                多按鈕並行邏輯</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                                當右手按「前進」，左手按「左轉」時，如何不打架？
+                                練習將指令打包成 JSON：<code>{F:1, L:1}</code> 統一發送。
+                            </p>
+                            <div class="text-xs text-pink-500 font-bold">👉 目標：多工協同運作</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2024 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Fullscreen Media Overlay -->
+    <div id="media-overlay" class="fixed inset-0 bg-black z-50 hidden flex flex-col overflow-hidden">
+        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-gray-200 flex justify-center">
+            <iframe id="doc-frame" class="border-0 bg-white shadow-2xl origin-top"
+                style="width: 850px; height: 100%; transition: transform 0.2s ease;" src="">
+            </iframe>
+        </div>
+        <div id="video-wrapper" class="hidden flex-grow w-full bg-black flex justify-center items-center">
+            <iframe id="video-frame" class="w-full h-full" src="" title="Course Video" frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen>
+            </iframe>
+        </div>
+        <button onclick="closeModal()"
+            class="close-video-btn absolute top-5 right-5 text-white bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full backdrop-blur-md transition">✕
+            Close</button>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // --- Lab Logic ---
+        const counterDisplay = document.getElementById('counter-display');
+        const timerIdDisplay = document.getElementById('timer-id-display');
+        const pulseBg = document.getElementById('pulse-bg');
+        let count = 0;
+        let labTimer = null;
+
+        document.getElementById('btn-start').addEventListener('click', () => {
+            if (labTimer) clearInterval(labTimer); // Safety clear
+
+            labTimer = setInterval(() => {
+                count++;
+                counterDisplay.innerText = count;
+
+                // Visual Pulse
+                pulseBg.classList.remove('bg-indigo-500/0');
+                pulseBg.classList.add('bg-indigo-500/20');
+                setTimeout(() => {
+                    pulseBg.classList.remove('bg-indigo-500/20');
+                    pulseBg.classList.add('bg-indigo-500/0');
+                }, 100);
+
+            }, 1000); // 1 sec interval
+
+            timerIdDisplay.innerText = labTimer;
+            document.getElementById('btn-start').disabled = true;
+            document.getElementById('btn-stop').disabled = false;
+        });
+
+        document.getElementById('btn-stop').addEventListener('click', () => {
+            if (labTimer) {
+                clearInterval(labTimer);
+                labTimer = null;
+                timerIdDisplay.innerText = 'null';
+            }
+            document.getElementById('btn-start').disabled = false;
+            document.getElementById('btn-stop').disabled = true;
+        });
+
+
+        // --- Overlay Logic ---
+        const overlay = document.getElementById('media-overlay');
+        const docWrapper = document.getElementById('doc-wrapper');
+        const videoWrapper = document.getElementById('video-wrapper');
+        const videoFrame = document.getElementById('video-frame');
+        const docFrame = document.getElementById('doc-frame');
+        let currentMode = null;
+        const BASE_DOC_WIDTH = 850;
+
+        // Placeholder ID or URL logic
+        const RESOURCES = {
+            video: "https://www.youtube.com/embed/U1A_b2SCAQY",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vT71TVYUiMQVH69DkFUvBUFcJ1w7Z9vs0Y25Km3NFZxOSMLlUhDUEVWYuVH4QqMABJENFo57pIXJDFE/pub?embedded=true"
+        };
+
+        function playVideo() { openModal('video'); }
+        function openDoc() { openModal('doc'); }
+
+        async function openModal(type) {
+            currentMode = type;
+            docWrapper.classList.add('hidden');
+            videoWrapper.classList.add('hidden');
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            // Request Fullscreen
+            try {
+                if (document.documentElement.requestFullscreen) {
+                    await document.documentElement.requestFullscreen();
+                } else if (document.documentElement.webkitRequestFullscreen) { /* Safari */
+                    await document.documentElement.webkitRequestFullscreen();
+                }
+            } catch (err) { console.warn("FS failed", err); }
+
+            if (type === 'video') {
+                videoWrapper.classList.remove('hidden');
+                videoFrame.src = RESOURCES.video;
+            } else if (type === 'doc') {
+                docWrapper.classList.remove('hidden');
+                docFrame.src = RESOURCES.doc;
+                setTimeout(autoFitZoom, 100);
+            }
+        }
+
+        function closeModal() {
+            overlay.classList.add('hidden');
+            document.body.style.overflow = '';
+            videoFrame.src = "";
+            docFrame.src = "";
+            currentMode = null;
+
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            }
+        }
+
+        function autoFitZoom() {
+            if (currentMode !== 'doc') return;
+            const availableWidth = docWrapper.clientWidth;
+            let scale = (availableWidth - 20) / BASE_DOC_WIDTH;
+            if (scale < 0.5) scale = 0.5;
+            docFrame.style.transform = `scale(${scale})`;
+            docFrame.style.height = `${100 / scale}%`;
+            docFrame.style.marginBottom = `${-(1 - scale) * 100}%`;
+        }
+
+        window.addEventListener('resize', () => {
+            if (currentMode === 'doc' && !overlay.classList.contains('hidden')) autoFitZoom();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "Escape") closeModal();
+        });
+
+        // --- Animations ---
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-10');
+                }
+            });
+        });
+
+        document.querySelectorAll('.fade-in-up').forEach((el) => {
+            el.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-10');
+            observer.observe(el);
+        });
+        // --- Fullscreen Change Listener ---
+        function onFullscreenChange() {
+            if (!document.fullscreenElement &&
+                !document.webkitFullscreenElement &&
+                !document.msFullscreenElement) {
+                closeModal();
+            }
+        }
+
+        document.addEventListener('fullscreenchange', onFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+        document.addEventListener('mozfullscreenchange', onFullscreenChange);
+        document.addEventListener('MSFullscreenChange', onFullscreenChange);
+    </script>
+</body>
+
+</html>

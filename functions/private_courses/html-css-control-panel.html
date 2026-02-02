@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI 佈局：HTML 按鈕與 CSS 控制面板 - Vibe Coding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the demo */
+        .demo-btn {
+            transition: all 0.1s ease;
+        }
+
+        .demo-btn:active {
+            transform: scale(0.95);
+        }
+
+        .demo-btn.disabled {
+            pointer-events: none;
+            filter: grayscale(100%);
+            opacity: 0.6;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 font-[Inter] text-gray-800">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div class="header-overlay absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90"></div>
+        <div class="container mx-auto px-4 relative z-10 pt-20 pb-20 text-center text-white">
+            <div class="badge-header bg-white/20 text-white border border-white/30 backdrop-blur-sm">
+                學習單元 1
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
+                UI 佈局：HTML 按鈕與 CSS 控制面板
+            </h1>
+            <p class="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed mb-10">
+                掌握 HTML5 語義化佈局與 CSS 偽類狀態，打造如同原生 App 般順滑的網頁遙控器介面。
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="playVideo()"
+                    class="resource-btn bg-blue-500 hover:bg-blue-400 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-lg font-bold">
+                    <span>▶️</span> 觀看教學影片
+                </button>
+                <button onclick="openDoc()"
+                    class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-3 rounded-full flex items-center gap-2 backdrop-blur-sm font-bold">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto max-w-6xl px-4 py-12">
+
+        <!-- Module 1: Intuitive Lab -->
+        <section class="content-block mb-24">
+            <div class="section-header-left border-l-4 border-blue-500 pl-6 mb-10">
+                <span class="text-blue-600 font-bold tracking-wider uppercase text-sm">Module 1: Intuitive Lab</span>
+                <h2 class="text-3xl font-bold text-gray-900 mt-2">感知實驗室：按鈕的物理回饋</h2>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
+                    <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                        <span
+                            class="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-lg">1</span>
+                        狀態設計 (State Design)
+                    </h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        一個好的按鈕不只是好看，還必須「好按」。透過 CSS 的 <code
+                            class="bg-gray-100 px-2 py-1 rounded text-blue-600 font-mono">:active</code>
+                        偽類，我們可以模擬真實物理按鈕被按下去的感覺。
+                    </p>
+
+                    <div class="space-y-4">
+                        <div class="flex gap-4 items-center p-4 bg-gray-50 rounded-lg">
+                            <div class="text-2xl">🖱️</div>
+                            <div>
+                                <h4 class="font-bold text-gray-900">:hover (懸停)</h4>
+                                <p class="text-sm text-gray-600 mt-1">暗示它是可點擊的 (游標變化、微亮)。</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 items-center p-4 bg-blue-50 rounded-lg border border-blue-100">
+                            <div class="text-2xl">👇</div>
+                            <div>
+                                <h4 class="font-bold text-blue-900">:active (按下)</h4>
+                                <p class="text-sm text-blue-800 mt-1">關鍵時刻！使用 <code>transform: scale(0.95)</code> 創造下沉感。
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 items-center p-4 bg-gray-100 rounded-lg opacity-70">
+                            <div class="text-2xl">🚫</div>
+                            <div>
+                                <h4 class="font-bold text-gray-600">:disabled (禁用)</h4>
+                                <p class="text-sm text-gray-500 mt-1">斷連時防止誤觸，搭配 <code>pointer-events: none</code>。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Demo -->
+                <div
+                    class="bg-gray-900 rounded-xl p-8 flex flex-col items-center justify-center shadow-2xl min-h-[400px]">
+                    <div class="mb-6 flex gap-4">
+                        <label class="flex items-center gap-2 text-white cursor-pointer container-checkbox">
+                            <input type="checkbox" id="disable-toggle"
+                                class="w-4 h-4 rounded text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500 max-w-[20px]">
+                            <span class="text-sm font-mono text-gray-300">模擬斷線 (Disable)</span>
+                        </label>
+                    </div>
+
+                    <!-- D-Pad Demo -->
+                    <div
+                        class="d-pad-container relative w-48 h-48 bg-gray-800 rounded-full border-4 border-gray-700 shadow-inner flex items-center justify-center">
+                        <!-- Up -->
+                        <button id="btn-up"
+                            class="demo-btn absolute top-2 w-12 h-12 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-white shadow-lg border-b-4 border-gray-900 active:border-b-0 active:translate-y-1 transition-all">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7">
+                                </path>
+                            </svg>
+                        </button>
+                        <!-- Left -->
+                        <button id="btn-left"
+                            class="demo-btn absolute left-2 w-12 h-12 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-white shadow-lg border-b-4 border-gray-900 active:border-b-0 active:translate-y-1 transition-all">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </button>
+                        <!-- Center (Stop) -->
+                        <button id="btn-stop"
+                            class="demo-btn w-14 h-14 bg-red-600 hover:bg-red-500 rounded-full flex items-center justify-center text-white shadow-lg border-b-4 border-red-800 active:border-b-0 active:translate-y-1 transition-all z-10">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                        <!-- Right -->
+                        <button id="btn-right"
+                            class="demo-btn absolute right-2 w-12 h-12 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-white shadow-lg border-b-4 border-gray-900 active:border-b-0 active:translate-y-1 transition-all">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                </path>
+                            </svg>
+                        </button>
+                        <!-- Down -->
+                        <button id="btn-down"
+                            class="demo-btn absolute bottom-2 w-12 h-12 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-white shadow-lg border-b-4 border-gray-900 active:border-b-0 active:translate-y-1 transition-all">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <p class="mt-8 text-gray-400 text-xs font-mono bg-gray-800 px-3 py-1 rounded">Try clicking the
+                        buttons!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Core Principles -->
+        <section class="content-block mb-24">
+            <div class="section-header-left border-l-4 border-indigo-500 pl-6 mb-10">
+                <span class="text-indigo-600 font-bold tracking-wider uppercase text-sm">Module 2: Core
+                    Principles</span>
+                <h2 class="text-3xl font-bold text-gray-900 mt-2">三大構建基石</h2>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Principle 1 -->
+                <div
+                    class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-2xl mb-4">🏗️
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">1. 語義化佈局</h3>
+                    <p class="text-gray-600 mb-4 text-sm">HTML5 不只是為了顯示，更是為了「結構」。使用 <code>section</code> 區分功能區塊，用 ID (如
+                        <code>#btn-up</code>) 給每個按鈕唯一的身份證。
+                    </p>
+                    <div class="bg-gray-50 p-3 rounded-lg text-xs font-mono text-gray-600 border border-gray-200">
+                        &lt;div id="d-pad"&gt;<br>
+                        &nbsp;&nbsp;&lt;button id="btn-up"&gt;...&lt;/button&gt;<br>
+                        &lt;/div&gt;
+                    </div>
+                </div>
+
+                <!-- Principle 2 -->
+                <div
+                    class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-2xl mb-4">🎨
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">2. 偽類魔法</h3>
+                    <p class="text-gray-600 mb-4 text-sm">透過 CSS 偽類 (:pseudo-classes) 來處理互動狀態，無需寫 JavaScript
+                        就能實現基礎的按壓反饋和視覺提示。</p>
+                    <ul class="text-sm text-gray-500 space-y-2 bg-gray-50 p-4 rounded-lg">
+                        <li class="flex items-center gap-2"><span class="text-purple-500">✔</span> :hover (PC端提示)</li>
+                        <li class="flex items-center gap-2"><span class="text-purple-500">✔</span> :active (按壓特效)</li>
+                        <li class="flex items-center gap-2"><span class="text-purple-500">✔</span> :disabled (狀態鎖定)</li>
+                    </ul>
+                </div>
+
+                <!-- Principle 3 -->
+                <div
+                    class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+                    <div class="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center text-2xl mb-4">🖼️
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">3. 向量圖示 (SVG)</h3>
+                    <p class="text-gray-600 mb-4 text-sm">為什麼不用圖片？SVG 是數學描述的向量圖，放大不失真，且可以透過 CSS (fill/stroke) 隨意改色，非常適合
+                        RWD 介面。</p>
+                    <div class="bg-pink-50 p-3 rounded-lg text-xs text-pink-800 border border-pink-200">
+                        <strong>優勢：</strong><br>檔案極小、載入快、樣式可控。
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Practical Challenge -->
+        <section class="content-block">
+            <div class="section-header-left border-l-4 border-teal-500 pl-6 mb-10">
+                <span class="text-teal-600 font-bold tracking-wider uppercase text-sm">Module 3: Classroom
+                    Challenges</span>
+                <h2 class="text-3xl font-bold text-gray-900 mt-2">教室實戰：打造專業控制板</h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 1-1 -->
+                <div
+                    class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-2"></div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-bold text-xl text-gray-800 group-hover:text-blue-600 transition">作業 1-1</h3>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">60 min</span>
+                        </div>
+                        <h4 class="font-bold text-gray-700 mb-2">Grid 佈局挑戰</h4>
+                        <p class="text-sm text-gray-500 mb-4">目標：利用 CSS Grid 實作經典 3x3 控制網格，確保手機旋轉時十字鍵不變形。</p>
+
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Key Property</h5>
+                            <code
+                                class="block bg-gray-50 text-gray-700 p-2 rounded text-xs font-mono border border-gray-200">
+                                grid-template-areas:<br>
+                                ". up ."<br>
+                                "left stop right"<br>
+                                ". down ."
+                            </code>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 1-2 -->
+                <div
+                    class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group">
+                    <div class="bg-gradient-to-r from-teal-500 to-teal-600 h-2"></div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-bold text-xl text-gray-800 group-hover:text-teal-600 transition">作業 1-2</h3>
+                            <span class="bg-teal-100 text-teal-700 text-xs px-2 py-1 rounded font-bold">45 min</span>
+                        </div>
+                        <h4 class="font-bold text-gray-700 mb-2">觸控區域優化</h4>
+                        <p class="text-sm text-gray-500 mb-4">目標：應用 Fitts's Law，調整按鈕的點擊熱區 (Touch Target)，確保至少 44x44px。
+                        </p>
+
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Challenge</h5>
+                            <p class="text-sm text-gray-600">
+                                使用 padding 擴大感應區，但不改變視覺上的按鈕大小。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 1-3 -->
+                <div
+                    class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group">
+                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-2"></div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-bold text-xl text-gray-800 group-hover:text-purple-600 transition">作業 1-3
+                            </h3>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold">60
+                                min</span>
+                        </div>
+                        <h4 class="font-bold text-gray-700 mb-2">多層級 UI 疊加</h4>
+                        <p class="text-sm text-gray-500 mb-4">目標：打造沈浸式 FPV 介面。將半透明控制層透過 <code>z-index</code> 疊加在視訊畫面上。
+                        </p>
+
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Visual</h5>
+                            <p class="text-sm text-gray-600">
+                                按下按鈕時產生光暈效果，強化指令送出的視覺回饋。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-900 text-white py-12 border-t border-gray-800">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500">© 2024 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Fullscreen Media Overlay -->
+    <div id="media-overlay" class="fixed inset-0 bg-black z-50 hidden flex flex-col overflow-hidden">
+        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-gray-200 flex justify-center">
+            <iframe id="doc-frame" class="border-0 bg-white shadow-2xl origin-top"
+                style="width: 850px; height: 100%; transition: transform 0.2s ease;" src="">
+            </iframe>
+        </div>
+        <div id="video-wrapper" class="hidden flex-grow w-full bg-black flex justify-center items-center">
+            <iframe id="video-frame" class="w-full h-full" src="" title="Course Video" frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+
+    <script>
+        // --- Interactive Demo Logic ---
+        const disableToggle = document.getElementById('disable-toggle');
+        const demoBtns = document.querySelectorAll('.demo-btn');
+
+        disableToggle.addEventListener('change', (e) => {
+            const isDisabled = e.target.checked;
+            demoBtns.forEach(btn => {
+                if (isDisabled) {
+                    btn.classList.add('disabled');
+                } else {
+                    btn.classList.remove('disabled');
+                }
+            });
+        });
+
+        // --- Standard Media Overlay Logic ---
+        const overlay = document.getElementById('media-overlay');
+        const docWrapper = document.getElementById('doc-wrapper');
+        const videoWrapper = document.getElementById('video-wrapper');
+        let currentMode = null;
+        let currentScale = 1.0;
+        const BASE_DOC_WIDTH = 850;
+
+        const RESOURCES = {
+            youtube: "https://www.youtube.com/embed/npkVulZAkI8",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vQPo7mHN5wddfoXi1hNsYO4amKmJ1ci-10qdh5xEQraOeCttQPiMnTz3dqWSSMZ8WrHNh7uKv8XwPry/pub?embedded=true"
+        };
+
+        function openDoc() {
+            // Using placeholder for now as requested
+            openModal('doc');
+            // alert('講義連結待更新');
+        }
+
+        function playVideo() {
+            // Using placeholder for now as requested
+            openModal('youtube');
+            // alert('影片連結待更新');
+        }
+
+        function openModal(type) {
+            currentMode = type;
+            docWrapper.classList.add('hidden');
+            videoWrapper.classList.add('hidden');
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            if (type === 'doc') {
+                docWrapper.classList.remove('hidden');
+                document.getElementById('doc-frame').src = RESOURCES.doc;
+                setTimeout(autoFitZoom, 100);
+            } else if (type === 'youtube') {
+                videoWrapper.classList.remove('hidden');
+                document.getElementById('video-frame').src = RESOURCES.youtube;
+            }
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(err => console.log(err));
+            }
+        }
+
+        function closeModal() {
+            overlay.classList.add('hidden');
+            document.body.style.overflow = '';
+            document.getElementById('video-frame').src = "";
+            document.getElementById('doc-frame').src = "";
+            if (document.fullscreenElement && document.exitFullscreen) {
+                document.exitFullscreen().catch(err => console.log(err));
+            }
+            currentMode = null;
+        }
+
+        function autoFitZoom() {
+            if (currentMode !== 'doc') return;
+            const availableWidth = docWrapper.clientWidth;
+            let scale = (availableWidth - 20) / BASE_DOC_WIDTH;
+            if (scale < 0.5) scale = 0.5;
+            applyZoom(scale);
+        }
+
+        function applyZoom(scale) {
+            currentScale = scale;
+            const iframe = document.getElementById('doc-frame');
+            iframe.style.transform = `scale(${scale})`;
+            iframe.style.height = `${100 / scale}%`;
+            iframe.style.marginBottom = `${-(1 - scale) * 100}%`;
+        }
+
+        window.addEventListener('resize', () => {
+            if (currentMode === 'doc' && !overlay.classList.contains('hidden')) {
+                autoFitZoom();
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === "Escape") closeModal();
+        });
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && !overlay.classList.contains('hidden')) closeModal();
+        });
+    </script>
+</body>
+
+</html>

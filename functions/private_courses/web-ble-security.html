@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web BLE 安全機制與權限規範 - Vibe Coding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+</head>
+
+<body class="bg-gray-50 font-[Inter] text-gray-800">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div class="header-overlay absolute inset-0 bg-gradient-to-r from-purple-900 to-indigo-800 opacity-90"></div>
+        <div class="container mx-auto px-4 relative z-10 pt-20 pb-20 text-center text-white">
+            <div class="badge-header bg-purple-500/20 text-purple-200 border border-purple-400/30 backdrop-blur-sm">
+                Web Bluetooth Security
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
+                Web BLE 安全機制與權限規範
+            </h1>
+            <p class="text-xl text-purple-100 max-w-2xl mx-auto leading-relaxed mb-10">
+                深入理解 Web Bluetooth API 的安全沙箱機制，掌握 HTTPS、User Gesture 與設備過濾的黃金法則。
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="playVideo()"
+                    class="resource-btn bg-purple-500 hover:bg-purple-400 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-lg font-bold">
+                    <span>▶️</span> 觀看教學影片
+                </button>
+                <button onclick="openDoc()"
+                    class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-3 rounded-full flex items-center gap-2 backdrop-blur-sm font-bold">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto max-w-6xl px-4 py-12">
+
+        <!-- Module 1: Intuitive Lab -->
+        <section class="content-block mb-24">
+            <div class="section-header-left border-l-4 border-purple-500 pl-6 mb-10">
+                <span class="text-purple-600 font-bold tracking-wider uppercase text-sm">Module 1: Intuitive Lab</span>
+                <h2 class="text-3xl font-bold text-gray-900 mt-2">安全沙箱：為什麼我的連線按鈕沒反應？</h2>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
+                    <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                        <span
+                            class="bg-purple-100 text-purple-600 w-10 h-10 rounded-full flex items-center justify-center text-lg">1</span>
+                        安全上下文 (Secure Context)
+                    </h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        Web Bluetooth 是一個強大的 API，它允許網頁直接控制實體設備。為了防止惡意網站偷偷連線你的設備，瀏覽器強制要求網站必須在 <strong>HTTPS</strong>
+                        環境下才能執行。
+                    </p>
+
+                    <div class="space-y-4">
+                        <div class="flex gap-4 items-center p-4 bg-red-50 rounded-lg border border-red-100 opacity-50">
+                            <div class="text-2xl">🔓</div>
+                            <div>
+                                <h4 class="font-bold text-red-900">HTTP (不安全)</h4>
+                                <p class="text-sm text-red-800 mt-1">navigator.bluetooth 為 undefined</p>
+                            </div>
+                        </div>
+                        <div
+                            class="flex gap-4 items-center p-4 bg-green-50 rounded-lg border border-green-200 shadow-md transform scale-105">
+                            <div class="text-2xl">🔒</div>
+                            <div>
+                                <h4 class="font-bold text-green-900">HTTPS (安全)</h4>
+                                <p class="text-sm text-green-800 mt-1">navigator.bluetooth 可正常呼叫</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <!-- Simulation Display -->
+                    <div class="bg-gray-900 rounded-xl overflow-hidden shadow-2xl">
+                        <div class="bg-gray-800 px-4 py-2 flex items-center gap-2 border-b border-gray-700">
+                            <span class="text-gray-400 text-xs font-mono">console</span>
+                        </div>
+                        <div class="p-6 font-mono text-sm leading-8">
+                            <div class="text-gray-400">// 在 http://localhost 執行時</div>
+                            <div class="text-red-400 mt-2">
+                                Uncaught TypeError: Cannot read properties of undefined (reading 'requestDevice')
+                            </div>
+                            <div class="text-gray-500 mt-1 ml-4">
+                                at connectBtn.onclick (main.js:12)
+                            </div>
+
+                            <div class="text-gray-400 mt-6">// 在 https://mysite.com 執行時</div>
+                            <div class="text-green-400 mt-2">
+                                > scanning for devices...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Floating Badge -->
+                    <div
+                        class="absolute -bottom-6 -right-6 bg-white p-4 rounded-xl shadow-lg border border-gray-100 flex items-center gap-3 animate-bounce-slow">
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-2xl">🛡️
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-500 font-bold uppercase">Rule #1</div>
+                            <div class="font-bold text-purple-900">必須是 HTTPS</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Core Principles -->
+        <section class="content-block mb-24">
+            <div class="section-header-left border-l-4 border-indigo-500 pl-6 mb-10">
+                <span class="text-indigo-600 font-bold tracking-wider uppercase text-sm">Module 2: Core
+                    Principles</span>
+                <h2 class="text-3xl font-bold text-gray-900 mt-2">Web BLE 三大安全鐵律</h2>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Principle 1 -->
+                <div
+                    class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-2xl mb-4">🔐
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">1. 環境限制</h3>
+                    <p class="text-gray-600 mb-4 text-sm">除了 localhost 用於開發測試外，所有上線的 Web App 必須部署在具備 SSL 憑證 (HTTPS)
+                        的伺服器上。</p>
+                    <ul class="text-sm text-gray-500 space-y-2 bg-gray-50 p-4 rounded-lg">
+                        <li class="flex items-center gap-2"><span class="text-green-500">✔</span> localhost</li>
+                        <li class="flex items-center gap-2"><span class="text-green-500">✔</span> 127.0.0.1</li>
+                        <li class="flex items-center gap-2"><span class="text-green-500">✔</span> https://...</li>
+                        <li class="flex items-center gap-2"><span class="text-red-500">✘</span> http://192.168.x.x</li>
+                    </ul>
+                </div>
+
+                <!-- Principle 2 -->
+                <div
+                    class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+                    <div class="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center text-2xl mb-4">👆
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">2. 使用者手動觸發</h3>
+                    <p class="text-gray-600 mb-4 text-sm">瀏覽器禁止網頁在背景「自動」掃描。所有的連線請求必須由使用者明確的點擊 (User Gesture) 觸發。</p>
+                    <div class="bg-gray-900 p-3 rounded-lg text-xs font-mono text-gray-300">
+                        <span class="text-purple-400">btn</span>.addEventListener(<span
+                            class="text-green-300">'click'</span>, <span class="text-blue-300">function</span>() {<br>
+                        &nbsp;&nbsp;<span class="text-gray-500">// 必須在這裡呼叫</span><br>
+                        &nbsp;&nbsp;navigator.bluetooth.requestDevice(...)<br>
+                        });
+                    </div>
+                </div>
+
+                <!-- Principle 3 -->
+                <div
+                    class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-2xl mb-4">🔎
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">3. 設備過濾與隱私</h3>
+                    <p class="text-gray-600 mb-4 text-sm">網頁不能掃描「所有」設備。必須明確宣告要存取的 <code>filters</code> 或
+                        <code>optionalServices</code>，否則瀏覽器會拒絕執行。
+                    </p>
+                    <div class="bg-yellow-50 p-3 rounded-lg text-xs text-yellow-800 border border-yellow-200">
+                        <strong>隱私保護：</strong><br>這防止了廣告商透過掃描你身邊的藍牙設備 (如智慧手環) 來追蹤你的位置。
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Practical Challenge -->
+        <section class="content-block">
+            <div class="section-header-left border-l-4 border-pink-500 pl-6 mb-10">
+                <span class="text-pink-600 font-bold tracking-wider uppercase text-sm">Module 3: Practical
+                    Challenge</span>
+                <h2 class="text-3xl font-bold text-gray-900 mt-2">教室實戰：打造穩固的連線流程</h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 1 -->
+                <div
+                    class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-2"></div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-bold text-xl text-gray-800 group-hover:text-blue-600 transition">作業 1-1</h3>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">45 min</span>
+                        </div>
+                        <h4 class="font-bold text-gray-700 mb-2">「授權失敗」模擬與排除</h4>
+                        <p class="text-sm text-gray-500 mb-4">目標：實作 try-catch 機制，當使用者在配對視窗按「取消」時，優雅地顯示提示，而不是報錯。</p>
+
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Key Object</h5>
+                            <code
+                                class="block bg-gray-50 text-gray-700 p-2 rounded text-xs font-mono border border-gray-200">
+                                catch (error) {<br>
+                                &nbsp;&nbsp;if (error.name === 'NotFoundError') ...<br>
+                                }
+                            </code>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2 -->
+                <div
+                    class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group">
+                    <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 h-2"></div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-bold text-xl text-gray-800 group-hover:text-indigo-600 transition">作業 1-2
+                            </h3>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">60
+                                min</span>
+                        </div>
+                        <h4 class="font-bold text-gray-700 mb-2">多裝置環境下的「精準過濾」</h4>
+                        <p class="text-sm text-gray-500 mb-4">目標：全班 20 台車同時開啟時，透過 <code>namePrefix</code> 或
+                            <code>services</code> 讓你的列表只顯示你自己的車。
+                        </p>
+
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Challenge</h5>
+                            <p class="text-sm text-gray-600">
+                                嘗試修改 ESP32 的藍牙名稱 (如: Car-01)，只搜尋特定名稱。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3 -->
+                <div
+                    class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group">
+                    <div class="bg-gradient-to-r from-pink-500 to-pink-600 h-2"></div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-bold text-xl text-gray-800 group-hover:text-pink-600 transition">作業 1-3</h3>
+                            <span class="bg-pink-100 text-pink-700 text-xs px-2 py-1 rounded font-bold">30 min</span>
+                        </div>
+                        <h4 class="font-bold text-gray-700 mb-2">跨平台權限大調查</h4>
+                        <p class="text-sm text-gray-500 mb-4">目標：比較 Android Chrome, Mac Chrome 與 iOS (Bluefy/WebBLE)
+                            的配對介面差異。</p>
+
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Compatibility</h5>
+                            <p class="text-xs text-red-500 bg-red-50 p-2 rounded">
+                                ⚠️ iOS Safari 目前尚未原生支援 Web BLE，需使用專用 App。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-900 text-white py-12 border-t border-gray-800">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500">© 2024 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Fullscreen Media Overlay -->
+    <div id="media-overlay" class="fixed inset-0 bg-black z-50 hidden flex flex-col overflow-hidden">
+        <!-- Doc Container -->
+        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-gray-200 flex justify-center">
+            <iframe id="doc-frame" class="border-0 bg-white shadow-2xl origin-top"
+                style="width: 850px; height: 100%; transition: transform 0.2s ease;" src="">
+            </iframe>
+        </div>
+
+        <!-- Video Container -->
+        <div id="video-wrapper" class="hidden flex-grow w-full bg-black flex justify-center items-center">
+            <iframe id="video-frame" class="w-full h-full" src="" title="Course Video" frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen>
+            </iframe>
+        </div>
+
+        <button onclick="closeModal()" class="close-video-btn">✕ Close</button>
+    </div>
+
+    <script>
+        // --- Robust Media Logic ---
+        const overlay = document.getElementById('media-overlay');
+        const docWrapper = document.getElementById('doc-wrapper');
+        const videoWrapper = document.getElementById('video-wrapper');
+
+        let currentMode = null;
+        let currentScale = 1.0;
+        const BASE_DOC_WIDTH = 850;
+
+        const RESOURCES = {
+            youtube: "https://www.youtube.com/embed/GIMfXJZ74hM",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vSKmbfX9VidYdzQ32wzbbXJeKZ6kVS9vaIFhiMjiZffWtAXAkYbTDk_GNaxKGVr-0WCyDekwJo8JnQ4/pub?embedded=true"
+        };
+
+        function openDoc() {
+            // Note: In a real scenario, we might want a specific doc link. 
+            // For now, alerting or using a placeholder if 'doc' isn't explicitly defined in prompt.
+            // The prompt mentioned "Google 文件 Web BLE 安全規範與實作", so we assume a link exists.
+            // I'll leave the placeholder logic but update if a real link is known.
+            openModal('doc');
+        }
+
+        function playVideo() {
+            openModal('youtube');
+        }
+
+        function openModal(type) {
+            currentMode = type;
+
+            // Reset UI
+            docWrapper.classList.add('hidden');
+            videoWrapper.classList.add('hidden');
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            if (type === 'doc') {
+                docWrapper.classList.remove('hidden');
+                const docFrame = document.getElementById('doc-frame');
+                docFrame.src = RESOURCES.doc;
+
+                setTimeout(autoFitZoom, 100);
+
+            } else if (type === 'youtube') {
+                videoWrapper.classList.remove('hidden');
+                const videoFrame = document.getElementById('video-frame');
+                videoFrame.src = RESOURCES.youtube;
+            }
+
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(err => console.log(err));
+            }
+        }
+
+        function closeModal() {
+            overlay.classList.add('hidden');
+            document.body.style.overflow = '';
+            document.getElementById('video-frame').src = "";
+            document.getElementById('doc-frame').src = "";
+            if (document.fullscreenElement && document.exitFullscreen) {
+                document.exitFullscreen().catch(err => console.log(err));
+            }
+            currentMode = null;
+        }
+
+        function autoFitZoom() {
+            if (currentMode !== 'doc') return;
+            const availableWidth = docWrapper.clientWidth;
+            let scale = (availableWidth - 20) / BASE_DOC_WIDTH;
+            if (scale < 0.5) scale = 0.5;
+            applyZoom(scale);
+        }
+
+        function applyZoom(scale) {
+            currentScale = scale;
+            const iframe = document.getElementById('doc-frame');
+            iframe.style.transform = `scale(${scale})`;
+            iframe.style.height = `${100 / scale}%`;
+            iframe.style.marginBottom = `${-(1 - scale) * 100}%`;
+        }
+
+        window.addEventListener('resize', () => {
+            if (currentMode === 'doc' && !overlay.classList.contains('hidden')) {
+                autoFitZoom();
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === "Escape") {
+                closeModal();
+            }
+        });
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && !overlay.classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HTML5 Canvas 與 CSS 圓形佈局 - Vibe Coding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- MathJax for rendering math formulas -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            }
+        };
+    </script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body class="bg-gray-50 font-[Inter] text-gray-800 overscroll-none">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="header-overlay absolute inset-0 bg-gradient-to-r from-indigo-900/90 to-purple-800/90 mix-blend-multiply">
+        </div>
+        <!-- Decorative background elements -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 opacity-20">
+            <div
+                class="absolute top-20 left-20 w-72 h-72 bg-indigo-500 rounded-full mix-blend-overlay filter blur-3xl animate-pulse">
+            </div>
+            <div class="absolute bottom-20 right-20 w-96 h-96 bg-purple-500 rounded-full mix-blend-overlay filter blur-3xl animate-pulse"
+                style="animation-delay: 2s"></div>
+        </div>
+
+        <div class="container mx-auto px-4 relative z-10 pt-10 pb-10 text-center text-white">
+            <div
+                class="badge-header inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 backdrop-blur-sm mb-8 text-sm font-semibold tracking-wide uppercase">
+                <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                Canvas & CSS Layout
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight">
+                HTML5 Canvas 與 <br class="hidden md:block" />CSS 圓形佈局
+            </h1>
+            <p class="text-xl text-indigo-100 max-w-2xl mx-auto leading-relaxed mb-10">
+                打造完美的圓：從 CSS 百分比定位到 Canvas 向量繪圖，<br>一步步解構網頁虛擬搖桿的實作原理。
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="playVideo()"
+                    class="resource-btn bg-indigo-500 hover:bg-indigo-400 text-white px-8 py-4 rounded-full flex items-center gap-3 shadow-lg shadow-indigo-500/30 font-bold transition-all">
+                    <span>▶️</span> 觀看教學影片
+                </button>
+                <button onclick="openDoc()"
+                    class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-8 py-4 rounded-full flex items-center gap-3 backdrop-blur-sm font-bold transition-all">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Intuitive Lab (CSS) -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="section-header-left border-l-4 border-indigo-500 pl-6 mb-12">
+                        <span class="text-indigo-600 font-bold tracking-wider uppercase text-sm">Module 1: Intuitive
+                            Lab</span>
+                        <h2 class="text-4xl font-bold text-gray-900 mt-2">CSS 圓形佈局與定位</h2>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-800 mb-4">完美的圓形容器</h3>
+                            <p class="text-gray-600 leading-relaxed mb-6">
+                                在網頁中製作圓形並不難，但要讓它完美置中且適應各種螢幕，就需要一點 CSS 技巧。
+                            </p>
+
+                            <div class="space-y-6">
+                                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                    <h4 class="font-bold text-gray-700 mb-2">關鍵屬性：</h4>
+                                    <ul class="space-y-3 text-sm">
+                                        <li class="flex items-center gap-3">
+                                            <code
+                                                class="bg-white px-2 py-1 rounded border border-gray-300 text-indigo-600 font-mono">border-radius: 50%</code>
+                                            <span class="text-gray-600">將方形變成圓形。</span>
+                                        </li>
+                                        <li class="flex items-center gap-3">
+                                            <code
+                                                class="bg-white px-2 py-1 rounded border border-gray-300 text-indigo-600 font-mono">aspect-ratio: 1 / 1</code>
+                                            <span class="text-gray-600">確保寬高比永遠即是正方形。</span>
+                                        </li>
+                                        <li class="flex items-center gap-3">
+                                            <code
+                                                class="bg-white px-2 py-1 rounded border border-gray-300 text-indigo-600 font-mono">transform: translate(-50%, -50%)</code>
+                                            <span class="text-gray-600">基於自身尺寸的中心點偏移。</span>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div
+                                    class="bg-yellow-50 text-yellow-800 p-4 rounded-lg text-sm border border-yellow-100">
+                                    <strong>線上任務：</strong><br>
+                                    製作一個半徑 100px 的灰色大圓（底座），裡面包含一個半徑 30px 的藍色小圓（搖桿頭），並讓它們完美同心對齊。
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CSS Interactive Demo -->
+                        <div
+                            class="bg-slate-900 rounded-xl p-8 relative min-h-[400px] flex items-center justify-center border border-slate-700 shadow-inner overflow-hidden">
+                            <!-- Background Grid -->
+                            <div class="absolute inset-0 opacity-20"
+                                style="background-image: linear-gradient(#444 1px, transparent 1px), linear-gradient(90deg, #444 1px, transparent 1px); background-size: 20px 20px;">
+                            </div>
+
+                            <!-- The Joystick Base -->
+                            <div
+                                class="relative w-48 h-48 bg-gray-700 rounded-full border-2 border-gray-500 flex items-center justify-center shadow-lg">
+                                <!-- Center Markers -->
+                                <div class="absolute w-full h-[1px] bg-gray-500/50"></div>
+                                <div class="absolute h-full w-[1px] bg-gray-500/50"></div>
+
+                                <!-- The Joystick Handle -->
+                                <div
+                                    class="w-16 h-16 bg-blue-500 rounded-full shadow-2xl shadow-blue-500/50 border-2 border-blue-400 relative z-10 animate-pulse">
+                                </div>
+                            </div>
+
+                            <div class="absolute bottom-4 left-4 text-xs font-mono text-gray-500">
+                                .joystick-base { ... }<br>
+                                .joystick-knob { ... }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Core Principles (Canvas) -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="section-header-left border-l-4 border-purple-500 pl-6 mb-12">
+                        <span class="text-purple-600 font-bold tracking-wider uppercase text-sm">Module 2: Core
+                            Principles</span>
+                        <h2 class="text-4xl font-bold text-gray-900 mt-2">HTML5 Canvas 繪圖基礎</h2>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-12">
+                        <div class="space-y-6">
+                            <h3 class="text-2xl font-bold text-gray-800">2D 渲染上下文</h3>
+                            <p class="text-gray-600 leading-relaxed">
+                                Canvas 就像一張空白的畫布，我們需要透過 JavaScript 取得 <code>getContext('2d')</code> 這支「畫筆」才能開始作畫。
+                            </p>
+
+                            <div class="bg-slate-900 rounded-xl p-6 shadow-xl border border-slate-800">
+                                <div
+                                    class="flex justify-between mb-3 text-sm text-slate-400 font-bold uppercase tracking-wider">
+                                    <span>JavaScript</span>
+                                </div>
+                                <pre
+                                    class="font-mono text-sm leading-relaxed overflow-x-auto p-4 bg-slate-950 rounded-lg text-slate-300">
+const canvas = document.getElementById('myCanvas');
+const ctx = canvas.<span class="text-yellow-300">getContext</span>('2d');
+
+function draw() {
+    <span class="text-gray-500">// 1. 清除畫布 (必備！)</span>
+    ctx.<span class="text-pink-400">clearRect</span>(0, 0, canvas.width, canvas.height);
+
+    <span class="text-gray-500">// 2. 開始繪製路徑</span>
+    ctx.<span class="text-blue-400">beginPath</span>();
+    ctx.<span class="text-blue-400">arc</span>(x, y, radius, 0, Math.PI * 2);
+    ctx.<span class="text-blue-400">fillStyle</span> = 'blue';
+    ctx.<span class="text-blue-400">fill</span>();
+    
+    <span class="text-gray-500">// 3. 動畫循環</span>
+    requestAnimationFrame(draw);
+}
+</pre>
+                            </div>
+
+                            <ul class="space-y-3">
+                                <li class="flex items-start gap-3">
+                                    <span
+                                        class="bg-purple-100 text-purple-700 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mt-1">1</span>
+                                    <div>
+                                        <strong class="text-gray-800">座標系：</strong>
+                                        <p class="text-sm text-gray-500">原點 $(0,0)$ 位於畫布的<strong>左上角</strong>，X軸向右，Y軸向下。
+                                        </p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <span
+                                        class="bg-purple-100 text-purple-700 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mt-1">2</span>
+                                    <div>
+                                        <strong class="text-gray-800">路徑繪製：</strong>
+                                        <p class="text-sm text-gray-500">所有的繪圖都從 <code>beginPath()</code>
+                                            開始，這告訴瀏覽器我們要畫一個新的形狀。</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Canvas Visualization -->
+                        <div
+                            class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm flex flex-col items-center justify-center relative">
+                            <h4 class="absolute top-4 left-4 text-gray-400 font-mono text-xs">Canvas Coordinate System
+                            </h4>
+                            <canvas id="demoCanvas" width="300" height="300"
+                                class="border border-gray-300 bg-gray-50 rounded cursor-crosshair"></canvas>
+                            <p class="mt-4 text-xs text-center text-gray-500">
+                                試著移動滑鼠：<br>
+                                <span id="coords" class="font-mono text-purple-600 font-bold">X: 0, Y: 0</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Math & Challenge -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-pink-500 to-rose-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="section-header-left border-l-4 border-pink-500 pl-6 mb-12">
+                        <span class="text-pink-600 font-bold tracking-wider uppercase text-sm">Module 3: Practical
+                            Challenge</span>
+                        <h2 class="text-4xl font-bold text-gray-900 mt-2">向量計算與實戰作業</h2>
+                    </div>
+
+                    <!-- Math Theory -->
+                    <div class="mb-12 bg-pink-50 rounded-xl p-8 border border-pink-100">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">預習：向量與角度 (Trigonometry)</h3>
+                        <p class="text-gray-600 mb-6">要讓搖桿跟隨手指，我們需要計算兩點之間的距離與角度。</p>
+
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div>
+                                <h4 class="font-bold text-pink-700 mb-2">1. 角度計算 (Angle)</h4>
+                                <p class="text-sm text-gray-600 mb-2">使用 <code>Math.atan2(y, x)</code> 計算滑鼠位置相對於圓心的角度。
+                                </p>
+                                <div class="bg-white p-3 rounded font-mono text-sm border border-pink-200">
+                                    \(\theta = \text{atan2}(dy, dx)\)
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-pink-700 mb-2">2. 距離計算 (Distance)</h4>
+                                <p class="text-sm text-gray-600 mb-2">使用畢氏定理計算距離，確保搖桿頭不會超出底座範圍。</p>
+                                <div class="bg-white p-3 rounded font-mono text-sm border border-pink-200">
+                                    \(d = \sqrt{dx^2 + dy^2}\)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tasks Grid -->
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <!-- Task 1-1 -->
+                        <div
+                            class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col h-full group hover:shadow-2xl transition-all">
+                            <div class="bg-indigo-500 h-2"></div>
+                            <div class="p-6 flex-grow">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-xl text-gray-800">作業 1-1</h3>
+                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-indigo-600 mb-2">虛擬搖桿：觸控映射</h4>
+                                <p class="text-sm text-gray-600 mb-4">
+                                    讓 CSS 製作的小圓（搖桿頭）跟隨手指移動，並限制在半徑 \(R\) 內。
+                                </p>
+                                <ul class="text-xs text-gray-500 list-disc list-inside space-y-1">
+                                    <li>計算偏移量 \(dx, dy\)</li>
+                                    <li>若 \(d > R\)，將距離限制在 \(R\)</li>
+                                    <li>將座標標準化映射至 \(-100\) 到 \(+100\)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Task 1-2 -->
+                        <div
+                            class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col h-full group hover:shadow-2xl transition-all">
+                            <div class="bg-purple-500 h-2"></div>
+                            <div class="p-6 flex-grow">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-xl text-gray-800">作業 1-2</h3>
+                                    <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-purple-600 mb-2">動態儀表板</h4>
+                                <p class="text-sm text-gray-600 mb-4">
+                                    利用 Canvas 繪製一個隨速度變化的「動態指針」。
+                                </p>
+                                <ul class="text-xs text-gray-500 list-disc list-inside space-y-1">
+                                    <li>使用 <code>requestAnimationFrame</code></li>
+                                    <li>練習 <code>save()</code>, <code>restore()</code></li>
+                                    <li><code>rotate()</code> 旋轉畫布</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Task 1-3 -->
+                        <div
+                            class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col h-full group hover:shadow-2xl transition-all">
+                            <div class="bg-pink-500 h-2"></div>
+                            <div class="p-6 flex-grow">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-xl text-gray-800">作業 1-3</h3>
+                                    <span class="bg-pink-100 text-pink-700 text-xs px-2 py-1 rounded font-bold">45
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-pink-600 mb-2">視覺回饋特效</h4>
+                                <p class="text-sm text-gray-600 mb-4">
+                                    當偵測到障礙物時（模擬數據），在 Canvas 上繪製紅色閃爍警示。
+                                </p>
+                                <ul class="text-xs text-gray-500 list-disc list-inside space-y-1">
+                                    <li>透明度動畫 (Alpha Blending)</li>
+                                    <li>製作呼吸燈光暈效果</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-900 text-white py-12 border-t border-gray-800">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500">© 2024 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <div id="media-overlay" class="fixed inset-0 bg-black z-50 hidden flex flex-col overflow-hidden outline-none"
+        tabindex="-1">
+        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-gray-200 flex justify-center">
+            <iframe id="doc-frame" class="border-0 bg-white shadow-2xl origin-top"
+                style="width: 850px; height: 100%; transition: transform 0.2s ease;" src="">
+            </iframe>
+        </div>
+        <div id="video-wrapper" class="hidden flex-grow w-full bg-black flex justify-center items-center">
+            <iframe id="video-frame" class="w-full h-full" src="" title="Course Video" frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen>
+            </iframe>
+        </div>
+        <button onclick="closeModal()"
+            class="close-video-btn absolute top-5 right-5 text-white bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full backdrop-blur-md transition">✕
+            Close</button>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // --- Canvas Demo Logic ---
+        const canvas = document.getElementById('demoCanvas');
+        const ctx = canvas.getContext('2d');
+        const coordsLabel = document.getElementById('coords');
+
+        // Draw coordinate grid basics
+        function drawGrid() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Grid lines
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            for (let x = 0; x <= canvas.width; x += 20) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for (let y = 0; y <= canvas.height; y += 20) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+        }
+
+        function drawCursor(x, y) {
+            drawGrid();
+
+            // Draw crosshair
+            ctx.strokeStyle = '#9333ea';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvas.height);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw Point
+            ctx.fillStyle = '#9333ea';
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw Text
+            ctx.fillStyle = '#4b5563';
+            ctx.font = '10px monospace';
+            ctx.fillText(`(${x}, ${y})`, x + 10, y - 10);
+        }
+
+        drawGrid();
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.round(e.clientX - rect.left);
+            const y = Math.round(e.clientY - rect.top);
+            coordsLabel.innerText = `X: ${x}, Y: ${y}`;
+            drawCursor(x, y);
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            drawGrid();
+            coordsLabel.innerText = "X: 0, Y: 0";
+        });
+
+
+        // --- Media Overlay Logic ---
+        const overlay = document.getElementById('media-overlay');
+        const docWrapper = document.getElementById('doc-wrapper');
+        const videoWrapper = document.getElementById('video-wrapper');
+        let currentMode = null;
+        const BASE_DOC_WIDTH = 850;
+
+        // Placeholders - To be updated by user
+        const RESOURCES = {
+            youtube: "https://www.youtube.com/embed/RjTLD5LN_fI",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vSadWh92SxVA4NIPyk4T98TigcvEg-r_6GsEeNp98gUwyllzy5J_vZhocJv8uRQ-xDOwMy1v6V8KuB-/pub?embedded=true"
+        };
+
+        function openDoc() {
+            openModal('doc');
+        }
+
+        function playVideo() {
+            openModal('youtube');
+        }
+
+        async function openModal(type) {
+            currentMode = type;
+            docWrapper.classList.add('hidden');
+            videoWrapper.classList.add('hidden');
+            overlay.classList.remove('hidden');
+            overlay.focus();
+            document.body.style.overflow = 'hidden';
+
+            try {
+                if (overlay.requestFullscreen) {
+                    await overlay.requestFullscreen();
+                } else if (overlay.webkitRequestFullscreen) {
+                    await overlay.webkitRequestFullscreen();
+                } else if (overlay.mozRequestFullScreen) {
+                    await overlay.mozRequestFullScreen();
+                } else if (overlay.msRequestFullscreen) {
+                    await overlay.msRequestFullscreen();
+                }
+            } catch (err) {
+                console.warn("Fullscreen request denied:", err);
+            }
+
+            if (type === 'doc') {
+                docWrapper.classList.remove('hidden');
+                document.getElementById('doc-frame').src = RESOURCES.doc;
+                setTimeout(autoFitZoom, 100);
+            } else if (type === 'youtube') {
+                videoWrapper.classList.remove('hidden');
+                document.getElementById('video-frame').src = RESOURCES.youtube;
+            }
+        }
+
+        function closeModal() {
+            overlay.classList.add('hidden');
+            document.body.style.overflow = '';
+            document.getElementById('video-frame').src = "";
+            document.getElementById('doc-frame').src = "";
+            currentMode = null;
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+        }
+
+        function autoFitZoom() {
+            if (currentMode !== 'doc') return;
+            const availableWidth = docWrapper.clientWidth;
+            let scale = (availableWidth - 20) / BASE_DOC_WIDTH;
+            if (scale < 0.5) scale = 0.5;
+            const iframe = document.getElementById('doc-frame');
+            iframe.style.transform = `scale(${scale})`;
+            iframe.style.height = `${100 / scale}%`;
+            iframe.style.marginBottom = `${-(1 - scale) * 100}%`;
+        }
+
+        window.addEventListener('resize', () => {
+            if (currentMode === 'doc' && !overlay.classList.contains('hidden')) autoFitZoom();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "Escape") closeModal();
+        }, true);
+
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) closeModal();
+        });
+    </script>
+</body>
+
+</html>

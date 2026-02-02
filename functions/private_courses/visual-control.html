@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>視覺控制系統：從開迴路到 PID | Vibe Coding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body id="page-visual-control" class="flex flex-col min-h-screen bg-slate-50">
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">🚀 Vibe Coding</div>
+        <ul class="nav-links">
+            <li><a href="../index.html">回首頁</a></li>
+            <li><a href="../basic.html">基礎課程</a></li>
+        </ul>
+        <div class="menu-toggle" id="mobile-menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8 flex-grow max-w-5xl mt-20">
+
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <div class="inline-block bg-pink-100 text-pink-700 px-4 py-1 rounded-full text-sm font-bold mb-4">翻轉教室
+                Flipped Classroom</div>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-800 tracking-tight mb-4">視覺閉迴路控制系統</h1>
+            <p class="text-xl text-slate-500 max-w-2xl mx-auto">從「直覺體驗」到「數學原理」，掌握讓機器人看見並思考的關鍵技術。</p>
+        </div>
+
+        <!-- 1. Open vs Closed Loop Lab -->
+        <div class="section-card lab-card" id="lab-section">
+            <div class="flex items-center gap-3 mb-6">
+                <span class="text-3xl">🧪</span>
+                <h2 class="text-2xl font-bold text-slate-800">1. 直覺實驗室：開迴路 vs 閉迴路</h2>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <p class="text-gray-600 mb-4">
+                        試著操作這台小車！按下「開始」讓它前進。
+                        在旅途中，試著加入「隨機側風 (Disturbance)」，觀察兩種不同控制策略的反應。
+                        <br><br>
+                        👉 <b>思考：</b>如果不看路（開迴路），被風吹歪了會發生什麼事？
+                    </p>
+
+                    <div class="control-panel space-y-4">
+                        <div class="flex justify-between items-center bg-white p-3 rounded shadow-sm">
+                            <span class="font-bold text-gray-700">控制模式</span>
+                            <div class="flex gap-2">
+                                <button onclick="setMode('open')" id="btn-open"
+                                    class="px-4 py-2 rounded-lg bg-slate-200 text-slate-600 font-bold hover:bg-slate-300 transition block-btn border-2 border-transparent">開迴路
+                                    Open-Loop</button>
+                                <button onclick="setMode('closed')" id="btn-closed"
+                                    class="px-4 py-2 rounded-lg bg-pink-500 text-white font-bold shadow-lg hover:bg-pink-600 transition block-btn border-2 border-pink-600">閉迴路
+                                    Closed-Loop</button>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <button onclick="startSim()"
+                                class="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-bold shadow transition">▶
+                                開始行駛</button>
+                            <button onclick="resetSim()"
+                                class="px-4 py-3 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-lg font-bold transition">↺
+                                重置</button>
+                        </div>
+
+                        <button onclick="addWind()"
+                            class="w-full py-3 border-2 border-dashed border-blue-400 text-blue-500 rounded-lg font-bold hover:bg-blue-50 transition">💨
+                            加入一陣強側風 (Disturbance)</button>
+                    </div>
+                </div>
+
+                <div class="relative bg-white rounded-xl shadow-inner border border-slate-200 overflow-hidden">
+                    <canvas id="simCanvas" width="500" height="300"></canvas>
+                    <div
+                        class="absolute top-2 left-2 bg-white/90 px-3 py-1 rounded text-xs font-mono text-slate-500 shadow pointer-events-none">
+                        Status: <span id="simStatus">Ready</span><br>
+                        Error: <span id="simError">0</span> px
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Core Principles -->
+        <div class="section-card theory-card">
+            <div class="flex items-center gap-3 mb-6">
+                <span class="text-3xl">📉</span>
+                <h2 class="text-2xl font-bold text-slate-800">2. 核心原理：資料的閉環旅程</h2>
+            </div>
+
+            <div class="space-y-8">
+                <!-- Diagram Part -->
+                <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 text-center">
+                    <h3 class="font-bold text-blue-800 mb-4">閉迴路控制系統架構</h3>
+                    <div class="flex flex-wrap justify-center items-center gap-4 text-sm md:text-base">
+                        <div class="bg-white px-4 py-2 rounded shadow border border-blue-200 font-bold">👀 感測器 (Sensor)
+                        </div>
+                        <div class="text-blue-400">➜</div>
+                        <div class="bg-white px-4 py-2 rounded shadow border border-blue-200 font-bold">🧠 計算誤差 (Error)
+                        </div>
+                        <div class="text-blue-400">➜</div>
+                        <div class="bg-white px-4 py-2 rounded shadow border border-blue-200 font-bold">⚡ PID 控制器</div>
+                        <div class="text-blue-400">➜</div>
+                        <div class="bg-white px-4 py-2 rounded shadow border border-blue-200 font-bold">⚙️ 馬達 (Actuator)
+                        </div>
+                    </div>
+                    <p class="text-sm text-blue-600 mt-4">這是一個不斷循環的過程，通常每秒鐘要執行數十次甚至上百次！</p>
+                </div>
+
+                <!-- Table Part -->
+                <div>
+                    <h3 class="font-bold text-slate-700 mb-4">控制策略博弈表</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">參數</th>
+                                    <th scope="col" class="px-6 py-3">物理意義</th>
+                                    <th scope="col" class="px-6 py-3">過大時的副作用</th>
+                                    <th scope="col" class="px-6 py-3">視覺特徵</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-white border-b hover:bg-gray-50">
+                                    <td class="px-6 py-4 font-bold text-gray-900">比例項 ($K_p$)</td>
+                                    <td class="px-6 py-4">發現偏差多大，就轉多大力</td>
+                                    <td class="px-6 py-4 text-red-500">劇烈震盪 (S形蛇行)</td>
+                                    <td class="px-6 py-4">反應最快，但容易衝過頭</td>
+                                </tr>
+                                <tr class="bg-white border-b hover:bg-gray-50">
+                                    <td class="px-6 py-4 font-bold text-gray-900">微分項 ($K_d$)</td>
+                                    <td class="px-6 py-4">預測未來的變化，提前「踩煞車」</td>
+                                    <td class="px-6 py-4 text-orange-500">反應遲鈍，產生高頻抖動</td>
+                                    <td class="px-6 py-4">讓動作變得平滑、柔和</td>
+                                </tr>
+                                <tr class="bg-white hover:bg-gray-50">
+                                    <td class="px-6 py-4 font-bold text-gray-900">延遲 (Latency)</td>
+                                    <td class="px-6 py-4">系統反應的「時差」</td>
+                                    <td class="px-6 py-4 text-red-600 font-bold">系統失控發散</td>
+                                    <td class="px-6 py-4">怎麼調參數都無法穩定</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Practical Challenge -->
+        <div class="section-card challenge-card">
+            <div class="flex items-center gap-3 mb-6">
+                <span class="text-3xl">🛠️</span>
+                <h2 class="text-2xl font-bold text-slate-800">3. 實戰挑戰：蛇行現象的「處方箋」</h2>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
+                    <div class="relative bg-gray-900 rounded-xl shadow-lg border-2 border-gray-700 overflow-hidden"
+                        style="height: 400px;">
+                        <canvas id="pidCanvas" width="600" height="400" class="w-full h-full object-cover"></canvas>
+                        <div
+                            class="absolute bottom-4 left-4 bg-black/70 text-green-400 font-mono text-sm px-3 py-2 rounded">
+                            Error: <span id="pidError">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-panel">
+                    <h3 class="font-bold text-lg mb-4 text-slate-800">PID 參數調校</h3>
+                    <p class="text-sm text-gray-600 mb-6">目前的小車 $K_p$ 設得很高，所以正在劇烈蛇行。請試著增加 $K_d$ 來穩定它！</p>
+
+                    <div class="space-y-6">
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <label class="font-bold text-sm text-gray-700">比例 gain ($K_p$)</label>
+                                <span id="val-kp" class="text-sm font-mono bg-white px-2 rounded border">0.8</span>
+                            </div>
+                            <input type="range" id="slider-kp" min="0" max="2" step="0.1" value="0.8">
+                            <p class="text-xs text-gray-500 mt-1">控制轉向靈敏度</p>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <label class="font-bold text-sm text-gray-700">微分 gain ($K_d$)</label>
+                                <span id="val-kd" class="text-sm font-mono bg-white px-2 rounded border">0.0</span>
+                            </div>
+                            <input type="range" id="slider-kd" min="0" max="50" step="1" value="0">
+                            <p class="text-xs text-gray-500 mt-1">產生阻尼效果 (Damping)</p>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-300 grid grid-cols-2 gap-3">
+                            <button onclick="resetPidSim()"
+                                class="py-2 bg-white border border-gray-300 rounded font-bold hover:bg-gray-50">重置位置</button>
+                            <button onclick="togglePidPause()" id="btn-pid-pause"
+                                class="py-2 bg-emerald-100 text-emerald-700 border border-emerald-200 rounded font-bold hover:bg-emerald-200">暫停/繼續</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">🚀 Vibe Coding</div>
+            <p>&copy; 2025 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+
+    <script>
+        /**
+         * MODULE 1: Open vs Closed Loop Simulator
+         */
+        const simCanvas = document.getElementById('simCanvas');
+        const simCtx = simCanvas.getContext('2d');
+        const simStatus = document.getElementById('simStatus');
+        const simError = document.getElementById('simError');
+        const btnOpen = document.getElementById('btn-open');
+        const btnClosed = document.getElementById('btn-closed');
+
+        let mode = 'closed'; // 'open' or 'closed'
+        let car = { x: 50, y: 150, heading: 0, speed: 0 };
+        let wind = 0;
+        let animationId = null;
+        let targetY = 150;
+
+        function setMode(m) {
+            mode = m;
+            // Update UI
+            if (m === 'open') {
+                btnOpen.className = "px-4 py-2 rounded-lg bg-pink-500 text-white font-bold shadow-lg block-btn border-2 border-pink-600";
+                btnClosed.className = "px-4 py-2 rounded-lg bg-slate-200 text-slate-600 font-bold hover:bg-slate-300 transition block-btn border-2 border-transparent";
+            } else {
+                btnClosed.className = "px-4 py-2 rounded-lg bg-pink-500 text-white font-bold shadow-lg block-btn border-2 border-pink-600";
+                btnOpen.className = "px-4 py-2 rounded-lg bg-slate-200 text-slate-600 font-bold hover:bg-slate-300 transition block-btn border-2 border-transparent";
+            }
+            resetSim();
+        }
+
+        function resetSim() {
+            car = { x: 50, y: 150, heading: 0, speed: 0 };
+            wind = 0;
+            simStatus.innerText = "Ready";
+            simError.innerText = "0";
+            cancelAnimationFrame(animationId);
+            drawSim();
+        }
+
+        function startSim() {
+            if (car.speed > 0) return;
+            car.speed = 2;
+            simStatus.innerText = "Running...";
+            loopSim();
+        }
+
+        function addWind() {
+            // Add vertical velocity disturbance
+            wind += (Math.random() > 0.5 ? 0.5 : -0.5);
+            // Announce
+            const noti = document.createElement('div');
+            noti.innerText = "Wind!";
+            noti.className = "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white px-3 py-1 rounded shadow-lg animate-ping";
+            simCanvas.parentElement.appendChild(noti);
+            setTimeout(() => noti.remove(), 500);
+        }
+
+        function drawSim() {
+            simCtx.clearRect(0, 0, simCanvas.width, simCanvas.height);
+
+            // 1. Draw Target Path (Dashed Line)
+            simCtx.beginPath();
+            simCtx.strokeStyle = '#cbd5e1';
+            simCtx.setLineDash([10, 10]);
+            simCtx.lineWidth = 2;
+            simCtx.moveTo(0, targetY);
+            simCtx.lineTo(simCanvas.width, targetY);
+            simCtx.stroke();
+            simCtx.setLineDash([]);
+
+            // 2. Draw Car
+            simCtx.save();
+            simCtx.translate(car.x, car.y);
+            simCtx.rotate(car.heading);
+
+            // Car Body
+            simCtx.fillStyle = mode === 'open' ? '#94a3b8' : '#ec4899'; // Grey vs Pink
+            simCtx.fillRect(-20, -10, 40, 20);
+
+            // Wheels
+            simCtx.fillStyle = '#333';
+            simCtx.fillRect(-15, -12, 10, 4);
+            simCtx.fillRect(5, -12, 10, 4);
+            simCtx.fillRect(-15, 8, 10, 4);
+            simCtx.fillRect(5, 8, 10, 4);
+
+            // Headlights (to show direction)
+            simCtx.fillStyle = '#fbbf24';
+            simCtx.beginPath();
+            simCtx.arc(18, -6, 2, 0, Math.PI * 2);
+            simCtx.arc(18, 6, 2, 0, Math.PI * 2);
+            simCtx.fill();
+
+            simCtx.restore();
+
+            // 3. Draw Wind Effect if any
+            if (Math.abs(wind) > 0.1) {
+                simCtx.fillStyle = '#3b82f6';
+                simCtx.font = "20px Arial";
+                simCtx.fillText("💨", car.x - 40, car.y - 30);
+            }
+        }
+
+        function loopSim() {
+            // Update Physics
+            if (car.x > simCanvas.width + 20) {
+                car.x = -20; // Wrap around for continuous demo
+            }
+
+            // Apply Disturbance (Wind)
+            car.y += wind;
+
+            // Control Logic
+            let error = targetY - car.y;
+            simError.innerText = Math.round(error);
+
+            if (mode === 'closed') {
+                // Simple P-Controller
+                let Kp = 0.05;
+                let desiredHeading = Kp * error;
+                // Limit turning speed
+                car.heading += (desiredHeading - car.heading) * 0.1;
+            } else {
+                // Open Loop: Heading is fixed (or just doesn't change based on error)
+                // If disturbed, it just keeps going in current heading
+            }
+
+            // Move Car
+            car.x += Math.cos(car.heading) * car.speed;
+            car.y += Math.sin(car.heading) * car.speed;
+
+            drawSim();
+
+            if (car.speed > 0) {
+                animationId = requestAnimationFrame(loopSim);
+            }
+        }
+
+        drawSim(); // Initial draw
+
+
+        /**
+         * MODULE 3: PID Tuning Challenge
+         */
+        const pidCanvas = document.getElementById('pidCanvas');
+        const pidCtx = pidCanvas.getContext('2d');
+        const sliderKp = document.getElementById('slider-kp');
+        const sliderKd = document.getElementById('slider-kd');
+        const valKp = document.getElementById('val-kp');
+        const valKd = document.getElementById('val-kd');
+        const pidErrorDisplay = document.getElementById('pidError');
+
+        let pidCar = { x: 50, y: 200, heading: 0, speed: 3 };
+        let pidPath = []; // store history for trail
+        let isPidPaused = false;
+        let lastError = 0;
+
+        // Path to follow (Sine wave)
+        function getTargetY(x) {
+            // A sine wave path: Center 200, Amplitude 80
+            return 200 + Math.sin(x * 0.02) * 80;
+        }
+
+        function drawPidScene() {
+            // Fade effect
+            pidCtx.fillStyle = 'rgba(17, 24, 39, 0.2)'; // Dark bg with trails
+            pidCtx.fillRect(0, 0, pidCanvas.width, pidCanvas.height);
+
+            // Draw Target Line
+            pidCtx.beginPath();
+            pidCtx.strokeStyle = '#374151'; // Gray-700
+            pidCtx.lineWidth = 4;
+            for (let x = 0; x < pidCanvas.width; x += 5) {
+                pidCtx.lineTo(x, getTargetY(x));
+            }
+            pidCtx.stroke();
+
+            // Draw Car
+            pidCtx.save();
+            pidCtx.translate(pidCar.x, pidCar.y);
+            pidCtx.rotate(pidCar.heading);
+
+            // Triangle Car
+            pidCtx.beginPath();
+            pidCtx.moveTo(15, 0);
+            pidCtx.lineTo(-10, 10);
+            pidCtx.lineTo(-10, -10);
+            pidCtx.fillStyle = '#10b981'; // Emerald
+            pidCtx.fill();
+            pidCtx.restore();
+
+            // Draw Trace
+            pidCtx.beginPath();
+            pidCtx.strokeStyle = '#10b981';
+            pidCtx.lineWidth = 2;
+            if (pidPath.length > 0) pidCtx.moveTo(pidPath[0].x, pidPath[0].y);
+            for (let p of pidPath) pidCtx.lineTo(p.x, p.y);
+            pidCtx.stroke();
+        }
+
+        function updatePid() {
+            if (isPidPaused) return;
+
+            // 1. Calculate Error (Vertical distance to line)
+            let targetY = getTargetY(pidCar.x);
+            let error = targetY - pidCar.y;
+            pidErrorDisplay.innerText = error.toFixed(1);
+
+            // 2. PID Calculation
+            let Kp = parseFloat(sliderKp.value);
+            let Kd = parseFloat(sliderKd.value); // Usually helps to be larger in this time scale
+
+            // Derivative
+            let derivative = error - lastError;
+            lastError = error;
+
+            // Output (Steering Angle)
+            // Note: Kp needs to be small for heading control
+            // Steering maps to change in heading
+            let turn = (Kp * 0.1 * error) + (Kd * 0.1 * derivative);
+
+            // Apply Physics
+            pidCar.heading += turn * 0.05; // Inertia
+            pidCar.heading *= 0.95; // Friction/damping on steering wheel itself
+
+            // Move
+            pidCar.x += Math.cos(pidCar.heading) * pidCar.speed;
+            pidCar.y += Math.sin(pidCar.heading) * pidCar.speed;
+
+            // Loop / Wrap
+            if (pidCar.x > pidCanvas.width) {
+                pidCar.x = 0;
+                pidPath = []; // Clear trail
+            }
+
+            // Store Trail
+            pidPath.push({ x: pidCar.x, y: pidCar.y });
+            if (pidPath.length > 200) pidPath.shift();
+
+            drawPidScene();
+            requestAnimationFrame(updatePid);
+        }
+
+        // Listeners
+        sliderKp.oninput = (e) => valKp.innerText = e.target.value;
+        sliderKd.oninput = (e) => valKd.innerText = e.target.value;
+
+        function resetPidSim() {
+            pidCar = { x: 50, y: 200, heading: 0, speed: 3 };
+            pidPath = [];
+            lastError = 0;
+            drawPidScene();
+        }
+
+        function togglePidPause() {
+            isPidPaused = !isPidPaused;
+            if (!isPidPaused) updatePid();
+            document.getElementById('btn-pid-pause').innerText = isPidPaused ? "繼續" : "暫停";
+        }
+
+        // Start PID Loop
+        updatePid();
+
+    </script>
+</body>
+
+</html>

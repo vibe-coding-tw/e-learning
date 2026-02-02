@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物聯網數據交換專家：序列化與所見即所得</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+
+</head>
+
+<body class="flex flex-col min-h-screen bg-slate-50">
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">🚀 Vibe Coding</div>
+        <ul class="nav-links">
+            <li><a href="../index.html">回首頁</a></li>
+            <li><a href="../basic.html">基礎課程</a></li>
+        </ul>
+        <div class="menu-toggle" id="mobile-menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8 flex-grow max-w-5xl">
+        <div class="page-header text-center mb-12">
+            <h1 class="text-4xl font-extrabold text-slate-800 tracking-tight mb-2">物聯網數據交換專家</h1>
+            <p class="text-lg text-slate-500">掌握序列化技術，優化傳輸效率</p>
+        </div>
+
+        <!-- 1. 直覺實驗室 -->
+        <div class="section-card section-lab">
+            <h2 class="text-2xl font-bold text-pink-600 mb-4 flex items-center gap-2">
+                <span class="text-3xl">🧪</span> 1. 課前體驗：封包大對決 (Packet Showdown)
+            </h2>
+            <p class="mb-6 text-gray-600">
+                你的 ESP32 感測器正在以 <b>100Hz</b> (每秒 100 次) 的頻率傳送數據。
+                <br>請切換下方的格式，觀察 <b>JSON</b> 與 <b>CSV</b> 在數據大小與可讀性上的巨大差異。
+            </p>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-6">
+                <!-- Data Source Control -->
+                <div class="bg-slate-100 p-4 rounded-lg">
+                    <h3 class="font-bold text-slate-700 mb-3">📡 感測器數據源</h3>
+                    <div class="flex flex-col gap-2 text-sm font-mono text-slate-600 bg-white p-3 rounded border">
+                        <div class="flex justify-between">
+                            <span>Device ID:</span>
+                            <span class="font-bold text-blue-600">"esp32_01"</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Timestamp:</span>
+                            <span class="font-bold text-blue-600" id="raw-ts">1678886400</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Temperature:</span>
+                            <span class="font-bold text-red-500" id="raw-temp">24.5</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Humidity:</span>
+                            <span class="font-bold text-indigo-500" id="raw-hum">60.2</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Voltage:</span>
+                            <span class="font-bold text-yellow-600" id="raw-bat">3.72</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Viewer -->
+                <div class="flex flex-col">
+                    <div class="flex gap-2 mb-2">
+                        <button onclick="setFormat('json')" id="btn-json"
+                            class="flex-1 py-1 rounded font-bold text-sm bg-pink-500 text-white shadow">
+                            JSON 格式
+                        </button>
+                        <button onclick="setFormat('csv')" id="btn-csv"
+                            class="flex-1 py-1 rounded font-bold text-sm bg-gray-200 text-gray-600 hover:bg-gray-300">
+                            CSV 格式
+                        </button>
+                    </div>
+
+                    <div class="relative flex-grow">
+                        <pre><code id="code-display" class="language-json">Waiting...</code></pre>
+                        <div
+                            class="absolute top-2 right-2 bg-white/90 px-3 py-1 rounded shadow text-xs font-bold font-mono">
+                            Size: <span id="size-display" class="text-pink-600 text-base">0</span> bytes
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-pink-50 p-4 rounded-lg border border-pink-100">
+                <h3 class="font-bold text-pink-700 mb-2">思考引導 🧠</h3>
+                <p class="text-gray-700 text-sm">
+                    當切換到 CSV 時，我們省去了重複的 Key 名稱 (如 "temperature", "humidity")。
+                    <br>雖然省下了約 <span class="font-bold text-pink-600">40-50%</span> 的流量，但如果接收端不知道欄位順序，數據將變成一堆無意義的數字。
+                </p>
+                <div class="mt-3 p-3 bg-white rounded border border-pink-200">
+                    <p class="font-bold text-slate-800 text-sm">❓ 你的選擇：</p>
+                    <p class="text-slate-600 text-sm mt-1">
+                        如果你正在開發一個<b>即時賽車儀表板 (低延遲)</b>，你會選擇哪種格式？
+                        <span class="inline-block px-2 py-0.5 bg-gray-200 rounded text-xs mx-1">CSV</span> 還是
+                        <span class="inline-block px-2 py-0.5 bg-gray-200 rounded text-xs mx-1">JSON</span> ?
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 核心原理 -->
+        <div class="section-card section-core">
+            <h2 class="text-2xl font-bold text-blue-600 mb-6 flex items-center gap-2">
+                <span class="text-3xl">📉</span> 2. 核心原理：從記憶體到網路
+            </h2>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-8">
+                <!-- Visualization -->
+                <div class="flex flex-col gap-4">
+                    <h3 class="text-lg font-bold text-gray-700 mb-2">序列化流程 (Serialization)</h3>
+
+                    <div class="flex flex-col gap-2">
+                        <!-- Step 1: Memory -->
+                        <div class="bg-gray-100 p-4 rounded-lg border-2 border-gray-300 relative">
+                            <div class="text-xs font-bold text-gray-500 mb-1 uppercase">ESP32 Memory (RAM)</div>
+                            <div class="font-mono text-sm bg-white p-2 rounded border border-gray-200 shadow-sm">
+                                <span class="text-purple-600">struct</span> SensorData {<br>
+                                &nbsp;&nbsp;<span class="text-blue-600">float</span> temp = 24.5;<br>
+                                &nbsp;&nbsp;<span class="text-blue-600">int</span> bat = 3720;<br>
+                                };
+                            </div>
+                            <!-- Arrow -->
+                            <div class="absolute left-1/2 -bottom-6 transform -translate-x-1/2 text-gray-400 text-2xl">
+                                ⬇️</div>
+                        </div>
+
+                        <!-- Spacer for arrow -->
+                        <div class="h-4"></div>
+
+                        <!-- Step 2: Serialization Engine -->
+                        <div class="bg-blue-50 p-4 rounded-lg border-2 border-blue-200 relative text-center">
+                            <div class="text-xs font-bold text-blue-500 mb-1 uppercase">Serialization Engine</div>
+                            <div class="text-sm text-blue-800">
+                                ArduinoJson / snprintf()
+                            </div>
+                            <!-- Arrow -->
+                            <div class="absolute left-1/2 -bottom-6 transform -translate-x-1/2 text-gray-400 text-2xl">
+                                ⬇️</div>
+                        </div>
+
+                        <!-- Spacer for arrow -->
+                        <div class="h-4"></div>
+
+                        <!-- Step 3: Network -->
+                        <div class="bg-green-50 p-4 rounded-lg border-2 border-green-200 relative">
+                            <div class="text-xs font-bold text-green-600 mb-1 uppercase">Network Buffer (WiFi)</div>
+                            <div class="font-mono text-sm bg-black text-green-400 p-2 rounded shadow-inner break-all">
+                                "{\"temp\":24.5,\"bat\":3720}"
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comparison Table -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-700 mb-3">格式優劣分析</h3>
+                    <div class="overflow-hidden rounded-lg border border-gray-200 shadow-sm">
+                        <table class="min-w-full text-sm text-left">
+                            <thead class="bg-gray-50 text-gray-700 uppercase font-bold">
+                                <tr>
+                                    <th class="px-4 py-3">特性</th>
+                                    <th class="px-4 py-3 text-pink-600">JSON</th>
+                                    <th class="px-4 py-3 text-blue-600">CSV</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr class="bg-white">
+                                    <td class="px-4 py-3 font-bold text-gray-600">結構表達</td>
+                                    <td class="px-4 py-3 text-green-600">強 (支援巢狀/陣列)</td>
+                                    <td class="px-4 py-3 text-red-500">弱 (僅二維扁平)</td>
+                                </tr>
+                                <tr class="bg-gray-50">
+                                    <td class="px-4 py-3 font-bold text-gray-600">自我描述</td>
+                                    <td class="px-4 py-3 text-green-600">是 (含 Key 名稱)</td>
+                                    <td class="px-4 py-3 text-red-500">否 (需依賴位置)</td>
+                                </tr>
+                                <tr class="bg-white">
+                                    <td class="px-4 py-3 font-bold text-gray-600">傳輸效率</td>
+                                    <td class="px-4 py-3 text-red-500">低 (冗餘字元多)</td>
+                                    <td class="px-4 py-3 text-green-600">高 (極致精簡)</td>
+                                </tr>
+                                <tr class="bg-gray-50">
+                                    <td class="px-4 py-3 font-bold text-gray-600">解析消耗</td>
+                                    <td class="px-4 py-3 text-red-500">高 (需Heap配置)</td>
+                                    <td class="px-4 py-3 text-green-600">低 (指標切割即可)</td>
+                                </tr>
+                                <tr class="bg-white">
+                                    <td class="px-4 py-3 font-bold text-gray-600">適用場景</td>
+                                    <td class="px-4 py-3">設定檔、複雜指令</td>
+                                    <td class="px-4 py-3">高頻感測數據流</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <h4 class="font-bold text-yellow-800 text-sm mb-1">💡 專家建議</h4>
+                        <p class="text-gray-700 text-sm">
+                            如果你的專案是 <b>MQTT</b> 傳輸，Payload 通常很小。如果是 <b>1秒1次</b> 的溫濕度，用 JSON 沒問題。但如果是 <b>100Hz 加速度計</b>
+                            數據，請務必使用 CSV 或 Binary (Hex) 傳輸！
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 實戰挑戰 -->
+        <div class="section-card section-challenge">
+            <h2 class="text-2xl font-bold text-emerald-600 mb-4 flex items-center gap-2">
+                <span class="text-3xl">🛠️</span> 3. 實戰挑戰：除錯與防禦性程式設計
+            </h2>
+            <p class="mb-6 text-gray-600">
+                IoT 開發中，發送端 (C++) 與 接收端 (JS) 的不匹配常導致系統崩潰。
+                <br>請完成以下兩個挑戰，證明你具備 Full Stack IoT 開發能力。
+            </p>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Part A: ArduinoJson -->
+                <div class="flex flex-col gap-4">
+                    <h3 class="text-lg font-bold text-gray-700">A. ArduinoJson 記憶體陷阱</h3>
+                    <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 text-sm font-mono text-gray-300">
+                        <div class="text-gray-500">// 全域宣告</div>
+                        <span class="text-purple-400">JsonDocument</span> doc;<br>
+                        <br>
+                        <span class="text-purple-400">void</span> loop() {<br>
+                        &nbsp;&nbsp;<span class="text-gray-500">// ⚠️ 陷阱：如果沒有清除，doc 會無限膨脹直到溢位</span><br>
+                        &nbsp;&nbsp;doc[<span class="text-green-400">"val"</span>] = analogRead(0);<br>
+                        &nbsp;&nbsp;serializeJson(doc, Serial);<br>
+                        &nbsp;&nbsp;<br>
+                        &nbsp;&nbsp;<span class="text-gray-500">// Day 1 新手常犯錯誤：忘記釋放或重置</span><br>
+                        &nbsp;&nbsp;<span class="text-yellow-400">doc.clear();</span> <span class="text-gray-500">// ✅
+                            正解：必須在迴圈末端重置</span><br>
+                        &nbsp;&nbsp;delay(1000);<br>
+                        }
+                    </div>
+                    <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-100 text-sm">
+                        <p class="font-bold text-emerald-800 mb-1">💡 觀念解析</p>
+                        <p class="text-emerald-800">
+                            在 IoT 嵌入式系統中，<b>Memory Leak (記憶體洩漏)</b> 是最致命的。ArduinoJson 的 `doc` 如果重複使用而不
+                            `clear()`，內部字串池會耗盡 Heap，導致 ESP32 隨機重啟 (WDT Reset)。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Part B: ES6 Destructuring -->
+                <div class="flex flex-col gap-4">
+                    <h3 class="text-lg font-bold text-gray-700">B. JavaScript 缺件防禦術</h3>
+
+                    <div class="bg-white rounded-lg shadow-sm border p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-sm text-gray-600">模擬儀表板</h4>
+                            <div id="status-indicator"
+                                class="px-2 py-0.5 rounded text-xs font-bold bg-gray-200 text-gray-500">待命</div>
+                        </div>
+
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-16 h-16 rounded-full border-4 flex items-center justify-center font-bold text-xl transition-colors"
+                                id="gauge-display" class="border-gray-200 text-gray-400">
+                                --
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                目標：從 `packet` 提取 `temp`。<br>
+                                挑戰：如果是<b>壞掉的封包 (空物件)</b>，請給予預設值 <b>0</b>。
+                            </div>
+                        </div>
+
+                        <!-- Editor -->
+                        <div class="relative">
+                            <div class="absolute top-0 right-0 p-1">
+                                <button onclick="runChallenge()"
+                                    class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-2 py-1 rounded font-bold">
+                                    ▶ 執行測試
+                                </button>
+                            </div>
+                            <pre class="m-0"><code class="language-javascript text-xs">// 模擬收到的壞掉封包
+const packet = {}; 
+
+// 🎯 任務：修改下方代碼，使用 ES6 解構並給予預設值 0
+// 提示：const { key = default } = object;
+
+let temp;
+try {
+    // 👇 在此修改，防止 temp 變成 undefined
+    const { temp: t = 0 } = packet; 
+    temp = t;
+    
+    updateGauge(temp);
+} catch (e) {
+    showError();
+}</code></pre>
+                            <textarea id="code-input"
+                                class="absolute top-[4.5rem] left-[2.5rem] w-[200px] h-[30px] font-mono text-xs bg-gray-800 text-yellow-300 border-b border-white outline-none p-1 resize-none"
+                                spellcheck="false">const { temp } = packet;</textarea>
+                        </div>
+                        <div id="console-output" class="mt-2 text-xs font-mono text-red-500 min-h-[1.2em]"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">🚀 Vibe Coding</div>
+            <p>&copy; 2025 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- Lab Logic ---
+        const sampleData = {
+            id: "esp32_01",
+            ts: 1678886400,
+            temp: 24.5,
+            hum: 60.2,
+            bat: 3.72
+        };
+
+        function updateRawData() {
+            // Update timestamp slightly to simulate life
+            sampleData.ts = Math.floor(Date.now() / 1000);
+            sampleData.temp = parseFloat((24 + Math.random()).toFixed(1));
+            document.getElementById('raw-ts').innerText = sampleData.ts;
+            document.getElementById('raw-temp').innerText = sampleData.temp;
+            if (document.getElementById('code-display')) {
+                refreshDisplay();
+            }
+        }
+
+        let currentFormat = 'json';
+
+        function setFormat(fmt) {
+            currentFormat = fmt;
+
+            // UI Toggle
+            const btnJson = document.getElementById('btn-json');
+            const btnCsv = document.getElementById('btn-csv');
+
+            if (fmt === 'json') {
+                btnJson.className = "flex-1 py-1 rounded font-bold text-sm bg-pink-500 text-white shadow transition";
+                btnCsv.className = "flex-1 py-1 rounded font-bold text-sm bg-gray-200 text-gray-600 hover:bg-gray-300 transition";
+            } else {
+                btnCsv.className = "flex-1 py-1 rounded font-bold text-sm bg-blue-500 text-white shadow transition";
+                btnJson.className = "flex-1 py-1 rounded font-bold text-sm bg-gray-200 text-gray-600 hover:bg-gray-300 transition";
+            }
+            refreshDisplay();
+        }
+
+        function refreshDisplay() {
+            const display = document.getElementById('code-display');
+            if (!display) return;
+
+            let text = "";
+
+            if (currentFormat === 'json') {
+                text = JSON.stringify(sampleData, null, 2);
+                if (window.hljs) {
+                    display.className = 'language-json';
+                }
+            } else {
+                // CSV Mode
+                text = `${sampleData.id},${sampleData.ts},${sampleData.temp},${sampleData.hum},${sampleData.bat}`;
+                if (window.hljs) {
+                    display.className = 'language-plaintext';
+                }
+            }
+
+            display.textContent = text;
+            if (window.hljs) hljs.highlightElement(display);
+
+            // Calculate Size
+            const size = new TextEncoder().encode(text).length;
+            document.getElementById('size-display').innerText = size;
+        }
+
+        // --- Challenge Logic ---
+        function runChallenge() {
+            const userCode = document.getElementById('code-input').value;
+            const output = document.getElementById('console-output');
+            const gauge = document.getElementById('gauge-display');
+            const status = document.getElementById('status-indicator');
+
+            output.innerText = "";
+
+            // Simulation
+            const packet = {}; // Empty packet
+            let temp;
+
+            function updateGauge(val) {
+                // Mock
+            }
+            function showError() {
+                // Mock
+            }
+
+            try {
+                // We wrap execution to capture 'temp'
+                // This is a simplified simulation
+                eval(userCode);
+
+                // Check result
+                if (typeof temp === 'undefined') {
+                    throw new Error("temp is undefined! (解構失敗)");
+                }
+
+                // Update UI Success
+                gauge.innerText = temp;
+                gauge.className = "w-16 h-16 rounded-full border-4 flex items-center justify-center font-bold text-xl transition-colors border-emerald-500 text-emerald-600 bg-emerald-50";
+                status.innerText = "系統正常";
+                status.className = "px-2 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-600";
+
+                if (temp === 0) {
+                    output.className = "mt-2 text-xs font-mono text-emerald-600";
+                    output.innerText = "✅ 成功：使用了預設值 0。";
+                } else {
+                    output.className = "mt-2 text-xs font-mono text-emerald-600";
+                    output.innerText = `✅ 成功：temp = ${temp}`;
+                }
+
+            } catch (e) {
+                // Error UI
+                gauge.innerText = "!";
+                gauge.className = "w-16 h-16 rounded-full border-4 flex items-center justify-center font-bold text-xl transition-colors border-red-500 text-red-600 bg-red-50";
+                status.innerText = "系統崩潰";
+                status.className = "px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-600";
+                output.className = "mt-2 text-xs font-mono text-red-500";
+                output.innerText = "❌ 錯誤：" + e.message;
+            }
+        }
+
+        // Timer
+        setInterval(updateRawData, 2000);
+
+        // Init
+        window.addEventListener('load', () => {
+            refreshDisplay();
+        });
+
+    </script>
+</body>
+
+</html>

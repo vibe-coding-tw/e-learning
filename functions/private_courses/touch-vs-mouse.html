@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>觸控與滑鼠事件監聽：無人車的雙重操控術 - Vibe Coding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        .touch-manipulation {
+            touch-action: manipulation;
+        }
+
+        .touch-none {
+            touch-action: none;
+        }
+
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Custom scrollbar for code blocks */
+        .code-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .code-scroll::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        .code-scroll::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+
+        .code-scroll::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+
+<body class="bg-indigo-50 font-[Inter] text-gray-800 overscroll-none">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="header-overlay absolute inset-0 bg-gradient-to-r from-indigo-900/90 to-purple-800/90 mix-blend-multiply">
+        </div>
+        <!-- Decorative background elements -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 opacity-20">
+            <div
+                class="absolute top-10 left-10 w-64 h-64 bg-indigo-500 rounded-full mix-blend-overlay filter blur-3xl animate-pulse">
+            </div>
+            <div class="absolute bottom-10 right-10 w-80 h-80 bg-purple-500 rounded-full mix-blend-overlay filter blur-3xl animate-pulse"
+                style="animation-delay: 2s"></div>
+        </div>
+
+        <div class="container mx-auto px-4 relative z-10 pt-10 pb-10 text-center text-white">
+            <div
+                class="badge-header inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 backdrop-blur-sm mb-8 text-sm font-semibold tracking-wide uppercase">
+                <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                Input Events Deep Dive
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight">
+                觸控 vs. 滑鼠：<br class="hidden md:block" />打造全平台通用的操控體驗
+            </h1>
+            <p class="text-xl text-indigo-100 max-w-2xl mx-auto leading-relaxed mb-10">
+                揭開 Click 300ms 延遲的真相，掌握 addEventListener 的 passive 陷阱，<br>實現「寫一次程式碼，滑鼠與手指通吃」的終極目標。
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="playVideo()"
+                    class="resource-btn bg-indigo-500 hover:bg-indigo-400 text-white px-8 py-4 rounded-full flex items-center gap-3 shadow-lg shadow-indigo-500/30 font-bold transition-all transform hover:-translate-y-1">
+                    <span>▶️</span> 觀看教學影片
+                </button>
+                <button onclick="openDoc()"
+                    class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-8 py-4 rounded-full flex items-center gap-3 backdrop-blur-sm font-bold transition-all">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Event Comparison Lab -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-white/50">
+                <div class="p-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="section-header-left border-l-4 border-indigo-500 pl-6 mb-12">
+                        <span class="text-indigo-600 font-bold tracking-wider uppercase text-sm">Module 1: Intuitive
+                            Lab</span>
+                        <h2 class="text-4xl font-bold text-gray-900 mt-2">滑鼠 vs. 手指：速度對決</h2>
+                    </div>
+
+                    <div class="grid lg:grid-cols-2 gap-12 items-start">
+                        <div class="space-y-6">
+                            <h3 class="text-2xl font-bold text-gray-800">為什麼手機上 click 比較慢？</h3>
+                            <p class="text-gray-600 leading-relaxed">
+                                在觸控螢幕剛誕生時，為了偵測「雙擊縮放 (Double Tap to Zoom)」，瀏覽器在使用者點擊後會等待約
+                                <strong>300ms</strong>，確認沒有第二次點擊才會觸發 `click` 事件。
+                            </p>
+                            <p class="text-gray-600 leading-relaxed">
+                                這對於一般網頁瀏覽沒問題，但對於<strong>即時遙控車</strong>來說，300ms 的延遲就像是一世紀那麼長！
+                            </p>
+
+                            <div class="bg-orange-50 rounded-xl p-5 border border-orange-100">
+                                <h4 class="font-bold text-orange-800 mb-2 flex items-center gap-2">
+                                    <span>⚠️</span> 實驗觀察重點
+                                </h4>
+                                <ul class="list-disc list-inside text-sm text-orange-700 space-y-1">
+                                    <li>使用滑鼠點擊方塊，觀察 log。</li>
+                                    <li>使用手機模式 (DevTools Cmd+Shift+M) 輕觸方塊。</li>
+                                    <li>注意 <code class="bg-orange-200 px-1 rounded">touchstart</code> 與 <code
+                                            class="bg-orange-200 px-1 rounded">click</code> 的時間差。</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Comparison Visualizer -->
+                        <div
+                            class="bg-gray-900 rounded-2xl p-6 shadow-2xl border border-gray-800 flex flex-col min-h-[400px]">
+                            <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                                <h4 class="text-white font-mono font-bold">Event Latency Tester</h4>
+                                <div class="text-xs font-mono text-gray-400">FPS: <span id="fps-counter"
+                                        class="text-green-400">60</span></div>
+                            </div>
+
+                            <div id="test-btn"
+                                class="flex-grow bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all active:scale-95 touch-manipulation user-select-none mb-4">
+                                <span class="text-4xl mb-2">TAP ME!</span>
+                                <span class="text-indigo-200 text-sm">(Desktop Click vs Touch)</span>
+                            </div>
+
+                            <div id="latency-log"
+                                class="h-40 bg-black rounded-lg p-3 font-mono text-xs text-green-400 overflow-y-auto border border-gray-700 shadow-inner code-scroll">
+                                <div class="opacity-50 text-center mt-10">--- Waiting for interaction ---</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Core Principles -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-white/50">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="section-header-left border-l-4 border-purple-500 pl-6 mb-12">
+                        <span class="text-purple-600 font-bold tracking-wider uppercase text-sm">Module 2: Core
+                            Principles</span>
+                        <h2 class="text-4xl font-bold text-gray-900 mt-2">事件結構與監聽陷阱</h2>
+                    </div>
+
+                    <!-- Comparison Table -->
+                    <div class="overflow-hidden rounded-xl border border-gray-200 shadow-sm mb-12">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-700">
+                                    <th class="p-4 border-b font-bold">特性</th>
+                                    <th class="p-4 border-b font-bold text-indigo-600">滑鼠事件 (Mouse)</th>
+                                    <th class="p-4 border-b font-bold text-purple-600">觸控事件 (Touch)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm">
+                                <tr class="bg-white border-b hover:bg-gray-50">
+                                    <td class="p-4 font-semibold text-gray-600">關鍵事件</td>
+                                    <td class="p-4 font-mono text-gray-500">mousedown, mousemove, mouseup</td>
+                                    <td class="p-4 font-mono text-gray-500">touchstart, touchmove, touchend</td>
+                                </tr>
+                                <tr class="bg-white border-b hover:bg-gray-50">
+                                    <td class="p-4 font-semibold text-gray-600">座標取得</td>
+                                    <td class="p-4 font-mono text-gray-500">e.clientX, e.clientY</td>
+                                    <td class="p-4 font-mono text-gray-500 text-red-500">e.touches[0].clientX (多層結構)
+                                    </td>
+                                </tr>
+                                <tr class="bg-white border-b hover:bg-gray-50">
+                                    <td class="p-4 font-semibold text-gray-600">多點支援</td>
+                                    <td class="p-4 text-gray-500">無 (單游標)</td>
+                                    <td class="p-4 text-gray-500">有 (TouchList 陣列)</td>
+                                </tr>
+                                <tr class="bg-white hover:bg-gray-50">
+                                    <td class="p-4 font-semibold text-gray-600">預設行為</td>
+                                    <td class="p-4 text-gray-500">選取文字、拖曳圖片</td>
+                                    <td class="p-4 text-gray-500 text-red-500">捲動頁面、雙擊縮放、長按選單</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="grid lg:grid-cols-2 gap-8">
+                        <!-- Code Explanation -->
+                        <div class="bg-slate-900 rounded-xl p-6 shadow-xl border border-slate-800">
+                            <div
+                                class="flex justify-between mb-3 text-sm text-slate-400 font-bold uppercase tracking-wider">
+                                <span>JavaScript - Universal Coordinate Helper</span>
+                            </div>
+                            <pre
+                                class="font-mono text-sm leading-relaxed overflow-x-auto p-4 bg-slate-950 rounded-lg text-slate-300 code-scroll">
+function <span class="text-yellow-300">getPosition</span>(e) {
+  let x, y;
+  
+  if (e.type.includes(<span class="text-green-400">'mouse'</span>)) {
+    <span class="text-gray-500">// 滑鼠直接取座標</span>
+    x = e.clientX;
+    y = e.clientY;
+  } else {
+    <span class="text-gray-500">// 觸控要判斷事件類型</span>
+    <span class="text-gray-500">// touchmove/start 看 touches</span>
+    <span class="text-gray-500">// touchend 看 changedTouches</span>
+    let touch = e.touches[0] || e.changedTouches[0];
+    x = touch.clientX;
+    y = touch.clientY;
+  }
+  
+  return { x, y };
+}</pre>
+                        </div>
+
+                        <!-- Passive Explanation -->
+                        <div class="space-y-4">
+                            <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                <span
+                                    class="bg-red-100 text-red-600 w-8 h-8 rounded flex items-center justify-center text-sm">!</span>
+                                被動監聽器 (Passive Listener)
+                            </h3>
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                                為了提升捲動效能，現代瀏覽器預設將 `touchstart` 和 `touchmove` 視為 <code>{ passive: true }</code>。
+                                這意味著你<strong>無法</strong>在這些事件中呼叫 <code>preventDefault()</code> 來阻止網頁捲動。
+                            </p>
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                                若要製作搖桿或拖曳功能，必須明確設定 <code>{ passive: false }</code>：
+                            </p>
+                            <div class="bg-gray-100 p-3 rounded font-mono text-xs text-gray-700 border border-gray-200">
+                                element.addEventListener('touchmove', handler, <span class="text-red-600">{ passive:
+                                    false }</span>);
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Practical Challenges -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-white/50">
+                <div class="p-1 bg-gradient-to-r from-pink-500 to-rose-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="section-header-left border-l-4 border-pink-500 pl-6 mb-12">
+                        <span class="text-pink-600 font-bold tracking-wider uppercase text-sm">Module 3: Hands-on
+                            Challenges</span>
+                        <h2 class="text-4xl font-bold text-gray-900 mt-2">教室挑戰任務</h2>
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <!-- Task 2-1 -->
+                        <div
+                            class="bg-white rounded-xl shadow border border-gray-100 p-6 hover:shadow-lg transition-shadow">
+                            <div
+                                class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-2xl mb-4">
+                                👆</div>
+                            <h3 class="font-bold text-lg mb-2">作業 2-1：萬用按鈕</h3>
+                            <p class="text-sm text-gray-600 mb-4">
+                                實作一個按鈕，同時監聽 Mouse 與 Touch 事件，但<strong>確保只觸發一次</strong>。
+                            </p>
+                            <div class="bg-gray-50 p-3 rounded text-xs text-gray-500 border border-gray-200">
+                                Hint: 使用 <code>event.preventDefault()</code> 在 touchstart 時阻止模擬的 mousedown。
+                            </div>
+                        </div>
+
+                        <!-- Task 2-2 -->
+                        <div
+                            class="bg-white rounded-xl shadow border border-gray-100 p-6 hover:shadow-lg transition-shadow">
+                            <div
+                                class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-2xl mb-4">
+                                🎚️</div>
+                            <h3 class="font-bold text-lg mb-2">作業 2-2：防抖滑桿</h3>
+                            <p class="text-sm text-gray-600 mb-4">
+                                製作一個控制車速的 Slider。要求手指在滑桿上拖曳時，<strong>網頁背景不能跟著上下捲動</strong>。
+                            </p>
+                            <div class="bg-gray-50 p-3 rounded text-xs text-gray-500 border border-gray-200">
+                                Hint: 在 <code>touchmove</code> 中使用 <code>preventDefault()</code> (記得開 non-passive)。
+                            </div>
+                        </div>
+
+                        <!-- Task 2-3 -->
+                        <div
+                            class="bg-white rounded-xl shadow border border-gray-100 p-6 hover:shadow-lg transition-shadow">
+                            <div
+                                class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center text-pink-600 text-2xl mb-4">
+                                🎮</div>
+                            <h3 class="font-bold text-lg mb-2">作業 2-3：原生級體驗</h3>
+                            <p class="text-sm text-gray-600 mb-4">
+                                模擬遊戲手把。長按按鈕時，禁止跳出右鍵選單 (Context Menu) 或選取文字。
+                            </p>
+                            <div class="bg-gray-50 p-3 rounded text-xs text-gray-500 border border-gray-200">
+                                Hint: 監聽 <code>contextmenu</code> 事件並 return false。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-900 text-white py-12 border-t border-gray-800">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500">© 2024 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Fullscreen Media Overlay -->
+    <div id="media-overlay" class="fixed inset-0 bg-black z-50 hidden flex flex-col overflow-hidden outline-none"
+        tabindex="-1">
+        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-gray-200 flex justify-center">
+            <iframe id="doc-frame" class="border-0 bg-white shadow-2xl origin-top"
+                style="width: 850px; height: 100%; transition: transform 0.2s ease;" src=""></iframe>
+        </div>
+        <div id="video-wrapper" class="hidden flex-grow w-full bg-black flex justify-center items-center">
+            <iframe id="video-frame" class="w-full h-full" src="" title="Course Video" frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen></iframe>
+        </div>
+        <button onclick="closeModal()"
+            class="close-video-btn absolute top-5 right-5 text-white bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full backdrop-blur-md transition">✕
+            Close</button>
+    </div>
+
+    <script>
+        // --- Latency Tester Logic ---
+        const testBtn = document.getElementById('test-btn');
+        const latencyLog = document.getElementById('latency-log');
+        let lastTouchTime = 0;
+
+        function log(msg, type) {
+            const el = document.createElement('div');
+            const time = new Date().toLocaleTimeString().split(' ')[0] + '.' + new Date().getMilliseconds().toString().padStart(3, '0');
+            let color = 'text-green-400';
+            if (type === 'touch') color = 'text-purple-400';
+            if (type === 'mouse') color = 'text-indigo-400';
+            if (type === 'click') color = 'text-yellow-400';
+
+            el.innerHTML = `<span class="opacity-50">[${time}]</span> <span class="${color}">${msg}</span>`;
+            latencyLog.appendChild(el);
+            latencyLog.scrollTop = latencyLog.scrollHeight;
+        }
+
+        testBtn.addEventListener('touchstart', (e) => {
+            lastTouchTime = Date.now();
+            log('⚡ touchstart', 'touch');
+            // Not preventing default here to show the ghost click!
+        }, { passive: true });
+
+        testBtn.addEventListener('touchend', (e) => {
+            log('👋 touchend', 'touch');
+        });
+
+        testBtn.addEventListener('mousedown', (e) => {
+            // Filter out simulated mouse events for clarity if needed, 
+            // but for this demo ensuring we see the order is key.
+            log('🖱️ mousedown', 'mouse');
+        });
+
+        testBtn.addEventListener('mouseup', (e) => {
+            log('🖱️ mouseup', 'mouse');
+        });
+
+        testBtn.addEventListener('click', (e) => {
+            const now = Date.now();
+            let suffix = '';
+            if (lastTouchTime > 0 && (now - lastTouchTime) < 1000) {
+                const delay = now - lastTouchTime;
+                suffix = ` <span class="text-red-500 font-bold">(${delay}ms delay)</span>`;
+                lastTouchTime = 0; // reset
+            }
+            log(`🎯 click${suffix}`, 'click');
+        });
+
+
+        // --- Media Overlay Logic ---
+        const overlay = document.getElementById('media-overlay');
+        const docWrapper = document.getElementById('doc-wrapper');
+        const videoWrapper = document.getElementById('video-wrapper');
+        let currentMode = null;
+        const BASE_DOC_WIDTH = 850;
+
+        const RESOURCES = {
+            youtube: "https://www.youtube.com/embed/J3lvIeNo-bY",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vSYindzefS_LY2Dv-f6CSHuSGbZFLA1fyIdppswvYDosGbXhFvDM1v2DudxdWpN9zGiU1twAd2gwViL/pub?embedded=true"
+        };
+
+        function openDoc() { openModal('doc'); }
+        function playVideo() { openModal('youtube'); }
+
+        async function openModal(type) {
+            currentMode = type;
+            docWrapper.classList.add('hidden');
+            videoWrapper.classList.add('hidden');
+            overlay.classList.remove('hidden');
+            overlay.focus();
+            document.body.style.overflow = 'hidden';
+
+            try {
+                if (overlay.requestFullscreen) {
+                    await overlay.requestFullscreen();
+                } else if (overlay.webkitRequestFullscreen) {
+                    await overlay.webkitRequestFullscreen();
+                } else if (overlay.mozRequestFullScreen) {
+                    await overlay.mozRequestFullScreen();
+                } else if (overlay.msRequestFullscreen) {
+                    await overlay.msRequestFullscreen();
+                }
+            } catch (err) { console.warn("Fullscreen denied:", err); }
+
+            if (type === 'doc') {
+                docWrapper.classList.remove('hidden');
+                document.getElementById('doc-frame').src = RESOURCES.doc;
+                setTimeout(autoFitZoom, 100);
+            } else if (type === 'youtube') {
+                videoWrapper.classList.remove('hidden');
+                document.getElementById('video-frame').src = RESOURCES.youtube;
+            }
+        }
+
+        function closeModal() {
+            overlay.classList.add('hidden');
+            document.body.style.overflow = '';
+            document.getElementById('video-frame').src = "";
+            document.getElementById('doc-frame').src = "";
+            currentMode = null;
+            if (document.fullscreenElement) document.exitFullscreen();
+        }
+
+        function autoFitZoom() {
+            if (currentMode !== 'doc') return;
+            const availableWidth = docWrapper.clientWidth;
+
+            // On mobile, we want to zoom in to crop out white margins
+            // Doc actual content is usually around 600-700px wide within the 850px page
+            const isMobile = availableWidth < 768;
+            const targetContentWidth = isMobile ? 650 : BASE_DOC_WIDTH + 40;
+
+            let scale = availableWidth / targetContentWidth;
+
+            const iframe = document.getElementById('doc-frame');
+            iframe.style.transform = `scale(${scale})`;
+            iframe.style.transformOrigin = 'top center';
+            iframe.style.height = `${100 / scale}%`;
+            iframe.style.marginBottom = `${-(1 - scale) * 100}%`;
+
+            // Ensure container centers it
+            docWrapper.classList.add('justify-center');
+        }
+
+        window.addEventListener('resize', () => {
+            if (currentMode === 'doc' && !overlay.classList.contains('hidden')) autoFitZoom();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "Escape") closeModal();
+        }, true); // Use capturing phase to catch event before iframe
+
+        // Optional: Message listener if iframe wants to signal close
+        window.addEventListener('message', (event) => {
+            if (event.data === 'close-modal') closeModal();
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) closeModal();
+        });
+        document.addEventListener('webkitfullscreenchange', () => {
+            if (!document.webkitFullscreenElement) closeModal();
+        });
+    </script>
+</body>
+
+</html>

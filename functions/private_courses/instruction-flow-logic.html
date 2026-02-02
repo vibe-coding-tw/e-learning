@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>指令流邏輯：單次觸發與重複發送 - Vibe Coding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        .log-entry {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 font-[Inter] text-gray-800">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-emerald-900 to-green-900 text-white pt-24 pb-32 overflow-hidden">
+        <div class="header-overlay absolute inset-0 bg-gradient-to-r from-emerald-600 to-green-600 opacity-90"></div>
+        <div class="container mx-auto px-4 relative z-10 pt-20 pb-20 text-center text-white">
+            <div class="badge-header bg-white/20 text-white border border-white/30 backdrop-blur-sm">
+                學習單元 3
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
+                指令流邏輯：單次觸發與重複發送
+            </h1>
+            <p class="text-xl text-emerald-100 max-w-2xl mx-auto leading-relaxed mb-10">
+                從「點一下」到「按住不放」，深入解析 onclick 與 setInterval 的核心差異。打造絲滑流暢、零延遲的無人車操控體驗。
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="playVideo()"
+                    class="resource-btn bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-lg font-bold">
+                    <span>▶️</span> 觀看教學影片
+                </button>
+                <button onclick="openDoc()"
+                    class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-3 rounded-full flex items-center gap-2 backdrop-blur-sm font-bold">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto max-w-6xl px-4 py-12">
+
+        <!-- Module 1: Intuitive Lab -->
+        <section class="content-block mb-24">
+            <div class="section-header-left border-l-4 border-emerald-500 pl-6 mb-10">
+                <span class="text-emerald-600 font-bold tracking-wider uppercase text-sm">Module 1: Intuitive Lab</span>
+                <h2 class="text-3xl font-bold text-gray-900 mt-2">直覺實驗室：點擊 vs. 狀態</h2>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12 items-start">
+                <div class="bg-white rounded-2xl p-8 shadow-xl border border-gray-100 h-full">
+                    <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                        <span
+                            class="bg-emerald-100 text-emerald-600 w-10 h-10 rounded-full flex items-center justify-center text-lg">1</span>
+                        事件觸發的本質
+                    </h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        在網頁控制中，不同的功能需要不同的觸發邏輯。試想一下：如果是喇叭，你希望按一次響一次；但如果是油門，你希望按著不放車子就一直跑。
+                    </p>
+
+                    <div class="space-y-4">
+                        <div class="flex gap-4 items-center p-4 bg-gray-50 rounded-lg">
+                            <div class="text-2xl">📸</div>
+                            <div>
+                                <h4 class="font-bold text-gray-900">單次觸發 (One-shot)</h4>
+                                <p class="text-sm text-gray-600 mt-1">適合：拍照、切換燈光、喇叭。<br>事件：<code
+                                        class="bg-gray-200 px-1 rounded">onclick</code></p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 items-center p-4 bg-emerald-50 rounded-lg border border-emerald-100">
+                            <div class="text-2xl">🏎️</div>
+                            <div>
+                                <h4 class="font-bold text-emerald-900">持續狀態 (Continuous)</h4>
+                                <p class="text-sm text-emerald-800 mt-1">適合：前進、後退、轉向。<br>事件：<code
+                                        class="bg-emerald-200/50 px-1 rounded">mousedown</code> + <code
+                                        class="bg-emerald-200/50 px-1 rounded">mouseup</code></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 bg-yellow-50 p-4 rounded-lg border border-yellow-100">
+                        <p class="text-sm text-yellow-800 font-bold">思考任務：</p>
+                        <p class="text-sm text-yellow-700 mt-1">觀察你的手機遊戲，列出 3 種「點一下就好」的功能與 3 種「按著不放」的功能。</p>
+                    </div>
+                </div>
+
+                <!-- Interactive Demo -->
+                <div class="bg-gray-900 rounded-xl p-6 flex flex-col shadow-2xl min-h-[500px]">
+                    <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-4">
+                        <h4 class="text-white font-mono font-bold">Event Logger Visualization</h4>
+                        <span class="text-xs text-gray-400 font-mono">Status: Connected</span>
+                    </div>
+
+                    <div class="flex-grow flex flex-col gap-6">
+                        <!-- Buttons Area -->
+                        <div class="flex justify-center gap-6 py-4">
+                            <button id="btn-snapshot"
+                                class="group relative w-24 h-24 bg-gray-700 hover:bg-gray-600 active:bg-gray-500 rounded-xl flex flex-col items-center justify-center transition-all shadow-lg border-b-4 border-gray-900 active:border-b-0 active:translate-y-1">
+                                <span class="text-4xl mb-2 group-hover:scale-110 transition-transform">📸</span>
+                                <span class="text-xs text-white font-bold">Snapshot</span>
+                                <div
+                                    class="absolute -top-2 -right-2 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                                    Click</div>
+                            </button>
+
+                            <button id="btn-drive"
+                                class="group relative w-24 h-24 bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-500 rounded-xl flex flex-col items-center justify-center transition-all shadow-lg border-b-4 border-emerald-900 active:border-b-0 active:translate-y-1 select-none">
+                                <span class="text-4xl mb-2 group-active:animate-pulse">🏎️</span>
+                                <span class="text-xs text-white font-bold">Drive</span>
+                                <div
+                                    class="absolute -top-2 -right-2 bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                                    Hold</div>
+                            </button>
+                        </div>
+
+                        <!-- Log Display -->
+                        <div id="log-container"
+                            class="bg-black/50 rounded-lg p-4 font-mono text-sm h-64 overflow-y-auto border border-gray-700 shadow-inner custom-scrollbar">
+                            <div class="text-gray-500 italic text-center mt-20">請操作上方按鈕觀察事件流...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Core Principles -->
+        <section class="content-block mb-24">
+            <div class="section-header-left border-l-4 border-indigo-500 pl-6 mb-10">
+                <span class="text-indigo-600 font-bold tracking-wider uppercase text-sm">Module 2: Core
+                    Principles</span>
+                <h2 class="text-3xl font-bold text-gray-900 mt-2">核心技術：頻率與流量控制</h2>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Principle 1 -->
+                <div
+                    class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+                    <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center text-2xl mb-4">🔁
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">1. 非同步迴圈 (setInterval)</h3>
+                    <p class="text-gray-600 mb-4 text-sm">瀏覽器的事件 (如 scroll 或 drag) 觸發頻率極高。為了穩定控制，我們不直接使用事件驅動，而是開啟一個
+                        <code class="bg-indigo-50 text-indigo-700 px-1 rounded">setInterval</code> 定時器。
+                    </p>
+                    <div class="bg-gray-900 p-3 rounded-lg text-xs font-mono text-green-400 border border-gray-800">
+                        timer = setInterval(() => {<br>
+                        &nbsp;&nbsp;sendCmd('forward');<br>
+                        }, 50); // 每 50ms 發送一次
+                    </div>
+                </div>
+
+                <!-- Principle 2 -->
+                <div
+                    class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center text-2xl mb-4">🖐️
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">2. 防抖與節流</h3>
+                    <p class="text-gray-600 mb-4 text-sm">為什麼不能每 1ms 就傳一次？Wi-Fi 頻寬有限，過快的指令會導致 ESP32 處理不及而「當機」或延遲 (Lag)。
+                    </p>
+                    <div class="bg-red-50 p-3 rounded-lg text-xs text-red-800 border border-red-200">
+                        <strong>最佳實踐：</strong><br>控制頻率在 20Hz - 50Hz 之間 (即每 20ms-50ms 一次) 最為流暢且穩定。
+                    </div>
+                </div>
+
+                <!-- Principle 3 -->
+                <div
+                    class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-2xl mb-4">💓
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">3. 心跳機制</h3>
+                    <p class="text-gray-600 mb-4 text-sm">如果網路突然斷線，車子收不到「停止」指令怎麼辦？這就是「死人開關 (Dead Man's Switch)」的重要性。</p>
+                    <p class="text-xs text-gray-500">安全邏輯：若 ESP32 超過 500ms 未收到新指令，應自動切斷馬達電源。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Practical Challenge -->
+        <section class="content-block">
+            <div class="section-header-left border-l-4 border-orange-500 pl-6 mb-10">
+                <span class="text-orange-600 font-bold tracking-wider uppercase text-sm">Module 3: Classroom
+                    Challenges</span>
+                <h2 class="text-3xl font-bold text-gray-900 mt-2">教室實戰：極限測試</h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 3-1 -->
+                <div
+                    class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group">
+                    <div class="bg-gradient-to-r from-orange-500 to-red-500 h-2"></div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-bold text-xl text-gray-800 group-hover:text-orange-600 transition">作業 3-1
+                            </h3>
+                            <span class="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded font-bold">60
+                                min</span>
+                        </div>
+                        <h4 class="font-bold text-gray-700 mb-2">指令連發實驗</h4>
+                        <p class="text-sm text-gray-500 mb-4">目標：尋找傳輸頻率的「甜蜜點」。測試 10ms, 100ms, 500ms 的差異，找出反應最快且不卡頓的設置。
+                        </p>
+
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Challenge</h5>
+                            <p class="text-sm text-gray-600">觀察網頁 Console 與 ESP32 序列埠，是否出現「緩衝區溢位」？</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-2 -->
+                <div
+                    class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group">
+                    <div class="bg-gradient-to-r from-blue-500 to-indigo-500 h-2"></div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-bold text-xl text-gray-800 group-hover:text-blue-600 transition">作業 3-2</h3>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">60 min</span>
+                        </div>
+                        <h4 class="font-bold text-gray-700 mb-2">狀態機衝突解決</h4>
+                        <p class="text-sm text-gray-500 mb-4">目標：實作多按鍵邏輯。當同時按下「前」與「左」時，車子應執行「左前」移動，而非打架。</p>
+
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Concept</h5>
+                            <code
+                                class="text-xs font-mono bg-gray-50 p-1 rounded block text-gray-600">let state = { up: false, left: true ... }</code>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-3 -->
+                <div
+                    class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group">
+                    <div class="bg-gradient-to-r from-gray-700 to-black h-2"></div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-bold text-xl text-gray-800 group-hover:text-gray-600 transition">作業 3-3</h3>
+                            <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded font-bold">45 min</span>
+                        </div>
+                        <h4 class="font-bold text-gray-700 mb-2">斷訊安全機制</h4>
+                        <p class="text-sm text-gray-500 mb-4">目標：模擬網路斷線（手機瀏覽器崩潰），確保車子在 500ms 後自動停機，防止失控衝撞。</p>
+
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Safety</h5>
+                            <p class="text-sm text-gray-600">Dead Man's Switch 實作。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-900 text-white py-12 border-t border-gray-800">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500">© 2024 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Fullscreen Media Overlay -->
+    <div id="media-overlay" class="fixed inset-0 bg-black z-50 hidden flex flex-col overflow-hidden">
+        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-gray-200 flex justify-center">
+            <iframe id="doc-frame" class="border-0 bg-white shadow-2xl origin-top"
+                style="width: 850px; height: 100%; transition: transform 0.2s ease;" src="">
+            </iframe>
+        </div>
+        <div id="video-wrapper" class="hidden flex-grow w-full bg-black flex justify-center items-center">
+            <iframe id="video-frame" class="w-full h-full" src="" title="Course Video" frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+
+    <script>
+        // --- Interactive Demo Logic ---
+        const btnSnapshot = document.getElementById('btn-snapshot');
+        const btnDrive = document.getElementById('btn-drive');
+        const logContainer = document.getElementById('log-container');
+        let driveInterval = null;
+        let driveCount = 0;
+
+        function addLog(message, type = 'info') {
+            const el = document.createElement('div');
+            el.className = 'log-entry mb-1 ' + (type === 'cmd' ? 'text-green-400' : 'text-gray-300');
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }) + '.' + String(new Date().getMilliseconds()).padStart(3, '0');
+            el.innerHTML = `<span class="text-gray-600 text-xs mr-2">[${time}]</span>${message}`;
+
+            // Remove initial placeholder
+            if (logContainer.querySelector('.italic')) {
+                logContainer.innerHTML = '';
+            }
+
+            logContainer.scrollTop = 0; // Prepend logic usually requires 0 scrollTop, but here we append
+            logContainer.appendChild(el);
+            logContainer.scrollTop = logContainer.scrollHeight;
+
+            // Limit log entries
+            if (logContainer.children.length > 50) {
+                logContainer.removeChild(logContainer.firstChild);
+            }
+        }
+
+        // Snapshot Button - Single Click
+        btnSnapshot.addEventListener('click', () => {
+            addLog('📸 Event: onclick triggered', 'info');
+            addLog('📡 Sending: CMD_SNAPSHOT', 'cmd');
+        });
+
+        // Drive Button - Press and Hold
+        function startDrive(e) {
+            e.preventDefault(); // Prevent text selection
+            if (driveInterval) return;
+
+            addLog('⬇️ Event: mousedown (Start)', 'info');
+            driveCount = 0;
+
+            // Immediate dispatch
+            addLog(`📡 Sending: CMD_FORWARD_START`, 'cmd');
+
+            // Start Interval
+            driveInterval = setInterval(() => {
+                driveCount++;
+                addLog(`📡 Sending: CMD_FORWARD_KEPT (${driveCount})`, 'cmd');
+            }, 100); // 100ms interval for demo
+        }
+
+        function stopDrive(e) {
+            if (!driveInterval) return;
+
+            clearInterval(driveInterval);
+            driveInterval = null;
+            addLog('⬆️ Event: mouseup (End)', 'info');
+            addLog('🛑 Sending: CMD_STOP', 'cmd');
+        }
+
+        // Mouse Events
+        btnDrive.addEventListener('mousedown', startDrive);
+        window.addEventListener('mouseup', stopDrive); // Bind to window to catch drag-out releases
+
+        // Touch Events (for mobile demo)
+        btnDrive.addEventListener('touchstart', (e) => { startDrive(e); });
+        window.addEventListener('touchend', stopDrive);
+
+        // --- Standard Media Overlay Logic ---
+        const overlay = document.getElementById('media-overlay');
+        const docWrapper = document.getElementById('doc-wrapper');
+        const videoWrapper = document.getElementById('video-wrapper');
+        let currentMode = null;
+        let currentScale = 1.0;
+        const BASE_DOC_WIDTH = 850;
+
+        // Note: Update these URLs with actual resources when available
+        const RESOURCES = {
+            youtube: "https://www.youtube.com/embed/LBsChfN0z5M", // Replace with actual video ID
+            doc: "https://docs.google.com/document/d/e/2PACX-1vQ_etv7SYPEN2omorbgU2Vfae6BDOshRSnXSYueN08FCyiDScT2EWJ2Fs9dM3aFGEgH_rl-oHsSzcNv/pub?embedded=true" // Replace with actual Doc ID
+        };
+
+        function openDoc() {
+            // Using placeholder for now as requested
+            // alert('講義連結待更新');
+            openModal('doc');
+        }
+
+        function playVideo() {
+            // Using placeholder for now as requested
+            // alert('影片連結待更新');
+            openModal('youtube');
+        }
+
+        function openModal(type) {
+            currentMode = type;
+            docWrapper.classList.add('hidden');
+            videoWrapper.classList.add('hidden');
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            if (type === 'doc') {
+                docWrapper.classList.remove('hidden');
+                document.getElementById('doc-frame').src = RESOURCES.doc;
+                setTimeout(autoFitZoom, 100);
+            } else if (type === 'youtube') {
+                videoWrapper.classList.remove('hidden');
+                document.getElementById('video-frame').src = RESOURCES.youtube;
+            }
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(err => console.log(err));
+            }
+        }
+
+        function closeModal() {
+            overlay.classList.add('hidden');
+            document.body.style.overflow = '';
+            document.getElementById('video-frame').src = "";
+            document.getElementById('doc-frame').src = "";
+            if (document.fullscreenElement && document.exitFullscreen) {
+                document.exitFullscreen().catch(err => console.log(err));
+            }
+            currentMode = null;
+        }
+
+        function autoFitZoom() {
+            if (currentMode !== 'doc') return;
+            const availableWidth = docWrapper.clientWidth;
+            let scale = (availableWidth - 20) / BASE_DOC_WIDTH;
+            if (scale < 0.5) scale = 0.5;
+            applyZoom(scale);
+        }
+
+        function applyZoom(scale) {
+            currentScale = scale;
+            const iframe = document.getElementById('doc-frame');
+            iframe.style.transform = `scale(${scale})`;
+            iframe.style.height = `${100 / scale}%`;
+            iframe.style.marginBottom = `${-(1 - scale) * 100}%`;
+        }
+
+        window.addEventListener('resize', () => {
+            if (currentMode === 'doc' && !overlay.classList.contains('hidden')) {
+                autoFitZoom();
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === "Escape") closeModal();
+        });
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && !overlay.classList.contains('hidden')) closeModal();
+        });
+    </script>
+</body>
+
+</html>

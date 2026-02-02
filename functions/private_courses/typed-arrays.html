@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數據解析與類型化陣列 (Typed Arrays) - Vibe Coding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+
+</head>
+
+<body class="bg-gray-50 font-[Inter] text-gray-800 flex flex-col min-h-screen">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-cyan-900 text-white pt-20 pb-28 overflow-hidden">
+        <div class="header-overlay absolute inset-0 bg-gradient-to-r from-blue-900 to-cyan-800 opacity-90"></div>
+        <div class="container mx-auto px-4 relative z-10 pt-16 pb-12 text-center text-white">
+            <div
+                class="badge-header inline-block px-3 py-1 rounded-full bg-blue-500/20 text-blue-200 border border-blue-400/30 backdrop-blur-sm mb-4 text-sm font-bold tracking-wider">
+                Study 3: Data Parsing & Typed Arrays
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
+                數據解析與類型化陣列
+            </h1>
+            <p class="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed mb-10">
+                解鎖二進位資料的奧秘，掌握 Uint8Array 與 DataView，讓你的藍牙傳輸效率提升 10 倍。
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="playVideo()"
+                    class="resource-btn bg-cyan-500 hover:bg-cyan-400 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-lg font-bold">
+                    <span>▶️</span> 觀看教學影片
+                </button>
+                <button onclick="openDoc()"
+                    class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-3 rounded-full flex items-center gap-2 backdrop-blur-sm font-bold">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto max-w-6xl px-4 py-12 flex-grow">
+
+        <!-- Module 1: Intuitive Lab -->
+        <section class="content-block mb-24">
+            <div class="section-header-left border-l-4 border-cyan-500 pl-6 mb-10">
+                <span class="text-cyan-600 font-bold tracking-wider uppercase text-sm">Module 1: Intuitive Lab</span>
+                <h2 class="text-3xl font-bold text-gray-900 mt-2">傳輸效率大對決：JSON vs Binary</h2>
+            </div>
+
+            <div class="bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
+                <p class="mb-8 text-gray-600 text-lg">
+                    藍牙傳輸為了省電與效率，我們不希望傳送冗長的字串。試著輸入一個速度值，比較 JSON 字串與原始二進位碼 (Binary) 的大小差異。
+                </p>
+
+                <div class="grid md:grid-cols-2 gap-12">
+                    <!-- Control Panel -->
+                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <label class="block text-slate-700 font-bold mb-2">輸入馬達速度 (0 - 255)</label>
+                        <div class="flex gap-4 items-center mb-6">
+                            <input type="range" id="speed-slider" min="0" max="255" value="100"
+                                class="flex-grow h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+                            <span id="speed-value"
+                                class="font-mono text-xl font-bold text-cyan-600 w-12 text-center">100</span>
+                        </div>
+
+                        <div class="text-sm text-slate-500 bg-white p-4 rounded border border-slate-200">
+                            <h4 class="font-bold text-slate-700 mb-2">情境模擬</h4>
+                            <p>你正在開發遙控車，如果你每秒發送 100 次控制指令...</p>
+                        </div>
+                    </div>
+
+                    <!-- Comparison Display -->
+                    <div class="flex flex-col gap-6">
+                        <!-- JSON View -->
+                        <div class="relative group">
+                            <div
+                                class="absolute -top-3 left-4 bg-pink-500 text-white text-xs font-bold px-2 py-0.5 rounded shadow">
+                                字串 (JSON)</div>
+                            <div
+                                class="bg-slate-800 text-white p-4 rounded-lg font-mono text-lg shadow-md border-l-4 border-pink-500">
+                                <span class="text-pink-300">{</span><span class="text-green-300">"speed"</span><span
+                                    class="text-pink-300">:</span> <span id="json-val"
+                                    class="text-yellow-300">100</span><span class="text-pink-300">}</span>
+                            </div>
+                            <div class="mt-2 text-right text-sm text-slate-500 font-bold">
+                                Size: <span id="json-size" class="text-pink-600 text-lg">13</span> bytes
+                            </div>
+                        </div>
+
+                        <!-- Binary View -->
+                        <div class="relative group">
+                            <div
+                                class="absolute -top-3 left-4 bg-cyan-500 text-white text-xs font-bold px-2 py-0.5 rounded shadow">
+                                二進位 (Binary)</div>
+                            <div
+                                class="bg-slate-800 text-white p-4 rounded-lg font-mono text-lg shadow-md border-l-4 border-cyan-500 flex items-center gap-4">
+                                <div class="flex flex-col items-center">
+                                    <span class="text-xs text-slate-400 mb-1">Index 0</span>
+                                    <div id="bin-val"
+                                        class="w-12 h-12 bg-cyan-900 border border-cyan-500 rounded flex items-center justify-center text-cyan-300 font-bold shadow-[0_0_15px_rgba(6,182,212,0.5)]">
+                                        0x64
+                                    </div>
+                                </div>
+                                <span class="text-slate-500 text-sm italic"><- 僅僅一個 Byte!</span>
+                            </div>
+                            <div class="mt-2 text-right text-sm text-slate-500 font-bold">
+                                Size: <span class="text-cyan-600 text-lg">1</span> byte
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Core Principles -->
+        <section class="content-block mb-24">
+            <div class="section-header-left border-l-4 border-indigo-500 pl-6 mb-10">
+                <span class="text-indigo-600 font-bold tracking-wider uppercase text-sm">Module 2: Core
+                    Principles</span>
+                <h2 class="text-3xl font-bold text-gray-900 mt-2">透視 ArrayBuffer 與位元組順序 (Endianness)</h2>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12">
+                <!-- Concept 1: The Glasses -->
+                <div class="space-y-6">
+                    <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <span class="bg-indigo-100 p-2 rounded-lg text-indigo-600">👓</span> 類型化陣列是你的眼鏡
+                    </h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        <b>ArrayBuffer</b> 是一塊原始的記憶體空間，裡面只有 0 和 1。我們無法直接操作它，必須戴上不同度數的「眼鏡」——也就是 <b>Typed Array</b> (如
+                        Uint8Array, Int16Array) 才能解讀其中的意義。
+                    </p>
+
+                    <div class="bg-white p-6 rounded-xl shadow border border-gray-100">
+                        <div class="flex justify-between text-sm text-gray-500 mb-2 font-mono">
+                            <span>Memory (ArrayBuffer)</span>
+                            <span>0x00 - 0x03</span>
+                        </div>
+                        <!-- Visual Memory Block -->
+                        <div class="flex border-2 border-slate-300 rounded overflow-hidden mb-6">
+                            <div class="flex-1 h-12 bg-slate-200 border-r border-slate-300 flex items-center justify-center font-mono text-slate-400"
+                                id="mem-0">11111111</div>
+                            <div class="flex-1 h-12 bg-slate-200 border-r border-slate-300 flex items-center justify-center font-mono text-slate-400"
+                                id="mem-1">11111111</div>
+                            <div class="flex-1 h-12 bg-slate-200 border-r border-slate-300 flex items-center justify-center font-mono text-slate-400"
+                                id="mem-2">00000000</div>
+                            <div class="flex-1 h-12 bg-slate-200 flex items-center justify-center font-mono text-slate-400"
+                                id="mem-3">00000000</div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button onclick="changeView('uint8')"
+                                class="flex-1 py-2 rounded border border-indigo-200 bg-indigo-50 text-indigo-700 font-bold hover:bg-indigo-100 transition">Uint8Array</button>
+                            <button onclick="changeView('int16')"
+                                class="flex-1 py-2 rounded border border-purple-200 bg-purple-50 text-purple-700 font-bold hover:bg-purple-100 transition">Int16Array</button>
+                        </div>
+                        <div id="view-explanation"
+                            class="mt-4 p-3 bg-indigo-50 text-indigo-800 rounded font-mono text-sm">
+                            每個格子被視為獨立的數字 (0-255)。
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Concept 2: Endianness -->
+                <div class="space-y-6">
+                    <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <span class="bg-pink-100 p-2 rounded-lg text-pink-600">⇄</span> 位元組順序 (Endianness)
+                    </h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        當數字超過 8 bits (例如 1000 = 0x03E8) 時，它需要佔用兩個位置。先放高位 (0x03) 還是低位 (0xE8)？這就是 <b>Big-Endian</b> 與
+                        <b>Little-Endian</b> 的差異。
+                    </p>
+
+                    <div class="bg-slate-900 p-6 rounded-xl shadow-lg text-white font-mono relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-2 opacity-20 text-6xl font-bold">FE</div>
+
+                        <div class="mb-4">
+                            <span class="text-gray-400">數值：</span> <span
+                                class="text-yellow-400 text-xl font-bold">1000</span> <span
+                                class="text-gray-500">(0x03E8)</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Big Endian -->
+                            <div class="border border-slate-600 rounded p-3 bg-slate-800">
+                                <div class="text-xs text-gray-400 mb-2 text-center">Big-Endian (網路標準)</div>
+                                <div class="flex justify-center gap-1">
+                                    <div
+                                        class="w-10 h-10 border border-green-500 bg-green-900/40 flex items-center justify-center rounded">
+                                        03</div>
+                                    <div
+                                        class="w-10 h-10 border border-green-500 bg-green-900/40 flex items-center justify-center rounded">
+                                        E8</div>
+                                </div>
+                                <div class="text-center mt-2 text-xs text-green-400">符合人類閱讀順序</div>
+                            </div>
+
+                            <!-- Little Endian -->
+                            <div class="border border-slate-600 rounded p-3 bg-slate-800">
+                                <div class="text-xs text-gray-400 mb-2 text-center">Little-Endian (Intel/ARM)</div>
+                                <div class="flex justify-center gap-1">
+                                    <div
+                                        class="w-10 h-10 border border-red-500 bg-red-900/40 flex items-center justify-center rounded">
+                                        E8</div>
+                                    <div
+                                        class="w-10 h-10 border border-red-500 bg-red-900/40 flex items-center justify-center rounded">
+                                        03</div>
+                                </div>
+                                <div class="text-center mt-2 text-xs text-red-400">低位在前</div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 text-sm text-gray-300 bg-slate-800 p-2 rounded border-l-2 border-yellow-500">
+                            <strong>注意：</strong> DataView 預設是大端序，但 Web Assembly (WASM) 與多數微處理器是小端序。使用
+                            <code>getUint16(0, true)</code> 中的 true 來開啟小端模式。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Practical Challenge -->
+        <section class="content-block mb-12">
+            <div class="section-header-left border-l-4 border-emerald-500 pl-6 mb-10">
+                <span class="text-emerald-600 font-bold tracking-wider uppercase text-sm">Module 3: Practical
+                    Challenge</span>
+                <h2 class="text-3xl font-bold text-gray-900 mt-2">實戰：封裝與解碼</h2>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Task 1: Command Encoder -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div class="bg-emerald-500 text-white px-6 py-4 flex justify-between items-center">
+                        <h3 class="font-bold text-lg">作業 3-1: 馬達指令封裝</h3>
+                        <span class="text-emerald-100 text-sm font-mono">Uint8Array(2)</span>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-gray-600 text-sm mb-6">
+                            請拖動滑桿控制左右輪速度，觀察數據如何被「打包」進 ArrayBuffer。最後產生出的 Hex Code 就是我們要透過 BLE 發送的 payload。
+                        </p>
+
+                        <div class="space-y-6 mb-6">
+                            <!-- Left Motor -->
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="text-xs font-bold text-gray-500 uppercase">Left Motor</label>
+                                    <span id="left-val" class="text-xs font-bold text-emerald-600">0</span>
+                                </div>
+                                <input type="range" id="left-slider" min="0" max="255" value="0"
+                                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+                            </div>
+
+                            <!-- Right Motor -->
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="text-xs font-bold text-gray-500 uppercase">Right Motor</label>
+                                    <span id="right-val" class="text-xs font-bold text-emerald-600">0</span>
+                                </div>
+                                <input type="range" id="right-slider" min="0" max="255" value="0"
+                                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+                            </div>
+                        </div>
+
+                        <!-- Result -->
+                        <div class="bg-gray-900 p-4 rounded-lg">
+                            <div class="text-xs text-gray-400 mb-2 font-mono">Payload Preview (Hex)</div>
+                            <div class="flex gap-2 font-mono text-2xl text-white justify-center">
+                                <span id="hex-0"
+                                    class="p-2 bg-gray-800 rounded border border-gray-600 min-w-[3rem] text-center">00</span>
+                                <span id="hex-1"
+                                    class="p-2 bg-gray-800 rounded border border-gray-600 min-w-[3rem] text-center">00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2: Sensor Decoder -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div class="bg-purple-600 text-white px-6 py-4 flex justify-between items-center">
+                        <h3 class="font-bold text-lg">作業 3-2: 感測器數據解碼</h3>
+                        <span class="text-purple-100 text-sm font-mono">DataView</span>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-gray-600 text-sm mb-4">
+                            假設收到兩個位元組的距離數據，請練習使用 <code>DataView</code> 將其還原為整數。
+                        </p>
+
+                        <div class="flex gap-2 items-center mb-6 bg-purple-50 p-4 rounded-lg border border-purple-100">
+                            <span class="text-sm font-bold text-purple-800">收到數據 (Hex):</span>
+                            <div class="flex gap-2">
+                                <input type="text" id="decoder-hex-input" value="03 E8"
+                                    class="font-mono text-center w-24 p-1 border border-purple-300 rounded focus:outline-none focus:border-purple-500 text-purple-700 font-bold uppercase">
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-800 rounded-lg p-4 font-mono text-xs text-gray-300 relative mb-4">
+                            <div class="text-gray-500 mb-2">// JavaScript Code</div>
+                            <div>const buffer = ...; // from bluetooth</div>
+                            <div>const view = new DataView(buffer);</div>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="text-purple-400">const</span> distance =
+                                <span class="text-yellow-300">view.getUint16(0);</span>
+                            </div>
+                        </div>
+
+                        <button onclick="decodeHex()"
+                            class="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold shadow transition mb-4">
+                            執行解碼
+                        </button>
+
+                        <div class="flex justify-between items-center border-t border-gray-100 pt-4">
+                            <span class="text-gray-600 font-bold">解碼結果 (mm):</span>
+                            <span id="decode-result" class="text-2xl font-bold text-gray-800">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-900 text-white py-12 border-t border-gray-800">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500">© 2025 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Fullscreen Media Overlay -->
+    <div id="media-overlay" class="fixed inset-0 bg-black z-50 hidden flex flex-col overflow-hidden">
+        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-gray-200 flex justify-center">
+            <iframe id="doc-frame" class="border-0 bg-white shadow-2xl origin-top"
+                style="width: 850px; height: 100%; transition: transform 0.2s ease;" src=""></iframe>
+        </div>
+        <div id="video-wrapper" class="hidden flex-grow w-full bg-black flex justify-center items-center">
+            <iframe id="video-frame" class="w-full h-full" src="" title="Course Video" frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen></iframe>
+        </div>
+        <button onclick="closeModal()" class="close-video-btn">✕ Close</button>
+    </div>
+
+    <script>
+        // --- Lab Logic: Efficiency Showdown ---
+        const speedSlider = document.getElementById('speed-slider');
+        const speedValue = document.getElementById('speed-value');
+        const jsonVal = document.getElementById('json-val');
+        const jsonSize = document.getElementById('json-size');
+        const binVal = document.getElementById('bin-val');
+
+        function updateEfficiency() {
+            const val = parseInt(speedSlider.value);
+            speedValue.innerText = val;
+
+            // Update JSON
+            jsonVal.innerText = val;
+            const jsonStr = JSON.stringify({ speed: val }); // {"speed":100}
+            // In the display we added spaces for readability but let's count strict JSON
+            // {"speed":100} -> 13 chars
+            // {"speed":5} -> 11 chars
+            jsonSize.innerText = jsonStr.length;
+
+            // Update Binary
+            const hex = val.toString(16).toUpperCase().padStart(2, '0');
+            binVal.innerText = "0x" + hex;
+
+            // Visual feedback
+            binVal.classList.remove('shadow-[0_0_15px_rgba(6,182,212,0.5)]');
+            void binVal.offsetWidth; // trigger reflow
+            binVal.classList.add('shadow-[0_0_15px_rgba(6,182,212,0.5)]');
+        }
+
+        speedSlider.addEventListener('input', updateEfficiency);
+
+        // --- Core Principle Logic: Typed Array View ---
+        function changeView(type) {
+            const mem0 = document.getElementById('mem-0');
+            const mem1 = document.getElementById('mem-1');
+            const explanation = document.getElementById('view-explanation');
+
+            if (type === 'uint8') {
+                mem0.innerText = "255";
+                mem1.innerText = "255";
+                explanation.innerText = "Uint8Array: 每個格子被視為獨立的 1 Byte 整數 (0-255)。";
+                explanation.className = "mt-4 p-3 bg-indigo-50 text-indigo-800 rounded font-mono text-sm border border-indigo-200";
+            } else {
+                mem0.innerText = "-1";
+                mem1.innerText = "(高位)";
+                explanation.innerText = "Int16Array: 兩個格子合併成一個 2 Bytes 有號整數 (-32768 ~ 32767)。";
+                explanation.className = "mt-4 p-3 bg-purple-50 text-purple-800 rounded font-mono text-sm border border-purple-200";
+            }
+        }
+
+        // --- Challenge Logic: Motor Encoder ---
+        const leftSlider = document.getElementById('left-slider');
+        const rightSlider = document.getElementById('right-slider');
+        const leftValDisplay = document.getElementById('left-val');
+        const rightValDisplay = document.getElementById('right-val');
+        const hex0 = document.getElementById('hex-0');
+        const hex1 = document.getElementById('hex-1');
+
+        function updateMotorPacket() {
+            const left = parseInt(leftSlider.value);
+            const right = parseInt(rightSlider.value);
+
+            leftValDisplay.innerText = left;
+            rightValDisplay.innerText = right;
+
+            hex0.innerText = left.toString(16).toUpperCase().padStart(2, '0');
+            hex1.innerText = right.toString(16).toUpperCase().padStart(2, '0');
+        }
+
+        leftSlider.addEventListener('input', updateMotorPacket);
+        rightSlider.addEventListener('input', updateMotorPacket);
+
+        // --- Challenge Logic: Sensor Decoder ---
+        function decodeHex() {
+            const input = document.getElementById('decoder-hex-input').value.replace(/\s/g, '');
+            const resultDisplay = document.getElementById('decode-result');
+
+            try {
+                if (input.length !== 4) throw new Error("長度錯誤");
+
+                // Parse hex to Uint8Array first
+                const buffer = new Uint8Array(2);
+                buffer[0] = parseInt(input.substring(0, 2), 16);
+                buffer[1] = parseInt(input.substring(2, 4), 16);
+
+                if (isNaN(buffer[0]) || isNaN(buffer[1])) throw new Error("無效的 Hex");
+
+                const view = new DataView(buffer.buffer);
+                const value = view.getUint16(0); // Big Endian by default
+
+                resultDisplay.innerText = value;
+                resultDisplay.className = "text-2xl font-bold text-purple-600";
+
+            } catch (e) {
+                resultDisplay.innerText = "錯誤";
+                resultDisplay.className = "text-2xl font-bold text-red-500";
+            }
+        }
+
+        // --- Video/Doc Overlay Logic ---
+        const overlay = document.getElementById('media-overlay');
+        const docWrapper = document.getElementById('doc-wrapper');
+        const videoWrapper = document.getElementById('video-wrapper');
+        let currentMode = null;
+        let currentScale = 1.0;
+        const BASE_DOC_WIDTH = 850;
+
+        // Placeholders
+        const RESOURCES = {
+            youtube: "https://www.youtube.com/embed/r1FOWU14hJo",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vTYg0tCOtK-qq1aFtWtAQ0PXZYfsrYQHr9Yd_B2CO66rRoqrOywpL1ci-J1fW-uLPDIPA8ldlTJeAN8/pub?embedded=true"
+        };
+
+        function openDoc() { openModal('doc'); }
+        function playVideo() { openModal('youtube'); }
+
+        function openModal(type) {
+            currentMode = type;
+            docWrapper.classList.add('hidden');
+            videoWrapper.classList.add('hidden');
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            if (type === 'doc') {
+                docWrapper.classList.remove('hidden');
+                document.getElementById('doc-frame').src = RESOURCES.doc;
+                setTimeout(autoFitZoom, 100);
+            } else if (type === 'youtube') {
+                videoWrapper.classList.remove('hidden');
+                document.getElementById('video-frame').src = RESOURCES.youtube;
+            }
+
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(err => console.log(err));
+            }
+        }
+
+        function closeModal() {
+            overlay.classList.add('hidden');
+            document.body.style.overflow = '';
+            document.getElementById('video-frame').src = "";
+            document.getElementById('doc-frame').src = "";
+
+            if (document.fullscreenElement && document.exitFullscreen) {
+                document.exitFullscreen().catch(err => console.log(err));
+            }
+            currentMode = null;
+        }
+
+        function autoFitZoom() {
+            if (currentMode !== 'doc') return;
+            const availableWidth = docWrapper.clientWidth;
+            let scale = (availableWidth - 20) / BASE_DOC_WIDTH;
+            if (scale < 0.5) scale = 0.5;
+            const iframe = document.getElementById('doc-frame');
+            iframe.style.transform = `scale(${scale})`;
+            iframe.style.height = `${100 / scale}%`;
+            iframe.style.marginBottom = `${-(1 - scale) * 100}%`;
+        }
+
+        window.addEventListener('resize', autoFitZoom);
+        document.addEventListener('keydown', (e) => { if (e.key === "Escape") closeModal(); });
+
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && !overlay.classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+
+        // Init
+        updateEfficiency();
+        updateMotorPacket();
+        changeView('uint8');
+
+    </script>
+</body>
+
+</html>

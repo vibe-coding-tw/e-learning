@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新手上路：環境設定與開發者身分 - Vibe Coding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+
+    <!-- Navigation (Shared) -->
+    <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="../index.html"
+                    class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
+                    <span>🚀</span> Vibe Coding
+                </a>
+
+                <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
+                    <a href="../prepare.html" class="hover:text-cyan-600 transition">課前準備</a>
+                    <a href="../started.html" class="hover:text-cyan-600 transition">入門課程</a>
+                    <a href="../basic.html" class="hover:text-cyan-600 transition">基礎實作</a>
+                    <a href="../advanced.html" class="hover:text-cyan-600 transition">進階應用</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Tab Navigation Bar -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-8">
+                <button onclick="switchTab('identity')" id="tab-identity" class="tab-btn active border-b-2">
+                    <span class="mr-2">1️⃣</span> 學習單元 1：雲端身分 (Identity)
+                </button>
+                <button onclick="switchTab('vscode')" id="tab-vscode" class="tab-btn border-b-2 border-transparent">
+                    <span class="mr-2">2️⃣</span> 學習單元 2：開發環境 (VS Code)
+                </button>
+                <button onclick="switchTab('online')" id="tab-online" class="tab-btn border-b-2 border-transparent">
+                    <span class="mr-2">3️⃣</span> 學習單元 3：VS Code Online
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Area (Iframe) -->
+    <div class="flex-grow w-full relative">
+        <iframe id="content-frame" src="" class="w-full h-full border-0 absolute inset-0 bg-gray-50 option-opacity"
+            onload="resizeIframe(this)"></iframe>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('content-frame');
+        const tabIdentity = document.getElementById('tab-identity');
+        const tabVscode = document.getElementById('tab-vscode');
+        const tabOnline = document.getElementById('tab-online');
+
+        // Initial Load
+        loadContent('developer-identity.html');
+
+        function switchTab(tab) {
+            // Helper to reset all tabs
+            [tabIdentity, tabVscode, tabOnline].forEach(t => {
+                t.classList.remove('text-blue-600', 'border-blue-600', 'active');
+                t.classList.add('text-gray-500', 'border-transparent');
+            });
+
+            // Activate current tab
+            let currentTabBtn;
+            let url;
+
+            if (tab === 'identity') {
+                currentTabBtn = tabIdentity;
+                url = 'developer-identity.html';
+            } else if (tab === 'vscode') {
+                currentTabBtn = tabVscode;
+                url = 'vscode-setup.html';
+            } else if (tab === 'online') {
+                currentTabBtn = tabOnline;
+                url = 'vscode-online.html';
+            }
+
+            if (currentTabBtn) {
+                currentTabBtn.classList.add('text-blue-600', 'border-blue-600', 'active');
+                currentTabBtn.classList.remove('text-gray-500', 'border-transparent');
+                loadContent(url);
+            }
+        }
+
+        function loadContent(url) {
+            iframe.style.opacity = '0';
+            setTimeout(() => {
+                // Determine delimiter: if url already has '?', use '&', else '?'
+                const separator = url.includes('?') ? '&' : '?';
+                // Remove '?' from location.search if it exists, or handling empty
+                const query = window.location.search.substring(1);
+
+                // Construct final URL
+                iframe.src = query ? `${url}${separator}${query}` : url;
+
+                iframe.onload = () => {
+                    iframe.style.opacity = '1';
+                };
+            }, 300);
+        }
+
+        // Auto-sizing logic for Iframe is tricky if cross-origin, but here it is same-origin.
+        // However, we want the iframe to just fill the viewport minus the header.
+        // CSS `absolute inset-0` on `flex-grow` container handles this if parent is flex-col h-screen.
+    </script>
+</body>
+
+</html>

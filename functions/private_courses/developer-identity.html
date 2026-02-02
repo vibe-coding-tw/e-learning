@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>開發者第一張通行證：雲端身分與安全</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+
+</head>
+
+<body id="page-identity" class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+    <!-- Navbar removed for iframe use -->
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-sm font-semibold mb-6 tracking-wide">學習單元
+                1</span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                開發者第一張通行證
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
+                雲端身分、安全與你的第一個公開倉庫。<br>
+                <span class="text-base text-gray-300 mt-2 block">拿起鑰匙，開啟通往開源世界的大門。</span>
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video')"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc')"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+        <!-- Module 1: Intuitive Lab (OAuth Visualization) -->
+        <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
+            <div class="p-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+            <div class="p-8 md:p-12">
+                <h2 class="text-2xl font-bold text-indigo-600 mb-4 flex items-center gap-2">
+                    <span class="text-3xl">🧪</span> 1. 課前體驗：直覺實驗室 (Interactive Lab)
+                </h2>
+                <p class="mb-6 text-gray-600">
+                    在申請帳號前，我們先來看看<b>「一鍵登入」</b>背後發生了什麼事。<br>
+                    為什麼我們可以用 Google 帳號登入 GitHub，卻不需要把 Google 的密碼告訴 GitHub？這就是 <b>OAuth</b> 的魔法。
+                </p>
+
+                <div
+                    class="bg-slate-50 border border-slate-200 rounded-xl p-8 relative overflow-hidden min-h-[300px] flex flex-col justify-between">
+
+                    <!-- Actors -->
+                    <div class="flex justify-between items-center relative z-10 px-4 md:px-12">
+
+                        <!-- User -->
+                        <div class="text-center w-24">
+                            <div
+                                class="w-16 h-16 bg-gray-200 rounded-full mx-auto flex items-center justify-center text-3xl mb-2 border-2 border-gray-300 relative">
+                                👤
+                                <div id="user-status"
+                                    class="absolute -bottom-1 -right-1 w-6 h-6 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[10px] text-white">
+                                    🔒</div>
+                            </div>
+                            <div class="font-bold text-gray-700">User</div>
+                            <div class="text-xs text-gray-400">(你)</div>
+                        </div>
+
+                        <!-- Flow Lines (Background) -->
+                        <div class="absolute top-8 left-[10%] w-[80%] h-[2px] bg-gray-300 -z-10"></div>
+
+                        <!-- GitHub (App) -->
+                        <div class="text-center w-24">
+                            <div
+                                class="w-16 h-16 bg-gray-900 rounded-xl mx-auto flex items-center justify-center text-3xl text-white mb-2 shadow-lg relative">
+                                <i class="fab fa-github"></i>
+                                <!-- Token Slot -->
+                                <div id="github-slot"
+                                    class="absolute -top-3 -right-3 w-8 h-8 rounded bg-gray-200 border-2 border-dashed border-gray-400 flex items-center justify-center text-xs opacity-0 transition-all">
+                                    🔑</div>
+                            </div>
+                            <div class="font-bold text-gray-700">GitHub</div>
+                            <div class="text-xs text-gray-400">(Service)</div>
+                        </div>
+
+                        <!-- Google (Provider) -->
+                        <div class="text-center w-24">
+                            <div
+                                class="w-16 h-16 bg-white rounded-xl mx-auto flex items-center justify-center text-3xl shadow-lg border border-gray-200 mb-2 relative">
+                                <img src="https://www.google.com/favicon.ico" class="w-8 h-8" alt="Google">
+                                <!-- Auth Dialog -->
+                                <div id="google-auth-dialog"
+                                    class="absolute top-[-80px] left-[-60px] w-48 bg-white p-3 rounded-lg shadow-xl border border-gray-200 text-left text-xs hidden z-20">
+                                    <div class="font-bold mb-1">Sign in with Google</div>
+                                    <div class="text-gray-500 mb-2">Allow GitHub to access your profile?</div>
+                                    <div class="flex gap-2">
+                                        <button onclick="approveAuth()"
+                                            class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 w-full transition">Allow</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="font-bold text-gray-700">Google</div>
+                            <div class="text-xs text-gray-400">(Identity Provider)</div>
+                        </div>
+                    </div>
+
+                    <!-- Token Animation Object -->
+                    <div id="token-key"
+                        class="absolute top-[60px] left-[15%] w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-sm shadow-md z-20 opacity-0 transform -translate-x-1/2 -translate-y-1/2">
+                        🔑
+                    </div>
+
+                    <!-- Simulation Controls -->
+                    <div class="text-center mt-8">
+                        <div id="step-desc" class="text-sm font-mono text-blue-600 mb-4 h-6">準備開始...</div>
+                        <button id="btn-login" onclick="startOAuth()"
+                            class="bg-gray-900 text-white px-6 py-2 rounded-lg font-bold hover:bg-gray-700 transition flex items-center gap-2 mx-auto">
+                            <i class="fab fa-github"></i> Sign in with GitHub
+                        </button>
+                        <button id="btn-reset" onclick="resetOAuth()"
+                            class="hidden text-gray-400 text-sm underline mt-2 hover:text-gray-600 mx-auto">重置</button>
+                    </div>
+                </div>
+
+                <!-- Reflection -->
+                <div class="mt-6 bg-indigo-50 p-4 rounded-lg flex gap-4 items-start">
+                    <div class="text-2xl">🧠</div>
+                    <div>
+                        <h4 class="font-bold text-indigo-800 mb-1">思考一下</h4>
+                        <p class="text-slate-600 text-sm">
+                            在這個過程中，GitHub 有拿到你的 Google 密碼嗎？<br>
+                            如果是傳統的帳號密碼註冊，GitHub 的資料庫被駭客入侵了，駭客能拿到你的 Google 密碼嗎？
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 2: Detailed Guide - Account Setup -->
+        <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
+            <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-400"></div>
+            <div class="p-8 md:p-12">
+                <h2 class="text-2xl font-bold text-blue-600 mb-6 flex items-center gap-2">
+                    <span class="text-3xl">�</span> 2. 實戰指南：建立你的雲端身分
+                </h2>
+
+                <div class="space-y-8">
+                    <!-- Google Account Section -->
+                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <img src="https://www.google.com/favicon.ico" class="w-6 h-6"> Google 帳號申請
+                        </h3>
+                        <p class="text-slate-600 mb-4">
+                            要申請新的 Google 帳號，最直接的方法是前往 Google 帳戶建立頁面。這將是你進入雲端世界的第一把鑰匙。
+                        </p>
+
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-bold text-slate-700 mb-2">步驟教學：</h4>
+                                <ol class="list-decimal list-inside space-y-2 text-sm text-slate-600">
+                                    <li>前往 <a href="https://accounts.google.com/signup" target="_blank"
+                                            class="text-blue-600 hover:underline">accounts.google.com/signup</a> 或 Gmail
+                                        點選「建立帳戶」。</li>
+                                    <li>選擇「個人用途」。</li>
+                                    <li>輸入姓名、生日、性別與想要的使用者名稱。</li>
+                                    <li>建立一個<strong>高強度密碼</strong> (建議包含大小寫字母、數字與符號)。</li>
+                                    <li>(建議) 設定備援信箱或電話，方便日後救援。</li>
+                                </ol>
+                            </div>
+                            <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-100 text-sm">
+                                <h4 class="font-bold text-yellow-800 mb-2">💡 小提示</h4>
+                                <ul class="list-disc list-inside space-y-1 text-yellow-700">
+                                    <li>手機設定：可至 設定 > 帳戶 > 新增帳戶 > Google 進行。</li>
+                                    <li>不想用手機驗證？有些情況下可點選「跳過」。</li>
+                                    <li>申請完成後，你將同時擁有 Gmail、雲端硬碟 (Drive) 等完整服務。</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GitHub Account Section -->
+                    <div class="bg-gray-900 text-white p-6 rounded-xl shadow-lg relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 text-9xl">
+                            <i class="fab fa-github"></i>
+                        </div>
+                        <div class="relative z-10">
+                            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                                <i class="fab fa-github"></i> GitHub 帳號申請
+                            </h3>
+
+                            <div class="grid md:grid-cols-2 gap-8">
+                                <div>
+                                    <h4 class="font-bold text-green-400 mb-2 border-b border-gray-700 pb-1">Step 1: 註冊
+                                        (Sign
+                                        up)</h4>
+                                    <ul class="space-y-2 text-sm text-gray-300">
+                                        <li>前往 <a href="https://github.com" target="_blank"
+                                                class="text-blue-400 hover:underline">GitHub 官網</a> 點擊右上角 "Sign up"。
+                                        </li>
+                                        <li><strong>Email</strong>: 建議使用常用的 Google 帳號。</li>
+                                        <li><strong>密碼</strong>: 需具備高強度。</li>
+                                        <li><strong>Username</strong>: 這是你的開發者身分 (例如
+                                            github.com/RoverChen)，建議使用英文+數字，避免過於隨意。
+                                        </li>
+                                    </ul>
+
+                                    <h4 class="font-bold text-green-400 mt-4 mb-2 border-b border-gray-700 pb-1">Step 2:
+                                        驗證
+                                        (Verify)</h4>
+                                    <ul class="space-y-2 text-sm text-gray-300">
+                                        <li>完成圖片旋轉或拼圖驗證 (證明是人類)。</li>
+                                        <li>輸入 Email 收到的 8 位數驗證碼。</li>
+                                        <li>填寫基礎問卷 (學生/開發者)，可快速勾選。</li>
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <h4 class="font-bold text-red-400 mb-2 border-b border-gray-700 pb-1">Step 3: 安全強化
+                                        (2FA)
+                                    </h4>
+                                    <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 mb-4">
+                                        <p class="text-sm text-gray-300 mb-2">
+                                            ⚠️ <strong>極重要：</strong>為了保護你的程式碼，請務必開啟兩階段驗證。
+                                        </p>
+                                        <ol class="list-decimal list-inside text-xs text-gray-400 space-y-1">
+                                            <li>進入 Settings -> Password and security</li>
+                                            <li>點擊 Enable Two-factor authentication</li>
+                                            <li>使用 <strong>GitHub Mobile App</strong> 或 <strong>Google
+                                                    Authenticator</strong> 掃描 QR Code。</li>
+                                        </ol>
+                                    </div>
+                                    <div
+                                        class="bg-blue-900/30 p-3 rounded border border-blue-800 text-xs text-blue-200">
+                                        <strong>學習重點：</strong>
+                                        <span class="block mt-1">• 2FA (兩步驟驗證)：保護帳號不被盜用。</span>
+                                        <span class="block">• Git 核心價值：為什麼我們需要版本控制？(多人協作、時光機)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mission Preview -->
+                    <div class="text-center p-4 bg-emerald-50 rounded-lg border border-emerald-100">
+                        <p class="text-emerald-800 font-bold">
+                            接下來的實戰任務：建立 Profile 與 第一個 Hello-world Repository！
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Module 3: Core Principles (Original) - Kept as Reference or Advanced Reading -->
+            <div
+                class="section-card section-core bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mb-8 opacity-80 hover:opacity-100 transition">
+                <h2 class="text-2xl font-bold text-gray-600 mb-6 flex items-center gap-2">
+                    <span class="text-3xl">📉</span> 3. 進階閱讀：身分與安全的原理
+                </h2>
+                <!-- (Original Content trimmed/adjusted below...) -->
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <!-- Concept 2: 2FA Comparison Table -->
+                    <div class="col-span-2">
+                        <h3 class="text-lg font-bold text-gray-700 mb-4 border-l-4 border-purple-500 pl-3">為什麼需要
+                            2FA？(安全對照表)
+                        </h3>
+                        <div class="overflow-hidden rounded-lg border border-gray-200">
+                            <table class="min-w-full text-sm text-left">
+                                <thead class="bg-slate-50 text-slate-700 font-bold border-b">
+                                    <tr>
+                                        <th class="px-4 py-3">安全手段</th>
+                                        <th class="px-4 py-3">本質</th>
+                                        <th class="px-4 py-3">風險</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200 bg-white">
+                                    <tr>
+                                        <td class="px-4 py-3 font-bold text-gray-600">密碼 (Password)</td>
+                                        <td class="px-4 py-3 text-blue-600">你<span
+                                                class="font-bold border-b-2 border-blue-200">知道</span>的東西</td>
+                                        <td class="px-4 py-3 text-red-500">容易被猜測、側錄或資料庫外洩。</td>
+                                    </tr>
+                                    <tr class="bg-yellow-50">
+                                        <td class="px-4 py-3 font-bold text-purple-700">2FA (Authenticator)</td>
+                                        <td class="px-4 py-3 text-purple-600">你<span
+                                                class="font-bold border-b-2 border-purple-200">擁有</span>的東西</td>
+                                        <td class="px-4 py-3 text-green-600">手機在身邊才能登入，駭客難以竊取。</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Module 3: Practical Mission -->
+            <div class="section-card section-mission bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-2xl font-bold text-emerald-600 mb-6 flex items-center gap-2">
+                    <span class="text-3xl">🛠️</span> 3. 實戰任務：我的開發者名片
+                </h2>
+
+                <div class="space-y-8">
+                    <!-- Mission 1: Profile -->
+                    <div class="border-l-4 border-emerald-400 pl-4">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">任務 1：打造專業 Profile</h3>
+                        <p class="text-gray-600 mb-4">你的 GitHub 首頁就是你的數位履歷。請完成以下清單：</p>
+                        <ul class="list-none space-y-2 mb-4">
+                            <li class="flex items-center gap-2 text-gray-700">
+                                <input type="checkbox" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                                <span>上傳一張清楚的頭像 (Avatar)</span>
+                            </li>
+                            <li class="flex items-center gap-2 text-gray-700">
+                                <input type="checkbox" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                                <span>填寫簡介 (Bio)：你是誰？你對什麼感興趣？</span>
+                            </li>
+                            <li class="flex items-center gap-2 text-gray-700">
+                                <input type="checkbox" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                                <span>建立個人 README (Special Repository)</span>
+                            </li>
+                        </ul>
+
+                        <!-- Markdown Cheat Sheet -->
+                        <div class="bg-slate-800 rounded-lg p-4 font-mono text-xs text-gray-300">
+                            <div class="text-slate-400 mb-2 border-b border-slate-700 pb-1">Markdown 速查表</div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <span class="text-purple-400"># Title</span> -> <h1>Title</h1>
+                                    <span class="text-purple-400">## SMB</span> -> <h2>SMB</h2>
+                                    <span class="text-purple-400">**Bold**</span> -> <b>Bold</b>
+                                </div>
+                                <div>
+                                    <span class="text-green-400">- List</span> -> <ul>
+                                        <li>List</li>
+                                    </ul>
+                                    <span class="text-blue-400">[Link](url)</span> -> <a href="#"
+                                        class="underline">Link</a>
+                                    <span class="text-yellow-400">`Code`</span> -> <code
+                                        class="bg-gray-700 px-1 rounded">Code</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mission 2: Hello World -->
+                    <div class="border-l-4 border-blue-400 pl-4">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">任務 2：Hello World</h3>
+                        <p class="text-gray-600 mb-4">建立你的第一個公開倉庫 (Public Repository)。</p>
+                        <ol class="list-decimal list-inside space-y-2 text-gray-700 text-sm">
+                            <li>點擊右上角的 <span class="bg-gray-200 px-1 rounded font-bold">+</span> 號，選擇 <b>New
+                                    repository</b>。
+                            </li>
+                            <li>Repository name 填寫 <code
+                                    class="text-red-500 font-bold bg-gray-100 px-1">hello-world</code>。
+                            </li>
+                            <li>一定要勾選 <span class="bg-green-100 text-green-700 font-bold px-1 rounded">Public</span>
+                                (讓世界看到)。</li>
+                            <li>勾選 <b>Add a README file</b> (初始化)。</li>
+                            <li>點擊 <b>Create repository</b>。</li>
+                        </ol>
+                    </div>
+
+                    <!-- Scoring Mockup -->
+                    <div class="mt-8 bg-gray-50 border border-gray-200 rounded-xl p-6 text-center">
+                        <h4 class="font-bold text-gray-500 mb-4">🚀 學習歷程自動記錄預覽</h4>
+                        <div
+                            class="inline-block bg-white shadow-lg rounded-xl overflow-hidden border border-gray-100 max-w-sm w-full relative">
+                            <!-- OLED Screen Simulation -->
+                            <div
+                                class="bg-black p-4 text-emerald-400 font-mono text-sm text-left relative h-32 flex flex-col justify-between">
+                                <div>
+                                    <div>ID: <span id="mock-id">waiting...</span></div>
+                                    <div class="w-full h-[1px] bg-gray-800 my-1"></div>
+                                    <div>REPO: <span id="mock-repo">--</span></div>
+                                    <div>2FA : <span id="mock-2fa">--</span></div>
+                                </div>
+                                <div class="text-right text-xl font-bold text-white">SCORE: <span
+                                        id="mock-score">00</span>
+                                </div>
+
+                                <!-- Tuning lines -->
+                                <div class="absolute top-0 left-0 w-full h-[1px] bg-green-500 opacity-20 animate-pulse">
+                                </div>
+                            </div>
+
+                            <!-- Input -->
+                            <div class="p-4 bg-gray-50">
+                                <div class="flex gap-2">
+                                    <input id="username-input" type="text" placeholder="Enter GitHub ID"
+                                        class="border rounded px-2 py-1 text-sm flex-grow">
+                                    <button onclick="simulateScan()"
+                                        class="bg-emerald-600 text-white px-3 py-1 rounded text-sm hover:bg-emerald-700">Scan</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Additional Script for Mission -->
+    <script>
+        function simulateScan() {
+            const input = document.getElementById('username-input').value;
+            const idDisplay = document.getElementById('mock-id');
+            const repoDisplay = document.getElementById('mock-repo');
+            const twofaDisplay = document.getElementById('mock-2fa');
+            const scoreDisplay = document.getElementById('mock-score');
+
+            if (!input) return;
+
+            idDisplay.innerText = "Scanning...";
+
+            setTimeout(() => {
+                idDisplay.innerText = input;
+                repoDisplay.innerText = Math.floor(Math.random() * 10) + 1; // Fake data
+                const has2FA = Math.random() > 0.3;
+                twofaDisplay.innerText = has2FA ? "YES" : "NO";
+                twofaDisplay.className = has2FA ? "text-green-400" : "text-red-400";
+
+                let score = 30 + (has2FA ? 40 : 0) + Math.min(30, parseInt(repoDisplay.innerText) * 10);
+                scoreDisplay.innerText = score;
+
+                // Color based on score
+                if (score >= 80) scoreDisplay.className = "text-right text-xl font-bold text-yellow-400"; // Gold
+                else if (score >= 60) scoreDisplay.className = "text-right text-xl font-bold text-white";
+                else scoreDisplay.className = "text-right text-xl font-bold text-red-500";
+            }, 1000);
+        }
+    </script>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">🚀 Vibe Coding</div>
+            <p>&copy; 2025 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Fullscreen Media Overlay (Moved outside container) -->
+    <div id="media-overlay" class="fixed inset-0 bg-black z-50 hidden flex flex-col overflow-hidden">
+
+
+        <!-- Doc Container -->
+        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-gray-200 flex justify-center">
+            <iframe id="doc-frame" class="border-0 bg-white shadow-2xl origin-top"
+                style="width: 850px; height: 100%; transition: transform 0.2s ease;" src="">
+            </iframe>
+        </div>
+
+        <!-- Video Container -->
+        <div id="video-wrapper" class="hidden flex-grow w-full bg-black flex justify-center items-center">
+            <iframe id="video-frame" class="w-full h-full" src="" title="Course Video" frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+
+    <script>
+        let sessionStartTime = null;
+        let currentMode = null; // 'doc' or 'video'
+
+        // Doc Zoom Logic
+        let currentScale = 1.0;
+        const BASE_DOC_WIDTH = 850;
+
+        const RESOURCES = {
+            doc: "https://docs.google.com/document/d/e/2PACX-1vS9X03HqxOyfGVDVeW7_ttf3_S93CZ-bkChm2IhujR4xB6mNliOT7eJAovPZ3yZWl39v1gnG2jI7BDv/pub?embedded=true",
+            video: "https://www.youtube.com/embed/JTXL9mv9zP0?autoplay=1"
+        };
+
+        function enterMediaMode(mode) {
+            currentMode = mode;
+            const overlay = document.getElementById('media-overlay');
+            const docWrapper = document.getElementById('doc-wrapper');
+            const videoWrapper = document.getElementById('video-wrapper');
+
+            // Reset UI
+            docWrapper.classList.add('hidden');
+            videoWrapper.classList.add('hidden');
+            overlay.classList.remove('hidden');
+
+            if (mode === 'doc') {
+                docWrapper.classList.remove('hidden');
+
+                // Load Doc Source if empty
+                const docFrame = document.getElementById('doc-frame');
+                if (!docFrame.src || docFrame.src === window.location.href) { // check if empty
+                    docFrame.src = RESOURCES.doc;
+                }
+                setTimeout(autoFitZoom, 100);
+
+            } else if (mode === 'video') {
+                videoWrapper.classList.remove('hidden');
+
+                // Load Video Source
+                const videoFrame = document.getElementById('video-frame');
+                videoFrame.src = RESOURCES.video;
+            }
+
+            // Request Fullscreen
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            }
+
+            // Start timer
+            sessionStartTime = new Date();
+            console.log(`[Tracking] ${mode} started at: ${sessionStartTime.toISOString()}`);
+        }
+
+        function autoFitZoom() {
+            if (currentMode !== 'doc') return;
+            const wrapper = document.getElementById('doc-wrapper');
+            const availableWidth = wrapper.clientWidth;
+            let scale = (availableWidth - 40) / BASE_DOC_WIDTH;
+            if (scale < 0.5) scale = 0.5;
+            applyZoom(scale);
+        }
+
+        function applyZoom(scale) {
+            currentScale = scale;
+            const iframe = document.getElementById('doc-frame');
+            iframe.style.transform = `scale(${scale})`;
+            // Compensate height (scale affects visual size but not layout flow sometimes, 
+            // but since we origin-top, we usually need to boost height percent)
+            iframe.style.height = `${100 / scale}%`;
+            iframe.style.marginBottom = `${-(1 - scale) * 100}%`;
+        }
+
+        function adjustZoom(delta) {
+            applyZoom(currentScale + delta);
+        }
+
+        function exitMediaMode() {
+            const overlay = document.getElementById('media-overlay');
+            overlay.classList.add('hidden');
+
+            // Stop Video Playback
+            const videoFrame = document.getElementById('video-frame');
+            videoFrame.src = ""; // Stop video
+
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(err => console.log(err));
+            }
+
+            if (sessionStartTime) {
+                const endTime = new Date();
+                const duration = (endTime - sessionStartTime) / 1000;
+                const modeLabel = currentMode === 'doc' ? '閱讀' : '觀看';
+
+                // alert(`${modeLabel}結束！本次時長：${Math.round(duration)} 秒。\n已記錄至學習歷程。`);
+
+                console.log(`[Tracking] ${currentMode} duration: ${duration}s`);
+                sessionStartTime = null;
+                currentMode = null;
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            if (currentMode === 'doc' && !document.getElementById('media-overlay').classList.contains('hidden')) {
+                autoFitZoom();
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                const overlay = document.getElementById('media-overlay');
+                if (!overlay.classList.contains('hidden')) {
+                    exitMediaMode();
+                }
+            }
+        });
+    </script>
+
+    <script>
+        // --- OAuth Simulation Logic ---
+        const token = document.getElementById('token-key');
+        const dialog = document.getElementById('google-auth-dialog');
+        const statusText = document.getElementById('step-desc');
+        const loginBtn = document.getElementById('btn-login');
+        const resetBtn = document.getElementById('btn-reset');
+        const userStatus = document.getElementById('user-status');
+        const githubSlot = document.getElementById('github-slot');
+
+        function startOAuth() {
+            loginBtn.disabled = true;
+            loginBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            // Step 1: Redirect to Google
+            statusText.innerText = "1. 使用者點擊登入，導向至 Google...";
+            statusText.className = "text-sm font-mono text-gray-600 mb-4 h-6";
+
+            // Visualize User -> Google
+            // Just show dialog delay
+            setTimeout(() => {
+                dialog.classList.remove('hidden');
+                dialog.classList.add('animate-bounce'); // simple attention getter
+                setTimeout(() => dialog.classList.remove('animate-bounce'), 500);
+
+                statusText.innerText = "2. Google 詢問使用者是否授權...";
+                statusText.className = "text-sm font-mono text-orange-500 mb-4 h-6 font-bold";
+            }, 800);
+        }
+
+        function approveAuth() {
+            dialog.classList.add('hidden');
+
+            // Step 3: Google issues token
+            statusText.innerText = "3. 使用者同意！Google 發放身分權杖 (Token)...";
+            statusText.className = "text-sm font-mono text-green-600 mb-4 h-6 font-bold";
+
+            // Prepare Animation: Google (Right) -> GitHub (Center)
+            // Need positions relative to container
+            // Hardcoded approximates for this simple demo, or use JS to calculate offsets if precise needed.
+            // Using percentages in CSS for simplicity: Google is approx 85%, GitHub is 50%.
+
+            token.style.opacity = '1';
+            token.style.left = '85%';
+            token.style.top = '60px'; // align with icons
+
+            setTimeout(() => {
+                // Animate to GitHub
+                token.style.transition = 'left 1s ease-in-out';
+                token.style.left = '50%'; // GitHub position
+
+                statusText.innerText = "4. Token 傳回 GitHub 驗證...";
+
+                setTimeout(() => {
+                    // Step 4: GitHub validates and logs in user
+                    token.style.opacity = '0'; // consumed
+                    githubSlot.style.opacity = '1'; // Badged
+                    githubSlot.innerText = '✅';
+                    githubSlot.classList.replace('border-dashed', 'border-solid');
+                    githubSlot.classList.replace('bg-gray-200', 'bg-green-100');
+                    githubSlot.classList.replace('border-gray-400', 'border-green-500');
+
+                    // Update User Status
+                    userStatus.innerText = '🔓';
+                    userStatus.classList.replace('bg-red-500', 'bg-green-500');
+
+                    statusText.innerText = "5. 驗證成功！登入完成。";
+                    statusText.className = "text-sm font-mono text-blue-600 mb-4 h-6 font-bold";
+
+                    loginBtn.innerHTML = '<i class="fas fa-check"></i> Logged In';
+                    loginBtn.classList.remove('bg-gray-900', 'hover:bg-gray-700');
+                    loginBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+
+                    resetBtn.classList.remove('hidden');
+
+                }, 1000); // Wait for travel
+
+            }, 500); // Short pause before sending
+        }
+
+        function resetOAuth() {
+            // Reset States
+            token.style.transition = 'none';
+            token.style.opacity = '0';
+            token.style.left = '15%'; // User pos
+
+            dialog.classList.add('hidden');
+
+            githubSlot.style.opacity = '0';
+            githubSlot.innerText = '🔑';
+            githubSlot.classList.add('border-dashed', 'bg-gray-200', 'border-gray-400');
+            githubSlot.classList.remove('border-solid', 'bg-green-100', 'border-green-500');
+
+            userStatus.innerText = '🔒';
+            userStatus.classList.replace('bg-green-500', 'bg-red-500');
+
+            statusText.innerText = "準備開始...";
+            statusText.className = "text-sm font-mono text-blue-600 mb-4 h-6";
+
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = '<i class="fab fa-github"></i> Sign in with GitHub';
+            loginBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-green-600', 'hover:bg-green-700');
+            loginBtn.classList.add('bg-gray-900', 'hover:bg-gray-700');
+
+            resetBtn.classList.add('hidden');
+        }
+    </script>
+</body>
+
+</html>

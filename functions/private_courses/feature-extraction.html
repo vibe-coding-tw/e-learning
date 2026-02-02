@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影像特徵提取：二值化與濾波</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body id="page-feature-extraction" class="flex flex-col min-h-screen">
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">🚀 Vibe Coding</div>
+        <ul class="nav-links">
+            <li><a href="../index.html">回首頁</a></li>
+            <li><a href="../basic.html">基礎課程</a></li>
+        </ul>
+        <div class="menu-toggle" id="mobile-menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8 flex-grow max-w-5xl">
+        <div class="page-header text-center mb-12">
+            <h1 class="text-4xl font-extrabold text-slate-800 tracking-tight mb-2">數位影像特徵提取</h1>
+            <p class="text-lg text-slate-500">從雜訊中看見真相 (Binarization & Filtering)</p>
+        </div>
+
+        <!-- 1. 直覺實驗室 -->
+        <div class="section-card section-lab">
+            <h2 class="text-2xl font-bold text-pink-600 mb-4 flex items-center gap-2">
+                <span class="text-3xl">🧪</span> 1. 課前體驗：直覺實驗室
+            </h2>
+            <p class="mb-6 text-gray-600">
+                感測器傳回來的影像往往並不完美，總是有許多「雜訊 (Noise)」。
+                試著扮演演算法，看看哪種方法能最好地還原中間那條黑線？
+            </p>
+
+            <div class="grid md:grid-cols-2 gap-8 items-start">
+                <div class="space-y-4">
+                    <div class="bg-gray-100 p-4 rounded-lg text-center">
+                        <canvas id="noiseCanvas" width="300" height="300" class="mx-auto"></canvas>
+                        <p class="text-sm mt-2 font-bold text-gray-600">原始影像 (含雜訊)</p>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Controls -->
+                    <div class="bg-pink-50 p-6 rounded-xl border border-pink-100">
+                        <h3 class="font-bold text-pink-700 mb-4">🎛️ 訊號處理控制台</h3>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-1">雜訊強度 (Noise Level)</label>
+                                <input type="range" id="noiseLevel" min="0" max="50" value="20"
+                                    class="w-full accent-pink-500">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="applyFilter('none')"
+                                    class="px-4 py-2 bg-white border border-pink-200 text-pink-700 rounded hover:bg-pink-100 font-bold transition">
+                                    ❌ 不處理 (None)
+                                </button>
+                                <button onclick="applyFilter('mean')"
+                                    class="px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 font-bold transition">
+                                    💧 均值濾波 (Mean)
+                                </button>
+                                <button onclick="applyFilter('median')"
+                                    class="px-4 py-2 bg-emerald-100 text-emerald-700 rounded hover:bg-emerald-200 font-bold transition col-span-2 shadow-sm">
+                                    ✨ 中值濾波 (Median)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded shadow-sm border border-gray-200 text-sm">
+                        <h4 class="font-bold text-gray-800 mb-2">觀察重點 👁️</h4>
+                        <ul class="list-disc list-inside space-y-1 text-gray-600">
+                            <li><b>均值濾波</b>：畫面變模糊了，黑線雖然還在，但邊緣不清楚。</li>
+                            <li><b>中值濾波</b>：神奇地消除了孤立的噪點，且保留了黑線銳利的邊緣！</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 核心原理：影像二值化 -->
+        <div class="section-card section-core">
+            <h2 class="text-2xl font-bold text-blue-600 mb-6 flex items-center gap-2">
+                <span class="text-3xl">📉</span> 2. 核心原理：非黑即白的決斷 (Binarization)
+            </h2>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <p class="mb-4 text-gray-700">
+                        電腦看圖片其實是在看一堆數字 (0~255)。
+                        <b>二值化</b>就是設定一個「門檻 (Threshold)」，超過這個值的變白色 (255)，低於它的變黑色 (0)。
+                    </p>
+                    <p class="mb-4 text-gray-700">
+                        這能幫助我們把「目標」從「背景」中分離出來。
+                        試著由左至右拖曳滑桿，觀察這張光影變化豐富的圖片會變成什麼樣子？
+                    </p>
+
+                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-200 mt-6">
+                        <label class="block font-bold text-blue-800 mb-2">
+                            閾值 (Threshold): <span id="threshVal" class="font-mono text-xl">128</span>
+                        </label>
+                        <input type="range" id="threshSlider" min="0" max="255" value="128"
+                            class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>0 (Black)</span>
+                            <span>255 (White)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-4 rounded-xl text-center">
+                    <canvas id="binCanvas" width="320" height="240" class="mx-auto border-none"></canvas>
+                    <div class="mt-3 flex justify-center gap-4 text-sm text-gray-300">
+                        <span class="flex items-center gap-1">
+                            <div class="w-3 h-3 bg-white"></div> White: > Threshold
+                        </span>
+                        <span class="flex items-center gap-1">
+                            <div class="w-3 h-3 bg-black border border-gray-600"></div> Black: < Threshold</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 實戰挑戰：形態學修補術 -->
+        <div class="section-card section-challenge">
+            <h2 class="text-2xl font-bold text-emerald-600 mb-4 flex items-center gap-2">
+                <span class="text-3xl">🛠️</span> 3. 實戰挑戰：形態學修補術 (Morphology)
+            </h2>
+            <p class="mb-6 text-gray-600">
+                二值化後，黑線若是斷斷續續的怎麼辦？
+                這裡有兩個法寶：<b>膨脹 (Dilation)</b> 能讓白點變胖（填補空隙），<b>侵蝕 (Erosion)</b> 能讓白點變瘦（消除噪點）。
+                <br>
+                <span class="text-sm bg-yellow-100 px-2 py-1 rounded text-yellow-800 font-bold mt-2 inline-block">
+                    任務：修復這條斷裂的線，同時保持它的形狀！
+                </span>
+            </p>
+
+            <div class="flex flex-col md:flex-row gap-8 items-start">
+                <!-- Canvas Zone -->
+                <div class="relative group">
+                    <canvas id="morphCanvas" width="320" height="320" class="bg-black shadow-lg mx-auto"></canvas>
+                    <div
+                        class="absolute top-2 right-2 bg-white/90 px-2 py-1 text-xs font-mono rounded pointer-events-none">
+                        Steps: <span id="stepCount">0</span>
+                    </div>
+                </div>
+
+                <!-- Tools -->
+                <div class="flex-1 space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="applyMorph('dilate')"
+                            class="p-4 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-xl font-bold transition flex flex-col items-center gap-2 border-2 border-emerald-200">
+                            <span class="text-2xl">💪</span>
+                            <span>膨脹 (Dilate)</span>
+                            <span class="text-xs font-normal text-emerald-600">填補黑色裂縫</span>
+                        </button>
+                        <button onclick="applyMorph('erode')"
+                            class="p-4 bg-red-100 hover:bg-red-200 text-red-800 rounded-xl font-bold transition flex flex-col items-center gap-2 border-2 border-red-200">
+                            <span class="text-2xl">🤏</span>
+                            <span>侵蝕 (Erode)</span>
+                            <span class="text-xs font-normal text-red-600">消除白色噪點</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h4 class="font-bold text-gray-700 mb-2">操作紀錄 (History)</h4>
+                        <div id="morphLog"
+                            class="text-sm font-mono text-gray-500 h-32 overflow-y-auto p-2 bg-white rounded border border-gray-100">
+                            > 系統就緒...<br>
+                        </div>
+                    </div>
+
+                    <button onclick="resetMorph()"
+                        class="w-full py-2 border-2 border-gray-300 text-gray-500 font-bold rounded hover:bg-gray-100 transition">
+                        🔄 重置任務 (Reset)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">🚀 Vibe Coding</div>
+            <p>&copy; 2025 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- Lab 1: Noise & Filtering ---
+        const canvas = document.getElementById('noiseCanvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const w = canvas.width;
+        const h = canvas.height;
+
+        let currentFilter = 'none';
+
+        function drawBaseImage() {
+            // Draw pure black background or white? Usually line following is black line on white or white on black.
+            // Let's do White background, Black line.
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, w, h);
+
+            // Draw a winding black line
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 15;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(50, 50);
+            ctx.bezierCurveTo(150, 50, 150, 250, 250, 250);
+            ctx.stroke();
+
+            // Draw a rectangle shape
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(40, 200, 60, 60);
+        }
+
+        function addNoise(imageData) {
+            const level = parseInt(document.getElementById('noiseLevel').value);
+            const data = imageData.data;
+            // Salt and Pepper noise
+            for (let i = 0; i < data.length; i += 4) {
+                const r = Math.random() * 100;
+                if (r < level) {
+                    // Pepper (Black)
+                    if (Math.random() > 0.5) {
+                        data[i] = 0; data[i + 1] = 0; data[i + 2] = 0;
+                    }
+                    // Salt (White)
+                    else {
+                        data[i] = 255; data[i + 1] = 255; data[i + 2] = 255;
+                    }
+                }
+            }
+            return imageData;
+        }
+
+        // Simple Mean Filter (3x3)
+        function applyMean(pixels) {
+            const side = Math.round(Math.sqrt(pixels.length / 4)); // square
+            const w = canvas.width;
+            const h = canvas.height;
+            const src = pixels.data;
+            const output = new ImageData(w, h);
+            const dst = output.data;
+
+            for (let y = 1; y < h - 1; y++) {
+                for (let x = 1; x < w - 1; x++) {
+                    let r = 0, g = 0, b = 0;
+                    // 3x3 kernel
+                    for (let ky = -1; ky <= 1; ky++) {
+                        for (let kx = -1; kx <= 1; kx++) {
+                            const idx = ((y + ky) * w + (x + kx)) * 4;
+                            r += src[idx];
+                            g += src[idx + 1];
+                            b += src[idx + 2];
+                        }
+                    }
+                    const i = (y * w + x) * 4;
+                    dst[i] = r / 9;
+                    dst[i + 1] = g / 9;
+                    dst[i + 2] = b / 9;
+                    dst[i + 3] = 255;
+                }
+            }
+            return output;
+        }
+
+        // Simple Median Filter (3x3)
+        function applyMedian(pixels) {
+            const w = canvas.width;
+            const h = canvas.height;
+            const src = pixels.data;
+            const output = new ImageData(w, h);
+            const dst = output.data;
+
+            // Arrays to store 9 neighbors
+            let rs = [], gs = [], bs = [];
+
+            for (let y = 1; y < h - 1; y++) {
+                for (let x = 1; x < w - 1; x++) {
+                    rs.length = 0; gs.length = 0; bs.length = 0;
+
+                    for (let ky = -1; ky <= 1; ky++) {
+                        for (let kx = -1; kx <= 1; kx++) {
+                            const idx = ((y + ky) * w + (x + kx)) * 4;
+                            rs.push(src[idx]);
+                            gs.push(src[idx + 1]);
+                            bs.push(src[idx + 2]);
+                        }
+                    }
+
+                    rs.sort((a, b) => a - b);
+                    gs.sort((a, b) => a - b);
+                    bs.sort((a, b) => a - b);
+
+                    const i = (y * w + x) * 4;
+                    dst[i] = rs[4]; // Median
+                    dst[i + 1] = gs[4];
+                    dst[i + 2] = bs[4];
+                    dst[i + 3] = 255;
+                }
+            }
+            return output;
+        }
+
+        function render() {
+            drawBaseImage();
+            let imageData = ctx.getImageData(0, 0, w, h);
+
+            // 1. Add Noise usually happens BEFORE filter in reality
+            imageData = addNoise(imageData);
+
+            // 2. Apply Filter
+            if (currentFilter === 'mean') {
+                imageData = applyMean(imageData);
+            } else if (currentFilter === 'median') {
+                imageData = applyMedian(imageData);
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function applyFilter(type) {
+            currentFilter = type;
+            render();
+        }
+
+        // --- Section 2: Binarization Logic ---
+        const binCanvas = document.getElementById('binCanvas');
+        const binCtx = binCanvas.getContext('2d');
+        const threshSlider = document.getElementById('threshSlider');
+        const threshVal = document.getElementById('threshVal');
+
+        // Prepare a gradient image with some shapes
+        let binBaseData = null;
+
+        function initBin() {
+            // Draw gradient background
+            const grad = binCtx.createLinearGradient(0, 0, binCanvas.width, 0);
+            grad.addColorStop(0, '#000000');
+            grad.addColorStop(1, '#ffffff');
+            binCtx.fillStyle = grad;
+            binCtx.fillRect(0, 0, binCanvas.width, binCanvas.height);
+
+            // Draw some interesting shapes with different gray levels
+            binCtx.fillStyle = '#404040'; // Dark Gray (64)
+            binCtx.beginPath(); binCtx.arc(80, 80, 30, 0, Math.PI * 2); binCtx.fill();
+
+            binCtx.fillStyle = '#808080'; // Medium Gray (128)
+            binCtx.beginPath(); binCtx.arc(160, 120, 40, 0, Math.PI * 2); binCtx.fill();
+
+            binCtx.fillStyle = '#bfbfbf'; // Light Gray (191)
+            binCtx.beginPath(); binCtx.arc(240, 160, 50, 0, Math.PI * 2); binCtx.fill();
+
+            // Text
+            binCtx.fillStyle = '#ff0000'; // Color (Red) - weights: 0.299R + 0.587G + 0.114B
+            binCtx.font = 'bold 40px sans-serif';
+            binCtx.fillText('VIBE', 120, 220);
+
+            binBaseData = binCtx.getImageData(0, 0, binCanvas.width, binCanvas.height);
+            updateBin();
+        }
+
+        function updateBin() {
+            const thresh = parseInt(threshSlider.value);
+            threshVal.innerText = thresh;
+
+            const w = binCanvas.width;
+            const h = binCanvas.height;
+            const output = new ImageData(w, h);
+            const src = binBaseData.data;
+            const dst = output.data;
+
+            for (let i = 0; i < src.length; i += 4) {
+                // Grayscale conversion (Luminance)
+                const gray = 0.299 * src[i] + 0.587 * src[i + 1] + 0.114 * src[i + 2];
+                // Thresholding
+                const val = gray > thresh ? 255 : 0;
+
+                dst[i] = val;
+                dst[i + 1] = val;
+                dst[i + 2] = val;
+                dst[i + 3] = 255;
+            }
+            binCtx.putImageData(output, 0, 0);
+        }
+
+        threshSlider.addEventListener('input', updateBin);
+
+
+        // --- Section 3: Morphology Logic ---
+        const morphCanvas = document.getElementById('morphCanvas');
+        const morphCtx = morphCanvas.getContext('2d');
+        let morphSteps = 0;
+
+        function initMorph() {
+            resetMorph();
+        }
+
+        function resetMorph() {
+            morphSteps = 0;
+            document.getElementById('stepCount').innerText = morphSteps;
+            document.getElementById('morphLog').innerHTML = '> 任務重置 (Reset)<br>';
+
+            morphCtx.fillStyle = '#000000'; // Background Black
+            morphCtx.fillRect(0, 0, morphCanvas.width, morphCanvas.height);
+
+            // Draw a broken white line (The Target)
+            morphCtx.strokeStyle = '#ffffff';
+            morphCtx.lineWidth = 15;
+            morphCtx.lineCap = 'round';
+            morphCtx.setLineDash([20, 10]); // Dashed line = Broken
+            morphCtx.beginPath();
+            morphCtx.moveTo(50, 160);
+            morphCtx.lineTo(270, 160);
+            morphCtx.stroke();
+            morphCtx.setLineDash([]); // Reset
+
+            // Add some "Noise" (Salt - White dots)
+            const imageData = morphCtx.getImageData(0, 0, morphCanvas.width, morphCanvas.height);
+            const data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                if (Math.random() < 0.05) { // 5% Noise
+                    data[i] = 255; data[i + 1] = 255; data[i + 2] = 255; // White noise
+                }
+            }
+            morphCtx.putImageData(imageData, 0, 0);
+        }
+
+        function applyMorph(type) {
+            const w = morphCanvas.width;
+            const h = morphCanvas.height;
+            const src = morphCtx.getImageData(0, 0, w, h);
+            const dst = morphCtx.createImageData(w, h); // Blank
+
+            const sData = src.data;
+            const dData = dst.data;
+
+            // Simple 3x3 Structuring Element
+            for (let y = 1; y < h - 1; y++) {
+                for (let x = 1; x < w - 1; x++) {
+                    let maxVal = 0; // For Dilation
+                    let minVal = 255; // For Erosion
+
+                    for (let ky = -1; ky <= 1; ky++) {
+                        for (let kx = -1; kx <= 1; kx++) {
+                            const idx = ((y + ky) * w + (x + kx)) * 4;
+                            // Use Red channel as intensity
+                            const val = sData[idx];
+                            if (val > maxVal) maxVal = val;
+                            if (val < minVal) minVal = val;
+                        }
+                    }
+
+                    const i = (y * w + x) * 4;
+                    const res = (type === 'dilate') ? maxVal : minVal;
+
+                    dData[i] = res;
+                    dData[i + 1] = res;
+                    dData[i + 2] = res;
+                    dData[i + 3] = 255; // Alpha
+                }
+            }
+            morphCtx.putImageData(dst, 0, 0);
+
+            // Log
+            morphSteps++;
+            document.getElementById('stepCount').innerText = morphSteps;
+            const log = document.getElementById('morphLog');
+            log.innerHTML = `> Step ${morphSteps}: ${type === 'dilate' ? '膨脹 (Dilate)' : '侵蝕 (Erode)'}<br>` + log.innerHTML;
+        }
+
+        window.onload = () => {
+            render(); // Lab 1
+            initBin(); // Lab 2
+            initMorph(); // Lab 3
+        };
+    </script>
+</body>
+
+</html>

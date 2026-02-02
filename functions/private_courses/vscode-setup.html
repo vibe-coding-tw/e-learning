@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VS Code 安裝與基礎配置 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <!-- Link to parent directory css -->
+    <link rel="stylesheet" href="../style.css">
+
+
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-cyan-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1555099962-4199c345e5dd?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-cyan-300 text-sm font-semibold mb-6 tracking-wide">學習單元
+                2</span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                VS Code 安裝與基礎配置
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                打造你的終極代碼指揮中心。<br>
+                <span class="text-base text-gray-300 mt-2 block">不僅僅是編輯器，更是你控制無人車與世界的控制台。</span>
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="openModal('youtube')"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="openModal('doc')"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Content Container -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Intuitive Lab -->
+        <section class="module-section mb-16 fade-in-up">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-400"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-8 items-start">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+                                <span class="text-4xl">🛠️</span> 直觀體驗：從零開始的基建
+                            </h2>
+                            <p class="text-gray-500 mb-8 text-lg">打地基的時間到了！讓我們用 15 分鐘完成最強編輯器的部署。</p>
+
+                            <div class="space-y-6">
+                                <div
+                                    class="bg-blue-50 rounded-xl p-6 border border-blue-100 hover:shadow-md transition">
+                                    <h3 class="text-xl font-bold text-blue-800 mb-3 flex items-center gap-2">
+                                        <div class="step-number-badge">1</div> 下載與安裝 (15 min)
+                                    </h3>
+                                    <p class="text-gray-600 mb-4 pl-10">前往 <a href="https://code.visualstudio.com"
+                                            target="_blank"
+                                            class="text-blue-600 hover:underline font-bold">code.visualstudio.com</a>，根據你的作業系統
+                                        (Windows/macOS/Linux) 下載。</p>
+
+                                    <div class="pl-10">
+                                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-md">
+                                            <p class="font-bold text-yellow-800 text-sm mb-1">Windows 用戶關鍵設定：</p>
+                                            <p class="text-yellow-700 text-sm">安裝時務必勾選 <strong>「加入 '開啟以程式碼編輯' 動作到
+                                                    Windows 檔案總管內容功能表」</strong> (Add "Open with Code")。</p>
+                                            <p class="text-xs text-yellow-600 mt-1">💡 這讓你能在資料夾直接按右鍵開啟專案，效率提升 10 倍！</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="bg-blue-50 rounded-xl p-6 border border-blue-100 hover:shadow-md transition">
+                                    <h3 class="text-xl font-bold text-blue-800 mb-3 flex items-center gap-2">
+                                        <div class="step-number-badge">2</div> 繁體中文介面設定 (5 min)
+                                    </h3>
+                                    <ul class="pl-10 space-y-2 text-gray-700 list-disc list-outside ml-4">
+                                        <li>開啟 VS Code。</li>
+                                        <li>點擊左側工具欄最下方的四方塊圖示 (Extensions) 或按 <kbd
+                                                class="bg-gray-200 px-2 py-0.5 rounded shadow-sm text-sm font-mono">Ctrl+Shift+X</kbd>。
+                                        </li>
+                                        <li>搜尋 <strong>Chinese</strong>，選擇 "Chinese (Traditional) Language Pack" 安裝。
+                                        </li>
+                                        <li><strong>重啟</strong> VS Code，介面即刻中文化。</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="md:w-1/3 flex flex-col justify-center items-center">
+                            <div
+                                class="bg-gray-800 rounded-lg p-4 shadow-2xl rotate-3 hover:rotate-0 transition duration-500 float-anim w-full max-w-sm">
+                                <div class="flex gap-2 mb-4">
+                                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                </div>
+                                <div class="text-center py-8">
+                                    <div class="text-6xl mb-4">🆚</div>
+                                    <div class="text-gray-400 font-mono text-sm">Visual Studio Code</div>
+                                    <div class="mt-4 inline-block bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                                        Recommend</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Core Principles -->
+        <section class="module-section mb-16 fade-in-up" style="animation-delay: 0.2s;">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-pink-400"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+                        <span class="text-4xl">🧬</span> 核心原理：賦予編輯器超能力
+                    </h2>
+                    <p class="text-gray-500 mb-8 text-lg">VS Code 本身很強，但加上這些外掛 (Extensions)，它將成為你的神兵利器。</p>
+
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <!-- Prettier -->
+                        <div
+                            class="group bg-white border border-gray-100 rounded-xl p-6 shadow-sm hover:shadow-lg transition hover:-translate-y-1">
+                            <div
+                                class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition">
+                                ✨</div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Prettier</h3>
+                            <p class="text-sm text-gray-500 mb-3">Code formatter</p>
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                                自動幫你把亂掉的程式碼排版整齊。存檔瞬間，混亂變秩序。
+                            </p>
+                        </div>
+
+                        <!-- Material Icon -->
+                        <div
+                            class="group bg-white border border-gray-100 rounded-xl p-6 shadow-sm hover:shadow-lg transition hover:-translate-y-1">
+                            <div
+                                class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition">
+                                📂</div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Material Icon</h3>
+                            <p class="text-sm text-gray-500 mb-3">File Icon Theme</p>
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                                讓檔案列表出現漂亮、易辨識的圖示。HTML 會有 &lt;html&gt; 圖示，JS 會有 JS 圖示。
+                            </p>
+                        </div>
+
+                        <!-- Error Lens -->
+                        <div
+                            class="group bg-white border border-gray-100 rounded-xl p-6 shadow-sm hover:shadow-lg transition hover:-translate-y-1">
+                            <div
+                                class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition">
+                                🔍</div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Error Lens</h3>
+                            <p class="text-sm text-gray-500 mb-3">Instant Debugging</p>
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                                直接把錯誤顯示在行末，不用滑鼠移過去看。除錯效率提升 200%。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Practical Challenge -->
+        <section class="module-section fade-in-up" style="animation-delay: 0.4s;">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-green-500 to-emerald-400"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🚀</span> 實作挑戰：硬體大腦與雲端同步
+                    </h2>
+
+                    <div class="space-y-8">
+                        <!-- Task 2-1 -->
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 pt-1">
+                                <div
+                                    class="w-6 h-6 rounded border-2 border-green-500 flex items-center justify-center text-green-600">
+                                    ✓</div>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">任務 2-1：安裝硬體大腦 PlatformIO (30 min)</h3>
+                                <p class="text-gray-600 mb-4">這是開發 ESP32 無人車最重要的核心外掛。</p>
+                                <div class="bg-gray-100 p-4 rounded-lg text-sm text-gray-700 font-mono">
+                                    <ol class="list-decimal ml-5 space-y-1">
+                                        <li>擴充功能搜尋 "PlatformIO IDE" 並安裝。</li>
+                                        <li><span class="text-red-500">注意：</span> 安裝過程會自動下載 Python 與核心，請耐心等待。</li>
+                                        <li>驗證：安裝完成後，左側欄會出現一個「小外星人 👽」圖示。</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="border-gray-100">
+
+                        <!-- Task 2-2 -->
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 pt-1">
+                                <div
+                                    class="w-6 h-6 rounded border-2 border-green-500 flex items-center justify-center text-green-600">
+                                    ✓</div>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">任務 2-2：Git 帳號同步 (20 min)</h3>
+                                <p class="text-gray-600 mb-4">體驗「雲端同步、多機開發」的流暢感。</p>
+                                <div class="bg-gray-100 p-4 rounded-lg text-sm text-gray-700 font-mono">
+                                    <ol class="list-decimal ml-5 space-y-1">
+                                        <li>點擊左下角的人頭圖示 (Accounts)。</li>
+                                        <li>選擇 "Turn on Settings Sync..."。</li>
+                                        <li>登入你在家申請好的 GitHub 帳號。</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-8 border-t border-gray-700 mt-10">
+        <div class="container mx-auto px-4 text-center">
+
+            <div class="border-t border-gray-700 pt-6">
+                <p class="text-gray-500 text-sm mb-2">&copy; 2025 Vibe Coding. All rights reserved.</p>
+                <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6 text-sm text-gray-400">
+                    <span>課程教材 - 內部使用</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Fullscreen Media Overlay (Robust Version) -->
+    <div id="media-overlay" class="fixed inset-0 bg-black z-50 hidden flex flex-col overflow-hidden">
+
+        <!-- Doc Container -->
+        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-gray-200 flex justify-center">
+            <iframe id="doc-frame" class="border-0 bg-white shadow-2xl origin-top"
+                style="width: 850px; height: 100%; transition: transform 0.2s ease;" src="">
+            </iframe>
+        </div>
+
+        <!-- Video Container -->
+        <div id="video-wrapper" class="hidden flex-grow w-full bg-black flex justify-center items-center">
+            <iframe id="video-frame" class="w-full h-full" src="" title="Course Video" frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+
+    <script>
+        // --- Robust Media Logic ---
+        const overlay = document.getElementById('media-overlay');
+        const docWrapper = document.getElementById('doc-wrapper');
+        const videoWrapper = document.getElementById('video-wrapper');
+        const zoomControls = document.getElementById('zoom-controls');
+        const statusText = document.getElementById('recording-status');
+
+        let currentMode = null;
+        let currentScale = 1.0;
+        const BASE_DOC_WIDTH = 850;
+
+        const RESOURCES = {
+            youtube: "https://www.youtube.com/embed/Z3t_Y41Ji4Y",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vSgxrrWDYgAH9KqjOszrDwXSqLsxhRsWDwr0BBUdiynJaQ0ZkAG4kkiy50ueGB6nm_8urAc6xtPTsee/pub?embedded=true"
+        };
+
+        function openModal(type) {
+            currentMode = type;
+
+            // Reset UI
+            docWrapper.classList.add('hidden');
+            videoWrapper.classList.add('hidden');
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            if (type === 'doc') {
+                docWrapper.classList.remove('hidden');
+
+                // Load Doc Source
+                const docFrame = document.getElementById('doc-frame');
+                // Always reload or check to ensure correct url
+                docFrame.src = RESOURCES.doc;
+
+                setTimeout(autoFitZoom, 100);
+
+            } else if (type === 'youtube') {
+                videoWrapper.classList.remove('hidden');
+
+                const videoFrame = document.getElementById('video-frame');
+                videoFrame.src = RESOURCES.youtube;
+            }
+
+            // Native Fullscreen
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(err => console.log(err));
+            }
+        }
+
+        function closeModal() {
+            overlay.classList.add('hidden');
+            document.body.style.overflow = '';
+
+            // Stop Video
+            document.getElementById('video-frame').src = "";
+
+            if (document.fullscreenElement && document.exitFullscreen) {
+                document.exitFullscreen().catch(err => console.log(err));
+            }
+            currentMode = null;
+        }
+
+        // --- Zoom Logic ---
+        function autoFitZoom() {
+            if (currentMode !== 'doc') return;
+            const availableWidth = docWrapper.clientWidth;
+            // Fit to width with small margin
+            let scale = (availableWidth - 20) / BASE_DOC_WIDTH;
+            if (scale < 0.5) scale = 0.5;
+            applyZoom(scale);
+        }
+
+        function applyZoom(scale) {
+            currentScale = scale;
+            const iframe = document.getElementById('doc-frame');
+            iframe.style.transform = `scale(${scale})`;
+            // Compensate height (scale affects visual size but not layout flow sometimes, 
+            // but since we origin-top, we usually need to boost height percent)
+            iframe.style.height = `${100 / scale}%`;
+            iframe.style.marginBottom = `${-(1 - scale) * 100}%`;
+        }
+
+        function adjustZoom(delta) {
+            applyZoom(currentScale + delta);
+        }
+
+        window.addEventListener('resize', () => {
+            if (currentMode === 'doc' && !overlay.classList.contains('hidden')) {
+                autoFitZoom();
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && !overlay.classList.contains('hidden')) {
+                // If user pressed ESC, close modal
+                closeModal();
+            }
+        });
+
+        // Trigger Animations on Scroll
+        document.addEventListener('DOMContentLoaded', () => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
+        });
+    </script>
+</body>
+
+</html>
