@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基礎 6: Wi-Fi (HTTP) 通訊與 Fetch API - Vibe Coding</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+
+    <!-- Navigation (Shared) -->
+    <div id="nav-placeholder"></div>
+    <script src="/js/nav-component.js"></script>
+    <script>
+        renderNav('/');
+    </script>
+
+    <!-- Tab Navigation Bar -->
+    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
+                <button onclick="switchTab('http-request')" id="tab-http-request"
+                    class="tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2">
+                    <span class="mr-2">1️⃣</span>HTTP 協議與請求實戰
+                </button>
+                <button onclick="switchTab('fetch-api')" id="tab-fetch-api"
+                    class="tab-btn text-gray-500 border-transparent whitespace-nowrap py-3 flex items-center gap-2">
+                    <span class="mr-2">2️⃣</span>Fetch API 基礎
+                </button>
+                <button onclick="switchTab('cors-security')" id="tab-cors-security"
+                    class="tab-btn text-gray-500 border-transparent whitespace-nowrap py-3 flex items-center gap-2">
+                    <span class="mr-2">3️⃣</span>CORS 與安全性基礎
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Area (Iframe) -->
+    <div class="flex-grow w-full relative">
+        <iframe id="content-frame" src=""
+            class="w-full h-full border-0 absolute inset-0 bg-gray-50 transition-opacity duration-300"
+            style="opacity: 0;" onload="this.style.opacity = '1'"></iframe>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('content-frame');
+        const tabHttp = document.getElementById('tab-http-request');
+        const tabFetch = document.getElementById('tab-fetch-api');
+        const tabSecurity = document.getElementById('tab-cors-security');
+
+        // Initial Load
+        loadContent('basic-06-unit-http-request.html');
+
+        function switchTab(tab) {
+            // Reset all tabs
+            [tabHttp, tabFetch, tabSecurity].forEach(t => {
+                t.classList.remove('text-blue-600', 'border-blue-600', 'active');
+                t.classList.add('text-gray-500', 'border-transparent');
+            });
+
+            if (tab === 'http-request') {
+                tabHttp.classList.add('text-blue-600', 'border-blue-600', 'active');
+                tabHttp.classList.remove('text-gray-500', 'border-transparent');
+                loadContent('basic-06-unit-http-request.html');
+            } else if (tab === 'fetch-api') {
+                tabFetch.classList.add('text-blue-600', 'border-blue-600', 'active');
+                tabFetch.classList.remove('text-gray-500', 'border-transparent');
+                loadContent('basic-06-unit-fetch-api.html');
+            } else if (tab === 'cors-security') {
+                tabSecurity.classList.add('text-blue-600', 'border-blue-600', 'active');
+                tabSecurity.classList.remove('text-gray-500', 'border-transparent');
+                loadContent('basic-06-unit-cors-security.html');
+            }
+        }
+
+        function loadContent(url) {
+            iframe.style.opacity = '0';
+            setTimeout(() => {
+                const separator = url.includes('?') ? '&' : '?';
+                const query = window.location.search.substring(1);
+                iframe.src = query ? `${url}${separator}${query}` : url;
+            }, 300);
+        }
+    </script>
+    <script type="module" src="/js/master-nav.js?v=11"></script>
+
+</body>
+
+</html>

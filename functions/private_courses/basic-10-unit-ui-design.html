@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網頁端模式控制介面設計 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 10 - 單元 2
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                網頁端<span class="text-blue-400">模式控制</span><br>介面設計與安全實務
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                設計一個直覺、零失誤且與硬體同步的戰術控制面板。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 影片：設計零失誤介面 (9 min)
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 模式控制介面設計說明書
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: UI Logic -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">🖱️</span> 1. 模式切換的 UI 邏輯 (30 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg">
+                                <p><strong>控制組件選擇：</strong>介面的直覺性來自於選擇正確的控制項。</p>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 shadow-sm">
+                                        <h4 class="font-bold text-blue-800 mb-2">Segmented Control</h4>
+                                        <p class="text-sm">適合 2-3 個互斥模式（如：手控 / 自動）。所有選項攤開，當前選中項高亮。</p>
+                                    </div>
+                                    <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 shadow-sm">
+                                        <h4 class="font-bold text-indigo-800 mb-2">Toggle Switch</h4>
+                                        <p class="text-sm">適合單一功能的開啟/關閉（如：避障功能 ON/OFF）。直觀模擬物理開關。</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                                    <h4 class="font-bold text-gray-800 mb-4">視覺層級 (Visual Hierarchy)</h4>
+                                    <ul class="list-disc list-inside space-y-2 text-sm">
+                                        <li><strong>顏色語義：</strong>紅色代表「緊急/停止」、藍色代表「手控模式」、綠色代表「全自動」。</li>
+                                        <li><strong>狀態顯眼化：</strong>當前模式應有明顯的背景色或陰影（.active 類別的視覺呈現）。</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Responsive & Touch Safety -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-teal-500 to-emerald-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">📱</span> 2. 響應式佈局與防誤觸 (30 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <h4 class="font-bold text-teal-800 mb-3">CSS Flexbox/Grid</h4>
+                                <p class="text-base leading-relaxed">
+                                    確保按鈕在不同尺寸的手機上都能輕鬆被大拇指點擊。使用 <code>min-height: 44px</code> 或更大的觸控熱區。
+                                </p>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-emerald-800 mb-3">防誤觸設計</h4>
+                                <p class="text-base leading-relaxed">
+                                    模式切換按鈕不應緊貼著「前進/後退」搖桿，避免操作時誤觸導致模式突變，造成安全隠憂。
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-200">
+                            <h4 class="font-bold text-emerald-800 mb-2 flex items-center gap-2">
+                                <span>💡</span> 實務技巧
+                            </h4>
+                            <p class="text-base text-emerald-900">
+                                在自動駕駛模式下，應將手動控制項（如搖桿）變為「禁用狀態」或降低透明度，讓使用者明確知道目前操作權已交給系統。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Data Binding -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🔄</span> 3. 預習：資料雙向綁定 (20 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <p><strong>核心概念：</strong>硬體狀態與網頁介面必須始終如一。</p>
+
+                        <div class="bg-amber-50 p-6 rounded-2xl border border-amber-200">
+                            <h4 class="font-bold text-amber-800 mb-4">狀態自動校正邏輯</h4>
+                            <p class="text-base mb-4">
+                                當車子因為感測器故障「自動切回待機」時，網頁上的按鈕也要透過 <strong>WebSocket/BLE Notify</strong> 跟著變動，而非只是單向發送指令。
+                            </p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-white p-4 rounded-lg shadow-sm border border-amber-100 text-sm">
+                                    <span class="font-bold text-amber-700">關鍵概念：</span><br>
+                                    單選按鈕 (Radio Buttons) 與切換開關 (Toggle Switch) 的前端實作。
+                                </div>
+                                <div class="bg-white p-4 rounded-lg shadow-sm border border-amber-100 text-sm">
+                                    <span class="font-bold text-amber-700">學習核心：</span><br>
+                                    使用 JavaScript 的 fetch() 或 WebSocket 發送「模式切換」指令給 ESP32。
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 p-8 rounded-2xl text-white font-mono text-sm overflow-x-auto">
+                            <div class="text-gray-500 mb-2">// JavaScript 狀態同步範例</div>
+                            <div>
+                                <span class="text-purple-400">function</span> <span
+                                    class="text-yellow-400">updateUI</span>(hardwareMode) {<br>
+                                &nbsp;&nbsp;<span class="text-gray-400">// 移除所有模式的 active 類別</span><br>
+                                &nbsp;&nbsp;document.<span class="text-yellow-400">querySelectorAll</span>(<span
+                                    class="text-green-400">'.mode-btn'</span>).<span
+                                    class="text-yellow-400">forEach</span>(btn => btn.classList.<span
+                                    class="text-yellow-400">remove</span>(<span
+                                    class="text-green-400">'active'</span>));<br><br>
+                                &nbsp;&nbsp;<span class="text-gray-400">// 根據硬體回傳值設定對應按鈕</span><br>
+                                &nbsp;&nbsp;<span class="text-purple-400">const</span> targetBtn = document.<span
+                                    class="text-yellow-400">getElementById</span>(<span
+                                    class="text-green-400">`btn-${hardwareMode}`</span>);<br>
+                                &nbsp;&nbsp;<span class="text-purple-400">if</span> (targetBtn) {<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;targetBtn.classList.<span
+                                    class="text-yellow-400">add</span>(<span
+                                    class="text-green-400">'active'</span>);<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;document.body.style.backgroundColor = (hardwareMode === <span
+                                    class="text-green-400">'AUTO'</span>) ? <span
+                                    class="text-green-400">'#f0fdf4'</span> : <span
+                                    class="text-green-400">'#f8fafc'</span>;<br>
+                                &nbsp;&nbsp;}<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：設計「零失誤」戰術面板</h2>
+            <p class="text-center text-gray-500 mb-12">透過 UI/UX 上的巧思，讓使用者在操作複雜機器時也能得心應手。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 2-1 -->
+                <div onclick="openSubmissionModal('basic-10-ui-tactical', '【作業 2-1】「戰術面板」：CSS 狀態切換實作')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🎨</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 2-1】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「戰術面板」：CSS 狀態切換</h4>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li><strong>三模面板：</strong>設計 Manual、Auto-Pilot、Eco-Mode 選項。</li>
+                                <li><strong>動態樣式：</strong>利用 JS 切換 CSS 類別（例如 .active），讓按鈕發光或變色。</li>
+                                <li><strong>UI 鎖定：</strong>當切換至 Auto-Pilot 時，虛擬搖桿應變為「半透明」且「無法觸控」。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2-2 -->
+                <div onclick="openSubmissionModal('basic-10-ui-sync', '【作業 2-2】雙向狀態同步 (WebSocket/BLE 回傳)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-orange-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🔄</span>
+                            <span class="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-orange-600 transition">【作業 2-2】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">雙向狀態同步 (WebSocket/BLE)</h4>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li><strong>心跳同步：</strong>每秒從 ESP32 發送一次當前 FSM 狀態給網頁。</li>
+                                <li><strong>自動校正：</strong>如果收到的狀態與網頁顯示不符，網頁應自動修正外觀。</li>
+                                <li><strong>安全隱憂：</strong>解決「網頁顯示手動，但機器正在自動」的不一致危險。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2-3 -->
+                <div onclick="openSubmissionModal('basic-10-ui-emergency', '【作業 2-3】緊急停機與視覺警告')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-red-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🚨</span>
+                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition">【作業 2-3】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">緊急停機與視覺警告</h4>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li><strong>滿版遮罩：</strong>點擊緊急鈕時，彈出一個紅色半透明遮罩，鎖死所有操作。</li>
+                                <li><strong>觸覺反饋：</strong>呼叫 <code>navigator.vibrate()</code> 讓手機震動提醒。</li>
+                                <li><strong>多感官回饋：</strong>利用視覺、觸覺確保危險發生時的即時警示。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 基礎 10 - 2</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/ZHMOvKhC6r8", // 網頁機器人：設計零失誤介面
+            doc: "https://docs.google.com/document/d/e/2PACX-1vSlx__HC3CHq9Mh9sRjh0Xmauj-5y6vLp6RGMuoz1bOD7mFqC7B7nFAMyCTTawbJ2a-A5wyR81R5u1q/pub?embedded=true" // 網頁端模式控制介面設計
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

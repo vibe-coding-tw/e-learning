@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTA 安全性：密碼保護與版本檢查 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .code-block {
+            background: #1e293b;
+            color: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            font-family: 'Outfit', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+        }
+
+        .security-badge {
+            @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-red-900 via-slate-900 to-black text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-red-500/20 border border-red-400/30 text-red-300 text-sm font-semibold mb-6 tracking-wide">Learning
+                Unit 3</span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                OTA 安全性：密碼與版本檢查 <br><span class="text-red-400">Security & Integrity</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-red-100 max-w-2xl mx-auto font-light leading-relaxed">
+                守護你的硬體防線：防止非法篡改與錯誤更新。<br>
+                <span class="text-base text-gray-400 mt-2 block">學習如何建立數位守門員，確保韌體更新的安全與穩定。</span>
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/ltNHIoc1A0o')"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 確保生命線安全 (9 min)
+                </button>
+                <button
+                    onclick="enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vRcbCF7EKxahjL92ReohxJutpO7hcuNu4YkQM9lgUuAfp2fjC1QGRACrarrtGwBv3wyByQvuVkPiVL6/pub?embedded=true')"
+                    class="flex items-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀安全講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Content Container -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Why Security -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-red-100">
+                <div class="p-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+                        <span class="text-4xl">⚠️</span> 為什麼 OTA 需要安全機制？ (20 min)
+                    </h2>
+                    <p class="text-gray-500 mb-8 text-lg">沒有保護的 OTA，就像是家門大開的保險箱。</p>
+
+                    <div class="grid lg:grid-cols-3 gap-8">
+                        <div class="p-6 rounded-2xl bg-red-50 border border-red-100">
+                            <h3 class="font-bold text-red-900 mb-2">攔截與偽造</h3>
+                            <p class="text-sm text-red-800">理解中間人攻擊 (MITM)。若無保護，駭客可上傳惡意二進制檔接管無人車，甚至造成危險。</p>
+                        </div>
+                        <div class="p-6 rounded-2xl bg-orange-50 border border-orange-100">
+                            <h3 class="font-bold text-orange-900 mb-2">版本倒退風險</h3>
+                            <p class="text-sm text-orange-800">若將舊版的 Bug 韌體重新刷入新版機器，可能導致功能失效或硬體損壞（Anti-rollback）。</p>
+                        </div>
+                        <div class="p-6 rounded-2xl bg-slate-50 border border-slate-100">
+                            <h3 class="font-bold text-slate-900 mb-2">硬體不匹配</h3>
+                            <p class="text-sm text-slate-800">若將 ESP32-S3 的韌體刷入 ESP32-C3，系統將無法啟動。必須在更新前檢查硬體 ID。</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 p-6 bg-blue-50 rounded-xl border border-blue-100 flex items-start gap-4">
+                        <span class="text-2xl mt-1">💡</span>
+                        <div>
+                            <h4 class="font-bold text-blue-900">學習任務：思考與討論</h4>
+                            <p class="text-blue-800 mt-1">思考生活中常見的軟體更新（如手機系統），更新前系統會檢查哪些資訊？這對用戶的安全性有何保障？</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Password Protection -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🔐</span> 密碼保護：HTTP 基本驗證 (20 min)
+                    </h2>
+
+                    <div class="grid md:grid-cols-2 gap-10 items-center">
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="font-bold text-lg mb-2">HTTP Basic Auth</h3>
+                                <p class="text-gray-600">利用瀏覽器內建機制，在請求更新頁面前彈出使用者名稱與密碼視窗。這是最簡單有效的防禦手段。</p>
+                            </div>
+                            <div class="bg-slate-50 p-6 rounded-xl border border-gray-200">
+                                <h4 class="font-bold mb-3 text-indigo-700">伺服器端驗證流程</h4>
+                                <ul class="list-disc list-inside space-y-2 text-sm text-gray-700">
+                                    <li>瀏覽器發送帶有 Auth Header 的請求</li>
+                                    <li>ESP32 攔截請求並提取帳密</li>
+                                    <li>比對儲存在 NVS (Preferences) 中的雜湊值</li>
+                                    <li>通過則回傳網頁，失敗則回傳 401</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 rounded-xl p-6 overflow-hidden relative">
+                            <div class="absolute top-4 right-4 text-xs text-slate-500 font-mono">esp32-auth.cpp</div>
+                            <h4 class="text-white font-bold mb-4">驗證代碼片段</h4>
+                            <div class="code-block">
+                                server.on("/update", HTTP_GET, []() {<br>
+                                &nbsp;&nbsp;if (!server.authenticate(www_username, www_password)) {<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;return server.requestAuthentication();<br>
+                                &nbsp;&nbsp;}<br>
+                                &nbsp;&nbsp;server.send(200, "text/html", updateIndex);<br>
+                                });
+                            </div>
+                            <div
+                                class="mt-4 p-3 bg-indigo-900/50 rounded border border-indigo-500/30 text-xs text-indigo-200 font-medium">
+                                <strong>學習任務：</strong> 查閱 ESP32 WebServer 庫中的 authenticate() 函數用法，思考如何實現「動態密碼」。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Version & Metadata -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🏷️</span> 版本檢查與中繼資料 (20 min)
+                    </h2>
+
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div class="p-5 rounded-xl bg-slate-50 border border-slate-200">
+                            <h4 class="font-bold text-gray-800 mb-2">1. 語義化版本</h4>
+                            <p class="text-sm text-gray-600">理解 MAJOR.MINOR.PATCH (如 v1.2.3) 的定義。主要更新、次要更新、修復補丁。</p>
+                        </div>
+                        <div class="p-5 rounded-xl bg-slate-50 border border-slate-200">
+                            <h4 class="font-bold text-gray-800 mb-2">2. 韌體標頭 (Header)</h4>
+                            <p class="text-sm text-gray-600">學習如何自定義結構。在編譯時將「版本號」與「目標型號」嵌入 .bin 檔的前段位置。</p>
+                        </div>
+                        <div class="p-5 rounded-xl bg-slate-50 border border-slate-200">
+                            <h4 class="font-bold text-gray-800 mb-2">3. 更新邏輯判斷</h4>
+                            <p class="text-sm text-gray-600">New > Current? Target == Current? 只有在條件滿足時，才調用
+                                Update.begin()。</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-10 grid lg:grid-cols-2 gap-10">
+                        <div>
+                            <h3 class="font-bold text-xl mb-4 text-emerald-700">如何防止別人惡意更新？</h3>
+                            <p class="text-gray-600 mb-4">
+                                除了密碼，更深層的防護是「簽章驗證」。在本課程中，我們先實作基礎的版本與硬體比對，確保系統內容的正確性。
+                            </p>
+                            <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-100">
+                                <h4 class="font-bold text-emerald-800 text-sm">關鍵概念：防呆機制</h4>
+                                <p class="text-xs text-emerald-700 mt-1">
+                                    當上傳一個不正確的 .bin 檔時，ESP32 應該在寫入 Flash 之前就發現錯誤（讀取 Header），而不是寫到一半出錯。
+                                </p>
+                            </div>
+                        </div>
+                        <div class="bg-emerald-900 rounded-xl p-6 text-emerald-100 font-mono text-sm leading-relaxed">
+                            <p class="text-emerald-400 font-bold mb-2">// 預想的驗證邏輯</p>
+                            <p>if (new_version > current_version) {</p>
+                            <p class="ml-4">if (target_hardware == "ESP32-S3") {</p>
+                            <p class="ml-8 text-emerald-300">startUpdate();</p>
+                            <p class="ml-4">} else { abort("Hardware mismatch!"); }</p>
+                            <p>} else { abort("Rollback prohibited!"); }</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 4: Homework -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-10 font-[Outfit]">實作挑戰：OTA 安全防護</h2>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 3-1 -->
+                <div onclick="openSubmissionModal('ota-safe-task-1', '作業 3-1: 「數位守門員」實作 OTA 密碼鎖')"
+                    class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-red-500 h-1.5"></div>
+                    <div class="p-6 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🔐</span>
+                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold">60 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition">作業 3-1</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「數位守門員」</h4>
+                        <p class="text-sm text-gray-600 mb-4">
+                            為 /update 增加認證層。帳密應從 NVS (Preferences) 讀取。實作計數器：密碼錯誤 3 次後暫時關閉功能 5 分鐘。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-red-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳作業</span>
+                    </div>
+                </div>
+
+                <!-- Task 3-2 -->
+                <div onclick="openSubmissionModal('ota-safe-task-2', '作業 3-2: 「防呆機制」韌體版本號檢查')"
+                    class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-orange-500 h-1.5"></div>
+                    <div class="p-6 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🤖</span>
+                            <span class="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-orange-600 transition">作業 3-2
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「防呆機制」</h4>
+                        <p class="text-sm text-gray-600 mb-4">
+                            定義 APP_VERSION。上傳前讀取 .bin 前 1024 Bytes 標記。若版本較舊，利用 Update.abort() 中止並回傳「禁止降級」。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-orange-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳作業</span>
+                    </div>
+                </div>
+
+                <!-- Task 3-3 -->
+                <div onclick="openSubmissionModal('ota-safe-task-3', '作業 3-3: 「跨硬體保護」硬體 ID 驗證')"
+                    class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-slate-800 h-1.5"></div>
+                    <div class="p-6 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🆔</span>
+                            <span class="bg-slate-100 text-slate-700 text-xs px-2 py-1 rounded font-bold">45 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-slate-600 transition">作業 3-3
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「硬體適配」</h4>
+                        <p class="text-sm text-gray-600 mb-4">
+                            使用 ESP.getChipModel() 檢測硬體型號。在 OTA 封包加入硬體名稱。實測嘗試將錯誤型號韌體上傳，觀察是否攔截成功。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-slate-800/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-slate-800 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳作業</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-8 border-t border-gray-700 mt-10">
+        <div class="container mx-auto px-4 text-center">
+            <div class="border-t border-gray-700 pt-6">
+                <p class="text-gray-500 text-sm mb-2">&copy; 2025 Vibe Coding. All rights reserved.</p>
+                <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6 text-sm text-gray-400">
+                    <span>課程教材 - 內部使用</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/ltNHIoc1A0o",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vRcbCF7EKxahjL92ReohxJutpO7hcuNu4YkQM9lgUuAfp2fjC1QGRACrarrtGwBv3wyByQvuVkPiVL6/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

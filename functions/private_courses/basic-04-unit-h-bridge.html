@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H 橋驅動原理：解鎖馬達控制的鑰匙 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-indigo-900 to-blue-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?q=80&w=2069&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 4 - H 橋驅動
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                H 橋驅動原理：<br><span class="text-blue-400">解鎖馬達控制的鑰匙</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                掌握馬達正反轉的核心電路架構，實現精準的動力控制與動態煞車。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> H 橋：馬達控制 (8 min)
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> H 橋原理與應用講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: H-Bridge Structure -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                                <span class="text-4xl">🏗️</span> 1. H 橋的構造：為什麼叫 H？
+                            </h2>
+                            <div class="space-y-4 text-gray-600 text-lg">
+                                <p>
+                                    <span class="font-bold text-blue-600">電路幾何：</span> 想像一個「H」字型，中間橫桿是<span
+                                        class="text-blue-700 font-bold">馬達</span>，四個支柱是<span
+                                        class="text-indigo-700 font-bold">開關</span>（通常是 MOSFET 或電晶體）。
+                                </p>
+                                <p>
+                                    <span class="font-bold text-blue-600">電流路徑：</span>
+                                    理解電流必須從電源正極出發，經過一個高側開關、穿過馬達、再經由一個對角的低側開關回到負極。
+                                </p>
+                                <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 mt-6">
+                                    <h4 class="font-bold text-blue-800 mb-3">核心構造關鍵：</h4>
+                                    <ul class="space-y-2 text-sm text-blue-700">
+                                        <li class="flex items-start gap-2">
+                                            <span class="mt-1">🔹</span>
+                                            <span>四個開關（S1, S2, S3, S4）控制兩個迴路。</span>
+                                        </li>
+                                        <li class="flex items-start gap-2">
+                                            <span class="mt-1">🔹</span>
+                                            <span>對角線導通決定電流流向。</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="mt-8 bg-slate-900 text-slate-300 p-6 rounded-xl border border-slate-700">
+                                <h4 class="text-white font-bold mb-3 flex items-center gap-2">
+                                    <span class="text-amber-400">📝</span> 學習任務
+                                </h4>
+                                <p class="text-sm leading-relaxed">
+                                    在紙上畫出 H 橋，並嘗試找出讓電流「由左向右」與「由右向左」流動的開關路徑。
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="md:w-1/3">
+                            <div class="sticky top-24">
+                                <div class="bg-slate-100 rounded-2xl p-4 shadow-inner border border-gray-200">
+                                    <div
+                                        class="aspect-square bg-white flex items-center justify-center border border-dashed border-gray-300 rounded-lg p-4">
+                                        <svg viewBox="0 0 200 200" class="w-full h-auto">
+                                            <!-- H Bridge Diagram -->
+                                            <!-- Vertical bars -->
+                                            <line x1="50" y1="20" x2="50" y2="180" stroke="#cbd5e1" stroke-width="4" />
+                                            <line x1="150" y1="20" x2="150" y2="180" stroke="#cbd5e1"
+                                                stroke-width="4" />
+                                            <!-- Horizontal bar (Motor) -->
+                                            <circle cx="100" cy="100" r="25" fill="#f8fafc" stroke="#3b82f6"
+                                                stroke-width="4" />
+                                            <text x="100" y="105" text-anchor="middle" font-size="12" font-weight="bold"
+                                                fill="#3b82f6">M</text>
+                                            <line x1="50" y1="100" x2="75" y2="100" stroke="#3b82f6" stroke-width="4" />
+                                            <line x1="125" y1="100" x2="150" y2="100" stroke="#3b82f6"
+                                                stroke-width="4" />
+                                            <!-- Switches -->
+                                            <circle cx="50" cy="50" r="10" fill="#ef4444" /> <text x="35" y="55"
+                                                font-size="10">S1</text>
+                                            <circle cx="150" cy="50" r="10" fill="#ef4444" /> <text x="165" y="55"
+                                                font-size="10">S2</text>
+                                            <circle cx="50" cy="150" r="10" fill="#ef4444" /> <text x="35" y="155"
+                                                font-size="10">S3</text>
+                                            <circle cx="150" cy="150" r="10" fill="#ef4444" /> <text x="165" y="155"
+                                                font-size="10">S4</text>
+                                        </svg>
+                                    </div>
+                                    <p class="text-center text-xs text-gray-400 mt-4 italic font-medium">
+                                        H 橋電路基本拓撲結構
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Core Logic States -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🕹️</span> 2. 四種核心邏輯狀態
+                    </h2>
+
+                    <div class="grid md:grid-cols-2 gap-8 lg:gap-12">
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="p-4 bg-green-50 rounded-xl border border-green-100">
+                                    <h4 class="font-bold text-green-800 mb-2">正轉 (Forward)</h4>
+                                    <p class="text-sm text-green-700">對角線開關 $S_1, S_4$ 導通，通正向電壓。</p>
+                                </div>
+                                <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                                    <h4 class="font-bold text-blue-800 mb-2">反轉 (Reverse)</h4>
+                                    <p class="text-sm text-blue-700">對角線開關 $S_2, S_3$ 導通，通反向電壓。</p>
+                                </div>
+                                <div class="p-4 bg-red-50 rounded-xl border border-red-100">
+                                    <h4 class="font-bold text-red-800 mb-2">煞車 (Brake/Short)</h4>
+                                    <p class="text-sm text-red-700">底部開關同時導通，產生反向電動勢抵消。</p>
+                                </div>
+                                <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 text-gray-400">
+                                    <h4 class="font-bold mb-2">空轉 (Coast/Idle)</h4>
+                                    <p class="text-sm">所有開關切斷，馬達因慣性滑行。</p>
+                                </div>
+                            </div>
+
+                            <div
+                                class="bg-amber-50 p-6 rounded-xl border border-amber-100 mt-6 font-medium text-amber-900">
+                                <h4 class="flex items-center gap-2 mb-2">
+                                    <span class="text-xl">⚠️</span> 禁忌狀態：直通短路 (Shoot-through)
+                                </h4>
+                                <p class="text-sm">絕對不能同時導通同一側的上下開關（例如 S1 與 S3），這會導致電源直接對地短路，燒毀驅動晶片！</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <h4 class="text-xl font-bold flex items-center gap-2">
+                                <span class="text-indigo-600">📊</span> 邏輯真值表 (以 TB6612 為例)
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm text-left border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-100">
+                                            <th class="p-3 border">IN1</th>
+                                            <th class="p-3 border">IN2</th>
+                                            <th class="p-3 border">PWM (EN)</th>
+                                            <th class="p-3 border">觀察結果</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="p-3 border font-mono">HIGH</td>
+                                            <td class="p-3 border font-mono">LOW</td>
+                                            <td class="p-3 border font-mono">255</td>
+                                            <td class="p-3 border">正轉 (全速)</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-3 border font-mono">LOW</td>
+                                            <td class="p-3 border font-mono">HIGH</td>
+                                            <td class="p-3 border font-mono">128</td>
+                                            <td class="p-3 border">反轉 (半速)</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-3 border font-mono">HIGH</td>
+                                            <td class="p-3 border font-mono">HIGH</td>
+                                            <td class="p-3 border font-mono">-</td>
+                                            <td class="p-3 border text-red-600 font-bold">煞車 (Brake)</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-3 border font-mono">LOW</td>
+                                            <td class="p-3 border font-mono">LOW</td>
+                                            <td class="p-3 border font-mono">-</td>
+                                            <td class="p-3 border">停止 (Coast)</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: PWM Integration -->
+        <section class="module-section mb-16">
+            <div class="bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white">
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col lg:flex-row gap-12">
+                        <div class="lg:w-1/2 space-y-6">
+                            <h2 class="text-3xl font-bold mb-4 flex items-center gap-3">
+                                <span class="text-4xl">⚡</span> 3. 結合 PWM 控制速度
+                            </h2>
+                            <div class="space-y-6 text-slate-300">
+                                <p class="text-lg leading-relaxed">
+                                    H 橋不只是「開」或「關」。透過在對角線導通期間加上 <span class="text-purple-400 font-bold">PWM
+                                        訊號</span>，我們可以控制馬達獲得的<span class="text-indigo-400 font-bold">平均電壓</span>。
+                                </p>
+                                <ul class="space-y-4">
+                                    <li class="flex gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                                        <span class="text-2xl">⚡</span>
+                                        <div>
+                                            <h4 class="font-bold text-white">脈衝驅動</h4>
+                                            <p class="text-sm">PWM 的占空比直接決定了推動力。50% Duty Cycle 代表一半的能量。</p>
+                                        </div>
+                                    </li>
+                                    <li class="flex gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                                        <span class="text-2xl">🔧</span>
+                                        <div>
+                                            <h4 class="font-bold text-white">智慧 API 封裝</h4>
+                                            <p class="text-sm">設計 <code>drive(int speed)</code> 函式，正數代表 IN1=H, IN2=L,
+                                                PWM=speed；負數代表 IN1=L, IN2=H, PWM=|speed|。</p>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="lg:w-1/2 bg-slate-800 p-8 rounded-2xl border border-slate-700">
+                            <h4 class="text-xl font-bold mb-6 flex items-center gap-2">
+                                <span class="text-amber-400">🔍</span> 深度探索 (預習任務)
+                            </h4>
+                            <p class="text-slate-300 leading-relaxed mb-6">
+                                查閱 DRV8833 或 TB6612FNG 驅動晶片的腳位圖，看看 AIN1 與 AIN2 如何決定馬達方向。嘗試思考：如果 PWM 頻率太低，你會聽到馬達發出什麼聲音？
+                            </p>
+                            <div class="p-6 bg-slate-700/50 rounded-xl border border-slate-600">
+                                <h5 class="font-bold text-amber-400 mb-3">線上任務：邏輯填空</h5>
+                                <p class="text-sm text-slate-300 mb-4">填寫課程講義中的邏輯真值表，確認哪種組合是「正轉」、「反轉」、「煞車」與「停止」。</p>
+                                <div class="flex flex-wrap gap-3">
+                                    <span
+                                        class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-bold border border-green-500/30">L298N
+                                        常用</span>
+                                    <span
+                                        class="px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-full text-xs font-bold border border-indigo-500/30">TB6612
+                                        進階</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實作任務：馬達控制的極限</h2>
+            <p class="text-center text-gray-500 mb-12">從靜態邏輯到動態物理效能的實戰演練。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 2-1 -->
+                <div onclick="openSubmissionModal('basic-04-hbridge-1', '作業 2-1: 「邏輯真值表」實測')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">📋</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">作業 2-1
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「邏輯真值表」實測</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
+                            編寫程式碼透過 ESP32 腳位控制馬達驅動模組，驗證 H 橋的運作邏輯，並填寫觀察結果。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-blue-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳觀察表與截圖</span>
+                    </div>
+                </div>
+
+                <!-- Task 2-2 -->
+                <div onclick="openSubmissionModal('basic-04-hbridge-2', '作業 2-2: 「急煞 vs. 緩停」效能對比')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-amber-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🛑</span>
+                            <span class="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-amber-600 transition">作業 2-2
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">急煞 vs. 緩停效能對比</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
+                            比較「空轉 (Coast)」與「煞車 (Brake)」對停車距離的影響，並討論感應電流帶來的物理效應。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-amber-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳測試數據與心得</span>
+                    </div>
+                </div>
+
+                <!-- Task 2-3 -->
+                <div onclick="openSubmissionModal('basic-04-hbridge-3', '作業 2-3: 方向與速度的綜合控制')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🏎️</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">作業 2-3
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">方向與速度綜合控制</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
+                            結合 PWM 與 H 橋，封裝 <code>drive(int speed)</code> API，完成緩加速至急煞與倒車的平滑切換。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-purple-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳完整程式碼</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 基礎 4</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/gU9-xPK6RjA",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vStb-XrR3-m21r7Y4r4tPBSqd5y68fmT_D7v9-6OJQ9W590DVTqtaUB1k1Lz31iPYfQD-rWhBws_Av_/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

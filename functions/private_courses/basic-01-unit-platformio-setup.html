@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>環境搭建：VS Code + PlatformIO - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <!-- Link to parent directory css -->
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .chip-gradient {
+            background: linear-gradient(135deg, #334155 0%, #0f172a 100%);
+        }
+
+        .code-block {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            background-color: #1e293b;
+            color: #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-sky-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide">Learning
+                Unit 1-2</span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                VS Code + PlatformIO 環境搭建
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                從 Arduino IDE 畢業，邁向專業開發之路。<br>
+                <span class="text-base text-gray-300 mt-2 block">IntelliSense、版本控制、多環境管理，一次滿足。</span>
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/lm_GUPEFNn8')"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button
+                    onclick="enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vRMdgLbF_rP3t_RG1bwgLNUx0bhqV91mFEXd-xVplxFKTOH0DtkUSHlPrc3R8EOliQU2kzbIRKjcX8n/pub?embedded=true')"
+                    class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Content Container -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Why PlatformIO? -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+                        <span class="text-4xl">🚀</span> 為什麼要捨棄 Arduino IDE？ (15 min)
+                    </h2>
+                    <p class="text-gray-500 mb-8 text-lg">PlatformIO 不僅是好用，它是讓你從「寫作業」變成「做專案」的關鍵工具。</p>
+
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <!-- IntelliSense -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 hover:shadow-md transition">
+                            <div
+                                class="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-lg flex items-center justify-center text-2xl mb-4">
+                                ✨</div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">代碼補完 (IntelliSense)</h3>
+                            <p class="text-sm text-gray-600 leading-relaxed">
+                                就像寫作文有自動校正。打出 `Serial.` 就會跳出所有可用函式，大幅減少拼錯關鍵字 (Typo) 的機率，寫程式不再靠運氣。
+                            </p>
+                        </div>
+
+                        <!-- Version Control -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 hover:shadow-md transition">
+                            <div
+                                class="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center text-2xl mb-4">
+                                📦</div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">版本管理</h3>
+                            <p class="text-sm text-gray-600 leading-relaxed">
+                                PIO 可以幫你鎖定特定版本的函式庫。避免發生「今天能跑，明天函式庫更新就壞掉」的悲劇，專案穩定度 UP。
+                            </p>
+                        </div>
+
+                        <!-- Multi-Environment -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 hover:shadow-md transition">
+                            <div
+                                class="w-12 h-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center text-2xl mb-4">
+                                🌍</div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">多環境編譯</h3>
+                            <p class="text-sm text-gray-600 leading-relaxed">
+                                同一個專案，換個設定就能同時燒錄到 ESP32、Arduino Uno 或 ESP8266。不需要複製貼上三份程式碼。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Installation -->
+        <section class="module-section mb-16" style="animation-delay: 0.2s;">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🛠️</span> 安裝與初始化 (25 min)
+                    </h2>
+
+                    <div class="space-y-6">
+                        <div class="flex gap-4 items-start">
+                            <div
+                                class="flex-shrink-0 w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
+                                1</div>
+                            <div>
+                                <h3 class="font-bold text-lg text-gray-800">安裝 VS Code (Visual Studio Code)</h3>
+                                <p class="text-gray-600 text-sm mb-2">前往官網下載並安裝適合你作業系統的版本。</p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4 items-start">
+                            <div
+                                class="flex-shrink-0 w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
+                                2</div>
+                            <div>
+                                <h3 class="font-bold text-lg text-gray-800">安裝 PlatformIO IDE 擴充套件</h3>
+                                <p class="text-gray-600 text-sm mb-2">
+                                    在 VS Code 左側點擊「方塊圖示 (Extensions)」，搜尋 "PlatformIO IDE" 並安裝。
+                                    <br>
+                                    <span class="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded">提示</span>
+                                    安裝後通常需要重啟 VS Code，看到左側出現「外星人圖標 👽」即代表成功。
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4 items-start">
+                            <div
+                                class="flex-shrink-0 w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
+                                3</div>
+                            <div>
+                                <h3 class="font-bold text-lg text-gray-800">認識核心：platformio.ini</h3>
+                                <p class="text-gray-600 text-sm mb-2">
+                                    這是專案的「大腦」。它紀錄了板子型號 (board)、框架 (framework) 與通訊速率。
+                                </p>
+                                <div class="code-block mt-2 text-sm">
+                                    [env:esp32dev]
+                                    platform = espressif32
+                                    board = esp32dev
+                                    framework = arduino
+                                    monitor_speed = 115200
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Project Structure -->
+        <section class="module-section mb-16" style="animation-delay: 0.4s;">
+            <div class="bg-gray-900 rounded-2xl shadow-xl overflow-hidden text-white">
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+                        <span class="text-4xl">📂</span> 專案結構巡禮 (20 min)
+                    </h2>
+                    <div class="grid md:grid-cols-2 gap-8 items-center">
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-3 p-3 bg-gray-800 rounded-lg border border-gray-700">
+                                <span class="text-2xl">📄</span>
+                                <div>
+                                    <div class="font-mono text-blue-400 font-bold">src/main.cpp</div>
+                                    <div class="text-sm text-gray-400">程式碼的主戰場。記得手動加上 <code
+                                            class="bg-gray-700 px-1 rounded text-orange-300">#include &lt;Arduino.h&gt;</code>。
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 bg-gray-800 rounded-lg border border-gray-700">
+                                <span class="text-2xl">📚</span>
+                                <div>
+                                    <div class="font-mono text-green-400 font-bold">lib/</div>
+                                    <div class="text-sm text-gray-400">存放你自己寫的私有函式庫 (Private Libraries)。</div>
+                                </div>
+                            </div>
+                            <div
+                                class="flex items-center gap-3 p-3 bg-gray-800 rounded-lg border border-gray-700 opacity-75">
+                                <span class="text-2xl">🗑️</span>
+                                <div>
+                                    <div class="font-mono text-gray-500 font-bold">.pio/</div>
+                                    <div class="text-sm text-gray-500">編譯產生的暫存檔。不需要去動它，也不要上傳到雲端。</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 bg-gray-800 rounded-lg border border-gray-700">
+                                <span class="text-2xl">⚙️</span>
+                                <div>
+                                    <div class="font-mono text-yellow-400 font-bold">platformio.ini</div>
+                                    <div class="text-sm text-gray-400">專案設定檔 (Project Configuration File)。</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-black/30 p-6 rounded-xl border border-dashed border-gray-600 text-center">
+                            <div class="text-6xl mb-4">🏗️</div>
+                            <p class="text-gray-300">
+                                PlatformIO 的結構雖然比 Arduino IDE 複雜，<br>但這正是它能管理大型專案的原因。<br>
+                                <span class="text-blue-400 text-sm mt-2 block">習慣後，你會回不去的！</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 4: Homework -->
+        <section class="module-section" style="animation-delay: 0.6s;">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-10 font-[Outfit]">實作挑戰：從玩家變專家</h2>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 2-1 -->
+                <div onclick="openSubmissionModal('esp32-env-task-2-1', '作業 2-1: 新環境的首航')"
+                    class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-1.5"></div>
+                    <div class="p-6 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🚢</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">作業 2-1
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">新環境的首航</h4>
+                        <p class="text-sm text-gray-600 mb-4">
+                            建立新專案，選擇 ESP32 Dev Module。將 .ino 移植到 main.cpp，記得加上 include。成功編譯並上傳 Blink 程式。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-indigo-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳作業</span>
+                    </div>
+                </div>
+
+                <!-- Task 2-2 -->
+                <div onclick="openSubmissionModal('esp32-env-task-2-2', '作業 2-2: 函式庫管家')"
+                    class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-teal-500 h-1.5"></div>
+                    <div class="p-6 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">📚</span>
+                            <span class="bg-teal-100 text-teal-700 text-xs px-2 py-1 rounded font-bold">60 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-teal-600 transition">作業 2-2
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">函式庫管家</h4>
+                        <p class="text-sm text-gray-600 mb-4">
+                            練習「配置即安裝」。在 platformio.ini 中加入 <code class="bg-gray-100 px-1 text-xs">lib_deps</code> 來安裝
+                            Adafruit NeoPixel 或類似庫，並編譯驗證自動下載。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-teal-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳作業</span>
+                    </div>
+                </div>
+
+                <!-- Task 2-3 -->
+                <div onclick="openSubmissionModal('esp32-env-task-2-3', '作業 2-3: 多環境並行')"
+                    class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-pink-500 h-1.5"></div>
+                    <div class="p-6 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🎛️</span>
+                            <span class="bg-pink-100 text-pink-700 text-xs px-2 py-1 rounded font-bold">45 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-pink-600 transition">作業 2-3
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">多環境並行配置</h4>
+                        <p class="text-sm text-gray-600 mb-4">
+                            設定 <code class="bg-gray-100 px-1 text-xs">monitor_speed</code> 解決亂碼。嘗試建立 [env:debug] 與
+                            [env:release] 兩個環境設定。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-pink-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳作業</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-8 border-t border-gray-700 mt-10">
+        <div class="container mx-auto px-4 text-center">
+            <div class="border-t border-gray-700 pt-6">
+                <p class="text-gray-500 text-sm mb-2">&copy; 2025 Vibe Coding. All rights reserved.</p>
+                <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6 text-sm text-gray-400">
+                    <span>課程教材 - 內部使用</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/lm_GUPEFNn8",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vRMdgLbF_rP3t_RG1bwgLNUx0bhqV91mFEXd-xVplxFKTOH0DtkUSHlPrc3R8EOliQU2kzbIRKjcX8n/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

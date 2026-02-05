@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 引腳地圖與功能 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .pin-map-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        .highlight-red {
+            color: #ef4444;
+            font-weight: 700;
+        }
+
+        .highlight-amber {
+            color: #f59e0b;
+            font-weight: 700;
+        }
+
+        .highlight-blue {
+            color: #3b82f6;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 3 - 數位與類比 I/O
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                ESP32 引腳地圖：<br><span class="text-blue-400">創客的生存指南</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                認識你的數位探針。學會區分 GPIO、ADC、DAC，並避開那些會讓系統崩潰的「地雷引腳」。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片 (8 min)
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 查閱應急講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Pinout Map -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                                <span class="text-4xl">🗺️</span> 1. 認識引腳地圖 (Pinout Map)
+                            </h2>
+                            <p class="text-gray-500 mb-8 text-lg">ESP32 就像瑞士軍刀，每一條腿都有多重身分。</p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                    <h3 class="font-bold text-blue-800 mb-1">GPIO (General Purpose)</h3>
+                                    <p class="text-sm text-gray-600">通用型輸入輸出，你的數位開關。</p>
+                                </div>
+                                <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                                    <h3 class="font-bold text-purple-800 mb-1">ADC & DAC</h3>
+                                    <p class="text-sm text-gray-600">類比訊號的入口(ADC)與出口(DAC)。</p>
+                                </div>
+                                <div class="bg-amber-50 p-4 rounded-xl border border-amber-100">
+                                    <h3 class="font-bold text-amber-800 mb-1">Touch (觸控)</h3>
+                                    <p class="text-sm text-gray-600">內建電容式觸控功能，不用按鈕也能感應。</p>
+                                </div>
+                                <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                                    <h3 class="font-bold text-emerald-800 mb-1">硬體通訊</h3>
+                                    <p class="text-sm text-gray-600">UART (通訊)、I2C (感測器)、SPI (螢幕)。</p>
+                                </div>
+                            </div>
+
+                            <div class="mt-8 bg-slate-900 text-slate-300 p-6 rounded-xl border border-slate-700">
+                                <h4 class="text-white font-bold mb-3 flex items-center gap-2">
+                                    <span class="text-amber-400">🔍</span> 學習任務
+                                </h4>
+                                <p class="text-sm leading-relaxed">
+                                    查閱資料，找出為什麼 <span class="highlight-amber">GPIO 1 (TX)</span> 與 <span
+                                        class="highlight-amber">GPIO 3 (RX)</span> 在開發時建議先留空？
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="md:w-1/3 flex flex-col justify-center">
+                            <div class="pin-map-card p-6 rounded-2xl shadow-2xl border border-slate-700">
+                                <h4 class="text-white font-bold mb-4 text-center">標記你的第一張 Pinout</h4>
+                                <div
+                                    class="aspect-square bg-slate-800 rounded-lg flex items-center justify-center border-2 border-dashed border-slate-600 text-slate-500 text-sm p-4 text-center">
+                                    此處應下載並標記一份 ESP32 Pinout 圖，標註出適合接按鈕與 LED 的位置。
+                                </div>
+                                <button
+                                    class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold transition">
+                                    下載空白 Pinout 圖
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Landmine Pins -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">💣</span> 2. 絕對不能忽視的「地雷引腳」
+                    </h2>
+
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="space-y-6">
+                            <div class="flex gap-4 p-4 bg-red-50 rounded-xl border border-red-100">
+                                <div class="text-3xl">🚫</div>
+                                <div>
+                                    <h4 class="font-bold text-red-800">僅限輸入 (Input Only)</h4>
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        <span class="highlight-red">GPIO 34, 35, 36,
+                                            39</span>。它們沒有內部拉高電阻，且<strong>不能輸出訊號</strong> (不能點亮 LED 或控制繼電器)。
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 p-4 bg-orange-50 rounded-xl border border-orange-100">
+                                <div class="text-3xl">⚙️</div>
+                                <div>
+                                    <h4 class="font-bold text-orange-800">啟動配置 (Strapping Pins)</h4>
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        <span class="highlight-amber">GPIO 0, 2, 5, 12, 15</span>。這些腳位在開機瞬間決定了進入什麼模式。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-100 p-8 rounded-2xl border border-slate-200 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">⚠️</div>
+                            <h4 class="text-lg font-bold text-slate-800 mb-4">案例分析：車子為什麼不動？</h4>
+                            <p class="text-gray-600 leading-relaxed mb-4">
+                                「如果在 <span class="highlight-red">GPIO 0</span> 接了一個強力上拉按鈕，車子可能永遠無法正常啟動，因為它會被強制拉入燒錄模式。」
+                            </p>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                                <p class="text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">生存守則</p>
+                                <p class="text-sm text-slate-700">優先使用 GPIO 12 以後的通用腳位，把地雷區留給最無害的設備。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Power & Limits -->
+        <section class="module-section mb-16">
+            <div class="bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white">
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col lg:flex-row gap-12 items-center">
+                        <div class="lg:w-1/2 space-y-6">
+                            <h2 class="text-3xl font-bold mb-4 flex items-center gap-3">
+                                <span class="text-4xl">⚡</span> 3. 供電腳位與極限
+                            </h2>
+                            <div class="space-y-4">
+                                <div class="flex items-start gap-4">
+                                    <div
+                                        class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 font-bold shrink-0">
+                                        Vin</div>
+                                    <div>
+                                        <h4 class="font-bold">Vin (5V)</h4>
+                                        <p class="text-sm text-slate-400">外部 5V 輸入口。當你不用 USB 供電時，這是你的能量入口。</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-4">
+                                    <div
+                                        class="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center text-green-400 font-bold shrink-0">
+                                        3V3</div>
+                                    <div>
+                                        <h4 class="font-bold">3V3</h4>
+                                        <p class="text-sm text-slate-400">降壓後的穩定輸出。可以用來驅動小型的感測器。</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-blue-900/30 p-6 rounded-2xl border border-blue-800/50 mt-8">
+                                <h4 class="font-bold text-blue-300 mb-2 flex items-center gap-2">
+                                    <span>🤔</span> 預習任務
+                                </h4>
+                                <p class="text-sm text-blue-100/80 leading-relaxed">
+                                    思考為什麼我們不能直接用 GPIO 供電給馬達？單個 GPIO 的建議電流極限是多少？(提示：12mA)
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="lg:w-1/2 grid grid-cols-2 gap-4">
+                            <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
+                                <div class="text-2xl mb-2">🚥</div>
+                                <h4 class="font-bold mb-1">數位 I/O</h4>
+                                <p class="text-xs text-slate-400">High / Low 的極限二進位。</p>
+                            </div>
+                            <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
+                                <div class="text-2xl mb-2">🌊</div>
+                                <h4 class="font-bold mb-1">類比 I/O</h4>
+                                <p class="text-xs text-slate-400">ADC 讀取電壓，DAC 輸出電壓。</p>
+                            </div>
+                            <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
+                                <div class="text-2xl mb-2">🎚️</div>
+                                <h4 class="font-bold mb-1">PWM</h4>
+                                <p class="text-xs text-slate-400">用數位脈衝模擬類比輸出，馬達控速核心。</p>
+                            </div>
+                            <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
+                                <div class="text-2xl mb-2">📉</div>
+                                <h4 class="font-bold mb-1">ADC1 vs ADC2</h4>
+                                <p class="text-xs text-slate-400">注意！開啟 Wi-Fi 時 ADC2 會失效。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實作任務：驗證與規劃</h2>
+            <p class="text-center text-gray-500 mb-12">透過動手做，徹底掌握硬體的物理限制。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 1-1 -->
+                <div onclick="openSubmissionModal('basic-03-task-1', '作業 1-1: 「數位探針」：驗證引腳限制')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-red-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🔬</span>
+                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition">作業 1-1</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「數位探針」：驗證引腳限制</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
+                            挑戰 Input Only 與 Strapping 引腳。實測將 GPIO 34 設為輸出是否有效？將 GPIO 12 接地重啟會發生什麼事？
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-red-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳實驗報告</span>
+                    </div>
+                </div>
+
+                <!-- Task 1-2 -->
+                <div onclick="openSubmissionModal('basic-03-task-2', '作業 1-2: 「無人車引腳資源大規劃」')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🏎️</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">作業 1-2
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">無人車引腳資源大規劃</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
+                            針對馬達(4 PWM)、編碼器(2 中斷)、I2C 感測器，繪製出「最佳配置圖」。避開地雷，建立系統整合的全局思維。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-blue-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳配置圖</span>
+                    </div>
+                </div>
+
+                <!-- Task 1-3 -->
+                <div onclick="openSubmissionModal('basic-03-task-3', '作業 1-3: 「類比掃描儀」：ADC 精度與底噪')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">📊</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">作業 1-3
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「類比掃描儀」：ADC 精度</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
+                            測試類比引腳讀取表現。觀察 12-bit 解析度下的數值跳動，並撰寫一段「平均濾波」程式碼來優化數據。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-purple-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳程式碼單元</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2025 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 基礎 3</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/NWyoh3SYcQs",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vSJQs7A4xg09uOVW0BY1Nf_CEXY7NFZyQFrzwn-AeR3vRLj8_Wrt5BsSYotDPoL48VMm14TBa5p3yKA/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

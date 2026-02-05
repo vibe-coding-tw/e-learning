@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript 非同步編程：Fetch API 基礎 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1516116216624-53e697fedbea?q=80&w=2128&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 6 - 非同步編程
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                從等待到非同步：<br><span class="text-blue-400">JavaScript Fetch API 基礎</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                學習如何發送一個「背景請求」，讓網頁在不重新整理的情況下，優雅地與遠端伺服器交換數據。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 預習影片 (7 min)
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> Fetch API 核心筆記
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Evolution -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">⏳</span> 1. 從 XHR 到 Fetch (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <div class="space-y-6 text-gray-600 text-lg">
+                            <p>在過去，我們使用 <code>XMLHttpRequest (XHR)</code> 來處理 AJAX，但它的語法冗長且基於事件監聽，容易導致「回呼地獄 (Callback
+                                Hell)」。</p>
+                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                                <h4 class="font-bold text-slate-800 mb-2">為什麼選擇 Fetch？</h4>
+                                <ul class="list-disc list-inside space-y-2 text-base">
+                                    <li><strong>基於 Promise</strong>：結構清晰，易於鏈結。</li>
+                                    <li><strong>語義化</strong>：API 命名直覺（fetch = 去拿）。</li>
+                                    <li><strong>簡潔</strong>：減少了大量的模板代碼。</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 rounded-xl p-6 text-white overflow-x-auto">
+                            <h4 class="text-sm font-bold text-slate-400 mb-4 uppercase tracking-widest">Promise 回顧</h4>
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-4">
+                                    <span
+                                        class="w-24 px-2 py-1 rounded bg-amber-500/20 text-amber-400 text-xs font-bold text-center border border-amber-500/30">PENDING</span>
+                                    <span class="text-sm text-slate-300">請求發送中（等待回應）</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span
+                                        class="w-24 px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs font-bold text-center border border-emerald-500/30">FULFILLED</span>
+                                    <span class="text-sm text-slate-300">成功獲取數據（走 .then）</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span
+                                        class="w-24 px-2 py-1 rounded bg-red-500/20 text-red-400 text-xs font-bold text-center border border-red-500/30">REJECTED</span>
+                                    <span class="text-sm text-slate-300">出現錯誤 / 斷網（走 .catch）</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Syntax -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🔗</span> 2. Fetch 的基本語法與鏈結 (40 min)
+                    </h2>
+                    <div class="space-y-8">
+                        <p class="text-gray-600 text-lg leading-relaxed">
+                            <code>fetch()</code> 執行後會回傳一個 Promise。最關鍵的概念是：它需要<strong>兩次等待</strong>。
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="p-6 bg-indigo-50 border border-indigo-100 rounded-2xl shadow-sm">
+                                <h4 class="font-bold text-indigo-900 mb-4 flex items-center gap-2">
+                                    <span>📡</span> 第一次等待：Response Header
+                                </h4>
+                                <p class="text-sm text-indigo-800 leading-relaxed mb-4">
+                                    當伺服器回傳狀態（如 200 OK）時，Promise 就會結束進入 Fulfilled 狀態。這時我們拿到的是 <code>Response</code>
+                                    物件，包含標頭資訊。
+                                </p>
+                                <code class="block bg-white p-3 rounded-lg text-indigo-600 font-mono text-xs">
+                                    fetch(url).then(response => { ... })
+                                </code>
+                            </div>
+                            <div class="p-6 bg-purple-50 border border-purple-100 rounded-2xl shadow-sm">
+                                <h4 class="font-bold text-purple-900 mb-4 flex items-center gap-2">
+                                    <span>📦</span> 第二次等待：Data Body
+                                </h4>
+                                <p class="text-sm text-purple-800 leading-relaxed mb-4">
+                                    數據流（Body）需要時間下載與解析（如轉成 JSON）。這也是一個非同步過程，所以 <code>res.json()</code> 會回傳第二個 Promise。
+                                </p>
+                                <code class="block bg-white p-3 rounded-lg text-purple-600 font-mono text-xs">
+                                    .then(res => res.json()).then(data => { ... })
+                                </code>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 p-8 rounded-2xl text-white">
+                            <h4 class="text-emerald-400 font-bold mb-4 flex items-center gap-2">
+                                <span>🚀</span> 線上任務：基礎鏈結練習
+                            </h4>
+                            <p class="text-slate-300 mb-6">打開 DevTools Console，練習撰寫以下代碼，向一個公開 API 獲取資料：</p>
+                            <pre class="bg-slate-800 p-4 rounded-lg text-blue-300 font-mono overflow-x-auto text-sm"><code>fetch('https://jsonplaceholder.typicode.com/posts/1')
+  .then(response => response.json())
+  .then(json => console.log(json));</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Async/Await -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">✨</span> 3. Async / Await 的優雅化 (30 min)
+                    </h2>
+                    <div class="space-y-8">
+                        <p class="text-gray-600 text-lg">
+                            雖然 <code>.then()</code> 已經很好，但當邏輯複雜時，<code>async/await</code> 能讓非同步代碼看起來像同步一樣易讀。
+                        </p>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                                <h4 class="font-bold text-slate-800 mb-4">語法轉換：從 .then 到 Await</h4>
+                                <pre
+                                    class="bg-white p-4 rounded-lg border border-slate-200 text-xs font-mono text-blue-600 overflow-x-auto"><code>async function getData() {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('伺服器錯誤');
+    const data = await res.json();
+    console.log(data);
+  } catch (err) {
+    console.error('發生錯誤：', err);
+  }
+}</code></pre>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
+                                    <h4 class="font-bold text-emerald-900 mb-2">💡 關鍵提醒：檢查 response.ok</h4>
+                                    <p class="text-sm text-emerald-800">
+                                        fetch 很頑強！即使伺服器傳回 <strong>404</strong> 或
+                                        <strong>500</strong>，它<strong>不會</strong>進入 <code>catch</code>。只有在斷網或 DNS
+                                        解析失敗時才會進入 catch。因此，務必檢查 <code>response.ok</code>。
+                                    </p>
+                                </div>
+                                <div class="p-6 bg-teal-50 rounded-2xl border border-teal-100">
+                                    <h4 class="font-bold text-teal-900 mb-2">🧱 AbortController (進階)</h4>
+                                    <p class="text-sm text-teal-800">
+                                        如果網路太慢，使用者不想等了，可以使用 <code>AbortController</code> 主動中斷請求，避免資源浪費。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：打造強韌的 Web 客戶端</h2>
+            <p class="text-center text-gray-500 mb-12">掌握數據獲取、提交與容錯處理的完整流程。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 2-1 -->
+                <div onclick="openSubmissionModal('basic-06-fetch-1', '【作業 2-1】JSON 數據獲取與動態渲染')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">📄</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 2-1】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「動態資料渲染」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            從 JSONPlaceholder 獲取使用者清單，並使用 DOM 操作（如 <code>createElement</code>）將姓名與 Email 顯示在網頁上。實作
+                            Loading 載入狀態。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-blue-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳 HTML 與渲染成果</span>
+                    </div>
+                </div>
+
+                <!-- Task 2-2 -->
+                <div onclick="openSubmissionModal('basic-06-fetch-2', '【作業 2-2】POST 請求：提交自定義數據')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">📮</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業
+                            2-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「POST 數據提交」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            製作一個表單，在 Submit 時將內容轉換為 JSON 並透過 POST 傳送。練習設定 <code>method</code>, <code>headers</code> 與
+                            <code>JSON.stringify(body)</code>。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-indigo-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳 JS 代碼與回應截圖</span>
+                    </div>
+                </div>
+
+                <!-- Task 2-3 -->
+                <div onclick="openSubmissionModal('basic-06-fetch-3', '【作業 2-3】網路異常處理：斷網與逾時保護')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🛡️</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 2-3】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「強韌通訊機制」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            實作 <code>AbortController</code>，若請求超過 5 秒未回應則自動取消。並完整判斷 <code>response.ok</code> 與捕捉 Catch
+                            錯誤，提供錯誤提示 UI。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-purple-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳錯誤處理逻辑截圖</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 基礎 6</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/aYT6WydbZ60",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vT1pzKosU71-034WsjB99JcP0rYgzZOJxuxk3ktik5k10iNoURTjJbqptFx_4Sb5lKLMIy-ifwCDnpI/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLE 核心架構：GATT 協議與階層 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 5 - BLE 核心架構
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                揭開藍牙低功耗的神秘面紗：<br><span class="text-blue-400">GATT 協議與數據交換</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                掌握 BLE 的通訊階層，設計出邏輯嚴密且高效的無人車通訊協議。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 預習影片 (10 min)
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> GATT 協議手冊
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: GATT Structure -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">🏛️</span> 1. 藍牙的階層美學：GATT 結構 (20 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg">
+                                <p>GATT (Generic Attribute Profile) 定義了兩台藍牙設備如何交換數據。你可以把它想像成一個組織嚴密的圖書館：</p>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 shadow-sm">
+                                        <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">
+                                            <span>📦</span> Profile (規範)
+                                        </h4>
+                                        <p class="text-sm">設備的角色定義。例如：「一台無人車」。</p>
+                                    </div>
+                                    <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 shadow-sm">
+                                        <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
+                                            <span>📂</span> Service (服務)
+                                        </h4>
+                                        <p class="text-sm">功能分類的資料夾。例如：「動力系統」、「遙測數據」。</p>
+                                    </div>
+                                    <div class="bg-purple-50 p-6 rounded-xl border border-purple-100 shadow-sm">
+                                        <h4 class="font-bold text-purple-800 mb-3 flex items-center gap-2">
+                                            <span>📄</span> Characteristic (特徵)
+                                        </h4>
+                                        <p class="text-sm">最基本的數據檔案。例如：「馬達速度值」、「電池電量」。</p>
+                                    </div>
+                                </div>
+                                <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
+                                    <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
+                                        <span>💡</span> 學習任務
+                                    </h4>
+                                    <p class="text-base text-amber-900">
+                                        想像你要設計一台「智慧燈泡」，請嘗試列出它可能包含哪些 Service 與 Characteristic？
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: UUID -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12 items-center">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">🆔</span> 2. 身份證字號：UUID (15 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg">
+                                <p>每一個 Service 與 Characteristic 都需要一個唯一的身份證，這就是 UUID。</p>
+                                <ul class="list-disc list-inside space-y-4 text-gray-700">
+                                    <li><span class="font-bold text-purple-600">唯一識別碼：</span>128-bit
+                                        的結構確保全世界的藍牙設備功能不會互相衝突。</li>
+                                    <li><span class="font-bold text-purple-600">標準 UUID：</span>藍牙聯盟定義好的功能（如：心率計：0x180D）。
+                                    </li>
+                                    <li><span class="font-bold text-purple-600">自定義 UUID：</span>我們開發無人車時自行生成的
+                                        UUID，用於特殊功能。</li>
+                                </ul>
+                                <div class="p-4 bg-slate-900 rounded-xl border border-slate-700">
+                                    <code class="text-sm text-pink-400 font-mono">
+                                        // 範例自定義 UUID<br>
+                                        #define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"<br>
+                                        #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+                                    </code>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="md:w-1/3 text-center">
+                            <div class="bg-purple-50 p-8 rounded-3xl border-2 border-dashed border-purple-200">
+                                <div class="text-5xl mb-4">🛠️</div>
+                                <h4 class="font-bold text-purple-800 mb-2">掌握核心</h4>
+                                <p class="text-sm text-purple-600 leading-relaxed">
+                                    設計「通訊地圖」是 BLE 開發的第一步，清晰的 UUID 規劃能讓後續除錯事半功倍。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Exchange Methods -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🔄</span> 3. 數據交換的四種方式 (25 min)
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                        <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                            <h4 class="font-bold text-teal-800 mb-3 flex items-center gap-2 text-xl">
+                                <span>📥</span> Read (讀取)
+                            </h4>
+                            <p class="text-gray-600">手機主動向車子索取數據。適用於不常變動的狀態（如：韌體版本）。</p>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                            <h4 class="font-bold text-teal-800 mb-3 flex items-center gap-2 text-xl">
+                                <span>📤</span> Write (寫入)
+                            </h4>
+                            <p class="text-gray-600">手機發送指令控制車子。例如：發送「前進」指令給馬達特徵值。</p>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                            <h4 class="font-bold text-teal-800 mb-3 flex items-center gap-2 text-xl">
+                                <span>🔔</span> Notify (通知)
+                            </h4>
+                            <p class="text-gray-600">車子主動推播。例如：電量低於 10% 時自動告知手機。最高效的方式。</p>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                            <h4 class="font-bold text-teal-800 mb-3 flex items-center gap-2 text-xl">
+                                <span>✅</span> Indicate (指示)
+                            </h4>
+                            <p class="text-gray-600">類似 Notify，但需要手機回傳確認收到。更安全但較慢。</p>
+                        </div>
+                    </div>
+                    <div class="mt-12 bg-emerald-900/5 p-8 rounded-2xl border border-emerald-500/20">
+                        <h4 class="text-emerald-800 font-bold mb-3 flex items-center gap-2 text-lg">
+                            <span>🚀</span> 預習任務
+                        </h4>
+                        <p class="text-gray-700 leading-relaxed text-lg">
+                            對於「即時控制方向盤」，你覺得用 <span class="font-bold underline decoration-emerald-500">Write</span> 還是
+                            <span class="font-bold underline decoration-emerald-500">Notify</span> 比較合理？為什麼？
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：打造你的 BLE 伺服器</h2>
+            <p class="text-center text-gray-500 mb-12">從定義 Service 開始，到實現雙向高效率的數據通訊。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 1-1 -->
+                <div onclick="openSubmissionModal('basic-05-ble-1', '【作業 1-1】「定義你的無人車服務」')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🛠️</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 1-1】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「定義你的無人車服務」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            在 ESP32 上實作自定義 GATT Service。生成 UUID，建立 Motor_Control 特徵值，並使用 nRF Connect App 驗證。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-blue-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳 nRF Connect 截圖</span>
+                    </div>
+                </div>
+
+                <!-- Task 1-2 -->
+                <div onclick="openSubmissionModal('basic-05-ble-2', '【作業 1-2】「雙向對話測試」：Read & Write')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">💬</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 1-2】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「雙向對話測試」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            實作寫入控制 LED 與動態讀取 millis()。掌握字串與 Byte 陣列之間的格式轉換（如：十進位轉十六進位）。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-purple-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳程式碼片段</span>
+                    </div>
+                </div>
+
+                <!-- Task 1-3 -->
+                <div onclick="openSubmissionModal('basic-05-ble-3', '【作業 1-3】「即時遙測：實作 Notify」')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🚨</span>
+                            <span
+                                class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業
+                            1-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「即時遙測：實作 Notify」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            讓車子主動回報「虛擬轉速」。加入 NOTIFY 描述符，並調用 notify() 方法。對比「主動詢問」與「被動接收」的差異。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-emerald-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳通知測試成果</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 基礎 5</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/tHAeaVPGxXE",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vTjl_Yfcyz9WctAshISVtfLAZu2lSADFFdii_wId9TA3Ey0ifqjdrIbR1fOBGiM18jCkbjkJlThyjJo/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

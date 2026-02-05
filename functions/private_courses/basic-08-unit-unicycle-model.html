@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>差速轉換數學：Unicycle Model - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 8 - 運動學轉換
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                差速轉換數學：<br><span class="text-blue-400">Unicycle Model</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                將抽象的速度與轉向，解構成左右馬達的動力之源。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 控制背後的數學 (8 min)
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 差速驅動運動學簡介
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Unicycle Model -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🚲</span> 1. 什麼是 Unicycle Model？ (30 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <p><strong>核心概念：</strong>將車輛簡化為一個點，透過兩個參數來控制其運動模式。</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div
+                                class="bg-blue-50 p-6 rounded-xl border border-blue-100 shadow-sm transition hover:shadow-md">
+                                <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">
+                                    <span class="text-2xl">v</span> 線速度 (Linear Velocity)
+                                </h4>
+                                <p class="text-sm leading-relaxed">
+                                    代表車輛前進或後退的速度。在搖桿上，這通常對應到 <strong>Y 軸</strong>。
+                                </p>
+                            </div>
+                            <div
+                                class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 shadow-sm transition hover:shadow-md">
+                                <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
+                                    <span class="text-2xl">ω</span> 角速度 (Angular Velocity)
+                                </h4>
+                                <p class="text-sm leading-relaxed">
+                                    代表車輛旋轉或轉向的速度。在搖桿上，這通常對應到 <strong>X 軸</strong>。
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
+                            <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
+                                <span>🎯</span> 學習目標
+                            </h4>
+                            <p class="text-base text-amber-900">
+                                理解為何搖桿的垂直位移控制速度，水平位移控制旋轉，這是建立直覺操控的基礎。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Differential Drive -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-indigo-500 to-blue-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">⚙️</span> 2. 差速驅動 (Differential Drive) 原理 (30 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <p><strong>物理結構：</strong>兩輪獨立驅動。要讓車轉向，左輪與右輪必須產生「速度差」。</p>
+
+                        <div class="bg-slate-900 p-8 rounded-2xl text-white text-center shadow-2xl">
+                            <h4 class="text-blue-400 font-bold mb-6 tracking-widest uppercase">基本混合公式</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                                <div class="p-6 bg-slate-800 rounded-xl border border-slate-700">
+                                    <div class="text-3xl font-mono text-cyan-400">\[L = v - \omega\]</div>
+                                    <div class="text-xs text-gray-400 mt-2">左輪轉速</div>
+                                </div>
+                                <div class="p-6 bg-slate-800 rounded-xl border border-slate-700">
+                                    <div class="text-3xl font-mono text-indigo-400">\[R = v + \omega\]</div>
+                                    <div class="text-xs text-gray-400 mt-2">右輪轉速</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-200">
+                            <h4 class="font-bold text-emerald-800 mb-3 flex items-center gap-2">
+                                <span>🧠</span> 學習任務：腦力激盪
+                            </h4>
+                            <p class="text-gray-700 leading-relaxed">
+                                若 \(v=100\), \(\omega=50\)（代表前進中右轉），算出左、右輪各是多少？<br>
+                                <span class="text-sm text-emerald-600 italic">（提示：左輪 50, 右輪 150）</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Normalization & Limits -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🛑</span> 3. 飽和度處理與比例縮放 (20 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <div class="bg-red-50 p-6 rounded-xl border border-red-100">
+                            <h4 class="font-bold text-red-800 mb-2 flex items-center gap-2">
+                                <span>⚠️</span> 問題：當數值溢出時？
+                            </h4>
+                            <p class="text-sm">
+                                若 \(v=255\) 且 \(\omega=100\)，算出的 \(R\) 會變成 \(355\)。但馬達最大 PWM 只有
+                                \(255\)，直接裁切（Clipping）會導致轉向失靈。
+                            </p>
+                        </div>
+
+                        <h4 class="font-bold text-gray-800 mt-8 mb-4">預習概念：等比例縮放 (Normalization)</h4>
+                        <div class="bg-slate-900 p-8 rounded-2xl text-white">
+                            <div class="text-xl font-mono space-y-4">
+                                <div>\[max\_val = \max(|L|, |R|, 255)\]</div>
+                                <div class="text-blue-400">\[L_{final} = (L / max\_val) \times 255\]</div>
+                                <div class="text-indigo-400">\[R_{final} = (R / max\_val) \times 255\]</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                            <p class="text-gray-600 italic text-base">
+                                目標：即使在全速前進時，轉向指令依然能有效發揮作用，保持車輛的動態平衡。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實戰挑戰：差速驅動混合器</h2>
+            <p class="text-center text-gray-500 mb-12">將數學公式轉化為代碼，賦予機器人靈魂般的運動能力。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 2-1 -->
+                <div onclick="openSubmissionModal('basic-08-kinematics-1', '【作業 2-1】基礎差速混合器實作')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🔀</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 2-1】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「基礎差速混合器」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            編寫 <code>mix(v, w)</code> 函式。在教室進行原地旋轉測試與方向校正，確保搖桿指令與車體運動完美契合。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 2-2 -->
+                <div onclick="openSubmissionModal('basic-08-kinematics-2', '【作業 2-2】飽和度處理與比例縮放')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">⚖️</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 2-2】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「飽和度等比例限幅」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            實作等比例限幅演算法。當 \(L\) 或 \(R\) 超過 255 時進行縮放，防止全速前進時轉向失效。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 2-3 -->
+                <div onclick="openSubmissionModal('basic-08-kinematics-3', '【作業 2-3】動態響應調教')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🎚️</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 2-3】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「轉向敏感度調教」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            加入 <code>Sensitivity (K)</code> 參數。透過實驗找出最適合賽道的 K 值，將數學轉化為卓越的操控性能。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 基礎 8</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/QVXuUU--oNs",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vTAH_kBcpySOE_Il_rJgM75icqTzBHnh1ktmJQZfpx-GJk-EcpOaQpKTmuWM_cjlEbuXX7V-Gg1ijN8/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

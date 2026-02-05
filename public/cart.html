@@ -1,138 +1,90 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vibe Coding 待結帳項目</title> 
+    <title>Vibe Coding 待結帳項目</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* 統一移除按鈕樣式 */
-        .remove-cart-item-btn {
-            color: #ef4444; /* red-500 */
-            font-size: 0.75rem; /* text-xs */
-            transition: color 0.2s;
-        }
-        .remove-cart-item-btn:hover {
-            text-decoration: underline;
-            color: #b91c1c; /* red-700 */
-        }
-
-        /* 下拉選單 */
-        .dropdown:hover .dropdown-menu { display: block; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="bg-gray-50 min-h-screen">
-    <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
-        <div class="container mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <a href="index.html" class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
-                    <span>🚀</span> Vibe Coding
-                </a>
+<body class="bg-gray-50 flex flex-col min-h-screen">
+    <div id="nav-placeholder"></div>
+    <script src="js/nav-component.js?v=3"></script>
+    <script>
+        renderNav('.', { showAuth: true });
+    </script>
 
-                <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
-                    <div class="relative dropdown group">
-                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            課程連結 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="prepare.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">課前準備</a>
-                            <a href="started.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">入門課程</a>
-                            <a href="basic.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">基礎實作</a>
-                            <a href="advanced.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">進階應用</a>
-                        </div>
-                    </div>
-
-                    <div class="relative dropdown group">
-                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            組態設定 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="examples/wifi-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">WiFi 設定</a>
-                            <a href="examples/motor-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">馬達設定</a>
-                        </div>
-                    </div>
-
-                    <div class="relative dropdown group">
-                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            關於我們 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="faq.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">課程常見問題</a>
-                            <a href="about.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">關於付費與購買</a>
-                            <a href="collaboration.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">合作事宜</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center space-x-4">
-                    <a href="cart.html" class="text-gray-600 hover:text-cyan-600 transition duration-150 relative" title="前往購物車">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
-                        </svg>
-                    </a>
-                    
-                    <div id="auth-status" class="text-sm flex items-center">
-                        <span id="user-display" class="text-gray-600 hidden md:inline mr-2">訪客</span>
-                        <button id="login-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">登入</button>
-                    </div>
-
-                    <div class="md:hidden ml-2">
-                        <button id="mobile-menu-btn" class="text-gray-600 focus:outline-none p-2 border rounded hover:bg-gray-100">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-100 mt-2">
-                <div class="flex flex-col space-y-3 pt-4 font-medium text-gray-600">
-                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
-                        <p class="text-xs text-gray-400 mb-1 uppercase">課程連結</p>
-                        <a href="prepare.html" class="block py-1 hover:text-cyan-600">課前準備</a>
-                        <a href="started.html" class="block py-1 hover:text-cyan-600">入門課程</a>
-                        <a href="basic.html" class="block py-1 hover:text-cyan-600">基礎實作</a>
-                        <a href="advanced.html" class="block py-1 hover:text-cyan-600">進階應用</a>
-                    </div>
-
-                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
-                        <p class="text-xs text-gray-400 mb-1 uppercase">組態設定</p>
-                        <a href="examples/wifi-config.html" class="block py-1 hover:text-cyan-600">WiFi 設定</a>
-                        <a href="examples/motor-config.html" class="block py-1 hover:text-cyan-600">馬達設定</a>
-                    </div>
-
-                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
-                        <p class="text-xs text-gray-400 mb-1 uppercase">關於我們</p>
-                        <a href="faq.html" class="block py-1 hover:text-cyan-600">課程常見問題</a>
-                        <a href="about.html" class="block py-1 hover:text-cyan-600">關於付費與購買</a>
-                        <a href="collaboration.html" class="block py-1 hover:text-cyan-600">合作事宜</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <main class="max-w-4xl mx-auto p-6">        
+    <main class="max-w-4xl mx-auto p-6">
         <section class="bg-white p-6 rounded-lg shadow-xl mb-10">
             <h2 class="text-3xl font-extrabold text-gray-800 border-b pb-4 mb-6">待結帳項目</h2>
-            
-            <div id="auth-error-message" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+
+            <div id="auth-error-message" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4"
+                role="alert">
                 <p class="font-bold">登入失敗通知</p>
                 <p id="error-details">您的登入嘗試失敗，原因可能為瀏覽器阻擋。我們已切換到「頁面重新導向」方式，請重新點擊登入。</p>
             </div>
-            
+
             <div id="unpaid-items" class="space-y-4">
             </div>
             <p id="empty-cart-msg" class="text-gray-500 italic text-center pt-4">購物車是空的！請回到課程頁面選購。</p>
-            
+
             <div id="cart-summary" class="mt-8 pt-4 border-t-2 border-dashed border-gray-200">
                 <div class="flex justify-between items-center text-2xl font-bold text-gray-800">
                     <span>總金額 (TWD):</span>
                     <span id="cart-total">0</span>
                 </div>
                 <div id="payment-form-container" class="hidden"></div>
-                
-                <button id="checkout-btn" class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white text-lg py-3 rounded-lg disabled:opacity-50" disabled>
+
+                <!-- [NEW] Shipping Information Section -->
+                <div id="shipping-info-section" class="hidden mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">📦 收件與物流資訊 (實體商品必填)</h3>
+
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">收件人姓名</label>
+                            <input type="text" id="receiver-name"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2"
+                                placeholder="請輸入真實姓名 (需核對證件)">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">收件人手機</label>
+                            <input type="tel" id="receiver-phone"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2"
+                                placeholder="09xxxxxxxx">
+                        </div>
+
+                        <div class="pt-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">取貨門市</label>
+                            <div id="store-display" class="bg-white p-3 border rounded-md mb-2 text-sm text-gray-600">
+                                尚未選擇門市
+                            </div>
+                            <input type="hidden" id="store-id">
+                            <input type="hidden" id="store-name">
+                            <input type="hidden" id="store-address">
+
+                            <div class="flex gap-2">
+                                <button onclick="openMap('UNIMART')"
+                                    class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">選擇
+                                    7-11</button>
+                                <button onclick="openMap('FAMI')"
+                                    class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">選擇
+                                    全家</button>
+                                <button onclick="openMap('HILIFE')"
+                                    class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">選擇
+                                    萊爾富</button>
+                                <button onclick="openMap('OKMART')"
+                                    class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">選擇
+                                    OK</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="checkout-btn"
+                    class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white text-lg py-3 rounded-lg disabled:opacity-50"
+                    disabled>
                     💳 前往付款
                 </button>
             </div>
@@ -147,7 +99,7 @@
                 <a href="basic.html" class="hover:text-white">基礎實作</a>
                 <a href="advanced.html" class="hover:text-white">進階應用</a>
             </div>
-            
+
             <div class="border-t border-gray-700 pt-6">
                 <p class="text-gray-500 text-sm mb-2">&copy; 2025 Vibe Coding. All rights reserved.</p>
                 <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6 text-sm text-gray-400">
@@ -161,38 +113,32 @@
         </div>
     </footer>
 
-    <script>
-        const btn = document.getElementById('mobile-menu-btn');
-        const menu = document.getElementById('mobile-menu');
-        btn.addEventListener('click', () => {
-            menu.classList.toggle('hidden');
-        });
-    </script>
+
 
     <script type="module">
         // 1. 匯入必要的 Firebase 函式
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"; 
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
         // 2. Firebase 配置
         const firebaseConfig = {
-          apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
-          authDomain: "e-learning-942f7.firebaseapp.com",
-          projectId: "e-learning-942f7",
-          storageBucket: "e-learning-942f7.firebasestorage.app",
-          messagingSenderId: "878397058574",
-          appId: "1:878397058574:web:28aaa07a291ee3baab165f"
+            apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
+            authDomain: "e-learning-942f7.firebaseapp.com",
+            projectId: "e-learning-942f7",
+            storageBucket: "e-learning-942f7.firebasestorage.app",
+            messagingSenderId: "878397058574",
+            appId: "1:878397058574:web:28aaa07a291ee3baab165f"
         };
 
         // 3. 初始化 Firebase 服務
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);    
-        const functions = getFunctions(app, 'asia-east1'); 
-        
+        const auth = getAuth(app);
+        const functions = getFunctions(app, 'asia-east1');
+
         // 修改為通用的付款請求 Function (後端需配合修改)
         const initiatePayment = httpsCallable(functions, 'initiatePayment');
-        
+
         // 您的商店代號 (公開資訊可放在前端)
         const MERCHANT_ID = "3271550";
         // 注意：HashKey 和 HashIV 請務必設定在 Firebase Cloud Functions 的環境變數中，不要寫在這裡！
@@ -211,14 +157,14 @@
             let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             delete cart[productId];
             localStorage.setItem('vibeCodingCart', JSON.stringify(cart));
-            renderCartItems(); 
+            renderCartItems();
         }
 
         function renderCartItems() {
             const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             let total = 0;
-            
-            unpaidItemsContainer.innerHTML = ''; 
+
+            unpaidItemsContainer.innerHTML = '';
 
             if (Object.keys(cart).length === 0) {
                 emptyMsg.style.display = 'block';
@@ -263,10 +209,97 @@
         renderCartItems();
 
         // ===============================================
+        // A-2. 物流與實體商品邏輯 (新增)
+        // ===============================================
+        const shippingSection = document.getElementById('shipping-info-section');
+        const receiverNameInput = document.getElementById('receiver-name');
+        const receiverPhoneInput = document.getElementById('receiver-phone');
+        const storeDisplay = document.getElementById('store-display');
+        const storeIdInput = document.getElementById('store-id');
+        const storeNameInput = document.getElementById('store-name');
+        const storeAddressInput = document.getElementById('store-address');
+
+        // 1. 檢查是否包含實體商品
+        function checkPhysicalItems() {
+            const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
+            let hasPhysical = false;
+            for (const item of Object.values(cart)) {
+                if (item.isPhysical) {
+                    hasPhysical = true;
+                    break;
+                }
+            }
+
+            if (hasPhysical) {
+                shippingSection.classList.remove('hidden');
+            } else {
+                shippingSection.classList.add('hidden');
+            }
+            return hasPhysical;
+        }
+
+        // 頁面載入時檢查
+        const hasPhysicalGoods = checkPhysicalItems();
+
+        // 2. 處理從 Map 返回的參數
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const action = urlParams.get('action');
+            if (action === 'storeSelected') {
+                const sId = urlParams.get('storeId');
+                const sName = urlParams.get('storeName');
+                const sAddr = urlParams.get('address');
+
+                if (sId) {
+                    storeIdInput.value = sId;
+                    storeNameInput.value = sName;
+                    storeAddressInput.value = sAddr;
+                    storeDisplay.textContent = `[${sId}] ${sName} - ${sAddr}`;
+                    storeDisplay.classList.add('text-green-700', 'font-bold');
+
+                    // 恢復顯示 (因為重整後 JS 會重新執行 checkPhysicalItems)
+                    // 但我們需要確保 cart 還有東西
+                    checkPhysicalItems();
+                }
+            }
+        });
+
+        // 3. 開啟電子地圖
+        window.openMap = function (logisticsSubType) {
+            // 構建 Form POST 到綠界 Map
+            // 注意：這裡是直接 POST 到綠界，ServerReplyURL 要指向我們的 mapReply Function
+
+            const mapForm = document.createElement('form');
+            mapForm.method = 'POST';
+            mapForm.action = 'https://logistics.ecpay.com.tw/Express/map'; // 正式環境
+            // mapForm.action = 'https://logistics-stage.ecpay.com.tw/Express/map'; // 測試環境 (若需要)
+
+            const params = {
+                MerchantID: MERCHANT_ID,
+                MerchantTradeNo: 'MAP' + Date.now(), // 臨時單號
+                LogisticsType: 'CVS',
+                LogisticsSubType: logisticsSubType,
+                IsCollection: 'N',
+                ServerReplyURL: 'https://asia-east1-e-learning-942f7.cloudfunctions.net/mapReply' // 重要：回傳網址
+            };
+
+            for (const key in params) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = params[key];
+                mapForm.appendChild(input);
+            }
+
+            document.body.appendChild(mapForm);
+            mapForm.submit();
+        };
+
+        // ===============================================
         // B. 身份驗證邏輯
         // ===============================================
-        
-         async function handleLogin() {
+
+        async function handleLogin() {
             const provider = new GoogleAuthProvider();
             try {
                 await signInWithPopup(auth, provider);
@@ -277,13 +310,13 @@
 
         async function handleLogout() {
             await signOut(auth);
-            onAuthStateChanged(auth, () => {}); 
+            onAuthStateChanged(auth, () => { });
         }
-        
+
         onAuthStateChanged(auth, (user) => {
             const userDisplay = document.getElementById('user-display');
             const loginBtn = document.getElementById('login-btn');
-            
+
             if (user) {
                 userDisplay.textContent = `您好, ${user.displayName || user.email}`;
                 loginBtn.textContent = '登出';
@@ -312,7 +345,7 @@
                 alert("請先登入才能進行付款！請點擊右上角按鈕登入。");
                 return;
             }
-            
+
             const cartItems = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             const user = auth.currentUser;
 
@@ -325,15 +358,39 @@
         /**
          * 處理付款結帳流程 (綠界版)
          */
-         async function handlePaymentCheckout(user, total, cartItems) {
+        async function handlePaymentCheckout(user, total, cartItems) {
+
+            // [NEW] 驗證實體商品欄位
+            const hasPhysical = checkPhysicalItems();
+            let logisticsInfo = null;
+
+            if (hasPhysical) {
+                const rName = receiverNameInput.value.trim();
+                const rPhone = receiverPhoneInput.value.trim();
+                const sId = storeIdInput.value;
+
+                if (!rName || !rPhone || !sId) {
+                    alert('請完整填寫收件人姓名、手機並選擇取貨門市！');
+                    return;
+                }
+                logisticsInfo = {
+                    receiverName: rName,
+                    receiverPhone: rPhone,
+                    storeId: sId,
+                    storeName: storeNameInput.value,
+                    storeAddress: storeAddressInput.value
+                };
+            }
+
             checkoutBtn.disabled = true;
             checkoutBtn.textContent = '🔒 正在連接綠界金流...';
-            
+
             try {
                 const response = await initiatePayment({
                     amount: total,
                     userId: user.uid,
-                    cartDetails: cartItems, 
+                    cartDetails: cartItems,
+                    logistics: logisticsInfo, // [NEW] Pass logistics info
                     // 設定交易完成後的返回網址
                     returnUrl: window.location.origin + '/payment-return.html'
                 });
@@ -343,7 +400,7 @@
                 if (data && data.paymentParams) {
                     console.log("取得綠界參數成功，正在跳轉...");
                     checkoutBtn.textContent = '🚀 前往付款頁面...';
-                    
+
                     // 執行綠界表單提交
                     submitECPayForm(data.paymentParams, data.apiUrl);
                 } else {
@@ -356,7 +413,7 @@
                 checkoutBtn.disabled = false;
                 checkoutBtn.textContent = '💳 前往付款';
             }
-        }    
+        }
 
         /**
          * 建立並送出綠界 (ECPay) 表單
@@ -365,7 +422,7 @@
             const form = document.createElement('form');
             form.method = 'post';
             form.action = apiUrl; // 綠界的 API 網址
-            
+
             // 將後端回傳的所有參數轉為 hidden input
             for (const key in params) {
                 if (params.hasOwnProperty(key)) {
@@ -382,4 +439,5 @@
         }
     </script>
 </body>
+
 </html>

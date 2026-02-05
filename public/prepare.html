@@ -7,431 +7,422 @@
     <title>安裝課程：VS Code, Copilot, PlatformIO 環境設定</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-
-    <style>
-        /* 基礎樣式 */
-        body {
-            font-family: 'Inter', 'Segoe UI', sans-serif;
-            background-color: #f7fafc;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: auto;
-        }
-
-        .page-header h1 {
-            color: #1e3a8a;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        /* 標題底線：青色 */
-        .section-title-underline {
-            height: 4px;
-            width: 80px;
-            background-color: #06b6d4;
-            margin: 0 auto 2rem;
-            border-radius: 2px;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 30px;
-            margin-top: 30px;
-        }
-
-        .info-card {
-            background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            padding: 25px;
-            height: 100%;
-            transition: transform 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            /* 頂部邊框：青色 */
-            border-top: 4px solid #06b6d4;
-        }
-
-        .course-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
-        }
-
-        .card-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-        }
-
-        .card-header h2 {
-            margin: 0;
-            font-size: 1.5em;
-            color: #1f2937;
-            font-weight: 700;
-        }
-
-        /* Icon：青色主題 */
-        .card-icon {
-            width: 40px;
-            height: 40px;
-            background-color: #cffafe;
-            color: #0891b2;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.2em;
-            margin-right: 15px;
-            font-weight: bold;
-        }
-
-        .spec-item {
-            margin-bottom: 15px;
-            line-height: 1.5;
-            color: #4b5563;
-        }
-
-        .spec-item strong {
-            display: block;
-            color: #111827;
-            margin-bottom: 3px;
-        }
-
-        .note {
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            font-size: 0.95em;
-        }
-
-        .action-btn {
-            margin-top: auto;
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.2s;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        .hardware-img-wrapper {
-            text-align: center;
-            margin-top: 10px;
-            margin-bottom: 20px;
-        }
-
-        .hardware-img-wrapper img {
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .basic-car-crop-wrapper {
-            overflow: hidden;
-            display: block;
-            position: relative;
-            border-radius: 8px;
-        }
-
-        .basic-car-crop-wrapper::before {
-            content: "";
-            display: block;
-            padding-top: 73%;
-        }
-
-        .basic-car-crop-wrapper img {
-            position: absolute;
-            top: -42%;
-            left: 0;
-            width: 100%;
-            height: auto;
-        }
-
-        .dropdown:hover .dropdown-menu {
-            display: block;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body class="flex flex-col min-h-screen">
+    <div id="nav-placeholder"></div>
+    <script src="js/nav-component.js?v=4"></script>
+    <script>
+        renderNav('.', { showAuth: true });
+    </script>
 
-    <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
-        <div class="container mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <a href="index.html"
-                    class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
-                    <span>🚀</span> Vibe Coding
-                </a>
+    <div class="container mx-auto py-12 px-4 flex-grow">
 
-                <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
-                    <div class="relative dropdown group">
-                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            課程連結 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div
-                            class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="prepare.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">課前準備</a>
-                            <a href="started.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">入門課程</a>
-                            <a href="basic.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">基礎實作</a>
-                            <a href="advanced.html"
-                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">進階應用</a>
-                        </div>
-                    </div>
-
-                    <div class="relative dropdown group">
-                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            組態設定 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div
-                            class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="examples/wifi-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">WiFi
-                                設定</a>
-                            <a href="examples/motor-config.html"
-                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">馬達設定</a>
-                        </div>
-                    </div>
-
-                    <div class="relative dropdown group">
-                        <button class="flex items-center text-cyan-600 font-bold transition cursor-pointer py-2">
-                            關於我們 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div
-                            class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="faq.html" class="block px-4 py-2 bg-cyan-50 text-cyan-700">課程常見問題</a>
-                            <a href="about.html"
-                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">關於付費與購買</a>
-                            <a href="collaboration.html"
-                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">合作事宜</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center space-x-4">
-                    <a href="cart.html" class="text-gray-600 hover:text-cyan-600 transition duration-150 relative"
-                        title="前往購物車">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
-                        </svg>
-                    </a>
-
-                    <div id="auth-status" class="text-sm flex items-center">
-                        <span id="user-display" class="text-gray-600 hidden md:inline mr-2">訪客</span>
-                        <button id="login-btn"
-                            class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">登入</button>
-                    </div>
-
-                    <div class="md:hidden ml-2">
-                        <button id="mobile-menu-btn"
-                            class="text-gray-600 focus:outline-none p-2 border rounded hover:bg-gray-100">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 6h16M4 12h16M4 18h16"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
+        <div class="page-header text-center mb-16 relative">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-800 tracking-tight mb-6">
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500">
+                    🛠️ 上課前準備事項
+                </span>
+            </h1>
+            <div class="h-1.5 w-24 bg-gradient-to-r from-blue-600 to-cyan-400 mx-auto rounded-full mb-8 shadow-sm">
             </div>
-
-            <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-100 mt-2">
-                <div class="flex flex-col space-y-3 pt-4 font-medium text-gray-600">
-                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
-                        <p class="text-xs text-gray-400 mb-1 uppercase">課程連結</p>
-                        <a href="prepare.html" class="block py-1 hover:text-cyan-600">課前準備</a>
-                        <a href="started.html" class="block py-1 hover:text-cyan-600">入門課程</a>
-                        <a href="basic.html" class="block py-1 hover:text-cyan-600">基礎實作</a>
-                        <a href="advanced.html" class="block py-1 hover:text-cyan-600">進階應用</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container py-10 px-4 flex-grow">
-
-        <div class="page-header text-center mb-10">
-            <h1 class="text-3xl font-bold text-gray-800">🛠️ 上課前應該準備的事項</h1>
-            <div class="section-title-underline"></div>
-            <p class="text-gray-600 max-w-2xl mx-auto">為了確保您的學習體驗順暢，請在上課前完成以下軟體安裝與硬體準備。我們會引導您一步步完成。</p>
+            <p class="text-slate-600 max-w-3xl mx-auto text-lg leading-relaxed font-light">
+                工欲善其事，必先利其器。為了確保您的學習體驗順暢且高效，<br class="hidden md:block" />
+                請參照以下指南完成軟體安裝與硬體準備，我們將引導您一步步完成所有設定。
+            </p>
         </div>
 
-        <div class="info-grid">
+        <div class="info-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
 
-            <div class="info-card course-card" data-course-id="esp32-c3" data-course-name="基本款程式開發平台"
-                data-course-price="1600" data-classroom-url="https://vibe-coding.tw/esp32-c3.html">
-                <div class="card-header">
-                    <div class="card-icon">Basic</div>
-                    <h2>基本款程式開發平台</h2>
+            <!-- Card 1: Basic ESP32-C3 -->
+            <div class="info-card course-card group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col border border-slate-100"
+                data-course-id="esp32-c3" data-course-name="基本款程式開發平台" data-course-price="1600" data-is-physical="true"
+                data-classroom-url="https://vibe-coding.tw/esp32-c3.html">
+
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-teal-400 to-emerald-500"></div>
+
+                <div class="p-6 pb-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <span
+                            class="px-3 py-1 bg-teal-50 text-teal-700 text-xs font-bold uppercase tracking-wider rounded-full border border-teal-100 shadow-sm">Entry
+                            Level</span>
+                        <div class="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-teal-600">
+                            <!-- Icon: Chip -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-teal-600 transition-colors">
+                        基本款開發平台</h2>
+                    <p class="text-slate-500 text-sm mb-4 min-h-[40px] leading-relaxed">適用於物聯網入門、各類基礎感測器控制與實驗。</p>
                 </div>
-                <p class="text-gray-500 italic mb-4 text-sm">本基本款程式開發平台適用於入門、基礎課程使用。</p>
 
-                <div class="hardware-img-wrapper">
-                    <div class="basic-car-crop-wrapper">
+                <div class="px-6 mb-4">
+                    <div
+                        class="basic-car-crop-wrapper relative rounded-xl overflow-hidden shadow-sm bg-slate-50 border border-slate-200 group-hover:border-teal-200 transition-colors">
                         <img src="https://down-tw.img.susercontent.com/file/tw-11134208-81ztp-me1d6y243mdjc3"
+                            class="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500"
                             alt="基本款 ESP32-C3">
                     </div>
-                    <p class="text-xs text-gray-400 mt-2">基本款</p>
+                    <p class="text-center text-xs text-slate-400 mt-2 font-mono">Model: ESP32-C3</p>
                 </div>
 
-                <div class="spec-item">
-                    <strong>CPU：</strong> ESP32-C3
-                </div>
-                <div class="spec-item">
-                    <strong>Memory：</strong> 320K
-                </div>
-                <div class="spec-item">
-                    <strong>Flash：</strong> 4M
-                </div>
-                <button class="action-btn bg-gray-400 text-white mt-auto" disabled>
-                    載入中...
-                </button>
-            </div>
-
-            <div class="info-card course-card" data-course-id="esp32-s3" data-course-name="進階款程式開發平台"
-                data-course-price="3600" data-classroom-url="https://vibe-coding.tw/esp32-s3.html">
-                <div class="card-header">
-                    <div class="card-icon">Pro</div>
-                    <h2>進階款程式開發平台</h2>
-                </div>
-                <p class="text-gray-500 italic mb-4 text-sm">本進階款程式開發平台適用於入門、基礎、及進階課程使用。</p>
-
-                <div class="hardware-img-wrapper">
-                    <img src="https://www.kidstoylover.com/cdn/shop/files/1_adc99452-bd07-49f0-95a1-a5d7990ed0f5.jpg?v=1715839568&width=1445"
-                        style="clip-path: inset(0 0 23% 0); margin-bottom: -23%;" alt="進階款 ESP32-S3">
-                    <p class="text-xs text-gray-400 mt-2">進階款</p>
+                <div class="px-6 space-y-3 mb-8 flex-grow">
+                    <div class="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
+                        <span class="text-slate-400 font-medium">CPU Cores</span>
+                        <span class="font-semibold text-slate-700">Single Core (RISC-V)</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
+                        <span class="text-slate-400 font-medium">SRAM</span>
+                        <span class="font-semibold text-slate-700">400 KB</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
+                        <span class="text-slate-400 font-medium">Flash</span>
+                        <span class="font-semibold text-slate-700">4 MB</span>
+                    </div>
                 </div>
 
-                <div class="spec-item">
-                    <strong>CPU：</strong> ESP32-S3
-                </div>
-                <div class="spec-item">
-                    <strong>Memory：</strong> 8M
-                </div>
-                <div class="spec-item">
-                    <strong>Flash：</strong> 16M
-                </div>
-                <button class="action-btn bg-gray-400 text-white mt-auto" disabled>
-                    載入中...
-                </button>
-            </div>
-
-            <div class="info-card course-card" data-course-id="cvhofqxc" data-course-name="WiFi 組態設定"
-                data-course-price="0" data-classroom-url="https://classroom.google.com/c/ODM3MzI0ODQ5MTQy?cjc=cvhofqxc">
-                <div class="card-header">
-                    <div class="card-icon">WiFi</div>
-                    <h2>WiFi 組態設定</h2>
-                </div>
-                <p class="text-gray-500 italic mb-4 text-sm">本課程是在說明如何設定 WiFi。</p>
-
-                <div class="spec-item">
-                    <strong>WiFi 設定：</strong>
-                    設定 WiFi 的 SSID 和 Password，可以連上當地的無線網路。
-                </div>
-                <div class="note bg-green-50 text-green-800 border-l-4 border-green-500">
-                    <b>重要：</b> 點擊下方按鈕，即可進入 <b>Google Classroom</b> 進行詳細的安裝設定步驟。
-                </div>
-                <button class="action-btn bg-gray-400 text-white mt-auto" disabled>
-                    載入中...
-                </button>
-            </div>
-
-            <div class="info-card course-card" data-course-id="cvhofqxc" data-course-name="Motor 馬達組態設定"
-                data-course-price="0" data-classroom-url="https://classroom.google.com/c/ODM3MzI0ODQ5MTQy?cjc=cvhofqxc">
-                <div class="card-header">
-                    <div class="card-icon">Motor</div>
-                    <h2>Motor 馬達組態設定</h2>
-                </div>
-                <p class="text-gray-500 italic mb-4 text-sm">本課程是在說明如何設定 Motor。</p>
-
-                <div class="spec-item">
-                    <strong>Motor 設定：</strong>
-                    設定前進/後退加速馬達及左轉/右轉轉速馬達的參數。
-                </div>
-                <div class="note bg-green-50 text-green-800 border-l-4 border-green-500">
-                    <b>重要：</b> 點擊下方按鈕，即可進入 <b>Google Classroom</b> 進行詳細的安裝設定步驟。
-                </div>
-                <button class="action-btn bg-gray-400 text-white mt-auto" disabled>
-                    載入中...
-                </button>
-            </div>
-
-
-
-            <div class="info-card border-t-4 border-yellow-400">
-                <div class="card-header">
-                    <div class="card-icon bg-yellow-100 text-yellow-600">💻</div>
-                    <h2>電腦規格：最低需求</h2>
-                </div>
-                <p class="text-gray-500 italic mb-4 text-sm">此規格可順利安裝所有工具並進行基本開發。</p>
-
-                <div class="hardware-img-wrapper">
-                    <img src="https://www.apple.com/v/macbook-air/x/images/overview/hero/hero_static__c9sislzzicq6_large.png"
-                        alt="入門電腦">
-                    <p class="text-xs text-gray-400 mt-2">入門電腦示意</p>
-                </div>
-
-                <div class="spec-item">
-                    <strong>OS：</strong> Windows 10/11 (64-bit)、macOS 12+
-                </div>
-                <div class="spec-item">
-                    <strong>CPU：</strong> Intel Core i3 / AMD Ryzen 3
-                </div>
-                <div class="spec-item">
-                    <strong>RAM：</strong> 至少 <b>8 GB</b>
-                </div>
-                <div class="spec-item">
-                    <strong>Disk：</strong> 至少 5 GB 可用空間，建議 <b>SSD</b>
-                </div>
-                <div class="note bg-yellow-50 text-yellow-800 border-l-4 border-yellow-400">
-                    <b>🚀 關鍵建議：</b> 8 GB 記憶體是基本門檻，但確保擁有 <b>SSD</b> 對於提升程式載入和編譯速度至關重要。
+                <div class="p-6 pt-0 mt-auto">
+                    <button
+                        class="action-btn w-full py-3 px-4 rounded-lg font-semibold shadow-sm transition-all duration-200 bg-gray-100 text-gray-400"
+                        disabled>
+                        <span class="flex items-center justify-center gap-2">
+                            <svg class="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg"
+                                fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                            讀取資料中...
+                        </span>
+                    </button>
                 </div>
             </div>
 
-            <div class="info-card border-t-4 border-blue-500">
-                <div class="card-header">
-                    <div class="card-icon bg-blue-100 text-blue-600">🚀</div>
-                    <h2>電腦規格：建議規格</h2>
-                </div>
-                <p class="text-gray-500 italic mb-4 text-sm">此規格能確保您享受即時 AI 輔助且操作順暢。</p>
+            <!-- Card 2: Pro ESP32-S3 -->
+            <div class="info-card course-card group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col border border-slate-100"
+                data-course-id="esp32-s3" data-course-name="進階款程式開發平台" data-course-price="3600" data-is-physical="true"
+                data-classroom-url="https://vibe-coding.tw/esp32-s3.html">
 
-                <div class="hardware-img-wrapper">
-                    <img src="https://www.fetnet.net/content/dam/fetnet/user_resource/cbu/images/life-circle/tech/2023/01/mac/mac-8.jpg"
-                        alt="進階電腦">
-                    <p class="text-xs text-gray-400 mt-2">進階電腦示意</p>
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+
+                <div class="p-6 pb-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <span
+                            class="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider rounded-full border border-indigo-100 shadow-sm">Pro
+                            Level</span>
+                        <div
+                            class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors">
+                        進階款開發平台</h2>
+                    <p class="text-slate-500 text-sm mb-4 min-h-[40px] leading-relaxed">具備 AI 運算能力，適用於影像識別、語音處理等進階應用。
+                    </p>
                 </div>
 
-                <div class="spec-item">
-                    <strong>OS：</strong> Windows 11、macOS 14+
+                <div class="px-6 mb-4">
+                    <div
+                        class="relative rounded-xl overflow-hidden shadow-sm bg-slate-50 border border-slate-200 group-hover:border-indigo-200 transition-colors h-48">
+                        <img src="https://www.kidstoylover.com/cdn/shop/files/1_adc99452-bd07-49f0-95a1-a5d7990ed0f5.jpg?v=1715839568&width=1445"
+                            class="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500"
+                            style="clip-path: inset(0 0 15% 0); object-position: center bottom;" alt="進階款 ESP32-S3">
+                    </div>
+                    <p class="text-center text-xs text-slate-400 mt-2 font-mono">Model: ESP32-S3</p>
                 </div>
-                <div class="spec-item">
-                    <strong>CPU：</strong> Intel Core i5 / AMD Ryzen 5 或以上
+
+                <div class="px-6 space-y-3 mb-8 flex-grow">
+                    <div class="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
+                        <span class="text-slate-400 font-medium">CPU Cores</span>
+                        <span class="font-semibold text-slate-700">Dual Core (Xtensa®)</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
+                        <span class="text-slate-400 font-medium">SRAM</span>
+                        <span class="font-semibold text-slate-700">512 KB + 8MB PSRAM</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
+                        <span class="text-slate-400 font-medium">Flash</span>
+                        <span class="font-semibold text-slate-700">16 MB</span>
+                    </div>
                 </div>
-                <div class="spec-item">
-                    <strong>RAM：</strong> <b>16 GB</b> 或更高
+
+                <div class="p-6 pt-0 mt-auto">
+                    <button
+                        class="action-btn w-full py-3 px-4 rounded-lg font-semibold shadow-sm transition-all duration-200 bg-gray-100 text-gray-400"
+                        disabled>
+                        <span class="flex items-center justify-center gap-2">
+                            <svg class="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg"
+                                fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                            讀取資料中...
+                        </span>
+                    </button>
                 </div>
-                <div class="spec-item">
-                    <strong>Disk：</strong> <b>256 GB SSD</b> 或更大
+            </div>
+
+            <!-- Card 3: WiFi Config -->
+            <div class="info-card course-card group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col border border-slate-100"
+                data-course-id="cvhofqxc" data-course-name="WiFi 組態設定" data-course-price="0"
+                data-classroom-url="/courses/00-master-wifi-motor.html?tab=wifi">
+
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-orange-400 to-amber-500"></div>
+
+                <div class="p-6 pb-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <span
+                            class="px-3 py-1 bg-orange-50 text-orange-700 text-xs font-bold uppercase tracking-wider rounded-full border border-orange-100 shadow-sm">Setup
+                            Guide</span>
+                        <div
+                            class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                            </svg>
+                        </div>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-orange-600 transition-colors">WiFi
+                        連線設定</h2>
+                    <p class="text-slate-500 text-sm mb-4 min-h-[40px] leading-relaxed">教您如何讓開發板連上當地的無線網路，進行遠端控制。</p>
                 </div>
-                <div class="note bg-green-50 text-green-800 border-l-4 border-green-500">
-                    強烈建議選擇 <b>16 GB 記憶體</b> 的電腦，這能確保您同時處理多個應用程式和複雜專案時，獲得最佳開發體驗。
+
+                <div class="px-6 flex-grow">
+                    <div class="p-4 bg-orange-50/50 rounded-xl border border-orange-100 mb-4">
+                        <ul class="text-sm text-slate-600 space-y-2">
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-orange-500 mt-0.5 mr-2 flex-shrink-0" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                設定 SSID 與密碼
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-orange-500 mt-0.5 mr-2 flex-shrink-0" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                獲取 IP 位置
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-orange-500 mt-0.5 mr-2 flex-shrink-0" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                雲端連線測試
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div
+                        class="note bg-orange-50 text-orange-800 p-3 rounded-lg text-sm border-l-4 border-orange-400 mb-6">
+                        <b>🔥 重點提示：</b> 這是所有 IoT 專案的第一步，請務必先完成此設定。
+                    </div>
+                </div>
+
+                <div class="p-6 pt-0 mt-auto">
+                    <button
+                        class="action-btn w-full py-3 px-4 rounded-lg font-semibold shadow-sm transition-all duration-200 bg-gray-100 text-gray-400"
+                        disabled>
+                        載入中...
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card 4: Motor Config -->
+            <div class="info-card course-card group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col border border-slate-100"
+                data-course-id="cvhofqxc" data-course-name="Motor 馬達組態設定" data-course-price="0"
+                data-classroom-url="/courses/00-master-wifi-motor.html?tab=motor">
+
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-400 to-pink-500"></div>
+
+                <div class="p-6 pb-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <span
+                            class="px-3 py-1 bg-red-50 text-red-700 text-xs font-bold uppercase tracking-wider rounded-full border border-red-100 shadow-sm">Hardware
+                            Setup</span>
+                        <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                            </svg>
+                        </div>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-red-600 transition-colors">馬達參數調校
+                    </h2>
+                    <p class="text-slate-500 text-sm mb-4 min-h-[40px] leading-relaxed">調整自走車的馬達參數，確保直線行駛不偏移。</p>
+                </div>
+
+                <div class="px-6 flex-grow">
+                    <div class="p-4 bg-red-50/50 rounded-xl border border-red-100 mb-4">
+                        <ul class="text-sm text-slate-600 space-y-2">
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-red-500 mt-0.5 mr-2 flex-shrink-0" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                前進/後退速度補償
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-red-500 mt-0.5 mr-2 flex-shrink-0" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                轉彎靈敏度設定
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="note bg-red-50 text-red-800 p-3 rounded-lg text-sm border-l-4 border-red-400 mb-6">
+                        <b>⚙️ 硬體校正：</b> 因每顆馬達特性不同，必須進行個別校正以達到最佳操控手感。
+                    </div>
+                </div>
+
+                <div class="p-6 pt-0 mt-auto">
+                    <button
+                        class="action-btn w-full py-3 px-4 rounded-lg font-semibold shadow-sm transition-all duration-200 bg-gray-100 text-gray-400"
+                        disabled>
+                        載入中...
+                    </button>
+                </div>
+            </div>
+
+            <!-- Computer Specs Section -->
+            <div class="md:col-span-2 lg:col-span-4 mt-8">
+                <div class="flex items-center gap-3 mb-8">
+                    <div class="p-2 bg-slate-100 rounded-lg">
+                        <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z">
+                            </path>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-800">電腦環境規格需求</h3>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Minimum Specs -->
+                    <div
+                        class="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-slate-200 overflow-hidden relative">
+                        <div class="bg-slate-50 p-5 border-b border-slate-200 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <span class="w-3 h-3 rounded-full bg-yellow-400 ring-2 ring-yellow-100"></span>
+                                <h4 class="font-bold text-slate-700">最低配置需求</h4>
+                            </div>
+                            <span
+                                class="text-xs font-mono text-slate-500 bg-white px-2 py-1 rounded border border-slate-200">Minimum</span>
+                        </div>
+
+                        <div class="p-6">
+                            <div class="flex gap-6 mb-6">
+                                <div class="w-1/3 flex-shrink-0">
+                                    <img src="https://www.apple.com/v/macbook-air/x/images/overview/hero/hero_static__c9sislzzicq6_large.png"
+                                        class="w-full h-auto object-contain p-2" alt="入門電腦">
+                                </div>
+                                <div class="w-2/3 space-y-3 text-sm">
+                                    <div class="flex justify-between border-b border-slate-100 pb-1">
+                                        <span class="text-slate-500">OS</span>
+                                        <span class="font-medium text-slate-800 text-right">Windows 10/11
+                                            (64-bit)<br>macOS 12+</span>
+                                    </div>
+                                    <div class="flex justify-between border-b border-slate-100 pb-1">
+                                        <span class="text-slate-500">CPU</span>
+                                        <span class="font-medium text-slate-800">Intel Core i3 / Ryzen 3</span>
+                                    </div>
+                                    <div class="flex justify-between border-b border-slate-100 pb-1">
+                                        <span class="text-slate-500">RAM</span>
+                                        <span class="font-medium text-slate-800">8 GB</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                class="bg-yellow-50 text-yellow-800 p-4 rounded-xl border border-yellow-100 flex gap-3 text-sm">
+                                <svg class="w-5 h-5 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div>
+                                    <p class="font-bold mb-1">效能提醒</p>
+                                    <p>8GB 記憶體雖可運行，但在編譯程式時可能會稍顯緩慢。強烈建議配備 SSD 硬碟以改善體驗。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommended Specs -->
+                    <div
+                        class="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-blue-100 overflow-hidden relative ring-1 ring-blue-50/50">
+                        <div
+                            class="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 border-b border-blue-100 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <span class="w-3 h-3 rounded-full bg-blue-500 ring-2 ring-blue-200"></span>
+                                <h4 class="font-bold text-slate-800">建議配置需求 <span
+                                        class="text-xs font-normal text-blue-600 ml-2">(最佳體驗)</span></h4>
+                            </div>
+                            <span
+                                class="text-xs font-bold text-blue-600 bg-white px-2 py-1 rounded border border-blue-200">Recommended</span>
+                        </div>
+
+                        <div class="p-6">
+                            <div class="flex gap-6 mb-6">
+                                <div class="w-1/3 flex-shrink-0">
+                                    <img src="https://www.fetnet.net/content/dam/fetnet/user_resource/cbu/images/life-circle/tech/2023/01/mac/mac-8.jpg"
+                                        class="w-full h-auto object-contain rounded-lg shadow-sm" alt="進階電腦">
+                                </div>
+                                <div class="w-2/3 space-y-3 text-sm">
+                                    <div class="flex justify-between border-b border-blue-50 pb-1">
+                                        <span class="text-slate-500">OS</span>
+                                        <span class="font-medium text-slate-900 text-right">Windows 11<br>macOS 14
+                                            (Sonoma)+</span>
+                                    </div>
+                                    <div class="flex justify-between border-b border-blue-50 pb-1">
+                                        <span class="text-slate-500">CPU</span>
+                                        <span class="font-medium text-slate-900">i5 / Ryzen 5 或以上</span>
+                                    </div>
+                                    <div class="flex justify-between border-b border-blue-50 pb-1">
+                                        <span class="text-slate-500">RAM</span>
+                                        <span class="font-bold text-blue-600">16 GB +</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                class="bg-blue-50 text-blue-900 p-4 rounded-xl border border-blue-100 flex gap-3 text-sm">
+                                <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div>
+                                    <p class="font-bold mb-1">為何需要 16GB？</p>
+                                    <p>同時開啟 VS Code、瀏覽器教學與 AI 輔助工具時，大記憶體能確保操作絲滑流暢不卡頓。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -492,7 +483,7 @@
         // ===============================================
         // A. 購物車核心邏輯
         // ===============================================
-        function addToCart(productId, productName, productPrice) {
+        function addToCart(productId, productName, productPrice, isPhysical) {
             let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             const priceNum = parseInt(productPrice, 10);
 
@@ -503,14 +494,15 @@
             cart[productId] = {
                 name: productName,
                 price: priceNum,
-                quantity: 1
+                quantity: 1,
+                isPhysical: !!isPhysical
             };
             localStorage.setItem('vibeCodingCart', JSON.stringify(cart));
 
             return { success: true, message: `「${productName}」已成功加入購物車！` };
         }
 
-        function handleAddToCartConfirmation(courseId, courseName, coursePrice) {
+        function handleAddToCartConfirmation(courseId, courseName, coursePrice, isPhysical) {
             const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
 
             if (cart[courseId]) {
@@ -523,7 +515,7 @@
             const isConfirmed = confirm(`您確定要將「${courseName}」加入購物車嗎？\n\n價格：${priceText}`);
 
             if (isConfirmed) {
-                addToCart(courseId, courseName, coursePrice);
+                addToCart(courseId, courseName, coursePrice, isPhysical);
                 // ★★★ 移除 Alert，直接跳轉 ★★★
                 window.location.href = CART_URL;
             }
@@ -555,6 +547,7 @@
             const courseId = cardElement.dataset.courseId;
             const courseName = cardElement.dataset.courseName;
             const coursePrice = cardElement.dataset.coursePrice;
+            const isPhysical = cardElement.dataset.isPhysical === 'true';
             const classroomUrl = cardElement.dataset.classroomUrl;
             const isFreeCourse = parseInt(coursePrice, 10) === 0;
             const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`;
@@ -562,41 +555,50 @@
             btn.onclick = null;
             btn.disabled = false;
 
+            // 共用按鈕樣式 (Tailwind)
+            const baseBtnClass = 'action-btn w-full py-3 px-4 rounded-lg font-semibold shadow-sm transition-all duration-200 mt-auto';
+
             if (status === 'AUTHORIZED') {
                 btn.textContent = '✅ 進入課程內容';
-                // ★ 改為青色 (Cyan-600) 以配合頁面主題
-                btn.className = 'action-btn bg-cyan-600 hover:bg-cyan-700 text-white mt-auto';
+                btn.className = `${baseBtnClass} bg-cyan-600 hover:bg-cyan-700 text-white`;
                 btn.onclick = () => {
                     window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`;
                 };
             } else if (status === 'UNAUTHORIZED' || status === 'ERROR') {
                 if (isFreeCourse) {
                     btn.textContent = '👤 請先登入 (免費)';
-                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white mt-auto';
+                    btn.className = `${baseBtnClass} bg-indigo-600 hover:bg-indigo-700 text-white`;
                     btn.onclick = handleLogin;
                 } else {
                     btn.textContent = `🛒 加入購物車 (${priceText})`;
-                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white mt-auto';
+                    btn.className = `${baseBtnClass} bg-indigo-600 hover:bg-indigo-700 text-white`;
                     btn.onclick = () => {
-                        handleAddToCartConfirmation(courseId, courseName, coursePrice);
+                        handleAddToCartConfirmation(courseId, courseName, coursePrice, isPhysical);
                     };
                 }
             } else if (status === 'NOT_LOGGED_IN') {
                 if (isFreeCourse) {
                     btn.textContent = '👤 請先登入 (免費)';
-                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white mt-auto';
+                    btn.className = `${baseBtnClass} bg-indigo-600 hover:bg-indigo-700 text-white`;
                     btn.onclick = handleLogin;
                 } else {
                     btn.textContent = `🛒 加入購物車 (${priceText})`;
-                    btn.className = 'action-btn bg-indigo-600 hover:bg-indigo-700 text-white mt-auto';
+                    btn.className = `${baseBtnClass} bg-indigo-600 hover:bg-indigo-700 text-white`;
                     btn.onclick = () => {
-                        handleAddToCartConfirmation(courseId, courseName, coursePrice);
+                        handleAddToCartConfirmation(courseId, courseName, coursePrice, isPhysical);
                     };
                 }
 
             } else if (status === 'LOADING') {
-                btn.textContent = '載入中...';
-                btn.className = 'action-btn bg-gray-400 text-white mt-auto';
+                btn.innerHTML = `
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        讀取資料中...
+                    </span>`;
+                btn.className = `${baseBtnClass} bg-gray-100 text-gray-400 cursor-not-allowed`;
                 btn.disabled = true;
             }
         }

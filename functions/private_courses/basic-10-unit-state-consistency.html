@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 3】非同步下的狀態一致性 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 10 - 單元 3
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                <span class="text-cyan-400">非同步通訊</span><br>當你的螢幕說謊時
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                在指令發送與硬體執行之間，如何確保「網頁狀態」與「機器人現實」永遠同步？
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 高風險世界：當螢幕說謊 (12 min)
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 非同步狀態一致性策略探討
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Race Condition -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">🏁</span> 1. 競爭條件 (Race Condition) (30 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg">
+                                <p><strong>核心概念：</strong>在非同步環境下，多個操作同時發生，最終結果取決於誰「跑得快」（抵達順序）。</p>
+
+                                <div class="bg-red-50 p-6 rounded-xl border border-red-100 relative">
+                                    <h4 class="font-bold text-red-800 mb-2">場景模擬：</h4>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-red-700">
+                                        <li>網頁發送「切換至自動模式」。</li>
+                                        <li>同一時間，車子偵測到電力不足，自動切回「待機模式」。</li>
+                                        <li>如果「待機回傳」比「模式確認」早到，網頁可能會卡在錯誤的狀態。</li>
+                                    </ul>
+                                </div>
+
+                                <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
+                                    <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
+                                        <span>🎯</span> 學習目標
+                                    </h4>
+                                    <p class="text-base text-amber-900 leading-relaxed">
+                                        理解 <strong>發送順序 $\neq$ 抵達順序</strong>。在不穩定的網路中，舊的數據可能會蓋掉新的數據。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Optimistic UI -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-cyan-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">✨</span> 2. 樂觀 UI (Optimistic UI) 的代價 (20 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <p><strong>定義：</strong>點擊按鈕後立即改變介面顏色（假設成功），而不是等硬體回傳。這在社交媒體（如點讚）很常見，但在硬體控制中很危險。</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-100">
+                                <h4 class="font-bold text-emerald-800 mb-2">✅ 優點</h4>
+                                <p class="text-sm">極致的操作流暢感，使用者不會感覺到毫秒級的延遲。</p>
+                            </div>
+                            <div class="bg-rose-50 p-6 rounded-xl border border-rose-100">
+                                <h4 class="font-bold text-rose-800 mb-2">❌ 缺點</h4>
+                                <p class="text-sm">如果硬體端切換失敗，介面必須「閃回」原狀，造成使用者困惑甚至引發危險。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Polling vs Push -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-indigo-500 to-purple-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🔄</span> 3. 定時輪詢 vs. 事件推送 (20 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-4">
+                                <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
+                                    <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">
+                                        <span>❓</span> 輪詢 (Polling)
+                                    </h4>
+                                    <p class="text-sm">
+                                        網頁主動、定時地詢問：「你現在是什麼模式？」。優點是實作簡單，缺點是浪費頻寬且有同步延遲。
+                                    </p>
+                                </div>
+                                <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
+                                    <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
+                                        <span>🔔</span> 事件推送 (Push / Notify)
+                                    </h4>
+                                    <p class="text-sm">
+                                        硬體狀態一改變，主動通知網頁。優點是效率極高、低延遲，缺點是實作較複雜（需建立雙向隧道）。
+                                    </p>
+                                </div>
+                            </div>
+                            <div
+                                class="bg-slate-50 p-6 rounded-2xl border border-slate-200 flex flex-col justify-center">
+                                <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                    <span>💡</span> 預習任務：思考題
+                                </h4>
+                                <p class="text-base text-slate-700 leading-relaxed italic">
+                                    「在藍牙 (BLE) 或 WiFi 頻寬有限且網路不穩定的情況下，哪種方式較能確保顯示器與無人車的『真實狀態』一致？」
+                                </p>
+                                <div class="mt-4 text-sm text-slate-500">
+                                    提示：考慮丟包 (Packet Loss) 的情況。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：解決「同步焦慮」</h2>
+            <p class="text-center text-gray-500 mb-12">實作專業的同步策略，確保遠端操作的安全與精確。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 3-1 -->
+                <div onclick="openSubmissionModal('basic-10-sync-sequence', '【作業 3-1】實作「版本序號」同步法')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🔢</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 3-1】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「版本序號」同步法</h4>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li><strong>任務：</strong>為每一個狀態變更賦予一個遞增的 Sequence Number。</li>
+                                <li><strong>核心邏輯：</strong>網頁收到封包時，檢查序號是否大於上一次。</li>
+                                <li><strong>挑戰：</strong>模擬網路波動，觀察系統是否能自動忽略「遲到的舊資訊」。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-2 -->
+                <div onclick="openSubmissionModal('basic-10-sync-ack', '【作業 3-2】實作應答確認機制 (ACK/NACK)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">⚖️</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 3-2】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">應答確認機制 (ACK/NACK)</h4>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li><strong>任務：</strong>實作具備「超時重試」功能的發送函式。</li>
+                                <li><strong>視覺回饋：</strong>在確認收到 ACK 前，按鈕顯示「轉圈圈」動畫。</li>
+                                <li><strong>目標：</strong>消除使用者對於指令是否傳遞成功的焦慮。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-3 -->
+                <div onclick="openSubmissionModal('basic-10-sync-ssot', '【作業 3-3】真值來源 (SSoT) 重構')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-slate-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🏠</span>
+                            <span class="bg-slate-100 text-slate-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-slate-600 transition">【作業 3-3】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">真值來源 (SSoT) 重構</h4>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li><strong>任務：</strong>強制 UI 遵循「單向數據流」，嚴禁樂觀更新。</li>
+                                <li><strong>測試：</strong>對比於延遲下，兩者的操作「體感差異」。</li>
+                                <li><strong>目標：</strong>理解安全性優先場景下，「精確」重於「反應」。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 基礎 10 - 3</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/bSRF4GZHjI8", // 當你的螢幕說謊時：機器人控制的高風險世界
+            doc: "https://docs.google.com/document/d/e/2PACX-1vRT8P9woBLECRbTK0dhxf9hnfOuUIpcAVDuMfjGivWR9d2TyIkYFHAQN3JSPXw685pNJDFAqgCCxC2y/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

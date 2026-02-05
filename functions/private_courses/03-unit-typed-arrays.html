@@ -238,89 +238,112 @@
 
             <div class="grid md:grid-cols-2 gap-8">
                 <!-- Task 1: Command Encoder -->
-                <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div onclick="openSubmissionModal('typed-arrays-task-1', '作業 3-1: 馬達指令封裝')"
+                    class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden cursor-pointer relative group transition-all hover:shadow-2xl">
                     <div class="bg-emerald-500 text-white px-6 py-4 flex justify-between items-center">
                         <h3 class="font-bold text-lg">作業 3-1: 馬達指令封裝</h3>
                         <span class="text-emerald-100 text-sm font-mono">Uint8Array(2)</span>
                     </div>
                     <div class="p-6">
-                        <p class="text-gray-600 text-sm mb-6">
-                            請拖動滑桿控制左右輪速度，觀察數據如何被「打包」進 ArrayBuffer。最後產生出的 Hex Code 就是我們要透過 BLE 發送的 payload。
-                        </p>
+                        <div onclick="event.stopPropagation()" class="cursor-auto">
+                            <p class="text-gray-600 text-sm mb-6">
+                                請拖動滑桿控制左右輪速度，觀察數據如何被「打包」進 ArrayBuffer。最後產生出的 Hex Code 就是我們要透過 BLE 發送的 payload。
+                            </p>
 
-                        <div class="space-y-6 mb-6">
-                            <!-- Left Motor -->
-                            <div>
-                                <div class="flex justify-between mb-1">
-                                    <label class="text-xs font-bold text-gray-500 uppercase">Left Motor</label>
-                                    <span id="left-val" class="text-xs font-bold text-emerald-600">0</span>
+                            <div class="space-y-6 mb-6">
+                                <!-- Left Motor -->
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <label class="text-xs font-bold text-gray-500 uppercase">Left Motor</label>
+                                        <span id="left-val" class="text-xs font-bold text-emerald-600">0</span>
+                                    </div>
+                                    <input type="range" id="left-slider" min="0" max="255" value="0"
+                                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-500">
                                 </div>
-                                <input type="range" id="left-slider" min="0" max="255" value="0"
-                                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+
+                                <!-- Right Motor -->
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <label class="text-xs font-bold text-gray-500 uppercase">Right Motor</label>
+                                        <span id="right-val" class="text-xs font-bold text-emerald-600">0</span>
+                                    </div>
+                                    <input type="range" id="right-slider" min="0" max="255" value="0"
+                                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+                                </div>
                             </div>
 
-                            <!-- Right Motor -->
-                            <div>
-                                <div class="flex justify-between mb-1">
-                                    <label class="text-xs font-bold text-gray-500 uppercase">Right Motor</label>
-                                    <span id="right-val" class="text-xs font-bold text-emerald-600">0</span>
+                            <!-- Result -->
+                            <div class="bg-gray-900 p-4 rounded-lg">
+                                <div class="text-xs text-gray-400 mb-2 font-mono">Payload Preview (Hex)</div>
+                                <div class="flex gap-2 font-mono text-2xl text-white justify-center">
+                                    <span id="hex-0"
+                                        class="p-2 bg-gray-800 rounded border border-gray-600 min-w-[3rem] text-center">00</span>
+                                    <span id="hex-1"
+                                        class="p-2 bg-gray-800 rounded border border-gray-600 min-w-[3rem] text-center">00</span>
                                 </div>
-                                <input type="range" id="right-slider" min="0" max="255" value="0"
-                                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-500">
                             </div>
                         </div>
-
-                        <!-- Result -->
-                        <div class="bg-gray-900 p-4 rounded-lg">
-                            <div class="text-xs text-gray-400 mb-2 font-mono">Payload Preview (Hex)</div>
-                            <div class="flex gap-2 font-mono text-2xl text-white justify-center">
-                                <span id="hex-0"
-                                    class="p-2 bg-gray-800 rounded border border-gray-600 min-w-[3rem] text-center">00</span>
-                                <span id="hex-1"
-                                    class="p-2 bg-gray-800 rounded border border-gray-600 min-w-[3rem] text-center">00</span>
-                            </div>
-                        </div>
+                    </div>
+                    <!-- Click Hint Overlay -->
+                    <div
+                        class="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                        <span
+                            class="bg-white text-emerald-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                            📤 點擊繳交作業
+                        </span>
                     </div>
                 </div>
 
                 <!-- Task 2: Sensor Decoder -->
-                <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div onclick="openSubmissionModal('typed-arrays-task-2', '作業 3-2: 感測器數據解碼')"
+                    class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden cursor-pointer relative group transition-all hover:shadow-2xl">
                     <div class="bg-purple-600 text-white px-6 py-4 flex justify-between items-center">
                         <h3 class="font-bold text-lg">作業 3-2: 感測器數據解碼</h3>
                         <span class="text-purple-100 text-sm font-mono">DataView</span>
                     </div>
                     <div class="p-6">
-                        <p class="text-gray-600 text-sm mb-4">
-                            假設收到兩個位元組的距離數據，請練習使用 <code>DataView</code> 將其還原為整數。
-                        </p>
+                        <div onclick="event.stopPropagation()" class="cursor-auto">
+                            <p class="text-gray-600 text-sm mb-4">
+                                假設收到兩個位元組的距離數據，請練習使用 <code>DataView</code> 將其還原為整數。
+                            </p>
 
-                        <div class="flex gap-2 items-center mb-6 bg-purple-50 p-4 rounded-lg border border-purple-100">
-                            <span class="text-sm font-bold text-purple-800">收到數據 (Hex):</span>
-                            <div class="flex gap-2">
-                                <input type="text" id="decoder-hex-input" value="03 E8"
-                                    class="font-mono text-center w-24 p-1 border border-purple-300 rounded focus:outline-none focus:border-purple-500 text-purple-700 font-bold uppercase">
+                            <div
+                                class="flex gap-2 items-center mb-6 bg-purple-50 p-4 rounded-lg border border-purple-100">
+                                <span class="text-sm font-bold text-purple-800">收到數據 (Hex):</span>
+                                <div class="flex gap-2">
+                                    <input type="text" id="decoder-hex-input" value="03 E8"
+                                        class="font-mono text-center w-24 p-1 border border-purple-300 rounded focus:outline-none focus:border-purple-500 text-purple-700 font-bold uppercase">
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-800 rounded-lg p-4 font-mono text-xs text-gray-300 relative mb-4">
+                                <div class="text-gray-500 mb-2">// JavaScript Code</div>
+                                <div>const buffer = ...; // from bluetooth</div>
+                                <div>const view = new DataView(buffer);</div>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <span class="text-purple-400">const</span> distance =
+                                    <span class="text-yellow-300">view.getUint16(0);</span>
+                                </div>
+                            </div>
+
+                            <button onclick="decodeHex()"
+                                class="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold shadow transition mb-4">
+                                執行解碼
+                            </button>
+
+                            <div class="flex justify-between items-center border-t border-gray-100 pt-4">
+                                <span class="text-gray-600 font-bold">解碼結果 (mm):</span>
+                                <span id="decode-result" class="text-2xl font-bold text-gray-800">--</span>
                             </div>
                         </div>
-
-                        <div class="bg-gray-800 rounded-lg p-4 font-mono text-xs text-gray-300 relative mb-4">
-                            <div class="text-gray-500 mb-2">// JavaScript Code</div>
-                            <div>const buffer = ...; // from bluetooth</div>
-                            <div>const view = new DataView(buffer);</div>
-                            <div class="flex items-center gap-2 mt-2">
-                                <span class="text-purple-400">const</span> distance =
-                                <span class="text-yellow-300">view.getUint16(0);</span>
-                            </div>
-                        </div>
-
-                        <button onclick="decodeHex()"
-                            class="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold shadow transition mb-4">
-                            執行解碼
-                        </button>
-
-                        <div class="flex justify-between items-center border-t border-gray-100 pt-4">
-                            <span class="text-gray-600 font-bold">解碼結果 (mm):</span>
-                            <span id="decode-result" class="text-2xl font-bold text-gray-800">--</span>
-                        </div>
+                    </div>
+                    <!-- Click Hint Overlay -->
+                    <div
+                        class="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                        <span
+                            class="bg-white text-purple-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                            📤 點擊繳交作業
+                        </span>
                     </div>
                 </div>
             </div>

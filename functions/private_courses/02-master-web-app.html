@@ -15,68 +15,26 @@
 
     <!-- Navigation (Shared) -->
     <!-- Navigation (Shared) -->
-    <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
-        <div class="container mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <a href="/index.html"
-                    class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
-                    <span>🚀</span> Vibe Coding
-                </a>
-
-                <!-- Desktop Menu -->
-                <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
-                    <a href="/prepare.html" class="hover:text-cyan-600 transition">課前準備</a>
-                    <a href="/started.html" class="hover:text-cyan-600 transition">入門課程</a>
-                    <a href="/basic.html" class="hover:text-cyan-600 transition">基礎實作</a>
-                    <a href="/advanced.html" class="hover:text-cyan-600 transition">進階應用</a>
-                </div>
-
-                <!-- Mobile Menu Button -->
-                <button id="mobile-menu-btn" class="md:hidden text-gray-600 focus:outline-none">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 6h16M4 12h16m-7 6h7"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-
-        <!-- Mobile Menu Dropdown -->
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
-            <div class="flex flex-col px-4 py-2 space-y-2 font-medium text-gray-600">
-                <a href="/prepare.html" class="block py-2 hover:text-cyan-600 transition">課前準備</a>
-                <a href="/started.html" class="block py-2 hover:text-cyan-600 transition">入門課程</a>
-                <a href="/basic.html" class="block py-2 hover:text-cyan-600 transition">基礎實作</a>
-                <a href="/advanced.html" class="block py-2 hover:text-cyan-600 transition">進階應用</a>
-            </div>
-        </div>
-    </nav>
+    <div id="nav-placeholder"></div>
+    <script src="/js/nav-component.js"></script>
     <script>
-        const mobileBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-
-        if (mobileBtn && mobileMenu) {
-            mobileBtn.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-            });
-        }
+        renderNav('/');
     </script>
 
     <!-- Tab Navigation Bar -->
     <div class="bg-white border-b border-gray-200">
         <div class="container mx-auto px-4">
-            <div class="flex space-x-8 overflow-x-auto">
+            <div class="flex space-x-8 overflow-x-auto" id="course-tabs-container">
                 <button onclick="switchTab('html5')" id="tab-html5" class="tab-btn active border-b-2 whitespace-nowrap">
-                    <span class="mr-2">1️⃣</span> 學習單元 1：HTML5 基礎
+                    <span class="mr-2">1️⃣</span> HTML5 基礎
                 </button>
                 <button onclick="switchTab('flexbox')" id="tab-flexbox"
                     class="tab-btn border-b-2 border-transparent whitespace-nowrap">
-                    <span class="mr-2">2️⃣</span> 學習單元 2：Flexbox 排版
+                    <span class="mr-2">2️⃣</span> Flexbox 排版
                 </button>
                 <button onclick="switchTab('uiux')" id="tab-uiux"
                     class="tab-btn border-b-2 border-transparent whitespace-nowrap">
-                    <span class="mr-2">3️⃣</span> 學習單元 3：UI/UX 設計規範
+                    <span class="mr-2">3️⃣</span> UI/UX 設計規範
                 </button>
             </div>
         </div>
@@ -84,8 +42,8 @@
 
     <!-- Content Area (Iframe) -->
     <div class="flex-grow w-full relative">
-        <iframe id="content-frame" src="" class="w-full h-full border-0 absolute inset-0 bg-gray-50 option-opacity"
-            onload="resizeIframe(this)"></iframe>
+        <iframe id="content-frame" src=""
+            class="w-full h-full border-0 absolute inset-0 bg-gray-50 option-opacity"></iframe>
     </div>
 
     <script>
@@ -146,11 +104,9 @@
         // Auto-sizing logic for Iframe is tricky if cross-origin, but here it is same-origin.
         // However, we want the iframe to just fill the viewport minus the header.
         // CSS `absolute inset-0` on `flex-grow` container handles this if parent is flex-col h-screen.
-        function resizeIframe(obj) {
-            // Optional: if we wanted to auto-height, we would do it here. 
-            // But we are using full height flex layout, so no action needed.
-        }
     </script>
+
+    <script type="module" src="/js/master-nav.js?v=9"></script>
 </body>
 
 </html>

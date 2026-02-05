@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 3】影像品質參數 (JPEG Quality) 的權衡 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1624969862293-b749659ccc4e?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 1 - 單元 3
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                <span class="text-fuchsia-400">影像品質參數</span><br>(JPEG Quality) 的權衡
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
+                在有限的頻寬下，如何在「清晰度」與「流暢度」之間取得完美平衡？深刻理解有損壓縮對電腦視覺的影響。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> JPEG品質：人眼 vs (9 min)
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> JPEG 品質權衡與視覺演算法
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: JPEG Compression -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-fuchsia-500 to-purple-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">🎨</span> 1. JPEG 壓縮：丟棄人類看不見的資訊 (20 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg">
+                                <p><strong>有損壓縮 (Lossy Compression)：</strong>JPEG 的魔術在於它會丟棄人眼不敏感的高頻色彩資訊。這就是為什麼 JPEG
+                                    檔案重新儲存多次後會變得模糊。</p>
+                                <p><strong>量化 (Quantization)：</strong>這是控制品質的核心步驟。高品質（如 90）保留更多細節，檔案較大；低品質（如
+                                    10）壓縮率高，但會產生明顯的 8x8「方塊效應」。</p>
+
+                                <div class="bg-purple-50 p-6 rounded-xl border border-purple-100 relative">
+                                    <h4 class="font-bold text-purple-800 mb-2 flex items-center gap-2">
+                                        <span>🔍</span> 學習任務
+                                    </h4>
+                                    <p class="text-base text-purple-700 mb-2">觀察同一張圖片在 Quality 10 與 Quality 90 下的差異。</p>
+                                    <ul class="list-disc list-inside space-y-2 text-purple-700 text-base">
+                                        <li>特別注意物體的<strong>「邊緣」</strong>。</li>
+                                        <li>思考這些模糊或鋸齒狀的邊緣，對後續的<strong>「邊緣偵測」演算法</strong>會有什麼影響？</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Trade-offs -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">⚖️</span> 2. 權衡：畫質 vs. 延遲 (25 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-2">大小與速度的連鎖反應</h4>
+                                <p class="text-sm leading-relaxed mb-4">
+                                    高品質影像 $\rightarrow$ 檔案大 $\rightarrow$ 傳輸時間長 $\rightarrow$
+                                    <strong>控制延遲增加</strong>。在即時遙控車的應用中，高延遲是致命的。
+                                </p>
+                                <h4 class="font-bold text-gray-800 mb-2">計算代價</h4>
+                                <p class="text-sm leading-relaxed">
+                                    在 ESP32 上，極高畫質的壓縮不僅消耗傳輸頻寬，也需要更多的運算時間與記憶體緩衝區來進行 JPEG 編碼。
+                                </p>
+                            </div>
+                            <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 flex flex-col justify-center">
+                                <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">
+                                    <span>🧠</span> 預測思考
+                                </h4>
+                                <p class="text-blue-700 text-sm mb-3">
+                                    假設你的無線網路頻寬固定（例如 10 Mbps），如果你將 Quality 從 20 提高到 80，請預測你的 <strong>FPS（每秒幀數）</strong>
+                                    會發生什麼變化？
+                                </p>
+                                <div class="mt-2 pt-2 border-t border-blue-200 text-xs text-blue-600">
+                                    提示：檔案大小可能變成 4-5 倍，FPS 會......？
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Algorithm Sensitivity -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🤖</span> 3. 視覺演算法的敏感度 (15 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <p>並非所有演算法都需要最高畫質。選擇適當的 Q 值 (Quality) 可以節省大量頻寬而不影響功能。</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-100">
+                                <h4 class="font-bold text-emerald-800 mb-3 flex items-center gap-2">
+                                    <span>🔑</span> 關鍵概念：壓縮比 vs 頻寬
+                                </h4>
+                                <ul class="list-disc list-inside space-y-2 text-emerald-700 text-sm">
+                                    <li><strong>顏色辨識 (Color
+                                            Tracking)：</strong>通常對雜訊<strong>較不敏感</strong>。即使又糊又馬賽克，紅色還是紅色。</li>
+                                    <li><strong>形狀/邊緣辨識 (Shape/Edge
+                                            Detection)：</strong>對雜訊<strong>非常敏感</strong>。方塊效應會創造出不存在的「假邊緣」，干擾判斷。</li>
+                                    <li>Q 值的物理意義：透過捨棄<strong>高頻資訊</strong>來換取傳輸速度。</li>
+                                </ul>
+                            </div>
+                            <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                                <h4 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                    <span>💻</span> 線上任務
+                                </h4>
+                                <p class="text-sm text-gray-600 mb-4">
+                                    撰寫一段簡易 JavaScript，預習如何使用 <code>URL.createObjectURL</code> 呈現接收到的圖片
+                                    Blob，這將是後續我們在網頁上顯示串流的基礎。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實作：尋找最佳平衡點</h2>
+            <p class="text-center text-gray-500 mb-12">工程師的價值在於權衡 (Trade-off)。透過實驗找出最適合你的應用的參數。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 3-1 -->
+                <div onclick="openSubmissionModal('adv-01-quality-fps', '【作業 3-1】「品質、大小與 FPS」關聯測試')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">📊</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 3-1】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">品質、大小與 FPS 關聯測試</h4>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li><strong>變因控制：</strong>在 Web 介面切換 Quality (10, 30, 60, 90)。</li>
+                                <li><strong>量化紀錄：</strong>紀錄各等級的「平均幀大小 (KB)」與「實際 FPS」。</li>
+                                <li><strong>曲線繪製：</strong>找出「品質提升」與「頻寬消耗」的拐點 (通常 >80 後效益遞減)。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-2 -->
+                <div onclick="openSubmissionModal('adv-01-centroid-interference', '【作業 3-2】品質對「質心計算」的干擾實驗')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-cyan-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🎯</span>
+                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition">【作業 3-2】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">演算法抗噪測試</h4>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li><strong>基準測試：</strong>Quality 80 下計算循跡線質心 $x$ 座標。</li>
+                                <li><strong>壓力測試：</strong>降至 Quality 5，觀察方塊雜訊是否導致質心座標「跳動 (Jitter)」。</li>
+                                <li><strong>濾波補救：</strong>嘗試加入「影像模糊 (Blur)」預處理，觀察能否抵銷雜訊。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-3 -->
+                <div onclick="openSubmissionModal('adv-01-dynamic-quality', '【作業 3-3】「動態品質切換」策略開發')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">⚡</span>
+                            <span
+                                class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業
+                            3-3】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">動態品質切換策略</h4>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li><strong>邏輯設計：</strong>車子「靜止」時提高品質 (細節優先)；「移動」時降低品質 (低延遲優先)。</li>
+                                <li><strong>效能驗證：</strong>測試此策略是否能有效提升過彎時的反應速度。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>進階課程 1 - 單元 3</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/placeholder_video_id", // TODO: Update with actual video ID if available
+            doc: "https://docs.google.com/document/d/e/2PACX-1vRT8P9woBLECRbTK0dhxf9hnfOuUIpcAVDuMfjGivWR9d2TyIkYFHAQN3JSPXw685pNJDFAqgCCxC2y/pub?embedded=true" // Placeholder
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

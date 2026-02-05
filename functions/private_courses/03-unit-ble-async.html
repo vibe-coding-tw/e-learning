@@ -325,8 +325,8 @@ navigator.bluetooth.requestDevice({...})
 
                     <div class="grid md:grid-cols-3 gap-8">
                         <!-- Task 2-1 -->
-                        <div
-                            class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col h-full group">
+                        <div onclick="openSubmissionModal('ble-async-task-1', '作業 2-1: 「逐步點亮」狀態機實作')"
+                            class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col h-full group cursor-pointer relative">
                             <div class="bg-gradient-to-r from-blue-500 to-cyan-500 h-2"></div>
                             <div class="p-6 flex-grow">
                                 <div class="flex justify-between items-start mb-4">
@@ -347,11 +347,19 @@ navigator.bluetooth.requestDevice({...})
                                     <p class="text-sm text-gray-500">如何防止使用者在 "Connecting..." 狀態下重複點擊按鈕？</p>
                                 </div>
                             </div>
+                            <!-- Click Hint Overlay -->
+                            <div
+                                class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span
+                                    class="bg-white text-blue-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                                    📤 點擊繳交作業
+                                </span>
+                            </div>
                         </div>
 
                         <!-- Task 2-2 -->
-                        <div
-                            class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col h-full group">
+                        <div onclick="openSubmissionModal('ble-async-task-2', '作業 2-2: 處理並發與競爭 (Race Condition)')"
+                            class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col h-full group cursor-pointer relative">
                             <div class="bg-gradient-to-r from-purple-500 to-indigo-500 h-2"></div>
                             <div class="p-6 flex-grow">
                                 <div class="flex justify-between items-start mb-4">
@@ -370,11 +378,19 @@ navigator.bluetooth.requestDevice({...})
                                     <p class="text-sm text-gray-500">設計一個簡單的 Queue 或 flag 機制，確保指令依序發送。</p>
                                 </div>
                             </div>
+                            <!-- Click Hint Overlay -->
+                            <div
+                                class="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span
+                                    class="bg-white text-purple-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                                    📤 點擊繳交作業
+                                </span>
+                            </div>
                         </div>
 
                         <!-- Task 2-3 -->
-                        <div
-                            class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col h-full group">
+                        <div onclick="openSubmissionModal('ble-async-task-3', '作業 2-3: 不同步超時保護 (Timeout)')"
+                            class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col h-full group cursor-pointer relative">
                             <div class="bg-gradient-to-r from-pink-500 to-rose-500 h-2"></div>
                             <div class="p-6 flex-grow">
                                 <div class="flex justify-between items-start mb-4">
@@ -389,12 +405,20 @@ navigator.bluetooth.requestDevice({...})
                                 </p>
                                 <code
                                     class="block bg-gray-50 text-pink-600 p-2 rounded text-xs font-mono border border-gray-200 mb-4">
-                            Promise.race([connect(), timeout(10000)])
-                        </code>
+                                    Promise.race([connect(), timeout(10000)])
+                                </code>
                                 <div class="mt-auto pt-4 border-t border-gray-50">
                                     <p class="text-xs text-gray-400 font-bold uppercase mb-1">Impact</p>
                                     <p class="text-sm text-gray-500">主動中斷連線嘗試，並提示使用者「連線逾時」，而不是讓網頁轉圈圈。</p>
                                 </div>
+                            </div>
+                            <!-- Click Hint Overlay -->
+                            <div
+                                class="absolute inset-0 bg-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span
+                                    class="bg-white text-pink-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                                    📤 點擊繳交作業
+                                </span>
                             </div>
                         </div>
                     </div>

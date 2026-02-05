@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS 與安全性基礎 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 6 - 網路安全
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                瀏覽器的邊界感：<br><span class="text-blue-400">CORS 與 ESP32 安全基礎</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                解鎖跨網域限制的原理，並為你的硬體專案建立正確的安全性防禦思維。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 預習影片 (9 min)
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> CORS 核心筆記
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: What is CORS? -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🛑</span> 1. 什麼是 CORS？瀏覽器的邊界感 (30 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <div class="space-y-6 text-gray-600 text-lg">
+                            <p><strong>CORS (Cross-Origin Resource Sharing)</strong>
+                                跨來源資源共用，是一套讓瀏覽器決定是否允許網頁讀取另一個網域資料的機制。</p>
+                            <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
+                                <h4 class="font-bold text-amber-900 mb-2">同源政策 (Same-Origin Policy)</h4>
+                                <p class="text-sm text-amber-800 leading-relaxed">
+                                    為了防止惡意網站偷取你的私人資料（如銀行登入資訊），瀏覽器預設禁止「網域 A」的腳本去讀取「網域 B」的回傳內容。
+                                </p>
+                            </div>
+                            <p class="text-base">判定標準：<strong>協議 (http/https)</strong>、<strong>網域
+                                    (domain)</strong>、<strong>連接埠 (port)</strong> 只要有一個不同，就是「跨來源」。</p>
+                        </div>
+                        <div class="bg-slate-900 rounded-xl p-6 text-white overflow-x-auto">
+                            <h4 class="text-sm font-bold text-slate-400 mb-4 uppercase tracking-widest">同源判定練習</h4>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between p-2 rounded bg-slate-800">
+                                    <span
+                                        class="text-xs font-mono text-slate-300">http://vibe.com:80/a.js<br>http://vibe.com:80/b.js</span>
+                                    <span
+                                        class="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">SAME</span>
+                                </div>
+                                <div class="flex items-center justify-between p-2 rounded bg-slate-800">
+                                    <span
+                                        class="text-xs font-mono text-slate-300">https://vibe.com<br>http://vibe.com</span>
+                                    <span
+                                        class="px-2 py-1 rounded bg-red-500/20 text-red-400 text-[10px] font-bold border border-red-500/30">CROSS</span>
+                                </div>
+                                <div class="flex items-center justify-between p-2 rounded bg-slate-800">
+                                    <span
+                                        class="text-xs font-mono text-slate-300">http://vibe.com:3000<br>http://vibe.com:8080</span>
+                                    <span
+                                        class="px-2 py-1 rounded bg-red-500/20 text-red-400 text-[10px] font-bold border border-red-500/30">CROSS</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Preflight -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-indigo-500 to-blue-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🙋‍♂️</span> 2. 預檢請求 (Preflight Request) (20 min)
+                    </h2>
+                    <div class="space-y-8">
+                        <p class="text-gray-600 text-lg leading-relaxed">
+                            當你發送「複雜」請求（如 POST 或自定義 Header）時，瀏覽器會像個禮貌的小朋友，先去敲門詢問。
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="p-6 bg-indigo-50 border border-indigo-100 rounded-2xl shadow-sm">
+                                <h4 class="font-bold text-indigo-900 mb-4 flex items-center gap-2">
+                                    <span>📩</span> OPTIONS 請求
+                                </h4>
+                                <p class="text-sm text-indigo-800 leading-relaxed mb-4">
+                                    瀏覽器會自動發送一個 <code>OPTIONS</code> 請求，詢問伺服器：「我可以進來嗎？我打算用這幾種方法和標頭」。
+                                </p>
+                            </div>
+                            <div class="p-6 bg-blue-50 border border-blue-100 rounded-2xl shadow-sm">
+                                <h4 class="font-bold text-blue-900 mb-4 flex items-center gap-2">
+                                    <span>🔑</span> 伺服器的許可證
+                                </h4>
+                                <p class="text-sm text-blue-800 leading-relaxed mb-4">
+                                    伺服器必須回傳 <code>Access-Control-Allow-Origin</code>。如果伺服器說「不行」或是沒回，瀏覽器就會攔截請求。
+                                </p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 p-8 rounded-2xl text-white">
+                            <h4 class="text-emerald-400 font-bold mb-4 flex items-center gap-2">
+                                <span>🚀</span> 關鍵代碼：ESP32 配置回應標頭
+                            </h4>
+                            <p class="text-slate-300 mb-6">在 ESP32 的 Web Server 中，你需要手動加入許可標頭：</p>
+                            <pre class="bg-slate-800 p-4 rounded-lg text-blue-300 font-mono overflow-x-auto text-sm"><code>server.on("/api/control", HTTP_POST, [](AsyncWebServerRequest *request){
+  request->send(200, "text/plain", "OK");
+});
+
+// 設定全域 CORS 許可 (這僅限開發測試)
+DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "Content-Type");</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Security Defense -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-slate-700 to-slate-900"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🔐</span> 3. 基礎安全性防禦 (30 min)
+                    </h2>
+                    <div class="space-y-8">
+                        <p class="text-gray-600 text-lg">
+                            理解為什麼「能動」並不代表「安全」。
+                        </p>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="space-y-4">
+                                <div class="p-6 bg-red-50 rounded-2xl border border-red-100">
+                                    <h4 class="font-bold text-red-900 mb-2">HTTPS 的必要性</h4>
+                                    <p class="text-sm text-red-800">
+                                        在 BLE 控制或傳輸敏感資料時，加密傳輸是唯一的選擇。沒有 HTTPS，所有的指令都是「裸奔」，中間人可以輕易攔截。
+                                    </p>
+                                </div>
+                                <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200">
+                                    <h4 class="font-bold text-slate-800 mb-2">API Key 的保護</h4>
+                                    <p class="text-sm text-slate-800">
+                                        為什麼不能直接將 API 密鑰寫在前端 JS 代碼中？因為所有人按 <strong>F12</strong> 都能看到。前端是「不可信」的區域。
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="bg-indigo-950 p-6 rounded-2xl text-indigo-100 shadow-inner">
+                                <h4 class="font-bold text-white mb-4">防禦性編程思維</h4>
+                                <ul class="space-y-4 text-sm leading-relaxed">
+                                    <li class="flex gap-3">
+                                        <span class="text-indigo-400">01</span>
+                                        <span><strong>權限最小化</strong>：只開放必要的 Origins 給你的 API。</span>
+                                    </li>
+                                    <li class="flex gap-3">
+                                        <span class="text-indigo-400">02</span>
+                                        <span><strong>資料遮蔽</strong>：在前端處理顯示時，隱藏部分 Token 或密碼。</span>
+                                    </li>
+                                    <li class="flex gap-3">
+                                        <span class="text-indigo-400">03</span>
+                                        <span><strong>指令簽章</strong>：利用雜湊 (Hash) 確保指令在傳輸過程中未被竄改。</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：安全性與開發應急實踐</h2>
+            <p class="text-center text-gray-500 mb-12">掌握診斷 CORS 錯誤的能力，並實作基礎加密機制。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 3-1 -->
+                <div onclick="openSubmissionModal('basic-06-security-1', '【作業 3-1】解碼 CORS 錯誤與診斷')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-red-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🔍</span>
+                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition">【作業 3-1】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「CORS 錯誤診斷」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            嘗試用 Fetch 存取 Google 首頁。觀察控制台中的紅色錯誤訊息，並利用 Network 面板找出遺失的
+                            <code>Access-Control-Allow-Origin</code> 標頭。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-red-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳錯誤截圖與分析筆記</span>
+                    </div>
+                </div>
+
+                <!-- Task 3-2 -->
+                <div onclick="openSubmissionModal('basic-06-security-2', '【作業 3-2】開發環境的「應急方案」')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🛠️</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業
+                            3-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「應急代理方案」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            學習在開發階段（後端還沒設定 CORS 時），使用 <code>cors-anywhere</code> 代理或 Chrome 插件「Allow CORS」進行臨時解鎖測試。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-blue-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳代理連線測試截圖</span>
+                    </div>
+                </div>
+
+                <!-- Task 3-3 -->
+                <div onclick="openSubmissionModal('basic-06-security-3', '【作業 3-3】數據加密與隱私保護實踐')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-slate-800 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">💎</span>
+                            <span class="bg-slate-100 text-slate-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-slate-600 transition">【作業 3-3】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「指令雜湊簽章」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            利用 <code>SubtleCrypto</code> 對一串控制指令進行 SHA-256 加密。建立「前端不可信」的防禦性編程思維，實作簡單的資料遮蔽邏輯。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-slate-800/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-slate-800 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳 Crypto 實作代碼截圖</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 基礎 6</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/frEd9ExuOSw",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vQXCijxWdyyPG4LpqwvurXSStWdv1V3sM10gJzDvjD9XbH05gmbTPbKNTpAubcdV_BJYVaIFfMaIChl/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

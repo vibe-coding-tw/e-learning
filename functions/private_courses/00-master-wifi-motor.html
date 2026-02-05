@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 課前準備：WiFi 與 Motor 參數設定 - Vibe Coding</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+
+    <!-- Navigation (Shared) -->
+    <!-- Navigation (Shared) -->
+    <div id="nav-placeholder"></div>
+    <script src="/js/nav-component.js"></script>
+    <script>
+        renderNav('/');
+    </script>
+
+    <!-- Tab Navigation Bar -->
+    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
+                <button onclick="switchTab('wifi')" id="tab-wifi"
+                    class="tab-btn active whitespace-nowrap py-3 flex items-center gap-2">
+                    <span
+                        class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                    WiFi 組態設定
+                </button>
+                <button onclick="switchTab('motor')" id="tab-motor"
+                    class="tab-btn whitespace-nowrap py-3 flex items-center gap-2">
+                    <span
+                        class="w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                    馬達 Ramping 調校
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Area (Iframe) -->
+    <div class="flex-grow w-full relative bg-gray-100">
+        <iframe id="content-frame" src="" class="w-full h-full border-0 absolute inset-0"></iframe>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('content-frame');
+        const tabWifi = document.getElementById('tab-wifi');
+        const tabMotor = document.getElementById('tab-motor');
+
+        // Initial Load
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialTab = urlParams.get('tab');
+
+        if (initialTab === 'motor') {
+            switchTab('motor');
+        } else {
+            switchTab('wifi');
+        }
+
+        function switchTab(tab) {
+            // Helper to reset all tabs
+            [tabWifi, tabMotor].forEach(t => {
+                t.classList.remove('active', 'border-b-2', 'border-blue-600', 'text-blue-700');
+                t.classList.add('text-gray-500');
+            });
+
+            // Activate current tab
+            let currentTabBtn;
+            let url;
+
+            if (tab === 'wifi') {
+                currentTabBtn = tabWifi;
+                url = '00-unit-wifi-setup.html';
+            } else if (tab === 'motor') {
+                currentTabBtn = tabMotor;
+                url = '00-unit-motor-ramping.html';
+            }
+
+            if (currentTabBtn) {
+                currentTabBtn.classList.add('active', 'border-b-2', 'border-blue-600', 'text-blue-700');
+                currentTabBtn.classList.remove('text-gray-500');
+                loadContent(url);
+            }
+        }
+
+        function loadContent(url) {
+            // Pass current query parameters to children (e.g., ?token=xyz)
+            const separator = url.includes('?') ? '&' : '?';
+            const query = window.location.search.substring(1);
+
+            iframe.src = query ? `${url}${separator}${query}` : url;
+        }
+    </script>
+    <script type="module" src="/js/master-nav.js?v=9"></script>
+</body>
+
+</html>

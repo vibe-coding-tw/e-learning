@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arduino OTA & Web OTA 原理 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .flow-diagram {
+            background: #f1f5f9;
+            border: 2px dashed #cbd5e1;
+            border-radius: 1rem;
+            padding: 2rem;
+        }
+
+        .ota-partition {
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            font-family: 'Outfit', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1558494949-ef010cbdcc48?q=80&w=2832&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-sm font-semibold mb-6 tracking-wide">Learning
+                Unit 2</span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                Arduino OTA 與 Web OTA 原理 <br><span class="text-indigo-400">Firmware Over-the-Air</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                無線進化的核心：讓你的硬體像軟體一樣隨時更新。<br>
+                <span class="text-base text-gray-300 mt-2 block">理解 A/B 分區機制，打造「絕不變磚」的更新流程。</span>
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/F712Ip6ZahQ')"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button
+                    onclick="enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vRpIzcvUuG1v9PIDOpLKxqXBPykCMlhXq9duH_N6ZOZFUeyNwQBGnr3XQzHu1fCpMsnUb4-WsKGc-3U/pub?embedded=true')"
+                    class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Content Container -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: OTA Core -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+                        <span class="text-4xl">🔄</span> OTA 的核心：雙分區機制 (20 min)
+                    </h2>
+                    <p class="text-gray-500 mb-8 text-lg">如何確保更新過程中斷電，機器也不會壞掉？</p>
+
+                    <div class="grid lg:grid-cols-2 gap-10">
+                        <div class="space-y-6">
+                            <div class="flex gap-4">
+                                <div
+                                    class="bg-indigo-100 text-indigo-600 w-12 h-12 rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                                    1</div>
+                                <div>
+                                    <h3 class="font-bold text-lg mb-1">預防「磚頭化」 (Bricking)</h3>
+                                    <p class="text-gray-600">絕不能直接覆蓋正在執行的程式！OTA 採用「先下載到備份區，驗證成功後再切換」的策略。</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4">
+                                <div
+                                    class="bg-indigo-100 text-indigo-600 w-12 h-12 rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                                    2</div>
+                                <div>
+                                    <h3 class="font-bold text-lg mb-1">分區切換 (A/B Partition)</h3>
+                                    <p class="text-gray-600">ESP32 將 Flash 分為 app0 與 app1。當 app0 正在執行時，OTA 會將新韌體寫入
+                                        app1。反之亦然。</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4">
+                                <div
+                                    class="bg-indigo-100 text-indigo-600 w-12 h-12 rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                                    3</div>
+                                <div>
+                                    <h3 class="font-bold text-lg mb-1">驗證與啟動標記</h3>
+                                    <p class="text-gray-600">寫入完成後會檢查 Checksum。成功後修改 `otadata` 分區，指引下次開機從新分區啟動。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 p-6 rounded-2xl border border-gray-200">
+                            <h4 class="font-bold mb-4 text-center">OTA 運作示意圖</h4>
+                            <div class="space-y-4">
+                                <div class="ota-partition bg-blue-500 text-white shadow-md">App 0 (正在執行)</div>
+                                <div class="flex justify-center text-2xl">⬇️ <span
+                                        class="text-sm self-center ml-2 text-gray-400">寫入新數據</span></div>
+                                <div
+                                    class="ota-partition bg-gray-200 text-gray-400 border-2 border-dashed border-gray-300">
+                                    App 1 (待更新區)</div>
+                                <div
+                                    class="mt-4 p-3 bg-yellow-50 rounded border border-yellow-200 text-xs text-yellow-700">
+                                    <strong>學習任務：</strong> 查閱分區表，思考為何 OTA 功能至少需要 Flash 總容量兩倍以上的 App 空間？
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Web OTA Flow -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🌐</span> Web OTA 的傳輸流程 (25 min)
+                    </h2>
+
+                    <div class="grid md:grid-cols-3 gap-6 mb-8">
+                        <div class="p-5 rounded-xl bg-emerald-50 border border-emerald-100">
+                            <h3 class="font-bold text-emerald-800 mb-2">1. HTTP POST</h3>
+                            <p class="text-sm text-emerald-700">Web OTA 本質上是將 .bin 檔案透過瀏覽器的 `FormData` 上傳到 ESP32 的特定路由。
+                            </p>
+                        </div>
+                        <div class="p-5 rounded-xl bg-blue-50 border border-blue-100">
+                            <h3 class="font-bold text-blue-800 mb-2">2. 串流寫入</h3>
+                            <p class="text-sm text-blue-700">ESP32 收到數據時，直接調用 `Update.write()` 將二進制流寫入 Flash 的特定地址。</p>
+                        </div>
+                        <div class="p-5 rounded-xl bg-purple-50 border border-purple-100">
+                            <h3 class="font-bold text-purple-800 mb-2">3. 進度回報</h3>
+                            <p class="text-sm text-purple-700">透過 JavaScript 的 `XMLHttpRequest` 監聽 `progress`
+                                事件，實現視覺化進度條。</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 rounded-xl p-6 overflow-hidden relative">
+                        <div class="absolute top-4 right-4 text-xs text-slate-500 font-mono">browser-upload.js</div>
+                        <h4 class="text-white font-bold mb-4">前端進度監聽範例</h4>
+                        <div class="code-block">
+                            xhr.upload.addEventListener('progress', function(e) {<br>
+                            &nbsp;&nbsp;if (e.lengthComputable) {<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;const percent = Math.round((e.loaded / e.total) * 100);<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;progressBar.style.width = percent + '%';<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;statusText.innerText = `上傳中: ${percent}%`;<br>
+                            &nbsp;&nbsp;}<br>
+                            });
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Security -->
+        <section class="module-section mb-16">
+            <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-xl overflow-hidden text-white">
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col lg:flex-row gap-10">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+                                <span class="text-4xl">🔐</span> 安全與驗證 (15 min)
+                            </h2>
+                            <p class="text-gray-300 mb-6 leading-relaxed">
+                                如果隨便一個連上 Wi-Fi 的人都能上傳韌體，會發生什麼事？安全機制是生產等級產品的必修課。
+                            </p>
+                            <ul class="space-y-4">
+                                <li class="flex items-start gap-3">
+                                    <span class="text-emerald-400">✔</span>
+                                    <span><strong>身份驗證：</strong> 在更新頁面前增加密碼彈窗或 Token 驗證。</span>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <span class="text-emerald-400">✔</span>
+                                    <span><strong>mDNS (網路發現)：</strong> 讓設備在網路上以 `esp32.local` 身份出現。</span>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <span class="text-emerald-400">✔</span>
+                                    <span><strong>ElegantOTA：</strong> 解析此庫如何封裝 驗證 -> 寫入 -> 切換 的過程。</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="lg:w-1/3 bg-slate-700/40 p-6 rounded-xl border border-slate-600">
+                            <h4 class="font-bold text-blue-300 mb-4">線上任務</h4>
+                            <p class="text-sm text-gray-300 mb-4">
+                                預習如何在代碼中加入：
+                            </p>
+                            <div class="code-block text-xs py-3 px-4 mb-4">
+                                ElegantOTA.begin(&server);<br>
+                                ElegantOTA.onStart(onOTAStart);<br>
+                                ElegantOTA.onEnd(onOTAEnd);
+                            </div>
+                            <p class="text-xs text-slate-400">
+                                思考：如何實作簡單的密碼驗證或硬體 ID 比對，防止非法更新？
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 4: Homework -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-10 font-[Outfit]">實作挑戰：OTA 更新核心</h2>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 2-1 -->
+                <div onclick="openSubmissionModal('esp32-ota-task-1', '作業 2-1: 「無線進化」實作基礎 Web Server OTA')"
+                    class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-1.5"></div>
+                    <div class="p-6 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">📡</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">作業 2-1
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「無線進化」</h4>
+                        <p class="text-sm text-gray-600 mb-4">
+                            在 ESP32 上建立 `/update` 路由，並撰寫一個包含 `<input type="file">` 的 HTML 頁面進行實機韌體更新測試。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-indigo-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳作業</span>
+                    </div>
+                </div>
+
+                <!-- Task 2-2 -->
+                <div onclick="openSubmissionModal('esp32-ota-task-2', '作業 2-2: 「更新進度條」視覺化用戶體驗')"
+                    class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-emerald-500 h-1.5"></div>
+                    <div class="p-6 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">📊</span>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">作業 2-2
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「更新進度條」</h4>
+                        <p class="text-sm text-gray-600 mb-4">
+                            使用 JavaScript XHR 監聽 `progress` 事件，並實作 CSS 進度條。當更新成功時顯示「重啟中...」。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-emerald-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳作業</span>
+                    </div>
+                </div>
+
+                <!-- Task 2-3 -->
+                <div onclick="openSubmissionModal('esp32-ota-task-3', '作業 2-3: 「斷點續傳與安全性挑戰」')"
+                    class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-slate-800 h-1.5"></div>
+                    <div class="p-6 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🛡️</span>
+                            <span class="bg-slate-100 text-slate-700 text-xs px-2 py-1 rounded font-bold">45 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-slate-600 transition">作業 2-3
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「安全防線」</h4>
+                        <p class="text-sm text-gray-600 mb-4">
+                            增加密碼驗證邏輯，並模擬斷網環境測試 ESP32 是否能優雅地清理緩衝區而不當機。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-slate-800/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-slate-800 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳作業</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-8 border-t border-gray-700 mt-10">
+        <div class="container mx-auto px-4 text-center">
+            <div class="border-t border-gray-700 pt-6">
+                <p class="text-gray-500 text-sm mb-2">&copy; 2025 Vibe Coding. All rights reserved.</p>
+                <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6 text-sm text-gray-400">
+                    <span>課程教材 - 內部使用</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/F712Ip6ZahQ",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vRpIzcvUuG1v9PIDOpLKxqXBPykCMlhXq9duH_N6ZOZFUeyNwQBGnr3XQzHu1fCpMsnUb4-WsKGc-3U/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

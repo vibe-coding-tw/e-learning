@@ -8,246 +8,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 
-    <style>
-        /* 基礎樣式 */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7fafc;
-            color: #333;
-        }
-
-        .page-header h1 {
-            color: #1e3a8a;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        /* 標題底線改為藍色 */
-        .section-title-underline {
-            height: 4px;
-            width: 80px;
-            background-color: #3b82f6;
-            margin: 0 auto 2rem;
-            border-radius: 2px;
-        }
-
-        /* 卡片樣式 */
-        .lesson-card {
-            background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            /* 頂部邊框改為藍色 */
-            border-top: 4px solid #3b82f6;
-        }
-
-        .lesson-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-
-        /* 卡片標題背景改為淺藍 */
-        .lesson-header {
-            background-color: #eff6ff;
-            padding: 15px 20px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        /* 卡片標題文字改為深藍 */
-        .lesson-header h2 {
-            margin: 0;
-            font-size: 1.25em;
-            color: #1e3a8a;
-            font-weight: 700;
-        }
-
-        .lesson-body {
-            padding: 20px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Icon 背景改為藍色 */
-        .lesson-icon {
-            width: 50px;
-            height: 50px;
-            background-color: #3b82f6;
-            color: #fff;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 2em;
-            margin-bottom: 15px;
-        }
-
-        .action-btn {
-            padding: 10px;
-            border-radius: 6px;
-            font-weight: 600;
-            transition: background-color 0.2s;
-            cursor: pointer;
-        }
-
-        /* 播放器與其他樣式 */
-        #video-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 9999;
-            background-color: black;
-        }
-
-        #video-overlay iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .close-video-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 10000;
-            background-color: rgba(0, 0, 0, 0.6);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50px;
-            padding: 8px 16px;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            backdrop-filter: blur(4px);
-        }
-
-        /* 下拉選單 */
-        .dropdown:hover .dropdown-menu {
-            display: block;
-        }
-
-        @media (max-width: 768px) {
-            .close-video-btn {
-                top: 15px;
-                right: 15px;
-                padding: 10px 20px;
-                font-size: 18px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="flex flex-col min-h-screen">
-    <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
-        <div class="container mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <a href="index.html"
-                    class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
-                    <span>🚀</span> Vibe Coding
-                </a>
-
-                <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
-                    <div class="relative dropdown group">
-                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            課程連結 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div
-                            class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="prepare.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">課前準備</a>
-                            <a href="started.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">入門課程</a>
-                            <a href="basic.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">基礎實作</a>
-                            <a href="advanced.html"
-                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">進階應用</a>
-                        </div>
-                    </div>
-
-                    <div class="relative dropdown group">
-                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            組態設定 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div
-                            class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="examples/wifi-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">WiFi
-                                設定</a>
-                            <a href="examples/motor-config.html"
-                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">馬達設定</a>
-                        </div>
-                    </div>
-
-                    <div class="relative dropdown group">
-                        <button class="flex items-center text-cyan-600 font-bold transition cursor-pointer py-2">
-                            關於我們 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div
-                            class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="faq.html" class="block px-4 py-2 bg-cyan-50 text-cyan-700">課程常見問題</a>
-                            <a href="about.html"
-                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">關於付費與購買</a>
-                            <a href="collaboration.html"
-                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">合作事宜</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center space-x-4">
-                    <a href="cart.html" class="text-gray-600 hover:text-cyan-600 transition duration-150 relative"
-                        title="前往購物車">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
-                        </svg>
-                    </a>
-
-                    <div id="auth-status" class="text-sm flex items-center">
-                        <span id="user-display" class="text-gray-600 hidden md:inline mr-2">訪客</span>
-                        <button id="login-btn"
-                            class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">登入</button>
-                    </div>
-
-                    <div class="md:hidden ml-2">
-                        <button id="mobile-menu-btn"
-                            class="text-gray-600 focus:outline-none p-2 border rounded hover:bg-gray-100">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 6h16M4 12h16M4 18h16"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-100 mt-2">
-                <div class="flex flex-col space-y-3 pt-4 font-medium text-gray-600">
-                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
-                        <p class="text-xs text-gray-400 mb-1 uppercase">課程連結</p>
-                        <a href="prepare.html" class="block py-1 hover:text-cyan-600">課前準備</a>
-                        <a href="started.html" class="block py-1 hover:text-cyan-600">入門課程</a>
-                        <a href="basic.html" class="block py-1 hover:text-cyan-600">基礎實作</a>
-                        <a href="advanced.html" class="block py-1 hover:text-cyan-600">進階應用</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+<body id="page-started" class="flex flex-col min-h-screen">
+    <div id="nav-placeholder"></div>
+    <script src="js/nav-component.js?v=3"></script>
+    <script src="course-shared.js?v=3"></script> <!-- Added Shared Logic -->
+    <script>
+        renderNav('.', { showAuth: true });
+    </script>
 
     <div class="container mx-auto px-4 py-8 flex-grow">
         <div class="page-header text-center mb-10">
@@ -258,7 +28,7 @@
         <div id="lesson-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
         </div>
 
-        <div id="video-overlay"></div>
+        <!-- #video-overlay removed (handled by course-shared.js) -->
     </div>
 
     <footer class="bg-gray-800 py-8 border-t border-gray-700 mt-10">
@@ -314,8 +84,9 @@
                     ? '免費'
                     : `NT$ ${parseInt(lesson.price).toLocaleString()}`;
 
+                // Use enterMediaMode from course-shared.js
                 const videoButtonHtml = lesson.videoId ? `
-                    <button onclick="playFullScreenVideo('${lesson.videoId}')" 
+                    <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/${lesson.videoId}?autoplay=1&enablejsapi=1')" 
                         class="flex-1 py-2 px-3 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
                         課程預覽
@@ -328,6 +99,7 @@
                          data-course-id="${lesson.courseId}" 
                          data-course-name="${lesson.title}" 
                          data-course-price="${lesson.price}" 
+                         data-is-physical="${lesson.isPhysical || false}"
                          data-classroom-url="${lesson.classroomUrl}">
                 
                         <div class="lesson-header mb-4 border-b pb-3">
@@ -373,35 +145,6 @@
                 window.updateAuthUI();
             }
         }
-
-        let isListenerAttached = false;
-        function playFullScreenVideo(videoId) {
-            const container = document.getElementById('video-overlay');
-            container.style.display = 'block';
-            container.innerHTML = `
-                <button class="close-video-btn" onclick="forceCloseVideo()">✕ 關閉影片</button>
-                <iframe id="yt-player-frame" src="https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1" allowfullscreen></iframe>
-            `;
-            const iframe = document.getElementById('yt-player-frame');
-            if (iframe.requestFullscreen) iframe.requestFullscreen();
-
-            if (!isListenerAttached) {
-                document.addEventListener('fullscreenchange', checkFullscreenStatus);
-                isListenerAttached = true;
-            }
-        }
-        function forceCloseVideo() {
-            if (document.exitFullscreen) document.exitFullscreen().catch(() => cleanupVideo());
-            else cleanupVideo();
-        }
-        function checkFullscreenStatus() {
-            if (!document.fullscreenElement) cleanupVideo();
-        }
-        function cleanupVideo() {
-            const container = document.getElementById('video-overlay');
-            container.innerHTML = '';
-            container.style.display = 'none';
-        }
     </script>
 
     <script type="module">
@@ -425,19 +168,19 @@
         const CART_URL = 'cart.html';
         const AUTH_URL = 'auth.html?v=' + new Date().getTime(); // Prevent cache
 
-        function addToCart(productId, productName, productPrice) {
+        function addToCart(productId, productName, productPrice, isPhysical) {
             let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             if (cart[productId]) return { success: false };
-            cart[productId] = { name: productName, price: parseInt(productPrice, 10), quantity: 1 };
+            cart[productId] = { name: productName, price: parseInt(productPrice, 10), quantity: 1, isPhysical: !!isPhysical };
             localStorage.setItem('vibeCodingCart', JSON.stringify(cart));
             return { success: true };
         }
 
-        window.handleAddToCartConfirmation = function (courseId, courseName, coursePrice) {
+        window.handleAddToCartConfirmation = function (courseId, courseName, coursePrice, isPhysical) {
             const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             if (cart[courseId]) { alert(`⚠️ 「${courseName}」已在購物車中！`); return; }
             if (confirm(`您確定要將課程「${courseName}」加入購物車嗎？`)) {
-                addToCart(courseId, courseName, coursePrice);
+                addToCart(courseId, courseName, coursePrice, isPhysical);
                 // ★★★ 移除 Alert，直接跳轉 ★★★
                 window.location.href = CART_URL;
             }
@@ -453,6 +196,7 @@
             const courseId = cardElement.dataset.courseId;
             const courseName = cardElement.dataset.courseName;
             const coursePrice = cardElement.dataset.coursePrice;
+            const isPhysical = cardElement.dataset.isPhysical === 'true';
             const classroomUrl = cardElement.dataset.classroomUrl;
 
             const isFreeCourse = parseInt(coursePrice, 10) === 0;
@@ -478,7 +222,7 @@
                 } else {
                     btn.textContent = `🛒 加入購物車`;
                     btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
-                    btn.onclick = () => window.handleAddToCartConfirmation(courseId, courseName, coursePrice);
+                    btn.onclick = () => window.handleAddToCartConfirmation(courseId, courseName, coursePrice, isPhysical);
                 }
 
             } else if (status === 'LOADING') {

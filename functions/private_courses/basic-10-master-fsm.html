@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基礎 10: 雙模式遙控器設計與狀態切換 - Vibe Coding</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+
+    <!-- Navigation (Shared) -->
+    <div id="nav-placeholder"></div>
+    <script src="/js/nav-component.js"></script>
+    <script>
+        renderNav('/');
+    </script>
+
+    <!-- Tab Navigation Bar -->
+    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
+                <button onclick="switchTab('fsm-basics')" id="tab-fsm-basics"
+                    class="tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2">
+                    <span class="mr-2">1️⃣</span>有限狀態機 (FSM) 入門
+                </button>
+                <button onclick="switchTab('ui-design')" id="tab-ui-design"
+                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
+                    <span class="mr-2">2️⃣</span>網頁端模式控制介面設計
+                </button>
+                <button onclick="switchTab('state-consistency')" id="tab-state-consistency"
+                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
+                    <span class="mr-2">3️⃣</span>非同步下狀態一致性
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Area (Iframe) -->
+    <div class="flex-grow w-full relative">
+        <iframe id="content-frame" src=""
+            class="w-full h-full border-0 absolute inset-0 bg-gray-50 transition-opacity duration-300"
+            style="opacity: 0;" onload="this.style.opacity = '1'"></iframe>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('content-frame');
+        const tabFsm = document.getElementById('tab-fsm-basics');
+        const tabUi = document.getElementById('tab-ui-design');
+        const tabSync = document.getElementById('tab-state-consistency');
+
+        // Initial Load
+        loadContent('basic-10-unit-fsm.html');
+
+        function switchTab(tab) {
+            // Reset all tabs
+            [tabFsm, tabUi, tabSync].forEach(t => {
+                t.classList.remove('text-blue-600', 'border-blue-600', 'active');
+                t.classList.add('text-gray-500', 'border-transparent');
+            });
+
+            if (tab === 'fsm-basics') {
+                tabFsm.classList.add('text-blue-600', 'border-blue-600', 'active');
+                tabFsm.classList.remove('text-gray-500', 'border-transparent');
+                loadContent('basic-10-unit-fsm.html');
+            } else if (tab === 'ui-design') {
+                tabUi.classList.add('text-blue-600', 'border-blue-600', 'active');
+                tabUi.classList.remove('text-gray-500', 'border-transparent');
+                loadContent('basic-10-unit-ui-design.html');
+            } else if (tab === 'state-consistency') {
+                tabSync.classList.add('text-blue-600', 'border-blue-600', 'active');
+                tabSync.classList.remove('text-gray-500', 'border-transparent');
+                loadContent('basic-10-unit-state-consistency.html');
+            }
+        }
+
+        function loadContent(url) {
+            iframe.style.opacity = '0';
+            setTimeout(() => {
+                const separator = url.includes('?') ? '&' : '?';
+                const query = window.location.search.substring(1);
+                iframe.src = query ? `${url}${separator}${query}` : url;
+            }, 300);
+        }
+    </script>
+    <script type="module" src="/js/master-nav.js?v=11"></script>
+
+</body>
+
+</html>

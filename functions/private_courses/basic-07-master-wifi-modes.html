@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基礎 7: Wi-Fi 雙模式與 AP/STA 切換 - Vibe Coding</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+
+    <!-- Navigation (Shared) -->
+    <div id="nav-placeholder"></div>
+    <script src="/js/nav-component.js"></script>
+    <script>
+        renderNav('/');
+    </script>
+
+    <!-- Tab Navigation Bar -->
+    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
+                <button onclick="switchTab('wifi-ap-sta')" id="tab-wifi-ap-sta"
+                    class="tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2">
+                    <span class="mr-2">1️⃣</span>AP vs. STA 模式解析
+                </button>
+                <button onclick="switchTab('http-lifecycle')" id="tab-http-lifecycle"
+                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
+                    <span class="mr-2">2️⃣</span>HTTP 協議與請求生命週期
+                </button>
+                <button onclick="switchTab('async-webserver')" id="tab-async-webserver"
+                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
+                    <span class="mr-2">3️⃣</span>ESP32 Web Server 函式庫
+                </button>
+                <!-- Add more units here in the future -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Area (Iframe) -->
+    <div class="flex-grow w-full relative">
+        <iframe id="content-frame" src=""
+            class="w-full h-full border-0 absolute inset-0 bg-gray-50 transition-opacity duration-300"
+            style="opacity: 0;" onload="this.style.opacity = '1'"></iframe>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('content-frame');
+        const tabWifi = document.getElementById('tab-wifi-ap-sta');
+        const tabHttp = document.getElementById('tab-http-lifecycle');
+        const tabAsync = document.getElementById('tab-async-webserver');
+
+        // Initial Load
+        loadContent('basic-07-unit-wifi-ap-sta.html');
+
+        function switchTab(tab) {
+            // Reset all tabs
+            [tabWifi, tabHttp, tabAsync].forEach(t => {
+                t.classList.remove('text-blue-600', 'border-blue-600', 'active');
+                t.classList.add('text-gray-500', 'border-transparent');
+            });
+
+            if (tab === 'wifi-ap-sta') {
+                tabWifi.classList.add('text-blue-600', 'border-blue-600', 'active');
+                tabWifi.classList.remove('text-gray-500', 'border-transparent');
+                loadContent('basic-07-unit-wifi-ap-sta.html');
+            } else if (tab === 'http-lifecycle') {
+                tabHttp.classList.add('text-blue-600', 'border-blue-600', 'active');
+                tabHttp.classList.remove('text-gray-500', 'border-transparent');
+                loadContent('basic-07-unit-http-lifecycle.html');
+            } else if (tab === 'async-webserver') {
+                tabAsync.classList.add('text-blue-600', 'border-blue-600', 'active');
+                tabAsync.classList.remove('text-gray-500', 'border-transparent');
+                loadContent('basic-07-unit-async-webserver.html');
+            }
+        }
+
+        function loadContent(url) {
+            iframe.style.opacity = '0';
+            setTimeout(() => {
+                const separator = url.includes('?') ? '&' : '?';
+                const query = window.location.search.substring(1);
+                iframe.src = query ? `${url}${separator}${query}` : url;
+            }, 300);
+        }
+    </script>
+    <script type="module" src="/js/master-nav.js?v=11"></script>
+
+</body>
+
+</html>

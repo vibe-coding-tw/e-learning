@@ -16,7 +16,8 @@
 <body class="bg-gray-50 font-[Inter] text-gray-800 overscroll-none">
 
     <!-- Hero Section -->
-    <header class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white pt-24 pb-32 overflow-hidden">
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white pt-24 pb-32 overflow-hidden">
         <div
             class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] opacity-20">
         </div>
@@ -255,8 +256,8 @@ btn.<span class="text-blue-400">addEventListener</span>(<span class="text-green-
 
                     <div class="grid md:grid-cols-3 gap-6">
                         <!-- Challenge 1 -->
-                        <div
-                            class="group bg-slate-50 hover:bg-white rounded-xl p-6 border border-slate-200 hover:border-indigo-300 hover:shadow-lg transition-all duration-300">
+                        <div onclick="openSubmissionModal('long-press-task-1', '作業 2-1: 甜蜜頻率尋找賽')"
+                            class="group bg-slate-50 hover:bg-white rounded-xl p-6 border border-slate-200 hover:border-indigo-300 hover:shadow-lg transition-all duration-300 cursor-pointer relative">
                             <div class="flex justify-between items-start mb-4">
                                 <div
                                     class="bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded text-xs uppercase">
@@ -270,11 +271,19 @@ btn.<span class="text-blue-400">addEventListener</span>(<span class="text-green-
                                 實測不同 setInterval 毫秒數 (10ms ~ 500ms) 對無人車反應的影響。找出一個不卡頓也不會讓 ESP32 當機的「甜蜜點」。
                             </p>
                             <div class="text-xs text-indigo-500 font-bold">👉 目標：20ms - 100ms</div>
+                            <!-- Hover Overlay -->
+                            <div
+                                class="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                                <span
+                                    class="bg-white text-indigo-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                    📤 點擊繳交作業
+                                </span>
+                            </div>
                         </div>
 
                         <!-- Challenge 2 -->
-                        <div
-                            class="group bg-slate-50 hover:bg-white rounded-xl p-6 border border-slate-200 hover:border-purple-300 hover:shadow-lg transition-all duration-300">
+                        <div onclick="openSubmissionModal('long-press-task-2', '作業 2-2: 雙重保險機制')"
+                            class="group bg-slate-50 hover:bg-white rounded-xl p-6 border border-slate-200 hover:border-purple-300 hover:shadow-lg transition-all duration-300 cursor-pointer relative">
                             <div class="flex justify-between items-start mb-4">
                                 <div
                                     class="bg-purple-100 text-purple-700 font-bold px-3 py-1 rounded text-xs uppercase">
@@ -290,11 +299,19 @@ btn.<span class="text-blue-400">addEventListener</span>(<span class="text-green-
                                 2. 斷線偵測 (navigator.onLine)。
                             </p>
                             <div class="text-xs text-purple-500 font-bold">👉 目標：極端狀況也能煞車</div>
+                            <!-- Hover Overlay -->
+                            <div
+                                class="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                                <span
+                                    class="bg-white text-purple-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                    📤 點擊繳交作業
+                                </span>
+                            </div>
                         </div>
 
                         <!-- Challenge 3 -->
-                        <div
-                            class="group bg-slate-50 hover:bg-white rounded-xl p-6 border border-slate-200 hover:border-pink-300 hover:shadow-lg transition-all duration-300">
+                        <div onclick="openSubmissionModal('long-press-task-3', '作業 2-3: 多按鈕並行邏輯')"
+                            class="group bg-slate-50 hover:bg-white rounded-xl p-6 border border-slate-200 hover:border-pink-300 hover:shadow-lg transition-all duration-300 cursor-pointer relative">
                             <div class="flex justify-between items-start mb-4">
                                 <div class="bg-pink-100 text-pink-700 font-bold px-3 py-1 rounded text-xs uppercase">HW
                                     2-3</div>
@@ -308,6 +325,14 @@ btn.<span class="text-blue-400">addEventListener</span>(<span class="text-green-
                                 練習將指令打包成 JSON：<code>{F:1, L:1}</code> 統一發送。
                             </p>
                             <div class="text-xs text-pink-500 font-bold">👉 目標：多工協同運作</div>
+                            <!-- Hover Overlay -->
+                            <div
+                                class="absolute inset-0 bg-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                                <span
+                                    class="bg-white text-pink-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                    📤 點擊繳交作業
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>

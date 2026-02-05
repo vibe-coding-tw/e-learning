@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Web Server 函式庫入門 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-indigo-900 to-blue-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1558494949-ef010cbdcc51?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 7 - 網路通訊架構
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                ESP32 Web Server 入門：<br><span class="text-blue-400">從「阻塞」到「非同步」的進化</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                擺脫 loop() 的束縛，實作基於事件驅動的高性能網頁伺服器。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 事件驅動程式設計 (8 min)
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> AsyncWebServer 文件
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Sync vs Async -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">🛡️</span> 1. 認識 ESP32 的網頁守門員 (20 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg">
+                                <p><strong>核心概念：</strong>區分傳統的阻塞式與現代的非同步處理方式。</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 shadow-sm">
+                                        <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                            <span>🐌</span> 舊式 WebServer.h (Sync)
+                                        </h4>
+                                        <ul class="text-sm space-y-2">
+                                            <li>• 必須在 <code>loop()</code> 呼叫 <code>handleClient()</code>。</li>
+                                            <li>• 如果 loop 忙碌（如影像處理），網頁會沒反應。</li>
+                                            <li>• 就像一個只能一次點餐一位的櫃檯。</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 shadow-sm">
+                                        <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">
+                                            <span>⚡</span> 新式 ESPAsyncWebServer (Async)
+                                        </h4>
+                                        <ul class="text-sm space-y-2">
+                                            <li>• 基於<strong>事件驅動</strong>，背後自動處理請求。</li>
+                                            <li>• 不佔用 <code>loop()</code> 時間，最適合即時控制。</li>
+                                            <li>• 就像百貨公司美食街，點完餐領取號碼牌（Callback）。</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
+                                    <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
+                                        <span>🧐</span> 學習任務
+                                    </h4>
+                                    <p class="text-base text-amber-900">
+                                        觀看動畫短片，思考：為什麼在控制「高速移動」的無人車時，非同步處理比傳統處理更安全？
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Routing & Handlers -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-indigo-500 to-blue-600"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12 items-center">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">🗺️</span> 2. 路由 (Routing) 與 處理器 (Handlers) (20 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg">
+                                <p><strong>核心概念：</strong>將特定的 URL 路徑應對到 C++ 的執行內容。</p>
+                                <div
+                                    class="bg-slate-900 p-6 rounded-2xl text-white font-mono text-sm leading-relaxed overflow-x-auto">
+                                    <div class="text-gray-500 mb-2">// 匿名函式 (Lambda) 語法範例</div>
+                                    <span class="text-blue-400">server</span>.<span
+                                        class="text-yellow-400">on</span>(<span
+                                        class="text-emerald-400">"/led/on"</span>, <span
+                                        class="text-purple-400">HTTP_GET</span>, [](<span
+                                        class="text-orange-400">AsyncWebServerRequest</span> *request) {<br>
+                                    &nbsp;&nbsp;<span class="text-yellow-400">digitalWrite</span>(LED_PIN, <span
+                                        class="text-purple-400">HIGH</span>);<br>
+                                    &nbsp;&nbsp;request-><span class="text-yellow-400">send</span>(200, <span
+                                        class="text-emerald-400">"text/plain"</span>, <span
+                                        class="text-emerald-400">"LED is ON"</span>);<br>
+                                    });
+                                </div>
+                                <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 shadow-sm">
+                                    <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2 text-base">
+                                        <span>💡</span> 關鍵技術：Lambda 語法
+                                    </h4>
+                                    <p class="text-sm">
+                                        <code>[] (AsyncWebServerRequest *request) { ... }</code> 是 C++11
+                                        的匿名函式。它讓我們在宣告路由的當下，就定義好處理邏輯，讓程式碼更簡潔。
+                                    </p>
+                                </div>
+                                <div class="bg-slate-900 p-6 rounded-2xl text-white">
+                                    <h4 class="text-blue-400 font-bold mb-3 flex items-center gap-2">
+                                        <span>⚙️</span> 學習任務
+                                    </h4>
+                                    <p class="text-gray-300 text-base leading-relaxed">
+                                        查閱函式庫文件，理解 <code>request->send()</code> 除了傳送純文字，還可以傳送哪些類期的數據？（例如：HTML、JSON 或
+                                        SPIFFS 檔案）
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Static Resources -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🎨</span> 3. 靜態資源管理 (15 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <p><strong>關鍵問題：</strong>將整個 HTML 寫在 C++ 字串裡有什麼缺點？（維護困難、縮排亂掉）。</p>
+                        <div class="bg-indigo-50 p-8 rounded-2xl border border-indigo-100">
+                            <h4 class="font-bold text-indigo-900 mb-4 flex items-center gap-2">
+                                <span>🖌️</span> 解決方案：R"rawliteral(...)"
+                            </h4>
+                            <p class="mb-4">使用 C++ 的原始字串字面量，可以保留 HTML 的換行與雙引號，不需要每次都加反斜線轉義。</p>
+                            <div class="bg-slate-800 p-4 rounded-xl text-indigo-200 font-mono text-sm">
+                                const char index_html[] PROGMEM = R"rawliteral(<br>
+                                &lt;!DOCTYPE html&gt;<br>
+                                &lt;html&gt;<br>
+                                &nbsp;&nbsp;&lt;h1&gt;My Controller&lt;/h1&gt;<br>
+                                &lt;/html&gt;<br>
+                                )rawliteral";
+                            </div>
+                        </div>
+                        <div class="bg-slate-800 p-8 rounded-2xl text-white">
+                            <h4 class="text-purple-400 font-bold mb-3 flex items-center gap-2 text-lg">
+                                <span>🚀</span> 線上實作任務
+                            </h4>
+                            <p class="text-gray-300 leading-relaxed text-lg mb-6">
+                                在 CodePen 或線上 HTML 編輯器中撰寫一段簡單的控制頁面原型（包含兩個按鈕：前進、後退）。完成後，思考如何將這段內容嵌入 ESP32。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：打造動態網頁服務</h2>
+            <p class="text-center text-gray-500 mb-12">從基本頁面到參數控制，掌握硬體與 Web 的即時互動。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 3-1 -->
+                <div onclick="openSubmissionModal('basic-07-webserver-1', '【作業 3-1】我的第一個非同步首頁')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">📡</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 3-1】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「非同步首頁」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            實作根路徑 <code>/</code>：回傳一段美化過的 HTML，內容包含車子名稱與目前剩餘記憶體空間 (<code>ESP.getFreeHeap()</code>)。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 3-2 -->
+                <div onclick="openSubmissionModal('basic-07-webserver-2', '【作業 3-2】遠端燈光控制器：參數提取')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">💡</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 3-2】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「參數提取」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            建立 <code>/set_led?value=128</code> 路徑。解析參數並控制 LED 亮度。若數值超出 0-255，回傳 400 錯誤。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 3-3 -->
+                <div onclick="openSubmissionModal('basic-07-webserver-3', '【作業 3-3】動態數據佔位符 (Processor)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">♻️</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 3-3】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「動態佔位符」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            使用 <code>%STATUS%</code> 佔位符，並實作 <code>processor</code> 函式，將網頁上的狀態文字即時替換為目前的硬體運作狀態。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 基礎 7</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/KE2EEXBBm9k",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vSHr8PnKv4JjqNdCPzpTu8jL1odJhwvd4czrSacn9IQ1N4HHc6ruto-eJs8rneRiRXyZmU61MDrdJIE/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

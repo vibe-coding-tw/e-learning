@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>曲線優化：線性 vs. 指數響應 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 8 - 單元 3
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                曲線優化：<br><span class="text-purple-400">線性 vs. 指數響應</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
+                掌握演算法如何彌補人類肌肉控制的不足，打造完美手感。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 打造直觀的機器人控制 (9 min)
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 動態響應調教實驗文件
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Linear Response -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">📏</span> 1. 線性響應 (Linear Response) (20 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg">
+                                <p><strong>定義：</strong>輸出與輸入成正比（\(y = x\)）。</p>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="bg-green-50 p-6 rounded-xl border border-green-100 shadow-sm">
+                                        <h4 class="font-bold text-green-800 mb-2">優點：直觀預測</h4>
+                                        <p class="text-sm">
+                                            搖桿推一半，馬達就出一半的力。反應速度最快，沒有任何延遲感。
+                                        </p>
+                                    </div>
+                                    <div class="bg-red-50 p-6 rounded-xl border border-red-100 shadow-sm">
+                                        <h4 class="font-bold text-red-800 mb-2">缺點：中心太敏感</h4>
+                                        <p class="text-sm">
+                                            在中心點附近的微調非常困難，對於需要精細動作（如窄路穿梭）的場景，操作感會顯得太過「敏感」。
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-900 p-8 rounded-2xl text-white text-center">
+                                    <div class="text-2xl font-mono mb-2">Linear: \(f(x) = x\)</div>
+                                    <div class="h-32 flex items-center justify-center">
+                                        <!-- Placeholder for a simple graph or SVG -->
+                                        <svg width="200" height="100" viewBox="0 0 200 100" class="overflow-visible">
+                                            <line x1="0" y1="100" x2="200" y2="0" stroke="white" stroke-width="2" />
+                                            <text x="205" y="0" fill="white" font-size="12">Output</text>
+                                            <text x="100" y="115" fill="white" font-size="12"
+                                                text-anchor="middle">Input</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Exponential Response -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-pink-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">📈</span> 2. 指數響應 (Exponential Response) (40 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <p><strong>定義：</strong>輸出隨輸入的次方增加（通常使用三次方 \(y = x^3\) 以保持正負號）。</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-4">
+                                <div class="bg-purple-50 p-6 rounded-xl border border-purple-100">
+                                    <h4 class="font-bold text-purple-800 mb-3 flex items-center gap-2">
+                                        <span>☁️</span> 軟中心 (Soft Center)
+                                    </h4>
+                                    <p class="text-sm">
+                                        中心區域的斜率較平緩，容許大幅度的手感微調。適合精細的轉彎。
+                                    </p>
+                                </div>
+                                <div class="bg-orange-50 p-6 rounded-xl border border-orange-100">
+                                    <h4 class="font-bold text-orange-800 mb-3 flex items-center gap-2">
+                                        <span>💥</span> 暴力尾段 (Punchy End)
+                                    </h4>
+                                    <p class="text-sm">
+                                        當搖桿推到底時，數值會快速攀升至最大值，保有爆發力。
+                                    </p>
+                                </div>
+                            </div>
+                            <div
+                                class="bg-slate-900 p-8 rounded-2xl text-white text-center flex flex-col justify-center">
+                                <h4 class="text-purple-400 font-bold mb-4 font-mono text-xl">\(f(x) = x^3\)</h4>
+                                <div class="h-32 flex items-center justify-center">
+                                    <svg width="200" height="100" viewBox="0 0 200 100" class="overflow-visible">
+                                        <path d="M 0 100 Q 150 100 200 0" fill="none" stroke="#a78bfa"
+                                            stroke-width="3" />
+                                        <line x1="0" y1="100" x2="200" y2="0" stroke="white" stroke-dasharray="4"
+                                            opacity="0.5" />
+                                    </svg>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-4">紫線：指數 / 虛線：線性</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
+                            <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
+                                <span>🎯</span> 線上任務
+                            </h4>
+                            <p class="text-base text-amber-900 leading-relaxed">
+                                在 Desmos 或 Excel 繪製「輸入對輸出」的曲線圖。觀察當輸入為 0.5 時，線性輸出是 0.5，而三次方輸出是多少？（答案：0.125）
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Deadzone -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-gray-700 to-black"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🌑</span> 3. 為什麼需要「死區 (Deadzone)」？ (20 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <div class="flex flex-col md:flex-row gap-8">
+                            <div class="flex-1 space-y-4">
+                                <p><strong>硬體限制：</strong>便宜的搖桿在放手時可能無法精確回到 0（可能停在 0.02），導致車子在沒動手時也會慢慢滑行。</p>
+                                <div class="bg-slate-100 p-6 rounded-xl border border-slate-200">
+                                    <h4 class="font-bold text-slate-800 mb-3">解決方案：加入小平台</h4>
+                                    <p class="text-sm">在函數中加入一個小判斷，讓低於某個數值（如 0.1）的輸入一律強制輸出為 0。</p>
+                                </div>
+                            </div>
+                            <div
+                                class="bg-slate-900 p-6 rounded-2xl text-white font-mono text-sm flex flex-col justify-center">
+                                <div class="text-gray-500 mb-2">// Deadzone Logic</div>
+                                <div>
+                                    <span class="text-purple-400">if</span> (Math.<span
+                                        class="text-yellow-400">abs</span>(value) < <span class="text-blue-400">
+                                        0.1</span>) { <br>
+                                        &nbsp;&nbsp;return <span class="text-blue-400">0</span>; <br>
+                                        }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：打造職人級手感</h2>
+            <p class="text-center text-gray-500 mb-12">透過混合曲線調整，找到專屬於你的「駕駛風格」。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 3-1 -->
+                <div onclick="openSubmissionModal('basic-08-expo-1', '【作業 3-1】實作指數映射函式')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🔢</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 3-1】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「混合映射函式」</h4>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <p>實作公式：</p>
+                            <p class="font-bold bg-slate-50 p-2 rounded text-center">Output = (1 - k)·x + k·x³</p>
+                            <p>讓學生透過調整比例參數 k (0~1)，觀察曲線從線性過渡到指數的過程。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-2 -->
+                <div onclick="openSubmissionModal('basic-08-expo-2', '【作業 3-2】「窄路繞錐」對比測試')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-pink-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🏎️</span>
+                            <span class="bg-pink-100 text-pink-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-pink-600 transition">【作業 3-2】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「窄路繞錐」測試</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            設置極窄 S 彎道。記錄使用「線性」與「指數」模式下的碰撞次數。體驗指數響應如何協助你進行微幅的方向修正。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 3-3 -->
+                <div onclick="openSubmissionModal('basic-08-expo-3', '【作業 3-3】動態曲線切換 UI')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🔘</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 3-3】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「動態模式切換」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            在 UI 上增加切換開關，實作「精準模式 (Expo)」與「競速模式 (Linear)」的即時切換邏輯。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 基礎 8-3</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/z13-gjYTvNk",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vTq1AWA9wq2xJFAdVeQ8cLdcgmLHFHNenW5-6EBAl1bA4xmw9AuWJu1r7ec55LoPXlk1KcwoOpbljir/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

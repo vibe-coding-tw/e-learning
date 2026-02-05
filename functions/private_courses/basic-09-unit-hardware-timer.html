@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習2】 硬體定時器 (Hardware Timer) 與 ISR - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-indigo-900 to-blue-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1501167786227-4cba60f6d58f?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 9 - 單元 2
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                精通 <span class="text-blue-400">硬體定時器</span><br>& <span class="text-emerald-400">ISR 中斷服務</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                超越 millis() 的極致精確度，讓處理器為你「插隊」執行關鍵任務。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 精通 ESP32 硬體計時器 (15 min)
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> ESP32 硬體定時器與 ISR 文件
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: What is Hardware Timer -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">⏰</span> 1. 什麼是硬體定時器？ (30 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg">
+                                <p><strong>核心概念：</strong>想像處理器內部有一個<strong>獨立的小鬧鐘</strong>。主程式（Loop）在跑的時候，鬧鐘時間一到，處理器會「強行暫停」手邊工作，去執行特定任務。
+                                </p>
+
+                                <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
+                                    <h4 class="font-bold text-blue-800 mb-4 flex items-center gap-2">
+                                        <span>⚔️</span> 與 millis() 的差異
+                                    </h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="bg-white p-4 rounded-lg shadow-sm border border-blue-200">
+                                            <span class="font-bold text-blue-600">millis()：被動查詢</span>
+                                            <p class="text-sm mt-1">「看錶」，必須在 loop 裡面手動檢查時間，會受其他程式阻塞影響。</p>
+                                        </div>
+                                        <div class="bg-white p-4 rounded-lg shadow-sm border border-blue-200">
+                                            <span class="font-bold text-blue-600">定時器中斷：主動通知</span>
+                                            <p class="text-sm mt-1">「鬧鐘響」，時間到直接插隊執行，不受 loop 阻塞影響，精度極高。</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                                    <h4 class="font-bold text-slate-800 mb-2 flex items-center gap-2">
+                                        <span>🎯</span> 學習目標
+                                    </h4>
+                                    <p class="text-base text-slate-700 leading-relaxed">
+                                        理解 ESP32 擁有 4 個硬體定時器，可以達到微秒 (\(\mu s\)) 等級的精確度。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: ISR Taboos -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-red-500 to-rose-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🚫</span> 2. 中斷服務常式 (ISR) 的三大禁忌 (30 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <p class="font-semibold text-red-600 decoration-wavy underline">關鍵概念：ISR 必須「快進快出」。</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-red-50 p-6 rounded-xl border border-red-100 shadow-sm">
+                                <h4 class="font-bold text-red-800 mb-2">不可使用 delay()</h4>
+                                <p class="text-sm">會導致系統鎖死，因為中斷已經停止了時間流逝的計數環境。</p>
+                            </div>
+                            <div class="bg-orange-50 p-6 rounded-xl border border-orange-100 shadow-sm">
+                                <h4 class="font-bold text-orange-800 mb-2">不可進行耗時運算</h4>
+                                <p class="text-sm">例如複雜的 JSON 解析或大容量浮點運算。這會卡住主程式太久。</p>
+                            </div>
+                            <div class="bg-rose-50 p-6 rounded-xl border border-rose-100 shadow-sm">
+                                <h4 class="font-bold text-rose-800 mb-2">不可使用 Serial.print()</h4>
+                                <p class="text-sm">I/O 操作太慢，會干擾中斷時序，甚至導致 Watchdog 重新啟動。</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 p-8 rounded-2xl text-white">
+                            <h4 class="text-emerald-400 font-bold mb-4 flex items-center gap-2">
+                                <span>⚡</span> 加速關鍵：IRAM_ATTR
+                            </h4>
+                            <p class="text-sm text-slate-300 mb-6">
+                                使用 <code>IRAM_ATTR</code> 關鍵字，可以確保 ISR 程式碼存放在 RAM 中，而不是從較慢的 Flash 讀取，確保中斷反應即時。
+                            </p>
+                            <div class="bg-slate-800 p-4 rounded-lg font-mono text-sm border border-slate-700">
+                                <span class="text-purple-400">void</span> <span class="text-yellow-400">IRAM_ATTR</span>
+                                <span class="text-blue-400">onTimer</span>() {<br>
+                                &nbsp;&nbsp;<span class="text-gray-500">// 內容越精簡越好</span><br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Volatile -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-amber-500 to-yellow-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🛡️</span> 3. 變數共享：volatile 關鍵字 (20 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <div class="flex flex-col md:flex-row gap-8">
+                            <div class="flex-1 space-y-4">
+                                <p><strong>核心概念：</strong>當主程式與 ISR 都會用到同一個變數（如：計數器）時，必須加上 <code>volatile</code>。</p>
+                                <p class="text-sm bg-amber-50 p-4 rounded-lg border border-amber-100 italic">
+                                    這會防止編譯器為了優化速度，而把變數存在暫存器中「懶得讀取」，導致主程式讀到舊的數值。
+                                </p>
+                            </div>
+                            <div class="flex-1">
+                                <div class="bg-slate-100 p-6 rounded-xl border border-slate-200">
+                                    <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                        <span>📝</span> 線上任務
+                                    </h4>
+                                    <p class="text-sm text-slate-600 leading-relaxed mb-4">
+                                        下載並閱讀 ESP32 定時器範例，畫出「定時中斷」觸發與主程式運行的時序圖。觀察「插隊」發生的瞬間。
+                                    </p>
+                                    <div class="bg-white p-4 rounded-lg border border-slate-300 font-mono text-xs">
+                                        volatile int interruptCounter = 0;<br>
+                                        // 告訴編譯器：這東西隨時會變，不要快取它！
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：硬體級別的精確控制</h2>
+            <p class="text-center text-gray-500 mb-12">運用硬體中斷，實現那些不容許延遲的關鍵功能。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 2-1 -->
+                <div onclick="openSubmissionModal('basic-09-timer-blink', '【作業 2-1】精確頻率：硬體定時器閃燈')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🚨</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 2-1】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「硬體定時器閃燈」</h4>
+                        <div class="text-sm text-gray-600 space-y-4">
+                            <p>利用硬體定時器，每隔精確的 \(1,000,000 \mu s\) (1秒) 切換 LED 狀態。</p>
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 text-xs">
+                                <strong>挑戰：</strong>在 loop 裡寫 <code>delay(5000)</code>，觀察 LED 是否依然能精確閃爍？
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2-2 -->
+                <div onclick="openSubmissionModal('basic-09-tachometer', '【作業 2-2】轉速計實作：計算馬達 Encoder 訊號')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🏎️</span>
+                            <span
+                                class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業
+                            2-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「轉速計實作」</h4>
+                        <div class="text-sm text-gray-600 space-y-4">
+                            <p>利用定時器每 100ms 觸發中斷，計算這段時間內馬達轉了幾圈。</p>
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 text-xs">
+                                <strong>技術：</strong>學習使用 <code>portENTER_CRITICAL</code> 來保護共享數據。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2-3 -->
+                <div onclick="openSubmissionModal('basic-09-watchdog', '【作業 2-3】安全保護：硬體級 Watchdog')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-rose-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🛡️</span>
+                            <span class="bg-rose-100 text-rose-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-rose-600 transition">【作業 2-3】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「硬體級 Watchdog」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            實作一個「看門狗」，如果藍牙 2 秒內沒收到心跳指令，定時器自動強制停止馬達。模擬當 loop 陷入死迴圈時，定時器如何發揮保護作用。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 基礎 9-2</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/F-glY2XmQnI",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vQhaR7a9cOXMXkDiQDlpMVPkyjjYqhojr2J_VHjt6oLAJX95N49mC3_KCkMVz0jToDX1JwraaLXoHOn/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

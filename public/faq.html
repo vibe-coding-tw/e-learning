@@ -1,128 +1,157 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>課程常見問題 - Vibe Coding</title>
+    <title>課程使用說明 - Vibe Coding</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7fafc; /* 淺灰色背景 */
-        }
-        .hero-bg {
-            /* 科技感深藍漸變 */
-            background-image: linear-gradient(to right, #1e3a8a, #06b6d4); 
-            color: white;
-        }
-        .vibe-card {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s, box-shadow 0.3s;
-            border-top: 5px solid #06b6d4; /* 頂部強調色 */
-            background-color: white;
-            border-radius: 1rem; /* rounded-2xl */
-            padding: 2rem;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        .vibe-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-        .section-title-underline {
-            height: 4px;
-            width: 80px;
-            background-color: #06b6d4;
-            margin: 0 auto 3rem;
-            border-radius: 2px;
-        }
-        /* 下拉選單樣式 */
-        .dropdown:hover .dropdown-menu {
-            display: block;
-        }
-        /* FAQ 特有樣式 - 問題標題 */
-        .faq-question {
-            color: #1e3a8a; /* 深藍色 */
-            font-weight: 700;
-            font-size: 1.25rem;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-        }
-        .faq-icon {
-            margin-right: 0.75rem;
-            font-size: 1.5rem;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body class="flex flex-col min-h-screen">
 
-    <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
-        <div class="container mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <a href="index.html" class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
-                    <span>🚀</span> Vibe Coding
-                </a>
-
-                <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
-                    <div class="relative dropdown group">
-                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            課程連結 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="prepare.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">課前準備</a>
-                            <a href="started.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">入門課程</a>
-                            <a href="basic.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">基礎實作</a>
-                            <a href="advanced.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">進階應用</a>
-                        </div>
-                    </div>
-
-                    <div class="relative dropdown group">
-                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            組態設定 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="examples/wifi-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">WiFi 設定</a>
-                            <a href="examples/motor-config.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">馬達設定</a>
-                        </div>
-                    </div>
-
-                    <div class="relative dropdown group">
-                        <button class="flex items-center text-cyan-600 font-bold transition cursor-pointer py-2">
-                            關於我們 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="dropdown-menu absolute hidden bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="faq.html" class="block px-4 py-2 bg-cyan-50 text-cyan-700">課程常見問題</a>
-                            <a href="about.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">關於付費與購買</a>
-                            <a href="collaboration.html" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">合作事宜</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="md:hidden">
-                    <button class="text-gray-600 focus:outline-none">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <div id="nav-placeholder"></div>
+    <script src="js/nav-component.js?v=3"></script>
+    <script>
+        renderNav('.');
+    </script>
 
     <header class="bg-white py-12">
         <div class="container mx-auto px-4 text-center">
-            <h1 class="text-4xl font-extrabold text-gray-800 mb-4">課程常見問題</h1>
-            <p class="text-lg text-gray-500">FAQ - 這裡整理了學員最常詢問的相關事項</p>
+            <h1 class="text-4xl font-extrabold text-gray-800 mb-4">課程使用說明</h1>
+            <p class="text-lg text-gray-500">Guide - 這裡整理了課程使用方式與相關服務說明</p>
             <div class="section-title-underline mt-6"></div>
         </div>
     </header>
 
     <section class="py-10 bg-gray-50 flex-grow">
         <div class="container mx-auto px-4">
-            
+
+            <!-- Course Usage Guide Section -->
+            <div class="max-w-5xl mx-auto mb-12">
+                <div class="vibe-card border-t-[5px] border-indigo-500">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-10 text-center flex items-center justify-center">
+                        <span class="mr-3 text-3xl">🚀</span> 完整課程使用指南
+                    </h2>
+
+                    <div class="space-y-2 relative">
+
+                        <!-- Connecting Line for Desktop -->
+                        <div class="hidden md:block absolute left-[23px] top-6 bottom-6 w-0.5 bg-indigo-100 z-0"></div>
+
+                        <!-- Step 1 -->
+                        <div class="flex flex-col md:flex-row gap-6 relative z-10 group">
+                            <div class="flex-shrink-0 flex flex-col items-center">
+                                <div
+                                    class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-md group-hover:scale-110 transition-transform duration-300">
+                                    1</div>
+                            </div>
+                            <div class="flex-grow pb-8">
+                                <h3
+                                    class="text-xl font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors">
+                                    註冊 / 登入會員</h3>
+                                <p class="text-gray-600 leading-relaxed">
+                                    首先，請點擊網站右上角的 <span class="font-bold text-indigo-600">「登入」</span> 按鈕。我們支援 <span
+                                        class="font-bold">Google 快速登入</span>，或使用 Email 註冊帳號。擁有帳號後，系統才能記錄您的購買與學習進度。
+                                    <br><br>
+                                    <span
+                                        class="inline-block bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold border border-green-200">
+                                        ✨ 新手好禮：首次註冊後，您可以免費體驗一個月的入門課程！
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="flex flex-col md:flex-row gap-6 relative z-10 group">
+                            <div class="flex-shrink-0 flex flex-col items-center">
+                                <div
+                                    class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-md group-hover:scale-110 transition-transform duration-300">
+                                    2</div>
+                            </div>
+                            <div class="flex-grow pb-8">
+                                <h3
+                                    class="text-xl font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors">
+                                    瀏覽並挑選課程</h3>
+                                <p class="text-gray-600 leading-relaxed">
+                                    前往 <a href="started.html" class="text-cyan-600 hover:underline font-medium">入門課程</a>
+                                    或 <a href="basic.html" class="text-cyan-600 hover:underline font-medium">基礎實作</a>
+                                    頁面，瀏覽詳細的課程大綱與介紹。確認符合您的需求後，準備進行購買。
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="flex flex-col md:flex-row gap-6 relative z-10 group">
+                            <div class="flex-shrink-0 flex flex-col items-center">
+                                <div
+                                    class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-md group-hover:scale-110 transition-transform duration-300">
+                                    3</div>
+                            </div>
+                            <div class="flex-grow pb-8">
+                                <h3
+                                    class="text-xl font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors">
+                                    加入購物車</h3>
+                                <p class="text-gray-600 leading-relaxed">
+                                    在課程頁面點擊 <span
+                                        class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-sm font-bold border border-gray-300">🛒
+                                        加入購物車</span> 按鈕。您可以一次挑選多堂課程，最後再一次結帳。
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Step 4 -->
+                        <div class="flex flex-col md:flex-row gap-6 relative z-10 group">
+                            <div class="flex-shrink-0 flex flex-col items-center">
+                                <div
+                                    class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-md group-hover:scale-110 transition-transform duration-300">
+                                    4</div>
+                            </div>
+                            <div class="flex-grow pb-8">
+                                <h3
+                                    class="text-xl font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors">
+                                    確認訂單與付款</h3>
+                                <p class="text-gray-600 leading-relaxed">
+                                    進入購物車頁面確認金額無誤，點擊「前往付款」。系統將跳轉至 <span class="font-bold text-green-600">綠界科技
+                                        ECPay</span> 安全支付頁面，您可選擇信用卡或 ATM 轉帳。
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Step 5 -->
+                        <div class="flex flex-col md:flex-row gap-6 relative z-10 group">
+                            <div class="flex-shrink-0 flex flex-col items-center">
+                                <div
+                                    class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-md group-hover:scale-110 transition-transform duration-300">
+                                    5</div>
+                            </div>
+                            <div class="flex-grow pb-2">
+                                <h3
+                                    class="text-xl font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors">
+                                    立刻開始學習</h3>
+                                <p class="text-gray-600 leading-relaxed">
+                                    付款成功後，系統將自動導回網站並開通權限。回到課程頁面，按鈕將變更為 <span
+                                        class="font-bold text-green-600">「進入課程內容」</span>，點擊即可進入教室開始上課！
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Support Hint -->
+                    <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+                        <p class="text-gray-500 text-sm">
+                            如有任何操作疑問，歡迎參考下方常見問題或直接聯繫客服信箱。
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
             <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                
+
                 <div class="vibe-card">
                     <h3 class="faq-question">
                         <span class="faq-icon">🎓</span> 1. 完成購買後，該如何上課?
@@ -145,7 +174,8 @@
                     <div class="text-gray-600 leading-relaxed">
                         <p class="mb-4">如果您已經購買課程，但遇到無法順利登入、或是按鈕狀態未更新等問題，請別擔心。</p>
                         <p>歡迎直接來信與我們聯繫，我們會盡快協助您解決權限問題：</p>
-                        <a href="mailto:rover.chen@vibe-coding.tw" class="inline-block mt-2 text-cyan-600 hover:text-cyan-700 font-bold border-b border-cyan-200 hover:border-cyan-600 transition">
+                        <a href="mailto:rover.chen@vibe-coding.tw"
+                            class="inline-block mt-2 text-cyan-600 hover:text-cyan-700 font-bold border-b border-cyan-200 hover:border-cyan-600 transition">
                             📧 info@vibe-coding.tw
                         </a>
                     </div>
@@ -153,11 +183,18 @@
 
                 <div class="vibe-card">
                     <h3 class="faq-question">
-                        <span class="faq-icon">♾️</span> 3. 購買後可以觀看幾次？
+                        <span class="faq-icon">⏳</span> 3. 課程的使用期限與服務？
                     </h3>
                     <div class="text-gray-600 leading-relaxed">
                         <p class="mb-4 text-lg font-medium text-gray-800">
-                            所有課程目前<span class="text-cyan-600">沒有觀看次數的限制</span>，您可以依照自己的節奏反覆觀看與實作。
+                            完成課程付款後，您將擁有<span class="text-cyan-600 font-bold">一年的課程使用權限</span>。
+                        </p>
+                        <p class="text-gray-600">
+                            系統會同時為您分配一位專屬老師，協助您的學習旅程，解答您在學習過程中遇到的所有問題。
+                        </p>
+                        <p class="text-gray-600 mt-2 mb-3">
+                            <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">貼心提醒</span>
+                            別擔心忘記時間，系統將在課程到期前一個月自動發送 Email 提醒通知。
                         </p>
                         <div class="bg-gray-100 p-3 rounded-lg text-xs text-gray-500">
                             <p>注意事項：本公司保有隨時修正變更、暫停及終止之權利，並保留最終解釋權。如有任何變更內容或詳細注意事項將公佈於本網頁，恕不另行通知。</p>
@@ -172,9 +209,61 @@
                     <div class="text-gray-600 leading-relaxed">
                         <p class="mb-4">為了確保最佳的學習體驗，我們整理了一份詳細的設備清單（包含電腦軟體環境與硬體材料）。</p>
                         <p>請在開始上課前，先閱讀下方的準備指南：</p>
-                        <a href="prepare.html" class="inline-flex items-center mt-3 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg hover:bg-indigo-100 transition font-bold">
+                        <a href="prepare.html"
+                            class="inline-flex items-center mt-3 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg hover:bg-indigo-100 transition font-bold">
                             👉 查看「上課前應該準備的事項」
                         </a>
+                    </div>
+                </div>
+
+                <div class="vibe-card">
+                    <h3 class="faq-question">
+                        <span class="faq-icon">👩‍🏫</span> 5. 老師會提供什麼協助？
+                    </h3>
+                    <div class="text-gray-600 leading-relaxed">
+                        <p class="mb-3">我們重視您的學習成效，老師的職責包含：</p>
+                        <ul class="list-disc pl-5 space-y-1 mb-4">
+                            <li>線上問題回答與技術指導</li>
+                            <li>批改作業並提供反饋（可於<strong>課程儀表板</strong>查看）</li>
+                            <li>繳交作業成績與學習評量</li>
+                        </ul>
+                        <p class="text-sm bg-blue-50 p-3 rounded text-blue-800">
+                            此外，視報名人數狀況，老師也會開設<strong>線上學習教室</strong>，或在鄰近區域尋找合適場地，開設<strong>實體班級</strong>親自指導教學。
+                        </p>
+                    </div>
+                </div>
+
+                <div class="vibe-card">
+                    <h3 class="faq-question">
+                        <span class="faq-icon">📦</span> 6. 如何購買硬體教材與運送方式？
+                    </h3>
+                    <div class="text-gray-600 leading-relaxed">
+                        <p class="mb-4">我們提供完整的 ESP32 開發套件，您可以在 <a href="prepare.html"
+                                class="text-cyan-600 hover:underline font-bold">課前準備</a> 頁面將所需的硬體加入購物車。</p>
+                        <p class="mb-2 font-bold text-gray-800">運送與取貨：</p>
+                        <ul class="list-disc pl-5 space-y-1 mb-4">
+                            <li>結帳時，系統支援<strong>超商取貨</strong>（7-11、全家、萊爾富、OK Mart）。</li>
+                            <li>請在結帳頁面填寫收件人真實姓名與手機號碼，並選擇方便取貨的門市。</li>
+                            <li>完成付款後，我們將盡快為您寄出教材。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="vibe-card">
+                    <h3 class="faq-question">
+                        <span class="faq-icon">📊</span> 7. 如何追蹤我的學習進度？
+                    </h3>
+                    <div class="text-gray-600 leading-relaxed">
+                        <p class="mb-4">我們全新的 <a href="dashboard.html"
+                                class="text-cyan-600 hover:underline font-bold">課程儀表板 (Dashboard)</a> 讓您能掌握學習狀況：</p>
+                        <ul class="list-disc pl-5 space-y-1 mb-4">
+                            <li><strong>學習時數統計</strong>：查看您在平台上的累積學習時間。</li>
+                            <li><strong>作業批改狀態</strong>：追蹤作業繳交情形，並閱讀老師的評分與詳細建議。</li>
+                            <li><strong>活躍狀態</strong>：確認您的帳號權限是否正常。</li>
+                        </ul>
+                        <p class="text-sm text-gray-500">
+                            * 登入後，在每堂課程中點擊「課程儀表板」即可進入查看。
+                        </p>
                     </div>
                 </div>
 
@@ -183,7 +272,8 @@
     </section>
 
     <section class="py-16 bg-gray-900 text-white relative overflow-hidden">
-        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10">
+        </div>
         <div class="container mx-auto px-4 text-center relative z-10">
             <h3 class="text-2xl sm:text-3xl font-bold mb-4 text-cyan-300">
                 還有其他問題嗎？
@@ -191,7 +281,8 @@
             <p class="text-lg mb-8 opacity-80 max-w-2xl mx-auto">
                 如果上方沒有您需要的解答，歡迎隨時聯繫我們的客服團隊。
             </p>
-            <a href="mailto:info@vibe-coding.tw" class="inline-block bg-transparent border-2 border-white text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-white hover:text-gray-900 transition duration-300 transform hover:scale-105">
+            <a href="mailto:info@vibe-coding.tw"
+                class="inline-block bg-transparent border-2 border-white text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-white hover:text-gray-900 transition duration-300 transform hover:scale-105">
                 聯繫客服
             </a>
         </div>
@@ -203,11 +294,13 @@
                 <a href="prepare.html" class="hover:text-white">課前準備</a>
                 <a href="started.html" class="hover:text-white">入門課程</a>
                 <a href="basic.html" class="hover:text-white">基礎實作</a>
-                <a href="advance.html" class="hover:text-white">進階應用</a>
+                <a href="advanced.html" class="hover:text-white">進階應用</a>
             </div>
-            <p class="text-gray-500 text-sm">&copy; 2025 Vibe Coding. All rights reserved. | 課程合作洽談請聯絡 B2B 部門 (Email: info@vibe-coding.tw)</p>
+            <p class="text-gray-500 text-sm">&copy; 2025 Vibe Coding. All rights reserved. | 課程合作洽談請聯絡 B2B 部門 (Email:
+                info@vibe-coding.tw)</p>
         </div>
     </footer>
 
 </body>
+
 </html>

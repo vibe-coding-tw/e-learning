@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLE 廣播機制與連線流程 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-blue-900 to-emerald-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1558346490-a72e53ae2d4f?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 5 - BLE 通訊深潛
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                我是誰？我在哪？<br><span class="text-emerald-400">BLE 廣播與連線機制全解析</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                理解 BLE 如何在擁擠的 2.4GHz 頻段中「聰明生存」，並建立穩定的連線。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 揭秘預習影片 (7 min)
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 藍牙連線詳解文件
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Advertising -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">📢</span> 1. 廣播機制：我是誰？我在哪？ (20 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg">
+                                <p>在連線建立之前，設備必須主動宣告自己的存在。這就是<strong>廣播 (Advertising)</strong>。</p>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-100 shadow-sm">
+                                        <h4 class="font-bold text-emerald-800 mb-3 flex items-center gap-2">
+                                            <span>📡</span> 避開干擾的頻道
+                                        </h4>
+                                        <p class="text-sm">BLE 廣播固定在 <strong>頻道 37, 38, 39</strong>。這些頻道的選擇是為了完美避開 Wi-Fi
+                                            常用的頻道 1, 6, 11，確保廣播能被順利接收。</p>
+                                    </div>
+                                    <div class="bg-teal-50 p-6 rounded-xl border border-teal-100 shadow-sm">
+                                        <h4 class="font-bold text-teal-800 mb-3 flex items-center gap-2">
+                                            <span>📦</span> 封包內容
+                                        </h4>
+                                        <p class="text-sm">包含設備名稱、MAC 地址、發射功率 (TX Power) 與 <strong>Service
+                                                UUID</strong>。這讓手機知道「我是一台遙控車」。</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-900 p-6 rounded-xl border border-slate-700 shadow-inner">
+                                    <h4 class="font-bold text-emerald-400 mb-2 flex items-center gap-2">
+                                        <span>⏱️</span> 廣播間隔 (Advertising Interval)
+                                    </h4>
+                                    <ul class="list-disc list-inside text-sm text-gray-300 space-y-2">
+                                        <li><span class="text-emerald-300">靈敏模式 (20ms):</span> 極快被搜尋到，但非常耗電。</li>
+                                        <li><span class="text-amber-300">省電模式 (1000ms):</span> 非常省電，但可能需要掃描好幾秒才看得到。</li>
+                                    </ul>
+                                </div>
+
+                                <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
+                                    <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
+                                        <span>💡</span> 學習任務
+                                    </h4>
+                                    <p class="text-base text-amber-900">
+                                        觀察你的手機藍牙列表，哪些設備是「可以連線的」，哪些只是在「廣播數據」（如百貨公司的 iBeacon 廣告）？
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Scanning & Connection -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12 items-center">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">🤝</span> 2. 掃描與連線流程 (25 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg">
+                                <p>當手機發現你的 ESP32 後，會經歷以下階段建立專屬通道：</p>
+                                <ol class="space-y-4">
+                                    <li class="flex gap-4">
+                                        <span
+                                            class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold">1</span>
+                                        <div>
+                                            <h5 class="font-bold text-gray-900">掃描 (Scanning)</h5>
+                                            <p class="text-sm">手機 (Central) 在廣播頻道間切換，傾聽空中的封包。</p>
+                                        </div>
+                                    </li>
+                                    <li class="flex gap-4">
+                                        <span
+                                            class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold">2</span>
+                                        <div>
+                                            <h5 class="font-bold text-gray-900">連線請求 (Connection Request)</h5>
+                                            <p class="text-sm">手機決定連線，發送時序指令，約定：「之後我們在特定頻率跳頻溝通，別再廣播了」。</p>
+                                        </div>
+                                    </li>
+                                    <li class="flex gap-4">
+                                        <span
+                                            class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold">3</span>
+                                        <div>
+                                            <h5 class="font-bold text-gray-900">連線成功</h5>
+                                            <p class="text-sm">ESP32 停止廣播，進入 <strong>1 對 1</strong> 的高速數據交換模式。這就是為什麼 A
+                                                同學連線後，B 同學就找不到了。</p>
+                                        </div>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                        <div class="md:w-1/3 text-center">
+                            <div class="bg-blue-50 p-8 rounded-3xl border-2 border-dashed border-blue-200">
+                                <div class="text-5xl mb-4">🔁</div>
+                                <h4 class="font-bold text-blue-800 mb-2">頻率跳頻 (AFH)</h4>
+                                <p class="text-sm text-blue-600 leading-relaxed">
+                                    連線後，設備會在剩餘的 37 個頻道中快速跳轉，這讓 BLE 即使在 Wi-Fi 干擾嚴重的環境下依然穩定。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Duty Cycle -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🔋</span> 3. 省電的關鍵：工作週期 (15 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <p>無人車如果一直維持高頻率廣播，電池很快就會耗盡。優秀的設計會考慮<strong>工作週期 (Duty Cycle)</strong>：</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div
+                                class="p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100">
+                                <h4 class="font-bold text-purple-800 mb-3 text-xl flex items-center gap-2">
+                                    <span>⏱️</span> 限制時間廣播
+                                </h4>
+                                <p class="text-gray-600">例如：開機後僅廣播 30 秒，若無人連線則進入休眠。下次需按 Reset 鍵喚醒。</p>
+                            </div>
+                            <div
+                                class="p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100">
+                                <h4 class="font-bold text-purple-800 mb-3 text-xl flex items-center gap-2">
+                                    <span>🔘</span> 按鈕觸發廣播
+                                </h4>
+                                <p class="text-gray-600">只有在按下配對鈕時才啟動廣播，平常完全關閉藍牙功能以達到極致省電。</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 bg-slate-50 p-8 rounded-2xl border border-slate-200 italic text-center">
+                            "BLE 的低功耗，不是因為它傳輸快，而是因為它大部份時間都在睡覺。"
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：掌握廣播與連線的藝術</h2>
+            <p class="text-center text-gray-500 mb-12">從修改封包數據開始，到實作連線狀態的硬體回饋。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 2-1 -->
+                <div onclick="openSubmissionModal('basic-05-ble-2-1', '【作業 2-1】「改名大師」：自定義廣播封包')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🆔</span>
+                            <span
+                                class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業
+                            2-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「改名大師」：自定義廣播</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            修改設備名稱（包含座號，如 Car_07）。進階挑戰：嘗試在廣播封包中直接塞入「即時電量」，讓手機不必連線就能看到數值。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-emerald-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳 nRF Connect 截圖</span>
+                    </div>
+                </div>
+
+                <!-- Task 2-2 -->
+                <div onclick="openSubmissionModal('basic-05-ble-2-2', '【作業 2-2】「連線守門員」：連線回呼 (Callback)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🔦</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 2-2】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「連線守門員」：Callbacks</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            實作 `BLEServerCallbacks`。連線時亮綠燈並在 Serial 印出訊息；斷線時亮紅燈並自動呼叫 `startAdvertising()` 重新廣播。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-blue-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳程式碼與影片</span>
+                    </div>
+                </div>
+
+                <!-- Task 2-3 -->
+                <div onclick="openSubmissionModal('basic-05-ble-2-3', '【作業 2-3】「距離與強度的秘密」：RSSI 測距')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">📏</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 2-3】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「距離與強度的秘密」：RSSI</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            紀錄手機遠近與 RSSI 變化的關係。實作「靠近自動解鎖」邏輯：若 RSSI > -50dBm 則解除馬達鎖定。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-purple-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳測試數據截圖</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 基礎 5</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/v8w8sw5hZvo",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vRPXS-p77hB3ttso-elHkH8OizQXQoYxx4fzYm5ZYrUlXv7tFgylSDiMvdAF_YWr6kCYrH3iCLRXYkC/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

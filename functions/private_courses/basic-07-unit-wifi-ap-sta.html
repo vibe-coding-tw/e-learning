@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Wi-Fi 雙模式：AP vs. STA - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1544197150-b99a580bb7a8?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 7 - 網路通訊架構
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                Wi-Fi 雙模式解析：<br><span class="text-blue-400">AP (自立門戶) vs. STA (加入大家庭)</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                掌握 ESP32 的通訊雙重身分，打造能在任何環境下連線的產品級智慧系統。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 智慧裝置的祕密 (8 min)
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> Wi-Fi 模式設定手冊
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: AP Mode -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">🗼</span> 1. AP (Access Point) 模式：自立門戶 (20 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg">
+                                <p><strong>核心概念：</strong>ESP32 自己當「基地台」。就像車子背著一台小迷你路由器，手機可以直接連到車子發出的 Wi-Fi。</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-100 shadow-sm">
+                                        <h4 class="font-bold text-emerald-800 mb-3 flex items-center gap-2">
+                                            <span>💪</span> 優點
+                                        </h4>
+                                        <ul class="text-sm space-y-2">
+                                            <li>• 不依賴外部網路。</li>
+                                            <li>• 去到哪裡都能連線（適合戶外賽道）。</li>
+                                            <li>• 設備間可形成獨立的私有網段。</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-rose-50 p-6 rounded-xl border border-rose-100 shadow-sm">
+                                        <h4 class="font-bold text-rose-800 mb-3 flex items-center gap-2">
+                                            <span>⚠️</span> 缺點
+                                        </h4>
+                                        <ul class="text-sm space-y-2">
+                                            <li>• 手機連上後通常無法上網。</li>
+                                            <li>• 連線距離受限於 ESP32 發射功率。</li>
+                                            <li>• 同時連進來的人數有物理限制。</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
+                                    <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
+                                        <span>🧐</span> 學習任務
+                                    </h4>
+                                    <p class="text-base text-amber-900">
+                                        查閱 SSID 與 Password 的設定規範。思考：為什麼 AP 模式通常會有「最大連線人數」限制？這與 ESP32 的記憶體 (RAM) 有什麼關係？
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: STA Mode -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-indigo-500 to-blue-600"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12 items-center">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">🏠</span> 2. STA (Station) 模式：加入大家庭 (20 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg">
+                                <p><strong>核心概念：</strong>ESP32 像手機一樣，「加入」現有的路由器（Router）。</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-100 shadow-sm">
+                                        <h4 class="font-bold text-emerald-800 mb-3 flex items-center gap-2">
+                                            <span>💪</span> 優點
+                                        </h4>
+                                        <ul class="text-sm space-y-2">
+                                            <li>• 可透過路由器進行長距離遠端控制。</li>
+                                            <li>• 車子可同時連網（下載更新或傳數據）。</li>
+                                            <li>• 穩定的網路基礎設施。</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-rose-50 p-6 rounded-xl border border-rose-100 shadow-sm">
+                                        <h4 class="font-bold text-rose-800 mb-3 flex items-center gap-2">
+                                            <span>⚠️</span> 缺點
+                                        </h4>
+                                        <ul class="text-sm space-y-2">
+                                            <li>• 需要環境中有路由器。</li>
+                                            <li>• 路由器負載太重時延遲會變高。</li>
+                                            <li>• 依賴密碼正確與路由器開啟。</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="bg-slate-900 p-6 rounded-2xl text-white">
+                                    <h4 class="text-blue-400 font-bold mb-3 flex items-center gap-2">
+                                        <span>⚙️</span> 學習任務：DHCP 協定
+                                    </h4>
+                                    <p class="text-gray-300 text-base leading-relaxed">
+                                        為什麼車子加入網路後，IP 地址會變動？理解如何設定「固定 IP (Static IP)」，這就像幫無人車在社區裡租一個固定的停車位，確保控制端永遠找得到它。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Dual Mode -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">⚡</span> 3. AP + STA (Dual Mode)：最強混合體 (20 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <p><strong>核心概念：</strong>同時開啟兩種模式，讓設備具備高度的彈性。</p>
+                        <div class="bg-indigo-50 p-8 rounded-2xl border border-indigo-100">
+                            <h4 class="font-bold text-indigo-900 mb-4 flex items-center gap-2">
+                                <span>🛒</span> 經典應用場景：配網流程 (Provisioning)
+                            </h4>
+                            <p class="mb-4">你買了一台新的智慧插座或掃地機器人，它是如何學會你家 Wi-Fi 密碼的？</p>
+                            <ol class="list-decimal list-inside space-y-3 text-sm font-medium text-indigo-800">
+                                <li>插座啟動 <strong>AP 模式</strong>，發出名稱為 "Smart_XXX" 的 Wi-Fi。</li>
+                                <li>你的手機連線到這個 AP，進入設定網頁。</li>
+                                <li>你在手機上輸入你家的 Wi-Fi SSID 與密碼。</li>
+                                <li>插座收到後，啟動 <strong>STA 模式</strong> 把身分切換到你家路由器。</li>
+                            </ol>
+                        </div>
+                        <div class="bg-slate-800 p-8 rounded-2xl text-white">
+                            <h4 class="text-purple-400 font-bold mb-3 flex items-center gap-2 text-lg">
+                                <span>🚀</span> 預習任務：繪製數據流向圖
+                            </h4>
+                            <p class="text-gray-300 leading-relaxed text-lg mb-6">
+                                繪製一張圖，展示手機連上車載 AP 後（IP 為 192.168.4.1）的數據傳輸路徑。並思考：為什麼透過 AP 控制通常比透過外部雲端控制更快？
+                            </p>
+                            <div class="flex items-center gap-2 text-sm text-purple-300 italic">
+                                <span>提示：省略了外部路由器的轉發過程。</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：掌握區域與全網通訊</h2>
+            <p class="text-center text-gray-500 mb-12">從建立獨立領地到智慧路徑修補，實作產品級的通訊邏輯。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 1-1 -->
+                <div onclick="openSubmissionModal('basic-07-wifi-1', '【作業 1-1】我的領地：AP 模式與強制門戶')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🗼</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 1-1】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「我的領地」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            實作自定義 SSID (MyRobot_01) 與網段 (192.168.4.1)。測試連線穩定性，觀察多台手機連入時是否會互相干擾 Web 控制介面。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-blue-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳手機連線 AP 截圖</span>
+                    </div>
+                </div>
+
+                <!-- Task 1-2 -->
+                <div onclick="openSubmissionModal('basic-07-wifi-2', '【作業 1-2】智慧尋路：STA 模式與斷線重連')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🏠</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業
+                            1-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「智慧尋路」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            撰寫程式碼掃描現場 Wi-Fi 並加入。實作 Wi-Fi 事件監聽 (Event Handler)，確保路由器斷電重啟後，車子能「自動重連」而非當機。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-indigo-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳 Serial Monitor 重連日誌</span>
+                    </div>
+                </div>
+
+                <!-- Task 1-3 -->
+                <div onclick="openSubmissionModal('basic-07-wifi-3', '【作業 1-3】終極備援：自動切換模式')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🛡️</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 1-3】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「終極備援」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            實作 Fallback 邏輯：啟動後先嘗試連 STA (5秒)，失敗則自動轉為 AP 模式。利用內建 LED 燈號區分模式（閃爍/長亮）。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-purple-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳「STA 轉 AP」影片</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 基礎 7</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/ZnXewBBA_ns",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vSHz2Aq-S4OAnkvQqEf-9gtVB75hz6zHuQPH85XdPYsEMLALj61Q0MCBh7btwgXweLy0LuENUZ_2V6y/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

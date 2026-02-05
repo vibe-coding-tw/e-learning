@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP 協議與請求生命週期 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1544197150-b99a580bb7a8?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 7 - Wi-Fi 應用與協議
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                數據的一趟旅程：<br><span class="text-blue-400">HTTP 協議與請求生命週期</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                拆解 HTTP 封包結構，跟隨數據包在網路森林中的跳轉，理解如何精準控制你的機器人。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 預習影片 (13 min)
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> Google 文件
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: HTTP Message Structure -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">📦</span> 1. HTTP 報文結構：封包裡裝了什麼？ (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <div class="space-y-6">
+                            <h3 class="text-xl font-bold text-blue-700 border-b pb-2">Request (請求)</h3>
+                            <ul class="space-y-4">
+                                <li class="flex items-start gap-3">
+                                    <span
+                                        class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-mono text-sm mt-1">Method</span>
+                                    <div>
+                                        <p class="font-bold">動作類型</p>
+                                        <p class="text-sm text-gray-600">GET (拿數據)、POST (傳指令)。</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <span
+                                        class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-mono text-sm mt-1">Headers</span>
+                                    <div>
+                                        <p class="font-bold">身份證與清單</p>
+                                        <p class="text-sm text-gray-600">例如 Content-Type: application/json。</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <span
+                                        class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-mono text-sm mt-1">Body</span>
+                                    <div>
+                                        <p class="font-bold">實際載重</p>
+                                        <p class="text-sm text-gray-600">例如控制馬達的 JSON 數據。</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="space-y-6">
+                            <h3 class="text-xl font-bold text-emerald-700 border-b pb-2">Response (回應)</h3>
+                            <ul class="space-y-4">
+                                <li class="flex items-start gap-3">
+                                    <span
+                                        class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-mono text-sm mt-1">Status
+                                        Code</span>
+                                    <div>
+                                        <p class="font-bold">執行結果</p>
+                                        <p class="text-sm text-gray-600">200 (成功)、404 (找不到路徑)、500 (車子當機)。</p>
+                                    </div>
+                                </li>
+                            </ul>
+                            <div class="bg-amber-50 p-6 rounded-xl border border-amber-200 mt-4">
+                                <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
+                                    <span>📝</span> 學習任務
+                                </h4>
+                                <p class="text-base text-amber-900">
+                                    在紙上模擬寫出一個發給車子「加速」指令的 HTTP POST 請求，包含 Path, Header 與 Body。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Request Lifecycle -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🚀</span> 2. 請求生命週期：一趟數據的旅程 (25 min)
+                    </h2>
+                    <div class="space-y-8">
+                        <div class="relative flex flex-col md:flex-row justify-between gap-8 py-8">
+                            <div class="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -z-10"></div>
+
+                            <div class="bg-white p-4 rounded-xl border shadow-sm flex-1 text-center">
+                                <div
+                                    class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">
+                                    1</div>
+                                <h4 class="font-bold mb-1">DNS 尋找</h4>
+                                <p class="text-xs text-gray-500">將 robot.local 轉為 IP</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl border shadow-sm flex-1 text-center">
+                                <div
+                                    class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">
+                                    2</div>
+                                <h4 class="font-bold mb-1">TCP 三向握手</h4>
+                                <p class="text-xs text-gray-500">建立可靠連線</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl border shadow-sm flex-1 text-center">
+                                <div
+                                    class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">
+                                    3</div>
+                                <h4 class="font-bold mb-1">數據傳輸</h4>
+                                <p class="text-xs text-gray-500">發送請求 + 伺服器解析</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl border shadow-sm flex-1 text-center">
+                                <div
+                                    class="w-12 h-12 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">
+                                    4</div>
+                                <h4 class="font-bold mb-1">瀏覽器渲染</h4>
+                                <p class="text-xs text-gray-500">接收結果並更新畫面</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 p-8 rounded-2xl text-white">
+                            <h4 class="text-blue-400 font-bold mb-3 flex items-center gap-2 text-lg">
+                                <span>📺</span> 預習任務：觀察動畫
+                            </h4>
+                            <p class="text-gray-300 leading-relaxed text-lg mb-4">
+                                觀看影片動畫，重點觀察數據包在路由器與伺服器間的跳轉。
+                            </p>
+                            <div class="aspect-video rounded-xl overflow-hidden bg-black/20">
+                                <iframe class="w-full h-full" src="https://www.youtube.com/embed/dgZQIdhlYHE"
+                                    title="YouTube video player" frameborder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    allowfullscreen></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Stateless Challenge -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🧠</span> 3. 無狀態 (Stateless) 的挑戰 (15 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <div class="space-y-6 text-gray-600 text-lg">
+                            <p>HTTP 每次請求都是獨立的。伺服器不會記得上一次發生了什麼事。</p>
+                            <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
+                                <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
+                                    <span>🤔</span> 預習任務
+                                </h4>
+                                <p class="text-base text-amber-900 leading-relaxed">
+                                    如果車子需要「記住」上次的模式（例如：競速模式 vs 節能模式），該由網頁端傳送狀態，還是讓 ESP32 儲存在記憶體裡？
+                                </p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-8 rounded-2xl border border-gray-200">
+                            <h4 class="font-bold text-gray-800 mb-4 flex items-center gap-2 text-lg">
+                                <span>🔍</span> 線上任務：開發者工具實測
+                            </h4>
+                            <p class="text-gray-600 mb-4">使用瀏覽器開發者工具 (F12) 觀察任何網頁的「Network」標籤，看看一個請求包含哪些資訊。</p>
+                            <ul class="space-y-2 text-sm text-gray-500">
+                                <li class="flex items-center gap-2">✅ 查看 Status Code</li>
+                                <li class="flex items-center gap-2">✅ 查看 Request Headers</li>
+                                <li class="flex items-center gap-2">✅ 查看 Payload (數據)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實戰任務：解剖與建構通訊</h2>
+            <p class="text-center text-gray-500 mb-12">透過專業工具定位故障，並從底層實作 API 路由。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 2-1 -->
+                <div onclick="openSubmissionModal('basic-07-http-1', '【作業 2-1】「封包捕手」：F12 開發者工具實測')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🕵️‍♂️</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 2-1】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「封包捕手」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            利用 Chrome DevTools 的 Network 面板，分析 Waiting (TTFB) 與 Content Download
+                            時間。判斷延遲發生在「網路傳輸」還是「ESP32 運算」。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-blue-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳 DevTools 截圖</span>
+                    </div>
+                </div>
+
+                <!-- Task 2-2 -->
+                <div onclick="openSubmissionModal('basic-07-http-2', '【作業 2-2】「自建路由」：ESP32 請求解析器')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🛠️</span>
+                            <span
+                                class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業
+                            2-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「自建路由」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            在 ESP32 上實作 `/api/status` (GET) 與 `/api/control` (POST)。正確回傳 JSON 訊息與 HTTP 狀態碼 (200, 400)。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-emerald-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳程式碼檔案</span>
+                    </div>
+                </div>
+
+                <!-- Task 2-3 -->
+                <div onclick="openSubmissionModal('basic-07-http-3', '【作業 2-3】「連線池優化」：Keep-Alive 實驗')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">⚡</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 2-3】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「連線池優化」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            比較「短連線」與「長連線 (Keep-Alive)」對頻繁控制的影響。計算完成 100 次指令的總耗時差異。
+                        </p>
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-purple-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
+                            上傳實驗數據截圖</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 基礎 7</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/h0OiJEgFcNk",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vR7hGyl50IfXf59oQYsv7Ya_vKTewHXhBqqRXBgOcj3IdVoabeNN83OUAcJo1mcDmgKmjzjcms0LUeH/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

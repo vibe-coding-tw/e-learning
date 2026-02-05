@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 2】MJPEG 編碼與 HTTP Boundary 原理 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 1 - 單元 2
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                MJPEG 編碼與<br><span class="text-fuchsia-400">HTTP Boundary</span> 原理
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
+                揭開串流影像的秘密：如何用最輕量的協議，在網頁上實現流暢的即時監控。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 微型攝影機串流背後的技巧 (8 min)
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> MJPEG 與 HTTP 串流原理
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: MJPEG -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-fuchsia-500 to-purple-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">🎞️</span> 1. MJPEG：每一幀都是主角 (20 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg">
+                                <p><strong>編碼邏輯：</strong>MJPEG (Motion JPEG) 並非真正的影片壓縮格式（如
+                                    H.264/H.265），它其實只是<strong>將一連串的 JPEG 圖片快速播放</strong>。</p>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+                                    <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                                        <h4 class="font-bold text-green-800 mb-2">✅ 優勢</h4>
+                                        <p class="text-sm text-green-700">對 ESP32-S3 運算壓力極小。它不需要計算「前後幀的差異 (Inter-frame
+                                            compression)」，只需專心把每一幀靜態圖片壓縮好。</p>
+                                    </div>
+                                    <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                                        <h4 class="font-bold text-red-800 mb-2">❌ 缺點</h4>
+                                        <p class="text-sm text-red-700">檔案大、佔頻寬，且通常不包含聲音軌道。</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-purple-50 p-6 rounded-xl border border-purple-100 relative">
+                                    <h4 class="font-bold text-purple-800 mb-2 flex items-center gap-2">
+                                        <span>🔍</span> 學習任務
+                                    </h4>
+                                    <p class="text-base text-purple-700 mb-2">在 hex 編輯器中觀察一個 JPEG 檔案，尋找它的「身份證明」：</p>
+                                    <ul class="list-disc list-inside space-y-2 text-purple-700 text-base">
+                                        <li><strong>開頭標誌 (SOI)：</strong><code>0xFFD8</code></li>
+                                        <li><strong>結尾標誌 (EOI)：</strong><code>0xFFD9</code></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: HTTP Boundary -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🚧</span> 2. HTTP Boundary 的「隔板」原理 (25 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <div
+                            class="bg-gray-800 text-gray-200 p-4 rounded-lg font-mono text-sm overflow-x-auto shadow-inner">
+                            Content-Type: multipart/x-mixed-replace; boundary=12345
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-2">原理</h4>
+                                <p class="text-sm leading-relaxed mb-4">
+                                    瀏覽器收到這個特殊的 Header 後，會知道這不是一個普通的網頁，而是一個<strong>「永遠不會結束」的傳輸</strong>。它會保持連線開啟，等待後續的數據。
+                                </p>
+                                <h4 class="font-bold text-gray-800 mb-2">Boundary 標籤</h4>
+                                <p class="text-sm leading-relaxed">
+                                    伺服器在每張圖片之間插入一個自定義的字串（如
+                                    <code>--12345</code>）。瀏覽器一看到這個標籤，就知道上一張圖傳完了，會立刻「清空」畫面並準備「換上」新收到的圖片。
+                                </p>
+                            </div>
+                            <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 flex flex-col justify-center">
+                                <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">
+                                    <span>🧠</span> 思考任務
+                                </h4>
+                                <p class="text-blue-700 text-base mb-4">
+                                    如果沒有 Boundary，瀏覽器如何區分第一張圖的結尾與第二張圖的開始？
+                                </p>
+                                <div class="bg-white p-3 rounded border border-blue-200 text-xs text-gray-500 italic">
+                                    提示：TCP 串流本身是連續的位元組流 (Byte Stream)，沒有天生的邊界。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Lifecycle -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🔄</span> 3. 串流的生命週期 (15 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <p>一個健康的串流服務，不僅要能「送」，還要在適當的時候「停」。</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-100">
+                                <h4 class="font-bold text-emerald-800 mb-3 flex items-center gap-2">
+                                    <span>🛑</span> 停止傳送的時機
+                                </h4>
+                                <p class="text-emerald-700 text-sm mb-4">
+                                    當你關閉網頁視窗時，ESP32 端的伺服器是如何得知「停止傳送影像」的？
+                                </p>
+                                <ul class="list-disc list-inside space-y-2 text-emerald-700 text-sm">
+                                    <li><strong>TCP Fin/Rst：</strong>瀏覽器主動斷開 TCP 連線。</li>
+                                    <li><strong>伺服器偵測：</strong>在發送下一幀數據時，檢查 <code>client.connected()</code>
+                                        或寫入錯誤，發現客戶端已離線。</li>
+                                </ul>
+                            </div>
+                            <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                                <h4 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                    <span>🌐</span> 線上任務
+                                </h4>
+                                <p class="text-sm text-gray-600 mb-4">
+                                    在電腦上觀察 MJPEG 串流的原始碼 (View Source)，你能看到每張圖片之間的「邊界符號 (Boundary)」嗎？
+                                </p>
+                                <div class="bg-white p-3 rounded border border-gray-200 text-xs text-gray-500 italic">
+                                    提示：通常瀏覽器會隱藏這些細節，你需要用 F12 Network 工具的 Response 分頁來查看 Raw Data。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實作：解剖網路數據流</h2>
+            <p class="text-center text-gray-500 mb-12">從底層協議層面，理解影像如何穿過網路到達你的螢幕。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 2-1 -->
+                <div onclick="openSubmissionModal('adv-01-packet-analysis', '【作業 2-1】封包解剖師：觀察 HTTP 串流頭')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🩺</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 2-1】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">封包解剖師</h4>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li><strong>Header 擷取：</strong>找出伺服器回傳的 Content-Type 與指定的 boundary 名稱。</li>
+                                <li><strong>單幀拆解：</strong>計算兩次 Boundary 出現的時間差，回推目前的 FPS。</li>
+                                <li><strong>大小紀錄：</strong>對比「全黑」與「複雜」畫面的數據量變化。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2-2 -->
+                <div onclick="openSubmissionModal('adv-01-manual-mjpeg', '【作業 2-2】實作 MJPEG 手動推送邏輯')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-cyan-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🔨</span>
+                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition">【作業 2-2】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">手動拼接 HTTP 數據流</h4>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li><strong>Header 拼接：</strong>使用 <code>client.print()</code> 發送 Content-Type 與 Length。
+                                </li>
+                                <li><strong>Boundary 置入：</strong>在每幀前後正確插入 <code>--frame_boundary</code>。</li>
+                                <li><strong>錯誤處理：</strong>斷線時必須立即釋放 Buffer。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2-3 -->
+                <div onclick="openSubmissionModal('adv-01-stream-stability', '【作業 2-3】串流穩定性與 MTU 優化')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">📶</span>
+                            <span
+                                class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業
+                            2-3】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">穩定性壓力測試</h4>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li><strong>緩衝區調整：</strong>觀察數據發送延遲是否造成影像「撕裂感 (Tearing)」。</li>
+                                <li><strong>解析度切換：</strong>比較 VGA 與 QVGA 在高負載下的穩定度。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>進階課程 1 - 單元 2</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/placeholder_video_id", // TODO: Replace with "微型攝影機串流背後的技巧" video ID
+            doc: "https://docs.google.com/document/d/placeholder_doc_id/pub?embedded=true" // TODO: Replace with "MJPEG 與 HTTP 串流原理" doc ID
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

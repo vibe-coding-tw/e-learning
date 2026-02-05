@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>有限狀態機 (FSM) 入門 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518433278988-2b0616010064?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 10 - 單元 1
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                <span class="text-blue-400">有限狀態機 (FSM)</span><br>日常裝置中的秘密邏輯
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
+                擺脫混亂的 if-else 嵌套，用「狀態」優化你的無人車控制架構。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 有限狀態機：秘密邏輯 (8 min)
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 有限狀態機入門指南
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: What is FSM -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">🤖</span> 1. 什麼是 FSM？ (20 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg">
+                                <p><strong>核心定義：</strong>一個系統在任何時間點，都處於「有限個狀態」中的其中一個。這能讓系統行為變得可預測且穩定。</p>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div
+                                        class="bg-blue-50 p-6 rounded-xl border border-blue-100 shadow-sm transition hover:shadow-md">
+                                        <h4 class="font-bold text-blue-800 mb-2">狀態 (State)</h4>
+                                        <p class="text-sm">例如「前進」、「停止」、「倒車」。系統目前「正在做什麼」。</p>
+                                    </div>
+                                    <div
+                                        class="bg-purple-50 p-6 rounded-xl border border-purple-100 shadow-sm transition hover:shadow-md">
+                                        <h4 class="font-bold text-purple-800 mb-2">事件 (Event)</h4>
+                                        <p class="text-sm">觸發改變的條件，如「按下按鈕」、「感測器偵測到障礙物」。</p>
+                                    </div>
+                                    <div
+                                        class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 shadow-sm transition hover:shadow-md">
+                                        <h4 class="font-bold text-indigo-800 mb-2">轉移 (Transition)</h4>
+                                        <p class="text-sm">從一個狀態變成另一個狀態的「動作」。</p>
+                                    </div>
+                                    <div
+                                        class="bg-slate-50 p-6 rounded-xl border border-slate-100 shadow-sm transition hover:shadow-md">
+                                        <h4 class="font-bold text-slate-800 mb-2">動作 (Action)</h4>
+                                        <p class="text-sm">進入該狀態後要做的事（如：馬達轉動、變換 LED 顏色）。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: State Diagram -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🎨</span> 2. 畫出狀態轉移圖 (30 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <p><strong>關鍵符號：</strong>圓圈代表狀態，箭頭代表轉移。這張圖將成為你編寫程式的「設計說明書」。</p>
+
+                        <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                            <h4 class="font-bold text-slate-800 mb-4">實例：紅綠燈系統</h4>
+                            <div class="flex flex-col items-center gap-4 py-8 overflow-x-auto">
+                                <div class="flex items-center gap-4 min-w-[600px] justify-center">
+                                    <div
+                                        class="w-24 h-24 rounded-full border-4 border-red-500 flex items-center justify-center text-red-600 font-bold bg-red-50 shadow-lg">
+                                        紅燈</div>
+                                    <div class="flex-1 h-1 bg-gray-300 relative">
+                                        <span
+                                            class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-mono text-gray-500">等
+                                            60 秒</span>
+                                        <span class="absolute right-0 top-1/2 -translate-y-1/2 text-gray-300">▶</span>
+                                    </div>
+                                    <div
+                                        class="w-24 h-24 rounded-full border-4 border-green-500 flex items-center justify-center text-green-600 font-bold bg-green-50 shadow-lg">
+                                        綠燈</div>
+                                    <div class="flex-1 h-1 bg-gray-300 relative">
+                                        <span
+                                            class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-mono text-gray-500">等
+                                            5 秒</span>
+                                        <span class="absolute right-0 top-1/2 -translate-y-1/2 text-gray-300">▶</span>
+                                    </div>
+                                    <div
+                                        class="w-24 h-24 rounded-full border-4 border-yellow-500 flex items-center justify-center text-yellow-600 font-bold bg-yellow-50 shadow-lg">
+                                        黃燈</div>
+                                    <div class="flex-1 h-1 bg-gray-300 relative">
+                                        <span
+                                            class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-mono text-gray-500">等
+                                            3 秒</span>
+                                        <span class="absolute right-0 top-1/2 -translate-y-1/2 text-gray-300">▶</span>
+                                    </div>
+                                    <div class="w-2 h-2 rounded-full bg-red-500 -ml-4"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
+                            <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
+                                <span>🎯</span> 線上任務：繪製狀態圖
+                            </h4>
+                            <p class="text-base text-amber-900 leading-relaxed mb-4">
+                                繪製一張狀態轉換圖（State Diagram），標出在什麼情況下（例如：按下按鈕、偵測到障礙物）系統會切換模式。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Syntax -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-indigo-500 to-blue-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">💻</span> 3. 程式語法：switch...case 與 enum (20 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <p><strong>優點：</strong>FSM 在程式碼中通常不是用一大堆 if...else，而是用 <code>switch</code> 語法，這能讓邏輯更清晰、易於擴充。</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-4">
+                                <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
+                                    <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">
+                                        <span>💎</span> enum: 定義狀態名稱
+                                    </h4>
+                                    <p class="text-sm">
+                                        使用 <code>enum</code> 來給狀態一個可讀的名字，避免在程式碼中使用 0, 1, 2 這種難以理解的「魔術數字」。
+                                    </p>
+                                </div>
+                                <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
+                                    <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
+                                        <span>💎</span> switch: 事件處理中心
+                                    </h4>
+                                    <p class="text-sm">
+                                        根據目前的狀態變數進行對應的跳轉。
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="bg-slate-900 p-8 rounded-2xl text-white font-mono text-sm overflow-x-auto">
+                                <div class="text-gray-500 mb-2">// Arduino / C++ Version</div>
+                                <div>
+                                    <span class="text-purple-400">enum</span> State {<br>
+                                    &nbsp;&nbsp;IDLE, DRIVING, STOPPED<br>
+                                    };<br><br>
+                                    State currentState = IDLE;<br><br>
+                                    <span class="text-purple-400">void</span> <span
+                                        class="text-yellow-400">loop</span>() {<br>
+                                    &nbsp;&nbsp;<span class="text-purple-400">switch</span>(currentState) {<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">case</span> IDLE:<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">if</span>
+                                    (buttonPressed) currentState = DRIVING;<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">break</span>;<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">case</span> DRIVING:<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">if</span>
+                                    (obstacle) currentState = STOPPED;<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">break</span>;<br>
+                                    &nbsp;&nbsp;}<br>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：設計你的無人車邏輯</h2>
+            <p class="text-center text-gray-500 mb-12">透過 FSM 結構，讓車子在複雜任務間切換得游刃有餘。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 1-1 -->
+                <div onclick="openSubmissionModal('basic-10-fsm-control', '【作業 1-1】實作基礎控制狀態機')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🕹️</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 1-1】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「基礎控制狀態機」</h4>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>設計三個狀態：<code>IDLE</code> (待機)、<code>REMOTE</code> (手控)、<code>AUTO</code> (自律避障)。
+                                </li>
+                                <li><strong>循環切換</strong>：按下網頁按鈕後循環切換。</li>
+                                <li><strong>視覺反饋</strong>：不同狀態對應不同 LED 顏色（如 待機綠、手控藍、自律紅）。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 1-2 -->
+                <div onclick="openSubmissionModal('basic-10-fsm-obstacle', '【作業 1-2】「避障邏輯」狀態機')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🛡️</span>
+                            <span
+                                class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業
+                            1-2】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「避障邏輯狀態機」</h4>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>細分避障行為：<code>FOR_SEARCH</code> -> <code>OBSTACLE_DETECTED</code> ->
+                                    <code>BACKING</code> -> <code>TURNING</code>。
+                                </li>
+                                <li><strong>計時器結合</strong>：利用 <code>millis()</code> 設定轉向 500ms 後自動切回前進。</li>
+                                <li><strong>解決混亂</strong>：用 FSM 取代傳統深層嵌套的 if-else 邏輯。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 1-3 -->
+                <div onclick="openSubmissionModal('basic-10-fsm-emergency', '【作業 1-3】異常狀態：救援模式')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-red-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🆘</span>
+                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition">【作業 1-3】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「異常救援模式」</h4>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>新增 <code>EMERGENCY_STOP</code> 狀態。</li>
+                                <li><strong>最高優先權</strong>：斷開藍牙或按下緊急鈕時，「強行轉移」到此狀態並鎖死馬達。</li>
+                                <li><strong>重置機制</strong>：設計長按 3 秒重置回 <code>IDLE</code> 的邏輯。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 基礎 10 - 1</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/EWhVv31pgXI",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vTjtzK4C3WTl5q5KSS7JEMBxabcYaImnoRFkDmyjrp3Zpqy9Ky1pQJ4er_P63-ighJWA1trHeisbMjP/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>
