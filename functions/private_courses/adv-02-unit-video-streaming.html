@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 1】影像串流原理：MJPEG vs. H.264 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-indigo-900 to-blue-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 2 - 單元 1
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                影像串流原理：<br><span class="text-blue-400">MJPEG</span> vs. <span class="text-cyan-400">H.264</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                從「簡單暴力」到「聰明預測」：理解串流技術如何權衡運算、頻寬與延遲。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Section 1: MJPEG -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">🎞️</span> 1. MJPEG：簡單暴力的圖片連播 (20 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
+                                <p>
+                                    <strong>核心原理：</strong>將每一幀影像都視為獨立的 <strong>JPEG 圖片</strong>
+                                    進行壓縮，然後像「翻頁書」一樣快速傳送。這是一種典型的 <strong>空間壓縮 (Intra-frame)</strong>。
+                                </p>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+                                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
+                                        <h4 class="font-bold text-blue-800 mb-2 flex items-center gap-2"><span>✨</span>
+                                            優點</h4>
+                                        <ul class="text-sm text-blue-700 space-y-1 list-disc list-inside">
+                                            <li>對 ESP32 負擔極小（只需 JPEG 硬體編碼器）</li>
+                                            <li><strong>無延遲累積</strong></li>
+                                            <li>編輯容易，每一格都是完整的圖</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-amber-50 p-6 rounded-xl border border-amber-100">
+                                        <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
+                                            <span>⚠️</span> 缺點
+                                        </h4>
+                                        <ul class="text-sm text-amber-700 space-y-1 list-disc list-inside">
+                                            <li><strong>極度消耗頻寬</strong></li>
+                                            <li>每秒都在傳送重複的背景資訊</li>
+                                            <li>缺乏時間軸優化</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
+                                    <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
+                                        <span>🔍</span> 學習任務
+                                    </h4>
+                                    <p class="text-indigo-700">觀察 MJPEG 在網路不穩時的現象：</p>
+                                    <p class="mt-2 text-sm italic text-indigo-600">思考：當網路開始「塞車」時，MJPEG
+                                        是會產生「殘影」，還是直接「掉幀（畫面卡住後跳到最新畫面）」？為什麼？</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: H.264 -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🧠</span> 2. H.264 (AVC)：聰明的變化預測 (30 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
+                        <p>
+                            <strong>核心原理：</strong>不傳送整張圖片，只傳送「跟上一秒比起來哪裡動了」。這包含了 <strong>時間壓縮 (Inter-frame)</strong> 技術。
+                        </p>
+
+                        <div class="bg-slate-800 text-cyan-400 p-6 rounded-xl font-mono text-sm mb-6">
+                            <h4 class="text-white font-bold mb-2">關鍵概念：幀類型 (Frame Types)</h4>
+                            <ul class="space-y-2">
+                                <li><span class="bg-blue-900 px-2 rounded text-white mr-2">I-Frame</span> 關鍵幀：一張完整的
+                                    JPEG，是所有預測的基石。</li>
+                                <li><span class="bg-emerald-900 px-2 rounded text-white mr-2">P-Frame</span>
+                                    預測幀：只紀錄與前一幀的「差異」。</li>
+                                <li><span class="bg-purple-900 px-2 rounded text-white mr-2">B-Frame</span>
+                                    雙向幀：參考前後幀，壓縮率最高（但延遲也最高）。</li>
+                            </ul>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-2">運動補償 (Motion Compensation)</h4>
+                                <p class="text-sm leading-relaxed text-gray-600">
+                                    編碼器會分析畫面中區塊的移動。例如車子往前開，編碼器會說：「把上一張圖的這個區塊，往左移動 5 像素」，而不是重新傳送整個車子的圖片。
+                                </p>
+                            </div>
+                            <div class="bg-cyan-50 p-6 rounded-xl border border-cyan-100">
+                                <h4 class="font-bold text-cyan-800 mb-2 flex items-center gap-2"><span>📊</span> 效能比較
+                                </h4>
+                                <p class="text-cyan-700 text-sm">
+                                    頻寬占用極低（約為 MJPEG 的 1/10），適合高畫質監控。但編解碼複雜，一旦丟包會產生明顯的「馬賽克殘影」。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Latency -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-slate-700 to-slate-900"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">⏱️</span> 3. 延遲 (Latency) 的組成 (10 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="p-4 border-l-4 border-blue-500 bg-gray-50">
+                                <h4 class="font-bold mb-1">編碼延遲</h4>
+                                <p class="text-xs text-gray-500">硬體把像素變成封包的時間。</p>
+                            </div>
+                            <div class="p-4 border-l-4 border-indigo-500 bg-gray-50">
+                                <h4 class="font-bold mb-1">傳輸延遲</h4>
+                                <p class="text-xs text-gray-500">數據在網路上跑的時間 (Ping)。</p>
+                            </div>
+                            <div class="p-4 border-l-4 border-purple-500 bg-gray-50">
+                                <h4 class="font-bold mb-1">解碼/緩衝延遲</h4>
+                                <p class="text-xs text-gray-500">接收端解壓與等待播放的時間。</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-100 p-8 rounded-2xl border border-amber-200 mt-8">
+                            <h4 class="text-amber-900 font-bold text-xl mb-4 flex items-center gap-2">
+                                <span>🚀</span> 預習任務：最優化選擇
+                            </h4>
+                            <p class="text-amber-800 mb-4 text-lg">
+                                思考：對於「遙控賽車」來說，頻寬大小重要，還是端到端延遲 (End-to-End Latency) 重要？為什麼？
+                            </p>
+                            <div class="bg-white/50 p-4 rounded-lg text-sm text-amber-700 italic">
+                                提示：想像一下，如果你看到畫面中出現牆壁，但實際上的車子已經撞上去了...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：影像效能實戰</h2>
+            <p class="text-center text-gray-500 mb-12">透過數據紀錄與對比，掌握不同編碼策略的平衡點。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 1-1 -->
+                <div onclick="openSubmissionModal('adv-02-mjpeg-test', '【作業 1-1】頻寬殺手：MJPEG 壓力測試')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">💥</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
+                            1-1】MJPEG 壓力測試</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務目標：</strong>找出畫質與流量的臨界點。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500">
+                                <li>動態調整 JPEG Quality (0-63)</li>
+                                <li>紀錄不同畫質下的單幀大小 (KB)</li>
+                                <li>計算維持 15 FPS 需多少 Mbps</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 1-2 -->
+                <div onclick="openSubmissionModal('adv-02-h264-latency', '【作業 1-2】時空旅人：H.264 延遲觀測實驗')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-cyan-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">⏱️</span>
+                            <span class="bg-cyan-50 text-cyan-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-cyan-600 transition">【作業
+                            1-2】H.264 延遲觀測</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務目標：</strong>測量編解碼帶來的「時差」。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500">
+                                <li>使用毫秒計時器測算延遲</li>
+                                <li>搖晃相機觀察 H.264 數據噴發</li>
+                                <li>實驗緩衝 (Buffer) 如何影響平滑度</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 1-3 -->
+                <div onclick="openSubmissionModal('adv-02-scenario-design', '【作業 1-3】情境化編碼選擇')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🏎️</span>
+                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
+                            1-3】編碼情境設計</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務目標：</strong>針對不同任務配置最佳參數。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500">
+                                <li><strong>場景 A (低延遲)：</strong>高速避障參數</li>
+                                <li><strong>場景 B (高畫質)：</strong>風景巡航參數</li>
+                                <li>撰寫設計說明與切換邏輯</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階課程 2 - 單元 1</span>
+                <span class="hidden md:inline">|</span>
+                <span>影像編碼與傳輸</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/P6nBc6KT2Kw",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vQB6v5Q2JwSsC1JWi0kYmew7fuAlO013SZHvF5pEHA5Z4n6eKrX9r77_pGwYUqVDGdh5iJVCBMKjttD/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adv 14: 軟體工程的除錯藝術 - Vibe Coding</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-violet-500/20 border border-violet-400/30 text-violet-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 14 - 單元 1
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                軟體工程的<span class="text-pink-400">除錯藝術</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-3xl mx-auto font-light leading-relaxed">
+                不要猜測，要證實。從「會解 Bug」進化到「會寫出不容易產生 Bug 的代碼」。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+
+        <!-- Learning 1: Psychology & Science -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-violet-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">1</span>
+                除錯的心理學與科學方法
+            </h2>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
+                <p class="text-gray-600 mb-6 leading-relaxed">
+                    除錯不僅僅是找錯誤，更是一場心理戰。很多時候，我們被自己的「假設」蒙蔽了雙眼。
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
+                        <h4 class="font-bold text-indigo-900 mb-3 flex items-center">
+                            <span class="text-2xl mr-2">🦆</span> 橡皮鴨除錯法 (Rubber Duck Debugging)
+                        </h4>
+                        <p class="text-sm text-indigo-700 mb-4">
+                            向他人（或桌上的鴨子）逐行解釋你的程式碼。當你試圖用自然語言表達邏輯時，往往會在這過程中自己發現邏輯漏洞。
+                        </p>
+                    </div>
+                    <div class="bg-pink-50 p-6 rounded-xl border border-pink-100">
+                        <h4 class="font-bold text-pink-900 mb-3 flex items-center">
+                            <span class="text-2xl mr-2">🔍</span> 二分搜尋法定位 (Binary Search)
+                        </h4>
+                        <p class="text-sm text-pink-700 mb-4">
+                            當程式有 1000 行時，如何快速縮小範圍？透過註解掉一半的程式碼，判斷問題還在不在。重複此步驟，只需幾次就能鎖定 Bug 位置。
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-6 bg-yellow-50 p-4 rounded-lg border border-yellow-100">
+                    <strong class="block text-yellow-800 font-bold mb-1">科學方法核心：</strong>
+                    <p class="text-sm text-yellow-700">不要猜測 (Don't Guess)。遵循「假設 —> 實驗 —> 觀察 —> 結論」的循環。回憶你上次解決
+                        Bug，是靠運氣改對的，還是真的理解了原因？</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Learning 2: Tools Deep Dive -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-violet-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">2</span>
+                除錯工具箱的深度應用
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                <!-- Logging -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                            </path>
+                        </svg>
+                        日誌的藝術 (Logging)
+                    </h3>
+                    <p class="text-gray-600 text-sm mb-4">
+                        `console.log` 人人都會，但重點是「上下文資訊」。
+                    </p>
+                    <ul class="text-sm text-gray-500 list-disc list-inside space-y-2">
+                        <li>不僅印出誤差值，還要印出當時的<strong>系統時間</strong>。</li>
+                        <li>印出<strong>感測器狀態</strong>與<strong>變數型別</strong> (typeof)。</li>
+                        <li>使用不同的 Log Level：INFO, WARN, ERROR。</li>
+                    </ul>
+                </div>
+
+                <!-- Breakpoints -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        斷點 (Breakpoints) & 堆疊追蹤
+                    </h3>
+                    <p class="text-gray-600 text-sm mb-4">
+                        讓時空暫停的魔法。
+                    </p>
+                    <ul class="text-sm text-gray-500 list-disc list-inside space-y-2">
+                        <li><strong>暫停時空：</strong>在特定行號停止執行，觀察變數的即時數值。</li>
+                        <li><strong>Stack Trace：</strong>看懂錯誤訊息的「犯罪現場」。依據堆疊判斷是你的代碼錯了，還是引用庫的問題？</li>
+                    </ul>
+                    <div class="mt-4 text-xs bg-gray-100 p-2 rounded text-gray-600">
+                        預習任務：在瀏覽器 F12 > Sources 中，對一段迴圈設定斷點並逐步執行 (Step Over)。
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Learning 3: Hardware & Network -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-violet-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">3</span>
+                硬體與網路除錯的特殊性
+            </h2>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
+                <div class="mb-6">
+                    <h4 class="font-bold text-gray-800 mb-2">⚡ 非同步的陷阱 (Async Traps)</h4>
+                    <p class="text-gray-600 leading-relaxed">
+                        在藍牙或網路通訊中，Bug 往往具有<strong>隨機性 (Race Condition)</strong>。如果你的車子「偶爾」會轉向過度，除了程式碼，還要考慮：
+                    </p>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">電量不足</span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">網路延遲</span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">感測器雜訊</span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">記憶體溢出</span>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 pt-6">
+                    <h4 class="font-bold text-gray-800 mb-2">🛠️ 關鍵實踐</h4>
+                    <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <li class="flex items-start">
+                            <span class="text-violet-500 mr-2">1.</span>
+                            <span class="text-sm text-gray-600">從 Serial Monitor 的錯誤訊息 (如 Guru Meditation Error) 定位
+                                ESP32 的記憶體溢出位置。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-violet-500 mr-2">2.</span>
+                            <span class="text-sm text-gray-600">使用 Try-Catch 捕獲異常，避免系統直接崩潰 (Crashing)。</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section>
+            <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center">
+                <span class="mr-3">📝</span> 實作任務 (Classroom Challenges)
+            </h2>
+
+            <!-- Assignment 1-1 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-md cursor-pointer"
+                onclick="openSubmissionModal('adv-14-crime-scene', 'Task 1-1: 命案現場 - 找出 Bug')">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <span class="bg-red-500 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 1-1</span>
+                        「命案現場」：找出埋好的 Bug (60 min)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
+                        <p class="text-gray-700">教師提供一段看似正確但無法運作的無人車控制代碼，你需要找出隱藏的 3 個 Bug。</p>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
+                        <li><strong>邏輯型：</strong>變數名稱拼錯 (如 <code>error</code> 寫成 <code>eror</code>)。</li>
+                        <li><strong>類型型：</strong>字串與數字相加 (JSON 讀取的 "50" 沒轉 Number 就運算)。</li>
+                        <li><strong>非同步型：</strong>在藍牙尚未連線完成就發送指令。</li>
+                    </ul>
+                    <div class="text-sm text-red-600 font-semibold">
+                        🚫 限制：不得直接閱讀原始碼，必須先透過 console.log 或 斷點 觀察變數變化。撰寫「除錯日誌」記錄你的假設與實驗。
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assignment 1-2 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-md cursor-pointer"
+                onclick="openSubmissionModal('adv-14-black-box', 'Task 1-2: 通訊黑盒')">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <span class="bg-blue-500 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 1-2</span>
+                        「通訊黑盒」：網路封包抓包與分析 (60 min)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
+                        <p class="text-gray-700">當網頁無法控制車子時，判斷問題是在「網頁端」、「網路傳輸」還是「ESP32 端」。掌握跨裝置除錯的「隔離技術」。</p>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
+                        <li><strong>Network 面板：</strong>檢查 HTTP 請求狀態 (200 OK vs 404/500)。</li>
+                        <li><strong>模擬弱網：</strong>人為增加 500ms 延遲，觀察控制邏輯是否崩潰。</li>
+                        <li><strong>封包比對：</strong>檢查發出的 JSON 格式是否與 ESP32 規格一致。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Assignment 1-3 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md cursor-pointer"
+                onclick="openSubmissionModal('adv-14-defensive', 'Task 1-3: 防禦性編程')">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <span class="bg-green-500 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 1-3</span>
+                        「防禦性編程」：打造不壞的代碼 (45 min)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
+                        <p class="text-gray-700">重構你的代碼，增加「容錯」與「自我診斷」能力。</p>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
+                        <li><strong>輸入驗證：</strong>處理數據前加入 <code>if (isNaN(value))</code> 判斷。</li>
+                        <li><strong>逾時機制：</strong>若藍牙指令 1 秒內沒回應，自動執行 <code>stop()</code> 以策安全。</li>
+                        <li><strong>錯誤回饋：</strong>建立「錯誤訊息視窗 / Toast」，發生錯誤時顯示具體原因，而非網頁空白。</li>
+                    </ul>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-16 border-t border-gray-200 pt-8 flex justify-between text-gray-500">
+            <a href="/courses/adv-13-master-robustness.html" class="hover:text-violet-600 flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Previous: Adv 13 軟體健壯性
+            </a>
+            <a href="/courses/adv-14-master-debugging-art.html" class="hover:text-violet-600 flex items-center">
+                Back to Menu
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+            </a>
+        </footer>
+
+    </main>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/q7JLirMY4IE",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vQyXmlJ-bo976MKAhHKAHJ8e4nmhCvz__S0C0ErlG_VepmFvuo_izHlQyWjT5iN7B5NRSatj4utdGjf/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

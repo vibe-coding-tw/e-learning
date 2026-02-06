@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 5-1】數位影像的特徵提取 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-slate-900 to-purple-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2048&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 5 - 單元 1
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                像機器一樣看見：<br><span class="text-indigo-400">特徵提取的藝術</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-indigo-100 max-w-2xl mx-auto font-light leading-relaxed">
+                影像不只是像素。學習如何從雜亂的畫面中提取關鍵資訊，讓無人車理解世界。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Section 1: What are Features? -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🔍</span> 1. 什麼是特徵？ (20 min)
+                    </h2>
+                    <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+                        特徵是影像中具有<strong>「代表性」</strong>且<strong>「不隨旋轉、縮放、光照輕易改變」</strong>的資訊。
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="bg-slate-50 p-6 rounded-xl border border-slate-100">
+                            <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                <span class="text-indigo-500">🟢</span> 低階特徵
+                            </h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">
+                                顏色、紋理、邊緣（Edges）。這些是構成影像的最基本元素。
+                            </p>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-xl border border-slate-100">
+                            <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                <span class="text-indigo-500">🟡</span> 中階特徵
+                            </h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">
+                                形狀（如圓形、方形）、孔洞。開始具備物件的雛形。
+                            </p>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-xl border border-slate-100">
+                            <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                <span class="text-indigo-500">🔴</span> 高階特徵
+                            </h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">
+                                臉部器官、車牌、交通標誌。這與人類的認知概念直接掛鉤。
+                            </p>
+                        </div>
+                    </div>
+                    <div
+                        class="mt-8 p-6 bg-amber-50 rounded-2xl border border-amber-100 flex flex-col md:flex-row items-center gap-6">
+                        <div class="text-4xl">💡</div>
+                        <div>
+                            <h4 class="font-bold text-amber-900">學習任務：尋找生活中的影像</h4>
+                            <p class="text-sm text-amber-800">思考：如果要辨識一張「信用卡」，你會提取哪些特徵？（如：卡號的凸起紋理、晶片的顏色、固定的長寬比）。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Edge Detection -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">✨</span> 2. 邊緣偵測的魔術 (25 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6">
+                            <div class="p-6 bg-slate-900 rounded-2xl text-white">
+                                <h4 class="text-indigo-400 font-bold mb-2">數學原理</h4>
+                                <p class="text-sm text-slate-300 leading-relaxed">
+                                    邊緣發生在像素值<strong>「劇烈變化」</strong>的地方。透過計算<strong>梯度 (Gradient)</strong>，我們可以勾勒出物體的輪廓。
+                                </p>
+                            </div>
+                            <ul class="space-y-4 text-gray-600 leading-relaxed">
+                                <li class="flex gap-3">
+                                    <span class="text-indigo-500 font-bold">●</span>
+                                    <span><strong>Sobel 算子：</strong>理解水平與垂直方向的差分。</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="text-indigo-500 font-bold">●</span>
+                                    <span><strong>Canny 算子：</strong>目前最流行的邊緣偵測演算法，包含降噪、尋找最強梯度、排除雜訊。</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 flex flex-col justify-center">
+                            <h4 class="font-bold text-indigo-900 mb-4 flex items-center gap-2">
+                                <span>🛠️</span> 學習任務
+                            </h4>
+                            <p class="text-gray-700 text-sm leading-relaxed">
+                                觀察同一張照片經過邊緣處理後，如何從複雜背景中抽離出物體的「骨架」。
+                            </p>
+                            <div class="mt-6 flex justify-center">
+                                <div
+                                    class="relative w-48 h-32 bg-slate-200 rounded-lg overflow-hidden border-2 border-indigo-300 shadow-inner group">
+                                    <div
+                                        class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=400&auto=format&fit=crop')] bg-cover opacity-100 transition-opacity duration-700 group-hover:opacity-0">
+                                    </div>
+                                    <div
+                                        class="absolute inset-0 bg-slate-900 flex items-center justify-center opacity-0 transition-opacity duration-700 group-hover:opacity-100">
+                                        <div class="w-full h-full border border-white/20 p-4">
+                                            <div
+                                                class="w-full h-full border border-white/40 rounded-full animate-pulse">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="absolute bottom-2 right-2 bg-indigo-600 text-[10px] text-white px-2 py-1 rounded">
+                                        Hover to see Canny</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Contours -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-purple-600 to-indigo-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">📐</span> 3. 輪廓檢索與幾何特徵 (15 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-6">
+                            <p class="text-gray-600 leading-relaxed">
+                                <strong>從邊緣到輪廓：</strong>理解如何將相連的邊緣點串聯成一個封閉的「輪廓 (Contour)」。
+                            </p>
+                            <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200">
+                                <h5 class="font-bold text-slate-800 mb-3 text-lg">矩 (Moments)</h5>
+                                <p class="text-sm text-slate-600">利用數學矩計算輪廓的<strong>面積、周長、圓度 (Roundness)</strong>。</p>
+                            </div>
+                        </div>
+                        <div class="bg-purple-50 p-8 rounded-3xl border border-purple-100">
+                            <h4 class="font-bold text-purple-900 mb-4 flex items-center gap-2 text-xl">
+                                <span>🎯</span> 預習任務：幾何判別
+                            </h4>
+                            <p class="text-gray-700 leading-relaxed mb-6">
+                                思考為什麼「圓度」可以用來區分畫面中的是「皮球」還是「磚塊」？
+                            </p>
+                            <div class="bg-white p-4 rounded-xl shadow-sm border border-purple-200">
+                                <code class="text-xs text-purple-700">Roundness = (4 * π * Area) / (Perimeter^2)</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Color Space -->
+        <section class="mb-12">
+            <div class="bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white">
+                <div class="p-1 bg-gradient-to-r from-green-400 to-blue-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🌈</span> 4. 顏色空間與二值化 (預習單元)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 text-slate-300">
+                        <div class="space-y-6">
+                            <h4 class="text-xl font-bold text-white flex items-center gap-2">
+                                <span class="text-green-400">●</span> RGB vs HSV
+                            </h4>
+                            <p class="leading-relaxed">
+                                為何在多變光影下應優先選擇 <strong>HSV (Hue, Saturation, Value)</strong>？如何定義顏色的「區間」。
+                            </p>
+                            <div class="bg-white/5 p-4 rounded-xl border border-white/10">
+                                <p class="text-xs italic">"HSV 將顏色 (H) 與亮度 (V) 完全分離，讓偵測對光影不敏感。"</p>
+                            </div>
+                        </div>
+                        <div class="space-y-6">
+                            <h4 class="text-xl font-bold text-white flex items-center gap-2">
+                                <span class="text-blue-400">●</span> 線上任務
+                            </h4>
+                            <p class="leading-relaxed">
+                                使用 Web 端模擬工具，調整 HSV 滑桿以提取範例圖中的「紅球」或「黑線」輪廓。
+                            </p>
+                            <div class="bg-indigo-600/30 p-4 rounded-xl border border-indigo-500/30 text-center">
+                                <span class="text-sm font-bold animate-pulse">Simulator Loading... (Available in
+                                    Lab)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Assignments -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：特徵提取實戰</h2>
+            <p class="text-center text-gray-500 mb-12">從像素操作到邏輯決策，建立無人車的感知層。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 1-1 -->
+                <div onclick="openSubmissionModal('adv-05-edge-hunter', '【作業 1-1】「邊緣獵人」：Canny 參數動態調校')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🎮</span>
+                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
+                            1-1】「邊緣獵人」</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>實作 Web 版邊緣偵測器，尋找教具無人車的最佳輪廓。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>建立 Threshold 1 &amp; 2 動態滑桿</li>
+                                <li>預處理整合：加入高斯模糊開關</li>
+                                <li>對比降噪前後邊緣的乾淨程度</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 1-2 -->
+                <div onclick="openSubmissionModal('adv-05-shape-filter', '【作業 1-2】「幾何篩選器」：形狀識別實戰')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🔶</span>
+                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
+                            1-2】「幾何篩選器」</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>利用輪廓特徵，讓網頁只鎖定畫面中的「圓形標誌」。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>使用 findContours 找出所有物體</li>
+                                <li>計算 `面積 / (周長^2)` 比值</li>
+                                <li>視覺標註：綠框標圓形，紅框標其他</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 1-3 -->
+                <div onclick="openSubmissionModal('adv-05-feature-decision', '【作業 1-3】特徵提取與決策連動')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-green-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🚗</span>
+                            <span class="bg-green-50 text-green-700 text-xs px-3 py-1 rounded-full font-bold">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-green-600 transition">【作業
+                            1-3】特徵與決策</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>當提取到特定特徵時，觸發無人車的行為。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>偵測停車線（橫向長方形）</li>
+                                <li>自動發送 BLE 指令 STOP 給 ESP32</li>
+                                <li>旋轉穩定性驗證與演算法優化</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階課程 5 - 單元 1</span>
+                <span class="hidden md:inline">|</span>
+                <span>數位影像的特徵提取</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/BXhOqLNPfBw",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vRqWBuf52ZV69F3jozz8NaMYeJnIIRDrXZ8ga6w6Em_FDM6JhfeW-epM6qkvYuZMPGYmpBM9xCHU-pk/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 4】ESP32-S3 影像處理與 DMA 觀念 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 15 - 單元 4
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                影像處理與 <span class="text-cyan-400">DMA 觀念</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto font-light leading-relaxed">
+                賦予 ESP32-S3 雙眼，利用 DMA 引擎驅動高速影像數據流，實現零延遲的邊緣視覺。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Intro Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 px-4">
+            <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 hover:shadow-2xl transition-all">
+                <div
+                    class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6 font-bold text-xl">
+                    ⚡
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">為什麼需要 DMA？</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    在高速影像傳輸中，CPU 不應浪費在搬運數據上。DMA (Direct Memory Access) 就像專業的搬運助手，自動完成數據流動，釋放處理核心的算力。
+                </p>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 hover:shadow-2xl transition-all">
+                <div
+                    class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center text-cyan-600 mb-6 font-bold text-xl">
+                    🎯
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">本單元重點</h3>
+                <ul class="space-y-2 text-gray-600 text-sm">
+                    <li class="flex items-center gap-2"><span>✅</span> 揭祕 DMA 的搬運機制與 CPU 優勢</li>
+                    <li class="flex items-center gap-2"><span>✅</span> 計算 RGB、YUV 與 JPEG 的頻寬消耗</li>
+                    <li class="flex items-center gap-2"><span>✅</span> 掌握 ESP32-S3 LCD_CAM 控制器組態</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Module 1: Why DMA? -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+                <div class="p-8 md:p-12 text-gray-600">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🚀</span> 1. 揭祕 DMA：高速數據流 (30 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                        <div class="space-y-6">
+                            <h3 class="text-xl font-bold text-gray-800">核心概念：搬運助手的藝術</h3>
+                            <p class="text-base leading-relaxed">想像 CPU
+                                是「主廚」，搬運食材（數據傳輸）如果是主廚親自做，就沒時間做菜。<strong>DMA</strong> 就是搬運工，讓數據在記憶體與鏡頭間自動流動。</p>
+                            <div class="flex flex-col gap-4">
+                                <div class="bg-red-50 p-4 rounded-xl border border-red-100 text-sm">
+                                    <p class="font-bold text-red-800">輪詢 (Polling)</p>
+                                    <p class="text-red-700">CPU 不斷詢問「數據好了嗎？」，搬運時 CPU 無法做其他事。</p>
+                                </div>
+                                <div class="bg-green-50 p-4 rounded-xl border border-green-100 text-sm">
+                                    <p class="font-bold text-green-800">DMA 模式</p>
+                                    <p class="text-green-700">硬體自動搬運，完成後才發中斷通知 CPU。效率極大化。</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            class="bg-gray-100 p-8 rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-4">
+                            <div class="bg-blue-600 text-white p-4 rounded-lg w-full text-center font-bold">CPU Core
+                            </div>
+                            <div class="w-1 h-8 bg-gray-300"></div>
+                            <div class="bg-amber-500 text-white p-4 rounded-lg w-full text-center font-bold shadow-lg">
+                                GDMA Controller</div>
+                            <div class="w-1 h-8 bg-gray-300"></div>
+                            <div class="flex gap-4 w-full">
+                                <div
+                                    class="flex-1 bg-cyan-600 text-white p-4 rounded text-center text-xs font-bold uppercase tracking-wider">
+                                    Camera</div>
+                                <div
+                                    class="flex-1 bg-indigo-600 text-white p-4 rounded text-center text-xs font-bold uppercase tracking-wider">
+                                    PSRAM</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Image Formats -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
+                <div class="p-8 md:p-12 text-gray-600">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🎞️</span> 2. 影像格式：RGB vs. JPEG (30 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <div class="p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                            <h3 class="font-bold text-gray-800 mb-4">數據量計算：頻寬戰爭</h3>
+                            <div class="bg-gray-900 p-6 rounded-xl font-mono text-sm text-cyan-400 mb-4">
+                                <p>// RGB565 (16-bit)</p>
+                                <p>320x240 x 2B = 153.6 KB / 幀</p>
+                                <p class="mt-3">// 30 FPS Stream</p>
+                                <p>153.6KB x 30 = 4.6 MB/s</p>
+                            </div>
+                            <p class="text-xs text-gray-400 italic">在 320x240 下就有 36.8 Mbps！如果是 720P WiFi 將崩潰。</p>
+                        </div>
+                        <div
+                            class="p-6 bg-indigo-900 rounded-2xl shadow-xl relative overflow-hidden flex flex-col justify-center">
+                            <h3 class="font-bold text-cyan-300 text-xl mb-4">JPEG 解救任務</h3>
+                            <p class="text-blue-100 mb-6 text-sm">S3 搭載硬體 JPEG 編碼器，壓縮率可達 10:1 至 20:1，是網路串流的首選。</p>
+                            <ul class="text-xs text-blue-200 space-y-2">
+                                <li class="flex gap-2"><span>🔹</span> RGB565：適合循線等局部運算</li>
+                                <li class="flex gap-2"><span>🔹</span> JPEG：串流王者，具硬體加速</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: LCD_CAM & PSRAM -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                <div class="p-8 md:p-12 text-gray-600">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">📼</span> 3. LCD_CAM 與 PSRAM (20 min)
+                    </h2>
+                    <div class="flex flex-col md:flex-row gap-8">
+                        <div class="flex-1 space-y-4">
+                            <h3 class="font-bold text-gray-800">外部緩衝的角色</h3>
+                            <p class="text-sm">SRAM 只有 512KB，裝不下 720P 影像。DMA 將攝像頭數據直接傾倒進 PSRAM 中，過程完全自動化。</p>
+                            <div class="bg-emerald-50 p-4 rounded-xl border-l-4 border-emerald-500 text-xs">
+                                <strong>Grab Mode:</strong> CAMERA_GRAB_LATEST 確保每次取得都是最新影幀，降低處理延遲。
+                            </div>
+                        </div>
+                        <div
+                            class="flex-1 bg-gray-900 p-6 rounded-2xl font-mono text-xs text-cyan-500 flex flex-col justify-center">
+                            <p>// S3 CAM Buffer Config</p>
+                            <p class="mt-2 text-gray-400">config.fb_count = 2;</p>
+                            <p class="text-white">config.fb_location = <span
+                                    class="text-emerald-400">CAMERA_FB_IN_PSRAM</span>;</p>
+                            <p class="text-gray-400">config.grab_mode = CAMERA_GRAB_LATEST;</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實作：高速邊緣視覺</h2>
+            <p class="text-center text-gray-500 mb-12">驅動 S3 影像引擎，實現數據流的高速擷取與分析。</p>
+
+            <div class="grid md:grid-cols-3 gap-6 px-4">
+                <!-- Task 4-1 -->
+                <div onclick="openSubmissionModal('adv-15-dma-capture', 'Task 4-1: 「零延遲」影像擷取測試')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">📷</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 4-1】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「零延遲」影像擷取測試</h4>
+                        <p class="text-sm text-gray-600 mb-4">配置 S3 DMA 模式驅動攝像頭，並實作雙緩衝機制。</p>
+                        <ul class="text-xs text-gray-500 space-y-1 list-disc list-inside">
+                            <li>設定 Double Buffer 異步寫入</li>
+                            <li>對比輪詢模式下的 CPU 負擔</li>
+                            <li>檢測大數據傳輸下的中斷穩定性</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Task 4-2 -->
+                <div onclick="openSubmissionModal('adv-15-stream-analyzer', 'Task 4-2: 影像數據流分析儀')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">📊</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 4-2】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">影像數據流分析儀</h4>
+                        <p class="text-sm text-gray-600 mb-4">在控制網頁實作接收解析器，即時顯示 FPS 與延遲。</p>
+                        <ul class="text-xs text-gray-500 space-y-1 list-disc list-inside">
+                            <li>處理 JPEG 二進位數據流</li>
+                            <li>即時計算數據封包大小與延遲</li>
+                            <li>支援不同 Quality 設定的對比測試</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Task 4-3 -->
+                <div onclick="openSubmissionModal('adv-15-pixel-filter', 'Task 4-3: 簡易影像濾鏡處理')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-cyan-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🎬</span>
+                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition">【作業 4-3】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">簡易影像濾鏡處理</h4>
+                        <p class="text-sm text-gray-600 mb-4">實作初步像素運算，體會「減少數據量」的穩定性優勢。</p>
+                        <ul class="text-xs text-gray-500 space-y-1 list-disc list-inside">
+                            <li>二值化處理（循跡線基礎）</li>
+                            <li>局部裁切傳輸 (Region of Interest)</li>
+                            <li>觀察 FPS 與頻寬占用的連動關係</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>進階課程 15 - 單元 4</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/Jq_JxUEKepA",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vRWhh757o8_dO1V32Yan6X_lV3dhXH6QVithXfL-gvgsRRvn2nE24L4cAe_v2MJWbc6Xhl0L4q60AfE/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

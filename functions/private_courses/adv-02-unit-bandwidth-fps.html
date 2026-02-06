@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 3】網路頻寬與幀率 (FPS) 的數學關係 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1558494949-ef010cbdcc51?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 2 - 單元 3
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                網路頻寬與 <span class="text-blue-400">FPS</span><br>的數學關係
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                像素與頻寬的博弈：計算、權衡並優化你的影像傳輸效率。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Section 1: Raw Data -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">🔢</span> 1. 影像容量的數學拆解 (20 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
+                                <p>
+                                    <strong>原始數據量 (Raw Data)：</strong>一張未壓縮影像的大小取決於解析度與每個像素佔用的位元組。
+                                </p>
+
+                                <div class="bg-slate-800 text-blue-400 p-6 rounded-xl font-mono text-center my-6">
+                                    <h4 class="text-white font-bold mb-2">核心公式</h4>
+                                    <p class="text-2xl">Width × Height × Bytes_per_pixel</p>
+                                </div>
+
+                                <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
+                                    <h4 class="font-bold text-blue-800 mb-2 flex items-center gap-2"><span>💡</span> 範例
+                                    </h4>
+                                    <p class="text-sm text-blue-700">
+                                        $160 \times 120$ 的 8-bit 灰階影像 $= 19,200$ Bytes ($\approx 19$ KB)。<br>
+                                        <strong>FPS 的乘法效應：</strong>當你每秒要傳送 20 張圖時，數據量會瞬間放大 20 倍！
+                                    </p>
+                                </div>
+
+                                <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
+                                    <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
+                                        <span>🔍</span> 學習任務
+                                    </h4>
+                                    <p class="text-indigo-700">
+                                        計算解析度從 $160 \times 120$ 提升到 $640 \times 480$ 時，所需的頻寬會增加幾倍？<br>
+                                        <span class="text-sm italic text-indigo-600">（提示：長寬各加 4 倍，總面積增加多少倍？）</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Compression Ratio -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🗜️</span> 2. 壓縮率 (Compression Ratio) 的變數 (20 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
+                        <p>
+                            <strong>JPEG 壓縮的影響：</strong>壓縮不是固定的。複雜的畫面（如森林）比簡單的畫面（如白牆）產生的 JPEG 檔案更大。
+                        </p>
+
+                        <div class="bg-slate-800 text-cyan-400 p-6 rounded-xl font-mono text-center mb-6">
+                            <h4 class="text-white font-bold mb-2">位元率 (Bitrate) 公式</h4>
+                            <p class="text-2xl">Bitrate (bps) = 平均幀大小 (Bytes) × 8 × FPS</p>
+                        </div>
+
+                        <div class="bg-cyan-50 p-6 rounded-xl border border-cyan-100">
+                            <h4 class="font-bold text-cyan-800 mb-2 flex items-center gap-2"><span>📊</span> 學習任務
+                            </h4>
+                            <p class="text-cyan-700">
+                                理解為什麼在相同的 Wi-Fi 頻寬下，降低解析度可以換取更高的 FPS（流暢度）。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Latency vs Bandwidth -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-slate-700 to-slate-900"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">⚖️</span> 3. 延遲與頻寬的權衡 (20 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg">
+                        <p>
+                            <strong>網路瓶頸：</strong>如果頻寬只有 2Mbps，但你的影像數據流是 5Mbps，會發生什麼事？（提示：封包堆積、延遲增加、連線斷開）。
+                        </p>
+
+                        <div class="bg-amber-100 p-8 rounded-2xl border border-amber-200 mt-8">
+                            <h4 class="text-amber-900 font-bold text-xl mb-4 flex items-center gap-2">
+                                <span>🚀</span> 預習任務：思考與設定
+                            </h4>
+                            <div class="space-y-4">
+                                <p class="text-amber-800 text-lg">
+                                    思考對於「自動導航」的無人車，是「高解析度但每秒 2 幀」比較好，還是「低解析度但每秒 30 幀」比較好？
+                                </p>
+                                <hr class="border-amber-200">
+                                <p class="text-amber-800 font-medium">
+                                    線上任務：如果要達成 30 FPS 且不卡頓，在 2.4GHz Wi-Fi 環境下，影像品質應該如何設定？
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                            <div class="p-6 bg-slate-50 rounded-xl border border-slate-200">
+                                <h4 class="font-bold text-slate-800 mb-2">關鍵概念</h4>
+                                <p class="text-sm text-slate-600">解析度、品質 (Quality) 與數據量的平衡。</p>
+                            </div>
+                            <div class="p-6 bg-slate-50 rounded-xl border border-slate-200">
+                                <h4 class="font-bold text-slate-800 mb-2">計算公式</h4>
+                                <p class="text-sm text-slate-600">FPS × 單張圖片大小 = 所需頻寬</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：頻寬與 FPS 優化實戰</h2>
+            <p class="text-center text-gray-500 mb-12">透過實測與除錯，掌握數據傳輸的工程取捨 (Trade-off)。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 3-1 -->
+                <div onclick="openSubmissionModal('adv-02-bandwidth-weigh', '【作業 3-1】數據秤重：解析度與封包體積實實測')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">⚖️</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
+                            3-1】數據秤重</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務目標：</strong>實測不同設定下，ESP32 傳出的真實數據量。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>紀錄 160x120 品質 10 下 100 幀的總 Size</li>
+                                <li>對比「純色桌面」與「複雜雜亂區」封包變化</li>
+                                <li>計算達成 24 FPS 穩定串流所需的 Mbps</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-2 -->
+                <div onclick="openSubmissionModal('adv-02-fps-bottleneck', '【作業 3-2】流暢度優化：FPS 瓶頸除錯')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-cyan-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🚀</span>
+                            <span class="bg-cyan-50 text-cyan-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-cyan-600 transition">【作業
+                            3-2】流暢度優化</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務目標：</strong>在固定頻寬環境下，找出提升 FPS 的最佳路徑。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>使用 Chrome 網路限制 (Throttling) 模擬弱網</li>
+                                <li>策略 A：維持高解析度，降低品質</li>
+                                <li>策略 B：維持高品質，降低解析度</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-3 -->
+                <div onclick="openSubmissionModal('adv-02-abr-logical', '【作業 3-3】動態頻寬適應 (ABR) 邏輯設計')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🤖</span>
+                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
+                            3-3】ABR 邏輯設計</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務目標：</strong>設計一套偽代碼邏輯，讓系統自動調整 FPS。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>設計延遲超過 200ms 時的執行動作</li>
+                                <li>設計 JSON 回傳包通知 ESP32 調整參數</li>
+                                <li>建立「自我調節系統」的閉迴路思考</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階課程 2 - 單元 3</span>
+                <span class="hidden md:inline">|</span>
+                <span>網路頻寬與 FPS 數學關係</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/7SBO8kGX5tE",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vR9PxhvlWr4eMEI-idYZtAOuh_xg67mQrXvHD49h5IqXpNKXHfvfmKs6GzH-1ZrAmY7iSGKMsJBR8Ao/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

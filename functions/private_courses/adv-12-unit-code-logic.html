@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 3】代碼實作邏輯預習 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-gray-800 to-zinc-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 12 - 單元 3
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                代碼實作邏輯預習<br><span class="text-cyan-400">Logic, Loop & FSM</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                無人車的大腦如何思考？從混亂到控制的系統藍圖。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Section 1: FSM -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">🔄</span> 1. 有限狀態機 (FSM) (20 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
+                                <p>
+                                    無人車不是「隨機」運行的，它在不同時刻處於不同「狀態」。
+                                    FSM 用來管理這些狀態的切換。
+                                </p>
+                                <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                                    <h3 class="font-bold text-gray-800 text-xl mb-2">⚡ 核心概念</h3>
+                                    <ul class="list-disc list-inside space-y-2">
+                                        <li><strong>狀態 (States)：</strong>系統當下的模式（如：搜尋線條、循跡中、遇到障礙物停止）。</li>
+                                        <li><strong>觸發條件 (Triggers)：</strong>從狀態 A 跳轉到狀態 B 的「關鍵事件」（如：感測器讀值全白時，進入搜尋狀態）。
+                                        </li>
+                                    </ul>
+                                </div>
+                                <p>
+                                    <strong>學習任務：</strong>嘗試畫出「自動洗車機」的狀態轉換圖（閒置 -> 噴水 -> 刷洗 -> 烘乾 -> 閒置）。
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                            <!-- Visual Analogy -->
+                            <div
+                                class="relative w-full max-w-sm aspect-square bg-gray-100 rounded-2xl p-6 flex items-center justify-center border-2 border-dashed border-gray-300">
+                                <div class="text-center space-y-4">
+                                    <div class="bg-white p-4 rounded-lg shadow font-bold text-gray-700">閒置 (IDLE)</div>
+                                    <div class="text-gray-400 text-2xl">⬇️ 投幣</div>
+                                    <div
+                                        class="bg-orange-100 p-4 rounded-lg shadow font-bold text-orange-700 border border-orange-200">
+                                        運转 (RUN)</div>
+                                    <div class="text-gray-400 text-2xl">⬇️ 結束</div>
+                                    <div class="bg-white p-4 rounded-lg shadow font-bold text-gray-700">閒置 (IDLE)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Main Loop -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">♾️</span> 2. 控制迴圈 (The Main Loop) (20 min)
+                    </h2>
+                    <p class="text-lg text-gray-600 mb-8">
+                        程式的核心是「永不停歇的思考」。輸入 -> 處理 -> 輸出。
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
+                                <h4 class="font-bold text-blue-900 mb-2">📥 1. 感測 (Input)</h4>
+                                <p class="text-blue-800 text-sm">讀取影像質心、檢查藍牙指令。</p>
+                            </div>
+                            <div class="bg-cyan-50 p-6 rounded-xl border border-cyan-100">
+                                <h4 class="font-bold text-cyan-900 mb-2">🧠 2. 決策 (Process)</h4>
+                                <p class="text-cyan-800 text-sm">計算 PID、判斷當前狀態。</p>
+                            </div>
+                            <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
+                                <h4 class="font-bold text-indigo-900 mb-2">📤 3. 執行 (Output)</h4>
+                                <p class="text-indigo-800 text-sm">更新 PWM 到馬達、更新網頁數據。</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-red-50 p-6 rounded-xl border border-red-100">
+                            <h3 class="font-bold text-red-900 text-xl mb-4">🚫 阻塞 (Blocking) 的威脅</h3>
+                            <p class="text-red-800 mb-4">
+                                理解為什麼在迴圈內使用 <code class="bg-red-100 px-1 rounded text-red-700">delay()</code> 會導致車子失控。
+                            </p>
+                            <div class="bg-white p-4 rounded-lg border border-red-200 text-sm">
+                                <p class="font-bold text-gray-700 mb-2">為什麼？</p>
+                                <p class="text-gray-600">
+                                    因為延遲期間，CPU 是「睡著」的，感測器是盲目的。
+                                    車子若正在全速衝刺，會無法即時煞車。
+                                </p>
+                            </div>
+                            <p class="mt-4 text-red-800 font-bold">
+                                學習任務：思考如何不用 delay() 也能讓 LED 每隔一秒閃爍一次？（提示：millis()）
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Pseudocode -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-green-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">📝</span> 3. 虛擬碼 (Pseudocode) 撰寫 (20 min)
+                    </h2>
+
+                    <div class="bg-gray-50 p-6 rounded-xl border border-gray-200 mb-8">
+                        <h3 class="font-bold text-gray-800 text-lg mb-4">用人類語言寫程式</h3>
+                        <p class="text-gray-600 mb-4">
+                            先別急著寫 C++！先用中文寫出邏輯。
+                        </p>
+                        <div class="font-mono text-sm bg-gray-900 text-green-400 p-4 rounded-lg shadow-inner">
+                            也就是說：<br>
+                            如果 (看到線在左邊) {<br>
+                            &nbsp;&nbsp;就左轉;<br>
+                            } 否則 如果 (沒看到線) {<br>
+                            &nbsp;&nbsp;就後退搜尋;<br>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-100">
+                            <h4 class="font-bold text-emerald-900 mb-2">⏱️ 取樣時間 (Sampling Time)</h4>
+                            <p class="text-emerald-800 text-sm">
+                                決策頻率有多快？
+                                預習任務：如何使用 <code class="bg-emerald-100 px-1 rounded">micros()</code> 函數精確計算 PID 的更新頻率。
+                            </p>
+                        </div>
+                        <div class="bg-green-50 p-6 rounded-xl border border-green-100">
+                            <h4 class="font-bold text-green-900 mb-2">📐 PID 代碼化</h4>
+                            <p class="text-green-800 text-sm">
+                                學習解析 <code
+                                    class="bg-green-100 px-1 rounded">output = Kp*e + Ki*integral + Kd*derivative</code>
+                                在 C++ 中的寫法。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實作任務</h2>
+            <p class="text-center text-gray-500 mb-12">Coding 之前的 Logical Thinking。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 3-1 -->
+                <div onclick="openSubmissionModal('adv-12-logic-puzzle', '【作業 3-1】「邏輯拼圖」：流程圖轉代碼')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-orange-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🧩</span>
+                            <span class="bg-orange-50 text-orange-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-orange-600 transition">【作業
+                            3-1】邏輯拼圖</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務：</strong>先把圖畫出來，再寫程式。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs text-left">
+                                <li>繪製流程圖：設計「繞過障礙物後回到循跡線」的邏輯。</li>
+                                <li>建立框架：寫出 if...else if...else 結構與註解。</li>
+                                <li>邏輯走查：測試邊界情況（如電量低時？）。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-2 -->
+                <div onclick="openSubmissionModal('adv-12-non-blocking', '【作業 3-2】「非阻塞任務器」：millis() 實踐')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">⏱️</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
+                            3-2】非阻塞任務器</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務：</strong>同時做很多事，但絕不卡頓。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs text-left">
+                                <li>實作：影像傳送 (50ms)、閃爍警示 (1s)、監控電量 (1s) 並行。</li>
+                                <li>技巧：使用 <code>previousMillis</code> 紀錄時間戳。</li>
+                                <li>觀測：印出 Loop Speed 檢查是否掉幀。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-3 -->
+                <div onclick="openSubmissionModal('adv-12-safeguard', '【作業 3-3】「防錯邏輯保護」：魯棒性設計')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-red-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🛡️</span>
+                            <span class="bg-red-50 text-red-700 text-xs px-3 py-1 rounded-full font-bold">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-red-600 transition">【作業
+                            3-3】防錯邏輯保護</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務：</strong>預防失控，建立最後一道防線。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs text-left">
+                                <li>通訊斷連：超過 2 秒沒指令，強制停車。</li>
+                                <li>異常值過濾：座標瞬間跳變 > 200px，視為雜訊忽略。</li>
+                                <li>目標：寫出工業級的 Robust Code。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階 12 - 單元 3</span>
+                <span class="hidden md:inline">|</span>
+                <span>代碼實作邏輯預習</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/wrcmKrYpNA0",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vTQOeZStAJUwGm1JlEo2r6vGVx20USevDP69swtB7BSJY33Jq9A5dYSQiey6nFjXs1IL3D6ibH5UySB/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

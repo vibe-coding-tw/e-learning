@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 2】硬體中斷觀念 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517433874015-8137351543b3?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 11 - 單元 2
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                硬體中斷<br><span class="text-purple-400">(Hardware Interrupts)</span> 觀念
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
+                即時運算的引擎：從輪詢的忙碌中釋放你的 CPU。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Section 1: Polling vs Interrupts -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">🤔</span> 1. 什麼是中斷？生活中的類比 (15 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
+                                <div
+                                    class="bg-gray-50 p-6 rounded-xl border border-gray-200 hover:border-purple-300 transition-colors">
+                                    <h3 class="font-bold text-gray-800 text-xl mb-2">🐢 輪詢 (Polling)</h3>
+                                    <p>你正在煮泡麵，每隔 5 秒就跑去廚房看水開了沒。這讓你無法專心寫作業（浪費 CPU 資源）。</p>
+                                </div>
+                                <div
+                                    class="bg-purple-50 p-6 rounded-xl border border-purple-200 hover:border-purple-300 transition-colors">
+                                    <h3 class="font-bold text-purple-800 text-xl mb-2">⚡ 中斷 (Interrupt)</h3>
+                                    <p>你回房間寫作業，等水開了水壺發出「鳴笛聲」，你才放下筆去關火。這讓你效率極大化。</p>
+                                </div>
+
+                                <p>
+                                    <strong>關鍵觀念：</strong>中斷能讓處理器從繁重的任務中被「強行暫停」，去處理更緊急的事。
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                            <!-- Visual Analogy -->
+                            <div
+                                class="relative w-full max-w-sm aspect-video bg-gray-100 rounded-2xl overflow-hidden flex flex-col items-center justify-center p-4">
+                                <div class="flex justify-between w-full px-8 mb-4">
+                                    <div class="text-center">
+                                        <div class="text-4xl mb-2">📝</div>
+                                        <div class="text-xs text-gray-500">Main Loop</div>
+                                    </div>
+                                    <div class="text-center animate-bounce">
+                                        <div class="text-4xl mb-2">🔔</div>
+                                        <div class="text-xs text-red-500 font-bold">Interrupt!</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-4xl mb-2">🚨</div>
+                                        <div class="text-xs text-gray-500">ISR</div>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                                    <div class="w-2/3 h-full bg-indigo-500"></div>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-2">CPU 執行流程切換示意</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: ISR Rules -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">📜</span> 2. 中斷服務函式 (ISR) 的三大法則 (25 min)
+                    </h2>
+                    <p class="text-lg text-gray-600 mb-8">當 CPU 被中斷後，會跳轉去執行一段特殊的程式碼，稱為 <strong>ISR (Interrupt Service
+                            Routine)</strong>。</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-orange-50 p-6 rounded-xl border border-orange-100">
+                            <span class="text-3xl mb-4 block">🚀</span>
+                            <h3 class="font-bold text-orange-900 text-lg mb-2">短小精悍</h3>
+                            <p class="text-orange-800 text-sm">ISR 必須極快地執行完畢，否則會阻塞主程式和其他中斷。</p>
+                        </div>
+
+                        <div class="bg-red-50 p-6 rounded-xl border border-red-100">
+                            <span class="text-3xl mb-4 block">🚫</span>
+                            <h3 class="font-bold text-red-900 text-lg mb-2">禁止延遲</h3>
+                            <p class="text-red-800 text-sm">在 ISR 內絕對不能使用 <code>delay()</code> 或複雜的
+                                <code>Serial.print()</code>。
+                            </p>
+                        </div>
+
+                        <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
+                            <span class="text-3xl mb-4 block">🔄</span>
+                            <h3 class="font-bold text-blue-900 text-lg mb-2">變數共享</h3>
+                            <p class="text-blue-800 text-sm">在 ISR 中被修改的變數，必須宣告為
+                                <code>volatile</code>（告訴編譯器：這個數值隨時會變，不要亂優化）。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Trigger Types -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-green-500 to-teal-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                                <span class="text-4xl">🎚️</span> 3. 中斷觸發類型 (10 min)
+                            </h2>
+
+                            <ul class="space-y-4">
+                                <li class="flex items-start gap-4">
+                                    <span
+                                        class="bg-green-100 text-green-800 font-bold px-3 py-1 rounded text-sm whitespace-nowrap mt-1">RISING</span>
+                                    <div>
+                                        <strong class="text-gray-900">上升沿：</strong>
+                                        <span class="text-gray-600">電位從 0 變 1 的瞬間。常用於按鈕按下瞬間。</span>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-4">
+                                    <span
+                                        class="bg-blue-100 text-blue-800 font-bold px-3 py-1 rounded text-sm whitespace-nowrap mt-1">FALLING</span>
+                                    <div>
+                                        <strong class="text-gray-900">下降沿：</strong>
+                                        <span class="text-gray-600">電位從 1 變 0 的瞬間。常用於按鈕放開瞬間。</span>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-4">
+                                    <span
+                                        class="bg-purple-100 text-purple-800 font-bold px-3 py-1 rounded text-sm whitespace-nowrap mt-1">CHANGE</span>
+                                    <div>
+                                        <strong class="text-gray-900">改變時：</strong>
+                                        <span class="text-gray-600">只要電位有動靜就觸發。常用於編碼器計數。</span>
+                                    </div>
+                                </li>
+                            </ul>
+
+                            <div class="mt-8 bg-teal-50 p-6 rounded-xl border border-teal-100">
+                                <h4 class="font-bold text-teal-800 mb-2 flex items-center gap-2">
+                                    <span>🧠</span> 預習任務
+                                </h4>
+                                <p class="text-teal-700 text-sm">
+                                    對於一個「緊急停止按鈕」，你覺得用哪種觸發方式最安全？為什麼不能在 loop() 裡用 digitalRead() 讀取編碼器？（提示：高轉速下會漏計）。
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex-1 flex flex-col items-center justify-center space-y-4">
+                            <!-- Rising/Falling Diagram -->
+                            <div class="w-full relative h-32 bg-gray-900 rounded-lg p-4 flex items-end">
+                                <div class="absolute left-4 top-4 text-xs text-green-400">Signal Level</div>
+                                <svg class="w-full h-full" viewBox="0 0 300 100" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M0 80 H50 V20 H150 V80 H250 V20 H300" stroke="#4ade80" />
+                                    <!-- Annotations -->
+                                    <text x="55" y="50" fill="white" font-size="10"
+                                        transform="rotate(-90 50,50)">RISING</text>
+                                    <text x="155" y="50" fill="white" font-size="10"
+                                        transform="rotate(-90 150,50)">FALLING</text>
+                                </svg>
+                            </div>
+                            <p class="text-xs text-gray-500">波形邊緣觸發示意圖</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實作任務</h2>
+            <p class="text-center text-gray-500 mb-12">從理論到實戰，掌握即時運算的核心。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 2-1 -->
+                <div onclick="openSubmissionModal('adv-11-reaction-test', '【作業 2-1】「光速反應測試」：中斷 vs 輪詢')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">⏱️</span>
+                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
+                            2-1】光速反應測試</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>比較 CPU 忙碌時，Polling 與 Interrupt 對按鈕的反應速度。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs text-left">
+                                <li>實驗 A (Polling)：忙碌迴圈中穿插檢查。</li>
+                                <li>實驗 B (Interrupt)：attachInterrupt 隨按隨亮。</li>
+                                <li>觀測重點：體會「非同步且不可預知」事件的處理差異。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2-2 -->
+                <div onclick="openSubmissionModal('adv-11-debouncing', '【作業 2-2】「彈跳惡夢」：解決機械開關的雜訊')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🦗</span>
+                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
+                            2-2】彈跳惡夢</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>解決按一下按鈕卻觸發 20 次中斷的問題。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs text-left">
+                                <li>問題再現：按鈕計數器亂跳。</li>
+                                <li>軟體去彈跳：ISR 內加入 50ms 時間差判斷。</li>
+                                <li>驗證：確保按一下就是加一，無論按多快。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2-3 -->
+                <div onclick="openSubmissionModal('adv-11-encoder-interrupt', '【作業 2-3】「馬達編碼器」實戰應用')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🏎️</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
+                            2-3】馬達編碼器實戰</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>利用光電感測器方波訊號觸發中斷，計算輪子轉動格數。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs text-left">
+                                <li>精確計數：ISR 內累加脈衝數。</li>
+                                <li>負載測試：全速轉動馬達確認無漏計。</li>
+                                <li>目標：將觀念應用於高頻數據擷取（>1kHz）。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階 11 - 單元 2</span>
+                <span class="hidden md:inline">|</span>
+                <span>硬體中斷觀念</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/Vf4KKlodIac",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vRPouKufRZ8cbXQdwXvgDVz_oydkDOt78eWVDST4bzUtrtt1osHVpI-hbP7UP0gj1iIJb-y0R5Z69uW/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 9-2】Teachable Machine 快速建模實戰 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1620712943543-bcc4628c6757?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 9 - 單元 2
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                Teachable Machine<br><span class="text-indigo-400">快速建模實戰</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-indigo-100 max-w-2xl mx-auto font-light leading-relaxed">
+                利用翻轉教室概念，親手體驗機器學習三部曲：數據收集、模型訓練與即時預覽。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Section 1: ML Trilogy -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🎬</span> 1. 機器學習三部曲 (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
+                            <ul class="space-y-4">
+                                <li class="flex gap-3">
+                                    <span class="text-indigo-500 font-bold">●</span>
+                                    <span><strong>數據收集 (Input)：</strong>定義類別 (Classes)。為什麼需要「背景」類別？它是為了讓 AI
+                                        知道「什麼都沒有」的樣子。</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="text-indigo-500 font-bold">●</span>
+                                    <span><strong>訓練 (Train)：</strong>模型學習特徵。<strong>紀元 (Epochs)</strong>
+                                        是資料被學習的次數，<strong>學習率 (Learning Rate)</strong> 則決定每次修正步幅的大小。</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="text-indigo-500 font-bold">●</span>
+                                    <span><strong>預覽 (Preview)：</strong>即時測試。觀察過擬合 (Overfitting) ——
+                                        當模型太依賴背景或光線時會發生的誤判現象。</span>
+                                </li>
+                            </ul>
+                            <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
+                                <h4 class="font-bold text-indigo-900 mb-2 flex items-center gap-2">
+                                    <span>🔗</span> 學習任務
+                                </h4>
+                                <p class="text-sm text-gray-700 leading-relaxed">
+                                    開啟 <a href="https://teachablemachine.withgoogle.com/" target="_blank"
+                                        class="text-indigo-600 underline font-bold">Teachable Machine 官網</a>，用視訊鏡頭建立「手勢
+                                    A」與「手勢 B」的分類模型。
+                                </p>
+                            </div>
+                        </div>
+                        <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100">
+                            <img src="/images/adv-09-tm-ui.png" alt="Machine Learning Training" class="w-full h-auto">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Quality and Diversity -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🌈</span> 2. 影像品質與多樣性 (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 order-2 md:order-1">
+                            <img src="/images/adv-09-data-diversity.png" alt="Diverse Data Collection"
+                                class="w-full h-auto">
+                        </div>
+                        <div class="space-y-6 order-1 md:order-2 text-lg text-gray-600 leading-relaxed">
+                            <ul class="space-y-4">
+                                <li class="flex gap-3">
+                                    <span class="text-cyan-500 font-bold">●</span>
+                                    <span><strong>環境干擾：</strong>為什麼在房間訓練的模型，到了教室可能失效？背景、光線強弱都會影響 AI 的判斷。</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="text-cyan-500 font-bold">●</span>
+                                    <span><strong>樣本多樣性：</strong>提昇模型的<strong>魯棒性
+                                            (Robustness)</strong>。改變角度、距離、光線來取樣，模型才更強健。</span>
+                                </li>
+                            </ul>
+                            <div class="bg-slate-900 p-6 rounded-2xl border border-cyan-500/30">
+                                <h4 class="font-bold text-cyan-400 mb-2 flex items-center gap-2">
+                                    <span>🕵️</span> 學習任務
+                                </h4>
+                                <p class="text-sm text-cyan-100 leading-relaxed font-light">
+                                    觀察當背景中出現其他人或移動物體時，模型的置信度 (Confidence) 會如何劇烈變化。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Integration -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-amber-500 to-orange-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🔌</span> 3. 導出與整合觀念 (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
+                            <ul class="space-y-4">
+                                <li class="flex gap-3">
+                                    <span class="text-amber-500 font-bold">●</span>
+                                    <span><strong>TensorFlow.js：</strong>模型如何以 <code>model.json</code>
+                                        格式導出？了解權重檔與結構檔的關係，並在網頁瀏覽器中執行。</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="text-amber-500 font-bold">●</span>
+                                    <span><strong>BLE 整合：</strong>思考如何將識別結果（例如：看到「前進手勢」）轉化為指令，並透過 Web BLE 傳送給無人車。</span>
+                                </li>
+                            </ul>
+                            <div class="bg-amber-50 p-6 rounded-2xl border border-amber-100">
+                                <h4 class="font-bold text-amber-900 mb-2 flex items-center gap-2">
+                                    <span>💡</span> 預習任務
+                                </h4>
+                                <p class="text-sm text-gray-700 leading-relaxed">
+                                    訓練 3-5 種自定義手勢（如：握拳=停止、指左=左轉），並思考匯出模型後如何整合至 Web App 中。
+                                </p>
+                            </div>
+                        </div>
+                        <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100">
+                            <img src="/images/adv-09-model-integration.png" alt="Model Export and Integration"
+                                class="w-full h-auto">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Assignments -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：建模與指令整合</h2>
+            <p class="text-center text-gray-500 mb-12">針對真實場景進行優化，實作具备視覺能力的控制介面。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 2-1 -->
+                <div onclick="openSubmissionModal('adv-09-env-tuning', '【作業 9-2-1】「環境適應」模型微調')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🏢</span>
+                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
+                            2-1】環境適應</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>針對教室現場的「場景」進行模型優化。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>實地採集：採集「直行」、「左轉」、「右轉」三種標籤照片</li>
+                                <li>負樣本訓練：建立一個「雜訊/閒置」類別，加入走動人影</li>
+                                <li>目標：讓 AI 模型在真實環境下達到 90% 以上置信度</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2-2 -->
+                <div onclick="openSubmissionModal('adv-09-ai-forwarder', '【作業 9-2-2】AI 指令轉發器實作')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-cyan-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🛰️</span>
+                            <span class="bg-cyan-50 text-cyan-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-cyan-600 transition">【作業
+                            2-2】指令轉發</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>在 BLE 控制網頁中整合 Teachable Machine 模型。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>模型載入：利用 <code>tmImage.load()</code> 導入訓練好的模型</li>
+                                <li>數據流連通：當機率 > 0.9 時，自動呼叫 <code>sendConfig</code> 發送 BLE</li>
+                                <li>視覺回饋：在網頁 UI 上即時顯示 AI 目前「看見」了什麼</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2-3 -->
+                <div onclick="openSubmissionModal('adv-09-stress-test', '【作業 9-2-3】AI 駕駛員壓力測試')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-amber-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">⚖️</span>
+                            <span class="bg-amber-50 text-amber-700 text-xs px-3 py-1 rounded-full font-bold">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-amber-600 transition">【作業
+                            2-3】壓力測試</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>模擬極端情況，設計系統的備援機制。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>低信心處理：信心值 < 50% 時，程式應自動停車 (Fail-safe)</li>
+                                <li>延遲測量：測量「看到影像 -> 模型推論 -> 指令發送」的總延遲</li>
+                                <li>目標：優化決策流程，提升系統的反應速度與安全性</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階課程 9 - 單元 2</span>
+                <span class="hidden md:inline">|</span>
+                <span>Teachable Machine 快速建模實戰</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/lY-mCI5YXxE",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vRvfsjpuncC9YSkGrZ0vz9JOmHtJ9qXj-jMmgzM63uUHdMQ36jjlvRAPbU2SBgzTJsrvWasuK7GN-iJ/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

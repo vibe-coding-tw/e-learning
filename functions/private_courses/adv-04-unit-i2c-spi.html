@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 4-1】通訊協議與硬體實戰 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2048&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 4 - 單元 1
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                通訊協議解密<br><span class="text-indigo-400">I2C、SPI 與硬體實務</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-indigo-100 max-w-2xl mx-auto font-light leading-relaxed">
+                掌握硬體對話的本質：從定址機制、時鐘極限到數據封裝的完整旅程。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Theory Section -->
+        <div class="grid lg:grid-cols-2 gap-8 mb-16">
+            <!-- Section 1: I2C -->
+            <section class="flex flex-col">
+                <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 flex-grow">
+                    <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                    <div class="p-8 h-full">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                            <span class="text-3xl">📢</span> I2C：省線的「廣播系統」
+                        </h2>
+                        <ul class="space-y-4 text-gray-600 leading-relaxed text-sm">
+                            <li class="flex gap-3">
+                                <span class="text-blue-500 font-bold">●</span>
+                                <span><strong>僅需兩根線：</strong>SDA（數據）與 SCL（時鐘）。</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="text-blue-500 font-bold">●</span>
+                                <span><strong>定址機制：</strong>主機透過廣播「地址」來決定與哪個設備通訊。</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="text-blue-500 font-bold">●</span>
+                                <span><strong>Open-Drain 架構：</strong>理解為什麼 I2C 總線需要上拉電阻。</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: SPI -->
+            <section class="flex flex-col">
+                <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 flex-grow">
+                    <div class="p-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+                    <div class="p-8 h-full">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                            <span class="text-3xl">⚡</span> SPI：高速的「專線系統」
+                        </h2>
+                        <ul class="space-y-4 text-gray-600 leading-relaxed text-sm">
+                            <li class="flex gap-3">
+                                <span class="text-indigo-500 font-bold">●</span>
+                                <span><strong>通常四根線：</strong>SCK、MOSI、MISO、CS（片選）。</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="text-indigo-500 font-bold">●</span>
+                                <span><strong>全雙工傳輸：</strong>數據可同時雙向移動，速度極快 (MHz)。</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="text-indigo-500 font-bold">●</span>
+                                <span><strong>點對點機制：</strong>主機利用專屬的 CS 線啟動特定設備。</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Section 3: Timing Diagram -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-slate-700 to-indigo-900"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">📈</span> 時序圖判讀與訊號擷取
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                        <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                            <h4 class="font-bold text-slate-800 mb-2">開始位元 (Start Condition)</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">
+                                I2C 的獨家通訊協議：當 SCL 為高電平時，SDA 從高變低，標誌著對話的開始。
+                            </p>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                            <h4 class="font-bold text-slate-800 mb-2">時鐘極性與相位 (CPOL/CPHA)</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">
+                                SPI 的四種模式。決定數據是在時鐘的「上升沿」還是「下降沿」被固定並讀取。
+                            </p>
+                        </div>
+                    </div>
+                    <div class="bg-amber-50 p-6 rounded-2xl border border-amber-100">
+                        <p class="text-amber-900 text-sm font-medium">
+                            💡 <strong>Datasheet 尋寶：</strong>嘗試找出 MPU6050 的預設 I2C 地址，以及它在通訊時的最高時鐘頻率限制。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">硬體實戰任務 (Labs)</h2>
+            <p class="text-center text-gray-500 mb-12">掌握硬體通訊的底層邏輯與數據轉換。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 1-1 -->
+                <div onclick="openSubmissionModal('adv-04-i2c-scanner', '【作業 1-1】I2C 設備大掃描')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🔍</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
+                            1-1】I2C 設備大掃描</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務目標：</strong>在 ESP32 上掃描連接的所有 I2C 設備，找回硬體定址。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>實作 I2C 通訊協議初始化</li>
+                                <li>找回設備地址 (e.g., 0x3C, 0x68)</li>
+                                <li>同時驅動 OLED 與加速度計</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 1-2 -->
+                <div onclick="openSubmissionModal('adv-04-spi-performance', '【作業 1-2】SPI 刷新率挑戰')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">⚡</span>
+                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
+                            1-2】SPI 刷新率挑戰</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務目標：</strong>測試 SPI 高頻極限，理解訊號完整性。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>調整 SPI 頻率 (1MHz - 40MHz)</li>
+                                <li>記錄影像雜訊出現的臨界點</li>
+                                <li>分析高頻通訊下的波形失真</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 1-3 -->
+                <div onclick="openSubmissionModal('adv-04-json-translator', '【作業 1-3】協議翻譯官')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">📦</span>
+                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
+                            1-3】協議翻譯官</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務目標：</strong>將硬體 Raw Data 轉換為現代 Web 協議格式。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>使用 ArduinoJson 封裝數據</li>
+                                <li>建立 I2C 數據與 JSON 結構的對映</li>
+                                <li>為網頁端提供異步通訊接口</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階課程 4 - 單元 1</span>
+                <span class="hidden md:inline">|</span>
+                <span>通訊協議與硬體實務整合</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/GrROdDW4Ffo",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vT1z2o5ffSzwXtepyy7ivHz31yb1TeUDEeicvJB5Ad_hrhvkDRGziTRcgiWKMgXMoD8CJIS2vYlMzKT/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

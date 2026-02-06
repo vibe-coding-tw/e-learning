@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 2】PID 三兄弟的數學直覺 - Vibe Coding</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Formula styling */
+        .formula-box {
+            background: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 12 - 單元 2
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                PID 三兄弟的<span class="text-pink-400">數學直覺</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
+                Why your car shakes? Understanding P, I, D through intuition.
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+
+        <!-- Concept 1: Proportional -->
+        <section class="mb-16">
+            <div class="flex items-center mb-6">
+                <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center text-2xl mr-4">P</div>
+                <h2 class="text-3xl font-bold text-gray-900">P (Proportional) 比例：關注「現在」</h2>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 card-hover">
+                    <div class="formula-box">
+                        <div class="text-sm text-gray-500 mb-2 font-mono">MATHEMATICAL INTUITION</div>
+                        <div class="text-xl font-bold text-gray-800">
+                            $$Output = K_p \times Error$$
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4 leading-relaxed">
+                        <strong class="text-blue-600">白話解釋：</strong> 這是「當下的反應」。修正量與當前誤差成正比。離目標越遠，推力越大；離目標越近，推力越小。
+                    </p>
+                    <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                        <div class="font-semibold text-red-700 mb-2">⚠️ 致命傷：靜態誤差 (Steady-state Error)</div>
+                        <p class="text-sm text-red-600">
+                            就像推一扇有重力回彈的門，當推力剛好等於回彈力時，門會卡在一個縫隙，永遠關不緊。單純的 P 控制很難讓系統精確到達目標點。
+                        </p>
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-6 flex flex-col justify-center items-center">
+                    <div class="text-center">
+                        <div class="text-6xl mb-4">⏱️</div>
+                        <h3 class="text-lg font-semibold text-gray-900">由現在的誤差決定</h3>
+                        <p class="text-gray-500 mt-2">反應速度最快，是控制系統的主力。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Concept 2: Integral -->
+        <section class="mb-16">
+            <div class="flex items-center mb-6">
+                <div class="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center text-2xl mr-4">I</div>
+                <h2 class="text-3xl font-bold text-gray-900">I (Integral) 積分：關注「過去」</h2>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 card-hover">
+                    <div class="formula-box">
+                        <div class="text-sm text-gray-500 mb-2 font-mono">MATHEMATICAL INTUITION</div>
+                        <div class="text-xl font-bold text-gray-800">
+                            $$Output = K_i \times \int Error \, dt$$
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4 leading-relaxed">
+                        <strong class="text-green-600">白話解釋：</strong>
+                        這是「歷史的記恨」。如果誤差一直存在（即使很小），積分項會隨著時間累積越來越「憤怒」，直到推力大到足以消除最後那一點殘餘誤差。
+                    </p>
+                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
+                        <div class="font-semibold text-yellow-700 mb-2">⚠️ 副作用：積分飽和與過衝</div>
+                        <p class="text-sm text-yellow-600">
+                            因為積累了太多過去的誤差，容易導致系統反應遲緩，甚至衝過頭 (Overshoot) 後才發現要拉回來。
+                        </p>
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-6 flex flex-col justify-center items-center">
+                    <div class="text-center">
+                        <div class="text-6xl mb-4">📜</div>
+                        <h3 class="text-lg font-semibold text-gray-900">消除靜態誤差</h3>
+                        <p class="text-gray-500 mt-2">負責把車子推到「真正的目標速度/位置」。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Concept 3: Derivative -->
+        <section class="mb-16">
+            <div class="flex items-center mb-6">
+                <div class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center text-2xl mr-4">D</div>
+                <h2 class="text-3xl font-bold text-gray-900">D (Derivative) 微分：關注「未來」</h2>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 card-hover">
+                    <div class="formula-box">
+                        <div class="text-sm text-gray-500 mb-2 font-mono">MATHEMATICAL INTUITION</div>
+                        <div class="text-xl font-bold text-gray-800">
+                            $$Output = K_d \times \frac{dError}{dt}$$
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4 leading-relaxed">
+                        <strong class="text-purple-600">白話解釋：</strong>
+                        這是「未來的預測」。當系統衝太快，誤差正在快速縮小時，微分項會偵測到這個變化率（斜率），提前踩煞車產生阻尼。
+                    </p>
+                    <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+                        <div class="font-semibold text-indigo-700 mb-2">⚠️ 副作用：對雜訊過敏</div>
+                        <p class="text-sm text-indigo-600">
+                            微分對瞬間的變化非常敏感，這意味著感測器的雜訊 (Noise) 也會被放大，可能導致系統劇烈抖動。
+                        </p>
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-6 flex flex-col justify-center items-center">
+                    <div class="text-center">
+                        <div class="text-6xl mb-4">🔮</div>
+                        <h3 class="text-lg font-semibold text-gray-900">抑制過衝與震盪</h3>
+                        <p class="text-gray-500 mt-2">像是系統的避震器，讓動態過程更平滑。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section>
+            <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center">
+                <span class="mr-3">📝</span> 實作任務
+            </h2>
+
+            <div class="space-y-8">
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Assignment 1 -->
+                    <div onclick="openSubmissionModal('adv-12-human-pid', '【作業 2-1】「人肉 PID」平衡實驗')"
+                        class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                        <div class="bg-blue-600 h-2"></div>
+                        <div class="p-8">
+                            <div class="flex justify-between items-start mb-6">
+                                <span class="text-4xl">🧘</span>
+                                <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">45
+                                    min</span>
+                            </div>
+                            <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">作業
+                                2-1：「人肉 PID」平衡實驗</h3>
+                            <div class="text-sm text-gray-600 space-y-3">
+                                <p>兩位同學一組，一人扮演「感測器」，一人扮演「控制器」。</p>
+                                <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs text-left">
+                                    <li><strong>純 P 模式：</strong>車子是否會停在離線幾公分處不動？</li>
+                                    <li><strong>P+I 模式：</strong>是否解決了停滯問題？</li>
+                                    <li><strong>P+D 模式：</strong>蛇行現象 (Overshoot) 是否減少？</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Assignment 2 -->
+                    <div onclick="openSubmissionModal('adv-12-pid-tuning', '【作業 2-2】「參數調校馬拉松」')"
+                        class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                        <div class="bg-purple-600 h-2"></div>
+                        <div class="p-8">
+                            <div class="flex justify-between items-start mb-6">
+                                <span class="text-4xl">🎛️</span>
+                                <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">75
+                                    min</span>
+                            </div>
+                            <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">作業
+                                2-2：「參數調校馬拉松」</h3>
+                            <div class="text-sm text-gray-600 space-y-3">
+                                <p>依序找出最佳的 \(K_p, K_i, K_d\) 組合。</p>
+                                <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs text-left">
+                                    <li><strong>尋找 \(K_p\)：</strong>增加直到等幅震盪。</li>
+                                    <li><strong>注入 \(K_i\)：</strong>消除穩態誤差。</li>
+                                    <li><strong>加入 \(K_d\)：</strong>壓制震盪，使過彎絲滑。</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Assignment 3 -->
+                    <div onclick="openSubmissionModal('adv-12-noise-challenge', '【作業 2-3】「雜訊大挑戰」')"
+                        class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                        <div class="bg-indigo-600 h-2"></div>
+                        <div class="p-8">
+                            <div class="flex justify-between items-start mb-6">
+                                <span class="text-4xl">📉</span>
+                                <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">45
+                                    min</span>
+                            </div>
+                            <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">作業
+                                2-3：「雜訊大挑戰」</h3>
+                            <div class="text-sm text-gray-600 space-y-3">
+                                <p>加入人工雜訊，觀察 D 項的弱點。</p>
+                                <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs text-left">
+                                    <li><strong>觀察抖動：</strong>高 \(K_d\) 下晃動相機，聽馬達聲音。</li>
+                                    <li><strong>濾波嘗試：</strong>體驗數學理想與物理現實的落差。</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-16 border-t border-gray-200 pt-8 flex justify-between text-gray-500">
+            <a href="/courses/adv-11-master-photoelectric.html" class="hover:text-blue-600 flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Previous: Advanced 11
+            </a>
+            <a href="/courses/adv-12-master-pid.html" class="hover:text-blue-600 flex items-center">
+                Back to Menu
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+            </a>
+        </footer>
+
+    </main>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/-wDMxfnqsE8",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vTZ-U4xMCI1QfPK4IOYp3tDyrYIBNx2nyEzsifSgHtYQlK7f1lfPGnqVkW62iedjIh6bDF4EeNwB_-a/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

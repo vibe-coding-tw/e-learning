@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 3】PID 演算法視覺化模擬 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 15 - 單元 3
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                PID 演算法<span class="text-cyan-400">視覺化模擬</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto font-light leading-relaxed">
+                將看不見的數學邏輯，轉化為直覺的動態曲線，掌握精準控制的藝術。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Intro Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 px-4">
+            <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 hover:shadow-2xl transition-all">
+                <div
+                    class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6 font-bold text-xl">
+                    📊
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">為什麼需要視覺化？</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    PID 參數調整常被視為「玄學」，但透過即時曲線圖，我們能清晰看到 P 的震盪、I 的補償與 D 的煞車效果，將盲目調參轉化為科學分析。
+                </p>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 hover:shadow-2xl transition-all">
+                <div
+                    class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center text-cyan-600 mb-6 font-bold text-xl">
+                    🎯
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">本單元重點</h3>
+                <ul class="space-y-2 text-gray-600 text-sm">
+                    <li class="flex items-center gap-2"><span>✅</span> 拆解 PID 三個控制靈魂</li>
+                    <li class="flex items-center gap-2"><span>✅</span> 理解誤差曲線與數據流向</li>
+                    <li class="flex items-center gap-2"><span>✅</span> 掌握齊格勒-尼科爾斯法則調校策略</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Module 1: PID Three Souls -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🧠</span> 1. 拆解 PID：三個控制靈魂 (30 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="p-6 bg-blue-50 rounded-2xl border border-blue-100 relative overflow-hidden group">
+                            <h3 class="font-bold text-blue-800 mb-2">P (Proportional) 比例</h3>
+                            <p class="text-sm text-blue-700 leading-relaxed mb-4"><strong>目前的誤差。</strong>
+                                發現偏離時「當下」轉動方向盤的力量。反應最直觀，但過大會震盪。</p>
+                            <div class="text-xs font-mono bg-white/50 p-2 rounded">Output_P = Kp * Error</div>
+                        </div>
+                        <div
+                            class="p-6 bg-purple-50 rounded-2xl border border-purple-100 relative overflow-hidden group">
+                            <h3 class="font-bold text-purple-800 mb-2">I (Integral) 積分</h3>
+                            <p class="text-sm text-purple-700 leading-relaxed mb-4"><strong>累積的誤差。</strong>
+                                解決持續性的偏差（如路面傾斜），負責補足「總是一點點」的力道。</p>
+                            <div class="text-xs font-mono bg-white/50 p-2 rounded">Output_I = Ki * sum(Error)</div>
+                        </div>
+                        <div class="p-6 bg-pink-50 rounded-2xl border border-pink-100 relative overflow-hidden group">
+                            <h3 class="font-bold text-pink-800 mb-2">D (Derivative) 微分</h3>
+                            <p class="text-sm text-pink-700 leading-relaxed mb-4"><strong>誤差變化率。</strong>
+                                預測未來趨勢，負責「煞車」，防止過度擺盪，提升穩定性。</p>
+                            <div class="text-xs font-mono bg-white/50 p-2 rounded">Output_D = Kd * (dErr/dt)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Visualization -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
+                <div class="p-8 md:p-12 text-gray-600">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">📈</span> 2. 視覺化數據流：誤差曲線圖 (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-3">
+                                <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                                <div>
+                                    <p class="font-bold text-gray-800">目標值 (Setpoint)</p>
+                                    <p class="text-xs text-gray-400">望塵莫及的北極星</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                                <div>
+                                    <p class="font-bold text-gray-800">實際值 (Measured)</p>
+                                    <p class="text-xs text-gray-400">掙扎前行的跟隨者</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
+                                <div>
+                                    <p class="font-bold text-gray-800">誤差 (Error)</p>
+                                    <p class="text-xs text-gray-400">兩者之間的距離 (Target - Measured)</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            class="bg-gray-900 rounded-2xl p-6 font-mono text-sm shadow-inner relative overflow-hidden min-h-[160px] flex flex-col justify-center">
+                            <div class="absolute inset-x-0 top-1/2 border-t border-red-500/30"></div>
+                            <div class="relative z-10 space-y-2">
+                                <p class="text-red-400 flex justify-between"><span>Target:</span> <span>100.0</span></p>
+                                <p class="text-blue-400 flex justify-between"><span>Measured:</span> <span
+                                        class="animate-pulse">98.2</span></p>
+                                <p class="text-yellow-400 flex justify-between"><span>Error:</span> <span>1.8</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Tuning Strategy -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🛠️</span> 3. 調校策略：經典四步法 (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 text-center">
+                            <div class="text-blue-600 font-bold mb-2">Step 1</div>
+                            <p class="text-xs text-gray-600">調 <strong>Kp</strong> 到系統出現穩定震盪</p>
+                        </div>
+                        <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 text-center">
+                            <div class="text-blue-600 font-bold mb-2">Step 2</div>
+                            <p class="text-xs text-gray-600">加 <strong>Kd</strong> 直到抑制震盪變平穩</p>
+                        </div>
+                        <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 text-center">
+                            <div class="text-blue-600 font-bold mb-2">Step 3</div>
+                            <p class="text-xs text-gray-600">補 <strong>Ki</strong> 消除最後的靜態誤差</p>
+                        </div>
+                        <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 text-center">
+                            <div class="text-blue-600 font-bold mb-2">Step 4</div>
+                            <p class="text-xs text-gray-600">微調 <strong>平衡</strong> 過衝與穩定時間</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實作：PID 動態調控終端</h2>
+            <p class="text-center text-gray-500 mb-12">透過直覺的儀表板與調整工具，掌握精準控制的藝術。</p>
+
+            <div class="grid md:grid-cols-3 gap-6 px-4">
+                <!-- Task 3-1 -->
+                <div onclick="openSubmissionModal('adv-15-pid-dashboard', 'Task 3-1: 實作 PID 動態儀表板')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">📊</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 3-1】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">實作 PID 動態儀表板</h4>
+                        <p class="text-sm text-gray-600 mb-4">利用 Chart.js 實作即時波形圖，將看不見的邏輯轉化為可分析波形。</p>
+                        <ul class="text-xs text-gray-500 space-y-1 list-disc list-inside">
+                            <li>三線並存：目標、實際、修正量</li>
+                            <li>支援即時與歷史滾動檢視</li>
+                            <li>自動縮放 (Auto-Scale) 縱軸範圍</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Task 3-2 -->
+                <div onclick="openSubmissionModal('adv-15-pid-challenge', 'Task 3-2: 「極限平衡」調參數挑戰賽')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-cyan-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🏆</span>
+                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition">【作業 3-2】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「極限平衡」調參挑戰</h4>
+                        <p class="text-sm text-gray-600 mb-4">在 Ramping 頁面新增 Kp/Ki/Kd 欄位，體驗非同步下的參數即時影響。</p>
+                        <ul class="text-xs text-gray-500 space-y-1 list-disc list-inside">
+                            <li>即時透過 BLE 傳送 Slider 數值</li>
+                            <li>紀錄並比較不同參數下的收斂速度</li>
+                            <li>挑戰不超過 10% 過衝的最快路徑</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Task 3-3 -->
+                <div onclick="openSubmissionModal('adv-15-pid-safety', 'Task 3-3: PID 安全限制器')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🛡️</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 3-3】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">PID 安全限制器</h4>
+                        <p class="text-sm text-gray-600 mb-4">撰寫健壯的控制程式，實作「積分飽和預防」與「輸出限幅」。</p>
+                        <ul class="text-xs text-gray-500 space-y-1 list-disc list-inside">
+                            <li>限制 I 項最大累積值防止爆衝</li>
+                            <li>實作误差死區 (Deadzone) 處理</li>
+                            <li>設定最大輸出 PWM 保護硬體</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>進階課程 15 - 單元 3</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/m1Mpa4X8ESc",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vQSXa-bz3cyVOpFeKD3ievTtDWFcQ2LtfJgr2CA0FrTylOZyUSxy-oB9OnBbqlBLOj17-umUHfzazY0/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

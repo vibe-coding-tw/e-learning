@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 2】非同步 Web Bluetooth 進階與優化 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 15 - 單元 2
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                Web Bluetooth <span class="text-blue-400">非同步與連線優化</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto font-light leading-relaxed">
+                深入探討 async/await 在硬體控制中的應用，打造具備「自動重補路、異常防湧」的健壯連線架構。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Intro Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 px-4">
+            <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 hover:shadow-2xl transition-all">
+                <div
+                    class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6 font-bold text-xl">
+                    ⚡
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">為什麼要用「非同步」？</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    CPU 運算速度比藍牙快數百萬倍。如果使用同步代碼，等待 ESP32 回應時整個 UI 會凍結。理解
+                    <strong>Pending</strong>、<strong>Resolved</strong>、<strong>Rejected</strong> 是掌握連線邏輯的基礎。
+                </p>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 hover:shadow-2xl transition-all">
+                <div
+                    class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 mb-6 font-bold text-xl">
+                    🛡️
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">異常處理：當硬體不理你時</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    在現實世界中，使用者會取消選取、裝置會超出範圍。學習利用 <code>Try...Catch</code> 捕捉錯誤，並監聽 <code>gattserverdisconnected</code>
+                    事件來實作自動重連。
+                </p>
+            </div>
+        </div>
+
+        <!-- Module 1: Handshake Flow -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🤝</span> 1. Web Bluetooth 的「握手」流程 (20 min)
+                    </h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <div class="p-4 bg-blue-50 rounded-xl border border-blue-100 text-center">
+                            <div class="text-2xl mb-1">🔍</div>
+                            <div class="font-bold text-xs text-blue-800 uppercase">requestDevice</div>
+                        </div>
+                        <div class="p-4 bg-indigo-50 rounded-xl border border-indigo-100 text-center">
+                            <div class="text-2xl mb-1">🌉</div>
+                            <div class="font-bold text-xs text-indigo-800 uppercase">gatt.connect</div>
+                        </div>
+                        <div class="p-4 bg-purple-50 rounded-xl border border-purple-100 text-center">
+                            <div class="text-2xl mb-1">🏠</div>
+                            <div class="font-bold text-xs text-purple-800 uppercase">getService</div>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                            <div class="text-2xl mb-1">🗄️</div>
+                            <div class="font-bold text-xs text-slate-800 uppercase">getCharacteristic</div>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-gray-900 p-6 rounded-xl font-mono text-sm text-cyan-400 border border-gray-800 shadow-inner">
+                        <p>// 現在：async/await (更易讀且健壯)</p>
+                        <p class="mt-2"><span class="text-purple-400">try</span> {</p>
+                        <p class="pl-4"> <span class="text-purple-400">const</span> device = <span
+                                class="text-purple-400">await</span> navigator.bluetooth.requestDevice(...);</p>
+                        <p class="pl-4"> <span class="text-purple-400">const</span> server = <span
+                                class="text-purple-400">await</span> device.gatt.connect();</p>
+                        <p class="pl-4"> <span class="text-purple-400">const</span> service = <span
+                                class="text-purple-400">await</span> server.getPrimaryService(UUID);</p>
+                        <p>} <span class="text-purple-400">catch</span> (err) { console.error(err); }</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Telemetry -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">📊</span> 2. 監控即時數據流 (20 min)
+                    </h2>
+                    <div class="flex flex-col md:flex-row gap-12 text-gray-600">
+                        <div class="flex-1 space-y-6">
+                            <h3 class="font-bold text-gray-800">characteristicvaluechanged 事件</h3>
+                            <p class="text-base">不要主動「輪詢 (Polling)」數據，這會浪費藍牙頻寬。正確做法是監聽事件：當 ESP32 數值更新時，瀏覽器會自動執行回呼。</p>
+                            <div
+                                class="bg-cyan-50 p-4 rounded-lg font-mono text-xs text-cyan-700 border border-cyan-100 leading-normal">
+                                characteristic.addEventListener('characteristicvaluechanged', handleData);<br>
+                                await characteristic.startNotifications();
+                            </div>
+                        </div>
+                        <div
+                            class="w-full md:w-64 bg-gray-50 p-6 rounded-2xl border border-gray-100 text-center flex flex-col justify-center">
+                            <div class="text-xs text-gray-400 uppercase mb-2">即時電量回傳</div>
+                            <div class="text-5xl font-bold text-blue-600 mb-2">98%</div>
+                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-green-500 w-[98%] transition-all duration-1000"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實作：健壯連線控制</h2>
+            <p class="text-center text-gray-500 mb-12">打造具備自癒能力的連線模組，解決現實世界的網路不穩定性。</p>
+
+            <div class="grid md:grid-cols-3 gap-6 px-4">
+                <!-- Task 2-1 -->
+                <div onclick="openSubmissionModal('adv-15-linear-connect', 'Task 2-1: 線性化連線序列')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🔗</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 2-1】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">線性化連線序列</h4>
+                        <p class="text-sm text-gray-600 mb-4">利用 async/await 將連線步驟線性化，消除重複觸發錯誤。</p>
+                        <ul class="text-xs text-gray-500 space-y-1 list-disc list-inside">
+                            <li>使用 try...catch 捕捉取消動作</li>
+                            <li>連線時鎖定 UI 按鈕 (Disabled)</li>
+                            <li>顯示詳細的連線階段提示</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Task 2-2 -->
+                <div onclick="openSubmissionModal('adv-15-autoreconnect', 'Task 2-2: 斷線自動重連機制')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-cyan-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🔄</span>
+                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition">【作業 2-2】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">斷線自動重連機制</h4>
+                        <p class="text-sm text-gray-600 mb-4">實作「自癒」系統，偵測斷開後自動嘗試復原。</p>
+                        <ul class="text-xs text-gray-500 space-y-1 list-disc list-inside">
+                            <li>監聽 gattserverdisconnected 事件</li>
+                            <li>實作 3 次自動重連重試</li>
+                            <li>重連期間顯示「黃色狀態警告」</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Task 2-3 -->
+                <div onclick="openSubmissionModal('adv-15-bi-stream', 'Task 2-3: 非同步並行處理：讀寫同步')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl">🛤️</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 2-3】
+                        </h3>
+                        <h4 class="font-medium text-gray-500 mb-4">非同步並行處理</h4>
+                        <p class="text-sm text-gray-600 mb-4">實現寫入指令與接收遙測數據並行的雙向互動。</p>
+                        <ul class="text-xs text-gray-500 space-y-1 list-disc list-inside">
+                            <li>100ms 間隔的指令寫入</li>
+                            <li>同步處理回傳的感測器事件</li>
+                            <li>防止競爭條件 (Race Condition)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>進階課程 15 - 單元 2</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/Qo592Y3XrRE",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vTfXHzTxJZOk6pvY2DHN20_PVw7y1Tz_5qUmEiGRTLOFwGrRI1N8JPfmpruQUYBqIJXD9xReDoQ6JXV/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

@@ -264,35 +264,43 @@
             }
         });
 
-        // 3. 開啟電子地圖
-        window.openMap = function (logisticsSubType) {
-            // 構建 Form POST 到綠界 Map
-            // 注意：這裡是直接 POST 到綠界，ServerReplyURL 要指向我們的 mapReply Function
+        // 3. 開啟電子地圖 (修正版：從後端取得加密參數)
+        window.openMap = async function (logisticsSubType) {
+            try {
+                // 呼叫後端 Function 取得參數
+                const getLogisticsMapParams = httpsCallable(functions, 'getLogisticsMapParams');
+                const response = await getLogisticsMapParams({
+                    logisticsSubType: logisticsSubType,
+                    isCollection: 'N'
+                });
 
-            const mapForm = document.createElement('form');
-            mapForm.method = 'POST';
-            mapForm.action = 'https://logistics.ecpay.com.tw/Express/map'; // 正式環境
-            // mapForm.action = 'https://logistics-stage.ecpay.com.tw/Express/map'; // 測試環境 (若需要)
+                const data = response.data;
+                if (!data || !data.params) {
+                    throw new Error('無法取得物流參數');
+                }
 
-            const params = {
-                MerchantID: MERCHANT_ID,
-                MerchantTradeNo: 'MAP' + Date.now(), // 臨時單號
-                LogisticsType: 'CVS',
-                LogisticsSubType: logisticsSubType,
-                IsCollection: 'N',
-                ServerReplyURL: 'https://asia-east1-e-learning-942f7.cloudfunctions.net/mapReply' // 重要：回傳網址
-            };
+                const params = data.params;
+                const apiUrl = data.apiUrl || 'https://logistics.ecpay.com.tw/Express/map';
 
-            for (const key in params) {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = key;
-                input.value = params[key];
-                mapForm.appendChild(input);
+                // 建立 Form POST 到綠界 Map
+                const mapForm = document.createElement('form');
+                mapForm.method = 'POST';
+                mapForm.action = apiUrl;
+
+                for (const key in params) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = params[key];
+                    mapForm.appendChild(input);
+                }
+
+                document.body.appendChild(mapForm);
+                mapForm.submit();
+            } catch (error) {
+                console.error("開啟地圖失敗:", error);
+                alert("開啟電子地圖失敗，請稍後再試。");
             }
-
-            document.body.appendChild(mapForm);
-            mapForm.submit();
         };
 
         // ===============================================

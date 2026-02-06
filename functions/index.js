@@ -20,6 +20,7 @@ const MERCHANT_ID = process.env.ECPAY_MERCHANT_ID;
 const HASH_KEY = process.env.ECPAY_HASH_KEY;
 const HASH_IV = process.env.ECPAY_HASH_IV;
 const ECPAY_API_URL = process.env.ECPAY_API_URL;
+const ECPAY_LOGISTICS_MAP_URL = process.env.ECPAY_LOGISTICS_MAP_URL;
 
 const REGION = "asia-east1";
 // 為了避免專案 ID 寫死，我們也可以動態抓取，或者您保留原本寫死的字串
@@ -154,6 +155,50 @@ exports.initiatePayment = functions.region(REGION).https.onRequest(async (req, r
 
     } catch (error) {
         console.error("嚴重錯誤:", error);
+        res.status(500).json({ error: { message: error.message } });
+    }
+});
+
+// ==========================================
+// 1.5. 取得物流地圖參數 (getLogisticsMapParams)
+// ==========================================
+exports.getLogisticsMapParams = functions.region(REGION).https.onRequest(async (req, res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    if (req.method === 'OPTIONS') {
+        res.status(204).send('');
+        return;
+    }
+
+    try {
+        console.log("收到 getLogisticsMapParams 請求");
+
+        const requestData = req.body.data || req.body || {};
+        const { logisticsSubType, isCollection } = requestData;
+
+        if (!logisticsSubType) {
+            return res.status(400).json({ error: { message: "缺少 logisticsSubType" } });
+        }
+
+        const params = {
+            MerchantID: MERCHANT_ID,
+            MerchantTradeNo: 'MAP' + Date.now(),
+            LogisticsType: 'CVS',
+            LogisticsSubType: logisticsSubType,
+            IsCollection: isCollection || 'N',
+            ServerReplyURL: `https://${REGION}-${PROJECT_ID}.cloudfunctions.net/mapReply`
+        };
+
+        params.CheckMacValue = generateCheckMacValue(params, HASH_KEY, HASH_IV);
+
+        console.log(`產生地圖參數: ${params.MerchantTradeNo} for ${logisticsSubType}`);
+
+        res.status(200).json({ result: { params, apiUrl: ECPAY_LOGISTICS_MAP_URL || 'https://logistics.ecpay.com.tw/Express/map' } });
+
+    } catch (error) {
+        console.error("產生地圖參數失敗:", error);
         res.status(500).json({ error: { message: error.message } });
     }
 });
@@ -495,12 +540,54 @@ exports.serveCourse = functions.region(REGION).https.onRequest((req, res) => {
         const isAdvS3CamGroup = (scopePart === "adv-01-master-s3-cam.html") &&
             (fileName === "adv-01-unit-s3-interfaces.html" || fileName === "adv-01-unit-mjpeg-stream.html" || fileName === "adv-01-unit-jpeg-quality.html");
 
+        const isAdvVideoStreamingGroup = (scopePart === "adv-02-master-video.html") &&
+            (fileName === "adv-02-unit-video-streaming.html" || fileName === "adv-02-unit-canvas-image.html" || fileName === "adv-02-unit-bandwidth-fps.html");
+
+        const isAdvBleAdvancedGroup = (scopePart === "adv-03-master-ble-advanced.html") &&
+            (fileName === "adv-03-unit-ble-notify.html" || fileName === "adv-03-unit-json-serialization.html" || fileName === "adv-03-unit-ble-mtu.html");
+
+        const isAdvSensorsGroup = (scopePart === "adv-04-master-sensors.html") &&
+            (fileName === "adv-04-unit-i2c-spi.html" || fileName === "adv-04-unit-json-rest.html" || fileName === "adv-04-unit-filter-algorithms.html");
+
+        const isAdvCvGroup = (scopePart === "adv-05-master-cv.html") &&
+            (fileName === "adv-05-unit-feature-extraction.html" || fileName === "adv-05-unit-centroid-error.html" || fileName === "adv-05-unit-closed-loop.html");
+
+        const isAdvCvAdvancedGroup = (scopePart === "adv-06-master-cv-advanced.html") &&
+            (fileName === "adv-06-unit-threshold-filter.html" || fileName === "adv-06-unit-centroid-algorithm.html" || fileName === "adv-06-unit-hsv-math.html" || fileName === "adv-06-unit-look-ahead.html");
+
+        const isAdvUiFrameworkGroup = (scopePart === "adv-07-master-ui-framework.html") &&
+            (fileName === "adv-07-unit-ui-framework.html" || fileName === "adv-07-unit-chart-canvas.html" || fileName === "adv-07-unit-json-parsing.html" || fileName === "adv-07-unit-event-polling.html");
+
+        const isAdvColorSpaceGroup = (scopePart === "adv-08-master-image-processing.html") &&
+            (fileName === "adv-08-unit-color-spaces.html" || fileName === "adv-08-unit-error-calculation.html" || fileName === "adv-08-unit-p-control.html" || fileName === "adv-08-unit-mobilenet-ssd.html");
+
+        const isAdvAiRecognitionGroup = (scopePart === "adv-09-master-ai-recognition.html") &&
+            (fileName === "adv-09-unit-cnn-audio.html" || fileName === "adv-09-unit-teachable-machine.html" || fileName === "adv-09-unit-webspeech-api.html" || fileName === "adv-09-unit-flow-control.html");
+
+        const isAdvDiffDriveGroup = (scopePart === "adv-10-master-diff-drive.html") &&
+            (fileName === "adv-10-unit-icc-geometry.html" || fileName === "adv-10-unit-api-design.html" || fileName === "adv-10-unit-pwm-limits.html");
+
+        const isAdvPhotoelectricGroup = (scopePart === "adv-11-master-photoelectric.html") &&
+            (fileName === "adv-11-unit-sensor-principles.html" || fileName === "adv-11-unit-hardware-interrupts.html" || fileName === "adv-11-unit-speed-algorithms.html");
+
+        const isAdvPidGroup = (scopePart === "adv-12-master-pid.html") &&
+            (fileName === "adv-12-unit-pid-control.html" || fileName === "adv-12-unit-pid-math.html" || fileName === "adv-12-unit-code-logic.html");
+
+        const isAdvRobustnessGroup = (scopePart === "adv-13-master-robustness.html") &&
+            (fileName === "adv-13-unit-robustness.html" || fileName === "adv-13-unit-system-perf.html" || fileName === "adv-13-unit-technical-narrative.html");
+
+        const isAdvDebuggingArtGroup = (scopePart === "adv-14-master-debugging-art.html") &&
+            (fileName === "adv-14-unit-debugging-art.html" || fileName === "adv-14-unit-kpi-definition.html" || fileName === "adv-14-unit-refactoring.html");
+
+        const isAdvArchitectureGroup = (scopePart === "adv-15-master-architecture.html") &&
+            (fileName === "adv-15-unit-data-flow.html" || fileName === "adv-15-unit-ble-async.html" || fileName === "adv-15-unit-pid-simulation.html" || fileName === "adv-15-unit-image-dma.html");
+
         if (scopePart !== "ANY" && scopePart !== fileName &&
             !isGettingStartedGroup && !isWebAppGroup && !isWebBleGroup &&
             !isWebRemoteControlGroup && !isTouchEventsGroup && !isJoystickLabGroup &&
-            !isWifiBleSetupGroup && !isBasicEnvGroup && !isBasicOtaGroup && !isBasicIOMappingGroup && !isBasicPwmGroup && !isBasicBleGattGroup && !isBasicHttpGroup && !isBasicWifiModesGroup && !isBasicJoystickGroup && !isBasicMultitaskingGroup && !isBasicFsmGroup && !isAdvS3CamGroup) {
-            console.error(`Access Denied Debug: Scope=${scopePart}, File=${fileName}, isBasicEnv=${isBasicEnvGroup}, isBasicOta=${isBasicOtaGroup}, isBasicIOMapping=${isBasicIOMappingGroup}, isBasicBleGatt=${isBasicBleGattGroup}, isBasicHttp=${isBasicHttpGroup}, isBasicWifiModes=${isBasicWifiModesGroup}, isBasicJoystick=${isBasicJoystickGroup}, isBasicMultitasking=${isBasicMultitaskingGroup}, isBasicFsm=${isBasicFsmGroup}, isAdvS3CamGroup=${isAdvS3CamGroup}`);
-            return res.status(403).send(`Access Denied: Token valid for ${scopePart}, but requested ${fileName}. Debug: isBasicEnv=${isBasicEnvGroup}, isBasicOta=${isBasicOtaGroup}, isBasicIOMapping=${isBasicIOMappingGroup}, isBasicBleGatt=${isBasicBleGattGroup}, isBasicHttp=${isBasicHttpGroup}, isBasicWifiModes=${isBasicWifiModesGroup}, isBasicJoystick=${isBasicJoystickGroup}, isBasicMultitasking=${isBasicMultitaskingGroup}, isBasicFsm=${isBasicFsmGroup}`);
+            !isWifiBleSetupGroup && !isBasicEnvGroup && !isBasicOtaGroup && !isBasicIOMappingGroup && !isBasicPwmGroup && !isBasicBleGattGroup && !isBasicHttpGroup && !isBasicWifiModesGroup && !isBasicJoystickGroup && !isBasicMultitaskingGroup && !isBasicFsmGroup && !isAdvS3CamGroup && !isAdvVideoStreamingGroup && !isAdvBleAdvancedGroup && !isAdvSensorsGroup && !isAdvCvGroup && !isAdvCvAdvancedGroup && !isAdvUiFrameworkGroup && !isAdvColorSpaceGroup && !isAdvAiRecognitionGroup && !isAdvDiffDriveGroup && !isAdvPhotoelectricGroup && !isAdvPidGroup && !isAdvRobustnessGroup && !isAdvDebuggingArtGroup && !isAdvArchitectureGroup) {
+            console.error(`Access Denied Debug: Scope=${scopePart}, File=${fileName}, isBasicEnv=${isBasicEnvGroup}, isBasicOta=${isBasicOtaGroup}, isBasicIOMapping=${isBasicIOMappingGroup}, isBasicBleGatt=${isBasicBleGattGroup}, isBasicHttp=${isBasicHttpGroup}, isBasicWifiModes=${isBasicWifiModesGroup}, isBasicJoystick=${isBasicJoystickGroup}, isBasicMultitasking=${isBasicMultitaskingGroup}, isBasicFsm=${isBasicFsmGroup}, isAdvS3CamGroup=${isAdvS3CamGroup}, isAdvVideoStreamingGroup=${isAdvVideoStreamingGroup}, isAdvBleAdvancedGroup=${isAdvBleAdvancedGroup}, isAdvSensorsGroup=${isAdvSensorsGroup}, isAdvCvGroup=${isAdvCvGroup}, isAdvCvAdvancedGroup=${isAdvCvAdvancedGroup}, isAdvUiFrameworkGroup=${isAdvUiFrameworkGroup}, isAdvColorSpaceGroup=${isAdvColorSpaceGroup}, isAdvAiRecognitionGroup=${isAdvAiRecognitionGroup}, isAdvDiffDriveGroup=${isAdvDiffDriveGroup}`);
+            return res.status(403).send(`Access Denied: Token valid for ${scopePart}, but requested ${fileName}. Debug: isAdvPidGroup=${isAdvPidGroup}`);
         }
 
         // 3. Serve File

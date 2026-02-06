@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 4-3】JSON 數據打包與 RESTful 回傳 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-emerald-900 to-teal-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 4 - 單元 3
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                JSON 數據打包<br><span class="text-emerald-400">與 RESTful API 回傳</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-emerald-100 max-w-2xl mx-auto font-light leading-relaxed mb-10">
+                建立標準化、語義化的通訊語言，讓硬體與網頁流暢溝通協助。
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-full font-bold shadow-xl transition transform hover:scale-105 active:scale-95">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/30 backdrop-blur-md px-8 py-4 rounded-full font-bold shadow-xl transition transform hover:scale-105 active:scale-95">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Core Concept Cards -->
+        <div class="grid md:grid-cols-3 gap-8 mb-16">
+            <!-- Concept 1 -->
+            <div
+                class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 transform transition-all hover:-translate-y-2">
+                <div
+                    class="w-14 h-14 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 text-2xl mb-6">
+                    📦
+                </div>
+                <h3 class="text-xl font-bold mb-4">1. 數據打包</h3>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    從「亂碼」到「字典」。學習如何利用鍵值對 (Key-Value) 建立具有意義的封包。為什麼不能只傳傳感器的數字？
+                </p>
+                <div class="mt-4 pt-4 border-t border-gray-50">
+                    <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">關鍵詞：JSON 結構設計</span>
+                </div>
+            </div>
+
+            <!-- Concept 2 -->
+            <div
+                class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 transform transition-all hover:-translate-y-2">
+                <div
+                    class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 text-2xl mb-6">
+                    🗣️
+                </div>
+                <h3 class="text-xl font-bold mb-4">2. RESTful 動詞</h3>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    語義化操作：GET 索取狀態、POST 下達指令、PUT 更新參數、DELETE 刪除任務。提高路徑命名的可讀性。
+                </p>
+                <div class="mt-4 pt-4 border-t border-gray-50">
+                    <span class="text-xs font-bold text-blue-600 uppercase tracking-wider">關鍵詞：GET, POST, PUT,
+                        DELETE</span>
+                </div>
+            </div>
+
+            <!-- Concept 3 -->
+            <div
+                class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 transform transition-all hover:-translate-y-2">
+                <div
+                    class="w-14 h-14 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600 text-2xl mb-6">
+                    🤝
+                </div>
+                <h3 class="text-xl font-bold mb-4">3. 狀態碼與回饋</h3>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    溝通禮儀：理解為什麼需要狀態碼？200 OK、400 Bad Request、500 Error 分散處理各種通訊情境。
+                </p>
+                <div class="mt-4 pt-4 border-t border-gray-50">
+                    <span class="text-xs font-bold text-amber-600 uppercase tracking-wider">關鍵詞：HTTP Status Codes</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Tasks Section -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold text-gray-900 mb-8 border-l-4 border-emerald-500 pl-4">預習與線上任務</h2>
+            <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="grid md:grid-cols-2">
+                    <div class="p-8 md:p-12 border-b md:border-b-0 md:border-r border-gray-100">
+                        <h4 class="font-bold text-xl mb-6 flex items-center gap-2">
+                            <span class="text-emerald-500">📖</span> 線上預習內容
+                        </h4>
+                        <ul class="space-y-4">
+                            <li class="flex items-start gap-3">
+                                <div
+                                    class="w-6 h-6 rounded-full bg-emerald-50 flex-shrink-0 flex items-center justify-center text-xs text-emerald-600 font-bold">
+                                    1</div>
+                                <p class="text-gray-600 text-sm">閱讀 Google 文件：<button
+                                        onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                                        class="text-emerald-600 hover:underline font-medium">
+                    <span>📄</span> 閱讀課程講義
+                </button></p>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <div
+                                    class="w-6 h-6 rounded-full bg-emerald-50 flex-shrink-0 flex items-center justify-center text-xs text-emerald-600 font-bold">
+                                    2</div>
+                                <p class="text-gray-600 text-sm">觀看影片：<button
+                                        onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                                        class="text-emerald-600 hover:underline font-medium">
+                    <span>📺</span> 觀看教學影片
+                </button></p>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <div
+                                    class="w-6 h-6 rounded-full bg-emerald-50 flex-shrink-0 flex items-center justify-center text-xs text-emerald-600 font-bold">
+                                    3</div>
+                                <p class="text-gray-600 text-sm">預習如何使用 <strong>ArduinoJson</strong> 函式庫建立巢狀數據結構。</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="p-8 md:p-12 bg-gray-50/50">
+                        <h4 class="font-bold text-xl mb-6 flex items-center gap-2">
+                            <span class="text-amber-500">🎯</span> 核心概念挑戰
+                        </h4>
+                        <div class="space-y-6">
+                            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                <p class="text-xs font-bold text-gray-400 mb-2 uppercase">任務 A</p>
+                                <p class="text-gray-700 text-sm font-medium">將「車速 50, 電量 80%, 偵測到紅球」設計成一個層次分明的 JSON 物件。
+                                </p>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                <p class="text-xs font-bold text-gray-400 mb-2 uppercase">任務 B</p>
+                                <p class="text-gray-700 text-sm font-medium">觀察 API 路徑 e.g.
+                                    /api/car/status，思考路徑命名如何提高可讀性。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：JSON 與 RESTful API 實戰</h2>
+            <p class="text-center text-gray-500 mb-12">掌握硬體通訊的標準化協定，建立雲端對話能力。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 3-1 -->
+                <div onclick="openSubmissionModal('adv-04-3-1', '【作業 3-1】標準化封包產生器')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">📦</span>
+                            <span class="bg-emerald-50 text-emerald-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-emerald-600 transition">【作業
+                            3-1】標準化封包產生器</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務目標：</strong>將感測器數據「打包並回傳」的接口實作。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>使用 ArduinoJson 序列化數據</li>
+                                <li>建立 /api/telemetry 的 GET 接口</li>
+                                <li>驗證 JSON 結構的層次化與可讀性</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-2 -->
+                <div onclick="openSubmissionModal('adv-04-3-2', '【作業 3-2】指令接收器')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🗣️</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
+                            3-2】指令接收器 (POST)</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務目標：</strong>實作接收網頁控制指令的 REST 接口。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>監聽 /api/move 的 POST 請求</li>
+                                <li>解析 JSON Payload 並建立防錯機制</li>
+                                <li>對比 GET 與 POST 在語義上的差異</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-3 -->
+                <div onclick="openSubmissionModal('adv-04-3-3', '【作業 3-3】API 效能分析')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-amber-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🚀</span>
+                            <span class="bg-amber-50 text-amber-700 text-xs px-3 py-1 rounded-full font-bold">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-amber-600 transition">【作業
+                            3-3】API 效能與壓力測試</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務目標：</strong>分析封包大小對傳輸延遲的影響。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>對比「冗餘」與「精簡」封包體積</li>
+                                <li>測試高頻請求下的系統穩定度</li>
+                                <li>理解嵌入式系統的通訊資源限制</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/UjrNwN-Wm_U",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vQjpHHno3kKJ9yS5nc9TxIHwDLWOs5FZhX2Swz4HQUYM_wGp5qC8IZJgCWYjWN-6MsBgqO8Y49qpgk6/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

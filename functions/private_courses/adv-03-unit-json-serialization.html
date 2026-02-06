@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 2】JSON 序列化與反序列化 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1558494949-ef010cbdcc51?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 3 - 單元 2
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                JSON <span class="text-purple-400">序列化</span><br>與反序列化
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
+                揭密 JSON：複雜資料如何通過電線傳輸，從物件到字串的華麗轉身。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Section 1: Why Serialization -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">📦</span> 1. 為什麼要序列化？ (20 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
+                                <p>
+                                    <strong>物理限制：</strong>理解通訊媒介（藍牙、Wi-Fi）只能傳送一連串的「位元組（Bytes）」，無法直接傳送一個「JavaScript 物件」。
+                                </p>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+                                    <div class="bg-purple-50 p-6 rounded-xl border border-purple-100">
+                                        <h4 class="font-bold text-purple-800 mb-2 flex items-center gap-2">
+                                            <span>📤</span> 序列化 (Serialization)
+                                        </h4>
+                                        <p class="text-sm text-purple-700">
+                                            將記憶體中的物件狀態「壓平」成文字格式（如 JSON 字串）的過程。
+                                        </p>
+                                    </div>
+                                    <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
+                                        <h4 class="font-bold text-indigo-800 mb-2 flex items-center gap-2">
+                                            <span>📥</span> 反序列化 (Deserialization)
+                                        </h4>
+                                        <p class="text-sm text-indigo-700">
+                                            將接收到的文字格式「重新組裝」成可操作物件的過程。
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-amber-50 p-6 rounded-xl border border-amber-100">
+                                    <h4 class="font-bold text-amber-800 mb-3 flex items-center gap-2">
+                                        <span>🪑</span> 學習任務：家具郵寄比喻
+                                    </h4>
+                                    <p class="text-amber-700 text-sm">
+                                        想像你要郵寄一張椅子給朋友。你必須先拆解它並裝箱（<strong>序列化</strong>），朋友收到後再按照說明書組裝（<strong>反序列化</strong>）。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: JSON Specs -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">📜</span> 2. JSON 格式規範與類型 (25 min)
+                    </h2>
+                    <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
+                        <p>
+                            <strong>合法格式：</strong>理解 JSON 支援的數據類型（字串、數字、布林值、陣列、物件）。
+                        </p>
+
+                        <div class="bg-slate-800 text-purple-400 p-6 rounded-xl font-mono mb-6">
+                            <h4 class="text-white font-bold mb-4 flex items-center gap-2"><span>⚠️</span> 常見錯誤：雙引號</h4>
+                            <div class="space-y-2 text-sm">
+                                <p class="text-green-400">✔ {"speed": 50} <span class="text-slate-500">// 正確</span></p>
+                                <p class="text-red-400">✘ {speed: 50} <span class="text-slate-500">// 錯誤：Key
+                                        必須用雙引號</span></p>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
+                            <h4 class="font-bold text-blue-800 mb-2 flex items-center gap-2"><span>🔍</span> 預習任務
+                            </h4>
+                            <p class="text-blue-700 text-sm">
+                                觀察一段複雜的無人車配置 JSON，嘗試識別出哪些是「數值（Number）」，哪些是「嵌套物件（Nested Object）」。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Toolbox -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-slate-700 to-slate-900"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🛠️</span> 3. 語法工具箱 (15 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-4">
+                            <h4 class="font-bold text-slate-800 flex items-center gap-2">
+                                <span class="bg-slate-100 p-2 rounded-lg text-xl">🌐</span> JavaScript 端
+                            </h4>
+                            <ul class="space-y-2 font-mono text-sm text-slate-600">
+                                <li class="bg-white p-3 rounded-lg border border-slate-100">JSON.stringify(obj)</li>
+                                <li class="bg-white p-3 rounded-lg border border-slate-100">JSON.parse(string)</li>
+                            </ul>
+                        </div>
+                        <div class="space-y-4">
+                            <h4 class="font-bold text-slate-800 flex items-center gap-2">
+                                <span class="bg-slate-100 p-2 rounded-lg text-xl">🦾</span> C++ (ESP32) 端
+                            </h4>
+                            <ul class="space-y-2 font-mono text-sm text-slate-600">
+                                <li class="bg-white p-3 rounded-lg border border-slate-100">serializeJson(doc, output)
+                                </li>
+                                <li class="bg-white p-3 rounded-lg border border-slate-100">deserializeJson(doc, input)
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-100 p-8 rounded-2xl border border-amber-200 mt-12">
+                        <h4 class="text-amber-900 font-bold text-xl mb-4 flex items-center gap-2">
+                            <span>💡</span> 節省頻寬的技巧
+                        </h4>
+                        <p class="text-amber-800">
+                            如何設計精簡的 Key 值？<br>
+                            例如使用 <code class="bg-amber-200 px-2 py-1 rounded">{"d": 10}</code> 代替 <code
+                                class="bg-amber-200 px-2 py-1 rounded">{"distance": 10}</code>。
+                        </p>
+                        <hr class="border-amber-200 my-4">
+                        <p class="text-amber-800 font-medium">
+                            學習目標：在線上編譯器中寫出一個能產生目標 JSON 格式的代碼片段。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">數據通訊實驗室</h2>
+            <p class="text-center text-gray-500 mb-12">掌握物件與字串的轉換，建立穩健的 IoT 數據交換機制。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 2-1 -->
+                <div onclick="openSubmissionModal('adv-03-packet-factory', '【作業 2-1】「封包工廠」：狀態物件序列化')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🏭</span>
+                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
+                            2-1】封包工廠</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務目標：</strong>實作一個能將無人車多樣感測器數據打包並傳送的網頁端功能。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>建立包含 battery, is_moving, coordinates 的 JS 物件</li>
+                                <li>使用 JSON.stringify() 並計算字串位元組 (Bytes)</li>
+                                <li>UI 即時顯示「目前準備傳送的原始字串」以供除錯</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2-2 -->
+                <div onclick="openSubmissionModal('adv-03-parsing-challenge', '【作業 2-2】「解析挑戰」：處理損毀的 JSON')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🧩</span>
+                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
+                            2-2】解析挑戰</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務目標：</strong>實作防禦性程式碼，確保網頁不會因為收到的數據出錯而當機。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>實作 try...catch 邏輯來處理格式錯誤的 JSON</li>
+                                <li>利用物件解構賦予缺失欄位預設值</li>
+                                <li>嘗試解析一段虛擬 ESP32 數據並顯示於網頁上</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2-3 -->
+                <div onclick="openSubmissionModal('adv-03-payload-optimization', '【作業 2-3】效能優化：數據精簡賽')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">⚡</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
+                            2-3】效能優化</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務目標：</strong>在不遺失資訊的前提下，極大化縮短序列化後的字串長度。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>比較冗長鍵名與縮寫鍵名對頻寬的影響</li>
+                                <li>進行數值截斷（如 3.14159 -> 3.14）觀察縮減程度</li>
+                                <li>模擬高頻率發送時瀏覽器的記憶體佔用情況</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階課程 3 - 單元 2</span>
+                <span class="hidden md:inline">|</span>
+                <span>JSON 序列化與反序列化實作</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/Vy8sjvHk0vw",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vT-FUAsECpf-7jVRV_X_E3Kh1wjZCUnFCBRZZDfi0YqgcbhWzMqH_5E3S82mVNCJH-0YxfnWaN8200I/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 5-2】質心計算與視覺誤差 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-slate-900 to-emerald-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2048&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 5 - 單元 2
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                影像中的羅盤：<br><span class="text-emerald-400">質心與視覺誤差</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-emerald-100 max-w-2xl mx-auto font-light leading-relaxed">
+                將像素轉化為角度。學習如何計算目標的平均位置，並定義引導無人車前進的導航指標。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Section 1: Essence of Centroids -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">⚖️</span> 1. 質心的數學本質 (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed">
+                                <strong>物理直覺：</strong>想像影像中所有被偵測到的「目標像素（如：黑色循跡線）」都是等重的小球，質心就是這群小球的平均位置。
+                            </p>
+                            <div class="bg-slate-900 border-l-4 border-emerald-500 p-6 rounded-r-xl">
+                                <h4 class="text-emerald-400 font-bold mb-4 uppercase tracking-wider text-xs">計算公式</h4>
+                                <div class="space-y-4 text-white font-mono text-sm">
+                                    <p>$\bar{x} = \frac{\sum x_i}{N}$</p>
+                                    <p>$\bar{y} = \frac{\sum y_i}{N}$</p>
+                                    <p class="text-slate-400 text-xs mt-2">$N$ 是目標像素總點數</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
+                            <h4 class="font-bold text-emerald-900 mb-4 flex items-center gap-2">
+                                <span>🎨</span> 學習任務：手算練習
+                            </h4>
+                            <p class="text-gray-700 text-sm leading-relaxed mb-6">
+                                在一個 $4 \times 4$ 的方格中繪製一個 <strong>L 型物體</strong>（如下圖），練習手動計算其質心座標。
+                            </p>
+                            <div class="flex justify-center mb-4">
+                                <div class="grid grid-cols-4 gap-1 bg-white p-2 border border-emerald-200 shadow-sm">
+                                    <!-- Row 0 -->
+                                    <div class="w-8 h-8 border border-gray-100 bg-emerald-500"></div>
+                                    <div class="w-8 h-8 border border-gray-100"></div>
+                                    <div class="w-8 h-8 border border-gray-100"></div>
+                                    <div class="w-8 h-8 border border-gray-100"></div>
+                                    <!-- Row 1 -->
+                                    <div class="w-8 h-8 border border-gray-100 bg-emerald-500"></div>
+                                    <div class="w-8 h-8 border border-gray-100"></div>
+                                    <div class="w-8 h-8 border border-gray-100"></div>
+                                    <div class="w-8 h-8 border border-gray-100"></div>
+                                    <!-- Row 2 -->
+                                    <div class="w-8 h-8 border border-gray-100 bg-emerald-500"></div>
+                                    <div class="w-8 h-8 border border-gray-100 bg-emerald-500"></div>
+                                    <div class="w-8 h-8 border border-gray-100"></div>
+                                    <div class="w-8 h-8 border border-gray-100"></div>
+                                    <!-- Row 3 -->
+                                    <div class="w-8 h-8 border border-gray-100"></div>
+                                    <div class="w-8 h-8 border border-gray-100"></div>
+                                    <div class="w-8 h-8 border border-gray-100"></div>
+                                    <div class="w-8 h-8 border border-gray-100"></div>
+                                </div>
+                            </div>
+                            <p class="text-xs text-center text-emerald-600 font-bold">思考：$(\bar{x}, \bar{y})$ 會在哪個位置？
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Visual Error -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">📏</span> 2. 視覺誤差 (Visual Error) 的定義 (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6">
+                            <ul class="space-y-4 text-gray-600 leading-relaxed">
+                                <li class="flex gap-3">
+                                    <span class="text-blue-500 font-bold">●</span>
+                                    <span><strong>參考基準點：</strong>影像中心點。例如 $320$ 寬影像，中心是 $160$。</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="text-blue-500 font-bold">●</span>
+                                    <span><strong>誤差公式：</strong>$Error = \bar{x} - Center_{image}$</span>
+                                </li>
+                            </ul>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                    <div class="text-blue-600 font-bold mb-1">$Error > 0$</div>
+                                    <p class="text-xs text-blue-800">目標偏右，車子需要<strong>右轉修正</strong>。</p>
+                                </div>
+                                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                                    <div class="text-indigo-600 font-bold mb-1">$Error < 0$</div>
+                                            <p class="text-xs text-indigo-800">目標偏左，車子需要<strong>左轉修正</strong>。</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                class="bg-slate-900 p-8 rounded-3xl flex flex-col justify-center items-center text-center">
+                                <div
+                                    class="relative w-full h-24 bg-white/5 rounded-lg border border-white/10 mb-6 flex items-center justify-center">
+                                    <div class="absolute inset-y-0 left-1/2 w-0.5 bg-blue-500/50 dashed"></div>
+                                    <div class="w-4 h-4 rounded-full bg-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.8)] absolute"
+                                        style="left: 75%;"></div>
+                                    <div class="absolute top-2 left-1/2 -translate-x-1/2 text-[10px] text-blue-300">
+                                        CENTER (160)</div>
+                                    <div
+                                        class="absolute bottom-2 left-[75%] -translate-x-1/2 text-[10px] text-emerald-300">
+                                        CENTROID (240)</div>
+                                </div>
+                                <h4 class="font-bold text-white mb-2">思考任務</h4>
+                                <p class="text-sm text-slate-400">若目標物體完全消失（總點數 $N=0$），程式應如何避免「除以零」的崩潰？</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </section>
+
+        <!-- Section 3: Data Normalization -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-purple-600 to-pink-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🔄</span> 3. 數據正規化 (Normalization) (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6">
+                            <p class="text-gray-600 leading-relaxed">
+                                <strong>核心概念：</strong>將誤差縮放到 $[-1, 1]$ 區間。
+                            </p>
+                            <p class="text-sm text-gray-500 italic bg-gray-50 p-4 rounded-xl">
+                                "這樣無論影像解析度是 160 還是 1280，控制邏輯都能通用，這就是演算法的抽象化。"
+                            </p>
+                            <div class="p-6 bg-purple-50 rounded-2xl border border-purple-100">
+                                <h5 class="font-bold text-purple-900 mb-3 flex items-center gap-2">
+                                    <span>🌐</span> 線上任務：預習「視野分區」
+                                </h5>
+                                <p class="text-sm text-gray-700 leading-relaxed">
+                                    思考如何將 $160 \times 120$ 的影像切成<strong>上、中、下</strong>三段，來預測前方的彎道變化？
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col justify-center">
+                            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                                <h4 class="font-bold text-slate-800 mb-4">預習觀察</h4>
+                                <ul class="space-y-3 text-sm text-slate-600">
+                                    <li class="flex items-center gap-2">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                                        <span>觀察不同解析度下，同一個物體偏離程度的數值變化。</span>
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                                        <span>定義誤差值 $e$ (Error) 的物理意義。</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Assignments -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：座標與算力</h2>
+            <p class="text-center text-gray-500 mb-12">將視覺資訊轉化為精確的導航參數。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 2-1 -->
+                <div onclick="openSubmissionModal('adv-05-centroid-extractor', '【作業 2-1】實作「質心提取器」函數')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🛰️</span>
+                            <span class="bg-emerald-50 text-emerald-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-emerald-600 transition">【作業
+                            2-1】「質心提取器」</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>編寫 JS 程式，遍歷二值化後的影像並標註中心。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>遍歷 ImageData.data 統計目標座標</li>
+                                <li>於 Canvas 上繪製紅色十字準星</li>
+                                <li>效能優化：實作跳行掃描（Skip Scanning）</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2-2 -->
+                <div onclick="openSubmissionModal('adv-05-error-dashboard', '【作業 2-2】誤差量化與動態儀表板')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">📊</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
+                            2-2】誤差動態儀表板</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>建立一個即時顯示誤差數值的視覺化監控介面。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>實作水平能量條（Error Bar）</li>
+                                <li>設置「盲區處理」(Deadzone) 機制</li>
+                                <li>定義左右轉修正的邊界數值</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2-3 -->
+                <div onclick="openSubmissionModal('adv-05-noise-robustness', '【作業 2-3】環境干擾下的誤差修正測試')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🛡️</span>
+                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
+                            2-3】抗干擾測試</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>測試當背景出現雜訊時，質心與誤差的變化。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>雜訊實驗：觀察質心如何被「拉走」</li>
+                                <li>實作面積過濾 (Area Threshold)</li>
+                                <li>理解視覺誤差的魯棒性 (Robustness)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階課程 5 - 單元 2</span>
+                <span class="hidden md:inline">|</span>
+                <span>質心計算與視覺誤差</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/pBosS1FgXfU",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vQYaas4Fa1QC7NzpkE0Oo7hEdFDP_8Sd2ClELuFfQyTTHIO3ZEBVIozEFdAaEQSkHpI5H4xqkVzY_r2/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

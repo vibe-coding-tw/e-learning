@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>進階 13: 軟體健壯性與錯誤處理 - Vibe Coding</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+
+    <!-- Navigation (Shared) -->
+    <div id="nav-placeholder"></div>
+    <script src="/js/nav-component.js"></script>
+    <script>
+        renderNav('/');
+    </script>
+
+    <!-- Tab Navigation Bar -->
+    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
+                <button onclick="switchTab('robustness-intro')" id="tab-robustness-intro"
+                    class="tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2">
+                    <span class="mr-2">1️⃣</span>軟體健壯性與防禦性編程
+                </button>
+                <button onclick="switchTab('system-perf')" id="tab-system-perf"
+                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
+                    <span class="mr-2">2️⃣</span>系統性能分析與瓶頸優化
+                </button>
+                <button onclick="switchTab('technical-narrative')" id="tab-technical-narrative"
+                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
+                    <span class="mr-2">3️⃣</span>視覺敘事：如何展示技術專案
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Area (Iframe) -->
+    <div class="flex-grow w-full relative">
+        <iframe id="content-frame" src=""
+            class="w-full h-full border-0 absolute inset-0 bg-gray-50 transition-opacity duration-300"
+            style="opacity: 0;" onload="this.style.opacity = '1'"></iframe>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('content-frame');
+        const tabIntro = document.getElementById('tab-robustness-intro');
+        const tabPerf = document.getElementById('tab-system-perf');
+        const tabNarrative = document.getElementById('tab-technical-narrative');
+
+        // Initial Load
+        loadFromHash();
+
+        function loadFromHash() {
+            const hash = window.location.hash.substring(1);
+            if (hash === 'system-perf') {
+                switchTab('system-perf');
+            } else if (hash === 'technical-narrative') {
+                switchTab('technical-narrative');
+            } else {
+                switchTab('robustness-intro');
+            }
+        }
+
+        function switchTab(tab) {
+            // Reset all tabs
+            [tabIntro, tabPerf, tabNarrative].forEach(t => {
+                if (t) t.className = "tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2";
+            });
+
+            if (tab === 'robustness-intro') {
+                tabIntro.className = "tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2";
+                loadContent('adv-13-unit-robustness.html');
+                window.location.hash = 'robustness-intro';
+            } else if (tab === 'system-perf') {
+                tabPerf.className = "tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2";
+                loadContent('adv-13-unit-system-perf.html');
+                window.location.hash = 'system-perf';
+            } else if (tab === 'technical-narrative') {
+                tabNarrative.className = "tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2";
+                loadContent('adv-13-unit-technical-narrative.html');
+                window.location.hash = 'technical-narrative';
+            }
+        }
+
+        function loadContent(url) {
+            iframe.style.opacity = '0';
+            setTimeout(() => {
+                const separator = url.includes('?') ? '&' : '?';
+                const query = window.location.search.substring(1);
+                iframe.src = query ? `${url}${separator}${query}` : url;
+            }, 300);
+        }
+    </script>
+    <script type="module" src="/js/master-nav.js?v=5"></script>
+
+</body>
+
+</html>

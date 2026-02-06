@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adv 13: 視覺敘事：如何展示技術專案 - Vibe Coding</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-violet-500/20 border border-violet-400/30 text-violet-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 13 - 單元 3
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                視覺敘事：<span class="text-pink-400">如何展示技術專案</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-3xl mx-auto font-light leading-relaxed">
+                技術再強，沒人看懂也是白搭。學習用「故事」和「視覺」為你的程式碼注入靈魂，打造令人驚艷的作品集。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+
+        <!-- Use Cases / Intro -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 card-hover">
+                <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 mb-6">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z">
+                        </path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">為什麼要學技術敘事？</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    在開源社群或求職面試中，Reviewer 只有 30 秒能被你吸引。單純貼 GitHub code 並不足夠，你需要一個引人入勝的故事 (Hero's Journey)
+                    和直觀的視覺展示，讓不懂代碼的人也能感受到技術的價值。
+                </p>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 card-hover">
+                <div class="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center text-pink-600 mb-6">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z">
+                        </path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">本單元目標</h3>
+                <ul class="space-y-2 text-gray-600">
+                    <li class="flex items-center"><span class="mr-2 text-pink-500">✓</span>掌握「英雄之旅」技術敘事框架</li>
+                    <li class="flex items-center"><span class="mr-2 text-pink-500">✓</span>設計「一眼就懂」的系統架構圖</li>
+                    <li class="flex items-center"><span class="mr-2 text-pink-500">✓</span>製作專業質感的 Demo 影片</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 1: Hero's Journey -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-violet-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">1</span>
+                英雄之旅：技術敘事的框架
+            </h2>
+            <div class="prose prose-violet max-w-none text-gray-600">
+                <p>
+                    別只寫 "I made a car."，試著講一個故事。好的技術敘事遵循「英雄之旅」的結構，讓讀者跟著你一起經歷開發的過程。
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+                    <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                        <h4 class="font-bold text-gray-800 mb-2">核心結構 (Structure)</h4>
+                        <ul class="list-none space-y-3">
+                            <li class="relative pl-6">
+                                <span class="absolute left-0 top-1.5 w-2 h-2 rounded-full bg-red-400"></span>
+                                <strong>挑戰 (The Problem)：</strong><br>
+                                為什麼要做這台車？解決了什麼痛點（如：狹窄空間的物流、危險環境探勘）？
+                            </li>
+                            <li class="relative pl-6">
+                                <span class="absolute left-0 top-1.5 w-2 h-2 rounded-full bg-yellow-400"></span>
+                                <strong>掙扎 (The Struggle)：</strong><br>
+                                開發中遇到了什麼技術障礙（如：搖桿數據延遲 - causing crash、CORS 錯誤 - blocked data）？不要害怕暴露弱點，這才是真實的工程。
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                        <h4 class="font-bold text-gray-800 mb-2">解決與成果 (Result)</h4>
+                        <ul class="list-none space-y-3">
+                            <li class="relative pl-6">
+                                <span class="absolute left-0 top-1.5 w-2 h-2 rounded-full bg-green-400"></span>
+                                <strong>突破 (The Solution)：</strong><br>
+                                你用了什麼黑科技解決它（如：引入 FSM 穩定狀態、數據歸一化優化控制手感）？這是展示技術深度的時刻。
+                            </li>
+                            <li class="relative pl-6">
+                                <span class="absolute left-0 top-1.5 w-2 h-2 rounded-full bg-blue-400"></span>
+                                <strong>成果 (The Result)：</strong><br>
+                                最終的性能表現。用數據說話（如：延遲從 500ms 降至 50ms、辨識準確率達 95%）。
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Visual Tools -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-violet-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">2</span>
+                視覺化工具：讓邏輯「被看見」
+            </h2>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <p class="text-gray-600 mb-6">
+                    看不見的代碼很難被欣賞。我們需要將抽象的數據流 (Data Flow) 和系統架構 (Architecture) 具象化。
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="border border-l-4 border-l-indigo-500 border-gray-200 rounded-lg p-4">
+                        <h4 class="font-bold text-gray-800 flex items-center mb-2">
+                            <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                                </path>
+                            </svg>
+                            動態圖表 (Dynamic Charts)
+                        </h4>
+                        <p class="text-sm text-gray-600 mb-2">使用 Chart.js 等函式庫將感測器數據轉化為動態曲線。</p>
+                        <ul class="text-sm text-gray-500 list-disc list-inside">
+                            <li>即時馬達轉速 (RPM)</li>
+                            <li>電池電壓監控</li>
+                            <li>PID 誤差修正曲線</li>
+                        </ul>
+                    </div>
+
+                    <div class="border border-l-4 border-l-purple-500 border-gray-200 rounded-lg p-4">
+                        <h4 class="font-bold text-gray-800 flex items-center mb-2">
+                            <svg class="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                                </path>
+                            </svg>
+                            架構圖設計 (Architecture Diagrams)
+                        </h4>
+                        <p class="text-sm text-gray-600 mb-2">清楚展示前端、藍牙、硬體三方的關係。工具推薦：Lucidchart, Figma, Excalidraw</p>
+                        <ul class="text-sm text-gray-500 list-disc list-inside">
+                            <li>分層架構 (Layered Architecture)</li>
+                            <li>數據流向 (Data Flow)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Recording -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-violet-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">3</span>
+                錄影與剪輯技巧
+            </h2>
+            <div class="prose prose-violet max-w-none text-gray-600">
+                <p>沒有影片就沒真相 (Pics or it didn't happen)。一個好的 Demo 影片勝過千言萬語。</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <div class="bg-gray-100 p-4 rounded-lg text-center">
+                        <span class="block text-2xl mb-2">🎥</span>
+                        <h5 class="font-bold text-gray-800">POV 第一人稱視角</h5>
+                        <p class="text-xs text-gray-600">把手機架在頭上或胸前，展示「操作者」的真實體驗，讓觀眾有代入感。</p>
+                    </div>
+                    <div class="bg-gray-100 p-4 rounded-lg text-center">
+                        <span class="block text-2xl mb-2">🖼️</span>
+                        <h5 class="font-bold text-gray-800">PiP 子母畫面</h5>
+                        <p class="text-xs text-gray-600">左邊放手機螢幕錄影，右邊放車子實際跑動畫面。同步展示「操作 -> 反應」。</p>
+                    </div>
+                    <div class="bg-gray-100 p-4 rounded-lg text-center">
+                        <span class="block text-2xl mb-2">🎬</span>
+                        <h5 class="font-bold text-gray-800">敘事節奏</h5>
+                        <p class="text-xs text-gray-600">問題定義 (5s) -> 技術特寫 (10s) -> 實際功能演示 (15s) -> 未來展望</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section>
+            <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center">
+                <span class="mr-3">📝</span> 實作任務 (Classroom Challenges)
+            </h2>
+
+            <!-- Assignment 1 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-md cursor-pointer"
+                onclick="openSubmissionModal('adv-13-architecture', 'Task 3-1: 架構圖設計')">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <span class="bg-violet-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 3-1</span>
+                        「一眼就懂」的架構圖設計 (60 min)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
+                        <p class="text-gray-700">利用圖形工具，將你無人車的「數據流」畫出來。目標是製作一張不需要解釋，別人就能看懂系統運作邏輯的資訊圖表。</p>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
+                        <li><strong>分層呈現：</strong>清楚區分 UI 層 (Web/App)、通訊層 (BLE/WiFi) 與硬體執行層 (ESP32/Motor)。</li>
+                        <li><strong>視覺指引：</strong>用箭頭標示數據（如 Joystick $(x,y)$）包含數學轉換公式，最終變成馬達 PWM 的過程。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Assignment 2 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-md cursor-pointer"
+                onclick="openSubmissionModal('adv-13-dashboard', 'Task 3-2: 動態數據儀表板')">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <span class="bg-violet-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 3-2</span>
+                        動態數據儀表板 (60 min)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
+                        <p class="text-gray-700">在你的控制網頁上加入實時的「性能監控器」。目標是在演示時，除了看車子在跑，還能看到背後的「數據心跳」。</p>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
+                        <li><strong>波形繪製：</strong>利用 Canvas 或 Chart.js 繪製馬達輸出 (PWM) 或 PID 誤差的即時波形。</li>
+                        <li><strong>數值儀表：</strong>實作圓形進度條或數字面板，顯示當前的 CPU 負載 (Loop Time) 或電池電壓。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Assignment 3 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md cursor-pointer"
+                onclick="openSubmissionModal('adv-13-pitch', 'Task 3-3: 電梯簡報')">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <span class="bg-violet-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 3-3</span>
+                        30 秒電梯簡報 (Elevator Pitch) (45 min)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
+                        <p class="text-gray-700">錄製一段現場展示影片，具備專業質感的技術成果短片。</p>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
+                        <li><strong>實機演示：</strong>邊操作邊說明。例如：「現在切換到自律模式，你可以看到畫面上搖桿變暗了...」。</li>
+                        <li><strong>性能特寫：</strong>特寫展示技術細節，如「死區 (Deadzone)」消除後的微動反應，或「指數曲線 (Expo)」帶來的平滑起步效果。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-indigo-50 border border-indigo-100 p-6 rounded-xl flex items-start">
+                <span class="text-2xl mr-4">🚀</span>
+                <div>
+                    <h4 class="font-bold text-indigo-900 mb-2">Next Level: 放入你的 Portfolio</h4>
+                    <p class="text-sm text-indigo-700">
+                        完成這些挑戰後，你將擁有一份完整的專案作品集素材。將架構圖、截圖和演示影片整理到你的 GitHub README 或個人網站，這將是你成為頂尖開發者的重要資產。
+                    </p>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-16 border-t border-gray-200 pt-8 flex justify-between text-gray-500">
+            <a href="/courses/adv-13-unit-system-perf.html" class="hover:text-violet-600 flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Previous: 13-2 Performance
+            </a>
+            <a href="/courses/adv-13-master-robustness.html" class="hover:text-violet-600 flex items-center">
+                Back to Menu
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+            </a>
+        </footer>
+
+    </main>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/UhoQY4ZWGSk",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vSdu1XLL7cAKXHKsfYcgiaZVuADoazmsfvQOReViBFZSyPsvshu9pa_s1Yco5GMV7O0Mg2BHvyK2f52/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

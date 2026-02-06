@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adv 13: 系統性能分析與瓶頸優化 - Vibe Coding</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-blue-900 to-cyan-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 13 - 單元 2
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                系統性能分析<span class="text-cyan-400">與瓶頸優化</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-indigo-100 max-w-3xl mx-auto font-light leading-relaxed">
+                打破速度的天花板：從硬體運算、通訊協議到前端渲染的全鏈路優化。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+
+        <!-- Use Cases / Intro -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 card-hover">
+                <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 mb-6">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z">
+                        </path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">為什麼要優化性能？</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    系統的速度取決於「最慢」的那一環。即使你有最強的馬達，如果 ESP32 還在慢慢 loop，或者藍牙傳輸卡住，車子的反應就會像「lag」一樣遲鈍。
+                </p>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 card-hover">
+                <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 mb-6">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                        </path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">本單元目標</h3>
+                <ul class="space-y-2 text-gray-600">
+                    <li class="flex items-center"><span class="mr-2 text-pink-500">✓</span>辨識三大瓶頸源：通訊、運算、渲染</li>
+                    <li class="flex items-center"><span class="mr-2 text-pink-500">✓</span>學會使用 micros() 與 DevTools 測量延遲
+                    </li>
+                    <li class="flex items-center"><span class="mr-2 text-pink-500">✓</span>實作指令瘦身與 Canvas 渲染優化</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 1: Identify Bottlenecks -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">1</span>
+                辨識性能瓶頸 (Bottlenecks)
+            </h2>
+            <div class="prose prose-indigo max-w-none text-gray-600">
+                <p>
+                    要解決「慢」的問題，首先要找出「哪裡慢」。在 IoT 系統中，瓶頸通常出現在以下三個地方：
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                    <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                        <h4 class="font-bold text-gray-800 mb-2">1. 通訊瓶頸</h4>
+                        <p class="text-sm">藍牙/Wi-Fi 頻寬不足或封包過大。</p>
+                        <ul class="text-xs text-gray-500 list-disc list-inside mt-2">
+                            <li>傳送了過於冗長的 JSON</li>
+                            <li>Web BLE 的 MTU 限制</li>
+                        </ul>
+                    </div>
+                    <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                        <h4 class="font-bold text-gray-800 mb-2">2. 運算瓶頸</h4>
+                        <p class="text-sm">ESP32 處理不及導致阻塞。</p>
+                        <ul class="text-xs text-gray-500 list-disc list-inside mt-2">
+                            <li>loop() 裡有 delay()</li>
+                            <li>大量的 Serial.print()</li>
+                            <li>複雜的浮點數運算</li>
+                        </ul>
+                    </div>
+                    <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                        <h4 class="font-bold text-gray-800 mb-2">3. 渲染瓶頸</h4>
+                        <p class="text-sm">網頁端繪圖過於頻繁。</p>
+                        <ul class="text-xs text-gray-500 list-disc list-inside mt-2">
+                            <li>Canvas 每秒重繪太多次</li>
+                            <li>垃圾回收 (GC) 頻繁觸發</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Tools -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">2</span>
+                性能觀測工具
+            </h2>
+            <div class="prose prose-indigo max-w-none text-gray-600">
+
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">硬體端：Code Profiling (micros)</h3>
+                    <p>別用猜的！在程式碼中埋設「時間點」，計算一段程式碼跑了多少微秒 ($\mu s$)。</p>
+                    <pre><code class="language-cpp">void loop() {
+    unsigned long start = micros(); // 記錄開始時間
+    
+    // ... 執行你的任務 ...
+    doComplexMath();
+    
+    unsigned long duration = micros() - start; // 計算耗時
+    Serial.printf("Task took %lu us\n", duration);
+}</code></pre>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">前端：Chrome DevTools Performance</h3>
+                    <p>
+                        利用瀏覽器的開發者工具 (F12) -> Performance 面板，錄製一段操作過程，觀察 Scripting (黃色) 和 Rendering (紫色) 的時間佔比。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Compression -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">3</span>
+                數據壓縮策略
+            </h2>
+            <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">為什麼少即是多？</h3>
+                <p class="text-gray-700 mb-4">
+                    減少封包長度能直接提升通訊頻率。比較以下兩種 JSON 格式：
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white p-4 rounded shadow-sm">
+                        <code class="text-red-500 text-sm">{"linear_velocity":100, "angular_velocity":50}</code>
+                        <p class="text-xs text-gray-400 mt-2">約 45 bytes (冗長)</p>
+                    </div>
+                    <div class="bg-white p-4 rounded shadow-sm">
+                        <code class="text-green-500 text-sm">{v:100,w:50}</code>
+                        <p class="text-xs text-gray-400 mt-2">約 12 bytes (精簡)</p>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-600 mt-4">
+                    甚至可以極限壓縮成二進位格式或自定義字串（如 `L100R50`），將通訊效率提升 3-4 倍。
+                </p>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section>
+            <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center">
+                <span class="mr-3">📝</span> 實作任務 (Classroom Challenges)
+            </h2>
+
+            <!-- Assignment 1 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-md cursor-pointer"
+                onclick="openSubmissionModal('adv-13-profiling', 'Task 2-1: 耗時追蹤')">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <span class="bg-indigo-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 2-1</span>
+                        「耗時追蹤」：硬體端分析 (60 min)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
+                        <p class="text-gray-700">測量並優化 ESP32 的主迴圈執行效率，找出拖慢系統的元兇。</p>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
+                        <li><strong>時間測量：</strong>在 <code>loop()</code> 的開頭與結尾記錄 <code>micros()</code>，算出每秒可以跑幾次迴圈（Hz）。
+                        </li>
+                        <li><strong>瓶頸切除：</strong>嘗試移除所有的 <code>delay()</code> 與不必要的
+                            <code>Serial.print()</code>，觀察迴圈頻率的變化（通常會提升 10 倍以上）。
+                        </li>
+                        <li><strong>目標：</strong>確保硬體處理頻率遠高於控制指令頻率（例如 > 100Hz）。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Assignment 2 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-md cursor-pointer"
+                onclick="openSubmissionModal('adv-13-protocol', 'Task 2-2: 指令瘦身')">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <span class="bg-indigo-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 2-2</span>
+                        「指令瘦身」：通訊協議優化 (60 min)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
+                        <p class="text-gray-700">將原始 JSON 指令重構成更輕量化的格式，提升無線傳輸效率。</p>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
+                        <li><strong>協議重構：</strong>將 <code>{"left":255, "right":255}</code> 改成自定義的二進位格式或極簡字串（如
+                            <code>L255R255</code>）。
+                        </li>
+                        <li><strong>解析實作：</strong>在 ESP32 端撰寫對應的解析邏輯（如 <code>sscanf</code> 或自定義 parser）。</li>
+                        <li><strong>延遲測試：</strong>對比瘦身前後，從按下按鈕到馬達轉動的反應時間。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Assignment 3 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md cursor-pointer"
+                onclick="openSubmissionModal('adv-13-rendering', 'Task 2-3: 前端渲染優化')">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <span class="bg-indigo-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 2-3</span>
+                        前端渲染優化 (45 min)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
+                        <p class="text-gray-700">優化網頁儀表板的繪圖效能，避免卡頓。</p>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
+                        <li><strong>離屏渲染 (Off-screen Rendering)：</strong>將不變的儀表背景畫在另一個 Canvas 上，只在主畫布更新變動的指針。</li>
+                        <li><strong>Frame Rate 限制：</strong>利用 <code>requestAnimationFrame</code> 確保 UI
+                            更新頻率與螢幕刷新率（60Hz）同步，不浪費運算資源。</li>
+                        <li><strong>目標：</strong>即使在低階手機上也能流暢顯示無人車狀態。</li>
+                    </ul>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-16 border-t border-gray-200 pt-8 flex justify-between text-gray-500">
+            <a href="/courses/adv-13-unit-robustness.html" class="hover:text-indigo-600 flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Previous: 13-1 Robustness
+            </a>
+            <a href="/courses/adv-13-master-robustness.html" class="hover:text-indigo-600 flex items-center">
+                Back to Menu
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+            </a>
+        </footer>
+
+    </main>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/q7qjcrXW5pI",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vTU7WfzMaQV96vBzCwXC7usM86n93lOC5J4BRrYbtRYLG5HHaJF1iqnJb78biQPVxGn4saoqcZpAB0e/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

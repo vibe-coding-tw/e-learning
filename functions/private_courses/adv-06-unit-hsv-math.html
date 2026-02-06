@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 6-3】HSV 顏色空間的數學優勢 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-slate-900 to-emerald-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2048&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 6 - 單元 3
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                為何電腦看不懂紅色：<br><span class="text-emerald-400">HSV 的故事</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-emerald-100 max-w-2xl mx-auto font-light leading-relaxed">
+                深入探討 HSV 相比於 RGB 在變動光影環境下的穩定性，學習如何定義精準的顏色區間。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Section 1: RGB's Weakness -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">💔</span> 1. RGB 的致命傷：光影耦合 (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed">
+                                <strong>問題現象：</strong>在 RGB 空間中，如果你調暗燈光，$R, G, B$
+                                三個數值會同時下降。這意味著對於電腦來說，「深紅色」與「明亮的粉紅色」在數學特徵上極度混亂。
+                            </p>
+                            <div class="bg-slate-900 border-l-4 border-red-500 p-6 rounded-r-xl text-white">
+                                <p class="font-mono text-sm mb-2 text-red-400">// RGB 耦合示例</p>
+                                <p class="font-mono text-sm">亮光下: (255, 100, 100) -> 淺紅</p>
+                                <p class="font-mono text-sm">陰影下: (80, 20, 20) -> 深紅</p>
+                                <p class="text-xs text-slate-400 mt-4 italic">三個維度都在動，難以設定穩定的門檻值。</p>
+                            </div>
+                        </div>
+                        <div class="bg-red-50 p-6 rounded-2xl border border-red-100">
+                            <h4 class="font-bold text-red-900 mb-4 flex items-center gap-2">
+                                <span>🔍</span> 學習任務：光影觀察
+                            </h4>
+                            <p class="text-gray-700 text-sm leading-relaxed mb-4">
+                                觀察同一張物體在「陽光下」與「陰影下」的 RGB 數值變化。
+                            </p>
+                            <div class="bg-white p-4 rounded-xl shadow-inner border border-red-100 space-y-2 text-xs">
+                                <p class="flex justify-between"><span>陽光下 (R,G,B):</span> <span
+                                        class="font-bold text-red-600">220, 45, 45</span></p>
+                                <p class="flex justify-between"><span>陰影下 (R,G,B):</span> <span
+                                        class="font-bold text-red-900">110, 22, 22</span></p>
+                            </div>
+                            <p class="text-xs mt-4 text-red-700 font-medium">理解為什麼簡單的 RGB 門檻值無法在戶外穩定追蹤目標。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: HSV Principles -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">📐</span> 2. HSV：幾何上的「分而治之」 (30 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-4">
+                            <div class="flex gap-4 items-start">
+                                <div
+                                    class="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                                    H</div>
+                                <div>
+                                    <h4 class="font-bold text-gray-900">Hue (色相)</h4>
+                                    <p class="text-sm text-gray-600 italic">代表「是什麼顏色」。它是一個角度（$0^\circ \sim
+                                        360^\circ$），是視覺追蹤最重要的參數。</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 items-start">
+                                <div
+                                    class="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                                    S</div>
+                                <div>
+                                    <h4 class="font-bold text-gray-900">Saturation (飽和度)</h4>
+                                    <p class="text-sm text-gray-600">顏色的純度。</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 items-start">
+                                <div
+                                    class="bg-slate-100 text-slate-600 w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                                    V</div>
+                                <div>
+                                    <h4 class="font-bold text-gray-900">Value (亮度)</h4>
+                                    <p class="text-sm text-gray-600">光的強弱。</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-indigo-900 p-8 rounded-3xl text-white relative overflow-hidden">
+                            <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl">
+                            </div>
+                            <h4 class="font-bold text-emerald-400 mb-4 uppercase tracking-wider text-sm italic">數學優勢
+                            </h4>
+                            <p class="text-lg leading-relaxed relative z-10">
+                                在 HSV 中，只要顏色不變，不論光照如何變化（V 變動）或顏色變淡（S 變動），<span
+                                    class="text-emerald-400 font-bold underline underline-offset-4">H 值通常保持穩定</span>。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Color Circle Continuity -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-purple-600 to-pink-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">⭕</span> 3. 色環的連續性與斷點 (10 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6">
+                            <div class="p-6 bg-purple-50 rounded-2xl border border-purple-100">
+                                <h5 class="font-bold text-purple-900 mb-3 flex items-center gap-2">
+                                    <span>🧠</span> 預習挑戰：紅色的斷點
+                                </h5>
+                                <p class="text-sm text-gray-700 leading-relaxed">
+                                    紅色的 H 值大約在 $0^\circ$（或 $360^\circ$）。思考在寫程式時，如果目標是紅色，門檻值該如何跨越這個「斷點」？
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-center">
+                            <!-- Simple Color Ring Representation -->
+                            <div class="relative w-40 h-40 rounded-full border-8 border-transparent"
+                                style="background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); mask: radial-gradient(transparent 60%, black 61%); -webkit-mask: radial-gradient(transparent 60%, black 61%);">
+                                <div
+                                    class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-8 text-xs font-bold text-red-600">
+                                    0° / 360°</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Assignments -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：HSVV 色彩攻防戰</h2>
+            <p class="text-center text-gray-500 mb-12">用數據與實作成就最強的視覺穩定性。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 3-1 -->
+                <div onclick="openSubmissionModal('adv-06-hsv-stress-test', '【作業 3-1】色彩壓力測試：RGB vs. HSV')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-orange-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">⚖️</span>
+                            <span class="bg-orange-50 text-orange-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-orange-600 transition">【作業
+                            3-1】色彩壓力測試</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務内容：</strong>在不同光照條件下，測試哪種顏色空間最容易鎖定目標物。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs text-justify">
+                                <li>環境模擬：使用手電筒強光與擋板製造影。</li>
+                                <li>數據紀錄：紀錄強光與暗處時的 RGB 與 HSV 均值。</li>
+                                <li>變異分析：計算波動程度，證明 H 值的穩定性。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-2 -->
+                <div onclick="openSubmissionModal('adv-06-hsv-mask-generator', '【作業 3-2】動態 HSV 遮罩 (Mask) 產生器')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🎭</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業 3-2】動態
+                            HSV 遮罩</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務内容：</strong>實作一個能過濾特定顏色的網頁程式。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs text-justify">
+                                <li>座標轉換：編寫 rgbToHsv() 數學轉換函式。</li>
+                                <li>雙門檻過濾：設定 H 的區間進行影像分割。</li>
+                                <li>容錯調校：調整 S 與 V 門檻排除背景雜訊。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-3 -->
+                <div onclick="openSubmissionModal('adv-06-multi-color-tracking', '【作業 3-3】多色追蹤與優先權判定')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🚦</span>
+                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
+                            3-3】多色追蹤判斷</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務内容：</strong>同時偵測紅、綠燈，並決定無人車的行為。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs text-justify">
+                                <li>並行偵測：實作兩組 HSV 門檻找出紅心與綠心。</li>
+                                <li>行為邏輯：紅色質心則 STOP，只有綠色則 FOLLOW。</li>
+                                <li>將數學優勢轉化為實際的 AI 決策邏輯。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階課程 6 - 單元 3</span>
+                <span class="hidden md:inline">|</span>
+                <span>HSV 顏色空間的數學優勢</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/s3OGZfucnZM",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vT5m2HqpkTLE-DwPfk1L0LXEtZBIdooEYMVOPsuOb3GMext9QXlPAscuunKYfT_97my0nqZS3rLLgrR/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

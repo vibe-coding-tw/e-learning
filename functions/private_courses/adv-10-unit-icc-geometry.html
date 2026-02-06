@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 10-1】差速驅動幾何學：ICC 的秘密 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .math-font {
+            font-family: 'Times New Roman', Times, serif;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1574169208507-84376144848b?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 10 - 單元 1
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                差速驅動幾何學：<br><span class="text-blue-400">ICC 的秘密</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                為什麼兩顆輪子就能轉向？探索 Instantaneous Center of Curvature (ICC) 的數學奧秘。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Section 1: Differential Layout -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🏎️</span> 1. 為什麼兩顆輪子就能轉向？ (15 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
+                            <ul class="space-y-4">
+                                <li class="flex gap-3">
+                                    <span class="text-blue-500 font-bold">●</span>
+                                    <span><strong>差速原理：</strong>當左輪速度 <span class="math-font">V<sub>L</sub></span>
+                                        大於右輪速度 <span class="math-font">V<sub>R</sub></span> 時，車輛會因為外側移動距離較長而向右偏轉。</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="text-blue-500 font-bold">●</span>
+                                    <span><strong>剛體運動限制：</strong>假設車輪不打滑，車輛整體的運動軌跡必然是繞著某個點旋轉，這個點就是我們轉彎的圓心。</span>
+                                </li>
+                            </ul>
+                            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+                                <h4 class="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                                    <span>🤔</span> 思考一下
+                                </h4>
+                                <p class="text-sm text-gray-700 leading-relaxed">
+                                    如果左右兩輪速度一樣 (V<sub>L</sub> = V<sub>R</sub>)，這個「圓心」會在哪裡呢？如果速度完全相反 (V<sub>L</sub> =
+                                    -V<sub>R</sub>) 呢？
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 flex items-center justify-center bg-gray-50">
+                            <!-- Placeholder for visualization -->
+                            <div class="text-center p-8">
+                                <div class="text-6xl mb-4">🔄</div>
+                                <p class="text-gray-500">Visualization of Differential Drive</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: ICC Core -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🌐</span> 2. 核心主角：ICC (Instantaneous Center of Curvature) (25 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div
+                            class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 order-2 md:order-1 bg-gray-50 flex items-center justify-center">
+                            <!-- Placeholder for ICC Geometry Diagram -->
+                            <div class="text-center p-8">
+                                <div class="text-6xl mb-4">📐</div>
+                                <p class="text-gray-500">ICC Geometry Diagram</p>
+                            </div>
+                        </div>
+                        <div class="space-y-6 order-1 md:order-2 text-lg text-gray-600 leading-relaxed">
+                            <p><strong>即時轉向中心 (ICC)：</strong>在任何時間點，車體上所有點都在繞著同一個「虛擬中心」旋轉。</p>
+
+                            <div
+                                class="bg-slate-900 p-6 rounded-2xl border border-indigo-500/30 text-gray-300 font-mono text-sm leading-8">
+                                <p class="mb-2 text-indigo-400 font-bold">// 幾何推導公式</p>
+                                <p>假設兩輪間距為 L，轉向半徑為 R，角速度為 &omega;</p>
+                                <hr class="border-slate-700 my-2">
+                                <p>V<sub>L</sub> = &omega; &times; (R + L/2)</p>
+                                <p>V<sub>R</sub> = &omega; &times; (R - L/2)</p>
+                            </div>
+
+                            <ul class="space-y-4">
+                                <li class="flex gap-3">
+                                    <span class="text-indigo-500 font-bold">●</span>
+                                    <span><strong>R 的秘密：</strong>透過上述公式解出 <span class="math-font">R</span>，你會發現 <span
+                                            class="math-font">R</span> 僅取決於 <span class="math-font">V<sub>L</sub></span>
+                                        與 <span class="math-font">V<sub>R</sub></span> 的速度比例。</span>
+                                </li>
+                            </ul>
+
+                            <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
+                                <h4 class="font-bold text-indigo-900 mb-2 flex items-center gap-2">
+                                    <span>✏️</span> 線上任務
+                                </h4>
+                                <p class="text-sm text-gray-700 leading-relaxed">
+                                    給定車寬 <span class="math-font">L</span>，手算若要畫出一個直徑 1 公尺的圓，左右輪速度比應為多少。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Special Cases -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-amber-500 to-orange-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🚦</span> 3. 特殊運動狀態預習 (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
+                            <div class="space-y-4">
+                                <div class="p-4 bg-gray-50 rounded-xl border-l-4 border-green-500">
+                                    <h4 class="font-bold text-gray-900">直線行駛</h4>
+                                    <p class="text-sm mt-1">當 V<sub>L</sub> = V<sub>R</sub> 時，R 趨於無窮大 (&infin;)，ICC
+                                        在無限遠處。</p>
+                                </div>
+                                <div class="p-4 bg-gray-50 rounded-xl border-l-4 border-red-500">
+                                    <h4 class="font-bold text-gray-900">原地旋轉</h4>
+                                    <p class="text-sm mt-1">當 V<sub>L</sub> = -V<sub>R</sub> 時，R 等於 0，ICC 就在兩輪連線的中點。</p>
+                                </div>
+                            </div>
+
+                            <ul class="space-y-4">
+                                <li class="flex gap-3">
+                                    <span class="text-amber-500 font-bold">●</span>
+                                    <span><strong>學習任務：</strong>在紙上嘗試畫出當 <span class="math-font">V<sub>R</sub> =
+                                            0</span>（一輪固定）時，ICC 的位置在哪？</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div
+                            class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 flex items-center justify-center bg-gray-50">
+                            <!-- Placeholder for Motion States -->
+                            <div class="text-center p-8">
+                                <div class="text-6xl mb-4">⛸️</div>
+                                <p class="text-gray-500">Diff-Drive Animation</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Assignments -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實驗室：差速驅動實戰</h2>
+            <p class="text-center text-gray-500 mb-12">從幾何理論到地面實測，驗證你的數學模型。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 1-1 -->
+                <div onclick="openSubmissionModal('adv-10-circle-control', '【作業 10-1-1】「圓周運動」精準控制')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🏹</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
+                            1-1】圓周控制</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>輸入目標半徑 R，讓車子畫出完美的圓。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>實作 setSteering(R, V) 函式</li>
+                                <li>地面實測：設定 R=50cm，用捲尺測量實際誤差</li>
+                                <li>目標：理解幾何模型如何指導硬體控制</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 1-2 -->
+                <div onclick="openSubmissionModal('adv-10-zero-turn', '【作業 10-1-2】「原地迴轉」極限測試')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-red-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🌪️</span>
+                            <span class="bg-red-50 text-red-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-red-600 transition">【作業
+                            1-2】原地迴轉</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>測試車輛在不同表面上的「零半徑旋轉」。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>設定 V<sub>L</sub> = 100, V<sub>R</sub> = -100</li>
+                                <li>觀察滑順桌面 vs 粗糙地毯的震盪差異</li>
+                                <li>目標：體會旋轉中心飄移現象</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 1-3 -->
+                <div onclick="openSubmissionModal('adv-10-dynamic-icc', '【作業 10-1-3】動態 ICC 軌跡規劃')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🐚</span>
+                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
+                            1-3】螺旋軌跡</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>實作能平滑改變轉向半徑的螺旋線。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>讓 R 從 20cm 逐漸變大到 100cm</li>
+                                <li>透過 Web/BLE 回傳理論 ICC 座標</li>
+                                <li>目標：掌握動態轉向參數調整</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階課程 10 - 單元 1</span>
+                <span class="hidden md:inline">|</span>
+                <span>差速驅動幾何學：ICC 的秘密</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/Ib8EuusyuA8",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vS1mhPDhfPDONAk2kLFxKn0Wa2wx-PwwUyrtsSxHM3e8-vesL6LwRWkaYLbqNa7o01FFKc1wFRDq_2Z/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

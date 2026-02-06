@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adv 14: 系統性能指標 (KPI) 定義 - Vibe Coding</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 14 - 單元 2
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                系統性能指標 <span class="text-cyan-400">(KPI) 定義</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto font-light leading-relaxed">
+                沒有指標就沒有真相。學習如何量化、監控並優化無人車系統的真實表現。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+
+        <!-- Use Cases / Intro -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 card-hover">
+                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                        </path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">為什麼需要指標？</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    <strong>量化優化：</strong>當你修改了 $K_p$ 值或縮小了影像解析度，效能提升了 $5\%$ 還是 $50\%$？工程師如果不相信直覺，只相信數據。<br>
+                    <strong>SLA (服務水準協議)：</strong>在專業領域中，系統必須承諾最低標準（例如：控制延遲必須小於 $100ms$）。
+                </p>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 card-hover">
+                <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 mb-6">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z">
+                        </path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">核心概念</h3>
+                <ul class="space-y-2 text-gray-600">
+                    <li class="flex items-center"><span class="mr-2 text-pink-500">✓</span>KPI 三大維度：時間、準確性、可靠性</li>
+                    <li class="flex items-center"><span class="mr-2 text-pink-500">✓</span>權衡 (Trade-off)：FPS 與 Latency
+                        的拉鋸</li>
+                    <li class="flex items-center"><span class="mr-2 text-pink-500">✓</span>數據驅動 (Data-driven) 的開發流程</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 1: KPI Dimensions -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">1</span>
+                關鍵性能指標 (KPI) 三大維度
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Temporal -->
+                <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    <h4 class="font-bold text-gray-800 mb-2 flex items-center">
+                        <span class="text-xl mr-2">⏱️</span>時間性 (Temporal)
+                    </h4>
+                    <ul class="text-sm text-gray-600 space-y-2 mt-3">
+                        <li><strong>延遲 (Latency)：</strong>從攝影機拍到畫面，經過處理，到馬達真正轉動的總時間。</li>
+                        <li><strong>幀率 (FPS)：</strong>每秒能夠處理並作出決策的影像數量。</li>
+                    </ul>
+                </div>
+                <!-- Accuracy -->
+                <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    <h4 class="font-bold text-gray-800 mb-2 flex items-center">
+                        <span class="text-xl mr-2">🎯</span>準確性 (Accuracy)
+                    </h4>
+                    <ul class="text-sm text-gray-600 space-y-2 mt-3">
+                        <li><strong>平均誤差 (Mean Error)：</strong>質心偏離影像中心線的平均像素值。</li>
+                        <li><strong>震盪指數 (Jitter)：</strong>控制輸出訊號的波動頻率與振幅，反映行駛的平穩度。</li>
+                    </ul>
+                </div>
+                <!-- Reliability -->
+                <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    <h4 class="font-bold text-gray-800 mb-2 flex items-center">
+                        <span class="text-xl mr-2">🛡️</span>可靠性 (Reliability)
+                    </h4>
+                    <ul class="text-sm text-gray-600 space-y-2 mt-3">
+                        <li><strong>任務完成率：</strong>成功跑完一圈 S 彎道且未出界的次數比例。</li>
+                        <li><strong>斷線復歸時間：</strong>BLE 意外斷線後，系統重新連線並恢復控制所需的時間。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Trade-offs -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">2</span>
+                權衡與組合指標
+            </h2>
+            <div class="prose prose-blue max-w-none text-gray-600">
+                <p>
+                    在資源有限的嵌入式系統中，我們往往無法兼得所有優點。
+                </p>
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 my-4">
+                    <p class="font-bold text-yellow-800">思考題：哪一個對「避障」更有利？</p>
+                    <ul class="list-disc list-inside mt-2 text-yellow-700">
+                        <li>方案 A：高 FPS (60Hz) 但 高延遲 (500ms) —— 看得快但反應慢</li>
+                        <li>方案 B：低 FPS (10Hz) 但 低延遲 (50ms) —— 看得慢但反應快</li>
+                    </ul>
+                </div>
+                <p>
+                    對於高速移動的無人車，<strong>低延遲</strong>通常比高 FPS 更為關鍵。為了綜合評估，我們會定義「複合指標 (Score)」，例如：
+                    <br>
+                    <code
+                        class="bg-gray-100 px-2 py-1 rounded text-red-600 font-mono">Performance Score = (FPS * 0.4) + (1000/Latency * 0.6)</code>
+                </p>
+                <p class="mt-4">
+                    <strong>官方性能規格書範例：</strong><br>
+                    在 $320 \times 240$ 解析度下，穩定維持 $20 FPS$ 且延遲 $< 80ms$。這就是你的系統必須達成的 SLA。 </p>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section>
+            <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center">
+                <span class="mr-3">📝</span> 實作任務 (Classroom Challenges)
+            </h2>
+
+            <!-- Assignment 1 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-md cursor-pointer"
+                onclick="openSubmissionModal('adv-14-kpi-dashboard', 'Task 2-1: 數位儀表板實作')">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <span class="bg-blue-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 2-1</span>
+                        「數位儀表板」實作 (60 min)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
+                        <p class="text-gray-700">讓抽象的指標變成具體的可視化資訊，在 Web UI 上實作即時性能監控面板。</p>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
+                        <li><strong>即時計算：</strong>在 JavaScript 中使用 <code>performance.now()</code> 計算每輪控制循環的精確耗時。</li>
+                        <li><strong>滾動平均：</strong>計算最近 10 幀的平均延遲，避免數據跳動過劇烈。</li>
+                        <li><strong>視覺化：</strong>在網頁上用紅/黃/綠燈號標示狀態（例如：&lt; 50ms 為綠燈，&gt; 150ms 為紅燈）。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Assignment 2 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-md cursor-pointer"
+                onclick="openSubmissionModal('adv-14-kpi-stress', 'Task 2-2: Stress Limit Test')">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <span class="bg-blue-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 2-2</span>
+                        「壓力極限測試」實驗 (60 min)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
+                        <p class="text-gray-700">透過人為增加負載，找出系統崩潰的臨界點，並學習硬體基準測試 (Benchmarking)。</p>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
+                        <li><strong>變因測試：</strong>逐步增加影像解析度 (QVGA -> VGA)，觀察 FPS 下降到多少時，車子開始無法穩定循跡。</li>
+                        <li><strong>誤差紀錄：</strong>紀錄在不同車速下，過彎時的「最大瞬間誤差值」。</li>
+                        <li><strong>產出：</strong>為你的無人車寫下「官方性能規格書」。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Assignment 3 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md cursor-pointer"
+                onclick="openSubmissionModal('adv-14-kpi-optimize', 'Task 2-3: KPI Optimization')">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <span class="bg-blue-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 2-3</span>
+                        「KPI 優化賽」 (45 min)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
+                        <p class="text-gray-700">練習數據驅動開發 (Data-driven Development)，針對某一項 KPI 進行針對性優化。</p>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
+                        <li><strong>選擇目標：</strong>選擇「降低延遲」或「提高精準度」作為單一目標。</li>
+                        <li><strong>實驗對照：</strong>修改代碼（如優化 JSON 打包或調整濾波演算法），並與優化前的數據對比。</li>
+                        <li><strong>效益分析：</strong>計算並提交你的「優化率 %」。</li>
+                    </ul>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-16 border-t border-gray-200 pt-8 flex justify-between text-gray-500">
+            <a href="/courses/adv-14-unit-debugging-art.html" class="hover:text-blue-600 flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Previous: Unit 1 軟體除錯
+            </a>
+            <a href="/courses/adv-14-master-debugging-art.html" class="hover:text-blue-600 flex items-center">
+                Back to Menu
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+            </a>
+        </footer>
+
+    </main>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/VKYpQdzm6o8",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vQ-fpZyJMU8W2Ow8hGF0n8VdSMjhlWWy87jbCZgsP99oDiHaD23wuefhv-qNNVPBz2sp5UdHaVTyYGF/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

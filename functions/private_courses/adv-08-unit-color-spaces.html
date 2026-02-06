@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 8-1】數位影像處理基礎：顏色空間 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2048&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 8 - 單元 1
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                數位影像處理基礎：<br><span class="text-purple-400">顏色空間 (Color Spaces)</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
+                理解 RGB、HSV 與 YUV 的本質差異。學習在不同的場景下選擇最適合的「色彩語言」。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Section 1: RGB -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-red-500 via-green-500 to-blue-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🌈</span> 1. RGB：光的加法與顯示器的邏輯 (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
+                            <ul class="space-y-4">
+                                <li class="flex gap-3">
+                                    <span class="text-red-500 font-bold">●</span>
+                                    <span><strong>核心概念：</strong>RGB (Red, Green, Blue) 是最直觀的空間，直接對應硬體顯示器。</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="text-red-500 font-bold">●</span>
+                                    <span><strong>限制：</strong>亮度與顏色是「耦合」在一起的。當環境變暗時，R、G、B 的數值會同時改變，讓電腦難以判斷。</span>
+                                </li>
+                            </ul>
+                            <div class="bg-red-50 p-6 rounded-2xl border border-red-100">
+                                <h4 class="font-bold text-red-900 mb-2 flex items-center gap-2">
+                                    <span>🧩</span> 學習任務
+                                </h4>
+                                <p class="text-sm text-gray-700 leading-relaxed">
+                                    觀察 RGB 色方塊，理解 24-bit 顏色（每個頻道 8-bit）如何組合成 1600 萬種色彩。
+                                </p>
+                            </div>
+                        </div>
+                        <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100">
+                            <img src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1000&auto=format&fit=crop"
+                                alt="RGB Color Space Illustration" class="w-full h-auto">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: HSV/HSL -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🎯</span> 2. HSV/HSL：色彩處理的利器 (30 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 order-2 md:order-1">
+                            <img src="https://images.unsplash.com/photo-1502691876148-a84978e59af8?q=80&w=1000&auto=format&fit=crop"
+                                alt="HSV Color Space Illustration" class="w-full h-auto">
+                        </div>
+                        <div class="space-y-6 order-1 md:order-2 text-lg text-gray-600 leading-relaxed">
+                            <div class="grid grid-cols-1 gap-4">
+                                <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                                    <strong class="text-purple-700">H (Hue) 色相：</strong> 真正的顏色（如：紅色、綠色）。
+                                </div>
+                                <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                                    <strong class="text-purple-700">S (Saturation) 飽和度：</strong> 顏色的鮮豔程度。
+                                </div>
+                                <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                                    <strong class="text-purple-700">V (Value/Brightness) 亮度：</strong> 光的明暗。
+                                </div>
+                            </div>
+                            <p><strong>為何重要：</strong> 在「影像追蹤」時，鎖定 H (色相)，即使在陰影下，系統依然能抓到目標。</p>
+                            <div class="bg-slate-900 p-6 rounded-2xl border border-purple-500/30">
+                                <h4 class="font-bold text-purple-400 mb-2 flex items-center gap-2">
+                                    <span>🧠</span> 學習任務
+                                </h4>
+                                <p class="text-sm text-purple-100 leading-relaxed font-light">
+                                    理解圓錐形或圓柱形的 HSV 座標系，思考如何在 0-360 度之間進行顏色過濾。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: YUV -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-indigo-600 to-blue-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🎞️</span> 3. YUV/YCbCr：影像傳輸與壓縮 (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
+                            <p><strong>核心概念：</strong>將影像分為亮度 (Y) 與色度 (UV)。</p>
+                            <p><strong>技術淵源：</strong>這是 ESP32-S3 攝像頭（如
+                                OV2640）常用的輸出格式。它模仿人類視覺：我們對明暗（Y）非常敏感，但對顏色細節（UV）相對遲鈍。</p>
+                            <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
+                                <h4 class="font-bold text-indigo-900 mb-2 flex items-center gap-2">
+                                    <span>💡</span> 預習任務
+                                </h4>
+                                <p class="text-sm text-gray-700 leading-relaxed">
+                                    思考為什麼影像壓縮（JPEG）通常會先轉為 YUV？（提示：可以捨棄部分 UV 數據而不被肉眼發現）。
+                                </p>
+                            </div>
+                        </div>
+                        <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100">
+                            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop"
+                                alt="YUV Representation" class="w-full h-auto">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Assignments -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：影像處理實戰</h2>
+            <p class="text-center text-gray-500 mb-12">掌握顏色過濾與數據壓縮，打造魯棒的視覺追蹤系統。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 1-1 -->
+                <div onclick="openSubmissionModal('adv-08-color-hunter', '【作業 8-1-1】「色彩獵人」：實作即時 HSV 過濾器')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🏹</span>
+                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
+                            1-1】色彩獵人</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>在控制網頁上實作滑桿，即時控制 ESP32 影像的過濾參數。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>滑桿控制：建立六個滑桿 (H, S, V min/max)</li>
+                                <li>二值化輸出：符合範圍設為白色，其餘黑色</li>
+                                <li>挑戰：調整參數只看見手持紅球，過濾背景</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 1-2 -->
+                <div onclick="openSubmissionModal('adv-08-rgb565', '【作業 8-1-2】RGB565 記憶體瘦身計畫')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">📉</span>
+                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
+                            1-2】RGB565 瘦身</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>理解 ESP32 內部如何儲存影像數據並實作位元運算。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>位元壓縮：將 24-bit RGB 壓為 16-bit RGB565</li>
+                                <li>效能計算：計算 320x240 解析度下省下的空間</li>
+                                <li>視覺觀察：觀察是否存在顏色斷層 (Banding)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 1-3 -->
+                <div onclick="openSubmissionModal('adv-08-auto-leveling', '【作業 8-1-3】亮度自適應 (Auto-Leveling) 實驗')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">💡</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
+                            1-3】亮度自適應</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>利用 YUV 空間解決影像「過黑或過曝」的問題。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>亮度提取：從影像流中提取 Y 頻道</li>
+                                <li>直方圖均衡：動態增加 V 或 Y 值提升品質</li>
+                                <li>目標：提升無人車在複雜光影下的魯棒性</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階課程 8 - 單元 1</span>
+                <span class="hidden md:inline">|</span>
+                <span>數位影像顏色空間應用探討</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/0NEy0eWTcIM",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vSvOHvkHt6fsbUw0LC9PVWRjbYogoskPytKhNRlcNac4aIoJprKR7dElIgyZR4-dnhWAcFGBiEUjREF/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

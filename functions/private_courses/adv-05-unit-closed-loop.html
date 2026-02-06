@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 5-3】視覺閉迴路控制理論 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1555664424-778a1e5e1b48?q=80&w=2048&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 5 - 單元 3
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                對抗延遲：<br><span class="text-blue-400">視覺閉迴路控制理論</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                影像不僅是視覺，更是導航的指針。學習如何透過實時反饋，讓無人車具備自我修正的智慧。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Section 1: Core Architecture -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🔗</span> 1. 閉迴路控制的核心架構 (25 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6">
+                            <div class="space-y-4">
+                                <div class="bg-gray-50 p-4 rounded-xl border-l-4 border-gray-400">
+                                    <h4 class="font-bold text-gray-700 mb-1">開迴路 (Open-Loop)</h4>
+                                    <p class="text-sm text-gray-600">只給指令（如：前進 5 秒），不看結果。容易受地面摩擦力、電池電量影響而偏離。</p>
+                                </div>
+                                <div class="bg-blue-50 p-4 rounded-xl border-l-4 border-blue-500">
+                                    <h4 class="font-bold text-blue-700 mb-1">閉迴路 (Closed-Loop)</h4>
+                                    <p class="text-sm text-blue-600">不斷觀察結果（影像位置），並根據結果調整指令，具備自動補償能力。</p>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <h4 class="font-bold text-gray-800 flex items-center gap-2">
+                                    <span>🏗️</span> 控制鏈元件 (Control Chain)
+                                </h4>
+                                <ul class="space-y-2 text-sm text-gray-600">
+                                    <li class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                        <span><strong>控制器 (Controller)：</strong>網頁中的控制邏輯 (P-Control)。</span>
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                        <span><strong>執行器 (Actuator)：</strong>ESP32 與馬達。</span>
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                        <span><strong>感測器 (Sensor)：</strong>攝影機 (Camera)。</span>
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                        <span><strong>回饋 (Feedback)：</strong>即時計算出的質心誤差。</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <div class="w-full max-w-sm space-y-4">
+                                <div class="flex items-center justify-between gap-4">
+                                    <div class="bg-blue-500 text-white p-3 rounded-lg text-xs font-bold">控制器</div>
+                                    <div class="text-blue-400">➡️</div>
+                                    <div class="bg-indigo-500 text-white p-3 rounded-lg text-xs font-bold">馬達</div>
+                                </div>
+                                <div class="flex justify-center">
+                                    <div class="text-blue-400 font-bold block">⬇️</div>
+                                </div>
+                                <div class="flex items-center justify-between gap-4">
+                                    <div class="bg-emerald-500 text-white p-3 rounded-lg text-xs font-bold">攝影機</div>
+                                    <div class="text-blue-400">⬅️</div>
+                                    <div class="bg-slate-700 text-white p-3 rounded-lg text-xs font-bold">環境</div>
+                                </div>
+                                <div class="mt-4 pt-4 border-t border-slate-700">
+                                    <p class="text-xs text-slate-400">「迴路」即是數據不斷循環的過程。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Latency -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">⏱️</span> 2. 系統延遲 (Latency) 的影響 (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed">
+                                <strong>視覺延遲：</strong>影像傳輸、解析 JSON、計算質心都需要時間。
+                            </p>
+                            <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-xl">
+                                <h4 class="text-red-700 font-bold mb-2">連鎖後果</h4>
+                                <p class="text-sm text-red-800 leading-relaxed">
+                                    如果延遲太高，車子修正的是「過去的誤差」，這會導致嚴重的震盪甚至失控（Over-correction）。就像在延遲嚴重的視訊通話中，兩個人總是同時說話又同時停下。
+                                </p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                            <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                <span>🚀</span> 學習任務：優化思考
+                            </h4>
+                            <p class="text-gray-700 text-sm mb-4">思考如何縮短控制循環的時間？</p>
+                            <ul class="space-y-3">
+                                <li class="flex items-start gap-3 bg-white p-3 rounded-lg shadow-sm">
+                                    <span class="text-emerald-500 font-bold">✓</span>
+                                    <span class="text-xs text-gray-600">降低影像解析度 (減少傳輸量)</span>
+                                </li>
+                                <li class="flex items-start gap-3 bg-white p-3 rounded-lg shadow-sm">
+                                    <span class="text-emerald-500 font-bold">✓</span>
+                                    <span class="text-xs text-gray-600">提升藍牙傳輸 MTU (增加吞吐量)</span>
+                                </li>
+                                <li class="flex items-start gap-3 bg-white p-3 rounded-lg shadow-sm">
+                                    <span class="text-emerald-500 font-bold">✓</span>
+                                    <span class="text-xs text-gray-600">使用跳行掃描演算法 (減少運算量)</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Set-point and Deviation -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-emerald-600 to-blue-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🎯</span> 3. 設定點 (Set-point) 與偏差 (Deviation) (15 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6">
+                            <ul class="space-y-4 text-gray-600 leading-relaxed">
+                                <li class="flex gap-3">
+                                    <span class="text-blue-500 font-bold">●</span>
+                                    <span><strong>設定點 (Set-point)：</strong>我們希望物體出現在影像中的目標位置（通常是中心 $x = 160$）。</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="text-blue-500 font-bold">●</span>
+                                    <span><strong>偏差 (Deviation)：</strong>當前偵測位置與設定點之間的動態距離。</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="text-emerald-500 font-bold">💡</span>
+                                    <span class="font-medium">預習任務：為什麼閉迴路系統可以「自動容忍」馬達左右出力不均的問題？</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="bg-indigo-900 p-8 rounded-3xl text-white">
+                            <h4 class="font-bold text-xl mb-4 text-indigo-300">PD 控制的物理意義</h4>
+                            <div class="space-y-4 text-sm">
+                                <div class="bg-white/10 p-4 rounded-xl">
+                                    <span class="text-emerald-400 font-bold mr-2">Kp (比例)</span>
+                                    <span>決定目前的轉向強度。Kp 越大，修正越果斷。</span>
+                                </div>
+                                <div class="bg-white/10 p-4 rounded-xl">
+                                    <span class="text-blue-400 font-bold mr-2">Kd (微分)</span>
+                                    <span>預測誤差變化趨勢，抑制過度震盪（就像是阻尼）。</span>
+                                </div>
+                                <div class="pt-4 text-xs text-indigo-200 italic">
+                                    線上任務：觀察「追蹤震盪」案例影片，分析為何 $K_p$ 過大會導致車輛在線上蛇行。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Assignments -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">自動化控制實驗室</h2>
+            <p class="text-center text-gray-500 mb-12">實現首個完整的自動化視覺控制閉環。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 3-1 -->
+                <div onclick="openSubmissionModal('adv-05-closed-loop-integration', '【作業 3-1】視覺追蹤閉迴路整合實作')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🤖</span>
+                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">75
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
+                            3-1】視覺追蹤整合</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>串接影像處理與 BLE 指令，實現全自動的「目標追隨」。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>將質心輸出直接餵給 P-Control 函式</li>
+                                <li>動態測試：用手移動目標物，觀察自動對準</li>
+                                <li>效能監控：顯示「迴圈每秒次數 (Hz)」</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-2 -->
+                <div onclick="openSubmissionModal('adv-05-step-response', '【作業 3-2】階躍響應 (Step Response) 觀察實驗')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">📈</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
+                            3-2】階躍響應觀察</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>測試系統從「靜止」到「追上偏差」的反應速度。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>瞬間偏差測試：車子靜止時突然移除遮擋</li>
+                                <li>觀察過衝 (Overshoot) 與穩態時間</li>
+                                <li>調整 Kp 值，觀察系統回復速度的差異</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-3 -->
+                <div onclick="openSubmissionModal('adv-05-resilience-testing', '【作業 3-3】極限壓力：斷點與恢復測試')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-red-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">⚡</span>
+                            <span class="bg-red-50 text-red-700 text-xs px-3 py-1 rounded-full font-bold">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-red-600 transition">【作業
+                            3-3】韌性極限測試</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>模擬環境干擾對閉迴路系統的衝擊。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>短暫遮蔽 1 秒，觀察系統自動找回目標</li>
+                                <li>照明干擾測試：觀察失去回饋時的風險</li>
+                                <li>設計具備「韌性」的軟停機 (Failsafe) 邏輯</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階課程 5 - 單元 3</span>
+                <span class="hidden md:inline">|</span>
+                <span>視覺閉迴路控制理論</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/N-GVgwKwMFI",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vRzYiaRnzxCQ-FXXsjYXfxGKK0CTBpw6Bo8l98afKPN-6oVzRsFu9trTY1X-vOVRVq8eeewaXF7QsIx/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 10-3】限制與飽和：PWM 的物理極限 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .math-font {
+            font-family: 'Times New Roman', Times, serif;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517420879524-86d64ac2f339?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 10 - 單元 3
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                限制與飽和：<br><span class="text-blue-400">PWM 的物理極限</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                當數學計算遇上物理極限，如何保持幾何軌跡的完美？
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Section 1: PWM Saturation -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🛑</span> 1. 什麼是 PWM 飽和？ (15 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
+                            <ul class="space-y-4">
+                                <li class="flex gap-3">
+                                    <span class="text-red-500 font-bold">●</span>
+                                    <span><strong>物理極限：</strong>ESP32 的 PWM 通常設定為 8-bit（0-255）。當你的 PID 或幾何公式算出來需要 300
+                                        的電力時，馬達只能給你 255。</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="text-red-500 font-bold">●</span>
+                                    <span><strong>失去比例 (Loss of Ratio)：</strong>在差速驅動中，轉向靠的是左右輪的「比例」。
+                                        <br>
+                                        如果左輪需要 300（飽和成 255），右輪需要 150。
+                                        <br>
+                                        原本 <span class="math-font">2:1</span> 的比例變成了 <span class="math-font">255:150 ≈
+                                            1.7:1</span>，車子就會轉不過彎或偏離預定弧度。</span>
+                                </li>
+                            </ul>
+                            <div class="bg-red-50 p-6 rounded-2xl border border-red-100">
+                                <h4 class="font-bold text-red-900 mb-2 flex items-center gap-2">
+                                    <span>⚠️</span> 警示
+                                </h4>
+                                <p class="text-sm text-gray-700 leading-relaxed">
+                                    不當的飽和處理（如直接 Clipping）會直接破壞幾何模型的準確性，導致導航誤差。
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 flex items-center justify-center bg-gray-50">
+                            <!-- Placeholder: Saturation Graph -->
+                            <div class="text-center p-8">
+                                <div class="text-6xl mb-4">📉</div>
+                                <p class="text-gray-500">Visualization of Ratio Loss</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Dead Zone -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-gray-500 to-slate-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">👻</span> 2. 死區 (Dead Zone) 現象 (15 min)
+                    </h2>
+                    <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
+                        <p><strong>啟動摩擦力：</strong>並非 PWM 給 1 馬達就會轉。通常在 PWM 低於某個數值（如 40）時，馬達只會發出吱吱聲而不動。</p>
+
+                        <div class="flex flex-col md:flex-row gap-8 items-center">
+                            <div class="flex-1">
+                                <ul class="space-y-4">
+                                    <li class="flex gap-3">
+                                        <span class="text-slate-500 font-bold">●</span>
+                                        <span><strong>有效區間：</strong>理解馬達的實際作業區間僅在 <span class="math-font">DeadZone < PWM
+                                                    < 255</span> 之間。</span>
+                                    </li>
+                                    <li class="flex gap-3">
+                                        <span class="text-slate-500 font-bold">●</span>
+                                        <span><strong>非線性響應：</strong>在低速區間，馬達輸出的扭力往往不穩定，需要透過軟體補償（如 Minimal
+                                            PWM）來解決。</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div
+                                class="flex-1 bg-slate-100 rounded-xl p-6 text-center border-2 border-slate-200 border-dashed">
+                                <span class="block text-4xl mb-2 font-bold text-slate-400">0 ... 40 ... 255</span>
+                                <span class="text-sm text-slate-500">Dead Zone Area (No Motion)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Scaling Algorithm -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">⚖️</span> 3. 等比例縮放演算法 (Scaling Algorithm) (30 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
+                            <p><strong>思考如何解決飽和問題？</strong></p>
+                            <div class="space-y-4">
+                                <div class="p-4 bg-red-50 rounded-xl border-l-4 border-red-500">
+                                    <h4 class="font-bold text-red-900">方法 A (Clipping) - ❌ 錯誤</h4>
+                                    <p class="text-sm mt-1">直接把超過 255 的變成 255。這樣會破壞左右輪的速度比例，導致車輛轉向半徑改變。</p>
+                                </div>
+                                <div class="p-4 bg-green-50 rounded-xl border-l-4 border-green-500">
+                                    <h4 class="font-bold text-green-900">方法 B (Scaling) - ✅ 正確</h4>
+                                    <p class="text-sm mt-1">找出左右輪中最大的一個，如果它超過 255，則將兩輪同時除以一個係數，使最大的一輪剛好等於 255。</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+                                <h4 class="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                                    <span>🔢</span> 練習計算
+                                </h4>
+                                <p class="text-sm text-gray-700 leading-relaxed mb-2">
+                                    若左輪算出來是 400，右輪是 200。請計算使用「方法 B」後，兩輪實際的 PWM 應該是多少？
+                                </p>
+                                <details class="text-xs text-gray-500 cursor-pointer">
+                                    <summary>查看答案</summary>
+                                    <p class="mt-2">Max = 400. Factor = 255 / 400 = 0.6375.<br>
+                                        Left = 400 * 0.6375 = 255<br>
+                                        Right = 200 * 0.6375 = 127.5<br>
+                                        比例維持 2:1。</p>
+                                </details>
+                            </div>
+                        </div>
+                        <div
+                            class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 flex items-center justify-center bg-gray-50">
+                            <!-- Placeholder for Scaling Algorithm Code Snippet or Visual -->
+                            <div class="text-center p-8">
+                                <div class="text-6xl mb-4">💻</div>
+                                <p class="text-gray-500">Code: normalizePWM()</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Assignments -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實驗室：控制極限實戰</h2>
+            <p class="text-center text-gray-500 mb-12">掌握處理硬體限制的標準工程方法。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 3-1 -->
+                <div onclick="openSubmissionModal('adv-10-saturation-loss', '【作業 10-3-1】「飽和失控」觀測實驗')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-red-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">💥</span>
+                            <span class="bg-red-50 text-red-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-red-600 transition">【作業
+                            3-1】飽和失控</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>故意給予超出極限的轉向指令，觀察車子軌跡的變化。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>使用單純裁剪 constrain(pwm, 0, 255)</li>
+                                <li>要求高速度 (<span class="math-font">V</span>) 小半徑 (<span class="math-font">R</span>) 轉向
+                                </li>
+                                <li>觀察是否變成奇怪的拋物線</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-2 -->
+                <div onclick="openSubmissionModal('adv-10-scaling-algo', '【作業 10-3-2】「比例保衛戰」實作縮放函式')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🛡️</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
+                            3-2】比例保衛戰</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>撰寫 normalizePWM() 函式，確保輸出不破壞速度比例。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>找出最大值與計算縮放係數 (Factor)</li>
+                                <li>重新執行高難度轉向測試</li>
+                                <li>驗證半徑是否接近理論值</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-3 -->
+                <div onclick="openSubmissionModal('adv-10-deadzone-comp', '【作業 10-3-3】「死區補償」與線性化')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">💊</span>
+                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
+                            3-3】死區補償</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>測量馬達死區，並在 API 中加入「最小啟動電壓」補償。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>測量 <span class="math-font">PWM<sub>min</sub></span></li>
+                                <li>使用 map() 將 0-255 映射到 Min-255</li>
+                                <li>測試極低速行駛的平順度</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階課程 10 - 單元 3</span>
+                <span class="hidden md:inline">|</span>
+                <span>限制與飽和：PWM 的物理極限</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/GOo0dZy5IXo",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vTDTOnPJ98qpd-wXyxHjjN-CwsCcdhRcKu5_9SnqZ2f9nACGPT9XJV_cjl_zydctXTDo_5JKFaA1jCd/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

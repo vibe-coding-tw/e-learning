@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 3】JSON 封包解析與物件解構 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1558494949-ef010cbdcc51?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 7 - 單元 3
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                JSON <span class="text-indigo-400">封包解析</span><br>與物件解構
+            </h1>
+            <p class="text-xl md:text-2xl text-indigo-100 max-w-2xl mx-auto font-light leading-relaxed">
+                從字串到物件的藝術：學習如何優雅地拆解來自硬體的複雜數據。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Section 1: Why JSON -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-indigo-500 to-blue-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl">💎</span> 1. 為什麼選擇 JSON？ (20 min)
+                            </h2>
+                            <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
+                                <p>
+                                    <strong>跨平台通用性：</strong>JSON 是純文字格式，無論是 ESP32（C++）還是網頁（JavaScript）都能理解。
+                                </p>
+                                <p>
+                                    <strong>結構化數據：</strong>理解如何用一個封包同時傳遞「電量」、「速度」與「座標」多組資訊，避免混亂的逗號分隔字串。
+                                </p>
+
+                                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                                    <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                        <span>🔍</span> 學習任務：優勢對比
+                                    </h4>
+                                    <p class="text-slate-700 text-sm">
+                                        對比「逗號分隔字串 (CSV)」與「JSON」，找出 JSON 在擴充新功能（例如增加感測器）時的優勢。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-1 bg-slate-900 rounded-2xl p-6 font-mono text-sm shadow-inner self-start">
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                <span class="text-slate-500 ml-2">esp32_payload.json</span>
+                            </div>
+                            <pre class="text-indigo-400"><code>{
+  <span class="text-blue-400">"bat"</span>: <span class="text-orange-400">12.1</span>,
+  <span class="text-blue-400">"temp"</span>: <span class="text-orange-400">38</span>,
+  <span class="text-blue-400">"rpm"</span>: [<span class="text-orange-400">120</span>, <span class="text-orange-400">118</span>]
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Destructuring -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🎨</span> 2. 物件解構 (Destructuring) 的藝術 (25 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
+                            <p>
+                                <strong>簡化代碼：</strong>傳統寫法需要多行才能提取資料，解構語法只需一行：<br>
+                                <code
+                                    class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded">const { speed, battery } = data;</code>
+                            </p>
+                            <p>
+                                <strong>預設值設定：</strong>學習在解構時加入預設值，防止當 ESP32 漏傳某個欄位時導致網頁崩潰。
+                            </p>
+                            <div class="bg-amber-50 p-6 rounded-xl border border-amber-100">
+                                <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2"><span>🎯</span> 學習任務
+                                </h4>
+                                <p class="text-amber-700 text-sm">
+                                    練習從深層巢狀物件（如：<code
+                                        class="bg-amber-100 px-1 rounded">data.motor.left.speed</code>）中精準提取特定數值。
+                                </p>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-slate-800 p-6 rounded-xl font-mono text-xs text-white">
+                                <p class="text-slate-500 mb-2">// 現代解構寫法 (ES6+)</p>
+                                <p><span class="text-purple-400">const</span> { speed = <span
+                                        class="text-orange-400">0</span>, bat } = payload;</p>
+                                <p class="text-slate-500 my-2 mt-6">// 巢狀提取</p>
+                                <p><span class="text-purple-400">const</span> { motor: { left } } = data;</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Serialize & Parse -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+                <div class="p-8 md:p-12 text-center">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-10 flex justify-center items-center gap-3">
+                        <span class="text-4xl">🔄</span> 3. 序列化與反序列化 (15 min)
+                    </h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                        <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
+                            <h4 class="font-bold text-indigo-800 mb-2">JSON.stringify()</h4>
+                            <p class="text-sm text-indigo-600">將物件轉為字串發送</p>
+                        </div>
+                        <div class="text-indigo-300 text-4xl hidden md:block">⇆</div>
+                        <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+                            <h4 class="font-bold text-blue-800 mb-2">JSON.parse()</h4>
+                            <p class="text-sm text-blue-600">將接收到的字串轉回物件</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-12 max-w-2xl mx-auto bg-slate-900 p-8 rounded-3xl text-left border border-slate-700">
+                        <h4 class="text-white font-bold mb-4 flex items-center gap-2">
+                            <span>💡</span> 預習任務：為什麼不能直接傳送 JS Object？
+                        </h4>
+                        <p class="text-slate-400 text-sm leading-relaxed">
+                            提示：傳輸媒介（電線、電磁波）只能傳送「位元組流 (Byte Stream)」。想像你要把一張完整的椅子塞進水管裡——你必須先把它拆散成木屑 (序列化)，到水管另一端再重新拼好
+                            (反序列化)。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">數據整合實作</h2>
+            <p class="text-center text-gray-500 mb-12">掌握數據解析的完整生命週期與異常防護。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 3-1 -->
+                <div onclick="openSubmissionModal('adv-07-packet-decoder', '【作業 3-1】「封包拆解員」：動態資訊看板')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🧩</span>
+                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
+                            3-1】封包拆解員</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>實作能即時解析來自 ESP32 狀態封包的網頁面板。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs text-left">
+                                <li>模擬數據流：每秒產生模擬 JSON 字串</li>
+                                <li>解構與渲染：提取 temp, humidity, rpm</li>
+                                <li>例外處理：使用 try...catch 捕捉解析錯誤</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-2 -->
+                <div onclick="openSubmissionModal('adv-07-config-manager', '【作業 3-2】多階層配置管理器')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">⚙️</span>
+                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
+                            3-2】配置管理器</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>實作複雜的組態設定發送器。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs text-left">
+                                <li>物件組合：組合多層次的 Config 物件</li>
+                                <li>按需發送：使用 Rest Property 過濾欄位</li>
+                                <li>驗證回傳：解析確認封包並顯示成功</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-3 -->
+                <div onclick="openSubmissionModal('adv-07-json-compression', '【作業 3-3】數據壓縮挑戰：精簡 JSON')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🗜️</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
+                            3-3】數據壓縮挑戰</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>在不影響功能下縮小 JSON 封包大小。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs text-left">
+                                <li>縮短金鑰：將 "motorSpeed" 改為 "s"</li>
+                                <li>數據優化：移除不必要的浮點數小數點</li>
+                                <li>效能對比：使用 Blob.size 計算節省量</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階 7 - 單元 3</span>
+                <span class="hidden md:inline">|</span>
+                <span>JSON 解析與物件解構教學</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/1SOVTB8IXao",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vQq2fi7zyD1H_qtHFOGoSIb-KhFyqR1bM_koOhcxk1vqpgRPQeLt915clSC3eDSmXn1apl45LOBMLIe/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

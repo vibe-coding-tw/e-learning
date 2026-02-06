@@ -27,7 +27,7 @@ onAuthStateChanged(auth, async (user) => {
                 const userData = userDoc.data();
                 const role = userData.role;
 
-                if (role === 'admin' || role === 'teacher') {
+                if (role === 'admin' || role === 'teacher' || role === 'student') {
                     injectDashboardTab();
                 }
             }

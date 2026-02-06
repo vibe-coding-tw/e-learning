@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adv 14: 代碼重構與模組化 - Vibe Coding</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 14 - 單元 3
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                代碼重構與<span class="text-teal-400">模組化設計</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-emerald-100 max-w-3xl mx-auto font-light leading-relaxed">
+                從「義大利麵代碼」進化到優雅的軟體架構。學習如何償還技術債，設計高內聚、低耦合的系統。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+
+        <!-- Use Cases / Intro -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 card-hover">
+                <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mb-6">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
+                        </path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">為什麼要重構？</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    為了趕進度而寫的快餐代碼是「技術債 (Technical Debt)」，利息就是未來修改時的高昂代價。重構不是增加新功能，而是讓代碼「更健康、更易讀、更好改」。
+                </p>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 card-hover">
+                <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center text-teal-600 mb-6">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                        </path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">模組化原則</h3>
+                <ul class="space-y-2 text-gray-600">
+                    <li class="flex items-center"><span class="mr-2 text-emerald-500">✓</span>高內聚 (High
+                        Cohesion)：一個檔案只做一件事</li>
+                    <li class="flex items-center"><span class="mr-2 text-emerald-500">✓</span>低耦合 (Low
+                        Coupling)：模組間依賴越少越好</li>
+                    <li class="flex items-center"><span class="mr-2 text-emerald-500">✓</span>關注點分離 (SoC)：感知、決策、執行分家
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 1: Code Smells -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-emerald-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">1</span>
+                識別「代碼壞味道」 (Code Smells)
+            </h2>
+            <div class="prose prose-emerald max-w-none text-gray-600">
+                <p>
+                    像聞牛奶一樣，有些代碼一打開就有「味道」。學會識別這些徵兆，是重構的第一步。
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                    <div class="bg-red-50 p-6 rounded-xl border border-red-100">
+                        <h4 class="font-bold text-red-800 mb-2">🐢 冗長函式 (Long Method)</h4>
+                        <p class="text-sm">一個 <code>loop()</code> 裡面寫了 500 行，包含連線、影像處理、馬達控制。看都看不完，更別說改了。</p>
+                    </div>
+                    <div class="bg-yellow-50 p-6 rounded-xl border border-yellow-100">
+                        <h4 class="font-bold text-yellow-800 mb-2">🔁 重複代碼 (Duplication)</h4>
+                        <p class="text-sm">違反 DRY (Don't Repeat Yourself) 原則。同樣的 JSON 解析邏輯複製貼上在三個地方，改了一個忘了改另外兩個。</p>
+                    </div>
+                    <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                        <h4 class="font-bold text-gray-800 mb-2">🧱 硬編碼 (Hardcoding)</h4>
+                        <p class="text-sm">IP 地址、PID 參數直接寫死在程式碼深處。每次要微調參數都要重新編譯燒錄，浪費生命。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Architecture Layers -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-emerald-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">2</span>
+                系統分層架構 (Separation of Concerns)
+            </h2>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <p class="text-gray-600 mb-6">
+                    將你的無人車拆解為三個獨立的大腦區域，就像神經系統一樣。
+                </p>
+
+                <div class="flex flex-col md:flex-row gap-4 items-stretch">
+                    <!-- Layer 1 -->
+                    <div class="flex-1 bg-blue-50 p-4 rounded-lg border border-blue-100 text-center">
+                        <h4 class="font-bold text-blue-900 mb-2">👁️ 感知層 (Perception)</h4>
+                        <p class="text-xs text-blue-700">負責「看」與「聽」。影像讀取、感測器濾波、特徵提取。</p>
+                        <div class="mt-2 text-xs bg-white py-1 px-2 rounded inline-block text-blue-500 font-mono">
+                            Camera, IMU, LiDAR</div>
+                    </div>
+
+                    <!-- Arrow -->
+                    <div class="hidden md:flex items-center justify-center text-gray-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </div>
+                    <div class="md:hidden flex items-center justify-center text-gray-400 my-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                        </svg>
+                    </div>
+
+                    <!-- Layer 2 -->
+                    <div class="flex-1 bg-purple-50 p-4 rounded-lg border border-purple-100 text-center">
+                        <h4 class="font-bold text-purple-900 mb-2">🧠 決策層 (Logic)</h4>
+                        <p class="text-xs text-purple-700">負責「想」。狀態機切換 (FSM)、PID 運算、路徑規劃。</p>
+                        <div class="mt-2 text-xs bg-white py-1 px-2 rounded inline-block text-purple-500 font-mono">
+                            State Machine, PID</div>
+                    </div>
+
+                    <!-- Arrow -->
+                    <div class="hidden md:flex items-center justify-center text-gray-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </div>
+                    <div class="md:hidden flex items-center justify-center text-gray-400 my-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                        </svg>
+                    </div>
+
+                    <!-- Layer 3 -->
+                    <div class="flex-1 bg-orange-50 p-4 rounded-lg border border-orange-100 text-center">
+                        <h4 class="font-bold text-orange-900 mb-2">⚡ 執行層 (Action)</h4>
+                        <p class="text-xs text-orange-700">負責「做」。馬達 PWM 輸出、LED 顯示、蜂鳴器。</p>
+                        <div class="mt-2 text-xs bg-white py-1 px-2 rounded inline-block text-orange-500 font-mono">
+                            Motor, LED, Buzzer</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section>
+            <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center">
+                <span class="mr-3">📝</span> 實作任務 (Code Challenges)
+            </h2>
+
+            <!-- Assignment 1 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-md cursor-pointer"
+                onclick="openSubmissionModal('adv-14-refactor-surgery', 'Task 3-1: 代碼手術台')">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <span class="bg-emerald-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 3-1</span>
+                        「手術台」：解構大雜燴程式碼 (60 min)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明</strong>
+                        <p class="text-gray-700">教師將提供一段「所有功能都塞在 <code>loop()</code> 裡」的義大利麵程式碼。你需要扮演外科醫生，將其拆解為乾淨的函式。
+                        </p>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
+                        <li><strong>提取函式 (Extract Function)：</strong>將影像處理、誤差計算、BLE 發送封裝成獨立的 Function。</li>
+                        <li><strong>參數物件化：</strong>將散落的全局變數（Kp, Ki, Speed）封裝進 <code>Config</code> 物件。</li>
+                        <li><strong>重命名演習：</strong>將 <code>a</code>, <code>b1</code>, <code>temp</code> 改為具語義的
+                            <code>errorCentroid</code>, <code>isMotorEnabled</code>。
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Assignment 2 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-md cursor-pointer"
+                onclick="openSubmissionModal('adv-14-ble-class', 'Task 3-2: 通訊模組 Class')">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <span class="bg-emerald-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 3-2</span>
+                        打造「通訊模組」Class (60 min)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (OOP)</strong>
+                        <p class="text-gray-700">主程式不應該知道底層是 Web Bluetooth API 還是 WebSocket。請利用 JavaScript Class 封裝通訊邏輯。
+                        </p>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
+                        <li><strong>建立 BLEManager：</strong>實作 <code>connect()</code>, <code>sendJson()</code>,
+                            <code>onNotify()</code> 方法。
+                        </li>
+                        <li><strong>介面隔離：</strong>確保主程式只呼叫 <code>ble.send({cmd: 'run'})</code>，而不直接操作 characteristic。
+                        </li>
+                        <li><strong>多實例思考：</strong>如果未來有兩台車，你的 Class 能直接 <code>new BLEManager()</code> 兩次嗎？</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Assignment 3 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md cursor-pointer"
+                onclick="openSubmissionModal('adv-14-plugin-chain', 'Task 3-3: 插件化影像處理鏈')">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <span class="bg-emerald-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 3-3</span>
+                        「插件化」影像處理鏈 (45 min)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Design
+                            Pattern)</strong>
+                        <p class="text-gray-700">設計一個可以自由組合濾鏡的「處理鏈 (Pipeline)」。目標是「對擴展開放，對修改封閉」。</p>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
+                        <li><strong>處理鏈陣列：</strong>建立 <code>processors = [Grayscale, Threshold, Centroid]</code>。</li>
+                        <li><strong>動態擴充：</strong>嘗試在不修改主迴圈的情況下，直接 push 一個「中值濾波」模組到陣列中並生效。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-teal-50 border border-teal-100 p-6 rounded-xl flex items-start">
+                <span class="text-2xl mr-4">🧩</span>
+                <div>
+                    <h4 class="font-bold text-teal-900 mb-2">重構的藝術</h4>
+                    <p class="text-sm text-teal-700">
+                        好的代碼應該像一篇優美的散文，讓人讀起來賞心悅目。當你能夠寫出別人願意維護的代碼時，你就正式晉升為資深工程師了。
+                    </p>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-16 border-t border-gray-200 pt-8 flex justify-between text-gray-500">
+            <a href="/courses/adv-14-unit-kpi-definition.html" class="hover:text-emerald-600 flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Previous: 14-2 KPI Definition
+            </a>
+            <a href="/courses/adv-14-master-debugging-art.html" class="hover:text-emerald-600 flex items-center">
+                Back to Menu
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+            </a>
+        </footer>
+
+    </main>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/PWrwVgsj4ow",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vT8koEKGVubw4v11Iysdxz1VTA5kCN2VQI0CMwXnw_NDuxnrk49ZQ02N4NYIlbZN1Irtz8H2BaO9NZT/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

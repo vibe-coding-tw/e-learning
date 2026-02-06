@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 9-3】Web Speech API 原理與限制 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-blue-950 to-slate-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1589254065878-42c9da997008?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 9 - 單元 3
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                Web Speech API：<br><span class="text-blue-400">開啟網頁的「聽覺與讀稿」能力</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                利用 JavaScript 原生 API 實現語音辨識與合成，探索雲端分析與本地引擎的權衡。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Section 1: Pillars -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🏛️</span> 1. Web Speech API 的兩大支柱 (30 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
+                            <div class="space-y-4">
+                                <div class="bg-blue-50/50 p-6 rounded-2xl border border-blue-100">
+                                    <h4 class="font-bold text-blue-900 mb-2">SpeechRecognition (語音辨識)</h4>
+                                    <p class="text-sm">將聲音轉化為文字（Speech-to-Text）。</p>
+                                    <ul class="mt-2 space-y-1 text-xs list-disc list-inside text-gray-500">
+                                        <li><strong>原理：</strong>擷取音訊後傳送到伺服器（如 Google 雲端）分析。</li>
+                                        <li><strong>限制：</strong>高度依賴網路，且不同瀏覽器支援度差異大。</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100">
+                                    <h4 class="font-bold text-indigo-900 mb-2">SpeechSynthesis (語音合成)</h4>
+                                    <p class="text-sm">將文字轉化為聲音（Text-to-Speech）。</p>
+                                    <ul class="mt-2 space-y-1 text-xs list-disc list-inside text-gray-500">
+                                        <li><strong>原理：</strong>利用作業系統內建語音引擎，不一定需要網路。</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="bg-slate-900 p-6 rounded-2xl border border-blue-500/30">
+                                <h4 class="font-bold text-blue-400 mb-2 flex items-center gap-2">
+                                    <span>🧩</span> 學習任務
+                                </h4>
+                                <p class="text-sm text-blue-100 leading-relaxed font-light">
+                                    在瀏覽器控制台 (Console) 嘗試簡單的 <code>window.speechSynthesis.speak()</code> 指令，讓電腦開口說話。
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 flex items-center justify-center bg-gray-50 p-8">
+                            <div class="text-center space-y-4">
+                                <div
+                                    class="w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                                    <span class="text-6xl">🎙️</span>
+                                </div>
+                                <p class="text-gray-400 text-sm italic">👂 Listening... ⮕ 🖹 "Hello World"</p>
+                                <div class="w-full bg-gray-200 h-1 rounded-full overflow-hidden">
+                                    <div class="bg-blue-500 h-full w-1/2 animate-pulse"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Lifecycle -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-green-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">⚡</span> 2. 事件驅動與非同步生命週期 (30 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div
+                            class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 order-2 md:order-1 bg-slate-800 p-6 font-mono text-sm text-emerald-400">
+                            <pre class="whitespace-pre-wrap">
+recognition.onstart = () => {
+  console.log('系統開始監聽...');
+};
+
+recognition.onresult = (event) => {
+  const result = event.results[0][0].transcript;
+  console.log('辨識結果:', result);
+};
+
+recognition.onerror = (e) => {
+  console.error('發生錯誤:', e.error);
+};
+</pre>
+                        </div>
+                        <div class="space-y-6 order-1 md:order-2 text-lg text-gray-600 leading-relaxed">
+                            <ul class="space-y-4">
+                                <li class="flex gap-3">
+                                    <span class="text-emerald-500 font-bold">●</span>
+                                    <span><strong>識別事件：</strong>理解
+                                        <code>onstart</code>、<code>onresult</code>、<code>onerror</code> 與
+                                        <code>onend</code> 的順序。</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="text-emerald-500 font-bold">●</span>
+                                    <span><strong>連續識別 (Continuous)：</strong>為什麼遙控車需要開啟
+                                        <code>interimResults</code>（中間結果），以達到即時反應？</span>
+                                </li>
+                            </ul>
+                            <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
+                                <h4 class="font-bold text-emerald-900 mb-2 flex items-center gap-2">
+                                    <span>📖</span> 學習任務
+                                </h4>
+                                <p class="text-sm text-gray-700 leading-relaxed">
+                                    閱讀官方文件，理解為什麼辨識過程會因為短暫的沉默而自動關閉，以及如何透過 <code>continuous = true</code> 設定解決。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Privacy and Security -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-red-500 to-rose-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🔒</span> 3. 安全與隱私限制 (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
+                            <ul class="space-y-4">
+                                <li class="flex gap-3">
+                                    <span class="text-red-500 font-bold">●</span>
+                                    <span><strong>HTTPS 要求：</strong>Web Speech API 必須在安全連線下運作，否則瀏覽器會拒絕權限。</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="text-red-500 font-bold">●</span>
+                                    <span><strong>使用者授權：</strong>瀏覽器如何保護麥克風權限？這對「自動化」監聽系統有什麼影響？</span>
+                                </li>
+                            </ul>
+                            <div class="bg-red-50 p-6 rounded-2xl border border-red-100">
+                                <h4 class="font-bold text-red-900 mb-2 flex items-center gap-2">
+                                    <span>⚠️</span> 重點提醒
+                                </h4>
+                                <p class="text-sm text-gray-700 leading-relaxed">
+                                    理解語音識別在「連續監聽」與「關鍵字觸發」間的權衡，以及如何處理語句權重 (Weighting)。
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 flex items-center justify-center bg-red-50 p-8">
+                            <div class="text-center p-6 bg-white rounded-xl shadow-md border border-red-100">
+                                <span class="text-5xl block mb-4">🎤🚫</span>
+                                <p class="text-red-600 font-bold mb-2">Permission Denied</p>
+                                <p class="text-xs text-gray-500">Please serve over HTTPS and allow microphone access.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Assignments -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：語音控制實戰</h2>
+            <p class="text-center text-gray-500 mb-12">將語音指令轉化為精確的硬體動作，打造智慧無人車。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 3-1 -->
+                <div onclick="openSubmissionModal('adv-09-voice-commands', '【作業 9-3-1】「聲控指令集」開發')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">⌨️</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
+                            3-1】聲控指令集</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>在 BLE 控制介面中整合語音辨識功能。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>關鍵字過濾：當結果包含「前進」、「左轉」時觸發函式</li>
+                                <li>模糊匹配：使用者說「請停下來」時應識別出「停」</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-2 -->
+                <div onclick="openSubmissionModal('adv-09-voice-noise', '【作業 9-3-2】環境噪音下的語音對抗')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🔊</span>
+                            <span class="bg-emerald-50 text-emerald-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-emerald-600 transition">【作業
+                            3-2】噪音對抗</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>優化在多人吵雜環境下的辨識成功率。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>信心指標 (Confidence)：顯示分數，低於 0.8 則忽略</li>
+                                <li>語音回饋：透過 SpeechSynthesis 回應「收到，開始前進」</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 3-3 -->
+                <div onclick="openSubmissionModal('adv-09-voice-fsm', '【作業 9-3-3】語音與狀態機的深度整合')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-red-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🔄</span>
+                            <span class="bg-red-50 text-red-700 text-xs px-3 py-1 rounded-full font-bold">45 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-red-600 transition">【作業 3-3】FSM
+                            整合</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>利用語音切換無人車的工作模式。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>模式切換：說出「進入自動模式」時 UI 同步切換</li>
+                                <li>異常重啟：當 <code>onend</code> 觸發時自動重啟辨識</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階課程 9 - 單元 3</span>
+                <span class="hidden md:inline">|</span>
+                <span>Web Speech API 原理與限制</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/4PDB_LF0wt8",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vR-n5S783GICTPTe7YFqmi85R13soE6bX26narP8b4C9P6maXJ6nm_YM6vMeEoW_PEUwm6fH6UrwrQf/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adv 13: 軟體健壯性 (Robustness) 與錯誤處理 - Vibe Coding</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-blue-900 to-blue-800 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 13 - 單元 1
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                軟體健壯性<span class="text-blue-400">與錯誤處理</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto font-light leading-relaxed">
+                打造一條牢不可破的防禦鏈：從前端到韌體的安全防護機制。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+
+        <!-- Use Cases / Intro -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 card-hover">
+                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                        </path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">為什麼需要健壯性？</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    「軟體健壯性
+                    (Robustness)」是指系統在面對異常輸入、網路斷線或硬體突發狀況時，仍能保持穩定運作（或安全停止）的能力。在現實世界中，網路會斷、硬體會壞、使用者會亂按，你的程式必須能夠處理這些「意外」。
+                </p>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 card-hover">
+                <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 mb-6">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-gray-900">本單元目標</h3>
+                <ul class="space-y-2 text-gray-600">
+                    <li class="flex items-center"><span class="mr-2 text-green-500">✓</span>理解防禦性編程的核心觀念</li>
+                    <li class="flex items-center"><span class="mr-2 text-green-500">✓</span>掌握 JS 與 C++ 的錯誤捕捉機制</li>
+                    <li class="flex items-center"><span class="mr-2 text-green-500">✓</span>實作心跳機制與自動煞車 (Fail-safe)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 1: Defensive Programming -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">1</span>
+                防禦性編程 (Defensive Programming)
+            </h2>
+            <div class="prose prose-blue max-w-none text-gray-600">
+                <p>
+                    <strong>核心觀念：</strong>假設所有的輸入都是錯誤的，所有的網路都會斷線，所有的硬體都會故障。程式設計師必須具備「被害妄想症」，隨時準備處理最壞的情況。
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+                    <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                        <h4 class="font-bold text-gray-800 mb-2">輸入驗證 (Input Validation)</h4>
+                        <p class="text-sm mb-4">永遠不要信任來自外部（如 App、感測器）的數據。在執行動作前，先檢查數值是否合理。</p>
+                        <pre><code class="language-cpp">// 危險寫法
+void setMotor(int speed) {
+    ledcWrite(pwmChannel, speed); // 如果 speed 是 99999 怎麼辦？
+}
+
+// 防禦性寫法
+void setMotor(int speed) {
+    // 範圍限制 (Clamping)
+    if (speed > 255) speed = 255;
+    if (speed < 0) speed = 0;
+    ledcWrite(pwmChannel, speed);
+}</code></pre>
+                    </div>
+                    <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                        <h4 class="font-bold text-gray-800 mb-2">預設安全值 (Fail-safe)</h4>
+                        <p class="text-sm mb-4">如果收到無法解析的亂碼指令，系統應預設為「安全狀態」（通常是停止），而非保持上一狀態暴衝。</p>
+                        <pre><code class="language-cpp">if (isValid(command)) {
+    execute(command);
+} else {
+    stopCar(); // 安全失效：立即停車
+    logError("Invalid Command");
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Error Catching -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">2</span>
+                錯誤捕捉機制 (JS & ESP32)
+            </h2>
+            <div class="prose prose-blue max-w-none text-gray-600">
+
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">前端 (Web): try...catch 防止白屏</h3>
+                    <p>在網頁開發中，一個未捕獲的錯誤可能導致整個 JS 腳本停止執行，讓使用者介面卡死（白屏）。使用 <code>try...catch</code> 可以優雅地處理錯誤。</p>
+                    <pre><code class="language-javascript">async function connectBluetooth() {
+    try {
+        const device = await navigator.bluetooth.requestDevice({/*...*/});
+        // ...連線邏輯
+    } catch (error) {
+        console.error("連線失敗:", error);
+        alert("找不到裝置，請確認藍牙已開啟！"); // 友善的錯誤提示
+        // updateUIState('disconnected'); // 恢復 UI 狀態
+    }
+}</code></pre>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">硬體 (ESP32): 看門狗定時器 (Watchdog Timer)</h3>
+                    <p>
+                        當嵌入式系統的程式因為無窮迴圈或死鎖 (Deadlock) 而卡死時，硬體層級的「看門狗」會發現系統太久沒有「餵狗」（重置計時器），進而強制重啟系統，避免整台車變磚。
+                    </p>
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-4">
+                        <p class="text-sm text-yellow-700">
+                            <strong>注意：</strong> ESP32 的 FreeRTOS 任務預設已開啟看門狗。如果你在 `loop()` 中執行太久的阻塞運算（如 `while(true)`
+                            且沒有 `delay`），看門狗就會觸發重啟。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Timeout & Heartbeat -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">3</span>
+                超時 (Timeout) 與心跳機制 (Heartbeat)
+            </h2>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <p class="text-gray-600 mb-4">
+                    如果手機 App 崩潰或藍牙斷線，最後一個指令如果是「全速前進」，車子就會一直跑直到撞牆。為了解決這個問題，我們需要「心跳機制」。
+                </p>
+                <div class="relative pl-8 border-l-2 border-blue-200 space-y-6">
+                    <div class="relative">
+                        <span
+                            class="absolute -left-[41px] bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">1</span>
+                        <h4 class="font-bold text-gray-800">App 端 (發送心跳)</h4>
+                        <p class="text-sm text-gray-600">App 每隔 100ms~500ms 必須發送一次指令（即使沒有操作，也可以發送一個空的心跳包）。</p>
+                    </div>
+                    <div class="relative">
+                        <span
+                            class="absolute -left-[41px] bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">2</span>
+                        <h4 class="font-bold text-gray-800">車端 (檢查心跳)</h4>
+                        <p class="text-sm text-gray-600">車子記錄 `lastMsgTime`。在 `loop()` 中不斷檢查 `millis() - lastMsgTime`。
+                        </p>
+                    </div>
+                    <div class="relative">
+                        <span
+                            class="absolute -left-[41px] bg-red-100 text-red-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">3</span>
+                        <h4 class="font-bold text-red-700">自動煞車 (Auto Brake)</h4>
+                        <p class="text-sm text-gray-600">如果超過 1000ms (1秒) 沒有收到任何指令，視為「失控」，強制將馬達出力設為 0。</p>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <pre><code class="language-cpp">unsigned long lastMsgTime = 0;
+const int TIMEOUT_MS = 1000;
+
+void loop() {
+    // 檢查是否超時
+    if (millis() - lastMsgTime > TIMEOUT_MS) {
+        stopCar(); // 安全機制
+    }
+    // ... 其他邏輯
+}
+
+// 當收到藍牙指令時
+void onPacketReceived() {
+    lastMsgTime = millis(); // 更新心跳時間（餵狗）
+    // ... 解析指令
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section>
+            <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center">
+                <span class="mr-3">📝</span> 實作任務 (Classroom Challenges)
+            </h2>
+
+            <!-- Assignment 1 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-md cursor-pointer"
+                onclick="openSubmissionModal('adv-13-stress-test', 'Task 1-1: 暴力輸入壓力測試')">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <span class="bg-blue-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 1-1</span>
+                        「暴力輸入」壓力測試 (60 min)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
+                        <p class="text-gray-700">修改你的 ESP32 韌體，確保它能夠過濾無效數據。測試時，故意從 App 發送包含雜訊、空字串或超大數值的指令。</p>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
+                        <li><strong>範圍限制 (Clamping)：</strong>實作 <code>constrain(value, 0, 255)</code> 確保 PWM 值永遠合法。</li>
+                        <li><strong>類型檢查：</strong>在解析 JSON 前驗證格式 <code>doc.isNull()</code>，若格式錯誤則跳過並
+                            <code>Serial.println("Invalid JSON")</code>。
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Assignment 2 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-md cursor-pointer"
+                onclick="openSubmissionModal('adv-13-failsafe', 'Task 1-2: 斷網救援模擬')">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <span class="bg-blue-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 1-2</span>
+                        「斷網救援」模擬演習 (60 min)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
+                        <p class="text-gray-700">實作通訊超時保護機制。在車子全速行駛時，突然關閉手機藍牙或 Wi-Fi，觀察車子是否能在一秒內自動停止。</p>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
+                        <li><strong>心跳計數器：</strong>使用 <code>millis()</code> 記錄最後有效指令時間。</li>
+                        <li><strong>緊急停機：</strong>當 <code>(millis() - lastMsgTime) > 1000</code> 時，強制
+                            <code>stopCar()</code>。
+                        </li>
+                        <li><strong>現場測試：</strong>實際演練斷線情境，確保 Fail-safe 機制生效。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Assignment 3 -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md cursor-pointer"
+                onclick="openSubmissionModal('adv-13-ui-report', 'Task 1-3: 異常狀態回報介面')">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <span class="bg-blue-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 1-3</span>
+                        異常狀態回報介面 (45 min)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
+                        <p class="text-gray-700">在你的網頁控制器上增加「故障診斷」UI，提供駕駛者足夠的資訊來判斷系統健康狀況。</p>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
+                        <li><strong>視覺警告：</strong>當通訊延遲超過 200ms 顯示黃燈；超過 500ms 顯示紅燈。</li>
+                        <li><strong>錯誤日誌：</strong>在網頁用列表顯示最近 5 條報錯（如：Battery Low, Sensor Timeout）。</li>
+                    </ul>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-16 border-t border-gray-200 pt-8 flex justify-between text-gray-500">
+            <a href="/courses/adv-12-master-pid.html" class="hover:text-blue-600 flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Previous: Advanced 12
+            </a>
+            <a href="/courses/adv-13-master-robustness.html" class="hover:text-blue-600 flex items-center">
+                Back to Menu
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+            </a>
+        </footer>
+
+    </main>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/-KKVmdfN920",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vTYKFbBeqSbJZZgwDXw9KzUK9L2_fe879xlBw7mVkRLi6Djl1vGze4csr7ccV9-E0y1a4QL89OKrwh3/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

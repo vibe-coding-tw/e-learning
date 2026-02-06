@@ -83,87 +83,90 @@ window.renderNav = function (rootPath = '.', options = {}) {
                     <span>🚀</span> Vibe Coding ${brandSuffix ? `<span class="text-sm font-normal text-gray-500 ml-2">${brandSuffix}</span>` : ''}
                 </a>
 
-                <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
-                    <div class="relative dropdown group">
-                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            課程連結 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div
-                            class="dropdown-menu absolute hidden group-hover:block bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="${resolve('prepare.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">課前準備</a>
-                            <a href="${resolve('started.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">入門課程</a>
-                            <a href="${resolve('basic.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">基礎實作</a>
-                            <a href="${resolve('advanced.html')}"
-                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">進階應用</a>
+                <!-- Right side: Links + Auth/Mobile Button -->
+                <div class="flex items-center gap-6">
+                    <div class="hidden md:flex items-center space-x-6 font-medium text-gray-600">
+                        <div class="relative dropdown group">
+                            <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
+                                課程連結 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div
+                                class="dropdown-menu absolute hidden group-hover:block bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
+                                <a href="${resolve('prepare.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">課前準備</a>
+                                <a href="${resolve('started.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">入門課程</a>
+                                <a href="${resolve('basic.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">基礎實作</a>
+                                <a href="${resolve('advanced.html')}"
+                                    class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">進階應用</a>
+                            </div>
+                        </div>
+
+                        <div class="relative dropdown group">
+                            <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
+                                組態設定 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div
+                                class="dropdown-menu absolute hidden group-hover:block bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
+                                <a href="${resolve('examples/wifi-config.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">WiFi 設定</a>
+                                <a href="${resolve('examples/motor-config.html')}"
+                                    class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">馬達設定</a>
+                            </div>
+                        </div>
+
+                        <div class="relative dropdown group">
+                            <button class="flex items-center text-cyan-600 font-bold transition cursor-pointer py-2">
+                                關於我們 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div
+                                class="dropdown-menu absolute hidden group-hover:block bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
+                                <a href="${resolve('faq.html')}" class="block px-4 py-2 bg-cyan-50 text-cyan-700">課程使用說明</a>
+                                <a href="${resolve('about.html')}"
+                                    class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">關於付費與購買</a>
+                                <a href="${resolve('collaboration.html')}"
+                                    class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">合作事宜</a>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="relative dropdown group">
-                        <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                            組態設定 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div
-                            class="dropdown-menu absolute hidden group-hover:block bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="${resolve('examples/wifi-config.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">WiFi 設定</a>
-                            <a href="${resolve('examples/motor-config.html')}"
-                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">馬達設定</a>
+                    <div class="flex items-center gap-4">
+                        ${showAuth ? `
+                        <div class="flex items-center space-x-4">
+                            <a href="${resolve('cart.html')}" class="text-gray-600 hover:text-cyan-600 transition duration-150 relative"
+                                title="前往購物車">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
+                                </svg>
+                            </a>
+
+                            <div id="auth-status" class="text-sm flex items-center">
+                                <span id="user-display" class="text-gray-600 hidden md:inline mr-2">訪客</span>
+                                <button id="login-btn"
+                                    class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">登入</button>
+                            </div>
                         </div>
-                    </div>
+                        ` : ''}
 
-                    <div class="relative dropdown group">
-                        <button class="flex items-center text-cyan-600 font-bold transition cursor-pointer py-2">
-                            關於我們 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div
-                            class="dropdown-menu absolute hidden group-hover:block bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                            <a href="${resolve('faq.html')}" class="block px-4 py-2 bg-cyan-50 text-cyan-700">課程使用說明</a>
-                            <a href="${resolve('about.html')}"
-                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">關於付費與購買</a>
-                            <a href="${resolve('collaboration.html')}"
-                                class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">合作事宜</a>
+                        <!-- Mobile Menu Button (Always visible on mobile) -->
+                        <div class="md:hidden z-[99999]" style="position: relative;">
+                            <button id="mobile-menu-btn" type="button"
+                                style="pointer-events: auto; cursor: pointer; position: relative; z-index: 99999;"
+                                class="text-gray-600 focus:outline-none p-2 border rounded hover:bg-gray-100">
+                                <svg class="w-6 h-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 6h16M4 12h16M4 18h16"></path>
+                                </svg>
+                            </button>
                         </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-4">
-                    ${showAuth ? `
-                    <div class="flex items-center space-x-4">
-                        <a href="${resolve('cart.html')}" class="text-gray-600 hover:text-cyan-600 transition duration-150 relative"
-                            title="前往購物車">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
-                            </svg>
-                        </a>
-
-                        <div id="auth-status" class="text-sm flex items-center">
-                            <span id="user-display" class="text-gray-600 hidden md:inline mr-2">訪客</span>
-                            <button id="login-btn"
-                                class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">登入</button>
-                        </div>
-                    </div>
-                    ` : ''}
-
-                    <!-- Mobile Menu Button (Always visible on mobile) -->
-                    <div class="md:hidden z-[99999]" style="position: relative;">
-                        <button id="mobile-menu-btn" type="button"
-                            style="pointer-events: auto; cursor: pointer; position: relative; z-index: 99999;"
-                            class="text-gray-600 focus:outline-none p-2 border rounded hover:bg-gray-100">
-                            <svg class="w-6 h-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 6h16M4 12h16M4 18h16"></path>
-                            </svg>
-                        </button>
                     </div>
                 </div>
             </div>

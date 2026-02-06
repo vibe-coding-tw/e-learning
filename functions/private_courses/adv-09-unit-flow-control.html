@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 9-4】前端資料緩衝與流控 (Debouncing) - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-gray-800 to-zinc-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-yellow-500/20 border border-yellow-400/30 text-yellow-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 9 - 單元 4
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                前端資料緩衝與流控<br><span class="text-yellow-400">Debouncing & Throttling</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto font-light leading-relaxed">
+                優化數據傳輸頻率，消除硬體延遲與不必要的運算，讓操控體驗更絲滑。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Section 1: Why Flow Control? -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-yellow-500 to-orange-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🚧</span> 1. 為什麼需要流控？ (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
+                            <p>在即時物聯網應用中，「發送越多越好」往往是錯誤的觀念。未經節流的數據流會導致嚴重的系統瓶頸。</p>
+                            <div class="space-y-4">
+                                <div class="bg-orange-50/50 p-6 rounded-2xl border border-orange-100">
+                                    <h4 class="font-bold text-orange-900 mb-2">硬體瓶頸</h4>
+                                    <p class="text-sm">ESP32 的藍牙接收與緩衝區有上限。如果網頁發送太快（例如 60Hz），封包會開始排隊
+                                        (Queuing)，導致你放開搖桿後車子還在跑，這就是所謂的<strong>「操作延遲感」</strong>。</p>
+                                </div>
+                                <div class="bg-yellow-50/50 p-6 rounded-2xl border border-yellow-100">
+                                    <h4 class="font-bold text-yellow-900 mb-2">無謂的運算</h4>
+                                    <p class="text-sm">並非所有微小的座標變動都需要傳送到馬達。過濾掉手抖產生的「雜訊」，能顯著節省電力與無線頻寬。</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 flex items-center justify-center bg-gray-50 p-8">
+                            <div class="text-center space-y-4">
+                                <div class="relative w-48 h-12 bg-gray-200 rounded-full mx-auto overflow-hidden">
+                                    <!-- Animated Packets -->
+                                    <div
+                                        class="absolute top-0 bottom-0 left-0 w-8 bg-red-500 opacity-80 animate-ping rounded-full">
+                                    </div>
+                                    <div class="absolute top-3 left-4 w-4 h-4 bg-red-600 rounded-full shadow"></div>
+                                    <span class="absolute right-4 top-3 text-xs font-mono text-gray-500">Buffer
+                                        Full!</span>
+                                </div>
+                                <p class="text-gray-400 text-sm italic">封包阻塞 (Packet Congestion) 示意圖</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Debouncing vs Throttling -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">⚔️</span> 2. 兩大技術武器 (30 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Debounce Card -->
+                        <div class="bg-blue-50 rounded-xl p-8 border border-blue-100 hover:shadow-md transition">
+                            <h3 class="text-2xl font-bold text-blue-800 mb-4 flex items-center gap-2">
+                                <span>💡</span> 防抖 (Debouncing)
+                            </h3>
+                            <p class="text-gray-700 mb-4 font-medium">像聲控燈。</p>
+                            <p class="text-gray-600 text-sm leading-relaxed mb-4">
+                                你一直叫它就不滅，直到你「安靜了一段時間」它才執行。
+                            </p>
+                            <ul class="text-xs text-blue-600 space-y-1 list-disc list-inside">
+                                <li>適合：輸入框搜尋 (Search Input)</li>
+                                <li>適合：設定變更確認</li>
+                            </ul>
+                        </div>
+
+                        <!-- Throttle Card -->
+                        <div class="bg-cyan-50 rounded-xl p-8 border border-cyan-100 hover:shadow-md transition">
+                            <h3 class="text-2xl font-bold text-cyan-800 mb-4 flex items-center gap-2">
+                                <span>🚇</span> 節流 (Throttling)
+                            </h3>
+                            <p class="text-gray-700 mb-4 font-medium">像捷運閘門。</p>
+                            <p class="text-gray-600 text-sm leading-relaxed mb-4">
+                                管你外面排多少人，每 100ms 只放行一個。保證執行頻率不超過上限。
+                            </p>
+                            <ul class="text-xs text-cyan-600 space-y-1 list-disc list-inside">
+                                <li>適合：搖桿移動 (Joystick)</li>
+                                <li>適合：視窗縮放 (Resize)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mt-8 bg-slate-900 p-6 rounded-2xl border border-blue-500/30">
+                        <h4 class="font-bold text-blue-400 mb-2 flex items-center gap-2">
+                            <span>🧪</span> 學習任務
+                        </h4>
+                        <p class="text-sm text-blue-100 leading-relaxed font-light">
+                            觀察視覺化演示工具，理解「執行最後一次 (Last exec)」與「固定頻率執行 (Fixed rate)」的邏輯差異。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Advanced Logic -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🧠</span> 3. 高階流控與優化 (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
+                            <div class="bg-purple-50 p-6 rounded-2xl border border-purple-100">
+                                <h4 class="font-bold text-purple-900 mb-2">Threshold (變動閥值)</h4>
+                                <p class="text-sm">儲存上一次發送的數值 \( V_{last} \)，只有當 \( |V_{current} - V_{last}| > Threshold
+                                    \) 時才執行傳輸。</p>
+                                <p class="text-xs text-gray-500 mt-2">有效過濾手指的生理顫抖，或 AI 辨識出的重複手勢指令。</p>
+                            </div>
+                            <div class="bg-pink-50 p-6 rounded-2xl border border-pink-100">
+                                <h4 class="font-bold text-pink-900 mb-2">Deadzone (死區)</h4>
+                                <p class="text-sm">當搖桿位移在中心點 \(\pm 10\%\) 範圍內時，強制輸出為 0。防止馬達因為微小訊號而發出低頻嗡嗡聲。</p>
+                            </div>
+                        </div>
+                        <div
+                            class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 bg-slate-800 p-6 font-mono text-sm text-purple-400">
+                            <pre class="whitespace-pre-wrap">
+// 變動閥值邏輯示意
+let lastVal = 0;
+const THRESHOLD = 5;
+
+function update(currentVal) {
+  if (Math.abs(currentVal - lastVal) > THRESHOLD) {
+    sendToBLE(currentVal);
+    lastVal = currentVal;
+  }
+}
+</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Assignments -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">流控實驗室：打造絲滑操控</h2>
+            <p class="text-center text-gray-500 mb-12">透過代碼與參數調校，在靈敏度與效能之間找到黃金平衡點。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 4-1 -->
+                <div onclick="openSubmissionModal('adv-09-throttle-joy', '【作業 9-4-1】實作搖桿節流器')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-orange-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">⏱️</span>
+                            <span class="bg-orange-50 text-orange-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-orange-600 transition">【作業
+                            4-1】搖桿節流器</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>在 <code>onMove</code> 事件中限制發送頻率。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>計時器限制：利用 setTimeout 確保頻率不超過 20Hz (50ms)。</li>
+                                <li>效能觀測：使用 Chrome DevTools 比較加入前後的封包量。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 4-2 -->
+                <div onclick="openSubmissionModal('adv-09-deadzone', '【作業 9-4-2】閾值與死區開發')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🎯</span>
+                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
+                            4-2】數據過濾</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>實作數值過濾器，減少無效傳輸。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>Deadzone：中心 \(\pm 10\%\) 強制歸零。</li>
+                                <li>變動觸發：數值變化 \(> Threshold\) 才發送。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 4-3 -->
+                <div onclick="openSubmissionModal('adv-09-stress-test', '【作業 9-4-3】壓力測試與調校')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-cyan-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">📉</span>
+                            <span class="bg-cyan-50 text-cyan-700 text-xs px-3 py-1 rounded-full font-bold">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-cyan-600 transition">【作業
+                            4-3】壓力測試</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>模擬極限情況並找出最佳參數。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>延遲測量：記錄這「按下」到「ESP32收到」的時間。</li>
+                                <li>參數優化：測試 10ms - 500ms 節流區間的手感變化。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階課程 9 - 單元 4</span>
+                <span class="hidden md:inline">|</span>
+                <span>前端資料緩衝與流控</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/ydWS55Tp2MM",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vR7bgssty2l_oF0F7NrFFT0DWjlrSz9Z_shaScRjTRg1WFrfn5_JWviSnh1TsqprmUkaJOoaJlKWCDZ/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

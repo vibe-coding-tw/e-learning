@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 4-2】數據抖動與數位濾波演算法 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-blue-900 via-slate-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2048&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 4 - 單元 2
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                數據抖動：<br><span class="text-blue-400">馴服數位震顫</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                感測器數據為什麼會跳動？學習如何利用濾波演算法，從雜訊中提取真實訊號。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Section 1: Why Jitter? -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🤔</span> 1. 為什麼數據會抖動？ (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="bg-slate-50 p-6 rounded-xl border border-slate-100">
+                            <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                <span class="text-blue-500">💡</span> 雜訊來源
+                            </h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">
+                                環境光線波動、馬達電磁干擾 (EMI) 以及感測器內部的電子熱雜訊。這些外部與內部噪音會疊加在原始數據上。
+                            </p>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-xl border border-slate-100">
+                            <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                <span class="text-blue-500">📉</span> 量化誤差
+                            </h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">
+                                數位系統在將類比訊號轉換為數位值 (ADC) 時，由於解析度限制產生的微小階梯狀波動。
+                            </p>
+                        </div>
+                        <div class="bg-amber-50 p-6 rounded-xl border border-amber-100 shadow-sm transition hover:shadow-md cursor-help"
+                            onclick="enterMediaMode('video', window.RESOURCES.youtube)">
+                            <h4 class="font-bold text-amber-800 mb-3 flex items-center gap-2">
+                                <span class="text-amber-500">👀</span> 學習任務
+                            </h4>
+                            <p class="text-xs text-amber-900 leading-relaxed">
+                                觀看一段「未經過濾的質心座標」影片，觀察數據點如何跳動，並思考這對馬達會造成什麼負擔（頻繁震動、過熱）。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Moving Average -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🧼</span> 2. 均值濾波器 (Moving Average) (25 min)
+                    </h2>
+                    <div class="flex flex-col md:flex-row gap-10">
+                        <div class="flex-1 space-y-6">
+                            <ul class="space-y-4 text-gray-600 text-lg leading-relaxed">
+                                <li class="flex gap-3">
+                                    <span class="text-indigo-500 font-bold">●</span>
+                                    <span><strong>核心概念：</strong>取最近 $N$ 筆數據的平均值，利用「時間換取穩定度」。</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="text-indigo-500 font-bold">●</span>
+                                    <span><strong>滑動窗口 (Sliding Window)：</strong>理解數據如何「先進先出 (FIFO)」。</span>
+                                </li>
+                                <li class="flex gap-3 text-red-600">
+                                    <span class="font-bold">⚠️</span>
+                                    <span><strong>延遲代價：</strong>窗口越大，數據越平滑，但對真實變化的反應就會越慢 (Lag)。</span>
+                                </li>
+                            </ul>
+                            <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
+                                <h4 class="font-bold text-indigo-800 mb-2 flex items-center gap-2">
+                                    <span>✍️</span> 手算挑戰
+                                </h4>
+                                <p class="text-sm">數據流：[10, 12, 11, 25, 12]。若視窗為 3，請計算最後一筆數據進入後的平均值。</p>
+                            </div>
+                        </div>
+                        <div class="md:w-1/3 bg-slate-900 rounded-2xl p-6 text-indigo-300 font-mono text-xs">
+                            <div class="flex items-center gap-2 mb-4 border-b border-slate-700 pb-2">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                <span
+                                    class="ml-2 text-slate-500 uppercase tracking-widest text-[10px]">moving_average.js</span>
+                            </div>
+                            <pre><code>function movingAverage(newData) {
+  window.push(newData);
+  if (window.length > N) {
+    window.shift();
+  }
+  return sum(window) / window.length;
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Low Pass Filter -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-teal-500 to-blue-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">📉</span> 3. 一階低通濾波 (Low-pass Filter) (15 min)
+                    </h2>
+                    <div class="space-y-8">
+                        <div class="bg-slate-900 p-8 rounded-3xl text-center">
+                            <span class="text-slate-400 text-sm mb-4 block uppercase tracking-widest">核心公式</span>
+                            <div class="text-3xl md:text-4xl font-serif text-white italic">
+                                Output = <span class="text-blue-400">α</span> × New + (1 - <span
+                                    class="text-blue-400">α</span>) × Old
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-lg">
+                            <div class="space-y-4">
+                                <p class="text-gray-600 leading-relaxed">
+                                    <strong>指數加權平均：</strong>不需要記憶大量歷史點，只需保留上一次的濾波結果，節省記憶體。
+                                </p>
+                                <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200">
+                                    <h5 class="font-bold text-slate-800 mb-3">參數 α 的意義</h5>
+                                    <ul class="text-sm space-y-2 text-slate-600">
+                                        <li>• <strong>α 越小：</strong>系統越穩定但越遲鈍。</li>
+                                        <li>• <strong>α 越大：</strong>系統越靈敏但越抖動。</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="bg-blue-50 p-8 rounded-3xl border border-blue-100">
+                                <h4 class="font-bold text-blue-900 mb-4 flex items-center gap-2 text-xl">
+                                    <span>💡</span> 預習任務：情境選擇
+                                </h4>
+                                <p class="text-gray-700 leading-relaxed mb-6">
+                                    思考在「緊急避障」與「穩定巡航」兩種場景下，$\alpha$ 值應該如何取捨？
+                                </p>
+                                <div class="flex gap-4">
+                                    <div class="flex-1 text-center bg-white p-4 rounded-xl shadow-sm">
+                                        <div class="text-blue-600 font-bold mb-1">避障</div>
+                                        <div class="text-xs text-gray-500">快速反應</div>
+                                    </div>
+                                    <div class="flex-1 text-center bg-white p-4 rounded-xl shadow-sm">
+                                        <div class="text-indigo-600 font-bold mb-1">巡航</div>
+                                        <div class="text-xs text-gray-500">極致平穩</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Filter Lab Simulator -->
+        <section class="mb-12">
+            <div class="bg-slate-900 rounded-3xl shadow-2xl overflow-hidden">
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+                        <div>
+                            <h2 class="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                                <span class="text-4xl">🧪</span> 4. 濾波器實驗室
+                            </h2>
+                            <p class="text-slate-400">即時模擬雜訊濾除效果與延遲對比</p>
+                        </div>
+                        <div class="flex gap-2 bg-slate-800 p-1 rounded-xl">
+                            <button id="btn-raw"
+                                class="px-4 py-2 rounded-lg text-sm font-medium transition bg-slate-700 text-white">原始值</button>
+                            <button id="btn-avg"
+                                class="px-4 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-white">均值</button>
+                            <button id="btn-lpf"
+                                class="px-4 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-white">低通</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-white/10">
+                        <canvas id="filter-chart" height="300"></canvas>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-4">
+                            <label class="block text-slate-400 text-sm font-medium mb-2">
+                                均值濾波窗口大小 (N): <span id="n-val" class="text-blue-400">5</span>
+                            </label>
+                            <input type="range" id="n-slider" min="1" max="20" value="5"
+                                class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                        </div>
+                        <div class="space-y-4">
+                            <label class="block text-slate-400 text-sm font-medium mb-2">
+                                低通濾波係數 (α): <span id="alpha-val" class="text-blue-400">0.20</span>
+                            </label>
+                            <input type="range" id="alpha-slider" min="1" max="100" value="20"
+                                class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Assignments -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：濾波演算法優化實戰</h2>
+            <p class="text-center text-gray-500 mb-12">掌握數據平滑、異常剔除與動態權重設計。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 2-1 -->
+                <div onclick="openSubmissionModal('adv-04-jitter-lab', '【作業 2-1】濾波器實驗室實作')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🧪</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
+                            2-1】濾波器實驗室實作</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務目標：</strong>在網頁端實作具備多種濾波模式的數據處理器。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>實作 `push()` 與 `shift()` 滑動窗口</li>
+                                <li>建立 UI 按鈕即時切換濾波模式</li>
+                                <li>使用 Chart.js 視覺化對比不同延遲</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2-2 -->
+                <div onclick="openSubmissionModal('adv-04-median-challenge', '【作業 2-2】中值濾波抗干擾挑戰')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🧼</span>
+                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
+                            2-2】中值濾波抗干擾</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務目標：</strong>解決突發性的「尖峰雜訊 (Spike Noise)」。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>模擬隨機插入極端異常點 (Spike)</li>
+                                <li>對比均值濾波與中值濾波的表現</li>
+                                <li>實作排序演算法以過濾異常值</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 2-3 -->
+                <div onclick="openSubmissionModal('adv-04-dynamic-alpha', '【作業 2-3】動態 α 濾波器')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-teal-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">📈</span>
+                            <span class="bg-teal-50 text-teal-700 text-xs px-3 py-1 rounded-full font-bold">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-teal-600 transition">【作業
+                            2-3】動態 α 濾波器</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務目標：</strong>實作具備「適應性」的強度調整邏輯。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>根據偏差大小自動調整 α 權重</li>
+                                <li>大偏差時追求快速，小偏差時追求穩定</li>
+                                <li>無人車 S 彎道路測數據驗證</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階課程 4 - 單元 2</span>
+                <span class="hidden md:inline">|</span>
+                <span>數據抖動與數位濾波演算法</span>
+            </div>
+        </div>
+    </footer>
+
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/owgr6C5rksY",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vQsffWi6ae-QzOzAdyPNtABH4E0IR7K8oIZ2mW9zmVI25_43SdwRMZR_rtjIJbSaQTbyhLEPxlab9aC/pub?embedded=true"
+        };
+
+        // --- Simulator Logic ---
+        const ctx = document.getElementById('filter-chart').getContext('2d');
+        let rawData = [];
+        let avgData = [];
+        let lpfData = [];
+        let timeline = [];
+        let windowBuffer = [];
+        let lastLpf = 0;
+
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timeline,
+                datasets: [
+                    { label: '原始數值 (Raw Data)', data: rawData, borderColor: '#64748b', borderWidth: 1.5, pointRadius: 0, fill: false },
+                    { label: '均值濾波 (Moving Average)', data: avgData, borderColor: '#3b82f6', borderWidth: 3, pointRadius: 0, fill: false },
+                    { label: '一階低通 (Low-pass Filter)', data: lpfData, borderColor: '#10b981', borderWidth: 3, pointRadius: 0, fill: false }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { min: 0, max: 200, grid: { color: 'rgba(255,255,255,0.05)' }, border: { display: false }, ticks: { color: '#94a3b8' } },
+                    x: { grid: { display: false }, border: { display: false }, ticks: { display: false } }
+                },
+                plugins: {
+                    legend: { labels: { color: '#94a3b8', font: { size: 10 } }, position: 'top' },
+                    tooltip: { enabled: false }
+                }
+            }
+        });
+
+        let frame = 0;
+        function updateChart() {
+            frame++;
+            // Generate raw data with sine wave + noise
+            let base = 100 + Math.sin(frame * 0.05) * 50;
+            let noise = (Math.random() - 0.5) * 40;
+            // Occasional spikes
+            if (Math.random() > 0.98) noise = (Math.random() > 0.5 ? 80 : -80);
+
+            let currentRaw = base + noise;
+
+            // Moving Average
+            let n = parseInt(document.getElementById('n-slider').value);
+            windowBuffer.push(currentRaw);
+            if (windowBuffer.length > n) windowBuffer.shift();
+            let currentAvg = windowBuffer.reduce((a, b) => a + b, 0) / windowBuffer.length;
+
+            // Low-pass Filter
+            let alpha = parseInt(document.getElementById('alpha-slider').value) / 100;
+            let currentLpf = alpha * currentRaw + (1 - alpha) * lastLpf;
+            lastLpf = currentLpf;
+
+            // Update Arrays
+            rawData.push(currentRaw);
+            avgData.push(currentAvg);
+            lpfData.push(currentLpf);
+            timeline.push('');
+
+            if (rawData.length > 50) {
+                rawData.shift(); avgData.shift(); lpfData.shift(); timeline.shift();
+            }
+
+            chart.update('none');
+            requestAnimationFrame(updateChart);
+        }
+
+        document.getElementById('n-slider').addEventListener('input', (e) => {
+            document.getElementById('n-val').innerText = e.target.value;
+        });
+        document.getElementById('alpha-slider').addEventListener('input', (e) => {
+            document.getElementById('alpha-val').innerText = (e.target.value / 100).toFixed(2);
+        });
+
+        requestAnimationFrame(updateChart);
+
+        // UI Interactions
+        document.getElementById('btn-raw').onclick = () => toggleDataset(0);
+        document.getElementById('btn-avg').onclick = () => toggleDataset(1);
+        document.getElementById('btn-lpf').onclick = () => toggleDataset(2);
+
+        function toggleDataset(idx) {
+            chart.setDatasetVisibility(idx, !chart.isDatasetVisible(idx));
+            const btns = ['btn-raw', 'btn-avg', 'btn-lpf'];
+            const btn = document.getElementById(btns[idx]);
+            if (chart.isDatasetVisible(idx)) {
+                btn.classList.add('bg-slate-700', 'text-white');
+                btn.classList.remove('text-slate-400');
+            } else {
+                btn.classList.remove('bg-slate-700', 'text-white');
+                btn.classList.add('text-slate-400');
+            }
+            chart.update();
+        }
+
+
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>

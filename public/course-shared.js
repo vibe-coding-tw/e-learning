@@ -31,6 +31,7 @@ let currentMode = null;
 let sessionStartTime = null;
 let currentScale = 1.0;
 const BASE_DOC_WIDTH = 850;
+const boundDocs = new Set(); // To prevent duplicate event listeners
 
 /**
  * Injects the standard Media Overlay HTML into the body
@@ -41,8 +42,8 @@ function injectMediaOverlay() {
     const overlayHTML = `
     <div id="media-overlay" class="fixed inset-0 bg-black hidden flex flex-col overflow-hidden" style="z-index: 1000000 !important;">
         <!-- Doc Container -->
-        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-white flex justify-start">
-            <iframe id="doc-frame" class="border-0 bg-white origin-top-left"
+        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-white flex justify-center">
+            <iframe id="doc-frame" class="border-0 bg-white origin-top"
                 style="width: 100%; min-height: 100%; transition: transform 0.2s ease;" src="">
             </iframe>
         </div>
@@ -144,20 +145,35 @@ function enterMediaMode(mode, url) {
             }
         });
 
+        // [FIX] Always re-bind events when entering media mode
+        bindOverlayEvents();
+
         requestFullscreenSafe();
         sessionStartTime = new Date();
+
+        // [FIX] Give focus to the close button so Esc works immediately
+        const closeBtn = document.querySelector('.close-video-btn');
+        if (closeBtn) {
+            setTimeout(() => closeBtn.focus(), 100);
+        }
     } catch (err) {
         console.error("[Media] Error in enterMediaMode:", err);
     }
 }
 
+// Flag to prevent recursive closing
+let isClosingModal = false;
+
 /**
  * Closes the Media Overlay
  */
 function closeModal() {
+    if (isClosingModal) return;
     const overlay = document.getElementById('media-overlay');
-    if (!overlay) return;
+    if (!overlay || overlay.classList.contains('hidden')) return;
 
+    isClosingModal = true;
+    console.log("[Media] Closing modal...");
     overlay.classList.add('hidden');
     document.body.style.overflow = '';
 
@@ -180,30 +196,148 @@ function closeModal() {
     document.getElementById('video-frame').src = "";
     document.getElementById('doc-frame').src = "";
 
-    currentMode = null;
-    exitFullscreenSafe();
-
     if (sessionStartTime) {
         const endTime = new Date();
         const duration = (endTime - sessionStartTime) / 1000;
         console.log(`[Tracking] Session duration: ${duration}s`);
 
-        // Dispatch event for Firebase to pick up
+        // Dispatch event for Firebase
         const modeUpper = currentMode ? currentMode.toUpperCase() : 'UNKNOWN';
+        const frameSrc = document.getElementById(currentMode + '-frame') ? document.getElementById(currentMode + '-frame').src : "";
+
         window.dispatchEvent(new CustomEvent('vibe-log-activity', {
             detail: {
-                action: modeUpper, // 'VIDEO' or 'DOC'
+                action: modeUpper,
                 duration: Math.round(duration),
-                metadata: { src: document.getElementById(currentMode + '-frame').src }
+                metadata: { src: frameSrc }
             }
         }));
 
         sessionStartTime = null;
     }
+
+    currentMode = null;
+    exitFullscreenSafe();
+
+    // Explicitly unbind from top window on close as a safety measure
+    cleanupOverlayEvents();
+
+    // Reset flag after transitions
+    setTimeout(() => { isClosingModal = false; }, 300);
 }
 
 // --- Zoom Logic ---
 
+// --- Event Listeners ---
+
+const handleEscKey = (e) => {
+    if (e.key === "Escape") {
+        const overlay = document.getElementById('media-overlay');
+        if (overlay && !overlay.classList.contains('hidden')) {
+            console.log("[Media] Esc pressed, closing modal");
+            closeModal();
+        }
+    }
+};
+
+/**
+ * [FIXED] Robust event binding to handle iframe transitions and cross-origin safety
+ */
+function bindOverlayEvents() {
+    // 1. Local Window & Document
+    window.removeEventListener('keydown', handleEscKey, true);
+    window.addEventListener('keydown', handleEscKey, true);
+    document.removeEventListener('keydown', handleEscKey, true);
+    document.addEventListener('keydown', handleEscKey, true);
+
+    // 2. Top Window (Persists across tab switches in Master Page context)
+    // We store the handler reference on win itself to properly remove it later
+    const bindTo = (win) => {
+        try {
+            if (!win) return;
+            // Remove previous version regardless of which unit page added it
+            if (win._vibeEscHandler) {
+                win.removeEventListener('keydown', win._vibeEscHandler, true);
+            }
+            // Bind new one
+            win._vibeEscHandler = handleEscKey;
+            win.addEventListener('keydown', win._vibeEscHandler, true);
+        } catch (e) { /* Cross-origin blocked */ }
+    };
+
+    if (window.top && window.top !== window) {
+        bindTo(window.top);
+    }
+
+    // 3. Fullscreen Events
+    const docs = [document];
+    try { if (window.top && window.top.document) docs.push(window.top.document); } catch (e) { }
+
+    docs.forEach(doc => {
+        try {
+            doc.removeEventListener('fullscreenchange', onFullscreenChange);
+            doc.removeEventListener('webkitfullscreenchange', onFullscreenChange);
+            doc.addEventListener('fullscreenchange', onFullscreenChange);
+            doc.addEventListener('webkitfullscreenchange', onFullscreenChange);
+        } catch (e) { }
+    });
+}
+
+function cleanupOverlayEvents() {
+    window.removeEventListener('keydown', handleEscKey, true);
+    document.removeEventListener('keydown', handleEscKey, true);
+
+    if (window.top && window.top._vibeEscHandler) {
+        try {
+            window.top.removeEventListener('keydown', window.top._vibeEscHandler, true);
+            window.top._vibeEscHandler = null;
+        } catch (e) { }
+    }
+
+    const docs = [document];
+    try { if (window.top && window.top.document) docs.push(window.top.document); } catch (e) { }
+
+    docs.forEach(doc => {
+        try {
+            doc.removeEventListener('fullscreenchange', onFullscreenChange);
+            doc.removeEventListener('webkitfullscreenchange', onFullscreenChange);
+        } catch (e) { }
+    });
+}
+
+// Ensure cleanup on tab switch/close
+window.addEventListener('pagehide', cleanupOverlayEvents);
+window.addEventListener('unload', cleanupOverlayEvents);
+
+bindOverlayEvents();
+
+function onFullscreenChange() {
+    // Multi-phase check to handle browser state lag
+    const check = () => {
+        const getFsElement = () => {
+            try {
+                return document.fullscreenElement || document.webkitFullscreenElement ||
+                    (window.top && window.top.document && (window.top.document.fullscreenElement || window.top.document.webkitFullscreenElement));
+            } catch (e) { return document.fullscreenElement || document.webkitFullscreenElement; }
+        };
+
+        const isFs = !!getFsElement();
+        if (!isFs && !isClosingModal) {
+            const overlay = document.getElementById('media-overlay');
+            if (overlay && !overlay.classList.contains('hidden')) {
+                console.log("[Media] Verified exit, closing modal");
+                closeModal();
+            }
+        }
+    };
+
+    // Trigger checks at multiple intervals
+    check();
+    setTimeout(check, 100);
+    setTimeout(check, 300);
+}
+
+// Update autoFitZoom to be more aggressive with width
 function autoFitZoom() {
     if (currentMode !== 'doc') return;
     const wrapper = document.getElementById('doc-wrapper');
@@ -213,30 +347,24 @@ function autoFitZoom() {
     const availableWidth = wrapper.clientWidth;
     const isMobile = window.innerWidth < 768;
 
+    // Use full width for both desktop and mobile
+    iframe.style.width = '100.2%';
+    iframe.style.maxWidth = 'none';
+
+    // Standard Google Doc content width is ~820px
+    const baseWidth = 820;
+    let scale = availableWidth / baseWidth;
+
     if (isMobile) {
-        // [MODIFIED] True Full Width for Mobile
-        // No fixed width, no grey margins. Use 100% of available space.
-        iframe.style.width = '100.2%'; // Slight overshoot to hide potential doc-internal margins
-        iframe.style.maxWidth = 'none';
-
-        // If it's Pageless, it will reflow to the phone's width.
-        // If it's Page Layout, we scale it to fit the screen.
-        let scale = availableWidth / 850; // Use the standard A4 width as base for Page Layout
-
-        // If the user uses Pageless, we should actually be at 1.0 zoom for best quality
-        // But since we can't detect Pageless mode easily via iframe src, 
-        // we'll assume the user wants readable text and stick to a minimum scale.
-        const minReadableScale = (availableWidth / 550); // Target a virtual width of 550px for readability
+        const minReadableScale = (availableWidth / 550);
         if (scale < minReadableScale) scale = minReadableScale;
-
-        applyZoom(scale);
     } else {
-        // Desktop: Fixed 850px width centered
-        iframe.style.width = '850px';
-        let scale = (availableWidth - 20) / BASE_DOC_WIDTH;
-        if (scale > 1.2) scale = 1.2;
-        applyZoom(scale);
+        // Desktop: Allow full expansion ("Page Width")
+        if (scale < 0.5) scale = 0.5;
+        // No upper limit to ensure it fills the screen width
     }
+
+    applyZoom(scale);
 }
 
 function applyZoom(scale) {
@@ -244,34 +372,26 @@ function applyZoom(scale) {
     const iframe = document.getElementById('doc-frame');
     if (!iframe) return;
 
-    const isMobile = window.innerWidth < 768;
-
     iframe.style.transform = `scale(${scale})`;
 
-    if (isMobile) {
-        // [COMPENSATE WIDTH] 
-        // If we scale down by 0.5, we need the width to be 200% (100/0.5) 
-        // so that the final visual width is 100%.
-        iframe.style.width = `${100 / scale}%`;
-        iframe.style.height = `${100 / scale}%`;
-        iframe.style.marginBottom = `${-(1 - scale) * 100 / scale}%`;
-    } else {
-        // Desktop handles centering differently
-        iframe.style.width = '850px';
-        iframe.style.height = `${100 / scale}%`;
-        iframe.style.marginBottom = `${-(1 - scale) * 100}%`;
+    // Width compensation
+    // We set the real width to 100/scale, so when scaled by 'scale', it looks like 100% width
+    iframe.style.width = `${100 / scale}%`;
+    iframe.style.height = `${100 / scale}%`;
 
-        // Ensure desktop is centered if width < 100%
-        const wrapper = document.getElementById('doc-wrapper');
-        if (wrapper) wrapper.style.justifyContent = 'center';
-    }
+    // Vertical spacing compensation (origin-top creates whitespace at bottom)
+    iframe.style.marginBottom = `${-(1 - scale) * 100 / scale}%`;
+
+    // Horizontal centering is handled by flex 'justify-center' on the wrapper
+    // and 'origin-top' (which defaults to center horizontal) on the iframe.
+    iframe.style.marginLeft = '0';
+    iframe.style.marginRight = '0';
 }
 
 
 // --- Helper Functions ---
 
 function requestFullscreenSafe() {
-    // Try to fullscreen the top document if same-origin, otherwise use local
     let target = document.documentElement;
     try {
         if (window.top && window.top.document) {
@@ -281,44 +401,36 @@ function requestFullscreenSafe() {
 
     if (target.requestFullscreen) {
         target.requestFullscreen().catch(err => console.log(err));
-    } else if (target.webkitRequestFullscreen) { /* Safari */
+    } else if (target.webkitRequestFullscreen) {
         target.webkitRequestFullscreen();
     }
 }
 
 function exitFullscreenSafe() {
-    if (document.fullscreenElement || document.webkitFullscreenElement) {
+    const fsElement = document.fullscreenElement || document.webkitFullscreenElement ||
+        (window.top && window.top.document && (window.top.document.fullscreenElement || window.top.document.webkitFullscreenElement));
+
+    if (fsElement) {
         if (document.exitFullscreen) {
-            document.exitFullscreen().catch(err => console.log(err));
-        } else if (document.webkitExitFullscreen) { /* Safari */
+            document.exitFullscreen().catch(() => { });
+        } else if (document.webkitExitFullscreen) {
             document.webkitExitFullscreen();
         }
+
+        // Also try top window if possible
+        try {
+            if (window.top && window.top.document && window.top.document.exitFullscreen) {
+                window.top.document.exitFullscreen().catch(() => { });
+            }
+        } catch (e) { }
     }
 }
-
-// --- Event Listeners ---
 
 window.addEventListener('resize', () => {
     if (currentMode === 'doc' && !document.getElementById('media-overlay').classList.contains('hidden')) {
         autoFitZoom();
     }
 });
-
-document.addEventListener('keydown', (e) => {
-    if (e.key === "Escape") closeModal();
-});
-
-function onFullscreenChange() {
-    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-        const overlay = document.getElementById('media-overlay');
-        if (overlay && !overlay.classList.contains('hidden')) {
-            closeModal();
-        }
-    }
-}
-
-document.addEventListener('fullscreenchange', onFullscreenChange);
-document.addEventListener('webkitfullscreenchange', onFullscreenChange);
 
 // --- Animation Logic ---
 

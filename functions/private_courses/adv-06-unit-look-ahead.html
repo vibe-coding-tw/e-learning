@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【學習 6-4】預覽控制 (Look-ahead Control) 觀念 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-slate-900 to-emerald-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1555664424-778a1e5e1b48?q=80&w=2048&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 6 - 單元 4
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                流暢自駕的秘密：<br><span class="text-emerald-400">預覽控制 (Look-ahead)</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-emerald-100 max-w-2xl mx-auto font-light leading-relaxed">
+                為何機器人必須向前看？學習如何透過預覽遠方目標點，實現平滑且高速的自動導航。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Section 1: Why Look Ahead? -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🔭</span> 1. 為什麼要「往遠處看」？ (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
+                            <ul class="space-y-4">
+                                <li class="flex gap-3">
+                                    <span class="text-emerald-500 font-bold">●</span>
+                                    <span><strong>反應延遲問題：</strong>感測器擷取、AI 計算到馬達轉向都有延遲。如果只看車頭正下方，高速時會衝出彎道。</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="text-emerald-500 font-bold">●</span>
+                                    <span><strong>平滑度 (Smoothing)：</strong>預覽遠方可以讓轉向動作更提早、更柔和，減少頻繁的左右震盪。</span>
+                                </li>
+                            </ul>
+                            <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
+                                <h4 class="font-bold text-emerald-900 mb-2 flex items-center gap-2">
+                                    <span>🚲</span> 學習任務：生活思維
+                                </h4>
+                                <p class="text-sm text-gray-700 leading-relaxed">
+                                    想像你騎腳踏車時，視線是盯著前輪看，還是前方 5 公尺的路面？思考這對你轉彎穩定性的影響。
+                                </p>
+                            </div>
+                        </div>
+                        <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100">
+                            <img src="/assets/adv-06/look_ahead_concept.png" alt="Look-ahead Concept Visualization"
+                                class="w-full h-auto">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Mathematical Selection -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">📐</span> 2. 預覽點 (Look-ahead Point) 的數學選取 (25 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 order-2 md:order-1">
+                            <img src="/assets/adv-06/look_ahead_geometry.png" alt="Look-ahead Geometry and ROI"
+                                class="w-full h-auto">
+                        </div>
+                        <div class="space-y-6 order-1 md:order-2">
+                            <div class="bg-slate-900 border-l-4 border-blue-500 p-6 rounded-r-xl">
+                                <h4 class="text-blue-400 font-bold mb-4 uppercase tracking-wider text-xs">影像區域與導航點</h4>
+                                <ul class="text-white font-light space-y-3 text-sm">
+                                    <li><strong class="text-blue-300">影像範圍：</strong> $320 \times 240$</li>
+                                    <li><strong class="text-blue-300">目標導航點：</strong> 選取中上方（例如 $Y=80$）</li>
+                                    <li><strong class="text-blue-300">作用：</strong> 提早偵測彎道趨勢，而非僅修正當下偏差。</li>
+                                </ul>
+                            </div>
+                            <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                                <h4 class="font-bold text-slate-800 mb-4 items-center flex gap-2"><span>🏎️</span>
+                                    預覽距離與速度的權衡</h4>
+                                <ul class="space-y-3 text-sm text-slate-600">
+                                    <li class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                        <span><strong>低速時：</strong>預覽點近，增加路徑精準度。</span>
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                        <span><strong>高速時：</strong>預覽點遠，為轉向爭取緩衝時間。</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Pure Pursuit -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-purple-600 to-pink-600"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🔄</span> 3. 純追蹤 (Pure Pursuit) 模型預習 (15 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed">
+                                <strong>核心挑戰：</strong>如何將「預覽點座標」轉換為「轉向指令」？這比單純的 Error 更符合車輛的運動學。
+                            </p>
+                            <div class="bg-purple-50 p-6 rounded-2xl border border-purple-100">
+                                <h4 class="font-bold text-purple-900 mb-3 flex items-center gap-2">
+                                    <span>🧠</span> 思考任務：切西瓜現象
+                                </h4>
+                                <p class="text-sm text-gray-700 leading-relaxed">
+                                    觀察不同預覽距離下的軌跡模擬。理解為何預覽過遠會導致「截彎取直」？（想像駕駛太早切入彎道內側）。
+                                </p>
+                            </div>
+                            <p class="text-sm text-slate-500 italic">
+                                "為什麼鏡頭要往下傾斜？學習『預測點』的概念，提早為即將到來的彎道做準備。"
+                            </p>
+                        </div>
+                        <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100">
+                            <img src="/assets/adv-06/adaptive_look_ahead.png"
+                                alt="Adaptive Look-ahead and Speed Relationship" class="w-full h-auto">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Assignments -->
+        <section>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：預覽控制實戰</h2>
+            <p class="text-center text-gray-500 mb-12">掌握動態調整的藝術，挑戰最流暢的過彎路徑。</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 4-1 -->
+                <div onclick="openSubmissionModal('adv-06-multilevel-roi', '【作業 6-4-1】實作「多層次 ROI」檢測器')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">📡</span>
+                            <span class="bg-emerald-50 text-emerald-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-emerald-600 transition">【作業
+                            4-1】多層次 ROI</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>在 Web 控制面板中，允許自定義影像掃描的高度。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>視覺化：在 Canvas 上畫出三條不同高度的掃描線</li>
+                                <li>誤差比對：分別計算近、中、遠三條線的質心</li>
+                                <li>切換機制：觀察相同彎道下，不同預覽高度的軌跡差異</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 4-2 -->
+                <div onclick="openSubmissionModal('adv-06-adaptive-lookahead', '【作業 6-4-2】自適應預覽距離 (Adaptive Look-ahead)')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">⚡</span>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
+                            4-2】自適應預覽</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>讓無人車根據目前的速度自動調整看多遠。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>撰寫邏輯：$Y_{target} = f(Speed)$ (速度愈快、看愈遠)</li>
+                                <li>穩定性：測試自動預覽是否能平抑制直線區的高速晃動</li>
+                                <li>精準度：測試彎道減速時，預覽點下降是否能提升精準度</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 4-3 -->
+                <div onclick="openSubmissionModal('adv-06-lookahead-debug', '【作業 6-4-3】預覽點與 P-Control 整合除錯')"
+                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="text-4xl">🔧</span>
+                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">45
+                                min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
+                            4-3】整合除錯</h3>
+                        <div class="text-sm text-gray-600 space-y-3">
+                            <p><strong>任務內容：</strong>解決預覽控制帶來的「內輪差」與「切彎」問題。</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
+                                <li>修正偏差：加入比例係數，防止太早切入彎道內側</li>
+                                <li>視覺化回饋：畫線連結「車頭中心」與「遠方預覽點」</li>
+                                <li>目標：將幾何預覽轉化為具體的馬達控制訊號</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階課程 6 - 單元 4</span>
+                <span class="hidden md:inline">|</span>
+                <span>預覽控制 (Look-ahead Control) 觀念</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/z0hYhCD8FX4",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vQDUVkSG6I19Bd2jWKA3nTgtq6-0j39lTggI0i1QTupl23HOrmH540FJcoePFEUZzTkRTtkvxsX7Mlz/pub?embedded=true"
+        };
+    </script>
+    <script src="/course-shared.js"></script>
+</body>
+
+</html>
