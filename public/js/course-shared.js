@@ -32,6 +32,8 @@ let sessionStartTime = null;
 let currentScale = 1.0;
 const BASE_DOC_WIDTH = 850;
 const boundDocs = new Set(); // To prevent duplicate event listeners
+let globalLessonsData = null; // [NEW] Cache for lessons.json
+let globalCourseConfigs = null; // [NEW] Cache for Firestore configs
 
 /**
  * Injects the standard Media Overlay HTML into the body
@@ -122,7 +124,22 @@ function enterMediaMode(mode, url) {
 
         if (mode === 'doc') {
             docWrapper.classList.remove('hidden');
-            if (targetSrc) docFrame.src = targetSrc;
+
+            // [NEW] Native Mobile Doc Feel Transformation
+            const isMobile = window.innerWidth < 768;
+            let finalSrc = targetSrc;
+            if (isMobile && targetSrc.includes('docs.google.com')) {
+                console.log("[Media] Mobile detected, optimizing Google Doc URL...");
+                // Transform to mobilebasic for native reflow
+                if (finalSrc.includes('/edit')) {
+                    finalSrc = finalSrc.replace(/\/edit.*$/, '/mobilebasic');
+                } else if (!finalSrc.includes('/mobilebasic')) {
+                    // Append mobilebasic if not present
+                    finalSrc = finalSrc.includes('?') ? finalSrc + '&rm=mobile' : finalSrc + '/mobilebasic';
+                }
+            }
+
+            if (finalSrc) docFrame.src = finalSrc;
             setTimeout(autoFitZoom, 100);
         } else if (mode === 'video') {
             videoWrapper.classList.remove('hidden');
@@ -347,6 +364,18 @@ function autoFitZoom() {
     const availableWidth = wrapper.clientWidth;
     const isMobile = window.innerWidth < 768;
 
+    // [NEW] If this is a mobile-optimized Google Doc, DISABLE manual scaling
+    // This allows Google's native mobile engine to handle reflow perfectly.
+    if (isMobile && iframe.src.includes('docs.google.com') && iframe.src.includes('mobile')) {
+        console.log("[Media] Native Mobile Doc detected, using standard scaling.");
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.transform = 'none';
+        iframe.style.marginBottom = '0';
+        return;
+    }
+
+    // Standard Scaling Logic (for Desktop or non-Google-Doc mobile)
     // Use full width for both desktop and mobile
     iframe.style.width = '100.2%';
     iframe.style.maxWidth = 'none';
@@ -356,10 +385,13 @@ function autoFitZoom() {
     let scale = availableWidth / baseWidth;
 
     if (isMobile) {
-        const minReadableScale = (availableWidth / 550);
+        // Increase zoom on mobile (smaller denominator = larger scale)
+        // This ensures the document text is large enough to read on small screens
+        const minReadableScale = (availableWidth / 450);
         if (scale < minReadableScale) scale = minReadableScale;
     } else {
         // Desktop: Allow full expansion ("Page Width")
+        // Keeping this untouched to satisfy user requirement
         if (scale < 0.5) scale = 0.5;
         // No upper limit to ensure it fills the screen width
     }
@@ -569,6 +601,22 @@ function initFirebaseFeatures() {
              }
         };
 
+        window.firebaseSubmitAssignment = async (data) => {
+             // ...
+        }
+
+        // [NEW] Helper to get dynamic configs
+        window.firebaseGetCourseConfigs = async (courseId) => {
+            try {
+                const getCourseConfigs = httpsCallable(functions, 'getCourseConfigs');
+                const result = await getCourseConfigs({ courseId });
+                return result.data;
+            } catch (e) {
+                console.error("Failed to fetch course configs:", e);
+                return null;
+            }
+        };
+
         console.log("[Firebase] Initialized.");
     `;
 
@@ -588,6 +636,19 @@ function injectSubmissionModal() {
             <input type="hidden" id="sub-assignment-id">
             <input type="hidden" id="sub-assignment-title">
             
+            <div id="github-classroom-section" class="mb-6 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 hidden">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-xl">🐙</span>
+                    <h4 class="font-bold text-gray-800">GitHub Classroom</h4>
+                </div>
+                <p class="text-xs text-gray-600 mb-4">本單元已整合 GitHub Classroom。請先領取作業範本，完成後將您的 Repo 連結貼到下方。</p>
+                <a id="sub-github-link" href="#" target="_blank"
+                    class="block w-full text-center py-2 bg-slate-800 text-white rounded-lg font-bold hover:bg-slate-700 transition shadow-md flex items-center justify-center gap-2">
+                    <span>🚀</span> 領取 GitHub Classroom 作業
+                </a>
+                <p class="text-[10px] text-gray-400 mt-2 italic text-center">※ 點擊後將連往 GitHub 頁面並自動建立您的私有 Repo</p>
+            </div>
+
             <div class="mb-5">
                 <label class="block text-sm font-bold text-gray-700 mb-2">作業名稱</label>
                 <div id="sub-display-title" class="text-gray-900 font-medium bg-gray-100 p-3 rounded"></div>
@@ -620,15 +681,90 @@ function injectSubmissionModal() {
 }
 
 // Global functions for Modal
-window.openSubmissionModal = function (assignmentId, title) {
+window.openSubmissionModal = async function (assignmentId, title) {
     document.getElementById('sub-assignment-id').value = assignmentId;
     document.getElementById('sub-assignment-title').value = title;
     document.getElementById('sub-display-title').textContent = title;
     document.getElementById('sub-url').value = '';
     document.getElementById('sub-note').value = '';
 
+    const githubSection = document.getElementById('github-classroom-section');
+    const githubLink = document.getElementById('sub-github-link');
+
+    let classroomUrl = null;
+
+    // 0. Try Dynamic Configs (Firestore) first [NEW]
+    try {
+        const pathParts = window.location.pathname.split('/');
+        const fileName = pathParts[pathParts.length - 1];
+
+        if (typeof window.firebaseGetCourseConfigs === 'function') {
+            if (!globalCourseConfigs) {
+                globalCourseConfigs = await window.firebaseGetCourseConfigs();
+            }
+
+            if (globalCourseConfigs) {
+                for (const [cid, cfg] of Object.entries(globalCourseConfigs)) {
+                    if (cfg && cfg.githubClassroomUrls && cfg.githubClassroomUrls[fileName]) {
+                        classroomUrl = resolveClassroomUrl(cfg.githubClassroomUrls[fileName]);
+                        break;
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.error("[CourseShared] Dynamic config lookup failed:", e);
+    }
+
+    // 1. Try local RESOURCES first (unit-level manual override)
+    if (typeof window.RESOURCES !== 'undefined' && window.RESOURCES.githubClassroomUrl) {
+        classroomUrl = resolveClassroomUrl(window.RESOURCES.githubClassroomUrl);
+    }
+
+    // 2. Fallback to centralized lessons.json
+    if (!classroomUrl) {
+        try {
+            if (!globalLessonsData) {
+                const resp = await fetch('/lessons.json');
+                globalLessonsData = await resp.json();
+            }
+
+            const pathParts = window.location.pathname.split('/');
+            const fileName = pathParts[pathParts.length - 1];
+
+            // Search all courses for this filename key
+            for (const course of globalLessonsData) {
+                if (course.githubClassroomUrls && course.githubClassroomUrls[fileName]) {
+                    classroomUrl = resolveClassroomUrl(course.githubClassroomUrls[fileName]);
+                    break;
+                }
+            }
+        } catch (e) {
+            console.error("[CourseShared] Fallback link fetch failed:", e);
+        }
+    }
+
+    if (classroomUrl) {
+        githubSection.classList.remove('hidden');
+        githubLink.href = classroomUrl;
+    } else {
+        githubSection.classList.add('hidden');
+    }
+
     document.getElementById('submission-modal').classList.remove('hidden');
 };
+
+/**
+ * Helper to pick the right URL based on teacher map
+ */
+function resolveClassroomUrl(urlConfig) {
+    if (typeof urlConfig === 'string') return urlConfig;
+    if (typeof urlConfig === 'object') {
+        // Fallback to default or first key
+        return urlConfig.default || Object.values(urlConfig)[0];
+    }
+    return null;
+}
 
 window.closeSubmissionModal = function () {
     document.getElementById('submission-modal').classList.add('hidden');

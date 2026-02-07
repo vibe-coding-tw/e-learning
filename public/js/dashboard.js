@@ -44,6 +44,41 @@ let dashboardData = null;
 let lessonsMap = {};
 let allLessons = [];
 
+const MASTER_UNIT_MAPPING = {
+    "00-master-wifi-motor.html": ["00-unit-wifi-setup.html", "00-unit-motor-ramping.html"],
+    "01-master-getting-started.html": ["01-unit-developer-identity.html", "01-unit-vscode-setup.html", "01-unit-vscode-online.html"],
+    "02-master-web-app.html": ["02-unit-html5-basics.html", "02-unit-flexbox-layout.html", "02-unit-ui-ux-standards.html"],
+    "03-master-web-ble.html": ["03-unit-ble-security.html", "03-unit-ble-async.html", "03-unit-typed-arrays.html"],
+    "04-master-remote-control.html": ["04-unit-control-panel.html", "04-unit-data-json.html", "04-unit-flow-logic.html"],
+    "05-master-touch-events.html": ["05-unit-touch-basics.html", "05-unit-long-press.html", "05-unit-prevent-default.html"],
+    "06-master-joystick-lab.html": ["06-unit-touch-vs-mouse.html", "06-unit-canvas-joystick.html", "06-unit-joystick-math.html"],
+    "basic-01-master-environment.html": ["basic-01-unit-esp32-architecture.html", "basic-01-unit-platformio-setup.html", "basic-01-unit-drivers-ports.html"],
+    "basic-02-master-ota-architecture.html": ["basic-02-unit-partition-table.html", "basic-02-unit-ota-principles.html", "basic-02-unit-ota-security.html"],
+    "basic-03-master-io-mapping.html": ["basic-03-unit-pinout.html", "basic-03-unit-pullup-debounce.html", "basic-03-unit-adc-resolution.html"],
+    "basic-04-master-pwm-control.html": ["basic-04-unit-pwm-basics.html", "basic-04-unit-h-bridge.html", "basic-04-unit-ledc-syntax.html"],
+    "basic-05-master-ble-gatt.html": ["basic-05-unit-gatt-structure.html", "basic-05-unit-advertising-connection.html", "basic-05-unit-ble-properties.html"],
+    "basic-06-master-http-web.html": ["basic-06-unit-fetch-api.html", "basic-06-unit-http-request.html", "basic-06-unit-cors-security.html"],
+    "basic-07-master-wifi-modes.html": ["basic-07-unit-wifi-ap-sta.html", "basic-07-unit-http-lifecycle.html", "basic-07-unit-async-webserver.html"],
+    "basic-08-master-joystick-math.html": ["basic-08-unit-joystick-mapping.html", "basic-08-unit-unicycle-model.html", "basic-08-unit-response-curves.html"],
+    "basic-09-master-multitasking.html": ["basic-09-unit-millis.html", "basic-09-unit-hardware-timer.html", "basic-09-unit-sampling-rate.html"],
+    "basic-10-master-fsm.html": ["basic-10-unit-fsm.html", "basic-10-unit-ui-design.html", "basic-10-unit-state-consistency.html"],
+    "adv-01-master-s3-cam.html": ["adv-01-unit-s3-interfaces.html", "adv-01-unit-mjpeg-stream.html", "adv-01-unit-jpeg-quality.html"],
+    "adv-02-master-video.html": ["adv-02-unit-video-streaming.html", "adv-02-unit-canvas-image.html", "adv-02-unit-bandwidth-fps.html"],
+    "adv-03-master-ble-advanced.html": ["adv-03-unit-ble-notify.html", "adv-03-unit-json-serialization.html", "adv-03-unit-ble-mtu.html"],
+    "adv-04-master-sensors.html": ["adv-04-unit-i2c-spi.html", "adv-04-unit-json-rest.html", "adv-04-unit-filter-algorithms.html"],
+    "adv-05-master-cv.html": ["adv-05-unit-feature-extraction.html", "adv-05-unit-centroid-error.html", "adv-05-unit-closed-loop.html"],
+    "adv-06-master-cv-advanced.html": ["adv-06-unit-threshold-filter.html", "adv-06-unit-centroid-algorithm.html", "adv-06-unit-hsv-math.html", "adv-06-unit-look-ahead.html"],
+    "adv-07-master-ui-framework.html": ["adv-07-unit-ui-framework.html", "adv-07-unit-chart-canvas.html", "adv-07-unit-json-parsing.html", "adv-07-unit-event-polling.html"],
+    "adv-08-master-image-processing.html": ["adv-08-unit-color-spaces.html", "adv-08-unit-error-calculation.html", "adv-08-unit-p-control.html", "adv-08-unit-mobilenet-ssd.html"],
+    "adv-09-master-ai-recognition.html": ["adv-09-unit-cnn-audio.html", "adv-09-unit-teachable-machine.html", "adv-09-unit-webspeech-api.html", "adv-09-unit-flow-control.html"],
+    "adv-10-master-diff-drive.html": ["adv-10-unit-icc-geometry.html", "adv-10-unit-api-design.html", "adv-10-unit-pwm-limits.html"],
+    "adv-11-master-photoelectric.html": ["adv-11-unit-sensor-principles.html", "adv-11-unit-hardware-interrupts.html", "adv-11-unit-speed-algorithms.html"],
+    "adv-12-master-pid.html": ["adv-12-unit-pid-control.html", "adv-12-unit-pid-math.html", "adv-12-unit-code-logic.html"],
+    "adv-13-master-robustness.html": ["adv-13-unit-robustness.html", "adv-13-unit-system-perf.html", "adv-13-unit-technical-narrative.html"],
+    "adv-14-master-debugging-art.html": ["adv-14-unit-debugging-art.html", "adv-14-unit-kpi-definition.html", "adv-14-unit-refactoring.html"],
+    "adv-15-master-architecture.html": ["adv-15-unit-data-flow.html", "adv-15-unit-ble-async.html", "adv-15-unit-pid-simulation.html", "adv-15-unit-image-dma.html"]
+};
+
 // [Global UI Init] Check for Iframe Mode immediately
 (function initIframeMode() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -115,15 +150,18 @@ async function loadDashboard() {
         myRole = data.role;
         console.log("Role:", myRole);
 
-        // [MODIFIED] Access Control
-        if (myRole === 'student') {
-            // Student View
-            renderStudentDashboard(data);
-        } else if (myRole === 'admin' || myRole === 'teacher') {
-            // Admin/Teacher View
+        // [MODIFIED] Access Control: Global Admin/Teacher OR Course-Specific Teacher
+        const isAuthorizedTeacher = data.courseConfigs && Object.keys(data.courseConfigs).length > 0;
+
+        if (myRole === 'admin' || myRole === 'teacher' || isAuthorizedTeacher) {
+            // Admin/Teacher View (Management)
             renderAdminDashboard(data);
             setupAdminFeatures();
             setupGradingFunctions();
+            setupSettingsFeature();
+        } else if (myRole === 'student') {
+            // Student View (Personal Stats)
+            renderStudentDashboard(data);
         } else {
             showAccessDenied();
         }
@@ -320,11 +358,35 @@ function renderAdminDashboard(data) {
     loadingState.classList.add('hidden');
     dashboardContent.classList.remove('hidden');
 
-    // Unhide Manage Link and Admin Tab
-
-
+    // Unhide Manage Link and Admin Tab (Admin Only)
     const adminTabBtn = document.getElementById('tab-btn-admin');
-    if (adminTabBtn) adminTabBtn.classList.remove('hidden');
+    if (adminTabBtn) {
+        if (myRole === 'admin') {
+            adminTabBtn.classList.remove('hidden');
+        } else {
+            adminTabBtn.classList.add('hidden');
+        }
+    }
+
+    // Settings Tab (Admin OR Teacher with authorized courses)
+    const settingsTabBtn = document.getElementById('tab-btn-settings');
+    if (settingsTabBtn) {
+        // [MODIFIED] If filtered, check if authorized for THIS course. If not filtered, check if authorized for ANY.
+        let isAuthorized = false;
+        if (myRole === 'admin') {
+            isAuthorized = true;
+        } else if (filterCourseId) {
+            isAuthorized = !!(data.courseConfigs && data.courseConfigs[filterCourseId]);
+        } else {
+            isAuthorized = !!(data.courseConfigs && Object.keys(data.courseConfigs).length > 0);
+        }
+
+        if (isAuthorized) {
+            settingsTabBtn.classList.remove('hidden');
+        } else {
+            settingsTabBtn.classList.add('hidden');
+        }
+    }
 
     // Stats
     stats.students.textContent = data.summary.totalStudents;
@@ -674,38 +736,106 @@ window.switchTab = function (tabName) {
         activeBtn.classList.remove('text-gray-500', 'hover:text-gray-700', 'border-transparent');
         activeBtn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
     }
+
+    // [NEW] Trigger specific tab data loading
+    if (tabName === 'settings') {
+        renderSettingsTab();
+    }
+    if (tabName === 'admin') {
+        renderAdminConsole();
+    }
 };
 
 // --- Admin Features ---
 function setupAdminFeatures() {
-    // adminPanel.classList.remove('hidden'); // No longer needed as it's inside a tab
-
-    adminSetBtn.onclick = async () => {
-        const email = adminEmailInput.value.trim();
-        const role = adminRoleSelect.value;
-        if (!email) return;
-
-        adminSetBtn.disabled = true;
-        adminSetBtn.textContent = "Processing...";
-        adminMsg.textContent = "";
-        adminMsg.className = "text-sm mt-2 text-gray-600 h-5";
-
-        try {
-            const setUserRole = httpsCallable(functions, 'setUserRole');
-            const res = await setUserRole({ email, role });
-            adminMsg.textContent = `✅ ${res.data.message}`;
-            adminMsg.className = "text-sm mt-2 text-green-600 h-5 font-bold";
-            adminEmailInput.value = "";
-        } catch (e) {
-            console.error(e);
-            adminMsg.textContent = `❌ Error: ${e.message}`;
-            adminMsg.className = "text-sm mt-2 text-red-600 h-5 font-bold";
-        } finally {
-            adminSetBtn.disabled = false;
-            adminSetBtn.textContent = "任命";
-        }
-    };
+    // Admin features are now initialized during renderAdminConsole
 }
+
+function renderAdminConsole() {
+    if (myRole !== 'admin') return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
+
+    const adminPanel = document.getElementById('admin-panel');
+    if (!adminPanel) return;
+
+    // Default structure (Heading only, role assignment removed)
+    let html = `
+        <h3 class="text-lg font-bold text-orange-800 mb-4 flex items-center gap-2">🛠️ 管理員控制台</h3>
+        <p id="admin-msg" class="text-sm mt-2 text-gray-600 h-5"></p>
+    `;
+
+    // ADDED: Course-Specific Teacher List
+    if (filterCourseId) {
+        const courseTitle = lessonsMap[filterCourseId] || filterCourseId;
+        const config = dashboardData?.courseConfigs?.[filterCourseId] || {};
+        const teachers = config.authorizedTeachers || [];
+
+        html += `
+            <div class="mt-8 pt-8 border-t border-orange-200">
+                <h4 class="text-md font-bold text-orange-900 mb-4 flex items-center gap-2">
+                    <span>🎓</span> ${escapeHtml(courseTitle)} 的合格老師清單
+                </h4>
+                
+                <div class="bg-white rounded-lg border border-orange-100 overflow-hidden mb-4 shadow-sm">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-orange-50 text-orange-800 font-bold">
+                            <tr>
+                                <th class="px-4 py-2">老師 Email</th>
+                                <th class="px-4 py-2 text-right">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-orange-50">
+                            ${teachers.length === 0 ? `<tr><td colspan="2" class="px-4 py-4 text-center text-gray-400 italic">目前尚無授權老師</td></tr>` :
+                teachers.map(email => `
+                                <tr>
+                                    <td class="px-4 py-3 font-mono text-gray-700">${escapeHtml(email)}</td>
+                                    <td class="px-4 py-3 text-right">
+                                        <button onclick="handleTeacherAuth('${filterCourseId}', '${email}', 'remove')" 
+                                            class="text-red-500 hover:underline text-xs">移除權限</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex gap-2 items-center">
+                    <input type="email" id="new-teacher-email" placeholder="新增合格老師 Email" 
+                        class="flex-grow px-4 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition">
+                    <button onclick="handleTeacherAuth('${filterCourseId}', document.getElementById('new-teacher-email').value, 'add')"
+                        class="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition font-bold text-sm shadow-md">
+                        新增授權
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    adminPanel.innerHTML = html;
+}
+
+
+window.handleTeacherAuth = async function (courseId, teacherEmail, action) {
+    if (!teacherEmail) return alert("請輸入 Email");
+    const msg = document.getElementById('admin-msg');
+
+    try {
+        if (msg) msg.textContent = action === 'add' ? "正在新增授權..." : "正在移除授權...";
+        const authFunc = httpsCallable(functions, 'authorizeTeacherForCourse');
+        await authFunc({ courseId, teacherEmail, action });
+
+        // alert("設定成功！");
+        // Reload dashboard data
+        loadDashboard();
+    } catch (e) {
+        console.error(e);
+        alert("設定失敗：" + e.message);
+    } finally {
+        if (msg) msg.textContent = "";
+    }
+};
 
 // --- Grading Logic ---
 function setupGradingFunctions() {
@@ -901,4 +1031,191 @@ function findCourseId(key) {
     }
 
     return key; // Fallback to original if no match found
+}
+
+// --- Course Settings Feature ---
+
+let courseConfigs = {};
+
+function setupSettingsFeature() {
+    const saveBtn = document.getElementById('btn-save-settings');
+    if (saveBtn) {
+        saveBtn.onclick = saveAllSettings;
+    }
+}
+
+async function renderSettingsTab() {
+    const container = document.getElementById('settings-container');
+    if (!container) return;
+
+    try {
+        // Use pre-loaded data instead of extra call
+        courseConfigs = dashboardData?.courseConfigs || {};
+
+        // 2. Render Course List (Only those the user is authorized for)
+        let authorizedLessons = allLessons.filter(l =>
+            myRole === 'admin' || courseConfigs[l.courseId]
+        );
+
+        // [NEW] If filtered to a specific course, only show that course in settings
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
+        if (filterCourseId) {
+            authorizedLessons = authorizedLessons.filter(l => l.courseId === filterCourseId);
+        }
+
+        if (authorizedLessons.length === 0) {
+            container.innerHTML = `<div class="text-center py-20 text-gray-400">目前尚無獲准管理的課程。</div>`;
+            return;
+        }
+
+        container.innerHTML = authorizedLessons.map(course => {
+            const configs = courseConfigs[course.courseId]?.githubClassroomUrls || {};
+
+            // List units already in configs
+            const unitFiles = new Set(Object.keys(configs));
+            // Also suggest the main master page if not listed
+            if (course.classroomUrl) {
+                const masterFile = course.classroomUrl.split('/').pop();
+                unitFiles.add(masterFile);
+            }
+
+            return `
+                <div class="p-6 bg-white border border-gray-100 rounded-xl shadow-sm space-y-4">
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-center border-b pb-3 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${course.icon || '📚'}</span>
+                            <div>
+                                <h4 class="font-bold text-gray-800">${escapeHtml(course.title)}</h4>
+                                <p class="text-[10px] text-gray-400 font-mono">${course.courseId}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4" id="units-list-${course.courseId}">
+                        ${(() => {
+                    const masterFile = course.classroomUrl ? course.classroomUrl.split('/').pop() : null;
+                    const units = (masterFile && MASTER_UNIT_MAPPING[masterFile]) ? [masterFile, ...MASTER_UNIT_MAPPING[masterFile]] : (masterFile ? [masterFile] : []);
+
+                    // Get any extra units from configs that might not be in mapping
+                    const configUnits = Object.keys(configs);
+                    const allUnits = Array.from(new Set([...units, ...configUnits]));
+
+                    return allUnits.map(fileName => renderUnitRow(course.courseId, fileName, configs[fileName])).join('');
+                })()}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (e) {
+        console.error("Failed to render settings:", e);
+        container.innerHTML = `<div class="text-red-500 p-4">載入失敗: ${e.message}</div>`;
+    }
+}
+
+function renderUnitRow(courseId, fileName, teacherMap = {}) {
+    // teacherMap: { "default": "...", "teacher_a": "..." }
+    const entries = Object.entries(teacherMap);
+    if (entries.length === 0) entries.push(['default', '']);
+
+    return `
+        <div class="unit-config-card bg-gray-50 p-4 rounded-xl border border-gray-100 hover:border-blue-100 transition shadow-sm relative group" 
+            data-course-id="${courseId}" data-file-name="${fileName}">
+            
+            <div class="mb-3">
+                <span class="text-[10px] font-bold text-blue-500 uppercase tracking-wider">Unit File</span>
+                <p class="text-sm font-mono text-gray-700 truncate" title="${fileName}">${fileName}</p>
+            </div>
+
+            <div class="space-y-3 teacher-links-container">
+                ${entries.map(([teacher, url], idx) => `
+                    <div class="space-y-1 teacher-link-row">
+                        <div class="flex justify-between items-center">
+                            <label class="text-[9px] font-bold text-gray-400 uppercase">${teacher === 'default' ? '預設連結 (自己)' : '教師 ID: ' + teacher}</label>
+                            <input type="hidden" class="teacher-id-input" value="${escapeHtml(teacher)}">
+                            ${teacher !== 'default' ? `<button onclick="this.parentElement.parentElement.remove()" class="text-[9px] text-red-400 hover:underline">刪除</button>` : ''}
+                        </div>
+                        <input type="url" placeholder="貼上 GitHub Classroom 邀請連結 (https://classroom.github.com/a/...)" 
+                            value="${escapeHtml(url)}" 
+                            class="teacher-url-input w-full px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                    </div>
+                `).join('')}
+            </div>
+            
+            <button onclick="addTeacherRow(this)" class="mt-3 text-[10px] text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1 opacity-60 hover:opacity-100 transition">
+                <span>➕</span> 設定其他教師連結 (進階)
+            </button>
+        </div>
+    `;
+}
+
+window.addTeacherRow = function (btn) {
+    const teacherId = prompt("請輸入教師 ID (例如: teacher_vibe):");
+    if (!teacherId) return;
+
+    const container = btn.previousElementSibling;
+    const div = document.createElement('div');
+    div.className = 'space-y-1 teacher-link-row';
+    div.innerHTML = `
+        <div class="flex justify-between items-center">
+            <label class="text-[9px] font-bold text-gray-400 uppercase">教師 ID: ${escapeHtml(teacherId)}</label>
+            <input type="hidden" class="teacher-id-input" value="${escapeHtml(teacherId)}">
+            <button onclick="this.parentElement.parentElement.remove()" class="text-[9px] text-red-400 hover:underline">刪除</button>
+        </div>
+        <input type="url" placeholder="貼上 GitHub Classroom 邀請連結" 
+            value="" 
+            class="teacher-url-input w-full px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition">
+    `;
+    container.appendChild(div);
+};
+
+
+async function saveAllSettings() {
+    const btn = document.getElementById('btn-save-settings');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "儲存中...";
+
+    const configsByCourse = {};
+
+    // Collect data from DOM
+    document.querySelectorAll('.unit-config-card').forEach(card => {
+        const cid = card.dataset.courseId;
+        const fname = card.dataset.fileName;
+
+        if (!configsByCourse[cid]) configsByCourse[cid] = {};
+
+        const teacherMap = {};
+        card.querySelectorAll('.teacher-link-row').forEach(row => {
+            const tid = row.querySelector('.teacher-id-input').value.trim();
+            const url = row.querySelector('.teacher-url-input').value.trim();
+            if (tid && url) {
+                teacherMap[tid] = url;
+            }
+        });
+
+        if (Object.keys(teacherMap).length > 0) {
+            configsByCourse[cid][fname] = teacherMap;
+        }
+    });
+
+    try {
+        const saveCourseConfigs = httpsCallable(functions, 'saveCourseConfigs');
+        const promises = Object.entries(configsByCourse).map(([cid, unitMap]) => {
+            return saveCourseConfigs({
+                courseId: cid,
+                configs: { githubClassroomUrls: unitMap }
+            });
+        });
+
+        await Promise.all(promises);
+        alert("設定儲存成功！");
+    } catch (e) {
+        console.error("Save failed:", e);
+        alert("儲存失敗: " + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
 }

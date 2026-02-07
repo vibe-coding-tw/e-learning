@@ -34,7 +34,7 @@ if (!MERCHANT_ID || !HASH_KEY || !HASH_IV || !ECPAY_API_URL) {
 // ==========================================
 // 工具函式：計算 CheckMacValue (保持不變)
 // ==========================================
-function generateCheckMacValue(params, hashKey, hashIV) {
+function generateCheckMacValue(params, hashKey, hashIV, encType = 'sha256') {
     const filteredParams = {};
     Object.keys(params).forEach(key => {
         if (key !== 'CheckMacValue' && params[key] !== undefined && params[key] !== null && params[key] !== '') {
@@ -57,7 +57,7 @@ function generateCheckMacValue(params, hashKey, hashIV) {
         .replace(/%29/g, ')')
         .replace(/%20/g, '+');
 
-    return crypto.createHash('sha256').update(encodedString).digest('hex').toUpperCase();
+    return crypto.createHash(encType).update(encodedString).digest('hex').toUpperCase();
 }
 
 function getCurrentTime() {
@@ -184,16 +184,15 @@ exports.getLogisticsMapParams = functions.region(REGION).https.onRequest(async (
 
         const params = {
             MerchantID: MERCHANT_ID,
-            MerchantTradeNo: 'MAP' + Date.now(),
             LogisticsType: 'CVS',
             LogisticsSubType: logisticsSubType,
             IsCollection: isCollection || 'N',
             ServerReplyURL: `https://${REGION}-${PROJECT_ID}.cloudfunctions.net/mapReply`
         };
 
-        params.CheckMacValue = generateCheckMacValue(params, HASH_KEY, HASH_IV);
+        params.CheckMacValue = generateCheckMacValue(params, HASH_KEY, HASH_IV, 'md5');
 
-        console.log(`產生地圖參數: ${params.MerchantTradeNo} for ${logisticsSubType}`);
+        console.log(`產生地圖參數 for ${logisticsSubType}:`, params);
 
         res.status(200).json({ result: { params, apiUrl: ECPAY_LOGISTICS_MAP_URL || 'https://logistics.ecpay.com.tw/Express/map' } });
 
@@ -687,7 +686,97 @@ exports.logActivity = functions.region(REGION).https.onCall(async (data, context
 });
 
 // ==========================================
-// 7. 獲取儀表板數據 (getDashboardData)
+// 7. 課程設定管理 (saveCourseConfigs / getCourseConfigs)
+// ==========================================
+exports.saveCourseConfigs = functions.region(REGION).https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'User must be logged in.');
+    }
+    const uid = context.auth.uid;
+    const role = await getRole(uid);
+    if (role !== 'admin' && role !== 'teacher') {
+        throw new functions.https.HttpsError('permission-denied', 'Only teachers and admins can save configs.');
+    }
+
+    const { courseId, configs } = data;
+    if (!courseId || !configs) {
+        throw new functions.https.HttpsError('invalid-argument', 'Missing courseId or configs.');
+    }
+
+    try {
+        const docRef = admin.firestore().collection('course_configs').doc(courseId);
+        const doc = await docRef.get();
+        const existingConfigs = doc.exists ? doc.data() : {};
+
+        // Security Check: Caller must be admin OR an authorized teacher for this course
+        const isAuthorized = requesterRole === 'admin' || (existingConfigs.authorizedTeachers && existingConfigs.authorizedTeachers.includes(context.auth.token.email));
+
+        if (!isAuthorized) {
+            throw new functions.https.HttpsError('permission-denied', 'Only authorized teachers can save configs.');
+        }
+
+        await docRef.set({
+            ...configs,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedBy: uid
+        }, { merge: true });
+        return { success: true, message: 'Configuration saved successfully.' };
+    } catch (e) {
+        console.error("Save Config Error:", e);
+        throw new functions.https.HttpsError('internal', e.message);
+    }
+});
+
+exports.getCourseConfigs = functions.region(REGION).https.onCall(async (data, context) => {
+    const { courseId } = data;
+    try {
+        const db = admin.firestore();
+        if (courseId) {
+            const doc = await db.collection('course_configs').doc(courseId).get();
+            return { [courseId]: doc.exists ? doc.data() : null };
+        } else {
+            const snapshot = await db.collection('course_configs').get();
+            const allConfigs = {};
+            snapshot.forEach(doc => allConfigs[doc.id] = doc.data());
+            return allConfigs;
+        }
+    } catch (e) {
+        throw new functions.https.HttpsError('internal', e.message);
+    }
+});
+
+// 7.3 授權課程老師 (Admin Only)
+exports.authorizeTeacherForCourse = functions.region(REGION).https.onCall(async (data, context) => {
+    if (!context.auth) throw new functions.https.HttpsError('unauthenticated', '請先登入');
+
+    const uid = context.auth.uid;
+    const requesterRole = await getRole(uid);
+    if (requesterRole !== 'admin') throw new functions.https.HttpsError('permission-denied', '僅限管理員');
+
+    const { courseId, teacherEmail, action } = data; // action: 'add' or 'remove'
+    if (!courseId || !teacherEmail) throw new functions.https.HttpsError('invalid-argument', '缺少必要參數');
+
+    try {
+        const docRef = admin.firestore().collection('course_configs').doc(courseId);
+        if (action === 'add') {
+            await docRef.set({
+                authorizedTeachers: admin.firestore.FieldValue.arrayUnion(teacherEmail),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        } else {
+            await docRef.set({
+                authorizedTeachers: admin.firestore.FieldValue.arrayRemove(teacherEmail),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
+        return { success: true };
+    } catch (e) {
+        throw new functions.https.HttpsError('internal', e.message);
+    }
+});
+
+// ==========================================
+// 8. 獲取儀表板數據 (getDashboardData)
 // ==========================================
 exports.getDashboardData = functions.region(REGION).https.onCall(async (data, context) => {
     if (!context.auth) {
@@ -695,86 +784,90 @@ exports.getDashboardData = functions.region(REGION).https.onCall(async (data, co
     }
 
     const uid = context.auth.uid;
+    const email = context.auth.token.email;
     const requesterRole = await getRole(uid);
-
-    if (requesterRole === 'student') {
-        // [MODIFIED] Students can now access dashboard to see THEIR OWN stats
-        // throw new functions.https.HttpsError('permission-denied', 'Students cannot access dashboard.');
-    }
+    const db = admin.firestore();
 
     try {
-        const db = admin.firestore();
+        // 0. Fetch Course Authorization Data
+        const authorizedCourseIds = [];
+        const courseConfigs = {};
+        const configsSnapshot = await db.collection('course_configs').get();
+        configsSnapshot.forEach(doc => {
+            const cfg = doc.data();
+            const isAuthorized = requesterRole === 'admin' || (cfg.authorizedTeachers && cfg.authorizedTeachers.includes(email));
+            if (isAuthorized) {
+                authorizedCourseIds.push(doc.id);
+                courseConfigs[doc.id] = cfg;
+            }
+        });
+
+        // Determine if this user has any management access (Global Admin/Teacher or Course-Specific Teacher)
+        const isManagementView = requesterRole === 'admin' || requesterRole === 'teacher' || authorizedCourseIds.length > 0;
+
         let result = {
             role: requesterRole,
             summary: {},
             students: [],
-            assignments: []
+            assignments: [],
+            courseConfigs: courseConfigs
         };
 
-        // 1. Fetch Users (based on role)
+        // 1. Fetch Users (Filtering based on access level)
         let usersMap = {};
-        if (requesterRole === 'admin') {
-            const usersSnapshot = await db.collection('users').get();
-            usersSnapshot.forEach(doc => usersMap[doc.id] = doc.data());
-        } else if (requesterRole === 'teacher') {
-            // MVP: Teacher sees ALL students for now, or filter if 'teacherId' link exists
+        if (isManagementView) {
+            // Admins see all users. Teachers/Course-Teachers see students.
             const usersSnapshot = await db.collection('users').get();
             usersSnapshot.forEach(doc => {
                 const userData = doc.data();
-                if (userData.role === 'student') {
+                if (requesterRole === 'admin' || userData.role === 'student') {
                     usersMap[doc.id] = userData;
                 }
             });
         } else {
-            // Student: only self
+            // Student ONLY view
             const userDoc = await db.collection('users').doc(uid).get();
             if (userDoc.exists) usersMap[uid] = userDoc.data();
         }
 
         const targetDgUids = Object.keys(usersMap);
-        if (targetDgUids.length === 0 && requesterRole !== 'student') {
-            return result; // No students found
-        }
+        if (targetDgUids.length === 0) return result;
 
         // 2. Fetch Activity Logs
         let logsQuery = db.collection('activity_logs').orderBy('timestamp', 'desc').limit(2000);
 
-        if (requesterRole === 'student') {
+        // If it's a student-only view, restrict by UID immediately
+        if (!isManagementView) {
             logsQuery = logsQuery.where('uid', '==', uid);
         }
 
         const logsSnapshot = await logsQuery.get();
         const studentStats = {};
 
-        // Initialize entries for known users
-        targetDgUids.forEach(id => {
-            studentStats[id] = {
-                uid: id,
-                email: usersMap[id]?.email || 'Unknown',
-                role: usersMap[id]?.role || 'student',
-                totalTime: 0,
-                videoTime: 0,
-                docTime: 0,
-                pageTime: 0,
-                lastActive: null,
-                courseProgress: {} // { [courseId]: { total, video, doc, page } }
-            };
-        });
-
         logsSnapshot.forEach(doc => {
             const log = doc.data();
             const sid = log.uid;
+            const cid = log.courseId || 'unknown';
 
-            // Only process if user is in our allowed map
-            if (usersMap[sid]) {
+            // Authorization Filter for each log:
+            // - It's my own log
+            // - I'm a global admin/teacher
+            // - I'm an authorized teacher for this specific course
+            const isAuthorizedForLog = (sid === uid) || (requesterRole === 'admin' || requesterRole === 'teacher') || authorizedCourseIds.includes(cid);
+
+            if (isAuthorizedForLog && usersMap[sid]) {
                 if (!studentStats[sid]) {
-                    // Should be initialized above, but just in case
-                    studentStats[sid] = { uid: sid, email: usersMap[sid]?.email || 'Unknown', totalTime: 0, videoTime: 0, docTime: 0, pageTime: 0, lastActive: null, courseProgress: {} };
+                    studentStats[sid] = {
+                        uid: sid,
+                        email: usersMap[sid]?.email || 'Unknown',
+                        role: usersMap[sid]?.role || 'student',
+                        totalTime: 0, videoTime: 0, docTime: 0, pageTime: 0, lastActive: null,
+                        courseProgress: {}
+                    };
                 }
 
                 const duration = log.duration || 0;
                 studentStats[sid].totalTime += duration;
-
                 if (log.action === 'VIDEO') studentStats[sid].videoTime += duration;
                 if (log.action === 'DOC') studentStats[sid].docTime += duration;
                 if (log.action === 'PAGE_VIEW') studentStats[sid].pageTime += duration;
@@ -783,18 +876,16 @@ exports.getDashboardData = functions.region(REGION).https.onCall(async (data, co
                     studentStats[sid].lastActive = log.timestamp ? log.timestamp.toDate() : null;
                 }
 
-                // Granular Course/Unit Tracking
-                const cid = log.courseId || 'unknown';
                 if (!studentStats[sid].courseProgress[cid]) {
                     studentStats[sid].courseProgress[cid] = { total: 0, video: 0, doc: 0, page: 0, logs: [] };
                 }
-                studentStats[sid].courseProgress[cid].total += duration;
-                if (log.action === 'VIDEO') studentStats[sid].courseProgress[cid].video += duration;
-                if (log.action === 'DOC') studentStats[sid].courseProgress[cid].doc += duration;
-                if (log.action === 'PAGE_VIEW') studentStats[sid].courseProgress[cid].page += duration;
+                const cp = studentStats[sid].courseProgress[cid];
+                cp.total += duration;
+                if (log.action === 'VIDEO') cp.video += duration;
+                if (log.action === 'DOC') cp.doc += duration;
+                if (log.action === 'PAGE_VIEW') cp.page += duration;
 
-                // [NEW] Attach Raw Log
-                studentStats[sid].courseProgress[cid].logs.push({
+                cp.logs.push({
                     action: log.action,
                     duration: duration,
                     timestamp: log.timestamp,
@@ -807,16 +898,19 @@ exports.getDashboardData = functions.region(REGION).https.onCall(async (data, co
 
         // 3. Fetch Assignments
         let assignQuery = db.collection('assignments');
-        if (requesterRole === 'student') {
+        if (!isManagementView) {
             assignQuery = assignQuery.where('userId', '==', uid);
         }
         const assignSnapshot = await assignQuery.get();
         assignSnapshot.forEach(doc => {
             const data = doc.data();
             const targetUid = data.userId || data.uid;
+            const cid = data.courseId;
 
-            // Filter for teachers (only their students)
-            if (requesterRole === 'admin' || usersMap[targetUid] || requesterRole === 'student') {
+            // Authorization Filter for each assignment
+            const isAuthorizedForAssign = (targetUid === uid) || (requesterRole === 'admin' || requesterRole === 'teacher') || authorizedCourseIds.includes(cid);
+
+            if (isAuthorizedForAssign && (requesterRole === 'admin' || usersMap[targetUid])) {
                 result.assignments.push({
                     id: doc.id,
                     ...data,

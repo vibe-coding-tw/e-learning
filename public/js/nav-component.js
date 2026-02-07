@@ -59,7 +59,9 @@ window.renderNav = function (rootPath = '.', options = {}) {
     const style = document.createElement('style');
     style.innerHTML = `
         /* Robust Dropdown Behavior */
-        .dropdown:hover .dropdown-menu { display: block; }
+        @media (hover: hover) {
+            .dropdown:hover .dropdown-menu { display: block; }
+        }
         
         /* Mobile Menu Transitions */
         #mobile-menu {
