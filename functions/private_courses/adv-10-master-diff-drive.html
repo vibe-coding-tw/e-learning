@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-advanced" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -21,20 +21,17 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('icc-geometry')" id="tab-icc-geometry"
-                    class="tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>差速驅動幾何學：ICC 的秘密
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('icc-geometry')" id="tab-icc-geometry" class="unit-tab-btn active">
+                    <span>1️⃣</span>差速驅動幾何學：ICC 的秘密
                 </button>
-                <button onclick="switchTab('api-design')" id="tab-api-design"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>API 封裝設計
+                <button onclick="switchTab('api-design')" id="tab-api-design" class="unit-tab-btn">
+                    <span>2️⃣</span>API 封裝設計
                 </button>
-                <button onclick="switchTab('pwm-limits')" id="tab-pwm-limits"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>PWM 物理極限
+                <button onclick="switchTab('pwm-limits')" id="tab-pwm-limits" class="unit-tab-btn">
+                    <span>3️⃣</span>PWM 物理極限
                 </button>
             </div>
         </div>
@@ -70,19 +67,19 @@
         function switchTab(tab) {
             // Reset all tabs
             [tabICC, tabAPI, tabPWM].forEach(t => {
-                if (t) t.className = "tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2";
+                if (t) t.classList.remove('active');
             });
 
             if (tab === 'icc-geometry') {
-                tabICC.className = "tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabICC.classList.add('active');
                 loadContent('adv-10-unit-icc-geometry.html');
                 window.location.hash = 'icc-geometry';
             } else if (tab === 'api-design') {
-                tabAPI.className = "tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabAPI.classList.add('active');
                 loadContent('adv-10-unit-api-design.html');
                 window.location.hash = 'api-design';
             } else if (tab === 'pwm-limits') {
-                tabPWM.className = "tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabPWM.classList.add('active');
                 loadContent('adv-10-unit-pwm-limits.html');
                 window.location.hash = 'pwm-limits';
             }

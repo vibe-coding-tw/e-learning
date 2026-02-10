@@ -31,7 +31,7 @@ const sampleParams = {
     MerchantID: '3271550',
     MerchantTradeNo: 'MAP123456789',
     LogisticsType: 'CVS',
-    LogisticsSubType: 'UNIMART',
+    LogisticsSubType: 'UNIMARTC2C',
     IsCollection: 'N',
     ServerReplyURL: 'https://example.com/reply'
 };

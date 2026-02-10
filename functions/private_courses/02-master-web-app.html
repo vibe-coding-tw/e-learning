@@ -11,7 +11,7 @@
 
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-started" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <!-- Navigation (Shared) -->
@@ -22,28 +22,29 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-8 overflow-x-auto" id="course-tabs-container">
-                <button onclick="switchTab('html5')" id="tab-html5" class="tab-btn active border-b-2 whitespace-nowrap">
-                    <span class="mr-2">1️⃣</span> HTML5 基礎
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('html5')" id="tab-html5" class="unit-tab-btn active">
+                    <span>1️⃣</span> HTML5 基礎
                 </button>
-                <button onclick="switchTab('flexbox')" id="tab-flexbox"
-                    class="tab-btn border-b-2 border-transparent whitespace-nowrap">
-                    <span class="mr-2">2️⃣</span> Flexbox 排版
+                <button onclick="switchTab('flexbox')" id="tab-flexbox" class="unit-tab-btn">
+                    <span>2️⃣</span> Flexbox 排版
                 </button>
-                <button onclick="switchTab('uiux')" id="tab-uiux"
-                    class="tab-btn border-b-2 border-transparent whitespace-nowrap">
-                    <span class="mr-2">3️⃣</span> UI/UX 設計規範
+                <button onclick="switchTab('uiux')" id="tab-uiux" class="unit-tab-btn">
+                    <span>3️⃣</span> UI/UX 設計規範
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Content Area (Iframe) -->
-    <div class="flex-grow w-full relative">
-        <iframe id="content-frame" src=""
-            class="w-full h-full border-0 absolute inset-0 bg-gray-50 option-opacity"></iframe>
+    <div class="flex-grow w-full relative flex flex-col">
+
+        <div class="flex-grow relative">
+            <iframe id="content-frame" src=""
+                class="w-full h-full border-0 absolute inset-0 bg-gray-50 option-opacity"></iframe>
+        </div>
     </div>
 
     <script>
@@ -58,8 +59,7 @@
         function switchTab(tab) {
             // Helper to reset all tabs
             [tabHtml5, tabFlexbox, tabUiux].forEach(t => {
-                t.classList.remove('text-blue-600', 'border-blue-600', 'active');
-                t.classList.add('text-gray-500', 'border-transparent');
+                t.classList.remove('active');
             });
 
             // Activate current tab
@@ -78,8 +78,7 @@
             }
 
             if (currentTabBtn) {
-                currentTabBtn.classList.add('text-blue-600', 'border-blue-600', 'active');
-                currentTabBtn.classList.remove('text-gray-500', 'border-transparent');
+                currentTabBtn.classList.add('active');
                 loadContent(url);
             }
         }
@@ -107,6 +106,8 @@
     </script>
 
     <script type="module" src="/js/master-nav.js?v=9"></script>
+
+
 </body>
 
 </html>

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
 </head>
@@ -17,26 +18,30 @@
     <!-- Hero Section -->
     <header
         class="relative bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
-        <div class="header-overlay absolute inset-0 bg-gradient-to-r from-purple-900 to-indigo-800 opacity-90"></div>
-        <div class="container mx-auto px-4 relative z-10 pt-20 pb-20 text-center text-white">
-            <div class="badge-header bg-purple-500/20 text-purple-200 border border-purple-400/30 backdrop-blur-sm">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <div
+                class="badge-header inline-block px-4 py-1 rounded-full bg-purple-500/20 text-purple-200 border border-purple-400/30 backdrop-blur-sm mb-6 text-xs font-semibold tracking-wide uppercase font-[Outfit]">
                 Web Bluetooth Security
             </div>
-            <h1 class="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-                Web BLE 安全機制與權限規範
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                Web BLE 安全機制與<br>權限規範
             </h1>
-            <p class="text-xl text-purple-100 max-w-2xl mx-auto leading-relaxed mb-10">
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
                 深入理解 Web Bluetooth API 的安全沙箱機制，掌握 HTTPS、User Gesture 與設備過濾的黃金法則。
             </p>
 
-            <div class="flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/GIMfXJZ74hM')"
-                    class="resource-btn bg-purple-500 hover:bg-purple-400 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-lg font-bold">
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button
-                    onclick="enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vSKmbfX9VidYdzQ32wzbbXJeKZ6kVS9vaIFhiMjiZffWtAXAkYbTDk_GNaxKGVr-0WCyDekwJo8JnQ4/pub?embedded=true')"
-                    class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-3 rounded-full flex items-center gap-2 backdrop-blur-sm font-bold">
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
             </div>
@@ -300,6 +305,89 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
+    <section id="instructor-guide" style="display: none;">
+        <h4>1. 為什麼適合在 GitHub Classroom 進行？</h4>
+
+        <p><strong>作業 1-1：try-catch 機制（邏輯優化）</strong></p>
+        <ul>
+            <li><strong>GitHub 優勢：</strong>這是標準的代碼品質測試。你可以透過自動評分檢查學生的 <code>index.js</code> 是否包含 <code>try-catch</code>
+                區塊，以及是否正確判斷了 <code>NotFoundError</code>。</li>
+            <li><strong>翻轉教學：</strong>學生在課前練習「失敗處理」。課堂上，老師可以關掉藍牙或故意點取消，測試誰的程式碼會「當掉」，誰的會「優雅提示」。</li>
+        </ul>
+
+        <p><strong>作業 1-2：精準過濾（實務應用）</strong></p>
+        <ul>
+            <li><strong>GitHub 優勢：</strong>適合練習 <strong>環境變數或組態管理</strong>。你可以要求學生在代碼中定義一個 <code>CONFIG</code>
+                物件來存放過濾條件。</li>
+            <li><strong>翻轉教學：</strong>這是課堂實作的高潮。全班 20 台車同時開啟，若學生沒做好過濾，會連到別人的車。這是一個極佳的「現場除錯」教學點，學生可以直接在 GitHub
+                更新代碼並重新部署（如使用 GitHub Pages）來即時修正。</li>
+        </ul>
+
+        <p><strong>作業 1-3：跨平台調查（文件化與協作）</strong></p>
+        <ul>
+            <li><strong>GitHub 優勢：</strong>適合練習使用 <strong>Markdown (README.md) 或 GitHub
+                    Wiki</strong>。這份作業不需要寫太多程式碼，而是要學生紀錄觀察結果。</li>
+            <li><strong>翻轉教學：</strong>學生將不同裝置的配對截圖傳到 <code>screenshots/</code> 資料夾。課堂上可以利用 GitHub 的 <strong>Pull Request
+                    比較功能</strong>，快速投放在大螢幕上對比 Android 與 iOS 的介面差異。</li>
+        </ul>
+
+        <hr>
+
+        <h4>2. 在 GitHub Classroom 上的設定建議</h4>
+        <p>針對這系列 Web BLE 任務，建議將它們合併為一個名為 <strong><code>BLE-Connection-Lab</code></strong> 的 Assignment。</p>
+
+        <h5>A. 範本倉庫建議結構</h5>
+        <pre style="background-color: #f3f4f6; padding: 10px; border-radius: 4px; font-family: monospace;">
+.
+├── index.html       # 包含連線按鈕與訊息顯示區域
+├── app.js           # 學生主要實作區 (1-1, 1-2)
+├── screenshots/     # 存放作業 1-3 的跨平台截圖
+└── README.md        # 紀錄 1-3 的調查結果與排除心得</pre>
+
+        <h5>B. 自動評分 (Autograding) 配置</h5>
+        <p>你可以針對 <strong>1-1</strong> 與 <strong>1-2</strong> 設定簡單的字串檢查：</p>
+        <ul>
+            <li><strong>測試 1 (1-1)：</strong>檢查是否使用了 <code>catch</code> 與
+                <code>NotFoundError</code>。<br>指令：<code>grep "catch" app.js && grep "NotFoundError" app.js</code>
+            </li>
+            <li><strong>測試 2 (1-2)：</strong>檢查是否使用了 <code>filters</code> 或
+                <code>optionalServices</code>。<br>指令：<code>grep "filters" app.js || grep "namePrefix" app.js</code>
+            </li>
+        </ul>
+
+        <hr>
+
+        <h4>3. 給老師的翻轉課堂執行建議</h4>
+        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+                <tr style="background-color: #f3f4f6;">
+                    <th style="padding: 8px; text-align: left;">階段</th>
+                    <th style="padding: 8px; text-align: left;">任務內容</th>
+                    <th style="padding: 8px; text-align: left;">老師如何利用 GitHub</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 8px;"><strong>課前 (自主學習)</strong></td>
+                    <td style="padding: 8px;">閱讀 Web BLE 文件，完成 1-1 的錯誤處理邏輯。</td>
+                    <td style="padding: 8px;">查看學生的 <strong>Commit History</strong>，確認誰已經開始動手寫。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><strong>課中 (實作對抗)</strong></td>
+                    <td style="padding: 8px;">進行 1-2 的「多車連線挑戰」。學生必須修改過濾條件以連上自己的 ESP32。</td>
+                    <td style="padding: 8px;"><strong>Live View：</strong>透過 GitHub Pages，學生修改完 Push 後，手機重新整理即可測試新邏輯。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><strong>課後 (總結)</strong></td>
+                    <td style="padding: 8px;">整理 1-3 的跨平台差異，提交最終報告。</td>
+                    <td style="padding: 8px;"><strong>Code Review：</strong>老師在學生提交的 PR 下方給予回饋，特別是針對錯誤處理的完整度。</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p class="mt-4"><strong>這組作業非常有「現場感」，特別是 1-2 的過濾功能，在教室環境下是非常強大的教學工具。</strong></p>
+    </section>
 </body>
 
 </html>

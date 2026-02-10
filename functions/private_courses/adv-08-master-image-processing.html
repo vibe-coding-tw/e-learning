@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-advanced" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -21,24 +21,20 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('color-spaces')" id="tab-color-spaces"
-                    class="tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>數位影像基礎：顏色空間 (Color Spaces)
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('color-spaces')" id="tab-color-spaces" class="unit-tab-btn active">
+                    <span>1️⃣</span>數位影像基礎：顏色空間 (Color Spaces)
                 </button>
-                <button onclick="switchTab('error-calculation')" id="tab-error-calculation"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>影像座標系與誤差計算
+                <button onclick="switchTab('error-calculation')" id="tab-error-calculation" class="unit-tab-btn">
+                    <span>2️⃣</span>影像座標系與誤差計算
                 </button>
-                <button onclick="switchTab('p-control')" id="tab-p-control"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>視覺追蹤控制策略：P 控制
+                <button onclick="switchTab('p-control')" id="tab-p-control" class="unit-tab-btn">
+                    <span>3️⃣</span>視覺追蹤控制策略：P 控制
                 </button>
-                <button onclick="switchTab('mobilenet-ssd')" id="tab-mobilenet-ssd"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">4️⃣</span>深度學習模型：MobileNet 與 SSD 簡介
+                <button onclick="switchTab('mobilenet-ssd')" id="tab-mobilenet-ssd" class="unit-tab-btn">
+                    <span>4️⃣</span>深度學習模型：MobileNet 與 SSD 簡介
                 </button>
             </div>
         </div>
@@ -79,23 +75,23 @@
         function switchTab(tab) {
             // Reset all tabs
             [tabColor, tabError, tabPControl, tabMobileNet].forEach(t => {
-                if (t) t.className = "tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2";
+                if (t) t.classList.remove('active');
             });
 
             if (tab === 'color-spaces') {
-                tabColor.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabColor.classList.add('active');
                 loadContent('adv-08-unit-color-spaces.html');
                 window.location.hash = 'color-spaces';
             } else if (tab === 'error-calculation') {
-                tabError.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabError.classList.add('active');
                 loadContent('adv-08-unit-error-calculation.html');
                 window.location.hash = 'error-calculation';
             } else if (tab === 'p-control') {
-                tabPControl.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabPControl.classList.add('active');
                 loadContent('adv-08-unit-p-control.html');
                 window.location.hash = 'p-control';
             } else if (tab === 'mobilenet-ssd') {
-                tabMobileNet.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabMobileNet.classList.add('active');
                 loadContent('adv-08-unit-mobilenet-ssd.html');
                 window.location.hash = 'mobilenet-ssd';
             }

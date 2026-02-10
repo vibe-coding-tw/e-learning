@@ -11,7 +11,7 @@
 
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-started" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -21,17 +21,17 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-8 overflow-x-auto" id="course-tabs-container">
-                <button onclick="switchTab('identity')" id="tab-identity" class="tab-btn active border-b-2">
-                    <span class="mr-2">1️⃣</span> 雲端身分 (Identity)
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('identity')" id="tab-identity" class="unit-tab-btn active">
+                    <span>1️⃣</span> 雲端身分 (Identity)
                 </button>
-                <button onclick="switchTab('vscode')" id="tab-vscode" class="tab-btn border-b-2 border-transparent">
-                    <span class="mr-2">2️⃣</span> 開發環境 (VS Code)
+                <button onclick="switchTab('vscode')" id="tab-vscode" class="unit-tab-btn">
+                    <span>2️⃣</span> 開發環境 (VS Code)
                 </button>
-                <button onclick="switchTab('online')" id="tab-online" class="tab-btn border-b-2 border-transparent">
-                    <span class="mr-2">3️⃣</span> VS Code Online
+                <button onclick="switchTab('online')" id="tab-online" class="unit-tab-btn">
+                    <span>3️⃣</span> VS Code Online
                 </button>
             </div>
         </div>
@@ -55,8 +55,7 @@
         function switchTab(tab) {
             // Helper to reset all tabs
             [tabIdentity, tabVscode, tabOnline].forEach(t => {
-                t.classList.remove('text-blue-600', 'border-blue-600', 'active');
-                t.classList.add('text-gray-500', 'border-transparent');
+                t.classList.remove('active');
             });
 
             // Activate current tab
@@ -75,8 +74,7 @@
             }
 
             if (currentTabBtn) {
-                currentTabBtn.classList.add('text-blue-600', 'border-blue-600', 'active');
-                currentTabBtn.classList.remove('text-gray-500', 'border-transparent');
+                currentTabBtn.classList.add('active');
                 loadContent(url);
             }
         }

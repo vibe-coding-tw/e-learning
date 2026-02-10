@@ -309,6 +309,71 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h4>任務拆解與 GitHub 整合策略</h4>
+
+        <p><strong>【作業 2-1】光速反應測試 (架構對比)</strong></p>
+        <ul>
+            <li><strong>GitHub 角色：</strong> <strong>對照組實驗室</strong>。</li>
+            <li><strong>執行方式：</strong> 學生需要提交兩個檔案：<code>polling.cpp</code> 與 <code>interrupt.cpp</code>。</li>
+            <li><strong>翻轉點：</strong> 老師在 GitHub 上提供一個「故意讓 CPU 很忙」的函式（如：大數運算），要求學生將按鈕邏輯分別放入。</li>
+            <li><strong>評分重點：</strong> 學生需在 <code>README.md</code> 描述兩者在反應速度上的「體感差異」，並解釋為什麼中斷能搶佔（Preempt）CPU。</li>
+        </ul>
+
+        <p><strong>【作業 2-2】彈跳惡夢 (邏輯除錯)</strong></p>
+        <ul>
+            <li><strong>GitHub 角色：</strong> <strong>邏輯驗證中心</strong>。</li>
+            <li><strong>執行方式：</strong> 這是最適合 <strong>Code Review</strong> 的環節。去彈跳（Debounce）有多種寫法（如：檢查
+                <code>millis()</code> 時間差）。
+            </li>
+            <li><strong>自動化檢查：</strong> 您可以撰寫一個腳立檢查學生的 ISR（中斷服務程式）內是否有正確使用 <code>static</code> 或 <code>volatile</code>
+                變數來儲存時間戳記。</li>
+            <li><strong>優勢：</strong> 學生在 PR（Pull Request）中互相評論彼此的去彈跳邏輯，討論哪種寫法最節省 CPU 資源。</li>
+        </ul>
+
+        <p><strong>【作業 2-3】馬達編碼器實戰 (高頻壓力測試)</strong></p>
+        <ul>
+            <li><strong>GitHub 角色：</strong> <strong>效能儀表板</strong>。</li>
+            <li><strong>執行方式：</strong> 這涉及高頻訊號（>1kHz），程式碼的效率變得至關重要。</li>
+            <li><strong>繳交物：</strong> 除了程式碼，學生需上傳一張「全速轉動時的 Serial Plotter 截圖」，證明計數曲線是線性且無斷點的。</li>
+            <li><strong>優勢：</strong> 老師可以透過 GitHub Actions 檢查學生是否在 ISR 裡面放了 <code>delay()</code> 或
+                <code>Serial.print()</code> 等致命錯誤（這些會導致高頻漏計）。
+            </li>
+        </ul>
+
+        <hr>
+
+        <h4>翻轉教室中的評分標準 (Checkpoint)</h4>
+
+        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+                <tr style="background-color: #f3f4f6;">
+                    <th style="padding: 8px; text-align: left;">任務</th>
+                    <th style="padding: 8px; text-align: left;">評分標準 (透過 GitHub 檢查)</th>
+                    <th style="padding: 8px; text-align: left;">課堂討論議題</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 8px;"><strong>2-1</strong></td>
+                    <td style="padding: 8px;">是否正確配置 <code>attachInterrupt</code> 的觸發模式？</td>
+                    <td style="padding: 8px;">既然中斷這麼好用，為什麼不全部都用中斷？</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><strong>2-2</strong></td>
+                    <td style="padding: 8px;">變數是否宣告為 <code>volatile</code>？時間判斷邏輯是否正確？</td>
+                    <td style="padding: 8px;">50ms 的去彈跳時間是怎麼決定的？對最高轉速有何影響？</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><strong>2-3</strong></td>
+                    <td style="padding: 8px;">ISR 程式碼是否簡潔？有無漏計處理邏輯？</td>
+                    <td style="padding: 8px;">當馬達反轉時，目前的程式碼能分辨方向嗎？</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
 </body>
+
 
 </html>

@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-advanced" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -21,20 +21,18 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
                 <button onclick="switchTab('feature-extraction')" id="tab-feature-extraction"
-                    class="tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>數位影像特徵提取
+                    class="unit-tab-btn active">
+                    <span>1️⃣</span>數位影像特徵提取
                 </button>
-                <button onclick="switchTab('centroid-error')" id="tab-centroid-error"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>質心計算與視覺誤差
+                <button onclick="switchTab('centroid-error')" id="tab-centroid-error" class="unit-tab-btn">
+                    <span>2️⃣</span>質心計算與視覺誤差
                 </button>
-                <button onclick="switchTab('closed-loop')" id="tab-closed-loop"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>視覺閉迴路控制理論
+                <button onclick="switchTab('closed-loop')" id="tab-closed-loop" class="unit-tab-btn">
+                    <span>3️⃣</span>視覺閉迴路控制理論
                 </button>
             </div>
         </div>
@@ -59,17 +57,17 @@
         function switchTab(tab) {
             // Reset all tabs
             [tabFeature, tabCentroid, tabClosedLoop].forEach(t => {
-                if (t) t.className = "tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2";
+                if (t) t.classList.remove('active');
             });
 
             if (tab === 'feature-extraction') {
-                tabFeature.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabFeature.classList.add('active');
                 loadContent('adv-05-unit-feature-extraction.html');
             } else if (tab === 'centroid-error') {
-                tabCentroid.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabCentroid.classList.add('active');
                 loadContent('adv-05-unit-centroid-error.html');
             } else if (tab === 'closed-loop') {
-                tabClosedLoop.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabClosedLoop.classList.add('active');
                 loadContent('adv-05-unit-closed-loop.html');
             }
         }

@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-advanced" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -21,20 +21,17 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('ble-notify')" id="tab-ble-notify"
-                    class="tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>BLE Notify 機制
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('ble-notify')" id="tab-ble-notify" class="unit-tab-btn active">
+                    <span>1️⃣</span>BLE Notify 機制
                 </button>
-                <button onclick="switchTab('json-serialization')" id="tab-json-serialization"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>JSON 序列化與反序列化
+                <button onclick="switchTab('json-serialization')" id="tab-json-serialization" class="unit-tab-btn">
+                    <span>2️⃣</span>JSON 序列化與反序列化
                 </button>
-                <button onclick="switchTab('ble-mtu')" id="tab-ble-mtu"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>MTU 與分段傳輸
+                <button onclick="switchTab('ble-mtu')" id="tab-ble-mtu" class="unit-tab-btn">
+                    <span>3️⃣</span>MTU 與分段傳輸
                 </button>
             </div>
         </div>
@@ -58,18 +55,18 @@
 
         function switchTab(tab) {
             // Reset all tabs
-            tabNotify.className = "tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2";
-            tabJson.className = "tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2";
-            tabMtu.className = "tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2";
+            [tabNotify, tabJson, tabMtu].forEach(t => {
+                t.classList.remove('active');
+            });
 
             if (tab === 'ble-notify') {
-                tabNotify.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabNotify.classList.add('active');
                 loadContent('adv-03-unit-ble-notify.html');
             } else if (tab === 'json-serialization') {
-                tabJson.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabJson.classList.add('active');
                 loadContent('adv-03-unit-json-serialization.html');
             } else if (tab === 'ble-mtu') {
-                tabMtu.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabMtu.classList.add('active');
                 loadContent('adv-03-unit-ble-mtu.html');
             }
         }

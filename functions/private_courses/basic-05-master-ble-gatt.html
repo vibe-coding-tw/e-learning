@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-basic" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -20,20 +20,18 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('gatt-structure')" id="tab-gatt-structure"
-                    class="tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>GATT 核心架構與階層
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('gatt-structure')" id="tab-gatt-structure" class="unit-tab-btn active">
+                    <span>1️⃣</span>GATT 核心架構與階層
                 </button>
                 <button onclick="switchTab('advertising-connection')" id="tab-advertising-connection"
-                    class="tab-btn border-b-2 border-transparent text-gray-400 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>BLE 廣播與連線流程
+                    class="unit-tab-btn">
+                    <span>2️⃣</span>BLE 廣播與連線流程
                 </button>
-                <button onclick="switchTab('ble-properties')" id="tab-ble-properties"
-                    class="tab-btn border-b-2 border-transparent text-gray-400 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>讀取、寫入與通知
+                <button onclick="switchTab('ble-properties')" id="tab-ble-properties" class="unit-tab-btn">
+                    <span>3️⃣</span>讀取、寫入與通知
                 </button>
             </div>
         </div>
@@ -58,21 +56,17 @@
         function switchTab(tab) {
             // Reset all tabs
             [tabGatt, tabAdv, tabProp].forEach(t => {
-                t.classList.remove('text-blue-600', 'border-blue-600', 'active');
-                t.classList.add('text-gray-500', 'border-transparent');
+                t.classList.remove('active');
             });
 
             if (tab === 'gatt-structure') {
-                tabGatt.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabGatt.classList.remove('text-gray-500', 'border-transparent');
+                tabGatt.classList.add('active');
                 loadContent('basic-05-unit-gatt-structure.html');
             } else if (tab === 'advertising-connection') {
-                tabAdv.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabAdv.classList.remove('text-gray-500', 'border-transparent');
+                tabAdv.classList.add('active');
                 loadContent('basic-05-unit-advertising-connection.html');
             } else if (tab === 'ble-properties') {
-                tabProp.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabProp.classList.remove('text-gray-500', 'border-transparent');
+                tabProp.classList.add('active');
                 loadContent('basic-05-unit-ble-properties.html');
             }
         }

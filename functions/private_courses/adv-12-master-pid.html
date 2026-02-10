@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-advanced" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -21,22 +21,18 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('pid-intro')" id="tab-pid-intro"
-                    class="tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>為什麼需要 PID？
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('pid-intro')" id="tab-pid-intro" class="unit-tab-btn active">
+                    <span>1️⃣</span>為什麼需要 PID？
                 </button>
-                <button onclick="switchTab('pid-concepts')" id="tab-pid-concepts"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>數學直覺
+                <button onclick="switchTab('pid-concepts')" id="tab-pid-concepts" class="unit-tab-btn">
+                    <span>2️⃣</span>數學直覺
                 </button>
-                <button onclick="switchTab('code-logic')" id="tab-code-logic"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>代碼實作預習
+                <button onclick="switchTab('code-logic')" id="tab-code-logic" class="unit-tab-btn">
+                    <span>3️⃣</span>代碼實作預習
                 </button>
-                <!-- Future tabs can be added here -->
             </div>
         </div>
     </div>
@@ -71,22 +67,19 @@
         function switchTab(tab) {
             // Reset all tabs
             [tabIntro, tabPid, tabCodeLogic].forEach(t => {
-                if (t) t.className = "tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2";
+                if (t) t.classList.remove('active');
             });
 
             if (tab === 'pid-intro') {
-                tabIntro.className = "tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabIntro.classList.add('active');
                 loadContent('adv-12-unit-pid-control.html');
                 window.location.hash = 'pid-intro';
-            }
-
-            if (tab === 'pid-concepts') {
-                tabPid.className = "tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2";
+            } else if (tab === 'pid-concepts') {
+                tabPid.classList.add('active');
                 loadContent('adv-12-unit-pid-math.html');
                 window.location.hash = 'pid-concepts';
-            }
-            if (tab === 'code-logic') {
-                tabCodeLogic.className = "tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2";
+            } else if (tab === 'code-logic') {
+                tabCodeLogic.classList.add('active');
                 loadContent('adv-12-unit-code-logic.html');
                 window.location.hash = 'code-logic';
             }

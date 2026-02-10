@@ -17,24 +17,27 @@
 
     <!-- Hero Section -->
     <header
-        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-cyan-900 text-white pt-24 pb-32 overflow-hidden">
-        <div class="header-overlay absolute inset-0 bg-gradient-to-r from-blue-900 to-indigo-800 opacity-90"></div>
-        <div class="container mx-auto px-4 relative z-10 pt-20 pb-20 text-center text-white">
-            <h1 class="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-                Web App 開發環境與 HTML5 基礎
+        class="relative bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                Web App 開發環境與<br>HTML5 基礎
             </h1>
-            <p class="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed mb-10">
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
                 從零打造你的第一個物聯網控制介面，掌握現代 Web 開發核心工作流。
             </p>
 
-            <div class="flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/Vyn9KVCsvb0?autoplay=1')"
-                    class="resource-btn bg-blue-500 hover:bg-blue-400 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-lg font-bold">
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button
-                    onclick="enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vTCF7RjZXdhW4uyPmKkCcXUGr0ejVJUjU6ixDYAuB7bF2UNadtNI6m34jz813rAE1iViYS2d3p4Q8G7/pub?embedded=true')"
-                    class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-3 rounded-full flex items-center gap-2 backdrop-blur-sm font-bold">
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
             </div>
@@ -240,12 +243,38 @@
                         <h2 class="text-3xl font-bold text-gray-900 mt-2">實戰挑戰：打造你的駕駛艙</h2>
                     </div>
 
+                    <!-- Git Base Station Metaphor -->
+                    <div
+                        class="bg-slate-900 rounded-xl p-6 mb-12 text-blue-300 font-mono text-sm border-l-4 border-blue-500">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="text-2xl">📡</span>
+                            <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
+                        </div>
+                        <p class="mb-4 text-slate-400">在任務中，GitHub 是你的「基地台」。請確保每完成一個里程碑，就將數據回傳。</p>
+                        <ul class="space-y-2">
+                            <li class="flex items-center gap-2">
+                                <span class="text-blue-500">Step 1.</span>
+                                <span>接受 GitHub Classroom 邀請，複製 (Clone) 專屬任務倉庫。</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-blue-500">Step 2.</span>
+                                <span>完成代碼撰寫後，執行 <code
+                                        class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code>
+                                    將進度上傳。</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-blue-500">Step 3.</span>
+                                <span>自動化助理會即時在 PR (Pull Request) 中回饋評分結果。</span>
+                            </li>
+                        </ul>
+                    </div>
+
                     <div class="grid md:grid-cols-3 gap-8">
                         <!-- Task 1 -->
                         <div onclick="openSubmissionModal('html5-basics-task-1', '作業 1-1: 實機部署與跨裝置連線')"
-                            class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative">
+                            class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col">
                             <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-2"></div>
-                            <div class="p-6">
+                            <div class="p-6 flex-grow">
                                 <div class="flex justify-between items-start mb-4">
                                     <h3 class="font-bold text-xl text-gray-800 group-hover:text-blue-600 transition">作業
                                         1-1</h3>
@@ -253,14 +282,31 @@
                                         min</span>
                                 </div>
                                 <h4 class="font-bold text-gray-700 mb-2">實機部署與跨裝置連線</h4>
-                                <p class="text-sm text-gray-500 mb-4">目標：讓你的手機連上電腦的 Live Server，看到開發中的網頁。</p>
+                                <p class="text-sm text-gray-500 mb-4">目標：讓你的手機連上電腦的 Live Server。完成後請截圖存放在 <code
+                                        class="text-blue-600">README.md</code> 回報。</p>
 
                                 <div class="mt-4 pt-4 border-t border-gray-100">
-                                    <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Classroom Challenge</h5>
-                                    <p class="text-sm text-gray-600 bg-gray-50 p-2 rounded">
-                                        🚧 <strong>防火牆阻擋？</strong><br>
-                                        嘗試暫時關閉防火牆，或在防火牆設定中允許 VS Code 通過。
-                                    </p>
+                                    <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Troubleshooting</h5>
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-[10px] text-gray-600 border-collapse">
+                                            <thead>
+                                                <tr class="bg-gray-50">
+                                                    <th class="border p-1 text-left">徵兆</th>
+                                                    <th class="border p-1 text-left">對策</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="border p-1">找不到網頁</td>
+                                                    <td class="border p-1">確認手機與電腦是否在同一個 WiFi</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="border p-1">連線被拒絕</td>
+                                                    <td class="border p-1">檢查電腦防火牆是否允許 VS Code</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                             <!-- Click Hint Overlay -->
@@ -275,9 +321,9 @@
 
                         <!-- Task 2 -->
                         <div onclick="openSubmissionModal('html5-basics-task-2', '作業 1-2: 觸控友善性優化')"
-                            class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative">
+                            class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col">
                             <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 h-2"></div>
-                            <div class="p-6">
+                            <div class="p-6 flex-grow">
                                 <div class="flex justify-between items-start mb-4">
                                     <h3 class="font-bold text-xl text-gray-800 group-hover:text-indigo-600 transition">
                                         作業 1-2
@@ -309,9 +355,9 @@
 
                         <!-- Task 3 -->
                         <div onclick="openSubmissionModal('html5-basics-task-3', '作業 1-3: FPV 影像容器佈局')"
-                            class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative">
+                            class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col">
                             <div class="bg-gradient-to-r from-pink-500 to-pink-600 h-2"></div>
-                            <div class="p-6">
+                            <div class="p-6 flex-grow">
                                 <div class="flex justify-between items-start mb-4">
                                     <h3 class="font-bold text-xl text-gray-800 group-hover:text-pink-600 transition">作業
                                         1-3</h3>
@@ -319,14 +365,14 @@
                                         min</span>
                                 </div>
                                 <h4 class="font-bold text-gray-700 mb-2">FPV 影像容器佈局</h4>
-                                <p class="text-sm text-gray-500 mb-4">目標：實作滿版或居中的即時影像容器，解決 16:9 vs 21:9 比例問題。</p>
+                                <p class="text-sm text-gray-500 mb-4">目標：實作滿版影像容器，解決 16:9 vs 21:9 比例問題。</p>
 
                                 <div class="mt-4 pt-4 border-t border-gray-100">
-                                    <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Pro Tip</h5>
-                                    <p class="text-sm text-gray-600">
-                                        使用 CSS <code class="text-pink-600 font-mono">object-fit: cover</code>
-                                        來讓影像填滿容器而不變形。
-                                    </p>
+                                    <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Visual Feedback</h5>
+                                    <p class="text-sm text-gray-600 mb-2">使用 CSS <code
+                                            class="text-pink-600 font-mono">object-fit: cover</code> 確保影像不變形。</p>
+                                    <p class="text-[10px] text-gray-500 italic">💡 進階任務：建立多個 Branch (如 feature/ios,
+                                        feature/android) 測試不同比例顯示效果。</p>
                                 </div>
                             </div>
                             <!-- Click Hint Overlay -->
@@ -361,4 +407,49 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h4>Web App 開發環境與 HTML5 基礎</h4>
+
+        <p><strong>【作業 1-1】實機部署與跨裝置連線</strong></p>
+        <ul>
+            <li><strong>執行方式：</strong> 提供基本 HTML 模板，學生克隆 (Clone) 後在 README.md 貼上手機連線截圖。</li>
+            <li><strong>評分重點：</strong> 確認學生能正確在區域網路內模擬伺服器並進行跨端預覽。</li>
+        </ul>
+
+        <p><strong>【作業 1-2】觸控友善性優化 (CSS)</strong></p>
+        <ul>
+            <li><strong>自動評分：</strong> 建議檢查 <code>touch-action: manipulation</code> 與 <code>user-select: none</code>。
+            </li>
+            <li><strong>引導：</strong> 在 PR 中引導學生思考：若無設定這些屬性，對遙控操作會產生哪些具體延遲？</li>
+        </ul>
+
+        <p><strong>【作業 1-3】FPV 影像容器佈局</strong></p>
+        <ul>
+            <li><strong>視覺挑戰：</strong> 掌握 <code>object-fit: cover</code> 處理不同比例背景。</li>
+            <li><strong>Git 策略：</strong> 鼓勵學生建立 feature 分支來測試不同螢幕尺寸的兼容性。</li>
+        </ul>
+
+        <hr>
+
+        <h4>4. 翻轉教室中的評分標準 (Checkpoint)</h4>
+
+        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+                <tr style="background-color: #f3f4f6;">
+                    <th style="padding: 8px; text-align: left;">任務</th>
+                    <th style="padding: 8px; text-align: left;">評分標準 (透過 GitHub 檢查)</th>
+                    <th style="padding: 8px; text-align: left;">課堂討論議題</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 8px;"><strong>1-1</strong></td>
+                    <td style="padding: 8px;">README 是否有截圖？能否正確描述本機 IP 位址？</td>
+                    <td style="padding: 8px;">若 WiFi 與電腦不同網段，為何無法連線？</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
 </body>

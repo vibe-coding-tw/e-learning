@@ -21,21 +21,18 @@
         renderNav('/');
     </script>
 
-    <!-- Tab Header -->
-    <div class="bg-white shadow-sm z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex space-x-8 overflow-x-auto" aria-label="Tabs" id="course-tabs-container">
-                <button onclick="switchTab('unit1')" id="tab-unit1"
-                    class="tab-active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
-                    <span class="mr-2">1️⃣</span> UI 佈局
+    <!-- Tab Navigation Bar -->
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('unit1')" id="tab-unit1" class="unit-tab-btn active">
+                    <span>1️⃣</span> UI 佈局
                 </button>
-                <button onclick="switchTab('unit2')" id="tab-unit2"
-                    class="tab-inactive whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm hover:border-gray-300 transition-colors duration-200">
-                    <span class="mr-2">2️⃣</span> 數據格式化
+                <button onclick="switchTab('unit2')" id="tab-unit2" class="unit-tab-btn">
+                    <span>2️⃣</span> 數據格式化
                 </button>
-                <button onclick="switchTab('unit3')" id="tab-unit3"
-                    class="tab-inactive whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm hover:border-gray-300 transition-colors duration-200">
-                    <span class="mr-2">3️⃣</span> 指令流邏輯
+                <button onclick="switchTab('unit3')" id="tab-unit3" class="unit-tab-btn">
+                    <span>3️⃣</span> 指令流邏輯
                 </button>
             </div>
         </div>
@@ -67,11 +64,9 @@
             Object.keys(tabs).forEach(key => {
                 const tabEl = document.getElementById(tabs[key].id);
                 if (key === unitKey) {
-                    tabEl.classList.remove('tab-inactive', 'border-transparent', 'hover:border-gray-300');
-                    tabEl.classList.add('tab-active', 'border-blue-500', 'text-blue-700');
+                    tabEl.classList.add('active');
                 } else {
-                    tabEl.classList.remove('tab-active', 'border-blue-500', 'text-blue-700');
-                    tabEl.classList.add('tab-inactive', 'border-transparent', 'hover:border-gray-300');
+                    tabEl.classList.remove('active');
                 }
             });
 

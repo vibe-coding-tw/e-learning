@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-basic" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -20,20 +20,17 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('pwm-basics')" id="tab-pwm-basics"
-                    class="tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>PWM 基礎與占空比
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('pwm-basics')" id="tab-pwm-basics" class="unit-tab-btn active">
+                    <span>1️⃣</span>PWM 基礎與占空比
                 </button>
-                <button onclick="switchTab('h-bridge')" id="tab-h-bridge"
-                    class="tab-btn border-b-2 border-transparent text-gray-400 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>H 橋與馬達驅動
+                <button onclick="switchTab('h-bridge')" id="tab-h-bridge" class="unit-tab-btn">
+                    <span>2️⃣</span>H 橋與馬達驅動
                 </button>
-                <button onclick="switchTab('ledc-syntax')" id="tab-ledc-syntax"
-                    class="tab-btn border-b-2 border-transparent text-gray-400 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>LEDC 控制器語法
+                <button onclick="switchTab('ledc-syntax')" id="tab-ledc-syntax" class="unit-tab-btn">
+                    <span>3️⃣</span>LEDC 控制器語法
                 </button>
             </div>
         </div>
@@ -58,21 +55,17 @@
         function switchTab(tab) {
             // Reset all tabs
             [tabPwm, tabHBridge, tabLedc].forEach(t => {
-                t.classList.remove('text-blue-600', 'border-blue-600', 'active');
-                t.classList.add('text-gray-500', 'border-transparent');
+                t.classList.remove('active');
             });
 
             if (tab === 'pwm-basics') {
-                tabPwm.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabPwm.classList.remove('text-gray-500', 'border-transparent');
+                tabPwm.classList.add('active');
                 loadContent('basic-04-unit-pwm-basics.html');
             } else if (tab === 'h-bridge') {
-                tabHBridge.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabHBridge.classList.remove('text-gray-500', 'border-transparent');
+                tabHBridge.classList.add('active');
                 loadContent('basic-04-unit-h-bridge.html');
             } else if (tab === 'ledc-syntax') {
-                tabLedc.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabLedc.classList.remove('text-gray-500', 'border-transparent');
+                tabLedc.classList.add('active');
                 loadContent('basic-04-unit-ledc-syntax.html');
             }
         }

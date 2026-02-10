@@ -30,7 +30,7 @@ function generateCheckMacValue(params, hashKey, hashIV, encType = 'sha256') {
 const sampleParams = {
     MerchantID: '3271550',
     LogisticsType: 'CVS',
-    LogisticsSubType: 'UNIMART',
+    LogisticsSubType: 'UNIMARTC2C',
     IsCollection: 'N',
     ServerReplyURL: 'https://example.com/reply'
 };

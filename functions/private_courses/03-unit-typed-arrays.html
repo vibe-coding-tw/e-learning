@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
     <link rel="stylesheet"
@@ -19,28 +20,31 @@
 
     <!-- Hero Section -->
     <header
-        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-cyan-900 text-white pt-20 pb-28 overflow-hidden">
-        <div class="header-overlay absolute inset-0 bg-gradient-to-r from-blue-900 to-cyan-800 opacity-90"></div>
-        <div class="container mx-auto px-4 relative z-10 pt-16 pb-12 text-center text-white">
+        class="relative bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1551288049-bbbda536339a?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
             <div
-                class="badge-header inline-block px-3 py-1 rounded-full bg-blue-500/20 text-blue-200 border border-blue-400/30 backdrop-blur-sm mb-4 text-sm font-bold tracking-wider">
+                class="badge-header inline-block px-4 py-1 rounded-full bg-purple-500/20 text-purple-200 border border-purple-400/30 backdrop-blur-sm mb-6 text-xs font-semibold tracking-wide uppercase font-[Outfit]">
                 Study 3: Data Parsing & Typed Arrays
             </div>
-            <h1 class="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-                數據解析與類型化陣列
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                數據解析與<br>類型化陣列
             </h1>
-            <p class="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed mb-10">
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
                 解鎖二進位資料的奧秘，掌握 Uint8Array 與 DataView，讓你的藍牙傳輸效率提升 10 倍。
             </p>
 
-            <div class="flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/r1FOWU14hJo')"
-                    class="resource-btn bg-cyan-500 hover:bg-cyan-400 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-lg font-bold">
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button
-                    onclick="enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vTYg0tCOtK-qq1aFtWtAQ0PXZYfsrYQHr9Yd_B2CO66rRoqrOywpL1ci-J1fW-uLPDIPA8ldlTJeAN8/pub?embedded=true')"
-                    class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-3 rounded-full flex items-center gap-2 backdrop-blur-sm font-bold">
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
             </div>
@@ -477,6 +481,49 @@
         changeView('uint8');
 
     </script>
+    <section id="instructor-guide" style="display: none;">
+        <h4>實作任務：封裝與解碼</h4>
+
+        <p><strong>【作業 3-1】馬達指令封裝</strong></p>
+        <ul>
+            <li><strong>任務內容：</strong>將左右輪速度 (0-255) 封入 2-byte 的 Uint8Array。</li>
+            <li><strong>陣列製作：</strong><code>const packet = new Uint8Array([left, right])</code>。</li>
+            <li><strong>Hex 核對：</strong>確認 100 換算為 0x64，255 換算為 0xFF。</li>
+        </ul>
+
+        <p><strong>【作業 3-2】感測器數據解碼</strong></p>
+        <ul>
+            <li><strong>任務內容：</strong>使用 DataView 解碼 16-bit 距離數據。</li>
+            <li><strong>Endianness：</strong>掌握 <code>getUint16(0, false)</code> 的用法。</li>
+            <li><strong>邏輯驗證：</strong>輸入 "03 E8" 是否能正確得到 1000？</li>
+        </ul>
+
+        <hr>
+
+        <h4>4. 評分標準與探討 (Checkpoint)</h4>
+
+        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+                <tr style="background-color: #f3f4f6;">
+                    <th style="padding: 8px; text-align: left;">任務</th>
+                    <th style="padding: 8px; text-align: left;">評分標準</th>
+                    <th style="padding: 8px; text-align: left;">課堂討論議題</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 8px;"><strong>3-1</strong></td>
+                    <td style="padding: 8px;">Uint8Array 的索引與長度是否正確？Hex 是否吻合？</td>
+                    <td style="padding: 8px;">為什麼不傳送 "L100,R100" 字串就好？頻寬與功耗的影響？</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><strong>3-2</strong></td>
+                    <td style="padding: 8px;">是否正確選用 DataView？大/小端序判定是否正確？</td>
+                    <td style="padding: 8px;">如果高低位放反了，1000 會變成多少？(0xE803 = 59395)</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
 </body>
 
 </html>

@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-advanced" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -21,20 +21,17 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('sensor-principles')" id="tab-sensor-principles"
-                    class="tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>光電感測器原理
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('sensor-principles')" id="tab-sensor-principles" class="unit-tab-btn active">
+                    <span>1️⃣</span>光電感測器原理
                 </button>
-                <button onclick="switchTab('hardware-interrupts')" id="tab-hardware-interrupts"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>硬體中斷觀念
+                <button onclick="switchTab('hardware-interrupts')" id="tab-hardware-interrupts" class="unit-tab-btn">
+                    <span>2️⃣</span>硬體中斷觀念
                 </button>
-                <button onclick="switchTab('speed-algorithms')" id="tab-speed-algorithms"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>速度算法
+                <button onclick="switchTab('speed-algorithms')" id="tab-speed-algorithms" class="unit-tab-btn">
+                    <span>3️⃣</span>速度算法
                 </button>
             </div>
         </div>
@@ -72,19 +69,19 @@
         function switchTab(tab) {
             // Reset all tabs
             [tabSensor, tabInterrupt, tabSpeed].forEach(t => {
-                if (t) t.className = "tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2";
+                if (t) t.classList.remove('active');
             });
 
             if (tab === 'sensor-principles') {
-                tabSensor.className = "tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabSensor.classList.add('active');
                 loadContent('adv-11-unit-sensor-principles.html');
                 window.location.hash = 'sensor-principles';
             } else if (tab === 'hardware-interrupts') {
-                tabInterrupt.className = "tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabInterrupt.classList.add('active');
                 loadContent('adv-11-unit-hardware-interrupts.html');
                 window.location.hash = 'hardware-interrupts';
             } else if (tab === 'speed-algorithms') {
-                tabSpeed.className = "tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabSpeed.classList.add('active');
                 loadContent('adv-11-unit-speed-algorithms.html');
                 window.location.hash = 'speed-algorithms';
             }
@@ -100,6 +97,8 @@
         }
     </script>
     <script type="module" src="/js/master-nav.js?v=5"></script>
+
+
 
 </body>
 

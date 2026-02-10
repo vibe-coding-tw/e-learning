@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-basic" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -20,20 +20,17 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('fsm-basics')" id="tab-fsm-basics"
-                    class="tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>有限狀態機 (FSM) 入門
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('fsm-basics')" id="tab-fsm-basics" class="unit-tab-btn active">
+                    <span>1️⃣</span>有限狀態機 (FSM) 入門
                 </button>
-                <button onclick="switchTab('ui-design')" id="tab-ui-design"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>網頁端模式控制介面設計
+                <button onclick="switchTab('ui-design')" id="tab-ui-design" class="unit-tab-btn">
+                    <span>2️⃣</span>網頁端模式控制介面設計
                 </button>
-                <button onclick="switchTab('state-consistency')" id="tab-state-consistency"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>非同步下狀態一致性
+                <button onclick="switchTab('state-consistency')" id="tab-state-consistency" class="unit-tab-btn">
+                    <span>3️⃣</span>非同步下狀態一致性
                 </button>
             </div>
         </div>
@@ -58,21 +55,17 @@
         function switchTab(tab) {
             // Reset all tabs
             [tabFsm, tabUi, tabSync].forEach(t => {
-                t.classList.remove('text-blue-600', 'border-blue-600', 'active');
-                t.classList.add('text-gray-500', 'border-transparent');
+                t.classList.remove('active');
             });
 
             if (tab === 'fsm-basics') {
-                tabFsm.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabFsm.classList.remove('text-gray-500', 'border-transparent');
+                tabFsm.classList.add('active');
                 loadContent('basic-10-unit-fsm.html');
             } else if (tab === 'ui-design') {
-                tabUi.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabUi.classList.remove('text-gray-500', 'border-transparent');
+                tabUi.classList.add('active');
                 loadContent('basic-10-unit-ui-design.html');
             } else if (tab === 'state-consistency') {
-                tabSync.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabSync.classList.remove('text-gray-500', 'border-transparent');
+                tabSync.classList.add('active');
                 loadContent('basic-10-unit-state-consistency.html');
             }
         }

@@ -682,22 +682,14 @@ function injectSubmissionModal() {
 
 // Global functions for Modal
 window.openSubmissionModal = async function (assignmentId, title) {
-    document.getElementById('sub-assignment-id').value = assignmentId;
-    document.getElementById('sub-assignment-title').value = title;
-    document.getElementById('sub-display-title').textContent = title;
-    document.getElementById('sub-url').value = '';
-    document.getElementById('sub-note').value = '';
-
-    const githubSection = document.getElementById('github-classroom-section');
-    const githubLink = document.getElementById('sub-github-link');
-
     let classroomUrl = null;
+    const pathParts = window.location.pathname.split('/');
+    const fileName = pathParts[pathParts.length - 1];
 
-    // 0. Try Dynamic Configs (Firestore) first [NEW]
+    // --- 1. Resolve Classroom URL (Priority Order) ---
+
+    // A. Try Dynamic Configs (Firestore) [NEW]
     try {
-        const pathParts = window.location.pathname.split('/');
-        const fileName = pathParts[pathParts.length - 1];
-
         if (typeof window.firebaseGetCourseConfigs === 'function') {
             if (!globalCourseConfigs) {
                 globalCourseConfigs = await window.firebaseGetCourseConfigs();
@@ -716,22 +708,18 @@ window.openSubmissionModal = async function (assignmentId, title) {
         console.error("[CourseShared] Dynamic config lookup failed:", e);
     }
 
-    // 1. Try local RESOURCES first (unit-level manual override)
-    if (typeof window.RESOURCES !== 'undefined' && window.RESOURCES.githubClassroomUrl) {
+    // B. Try local RESOURCES (unit-level manual override)
+    if (!classroomUrl && typeof window.RESOURCES !== 'undefined' && window.RESOURCES.githubClassroomUrl) {
         classroomUrl = resolveClassroomUrl(window.RESOURCES.githubClassroomUrl);
     }
 
-    // 2. Fallback to centralized lessons.json
+    // C. Fallback to centralized lessons.json
     if (!classroomUrl) {
         try {
             if (!globalLessonsData) {
                 const resp = await fetch('/lessons.json');
                 globalLessonsData = await resp.json();
             }
-
-            const pathParts = window.location.pathname.split('/');
-            const fileName = pathParts[pathParts.length - 1];
-
             // Search all courses for this filename key
             for (const course of globalLessonsData) {
                 if (course.githubClassroomUrls && course.githubClassroomUrls[fileName]) {
@@ -743,6 +731,25 @@ window.openSubmissionModal = async function (assignmentId, title) {
             console.error("[CourseShared] Fallback link fetch failed:", e);
         }
     }
+
+    // --- 2. Direct Navigation Logic ---
+    // If we have a link and Shift is NOT held, navigate directly (User Request)
+    const isShiftPressed = window.event && window.event.shiftKey;
+    if (classroomUrl && !isShiftPressed) {
+        console.log(`[CourseShared] Direct navigation to: ${classroomUrl}`);
+        window.open(classroomUrl, '_blank');
+        return;
+    }
+
+    // --- 3. Modal UI Updates (if still here) ---
+    document.getElementById('sub-assignment-id').value = assignmentId;
+    document.getElementById('sub-assignment-title').value = title;
+    document.getElementById('sub-display-title').textContent = title;
+    document.getElementById('sub-url').value = '';
+    document.getElementById('sub-note').value = '';
+
+    const githubSection = document.getElementById('github-classroom-section');
+    const githubLink = document.getElementById('sub-github-link');
 
     if (classroomUrl) {
         githubSection.classList.remove('hidden');

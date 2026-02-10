@@ -291,6 +291,66 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h4>訊號取樣與基礎計數</h4>
+
+        <p><strong>【作業 1-1】訊號觀測站 (方波品質)</strong></p>
+        <ul>
+            <li><strong>GitHub 角色：</strong> <strong>訊號分析師</strong>。</li>
+            <li><strong>執行方式：</strong> 學生需提交「示波器截圖」或「Serial Plotter 截圖」。</li>
+            <li><strong>觀察點：</strong> 轉動馬達時，高低電位的切換是否乾淨？有無明顯的雜訊毛邊？</li>
+            <li><strong>評分重點：</strong> 能否分辨什麼是「數位訊號」的邊緣（Rising/Falling Edge）。</li>
+        </ul>
+
+        <p><strong>【作業 1-2】外部中斷計數器 (精確度)</strong></p>
+        <ul>
+            <li><strong>GitHub 角色：</strong> <strong>數據採集員</strong>。</li>
+            <li><strong>執行方式：</strong> 學生提交 <code>interrupt_counter.cpp</code>，能即時列印累計脈衝數。</li>
+            <li><strong>實驗：</strong> 手動轉動輪子一圈，檢查計數器是否剛好增加「編碼器格數」（如 20 格）。</li>
+            <li><strong>優勢：</strong> 這是建立對「中斷觸發」信任感的基礎。</li>
+        </ul>
+
+        <p><strong>【作業 1-3】即時轉速計 (數據轉換)</strong></p>
+        <ul>
+            <li><strong>GitHub 角色：</strong> <strong>儀表板開發者</strong>。</li>
+            <li><strong>執行方式：</strong> 將格數轉換為物理長度（cm）或轉速（RPM）。</li>
+            <li><strong>呈現：</strong> 透過 Web 介面顯示目前的「虛擬里程計」與「當前時速」。</li>
+            <li><strong>評分重點：</strong> 公式換算的正確性，特別是單位轉換（格 -> 圈 -> 公分）。</li>
+        </ul>
+
+        <hr>
+
+        <h4>翻轉教室中的評分標準 (Checkpoint)</h4>
+
+        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+                <tr style="background-color: #f3f4f6;">
+                    <th style="padding: 8px; text-align: left;">任務</th>
+                    <th style="padding: 8px; text-align: left;">評分標準 (透過 GitHub 檢查)</th>
+                    <th style="padding: 8px; text-align: left;">課堂討論議題</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 8px;"><strong>1-1</strong></td>
+                    <td style="padding: 8px;">是否有截圖證明觀察到方波？能否說明 0V/3.3V 的意義？</td>
+                    <td style="padding: 8px;">如果馬達不轉，訊號線上的電位會一直固定嗎？</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><strong>1-2</strong></td>
+                    <td style="padding: 8px;">程式是否正確載入 <code>attachInterrupt</code>？一圈的計數是否準確？</td>
+                    <td style="padding: 8px;">為什麼用軟體 <code>digitalRead</code> 在高速下會跟不上？</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><strong>1-3</strong></td>
+                    <td style="padding: 8px;">里程計公式是否正確？Web 顯示是否即時？</td>
+                    <td style="padding: 8px;">假如輪胎直徑變大，你的程式碼需要修改哪幾個變數？</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
 </body>
+
 
 </html>

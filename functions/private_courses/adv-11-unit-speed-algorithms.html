@@ -396,6 +396,70 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h4>實作任務：打造你的工業級測速核心</h4>
+
+        <p><strong>【作業 3-1】頻率法實作</strong></p>
+        <ul>
+            <li><strong>任務內容：</strong>利用定時中斷計算每 100ms 的脈衝數。</li>
+            <li><strong>時間視窗：</strong>每 100ms 讀取並歸零</li>
+            <li><strong>數據平滑：</strong>實作移動平均濾波</li>
+            <li><strong>低速觀察：</strong>體會低速解像力不足</li>
+        </ul>
+
+        <p><strong>【作業 3-2】週期法實作</strong></p>
+        <ul>
+            <li><strong>任務內容：</strong>利用 <code>micros()</code> 測量相鄰脈衝間隔。</li>
+            <li><strong>高解析計時：</strong>RISING 中斷紀錄時間</li>
+            <li><strong>倒數運算：</strong>1 / delta_t 換算速度</li>
+            <li><strong>高速觀察：</strong>體會雜訊對短週期的影響</li>
+        </ul>
+
+        <p><strong>【作業 3-3】智能混合法</strong></p>
+        <ul>
+            <li><strong>任務內容：</strong>動態切換演算法以適應全速域。</li>
+            <li><strong>臨界點判斷：</strong><code>if (dt > 50ms) ...</code></li>
+            <li><strong>平滑過渡：</strong>確保切換無明顯跳變</li>
+            <li><strong>Web 儀表板：</strong>繪製完整的速度曲線</li>
+        </ul>
+
+        <hr>
+
+        <h4>翻轉教室中的評分標準 (Checkpoint)</h4>
+
+        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+                <tr style="background-color: #f3f4f6;">
+                    <th style="padding: 8px; text-align: left;">任務</th>
+                    <th style="padding: 8px; text-align: left;">評分標準 (透過 GitHub 檢查)</th>
+                    <th style="padding: 8px; text-align: left;">課堂討論議題</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 8px;"><strong>3-1</strong></td>
+                    <td style="padding: 8px;">是否實作移動平均濾波？100ms 取樣是否準確？</td>
+                    <td style="padding: 8px;">為什麼低速時速度跳動很大？</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><strong>3-2</strong></td>
+                    <td style="padding: 8px;">是否正確使用 <code>micros()</code>？速度換算邏輯是否正確？</td>
+                    <td style="padding: 8px;">為什麼高速時速度顯得不穩定？</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><strong>3-3</strong></td>
+                    <td style="padding: 8px;">混合切換是否平滑？Web 曲線是否穩定？</td>
+                    <td style="padding: 8px;">臨界點 50ms 是如何根據硬體規格計算出來的？</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>總結評價</h4>
+        <p>這套作業非常硬實，且<strong>邏輯錯誤（如忘記寫 volatile 或在 ISR 用 delay）</strong>非常典型。透過 GitHub
+            Classroom，您可以在課前就將這些常見錯誤「批改完畢」，上課時就能直接進入「馬達全速運轉、誤差校準」等更高層次的挑戰。</p>
+    </section>
 </body>
+
 
 </html>

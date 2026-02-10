@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-basic" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -20,20 +20,17 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('millis-logic')" id="tab-millis-logic"
-                    class="tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>擺脫 delay()：millis() 與非阻塞邏輯
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('millis-logic')" id="tab-millis-logic" class="unit-tab-btn active">
+                    <span>1️⃣</span>擺脫 delay()：millis() 與非阻塞邏輯
                 </button>
-                <button onclick="switchTab('hardware-timer')" id="tab-hardware-timer"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>核心概念：硬體定時器 與 ISR
+                <button onclick="switchTab('hardware-timer')" id="tab-hardware-timer" class="unit-tab-btn">
+                    <span>2️⃣</span>核心概念：硬體定時器 與 ISR
                 </button>
-                <button onclick="switchTab('sampling-rate')" id="tab-sampling-rate"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>數據流與取樣率 (Sampling Rate)
+                <button onclick="switchTab('sampling-rate')" id="tab-sampling-rate" class="unit-tab-btn">
+                    <span>3️⃣</span>數據流與取樣率 (Sampling Rate)
                 </button>
             </div>
         </div>
@@ -58,21 +55,17 @@
         function switchTab(tab) {
             // Reset all tabs
             [tabMillis, tabTimer, tabSampling].forEach(t => {
-                t.classList.remove('text-blue-600', 'border-blue-600', 'active');
-                t.classList.add('text-gray-500', 'border-transparent');
+                t.classList.remove('active');
             });
 
             if (tab === 'millis-logic') {
-                tabMillis.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabMillis.classList.remove('text-gray-500', 'border-transparent');
+                tabMillis.classList.add('active');
                 loadContent('basic-09-unit-millis.html');
             } else if (tab === 'hardware-timer') {
-                tabTimer.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabTimer.classList.remove('text-gray-500', 'border-transparent');
+                tabTimer.classList.add('active');
                 loadContent('basic-09-unit-hardware-timer.html');
             } else if (tab === 'sampling-rate') {
-                tabSampling.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabSampling.classList.remove('text-gray-500', 'border-transparent');
+                tabSampling.classList.add('active');
                 loadContent('basic-09-unit-sampling-rate.html');
             }
         }

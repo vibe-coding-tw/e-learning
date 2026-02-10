@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-advanced" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -20,20 +20,17 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('video-streaming')" id="tab-video-streaming"
-                    class="tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>MJPEG vs. H.264 原理
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('video-streaming')" id="tab-video-streaming" class="unit-tab-btn active">
+                    <span>1️⃣</span>MJPEG vs. H.264 原理
                 </button>
-                <button onclick="switchTab('canvas-image')" id="tab-canvas-image"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>HTML5 Canvas 影像處理
+                <button onclick="switchTab('canvas-image')" id="tab-canvas-image" class="unit-tab-btn">
+                    <span>2️⃣</span>HTML5 Canvas 影像處理
                 </button>
-                <button onclick="switchTab('bandwidth-fps')" id="tab-bandwidth-fps"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>網路頻寬與 FPS 數學關係
+                <button onclick="switchTab('bandwidth-fps')" id="tab-bandwidth-fps" class="unit-tab-btn">
+                    <span>3️⃣</span>網路頻寬與 FPS 數學關係
                 </button>
             </div>
         </div>
@@ -57,18 +54,18 @@
 
         function switchTab(tab) {
             // Reset all tabs
-            tabVideo.className = "tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2";
-            tabCanvas.className = "tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2";
-            tabBandwidth.className = "tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2";
+            [tabVideo, tabCanvas, tabBandwidth].forEach(t => {
+                t.classList.remove('active');
+            });
 
             if (tab === 'video-streaming') {
-                tabVideo.className = "tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabVideo.classList.add('active');
                 loadContent('adv-02-unit-video-streaming.html');
             } else if (tab === 'canvas-image') {
-                tabCanvas.className = "tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabCanvas.classList.add('active');
                 loadContent('adv-02-unit-canvas-image.html');
             } else if (tab === 'bandwidth-fps') {
-                tabBandwidth.className = "tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabBandwidth.classList.add('active');
                 loadContent('adv-02-unit-bandwidth-fps.html');
             }
         }

@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-basic" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -20,20 +20,17 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('pinout')" id="tab-pinout"
-                    class="tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>引腳地圖與地雷
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('pinout')" id="tab-pinout" class="unit-tab-btn active">
+                    <span>1️⃣</span>引腳地圖與地雷
                 </button>
-                <button onclick="switchTab('syntax')" id="tab-syntax"
-                    class="tab-btn border-b-2 border-transparent text-gray-400 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>數位控制與去彈跳
+                <button onclick="switchTab('syntax')" id="tab-syntax" class="unit-tab-btn">
+                    <span>2️⃣</span>數位控制與去彈跳
                 </button>
-                <button onclick="switchTab('adc')" id="tab-adc"
-                    class="tab-btn border-b-2 border-transparent text-gray-400 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>ADC 解析度與對應
+                <button onclick="switchTab('adc')" id="tab-adc" class="unit-tab-btn">
+                    <span>3️⃣</span>ADC 解析度與對應
                 </button>
             </div>
         </div>
@@ -58,21 +55,17 @@
         function switchTab(tab) {
             // Reset all tabs
             [tabPinout, tabSyntax, tabAdc].forEach(t => {
-                t.classList.remove('text-blue-600', 'border-blue-600', 'active');
-                t.classList.add('text-gray-500', 'border-transparent');
+                t.classList.remove('active');
             });
 
             if (tab === 'pinout') {
-                tabPinout.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabPinout.classList.remove('text-gray-500', 'border-transparent');
+                tabPinout.classList.add('active');
                 loadContent('basic-03-unit-pinout.html');
             } else if (tab === 'syntax') {
-                tabSyntax.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabSyntax.classList.remove('text-gray-500', 'border-transparent');
+                tabSyntax.classList.add('active');
                 loadContent('basic-03-unit-pullup-debounce.html');
             } else if (tab === 'adc') {
-                tabAdc.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabAdc.classList.remove('text-gray-500', 'border-transparent');
+                tabAdc.classList.add('active');
                 loadContent('basic-03-unit-adc-resolution.html');
             }
         }

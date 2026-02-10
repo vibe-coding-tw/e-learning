@@ -11,7 +11,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-started" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <!-- Navigation (Shared) -->
@@ -22,20 +22,14 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('wifi')" id="tab-wifi"
-                    class="tab-btn active whitespace-nowrap py-3 flex items-center gap-2">
-                    <span
-                        class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">1</span>
-                    WiFi 組態設定
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('wifi')" id="tab-wifi" class="unit-tab-btn active">
+                    <span>1️⃣</span>WiFi 組態設定
                 </button>
-                <button onclick="switchTab('motor')" id="tab-motor"
-                    class="tab-btn whitespace-nowrap py-3 flex items-center gap-2">
-                    <span
-                        class="w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
-                    馬達 Ramping 調校
+                <button onclick="switchTab('motor')" id="tab-motor" class="unit-tab-btn">
+                    <span>2️⃣</span>馬達 Ramping 調校
                 </button>
             </div>
         </div>
@@ -64,26 +58,15 @@
         function switchTab(tab) {
             // Helper to reset all tabs
             [tabWifi, tabMotor].forEach(t => {
-                t.classList.remove('active', 'border-b-2', 'border-blue-600', 'text-blue-700');
-                t.classList.add('text-gray-500');
+                if (t) t.classList.remove('active');
             });
 
-            // Activate current tab
-            let currentTabBtn;
-            let url;
-
             if (tab === 'wifi') {
-                currentTabBtn = tabWifi;
-                url = '00-unit-wifi-setup.html';
+                tabWifi.classList.add('active');
+                loadContent('00-unit-wifi-setup.html');
             } else if (tab === 'motor') {
-                currentTabBtn = tabMotor;
-                url = '00-unit-motor-ramping.html';
-            }
-
-            if (currentTabBtn) {
-                currentTabBtn.classList.add('active', 'border-b-2', 'border-blue-600', 'text-blue-700');
-                currentTabBtn.classList.remove('text-gray-500');
-                loadContent(url);
+                tabMotor.classList.add('active');
+                loadContent('00-unit-motor-ramping.html');
             }
         }
 

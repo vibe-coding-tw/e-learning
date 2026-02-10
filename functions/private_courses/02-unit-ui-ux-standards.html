@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Noto+Sans+TC:wght@400;500;700&display=swap"
         rel="stylesheet">
 
 
@@ -18,24 +18,27 @@
 
     <!-- Hero Section -->
     <header
-        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-cyan-900 text-white pt-24 pb-32 overflow-hidden">
+        class="relative bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
         <div
-            class="absolute inset-0 bg-[url('https://source.unsplash.com/random/1920x1080?drone,technology')] opacity-10 bg-cover bg-center">
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=2940&auto=format&fit=crop')] opacity-10 bg-cover bg-center mix-blend-overlay">
         </div>
-        <div class="container mx-auto max-w-5xl relative z-10 text-center">
-            <h1 class="text-4xl md:text-5xl font-bold mb-6 text-shadow">UI/UX 設計規範：從視覺到體驗</h1>
-            <p class="text-xl opacity-90 max-w-2xl mx-auto leading-relaxed mb-10">
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                UI/UX 設計規範：<br>從視覺到體驗
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
                 不只是好看，更要好用。學習如何利用「翻轉教室」的概念，設計出直覺、高效且符合人體工學的 FPV 遙控介面。
             </p>
 
-            <div class="flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/VeOwKnWLCN8?autoplay=1')"
-                    class="resource-btn bg-[#E76F51] hover:bg-[#d65f41] text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-lg font-bold">
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button
-                    onclick="enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vQbhALfnxDYjHlpWoJ2uqgEVA6vh-USrIWShsry4C9nigfsWQuX4kAW4SyNMDqE5s7JG0f5_OKlALeA/pub?embedded=true')"
-                    class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-3 rounded-full flex items-center gap-2 backdrop-blur-sm font-bold">
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
             </div>
@@ -258,7 +261,20 @@
                 class="absolute top-0 right-0 w-64 h-64 bg-[#E76F51] rounded-full blur-[100px] opacity-20 transform translate-x-1/2 -translate-y-1/2">
             </div>
 
-            <h2 class="text-3xl font-bold mb-12 text-center text-white relative z-10">實作任務 Challenge</h2>
+            <h2 class="text-3xl font-bold mb-8 text-center text-white relative z-10">實作任務 Challenge</h2>
+
+            <!-- Git Base Station Metaphor -->
+            <div
+                class="bg-white/5 backdrop-blur-md rounded-2xl p-6 mb-12 text-orange-100 font-mono text-sm border border-white/10 max-w-3xl mx-auto">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-2xl">🛰️</span>
+                    <h3 class="text-white font-bold text-lg">同步進度：優化體驗回報</h3>
+                </div>
+                <p class="mb-4 opacity-70">最後階段！將你的 UI/UX 優化方案同步至專屬 Branch，並在 PR 中留下你的設計思考。</p>
+                <div class="flex items-center gap-2 bg-black/20 p-2 rounded text-orange-200">
+                    <code>git push origin feature/ux-optimization</code>
+                </div>
+            </div>
 
             <div class="grid md:grid-cols-3 gap-8 relative z-10">
                 <!-- Task 1 -->
@@ -370,6 +386,69 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h4>UI/UX 設計規範：從視覺到體驗</h4>
+
+        <p><strong>【作業 3-1】「盲操」佈局挑戰 (可用性測試)</strong></p>
+        <ul>
+            <li><strong>GitHub 角色：</strong> 可用性分析師。</li>
+            <li><strong>執行方式：</strong> 根據 Thumb Zone 理論重新排列「停止」與「前進」按鈕。</li>
+            <li><strong>評分重點：</strong> 按鈕大小（觸控熱區）是否足夠？是否避開了螢幕頂端的難觸及區？</li>
+        </ul>
+
+        <p><strong>【作業 3-2】FPV HUD 抬頭顯示器 (視覺層級)</strong></p>
+        <ul>
+            <li><strong>GitHub 角色：</strong> 視覺設計師。</li>
+            <li><strong>執行方式：</strong> 將遙測數據（Ping/電量）以半透明方式疊加在影像容器上。</li>
+            <li><strong>評分重點：</strong> 視覺層級的處理，以及 CSS 透明度與圖層順序（z-index）的應用。</li>
+        </ul>
+
+        <p><strong>【作業 3-3】異常狀態 UX 處理 (回饋設計)</strong></p>
+        <ul>
+            <li><strong>GitHub 角色：</strong> 使用者體驗官。</li>
+            <li><strong>執行方式：</strong> 設計「斷線」或「弱訊號」時的視覺提醒（如紅色閃爍）。</li>
+            <li><strong>評分重點：</strong> 顏色編碼（Color Coding）的直覺性，以及過渡動畫對注意力的引導。</li>
+        </ul>
+
+        <hr>
+
+        <h4>4. 翻轉教室中的評分標準 (Checkpoint)</h4>
+
+        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+                <tr style="background-color: #f3f4f6;">
+                    <th style="padding: 8px; text-align: left;">任務</th>
+                    <th style="padding: 8px; text-align: left;">評分標準 (透過 GitHub 檢查)</th>
+                    <th style="padding: 8px; text-align: left;">課堂討論議題</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 8px;"><strong>3-1</strong></td>
+                    <td style="padding: 8px;">核心按鈕是否位於「自然操作區（Natural Zone）」？</td>
+                    <td style="padding: 8px;">如果使用者是左撇子，目前的 UI 該如何調整？</td>
+                </tr>
+                <tr style="background-color: #f9fafb;">
+                    <td style="padding: 8px;"><strong>3-2</strong></td>
+                    <td style="padding: 8px;">HUD 資訊是否精簡？有無遮擋中央 50% 的核心視野？</td>
+                    <td style="padding: 8px;">在強烈陽光下，哪種顏色的 HUD 文字辨識度最高？</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><strong>3-3</strong></td>
+                    <td style="padding: 8px;">回饋機制是否即時？是否正確使用顏色傳遞緊張感？</td>
+                    <td style="padding: 8px;">除了視覺，還有哪些方式可以提醒使用者「斷線了」？</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+
+        <h3>總結評價</h3>
+        <p>單元 2 與 3 的作業旨在建立學生<strong>從代碼到體驗的轉化能力</strong>。在 GitHub Classroom 上，老師可以透過學生提交的 UI
+            截圖或代碼結構，快速判斷其「排版邏輯」與「設計直覺」。建議課堂上讓同學交換手機測試對方的 UI，實機體驗所謂的「拇指操作區」。</p>
+    </section>
+
 </body>
 
 </html>

@@ -1,4 +1,4 @@
-console.log("Dashboard Script v10 Loaded");
+console.log("Dashboard Script v11 Loaded");
 // alert("Dashboard Script v5 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -153,15 +153,48 @@ async function loadDashboard() {
         // [MODIFIED] Access Control: Global Admin/Teacher OR Course-Specific Teacher
         const isAuthorizedTeacher = data.courseConfigs && Object.keys(data.courseConfigs).length > 0;
 
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterUnitId = urlParams.get('unitId');
+
         if (myRole === 'admin' || myRole === 'teacher' || isAuthorizedTeacher) {
             // Admin/Teacher View (Management)
-            renderAdminDashboard(data);
+            renderAdminDashboard(data, filterUnitId);
             setupAdminFeatures();
             setupGradingFunctions();
             setupSettingsFeature();
+
+            // [MODIFIED] Automatically refresh the UI and handle tab switching for filtered units
+            const activeTab = document.querySelector('.tab-btn.text-blue-600');
+            if (activeTab) {
+                const tabId = activeTab.id.replace('tab-btn-', '');
+
+                // If filtered to a unit and on Overview, switch to Assignments or Settings
+                if (filterUnitId && tabId === 'overview') {
+                    // Default to assignments if filtered to a unit
+                    switchTab('assignments');
+                } else {
+                    // Refresh current tab
+                    if (tabId === 'admin') renderAdminConsole();
+                    if (tabId === 'settings') renderSettingsTab(filterUnitId);
+                    if (tabId === 'assignments') {
+                        let displayAssignments = data.assignments;
+                        const urlParams = new URLSearchParams(window.location.search);
+                        let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
+
+                        if (filterCourseId) {
+                            if (filterUnitId) {
+                                displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId && a.unitId === filterUnitId);
+                            } else {
+                                displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
+                            }
+                        }
+                        renderAssignments(displayAssignments);
+                    }
+                }
+            }
         } else if (myRole === 'student') {
             // Student View (Personal Stats)
-            renderStudentDashboard(data);
+            renderStudentDashboard(data, filterUnitId);
         } else {
             showAccessDenied();
         }
@@ -206,7 +239,7 @@ function resolveCourseIdFromUrlParam(paramId) {
 }
 
 // --- Rendering ---
-function renderStudentDashboard(data) {
+function renderStudentDashboard(data, filterUnitId = null) {
     loadingState.classList.add('hidden');
     dashboardContent.classList.remove('hidden');
 
@@ -226,7 +259,13 @@ function renderStudentDashboard(data) {
 
     // Filter if courseId is present
     if (filterCourseId) {
-        displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
+        // [NEW] Filter assignments by unit if present
+        if (filterUnitId) {
+            displayAssignments = displayAssignments.filter(a => a.unitId === filterUnitId);
+        } else {
+            displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
+        }
+
         // Filter progress to only this course
         const filteredProgress = {};
         if (displayCourseProgress[filterCourseId]) {
@@ -234,10 +273,10 @@ function renderStudentDashboard(data) {
         }
         displayCourseProgress = filteredProgress;
 
-        // Update "Total Hours" to reflect THIS course only? 
-        // User asked "Please list the course related info". 
-        // Use the filtered progress total time if available, otherwise 0.
-        if (displayCourseProgress[filterCourseId]) {
+        // [NEW] If filterUnitId is present, calculate time for THAT UNIT specifically
+        if (filterUnitId && displayCourseProgress[filterCourseId] && displayCourseProgress[filterCourseId].units && displayCourseProgress[filterCourseId].units[filterUnitId]) {
+            myData.totalTime = displayCourseProgress[filterCourseId].units[filterUnitId].total;
+        } else if (displayCourseProgress[filterCourseId]) {
             myData.totalTime = displayCourseProgress[filterCourseId].total; // Override for display
         } else {
             myData.totalTime = 0;
@@ -249,7 +288,8 @@ function renderStudentDashboard(data) {
 
     const container = document.getElementById('view-overview');
 
-    const courseTitle = filterCourseId ? (lessonsMap[filterCourseId] || filterCourseId) : "我的學習概況";
+    let courseTitle = filterCourseId ? (lessonsMap[filterCourseId] || filterCourseId) : "我的學習概況";
+    if (filterUnitId) courseTitle += ` - ${formatUnitName(filterUnitId)}`;
 
     container.innerHTML = `
         <div class="mb-6">
@@ -259,7 +299,7 @@ function renderStudentDashboard(data) {
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="card border-l-4 border-blue-500">
-                <p class="text-gray-500 text-sm font-medium">學習時數</p>
+                <p class="text-gray-500 text-sm font-medium">${filterUnitId ? '本單元學習時數' : '學習時數'}</p>
                 <h3 class="text-3xl font-bold text-gray-800 mt-1">${(myData.totalTime / 3600).toFixed(1)} <span class="text-sm font-normal text-gray-400">hours</span></h3>
             </div>
             <div class="card border-l-4 border-purple-500">
@@ -344,17 +384,28 @@ function renderStudentDashboard(data) {
     if (filterCourseId && displayCourseProgress[filterCourseId]) {
         // Construct a temp object mimicking student structure but with only this course's times
         const p = displayCourseProgress[filterCourseId];
-        chartData = [{
-            videoTime: p.video,
-            docTime: p.doc,
-            pageTime: p.page || 0 // assuming page exists or calc remainder
-        }];
+
+        // [NEW] Deep Filter to unit level if present
+        if (filterUnitId && p.units && p.units[filterUnitId]) {
+            const up = p.units[filterUnitId];
+            chartData = [{
+                videoTime: up.video,
+                docTime: up.doc,
+                pageTime: up.page || 0
+            }];
+        } else {
+            chartData = [{
+                videoTime: p.video,
+                docTime: p.doc,
+                pageTime: p.page || 0 // assuming page exists or calc remainder
+            }];
+        }
     }
 
     renderChart(chartData);
 }
 
-function renderAdminDashboard(data) {
+function renderAdminDashboard(data, filterUnitId = null) {
     loadingState.classList.add('hidden');
     dashboardContent.classList.remove('hidden');
 
@@ -389,12 +440,43 @@ function renderAdminDashboard(data) {
     }
 
     // Stats
-    stats.students.textContent = data.summary.totalStudents;
-    stats.hours.textContent = data.summary.totalHours.toFixed(1);
+    if (stats.students) stats.students.textContent = data.summary.totalStudents;
+    if (stats.hours) stats.hours.textContent = data.summary.totalHours.toFixed(1);
 
     // Parse courseId for Admin View to filter stats
     const urlParams = new URLSearchParams(window.location.search);
     let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
+
+    // [NEW] Hide Overview Tab if filtered to a specific course
+    const overviewTabBtn = document.getElementById('tab-btn-overview');
+    if (overviewTabBtn) {
+        if (filterCourseId) {
+            overviewTabBtn.classList.add('hidden');
+            // Logic moved to loadDashboard for better flow
+        } else {
+            overviewTabBtn.classList.remove('hidden');
+        }
+    }
+
+    // [NEW] Unit Context Header
+    if (filterUnitId || filterCourseId) {
+        const header = document.querySelector('#dashboard-content > div.flex.justify-between.items-center.mb-8');
+        if (header) {
+            let contextLabel = filterCourseId ? (lessonsMap[filterCourseId] || filterCourseId) : "";
+            if (filterUnitId) contextLabel = (contextLabel ? contextLabel + " / " : "") + formatUnitName(filterUnitId);
+
+            const existingLabel = document.getElementById('unit-context-label');
+            if (existingLabel) {
+                existingLabel.textContent = contextLabel;
+            } else {
+                const badge = document.createElement('div');
+                badge.id = 'unit-context-label';
+                badge.className = 'bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold ml-4';
+                badge.textContent = contextLabel;
+                header.querySelector('h2').appendChild(badge);
+            }
+        }
+    }
 
     // Table with Expansion
     const tbody = document.getElementById('student-table-body');
@@ -409,9 +491,18 @@ function renderAdminDashboard(data) {
         if (filterCourseId) {
             if (courses[filterCourseId]) {
                 const p = courses[filterCourseId];
-                displayTotal = p.total || 0;
-                displayVideo = p.video || 0;
-                displayDoc = p.doc || 0;
+
+                // [NEW] Filter deep to unit level if enabled
+                if (filterUnitId && p.units && p.units[filterUnitId]) {
+                    const up = p.units[filterUnitId];
+                    displayTotal = up.total || 0;
+                    displayVideo = up.video || 0;
+                    displayDoc = up.doc || 0;
+                } else {
+                    displayTotal = p.total || 0;
+                    displayVideo = p.video || 0;
+                    displayDoc = p.doc || 0;
+                }
             } else {
                 // Course selected but student has no record for it
                 displayTotal = 0;
@@ -452,14 +543,12 @@ function renderAdminDashboard(data) {
 
             // Render Unit Rows (if any)
             if (progress.units) {
-                const sortedUnits = Object.entries(progress.units).sort();
+                const sortedUnits = Object.entries(progress.units)
+                    .filter(([unitKey]) => (!filterUnitId || unitKey === filterUnitId) && !unitKey.includes('-master-'))
+                    .sort();
                 const unitRows = sortedUnits.map(([unitKey, unitStats]) => {
                     // Format Unit Name
-                    let unitName = unitKey.replace('.html', '');
-                    // Try to strip prefixes like "00-unit-", "basic-01-unit-"
-                    const nameMatch = unitName.match(/(?:unit-|master-)(.+)/i);
-                    if (nameMatch) unitName = nameMatch[1];
-                    unitName = unitName.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); // Title Case
+                    const unitName = formatUnitName(unitKey);
 
                     const unitLogsId = `logs-${s.uid}-${cid}-${unitKey.replace(/\./g, '-')}`;
 
@@ -597,33 +686,56 @@ function renderAdminDashboard(data) {
         }
     };
 
-
-
     // [Fix] Filter chart data if courseId is present
     let chartData = data.students;
     if (filterCourseId) {
         chartData = data.students.map(s => {
             const courses = s.courseProgress || {};
             const p = courses[filterCourseId] || { total: 0, video: 0, doc: 0, page: 0 };
+
+            let finalStats = p;
+            if (filterUnitId && p.units && p.units[filterUnitId]) {
+                finalStats = p.units[filterUnitId];
+            }
+
             return {
                 ...s,
-                totalTime: p.total || 0,
-                videoTime: p.video || 0,
-                docTime: p.doc || 0,
-                pageTime: p.page || 0
+                totalTime: finalStats.total || finalStats.totalTime || 0,
+                videoTime: finalStats.video || finalStats.videoTime || 0,
+                docTime: finalStats.doc || finalStats.docTime || 0,
+                pageTime: finalStats.page || finalStats.pageTime || 0
             };
         });
     }
 
-    // [Fix] Filter assignments based on courseId
+    // [Fix] Filter assignments based on courseId and unitId
     let displayAssignments = data.assignments;
     if (filterCourseId) {
-        displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
+        if (filterUnitId) {
+            displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId && a.unitId === filterUnitId);
+        } else {
+            displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
+        }
     }
 
     renderChart(chartData);
     renderAssignments(displayAssignments);
 }
+
+window.handleAssignmentClick = function (courseId, unitId) {
+    const cfg = (dashboardData && dashboardData.courseConfigs) ? dashboardData.courseConfigs[courseId] : null;
+    const inviteLink = cfg && cfg.githubClassroomUrls ? cfg.githubClassroomUrls[unitId] : null;
+
+    if (inviteLink) {
+        let finalUrl = inviteLink;
+        if (typeof inviteLink === 'object') {
+            finalUrl = inviteLink.default || Object.values(inviteLink)[0];
+        }
+        window.open(finalUrl, '_blank');
+    } else {
+        alert("此單元尚未設定 GitHub Classroom 邀請連結，請管理員/老師至「課程設定」中設定。");
+    }
+};
 
 function renderAssignments(assignments) {
     if (!assignments || assignments.length === 0) {
@@ -664,9 +776,9 @@ function renderAssignments(assignments) {
             if (unitMatch) displayUnit = unitMatch[1]; // Try to extract meaningful part
 
             return `
-            <tr class="hover:bg-gray-50 transition border-b border-gray-100">
+            <tr class="lg:hover:bg-blue-50/50 transition border-b border-gray-100 cursor-pointer group" onclick="handleAssignmentClick('${a.courseId}', '${a.unitId}')">
                 <td class="py-3 px-2 text-gray-800">
-                    <div class="font-medium">${escapeHtml(a.studentEmail || a.userEmail)}</div>
+                    <div class="font-medium group-hover:text-blue-600 transition-colors">${escapeHtml(a.studentEmail || a.userEmail)}</div>
                 </td>
                 <td class="py-3 px-2 text-sm text-gray-600">
                     <div class="font-bold text-xs text-gray-700">${escapeHtml(title)}</div>
@@ -676,8 +788,8 @@ function renderAssignments(assignments) {
                 <td class="py-3 px-2">${badge}</td>
                 <td class="py-3 px-2 font-bold text-gray-700">${a.grade !== null && a.grade !== undefined ? a.grade : '-'}</td>
                 <td class="py-3 px-2 text-right">
-                    <button onclick="openGradingModal('${a.id}')" 
-                        class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded text-xs font-bold transition">
+                    <button onclick="event.stopPropagation(); openGradingModal('${a.id}')" 
+                        class="bg-blue-100 hover:bg-blue-600 hover:text-white text-blue-700 px-3 py-1 rounded text-xs font-bold transition">
                         評分
                     </button>
                 </td>
@@ -739,7 +851,25 @@ window.switchTab = function (tabName) {
 
     // [NEW] Trigger specific tab data loading
     if (tabName === 'settings') {
-        renderSettingsTab();
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterUnitId = urlParams.get('unitId');
+        console.log("[Dashboard] Rendering Settings for unitId:", filterUnitId);
+        renderSettingsTab(filterUnitId);
+    }
+    if (tabName === 'assignments') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterUnitId = urlParams.get('unitId');
+        let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
+
+        let displayAssignments = dashboardData.assignments;
+        if (filterCourseId) {
+            if (filterUnitId) {
+                displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId && a.unitId === filterUnitId);
+            } else {
+                displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
+            }
+        }
+        renderAssignments(displayAssignments);
     }
     if (tabName === 'admin') {
         renderAdminConsole();
@@ -760,40 +890,68 @@ function renderAdminConsole() {
     const adminPanel = document.getElementById('admin-panel');
     if (!adminPanel) return;
 
-    // Default structure (Heading only, role assignment removed)
+    // Redesigned Header and Role Management (hidden/removed for now as per previous logic)
     let html = `
-        <h3 class="text-lg font-bold text-orange-800 mb-4 flex items-center gap-2">🛠️ 管理員控制台</h3>
-        <p id="admin-msg" class="text-sm mt-2 text-gray-600 h-5"></p>
+        <div class="flex items-center justify-between mb-8">
+            <h3 class="text-xl font-extrabold text-orange-900 flex items-center gap-3">
+                <span class="p-2 bg-orange-100 rounded-lg">🛠️</span> 
+                管理員控制台 (Admin Console)
+            </h3>
+            <p id="admin-msg" class="text-xs font-medium text-orange-500 animate-pulse"></p>
+        </div>
     `;
 
-    // ADDED: Course-Specific Teacher List
+    // ADDED: Course-Specific Teacher List with Premium Design
     if (filterCourseId) {
         const courseTitle = lessonsMap[filterCourseId] || filterCourseId;
         const config = dashboardData?.courseConfigs?.[filterCourseId] || {};
         const teachers = config.authorizedTeachers || [];
 
         html += `
-            <div class="mt-8 pt-8 border-t border-orange-200">
-                <h4 class="text-md font-bold text-orange-900 mb-4 flex items-center gap-2">
-                    <span>🎓</span> ${escapeHtml(courseTitle)} 的合格老師清單
-                </h4>
+            <div class="bg-white/50 backdrop-blur-sm rounded-2xl border border-orange-100 p-6 shadow-sm">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h4 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                            <span class="text-orange-500 text-xl">🎓</span> 
+                            ${escapeHtml(courseTitle)}
+                        </h4>
+                        <p class="text-xs text-gray-400 mt-1">管理此課程的授權教師清單</p>
+                    </div>
+                </div>
                 
-                <div class="bg-white rounded-lg border border-orange-100 overflow-hidden mb-4 shadow-sm">
+                <div class="bg-white rounded-xl border border-gray-100 overflow-hidden mb-6 shadow-inner">
                     <table class="w-full text-left text-sm">
-                        <thead class="bg-orange-50 text-orange-800 font-bold">
+                        <thead class="bg-gray-50/80 text-gray-500 font-semibold border-b border-gray-100">
                             <tr>
-                                <th class="px-4 py-2">老師 Email</th>
-                                <th class="px-4 py-2 text-right">操作</th>
+                                <th class="px-6 py-3 uppercase tracking-wider text-[10px]">教師電子郵件 (Teacher Email)</th>
+                                <th class="px-6 py-3 text-right uppercase tracking-wider text-[10px]">管理操作</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-orange-50">
-                            ${teachers.length === 0 ? `<tr><td colspan="2" class="px-4 py-4 text-center text-gray-400 italic">目前尚無授權老師</td></tr>` :
-                teachers.map(email => `
+                        <tbody class="divide-y divide-gray-50">
+                            ${teachers.length === 0 ? `
                                 <tr>
-                                    <td class="px-4 py-3 font-mono text-gray-700">${escapeHtml(email)}</td>
-                                    <td class="px-4 py-3 text-right">
+                                    <td colspan="2" class="px-6 py-10 text-center text-gray-400">
+                                        <div class="flex flex-col items-center gap-2">
+                                            <span class="text-3xl opacity-20">👤</span>
+                                            <p class="italic">目前尚無獲准管理的老師</p>
+                                        </div>
+                                    </td>
+                                </tr>` :
+                teachers.map(email => `
+                                <tr class="hover:bg-orange-50/30 transition-colors group">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 text-xs font-bold">
+                                                ${email.substring(0, 1).toUpperCase()}
+                                            </div>
+                                            <span class="font-medium text-gray-700 font-mono">${escapeHtml(email)}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
                                         <button onclick="handleTeacherAuth('${filterCourseId}', '${email}', 'remove')" 
-                                            class="text-red-500 hover:underline text-xs">移除權限</button>
+                                            class="inline-flex items-center gap-1 text-red-400 hover:text-red-600 font-bold text-xs transition-all opacity-0 group-hover:opacity-100 px-3 py-1 hover:bg-red-50 rounded-lg">
+                                            <span>✕</span> 移除權限
+                                        </button>
                                     </td>
                                 </tr>
                             `).join('')}
@@ -801,14 +959,24 @@ function renderAdminConsole() {
                     </table>
                 </div>
 
-                <div class="flex gap-2 items-center">
-                    <input type="email" id="new-teacher-email" placeholder="新增合格老師 Email" 
-                        class="flex-grow px-4 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 transition">
+                <div class="flex flex-col sm:flex-row gap-3 items-center bg-orange-50/50 p-4 rounded-xl border border-orange-100/50">
+                    <div class="relative flex-grow w-full">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">✉️</span>
+                        <input type="email" id="new-teacher-email" placeholder="輸入要新增的老師 Email..." 
+                            class="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:ring-4 focus:ring-orange-100 focus:border-orange-400 transition-all shadow-sm">
+                    </div>
                     <button onclick="handleTeacherAuth('${filterCourseId}', document.getElementById('new-teacher-email').value, 'add')"
-                        class="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition font-bold text-sm shadow-md">
-                        新增授權
+                        class="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-2.5 rounded-xl hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all font-bold text-sm flex items-center justify-center gap-2">
+                        <span>➕</span> 新增授權
                     </button>
                 </div>
+            </div>
+        `;
+    } else {
+        html += `
+            <div class="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <span class="text-4xl mb-4 block">🔍</span>
+                <p class="text-gray-500 font-medium">請先從上方選擇課程，以管理授權教師。</p>
             </div>
         `;
     }
@@ -940,6 +1108,21 @@ function escapeHtml(text) {
         .replace(/'/g, "&#039;");
 }
 
+function formatUnitName(fileName) {
+    if (!fileName) return "Unknown";
+    let name = fileName.replace('.html', '');
+
+    // Explicit handle for master files
+    if (name.includes('-master-')) {
+        return ""; // Return empty to indicate this shouldn't be displayed as a unit name
+    }
+
+    // Try to strip prefixes like "00-unit-", "basic-01-unit-"
+    const nameMatch = name.match(/(?:unit-|master-)(.+)/i);
+    if (nameMatch) name = nameMatch[1];
+    return name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); // Title Case
+}
+
 // --- Data Aggregation Logic ---
 function aggregateData(data) {
     if (!data.students) return;
@@ -1044,7 +1227,7 @@ function setupSettingsFeature() {
     }
 }
 
-async function renderSettingsTab() {
+async function renderSettingsTab(filterUnitId = null) {
     const container = document.getElementById('settings-container');
     if (!container) return;
 
@@ -1072,13 +1255,79 @@ async function renderSettingsTab() {
         container.innerHTML = authorizedLessons.map(course => {
             const configs = courseConfigs[course.courseId]?.githubClassroomUrls || {};
 
-            // List units already in configs
-            const unitFiles = new Set(Object.keys(configs));
-            // Also suggest the main master page if not listed
-            if (course.classroomUrl) {
-                const masterFile = course.classroomUrl.split('/').pop();
-                unitFiles.add(masterFile);
+            const masterFile = (course.classroomUrl && typeof course.classroomUrl === 'string') ? course.classroomUrl.split('/').pop() : null;
+            const units = (masterFile && MASTER_UNIT_MAPPING[masterFile]) ? MASTER_UNIT_MAPPING[masterFile] : [];
+            const isMasterFileSelected = filterUnitId && filterUnitId.includes('-master-');
+            if (isMasterFileSelected && masterFile) units.unshift(masterFile);
+
+            // Get any extra units from configs that might not be in mapping
+            const configUnits = Object.keys(configs);
+            const allUnits = Array.from(new Set([...units, ...configUnits]));
+
+            // [NEW] Extract guide segments
+            const guideData = robustExtractGuideSegments(courseConfigs[course.courseId]?.instructorGuide);
+            const usedSegments = new Set();
+
+            // [MODIFIED] Respect filterUnitId if present
+            const unitRows = allUnits
+                .filter(f => {
+                    const isMaster = f.includes('-master-');
+                    if (isMaster) return false; // Never show master rows
+
+                    // If filtered to a specific unit, only show that unit
+                    if (filterUnitId && !filterUnitId.includes('-master-')) {
+                        const cleanF = f.replace('.html', '');
+                        const cleanFilter = filterUnitId.replace('.html', '');
+                        return cleanF === cleanFilter;
+                    }
+
+                    return true;
+                })
+                .map((fileName) => {
+                    const isMaster = fileName.includes('-master-');
+                    // [FIX] Map unitNum correctly: master is skipped in numbering for guides
+                    // Find actual unit index among unit-only files
+                    const realUnitsOnly = allUnits.filter(u => !u.includes('-master-'));
+                    const unitIdx = realUnitsOnly.indexOf(fileName);
+                    const unitNum = unitIdx !== -1 ? unitIdx + 1 : null;
+
+                    const segment = guideData.segments[fileName] || (unitNum ? guideData.segments[unitNum] : "") || "";
+
+                    if (segment) {
+                        usedSegments.add(fileName);
+                        if (unitNum) usedSegments.add(unitNum.toString());
+                    }
+                    return renderUnitRow(course.courseId, fileName, configs[fileName], segment);
+                })
+                .join('');
+
+            // Collect unused segments for footer
+            let extraFooter = "";
+            Object.entries(guideData.segments).forEach(([key, content]) => {
+                if (!usedSegments.has(key)) {
+                    // [FIX] If filtering to a specific unit, don't show segments from OTHER units in the footer
+                    if (filterUnitId) {
+                        const isOtherFileUnit = key.includes('.html') && !key.includes(filterUnitId);
+                        const isOtherNumUnit = !isNaN(key) && !formatUnitName(filterUnitId).includes(key);
+
+                        if (isOtherFileUnit || isOtherNumUnit) {
+                            return; // Skip guides from other units
+                        }
+                    }
+                    extraFooter += (extraFooter ? "<hr>" : "") + content;
+                }
+            });
+
+            // Construct final footer content (Header + Footer + ANY non-rendered segments)
+            let footerContent = guideData.header ? `<div class="mb-4">${guideData.header}</div>` : "";
+            if (guideData.footer || extraFooter) {
+                if (footerContent) footerContent += "<hr>";
+                footerContent += (guideData.footer || "") + (extraFooter ? (guideData.footer ? "<hr>" : "") + extraFooter : "");
             }
+
+            const cardName = filterUnitId ? formatUnitName(filterUnitId) : "";
+            const cardTitle = cardName || escapeHtml(course.title);
+            const showFooter = footerContent && (filterUnitId || units.length > 0);
 
             return `
                 <div class="p-6 bg-white border border-gray-100 rounded-xl shadow-sm space-y-4">
@@ -1086,55 +1335,132 @@ async function renderSettingsTab() {
                         <div class="flex items-center gap-3">
                             <span class="text-2xl">${course.icon || '📚'}</span>
                             <div>
-                                <h4 class="font-bold text-gray-800">${escapeHtml(course.title)}</h4>
-                                <p class="text-[10px] text-gray-400 font-mono">${course.courseId}</p>
+                                <h4 class="font-bold text-gray-800">${cardTitle}</h4>
+                                <p class="text-[10px] text-gray-400 font-mono">${filterUnitId || course.courseId}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4" id="units-list-${course.courseId}">
-                        ${(() => {
-                    const masterFile = course.classroomUrl ? course.classroomUrl.split('/').pop() : null;
-                    const units = (masterFile && MASTER_UNIT_MAPPING[masterFile]) ? [masterFile, ...MASTER_UNIT_MAPPING[masterFile]] : (masterFile ? [masterFile] : []);
-
-                    // Get any extra units from configs that might not be in mapping
-                    const configUnits = Object.keys(configs);
-                    const allUnits = Array.from(new Set([...units, ...configUnits]));
-
-                    return allUnits.map(fileName => renderUnitRow(course.courseId, fileName, configs[fileName])).join('');
-                })()}
+                    <div class="grid grid-cols-1 gap-4" id="units-list-${course.courseId}">
+                        ${unitRows}
                     </div>
+                    
+                    ${showFooter ? `
+                        <div class="mt-8 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+                            <h5 class="text-blue-800 font-bold flex items-center gap-2 mb-4">
+                                <span>💡</span> 教師指南 (Instructor Guide)
+                            </h5>
+                            <div class="instructor-guide-content text-base text-blue-900/90 leading-relaxed prose prose-blue max-w-none">
+                                ${footerContent}
+                            </div>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }).join('');
 
     } catch (e) {
         console.error("Failed to render settings:", e);
+        alert("Error mapping settings: " + e.message + "\nStack: " + e.stack);
         container.innerHTML = `<div class="text-red-500 p-4">載入失敗: ${e.message}</div>`;
     }
 }
 
-function renderUnitRow(courseId, fileName, teacherMap = {}) {
+// Helper to split instructor guide into parts
+function robustExtractGuideSegments(inputArg) {
+    console.log("[Debug] robustExtractGuideSegments start. Type:", typeof inputArg, inputArg);
+
+    if (inputArg === null || inputArg === undefined) {
+        return { header: '', segments: {}, footer: '' };
+    }
+
+    // [NEW] Handle structured object from backend
+    if (typeof inputArg === 'object' && !Array.isArray(inputArg)) {
+        const result = { header: '', segments: {}, footer: '' };
+        Object.entries(inputArg).forEach(([fileName, content]) => {
+            if (typeof content !== 'string') {
+                console.warn("[Debug] Non-string content in guide object for", fileName, content);
+                return;
+            }
+            if (fileName.includes('-master-')) {
+                // General content usually comes from master
+                result.footer += (result.footer ? "<hr>" : "") + content;
+            } else {
+                result.segments[fileName] = content;
+            }
+        });
+        return result;
+    }
+
+    // Legacy string-based split by <hr>
+    if (typeof inputArg !== 'string') {
+        console.warn("[Debug] inputArg is not a string or object:", typeof inputArg, inputArg);
+        return { header: '', segments: {}, footer: '' };
+    }
+
+    const sections = inputArg.split(/<hr\s*\/?>/i);
+    const segments = {};
+    let header = "";
+    let footer = "";
+
+    let firstUnitFound = false;
+    let lastUnitIdx = -1;
+
+    // First pass: Identify sections that explicitly belong to a unit
+    sections.forEach((section, idx) => {
+        // Look for: <h4>X. , 【作業 X-Y】, 任務 X-Y, etc.
+        const unitMatch = section.match(/<h4>(\d+)\./i) ||
+            section.match(/【(?:作業|任務)\s*(\d+)-\d+】/i) ||
+            section.match(/<h4>【(?:作業|任務)\s*(\d+)-\d+】/i);
+
+        if (unitMatch) {
+            const unitIdx = parseInt(unitMatch[1]);
+            if (!segments[unitIdx]) segments[unitIdx] = "";
+            segments[unitIdx] += (segments[unitIdx] ? "<hr>" : "") + section;
+            firstUnitFound = true;
+            lastUnitIdx = idx;
+        } else {
+            if (!firstUnitFound) {
+                header += (header ? "<hr>" : "") + section;
+            }
+        }
+    });
+
+    // Second pass: Handle gaps and trailing sections
+    let currentUnit = -1;
+    sections.forEach((section, idx) => {
+        const unitMatch = section.match(/<h4>(\d+)\./i) ||
+            section.match(/【(?:作業|任務)\s*(\d+)-\d+】/i) ||
+            section.match(/<h4>【(?:作業|任務)\s*(\d+)-\d+】/i);
+
+        if (unitMatch) {
+            currentUnit = parseInt(unitMatch[1]);
+        } else if (idx > lastUnitIdx) {
+            footer += (footer ? "<hr>" : "") + section;
+        } else if (firstUnitFound && currentUnit !== -1 && idx > 0) {
+            // This is content that follows a unit section but doesn't have its own ID
+            // Append it to the current unit segment
+            segments[currentUnit] += "<hr>" + section;
+        }
+    });
+
+    return { header, segments, footer };
+}
+
+function renderUnitRow(courseId, fileName, teacherMap = {}, guideSegment = "") {
     // teacherMap: { "default": "...", "teacher_a": "..." }
     const entries = Object.entries(teacherMap);
     if (entries.length === 0) entries.push(['default', '']);
 
     return `
-        <div class="unit-config-card bg-gray-50 p-4 rounded-xl border border-gray-100 hover:border-blue-100 transition shadow-sm relative group" 
-            data-course-id="${courseId}" data-file-name="${fileName}">
+        <div class="unit-config-card bg-gray-50 p-4 rounded-xl border border-gray-100 hover:border-blue-100 transition shadow-sm relative group">
             
-            <div class="mb-3">
-                <span class="text-[10px] font-bold text-blue-500 uppercase tracking-wider">Unit File</span>
-                <p class="text-sm font-mono text-gray-700 truncate" title="${fileName}">${fileName}</p>
-            </div>
-
             <div class="space-y-3 teacher-links-container">
                 ${entries.map(([teacher, url], idx) => `
                     <div class="space-y-1 teacher-link-row">
                         <div class="flex justify-between items-center">
-                            <label class="text-[9px] font-bold text-gray-400 uppercase">${teacher === 'default' ? '預設連結 (自己)' : '教師 ID: ' + teacher}</label>
+                            <label class="text-[9px] font-bold text-gray-400 uppercase">${teacher === 'default' ? '作業連結' : '教師 ID: ' + teacher}</label>
                             <input type="hidden" class="teacher-id-input" value="${escapeHtml(teacher)}">
-                            ${teacher !== 'default' ? `<button onclick="this.parentElement.parentElement.remove()" class="text-[9px] text-red-400 hover:underline">刪除</button>` : ''}
                         </div>
                         <input type="url" placeholder="貼上 GitHub Classroom 邀請連結 (https://classroom.github.com/a/...)" 
                             value="${escapeHtml(url)}" 
@@ -1142,33 +1468,16 @@ function renderUnitRow(courseId, fileName, teacherMap = {}) {
                     </div>
                 `).join('')}
             </div>
-            
-            <button onclick="addTeacherRow(this)" class="mt-3 text-[10px] text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1 opacity-60 hover:opacity-100 transition">
-                <span>➕</span> 設定其他教師連結 (進階)
-            </button>
+
+            ${guideSegment ? `
+                <div class="mt-4 p-5 bg-blue-50/50 border border-blue-100 rounded-lg text-sm text-blue-900/90 leading-relaxed instructor-guide-content">
+                    ${guideSegment}
+                </div>
+            ` : ''}
         </div>
     `;
 }
 
-window.addTeacherRow = function (btn) {
-    const teacherId = prompt("請輸入教師 ID (例如: teacher_vibe):");
-    if (!teacherId) return;
-
-    const container = btn.previousElementSibling;
-    const div = document.createElement('div');
-    div.className = 'space-y-1 teacher-link-row';
-    div.innerHTML = `
-        <div class="flex justify-between items-center">
-            <label class="text-[9px] font-bold text-gray-400 uppercase">教師 ID: ${escapeHtml(teacherId)}</label>
-            <input type="hidden" class="teacher-id-input" value="${escapeHtml(teacherId)}">
-            <button onclick="this.parentElement.parentElement.remove()" class="text-[9px] text-red-400 hover:underline">刪除</button>
-        </div>
-        <input type="url" placeholder="貼上 GitHub Classroom 邀請連結" 
-            value="" 
-            class="teacher-url-input w-full px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition">
-    `;
-    container.appendChild(div);
-};
 
 
 async function saveAllSettings() {
@@ -1219,3 +1528,22 @@ async function saveAllSettings() {
         btn.textContent = originalText;
     }
 }
+
+// --- Global Fixes: Esc Key handling ---
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        // 1. Close Modal if open
+        const modal = document.getElementById('grading-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            window.closeGradingModal();
+            return;
+        }
+
+        // 2. Clear filters if present
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('courseId') || urlParams.get('unitId')) {
+            console.log("[Esc] Redirecting to main dashboard...");
+            window.location.href = 'dashboard.html';
+        }
+    }
+});

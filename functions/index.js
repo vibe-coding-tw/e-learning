@@ -693,6 +693,7 @@ exports.saveCourseConfigs = functions.region(REGION).https.onCall(async (data, c
         throw new functions.https.HttpsError('unauthenticated', 'User must be logged in.');
     }
     const uid = context.auth.uid;
+    const email = context.auth.token.email;
     const role = await getRole(uid);
     if (role !== 'admin' && role !== 'teacher') {
         throw new functions.https.HttpsError('permission-denied', 'Only teachers and admins can save configs.');
@@ -709,10 +710,18 @@ exports.saveCourseConfigs = functions.region(REGION).https.onCall(async (data, c
         const existingConfigs = doc.exists ? doc.data() : {};
 
         // Security Check: Caller must be admin OR an authorized teacher for this course
-        const isAuthorized = requesterRole === 'admin' || (existingConfigs.authorizedTeachers && existingConfigs.authorizedTeachers.includes(context.auth.token.email));
+        const isAuthorized = role === 'admin' || (existingConfigs.authorizedTeachers && existingConfigs.authorizedTeachers.includes(email));
 
         if (!isAuthorized) {
             throw new functions.https.HttpsError('permission-denied', 'Only authorized teachers can save configs.');
+        }
+
+        // [NEW] If admin is saving, automatically add them to the authorized teachers list for recorded tracking
+        if (role === 'admin') {
+            const currentTeachers = existingConfigs.authorizedTeachers || [];
+            if (!currentTeachers.includes(email)) {
+                configs.authorizedTeachers = admin.firestore.FieldValue.arrayUnion(email);
+            }
         }
 
         await docRef.set({
@@ -801,6 +810,64 @@ exports.getDashboardData = functions.region(REGION).https.onCall(async (data, co
                 courseConfigs[doc.id] = cfg;
             }
         });
+
+        // [NEW] Extract Instructor Guides for all authorized courses dynamically
+        // Refactored to aggregate from all related unit files by prefix
+        const lessons = await getLessons();
+
+        // [MODIFIED] If admin or global teacher, ensure ALL courses from lessons.json are considered for guide aggregation
+        if (requesterRole === 'admin' || requesterRole === 'teacher') {
+            lessons.forEach(l => {
+                if (!authorizedCourseIds.includes(l.courseId)) {
+                    authorizedCourseIds.push(l.courseId);
+                }
+            });
+        }
+
+        const privateCoursesDir = path.join(__dirname, 'private_courses');
+        const allFiles = fs.existsSync(privateCoursesDir) ? fs.readdirSync(privateCoursesDir) : [];
+
+        for (const cid of authorizedCourseIds) {
+            const course = lessons.find(l => l.courseId === cid);
+            if (course && course.classroomUrl) {
+                try {
+                    const masterFile = course.classroomUrl.split('/').pop();
+                    const prefix = masterFile.split('-master-')[0];
+
+                    if (prefix) {
+                        const relatedFiles = allFiles.filter(f => f.startsWith(prefix) && f.endsWith('.html'));
+                        let aggregatedGuides = {};
+
+                        // Sort files to maintain some order (master first, then units)
+                        relatedFiles.sort((a, b) => {
+                            if (a.includes('-master-')) return -1;
+                            if (b.includes('-master-')) return 1;
+                            return a.localeCompare(b);
+                        });
+
+                        for (const file of relatedFiles) {
+                            const filePath = path.join(privateCoursesDir, file);
+                            const html = fs.readFileSync(filePath, 'utf8');
+                            const guideMatch = html.match(/<section id="instructor-guide"[^>]*>([\s\S]*?)<\/section>/);
+                            if (guideMatch && guideMatch[1]) {
+                                const guideContent = guideMatch[1].trim();
+                                if (guideContent) {
+                                    aggregatedGuides[file] = guideContent;
+                                }
+                            }
+                        }
+
+                        if (Object.keys(aggregatedGuides).length > 0) {
+                            if (!courseConfigs[cid]) courseConfigs[cid] = {};
+                            courseConfigs[cid].instructorGuide = aggregatedGuides;
+                        }
+                    }
+                } catch (e) {
+                    console.error(`Failed to extract aggregated instructor guide for ${cid}:`, e);
+                }
+            }
+        }
+
 
         // Determine if this user has any management access (Global Admin/Teacher or Course-Specific Teacher)
         const isManagementView = requesterRole === 'admin' || requesterRole === 'teacher' || authorizedCourseIds.length > 0;

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
 </head>
@@ -16,24 +17,27 @@
 
     <!-- Hero Section -->
     <header
-        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-cyan-900 text-white pt-24 pb-32 overflow-hidden">
-        <div class="header-overlay absolute inset-0 bg-gradient-to-r from-orange-600 to-red-500 opacity-90"></div>
-        <div class="container mx-auto px-4 relative z-10 pt-20 pb-20 text-center text-white">
-            <h1 class="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-                CSS Flexbox：遙控器排版的神器
+        class="relative bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550439062-609e154f270e?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                CSS Flexbox：<br>遙控器排版的神器
             </h1>
-            <p class="text-xl text-orange-100 max-w-2xl mx-auto leading-relaxed mb-10">
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
                 告別 float 與 position 的噩夢，用彈性盒子打造完美的響應式遙控介面。
             </p>
 
-            <div class="flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/Eug1scRXLgg?autoplay=1')"
-                    class="resource-btn bg-orange-500 hover:bg-orange-400 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-lg font-bold">
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button
-                    onclick="enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vQYojXkmg-_K5jXRtyqhpTG-9OEyvVrhjlfiifb9sJQDeoSJ7JJKOB1Y9n2Hw-VYyvDjxQNfqol9bnN/pub?embedded=true')"
-                    class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-3 rounded-full flex items-center gap-2 backdrop-blur-sm font-bold">
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
             </div>
@@ -257,6 +261,19 @@
                 <h2 class="text-3xl font-bold text-gray-900 mt-2">實戰挑戰：Flexbox 遙控器</h2>
             </div>
 
+            <!-- Git Base Station Metaphor -->
+            <div
+                class="bg-indigo-900 rounded-xl p-6 mb-12 text-indigo-100 font-mono text-sm border-l-4 border-indigo-500 shadow-xl">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-2xl">📡</span>
+                    <h3 class="text-white font-bold text-lg">基地台通訊：回傳排版數據</h3>
+                </div>
+                <p class="mb-4 text-indigo-300">完成後請回傳至基地台，助教機器人會自動巡檢你的 Flexbox 軸線設定。</p>
+                <div class="flex items-center gap-2 bg-black/30 p-2 rounded text-indigo-200">
+                    <code>git add . && git commit -m "feat: layout optimized" && git push</code>
+                </div>
+            </div>
+
             <div class="space-y-8">
                 <!-- Task 2-1 -->
                 <div onclick="openSubmissionModal('flexbox-task-1', '作業 2-1: 十字方向鍵佈局')"
@@ -451,6 +468,64 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h4>CSS Flexbox：遙控器排版的神器</h4>
+
+        <p><strong>【作業 2-1】十字方向鍵佈局 (幾何對稱挑戰)</strong></p>
+        <ul>
+            <li><strong>GitHub 角色：</strong> 佈局工程師。</li>
+            <li><strong>執行方式：</strong> 學生需使用 <code>flex-direction</code> 組合巢狀容器，達成 D-pad 的十字排列。</li>
+            <li><strong>評分重點：</strong> 是否正確應用 <code>justify-content: center</code> 與 <code>align-items: center</code>。
+            </li>
+        </ul>
+
+        <p><strong>【作業 2-2】響應式儀表板 (佈局切換)</strong></p>
+        <ul>
+            <li><strong>GitHub 角色：</strong> 前端開發工程師。</li>
+            <li><strong>執行方式：</strong> 利用 Media Queries，在手機橫向時將選單從「下方」移至「側邊」。</li>
+            <li><strong>評分重點：</strong> <code>flex-direction</code> 的切換邏輯，以及 <code>flex-grow: 1</code> 的正確應用。</li>
+        </ul>
+
+        <p><strong>【作業 2-3】間距與觸控優化 (精確控制)</strong></p>
+        <ul>
+            <li><strong>GitHub 角色：</strong> 介面優化師。</li>
+            <li><strong>執行方式：</strong> 使用 <code>gap</code> 屬性取代傳統 margin，並實作寬度平分的控制組。</li>
+            <li><strong>評分重點：</strong> <code>gap</code> 數值的合理性，以及 <code>flex: 1</code> 在等寬佈局中的使用。</li>
+        </ul>
+
+        <hr>
+
+        <h4>4. 翻轉教室中的評分標準 (Checkpoint)</h4>
+
+        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+                <tr style="background-color: #f3f4f6;">
+                    <th style="padding: 8px; text-align: left;">任務</th>
+                    <th style="padding: 8px; text-align: left;">評分標準 (透過 GitHub 檢查)</th>
+                    <th style="padding: 8px; text-align: left;">課堂討論議題</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 8px;"><strong>2-1</strong></td>
+                    <td style="padding: 8px;">十字鍵是否正確對齊？巢狀容器結構是否清晰？</td>
+                    <td style="padding: 8px;">如果其中一個按鈕隱藏了，Flexbox 會如何自動調整位置？</td>
+                </tr>
+                <tr style="background-color: #f9fafb;">
+                    <td style="padding: 8px;"><strong>2-2</strong></td>
+                    <td style="padding: 8px;">Media Query 觸發點是否合理？佈局切換是否平滑？</td>
+                    <td style="padding: 8px;">在摺疊手機上，這套佈局會遇到什麼挑戰？</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><strong>2-3</strong></td>
+                    <td style="padding: 8px;">gap 應用是否一致？flex: 1 是否讓寬度正確平分？</td>
+                    <td style="padding: 8px;">為什麼有些設計師偏好用 gap 而不是 margin？</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
 </body>
 
 </html>

@@ -35,12 +35,11 @@
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/q_4Em1aBb_I')"
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button
-                    onclick="enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vTB7f3i88FchXuz4xKaGPAI3_AvO0iYhq_fET3BBv07Sa7oeiW3Hp3lci8Lq9-VvKCj9aFvfmY8Mq5G/pub?embedded=true')"
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -421,6 +420,67 @@
 
         // Trigger Animations on Scroll - Moved to course-shared.js
         </script>
+        <!-- Instructor Guide (Hidden) -->
+        <section id="instructor-guide" style="display: none;">
+            <h4>教學重點</h4>
+            <ul>
+                <li><strong>vscode.dev vs Codespaces：</strong>這是學生最容易混淆的地方。<code>vscode.dev</code> 只是一個在瀏覽器跑的
+                    UI，它沒有後端運算力（無法編譯）；而 <code>Codespaces</code> 是一台完整的雲端虛擬機。</li>
+                <li><strong>一鍵變身術 (.)：</strong>這是一個很酷的技巧，能大幅提升學生對 GitHub 整合環境的好感度。</li>
+                <li><strong>Web Serial：</strong>雖然 <code>vscode.dev</code> 支援 Web
+                    Serial，但通常只能進行通訊除錯，無法上傳韌體。應以此作為「快速診斷硬體」的工具。</li>
+            </ul>
+
+            <hr>
+
+            <h4>GitHub Classroom 運作指南</h4>
+            <ol>
+                <li><strong>Codespaces 整合：</strong>GitHub Classroom 的 Repo 預設都支援一鍵啟動 Codespaces。</li>
+                <li><strong>檢查學生進度：</strong>老師可以直接進入學生的 Repo，按下 <code>.</code> 進入 <code>github.dev</code> 快速檢視程式碼，不需要
+                    clone 到本機。</li>
+                <li><strong>即時除錯：</strong>若學生遇到環境問題，老師可以啟動 Codespace 幫學生建立一個一致的環境進行排除。</li>
+            </ol>
+
+            <hr>
+
+            <h4>常見問題 (FAQ)</h4>
+            <ul>
+                <li><strong>按下 <code>.</code> 沒反應：</strong>檢查是否已登入 GitHub，且確認當前頁面是有效的 Repository。</li>
+                <li><strong>Terminal 選項是灰色的：</strong>這證明學生正在使用 <code>vscode.dev</code> 而非 <code>Codespaces</code>。請引導至
+                    Repo 的 Code > Codespaces 開啟。</li>
+                <li><strong>Web Serial 無法連線：</strong>確認瀏覽器是 Chrome 或 Edge（Safari/Firefox 目前不支援 Web Serial）。</li>
+            </ul>
+
+            <hr>
+
+            <h4>評分標準 (Checkpoint)</h4>
+            <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
+                <thead style="background-color: #f3f4f6;">
+                    <tr>
+                        <th style="padding: 8px;">任務</th>
+                        <th style="padding: 8px;">評分標準</th>
+                        <th style="padding: 8px;">檢核要點</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 8px;">Web Serial 測試</td>
+                        <td style="padding: 8px;">硬體通訊</td>
+                        <td style="padding: 8px;">學生能否在瀏覽器中成功看到 ESP32 輸出的 Hello 訊息。</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Codespaces 雲端編譯</td>
+                        <td style="padding: 8px;">環境操作</td>
+                        <td style="padding: 8px;">能否成功開啟 Codespace 並在 Terminal 下達簡單指令。</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">跨裝置同步</td>
+                        <td style="padding: 8px;">Git Flow 理解</td>
+                        <td style="padding: 8px;">在行動裝置端 Commit 後，回到 Web 端是否能看到變動。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
 </body>
 
 </html>

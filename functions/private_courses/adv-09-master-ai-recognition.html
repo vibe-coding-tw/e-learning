@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-advanced" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -21,24 +21,20 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('cnn-audio')" id="tab-cnn-audio"
-                    class="tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>AI 識別原理：CNN 與語音特徵
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('cnn-audio')" id="tab-cnn-audio" class="unit-tab-btn active">
+                    <span>1️⃣</span>AI 識別原理：CNN 與語音特徵
                 </button>
-                <button onclick="switchTab('teachable-machine')" id="tab-teachable-machine"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>Teachable Machine 建模實戰
+                <button onclick="switchTab('teachable-machine')" id="tab-teachable-machine" class="unit-tab-btn">
+                    <span>2️⃣</span>Teachable Machine 建模實戰
                 </button>
-                <button onclick="switchTab('webspeech-api')" id="tab-webspeech-api"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>Web Speech API 原理與限制
+                <button onclick="switchTab('webspeech-api')" id="tab-webspeech-api" class="unit-tab-btn">
+                    <span>3️⃣</span>Web Speech API 原理與限制
                 </button>
-                <button onclick="switchTab('flow-control')" id="tab-flow-control"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">4️⃣</span>前端資料緩衝與流控
+                <button onclick="switchTab('flow-control')" id="tab-flow-control" class="unit-tab-btn">
+                    <span>4️⃣</span>前端資料緩衝與流控
                 </button>
             </div>
         </div>
@@ -77,23 +73,23 @@
         function switchTab(tab) {
             // Reset all tabs
             [tabCNNAudio, tabTeachableMachine, tabWebSpeechAPI, tabFlowControl].forEach(t => {
-                if (t) t.className = "tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2";
+                if (t) t.classList.remove('active');
             });
 
             if (tab === 'cnn-audio') {
-                tabCNNAudio.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabCNNAudio.classList.add('active');
                 loadContent('adv-09-unit-cnn-audio.html');
                 window.location.hash = 'cnn-audio';
             } else if (tab === 'teachable-machine') {
-                tabTeachableMachine.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabTeachableMachine.classList.add('active');
                 loadContent('adv-09-unit-teachable-machine.html');
                 window.location.hash = 'teachable-machine';
             } else if (tab === 'webspeech-api') {
-                tabWebSpeechAPI.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabWebSpeechAPI.classList.add('active');
                 loadContent('adv-09-unit-webspeech-api.html');
                 window.location.hash = 'webspeech-api';
             } else if (tab === 'flow-control') {
-                tabFlowControl.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabFlowControl.classList.add('active');
                 loadContent('adv-09-unit-flow-control.html');
                 window.location.hash = 'flow-control';
             }

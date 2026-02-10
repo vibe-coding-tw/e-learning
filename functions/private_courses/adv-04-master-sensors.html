@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-advanced" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -21,20 +21,17 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('i2c-spi-basics')" id="tab-i2c-spi-basics"
-                    class="tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>I2C, SPI 與硬體實戰
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('i2c-spi-basics')" id="tab-i2c-spi-basics" class="unit-tab-btn active">
+                    <span>1️⃣</span>I2C, SPI 與硬體實戰
                 </button>
-                <button onclick="switchTab('filter-algorithms')" id="tab-filter-algorithms"
-                    class="tab-btn active border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>數據抖動與濾波演算法
+                <button onclick="switchTab('filter-algorithms')" id="tab-filter-algorithms" class="unit-tab-btn">
+                    <span>2️⃣</span>數據抖動與濾波演算法
                 </button>
-                <button onclick="switchTab('json-rest')" id="tab-json-rest"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>JSON 數據打包與 RESTful 回傳
+                <button onclick="switchTab('json-rest')" id="tab-json-rest" class="unit-tab-btn">
+                    <span>3️⃣</span>JSON 數據打包與 RESTful 回傳
                 </button>
             </div>
         </div>
@@ -59,17 +56,17 @@
         function switchTab(tab) {
             // Reset all tabs
             [tabBasics, tabJsonRest, tabFilter].forEach(t => {
-                t.className = "tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2";
+                t.classList.remove('active');
             });
 
             if (tab === 'i2c-spi-basics') {
-                tabBasics.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabBasics.classList.add('active');
                 loadContent('adv-04-unit-i2c-spi.html');
             } else if (tab === 'json-rest') {
-                tabJsonRest.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabJsonRest.classList.add('active');
                 loadContent('adv-04-unit-json-rest.html');
             } else if (tab === 'filter-algorithms') {
-                tabFilter.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabFilter.classList.add('active');
                 loadContent('adv-04-unit-filter-algorithms.html');
             }
         }

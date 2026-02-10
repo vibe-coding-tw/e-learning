@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-advanced" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -21,24 +21,20 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('ui-framework')" id="tab-ui-framework"
-                    class="tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>UI 框架與元件化設計
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('ui-framework')" id="tab-ui-framework" class="unit-tab-btn active">
+                    <span>1️⃣</span>UI 框架與元件化設計
                 </button>
-                <button onclick="switchTab('chart-canvas')" id="tab-chart-canvas"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>即時繪圖與效能優化
+                <button onclick="switchTab('chart-canvas')" id="tab-chart-canvas" class="unit-tab-btn">
+                    <span>2️⃣</span>即時繪圖與效能優化
                 </button>
-                <button onclick="switchTab('json-parsing')" id="tab-json-parsing"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>JSON 封包解析
+                <button onclick="switchTab('json-parsing')" id="tab-json-parsing" class="unit-tab-btn">
+                    <span>3️⃣</span>JSON 封包解析
                 </button>
-                <button onclick="switchTab('event-polling')" id="tab-event-polling"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">4️⃣</span>事件驅動 vs. 輪詢更新
+                <button onclick="switchTab('event-polling')" id="tab-event-polling" class="unit-tab-btn">
+                    <span>4️⃣</span>事件驅動 vs. 輪詢更新
                 </button>
             </div>
         </div>
@@ -77,23 +73,23 @@
         function switchTab(tab) {
             // Reset all tabs
             [tabUI, tabChart, tabJSON, tabEvent].forEach(t => {
-                if (t) t.className = "tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2";
+                if (t) t.classList.remove('active');
             });
 
             if (tab === 'ui-framework') {
-                tabUI.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabUI.classList.add('active');
                 loadContent('adv-07-unit-ui-framework.html');
                 window.location.hash = 'ui-framework';
             } else if (tab === 'chart-canvas') {
-                tabChart.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabChart.classList.add('active');
                 loadContent('adv-07-unit-chart-canvas.html');
                 window.location.hash = 'chart-canvas';
             } else if (tab === 'json-parsing') {
-                tabJSON.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabJSON.classList.add('active');
                 loadContent('adv-07-unit-json-parsing.html');
                 window.location.hash = 'json-parsing';
             } else if (tab === 'event-polling') {
-                tabEvent.className = "tab-btn active border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabEvent.classList.add('active');
                 loadContent('adv-07-unit-event-polling.html');
                 window.location.hash = 'event-polling';
             }

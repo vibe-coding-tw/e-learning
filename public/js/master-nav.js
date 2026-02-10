@@ -28,7 +28,7 @@ onAuthStateChanged(auth, async (user) => {
                 const role = userData.role;
 
                 if (role === 'admin' || role === 'teacher' || role === 'student') {
-                    injectDashboardTab();
+                    injectDashboardFAB();
                 }
             }
         } catch (e) {
@@ -50,7 +50,7 @@ function injectDashboardModal() {
             <div class="flex justify-between items-center p-4 border-b bg-gray-50/80 backdrop-blur">
                 <div class="flex items-center gap-3">
                     <span class="text-2xl">📊</span>
-                    <h3 class="text-lg font-bold text-gray-800">課程儀表板 (Course Dashboard)</h3>
+                    <h3 class="text-lg font-bold text-gray-800">課程儀表板 (Dashboard)</h3>
                 </div>
                 <button onclick="closeDashboardModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -77,15 +77,66 @@ window.openDashboardModal = function (courseParam) {
     // Construct URL with mode=iframe
     // courseParam includes '?courseId=...' or is empty
     let separator = courseParam.includes('?') ? '&' : '?';
-    let url = `/dashboard.html${courseParam}${separator}mode=iframe`;
+
+    // [NEW] Resolve unitId: Check iframe first (Master Page pattern), then fallback to filename
+    let finalUnitId = '';
+    const iframe = document.getElementById('content-frame');
+    if (iframe && iframe.src) {
+        try {
+            // Use absolute URL resolution to ensure correct parsing
+            const absoluteSrc = new URL(iframe.src, window.location.href).href;
+            finalUnitId = absoluteSrc.split('/').pop().split('?')[0];
+            console.log("[MasterNav] Detected unit from iframe:", finalUnitId);
+        } catch (e) {
+            console.error("[MasterNav] Iframe URL parsing failed:", e);
+            finalUnitId = iframe.src.split('/').pop().split('?')[0];
+        }
+    }
+
+    if (!finalUnitId) {
+        finalUnitId = window.location.pathname.split('/').pop();
+        console.log("[MasterNav] Fallback to pathname unitId:", finalUnitId);
+    }
+
+    const unitParam = finalUnitId ? `&unitId=${finalUnitId}` : '';
+    console.log("[MasterNav] Final Unit Param:", unitParam);
+
+    // [NEW] Update Title to be Unit-Centric if unit is detected
+    const modalTitle = modal.querySelector('h3');
+    if (modalTitle) {
+        modalTitle.innerText = "儀表板 (Dashboard)";
+    }
+
+    let url = `/dashboard.html${courseParam}${separator}mode=iframe${unitParam}`;
 
     // Only reload if src changed or empty (to avoid reload on simple show/hide if we wanted to cache, but for now fresh is safer)
     frame.src = url;
     loader.classList.remove('hidden');
 
+    // Style refinements for "Fullscreen" Feel
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden'; // Lock scroll
     document.body.classList.add('modal-open');
+
+    modal.classList.add('bg-gray-100'); // Ensure background is solid enough
+    const innerContainer = modal.querySelector('.max-w-7xl'); // Corrected to 7xl based on modal HTML
+    if (innerContainer) {
+        innerContainer.classList.remove('max-w-7xl', 'my-8'); // Corrected to 7xl
+        innerContainer.classList.add('w-full', 'h-full', 'max-w-none', 'm-0', 'rounded-none');
+    }
+
+    // Ensure iframe is also full height
+    if (frame) {
+        frame.classList.add('h-screen');
+        frame.style.height = '100vh';
+    }
+
+    // [NEW] Request Fullscreen on the modal div
+    if (modal.requestFullscreen) {
+        modal.requestFullscreen();
+    } else if (modal.webkitRequestFullscreen) {
+        modal.webkitRequestFullscreen();
+    }
 
     // Hide Navbar to prevent z-index issues
     const nav = document.getElementById('main-nav') || document.querySelector('nav');
@@ -98,6 +149,12 @@ window.closeDashboardModal = function () {
         modal.classList.add('hidden');
         document.body.classList.remove('modal-open');
 
+        // [NEW] Exit Fullscreen if active
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+            if (document.exitFullscreen) document.exitFullscreen();
+            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        }
+
         // Restore Navbar
         const nav = document.getElementById('main-nav') || document.querySelector('nav');
         if (nav) nav.style.display = '';
@@ -109,74 +166,81 @@ window.closeDashboardModal = function () {
     document.body.style.overflow = '';
 }
 
-function injectDashboardTab() {
-    const tabsContainer = document.getElementById('course-tabs-container');
-    if (tabsContainer) {
-        // [Fix] Remove existing link/button to ensure we replace any stale/cached version
-        const existing = document.getElementById('tab-dashboard-link');
-        if (existing) existing.remove();
-
-        // Injects the modal HTML once
-        injectDashboardModal();
-
-        // Create Link
-        const link = document.createElement('button'); // Changed to button for semantics
-        link.id = 'tab-dashboard-link';
-
-        // [Fix] Decode URI
-        const path = decodeURIComponent(window.location.pathname);
-        let courseParam = '';
-
-        // Extract filename
-        const filename = path.split('/').pop();
-        if (filename) {
-            // Robust extraction: take everything before '-unit' or '-master'
-            // This handles 'basic-01-unit...', '00-master...', '05-unit...'
-
-            let idPrefix = null;
-            if (filename.includes('-unit')) {
-                idPrefix = filename.split('-unit')[0];
-            } else if (filename.includes('-master')) {
-                idPrefix = filename.split('-master')[0];
-            } else {
-                // Try Regex for patterns like "00-..." or "basic-01-..." if standard separators missing
-                const match = filename.match(/^([a-zA-Z0-9]+-\d+|\d+)-/);
-                if (match) idPrefix = match[1];
-            }
-
-            if (idPrefix) {
-                console.log("[MasterNav] Detected Course Context:", idPrefix);
-                courseParam = `?courseId=${idPrefix}`;
-            }
+// [NEW] Sync Modal state with Native Fullscreen Exit (e.g. Esc key or browser button)
+document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        const modal = document.getElementById('dashboard-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            closeDashboardModal();
         }
-
-        // Use onclick to open modal
-        link.onclick = function () {
-            console.log("[MasterNav] Opening Modal with param:", courseParam);
-            openDashboardModal(courseParam);
-        };
-        // Removed href since it's a button now, or keep styling consistent
-
-        // Try to mimic sibling styles
-        const lastTab = tabsContainer.querySelector('button');
-        if (lastTab) {
-            link.className = lastTab.className;
-            // Adapt styling for button if previous was anchor (though usually tabs are buttons here?)
-            // Assuming tabs are <a> or <button>. If <a> tags are used for tabs, we might need to mimic <a> class string.
-
-            // Remove active/inactive specific tweaks if copying from an active tab
-            link.classList.remove('active', 'tab-active', 'border-blue-600', 'text-blue-700', 'border-b-2');
-            link.classList.add('text-gray-500', 'hover:text-blue-600', 'border-transparent', 'border-b-2', 'hover:border-blue-300');
-
-            if (!link.classList.contains('flex')) link.classList.add('flex', 'items-center', 'gap-2');
-        } else {
-            // Fallback styles
-            link.className = 'whitespace-nowrap py-3 px-4 font-bold text-gray-500 hover:text-blue-600 flex items-center gap-2 border-b-2 border-transparent hover:border-blue-300 transition-colors bg-transparent cursor-pointer';
-        }
-
-        link.classList.add('pl-6');
-        link.innerHTML = '<span class="text-xl">📊</span> 課程儀表板';
-
-        tabsContainer.appendChild(link);
     }
+});
+document.addEventListener('webkitfullscreenchange', () => {
+    if (!document.webkitFullscreenElement) {
+        const modal = document.getElementById('dashboard-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            closeDashboardModal();
+        }
+    }
+});
+
+// [NEW] Listen for ESC on the whole window to close dashboard
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('dashboard-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            closeDashboardModal();
+        }
+    }
+});
+
+function injectDashboardFAB() {
+    // [Fix] Remove existing link/button to ensure we replace any stale/cached version
+    const existing = document.getElementById('dashboard-fab');
+    if (existing) existing.remove();
+
+    // Injects the modal HTML once
+    injectDashboardModal();
+
+    // [Fix] Decode URI
+    const path = decodeURIComponent(window.location.pathname);
+    let courseParam = '';
+
+    // Extract filename
+    const filename = path.split('/').pop();
+    if (filename) {
+        let idPrefix = null;
+        if (filename.includes('-unit')) {
+            idPrefix = filename.split('-unit')[0];
+        } else if (filename.includes('-master')) {
+            idPrefix = filename.split('-master')[0];
+        } else {
+            const match = filename.match(/^([a-zA-Z0-9]+-\d+|\d+)-/);
+            if (match) idPrefix = match[1];
+        }
+
+        if (idPrefix) {
+            console.log("[MasterNav] Detected Course Context:", idPrefix);
+            courseParam = `?courseId=${idPrefix}`;
+        }
+    }
+
+    // Create Floating Action Button (FAB)
+    const fab = document.createElement('button');
+    fab.id = 'dashboard-fab';
+    fab.className = 'fixed bottom-8 right-8 w-16 h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group z-50';
+    fab.style.zIndex = '9999';
+    fab.innerHTML = `
+        <span class="text-3xl group-hover:rotate-12 transition-transform">📊</span>
+        <span class="absolute right-full mr-4 px-3 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg">
+            查看儀表板
+        </span>
+    `;
+
+    fab.onclick = function () {
+        console.log("[MasterNav] Opening Modal with param:", courseParam);
+        openDashboardModal(courseParam);
+    };
+
+    document.body.appendChild(fab);
 }

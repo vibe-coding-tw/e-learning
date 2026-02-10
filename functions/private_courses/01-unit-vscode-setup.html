@@ -18,7 +18,7 @@
 
     <!-- Hero Section -->
     <header
-        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-cyan-900 text-white pt-24 pb-32 overflow-hidden">
+        class="relative bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
         <div
             class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1555099962-4199c345e5dd?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay">
         </div>
@@ -28,18 +28,17 @@
             <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
                 VS Code 安裝與基礎配置
             </h1>
-            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
                 打造你的終極代碼指揮中心。<br>
                 <span class="text-base text-gray-300 mt-2 block">不僅僅是編輯器，更是你控制無人車與世界的控制台。</span>
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/Z3t_Y41Ji4Y')"
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button
-                    onclick="enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vSgxrrWDYgAH9KqjOszrDwXSqLsxhRsWDwr0BBUdiynJaQ0ZkAG4kkiy50ueGB6nm_8urAc6xtPTsee/pub?embedded=true')"
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -282,6 +281,62 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h4>教學重點</h4>
+        <ul>
+            <li><strong>本機版的必要性：</strong>既然有網頁版，為什麼還要裝本機版？因為網頁版無法直接驅動編譯器進行 ESP32 的代碼編譯與韌體上傳（除非使用特殊的 Web Serial
+                協定，但功能有限）。</li>
+            <li><strong>PlatformIO：</strong>這是嵌入式開發的核心。安裝過程會下載大量的 Python 與編譯器組件，務必提醒學生在良好的網路環境下進行。</li>
+            <li><strong>Open with Code：</strong>這是 Windows 用戶最常忽略的步驟，會大幅影響後續開啟專案的效率。</li>
+        </ul>
+
+        <hr>
+
+        <h4>GitHub Classroom 運作指南</h4>
+        <ol>
+            <li><strong>建立作業：</strong>在 GitHub Classroom 建立 "VSCode Setup" 作業。建議上傳一個包含 <code>platformio.ini</code>
+                的基礎專案模板。</li>
+            <li><strong>Dashboard 配置：</strong>將作業邀請連結填入 Dashboard 的對應欄位。</li>
+            <li><strong>學生領取：</strong>學生點擊作業卡片後建立 Repo。</li>
+            <li><strong>同場檢查：</strong>老師可引導學生領取 Repo 後，在本機 VS Code 中使用 <code>git clone</code> 或直接在課程頁面點擊進入 codespace 觀察。
+            </li>
+        </ol>
+
+        <hr>
+
+        <h4>常見問題 (FAQ)</h4>
+        <ul>
+            <li><strong>PlatformIO 安裝很久：</strong>這是正常的，它在背景下載 Core 文件。請學生耐心等待，或重啟 VS Code 觸發重試。</li>
+            <li><strong>👽 圖示沒出現：</strong>檢查 C/C++ 擴充套件是否已安裝，並確認沒有被防火牆擋住下載。</li>
+            <li><strong>右鍵沒有「以程式碼開啟」：</strong>只能請學生重新執行安裝程式，並務必勾選該選項。</li>
+        </ul>
+
+        <hr>
+
+        <h4>評分標準 (Checkpoint)</h4>
+        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
+            <thead style="background-color: #f3f4f6;">
+                <tr>
+                    <th style="padding: 8px;">任務</th>
+                    <th style="padding: 8px;">評分標準</th>
+                    <th style="padding: 8px;">檢核要點</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 8px;">安裝 PlatformIO</td>
+                    <td style="padding: 8px;">環境就緒</td>
+                    <td style="padding: 8px;">左側出現 👽 圖示，且點擊後能進入 PIO Home。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;">Git 帳號同步</td>
+                    <td style="padding: 8px;">功能開啟</td>
+                    <td style="padding: 8px;">左下角 👤 已登入個人 GitHub 帳號並顯示同步中。</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
 </body>
 
 </html>

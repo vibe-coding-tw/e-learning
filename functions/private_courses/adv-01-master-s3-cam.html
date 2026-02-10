@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-advanced" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -20,20 +20,17 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('s3-interfaces')" id="tab-s3-interfaces"
-                    class="tab-btn active border-b-2 border-purple-600 text-purple-600 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>感測器介面與 PSRAM
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('s3-interfaces')" id="tab-s3-interfaces" class="unit-tab-btn active">
+                    <span>1️⃣</span>感測器介面與 PSRAM
                 </button>
-                <button onclick="switchTab('mjpeg-stream')" id="tab-mjpeg-stream"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>MJPEG 串流原理
+                <button onclick="switchTab('mjpeg-stream')" id="tab-mjpeg-stream" class="unit-tab-btn">
+                    <span>2️⃣</span>MJPEG 串流原理
                 </button>
-                <button onclick="switchTab('jpeg-quality')" id="tab-jpeg-quality"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>影像品質與權衡
+                <button onclick="switchTab('jpeg-quality')" id="tab-jpeg-quality" class="unit-tab-btn">
+                    <span>3️⃣</span>影像品質與權衡
                 </button>
             </div>
         </div>
@@ -57,18 +54,18 @@
 
         function switchTab(tab) {
             // Reset all tabs
-            tabInterfaces.className = "tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2";
-            tabMjpeg.className = "tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2";
-            tabJpeg.className = "tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2";
+            [tabInterfaces, tabMjpeg, tabJpeg].forEach(t => {
+                t.classList.remove('active');
+            });
 
             if (tab === 's3-interfaces') {
-                tabInterfaces.className = "tab-btn active border-b-2 border-purple-600 text-purple-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabInterfaces.classList.add('active');
                 loadContent('adv-01-unit-s3-interfaces.html');
             } else if (tab === 'mjpeg-stream') {
-                tabMjpeg.className = "tab-btn active border-b-2 border-purple-600 text-purple-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabMjpeg.classList.add('active');
                 loadContent('adv-01-unit-mjpeg-stream.html');
             } else if (tab === 'jpeg-quality') {
-                tabJpeg.className = "tab-btn active border-b-2 border-purple-600 text-purple-600 whitespace-nowrap py-3 flex items-center gap-2";
+                tabJpeg.classList.add('active');
                 loadContent('adv-01-unit-jpeg-quality.html');
             }
         }

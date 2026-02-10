@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-basic" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -20,20 +20,17 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('http-request')" id="tab-http-request"
-                    class="tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>HTTP 協議與請求實戰
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('http-request')" id="tab-http-request" class="unit-tab-btn active">
+                    <span>1️⃣</span>HTTP 協議與請求實戰
                 </button>
-                <button onclick="switchTab('fetch-api')" id="tab-fetch-api"
-                    class="tab-btn text-gray-500 border-transparent whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>Fetch API 基礎
+                <button onclick="switchTab('fetch-api')" id="tab-fetch-api" class="unit-tab-btn">
+                    <span>2️⃣</span>Fetch API 基礎
                 </button>
-                <button onclick="switchTab('cors-security')" id="tab-cors-security"
-                    class="tab-btn text-gray-500 border-transparent whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>CORS 與安全性基礎
+                <button onclick="switchTab('cors-security')" id="tab-cors-security" class="unit-tab-btn">
+                    <span>3️⃣</span>CORS 與安全性基礎
                 </button>
             </div>
         </div>
@@ -58,21 +55,17 @@
         function switchTab(tab) {
             // Reset all tabs
             [tabHttp, tabFetch, tabSecurity].forEach(t => {
-                t.classList.remove('text-blue-600', 'border-blue-600', 'active');
-                t.classList.add('text-gray-500', 'border-transparent');
+                t.classList.remove('active');
             });
 
             if (tab === 'http-request') {
-                tabHttp.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabHttp.classList.remove('text-gray-500', 'border-transparent');
+                tabHttp.classList.add('active');
                 loadContent('basic-06-unit-http-request.html');
             } else if (tab === 'fetch-api') {
-                tabFetch.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabFetch.classList.remove('text-gray-500', 'border-transparent');
+                tabFetch.classList.add('active');
                 loadContent('basic-06-unit-fetch-api.html');
             } else if (tab === 'cors-security') {
-                tabSecurity.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabSecurity.classList.remove('text-gray-500', 'border-transparent');
+                tabSecurity.classList.add('active');
                 loadContent('basic-06-unit-cors-security.html');
             }
         }

@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-basic" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <div id="nav-placeholder"></div>
@@ -20,20 +20,17 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('joystick-mapping')" id="tab-joystick-mapping"
-                    class="tab-btn active border-b-2 border-blue-600 text-blue-600 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>搖桿數據：歸一化、映射與死區
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('joystick-mapping')" id="tab-joystick-mapping" class="unit-tab-btn active">
+                    <span>1️⃣</span>搖桿數據：歸一化、映射與死區
                 </button>
-                <button onclick="switchTab('unicycle-model')" id="tab-unicycle-model"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>差速轉換數學：Unicycle Model
+                <button onclick="switchTab('unicycle-model')" id="tab-unicycle-model" class="unit-tab-btn">
+                    <span>2️⃣</span>差速轉換數學：Unicycle Model
                 </button>
-                <button onclick="switchTab('response-curves')" id="tab-response-curves"
-                    class="tab-btn border-b-2 border-transparent text-gray-500 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>曲線優化：線性 vs. 指數響應
+                <button onclick="switchTab('response-curves')" id="tab-response-curves" class="unit-tab-btn">
+                    <span>3️⃣</span>曲線優化：線性 vs. 指數響應
                 </button>
             </div>
         </div>
@@ -58,21 +55,17 @@
         function switchTab(tab) {
             // Reset all tabs
             [tabJoystick, tabUnicycle, tabResponse].forEach(t => {
-                t.classList.remove('text-blue-600', 'border-blue-600', 'active');
-                t.classList.add('text-gray-500', 'border-transparent');
+                t.classList.remove('active');
             });
 
             if (tab === 'joystick-mapping') {
-                tabJoystick.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabJoystick.classList.remove('text-gray-500', 'border-transparent');
+                tabJoystick.classList.add('active');
                 loadContent('basic-08-unit-joystick-mapping.html');
             } else if (tab === 'unicycle-model') {
-                tabUnicycle.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabUnicycle.classList.remove('text-gray-500', 'border-transparent');
+                tabUnicycle.classList.add('active');
                 loadContent('basic-08-unit-unicycle-model.html');
             } else if (tab === 'response-curves') {
-                tabResponse.classList.add('text-blue-600', 'border-blue-600', 'active');
-                tabResponse.classList.remove('text-gray-500', 'border-transparent');
+                tabResponse.classList.add('active');
                 loadContent('basic-08-unit-response-curves.html');
             }
         }

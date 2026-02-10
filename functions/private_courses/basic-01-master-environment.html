@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+<body id="page-basic" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
     <!-- Navigation (Shared) -->
     <!-- Navigation (Shared) -->
@@ -21,20 +21,17 @@
     </script>
 
     <!-- Tab Navigation Bar -->
-    <div class="bg-white border-b border-gray-200 shadow-sm relative z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex space-x-4 md:space-x-8 overflow-x-auto no-scrollbar" id="course-tabs-container">
-                <button onclick="switchTab('arch')" id="tab-arch"
-                    class="tab-btn active border-b-2 whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">1️⃣</span>ESP32 架構
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('arch')" id="tab-arch" class="unit-tab-btn active">
+                    <span>1️⃣</span>ESP32 架構
                 </button>
-                <button onclick="switchTab('setup')" id="tab-setup"
-                    class="tab-btn border-b-2 border-transparent whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">2️⃣</span>環境設定 (PIO)
+                <button onclick="switchTab('setup')" id="tab-setup" class="unit-tab-btn">
+                    <span>2️⃣</span>環境設定 (PIO)
                 </button>
-                <button onclick="switchTab('drivers')" id="tab-drivers"
-                    class="tab-btn border-b-2 border-transparent whitespace-nowrap py-3 flex items-center gap-2">
-                    <span class="mr-2">3️⃣</span>驅動與通訊埠
+                <button onclick="switchTab('drivers')" id="tab-drivers" class="unit-tab-btn">
+                    <span>3️⃣</span>驅動與通訊埠
                 </button>
             </div>
         </div>
@@ -58,8 +55,7 @@
         function switchTab(tab) {
             // Helper to reset all tabs
             [tabArch, tabSetup, tabDrivers].forEach(t => {
-                t.classList.remove('text-blue-600', 'border-blue-600', 'active');
-                t.classList.add('text-gray-500', 'border-transparent');
+                t.classList.remove('active');
             });
 
             // Activate current tab
@@ -78,8 +74,7 @@
             }
 
             if (currentTabBtn) {
-                currentTabBtn.classList.add('text-blue-600', 'border-blue-600', 'active');
-                currentTabBtn.classList.remove('text-gray-500', 'border-transparent');
+                currentTabBtn.classList.add('active');
                 loadContent(url);
             }
         }

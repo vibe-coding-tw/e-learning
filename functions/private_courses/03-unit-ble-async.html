@@ -17,40 +17,32 @@
 
     <!-- Hero Section -->
     <header
-        class="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 text-white pt-24 pb-32 overflow-hidden">
+        class="relative bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
         <div
-            class="header-overlay absolute inset-0 bg-gradient-to-r from-blue-900/90 to-indigo-800/90 mix-blend-multiply">
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay">
         </div>
-        <!-- Decorative background elements -->
-        <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 opacity-20">
-            <div
-                class="absolute top-10 left-10 w-64 h-64 bg-blue-500 rounded-full mix-blend-overlay filter blur-3xl animate-pulse">
-            </div>
-            <div class="absolute bottom-10 right-10 w-80 h-80 bg-purple-500 rounded-full mix-blend-overlay filter blur-3xl animate-pulse"
-                style="animation-delay: 2s"></div>
-        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
 
-        <div class="container mx-auto px-4 relative z-10 pt-10 pb-10 text-center text-white">
+        <div class="container mx-auto px-4 relative z-10 text-center">
             <div
-                class="badge-header inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/20 text-blue-200 border border-blue-400/30 backdrop-blur-sm mb-8 text-sm font-semibold tracking-wide uppercase">
-                <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                class="badge-header inline-flex items-center gap-2 px-4 py-1 rounded-full bg-purple-500/20 text-purple-200 border border-purple-400/30 backdrop-blur-sm mb-6 text-xs font-semibold tracking-wide uppercase font-[Outfit]">
+                <span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
                 JavaScript Async Programming
             </div>
-            <h1 class="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight">
-                非同步編程：<br class="hidden md:block" />操作 BLE 的靈魂
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                非同步編程：<br>操作 BLE 的靈魂
             </h1>
-            <p class="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed mb-10">
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
                 掌握 Promise、Async/Await，駕馭藍牙連線的「時序藝術」，徹底告別 Callback Hell，打造優雅流暢的 Web Bluetooth 應用。
             </p>
 
-            <div class="flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/d81d8eSU3EQ')"
-                    class="resource-btn bg-blue-500 hover:bg-blue-400 text-white px-8 py-4 rounded-full flex items-center gap-3 shadow-lg shadow-blue-500/30 font-bold transition-all">
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button
-                    onclick="enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vSOWL39uyJgCoRn_7zTie-Bf7RKr3wYtp2OnCCvWU0mbv3Ks1jUZ3A0LSWyzK7kBRG9lrOT2zZigM9W/pub?embedded=true')"
-                    class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-8 py-4 rounded-full flex items-center gap-3 backdrop-blur-sm font-bold transition-all">
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
             </div>
@@ -541,6 +533,61 @@ navigator.bluetooth.requestDevice({...})
         };
     </script>
     <script src="/js/course-shared.js"></script>
+    <section id="instructor-guide" style="display: none;">
+        <h4>實作任務：強韌的非同步架構</h4>
+
+        <p><strong>【作業 2-1】「逐步點亮」狀態機實作</strong></p>
+        <ul>
+            <li><strong>任務內容：</strong>隨著 await 進度更新 UI 狀態（Idle -> Searching -> Connecting -> Ready）。</li>
+            <li><strong>按鈕防跳：</strong>當狀態為 Connecting 時，按鈕必須設為 disabled 防止重複觸發。</li>
+            <li><strong>UI 反饋：</strong>確保每個狀態都有視覺上的變化（文字、顏色或 Spinner）。</li>
+        </ul>
+
+        <p><strong>【作業 2-2】處理並發與競爭 (Race Condition)</strong></p>
+        <ul>
+            <li><strong>任務內容：</strong>設計機制確保 BLE 指令依序發送。</li>
+            <li><strong>Flag 機制：</strong>使用 <code>isBusy</code> flag 鎖定發送功能。</li>
+            <li><strong>佇列優化：</strong>進階同學可以嘗試實作 Command Queue。</li>
+        </ul>
+
+        <p><strong>【作業 2-3】不同步超時保護 (Timeout)</strong></p>
+        <ul>
+            <li><strong>任務內容：</strong>實作 10 秒超時機制。</li>
+            <li><strong>Promise.race：</strong>結合連線 Promise 與 <code>setTimeout</code> 返回的 Promise。</li>
+            <li><strong>錯誤處理：</strong>超時後主動 catch 並提示使用者重試。</li>
+        </ul>
+
+        <hr>
+
+        <h4>4. 評分標準與探討 (Checkpoint)</h4>
+
+        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+                <tr style="background-color: #f3f4f6;">
+                    <th style="padding: 8px; text-align: left;">任務</th>
+                    <th style="padding: 8px; text-align: left;">評分標準</th>
+                    <th style="padding: 8px; text-align: left;">課堂討論議題</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 8px;"><strong>2-1</strong></td>
+                    <td style="padding: 8px;">是否確實防止重複點擊？狀態切換是否流暢？</td>
+                    <td style="padding: 8px;">為何硬體操作需要「進度感」？思考使用者心理。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><strong>2-2</strong></td>
+                    <td style="padding: 8px;">是否實作 flag 鎖或 Queue？併發報錯是否消失？</td>
+                    <td style="padding: 8px;">GATT 操作為何不能並行？這跟藍牙單工通訊的關係？</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><strong>2-3</strong></td>
+                    <td style="padding: 8px;">Promise.race 邏輯是否正確？超時提示是否出現？</td>
+                    <td style="padding: 8px;">如果設備一直連不上，除了超時我們還能做什麼？</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
 </body>
 
 </html>
