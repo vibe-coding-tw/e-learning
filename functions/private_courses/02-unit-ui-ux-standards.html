@@ -387,66 +387,114 @@
     </script>
     <script src="/js/course-shared.js"></script>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 3-1：「盲操」佈局挑戰 (可用性測試)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 可用性分析師。</li>
+            <li><strong>執行方式：</strong> 學生根據 Thumb Zone 理論佈置「停止」與「前進」按鈕，並測試盲操精準度。</li>
+            <li><strong>評分重點：</strong> 核心按鈕是否位於 Natural Zone？按鈕間距是否足夠防止誤擊？</li>
+        </ul>
+
+        <h3>作業 3-2：FPV HUD 抬頭顯示器 (視覺層級)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 視覺設計師。</li>
+            <li><strong>執行方式：</strong> 在影像容器上疊加半透明的遙測數據（Ping、電量）。</li>
+            <li><strong>評分重點：</strong> 資訊層級（Hierarchy）是否清晰？有無遮擋中央 50% 的核心視野？</li>
+        </ul>
+
+        <h3>作業 3-3：異常狀態 UX 處理 (回饋設計)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 使用者體驗官。</li>
+            <li><strong>執行方式：：</strong> 設計 Wi-Fi 斷線或低電量時時的視覺提示機制（如閃爍或顏色變化）。</li>
+            <li><strong>評分重點：</strong> 顏色編碼（Color Coding）的直覺性與反饋的即時性。</li>
+        </ul>
+
+    </section>
+
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h4>UI/UX 設計規範：從視覺到體驗</h4>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>建議範本倉庫設置如下：</p>
 
-        <p><strong>【作業 3-1】「盲操」佈局挑戰 (可用性測試)</strong></p>
-        <ul>
-            <li><strong>GitHub 角色：</strong> 可用性分析師。</li>
-            <li><strong>執行方式：</strong> 根據 Thumb Zone 理論重新排列「停止」與「前進」按鈕。</li>
-            <li><strong>評分重點：</strong> 按鈕大小（觸控熱區）是否足夠？是否避開了螢幕頂端的難觸及區？</li>
-        </ul>
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html       # 遙控介面主結構
+├── style.css        # (重點) 實作 z-index 與透明度 CSS
+├── assets/          # 預置的圖標與模擬數據
+└── README.md        # 紀錄可用性測試的數據 (盲操成功率)</code></pre>
 
-        <p><strong>【作業 3-2】FPV HUD 抬頭顯示器 (視覺層級)</strong></p>
+        <h3>B. 自動評分 (Autograding) 的設計</h3>
         <ul>
-            <li><strong>GitHub 角色：</strong> 視覺設計師。</li>
-            <li><strong>執行方式：</strong> 將遙測數據（Ping/電量）以半透明方式疊加在影像容器上。</li>
-            <li><strong>評分重點：</strong> 視覺層級的處理，以及 CSS 透明度與圖層順序（z-index）的應用。</li>
-        </ul>
-
-        <p><strong>【作業 3-3】異常狀態 UX 處理 (回饋設計)</strong></p>
-        <ul>
-            <li><strong>GitHub 角色：</strong> 使用者體驗官。</li>
-            <li><strong>執行方式：</strong> 設計「斷線」或「弱訊號」時的視覺提醒（如紅色閃爍）。</li>
-            <li><strong>評分重點：</strong> 顏色編碼（Color Coding）的直覺性，以及過渡動畫對注意力的引導。</li>
+            <li><strong>層級檢查：</strong> 掃描 <code>style.css</code> 確認是否使用了 <code>opacity</code> 或 <code>rgba</code> 屬性。
+            </li>
+            <li><strong>佈局檢查：</strong> 檢查 <code>.hud-layer</code> 的 <code>z-index</code> 是否高於影像容器。</li>
         </ul>
 
         <hr>
 
-        <h4>4. 翻轉教室中的評分標準 (Checkpoint)</h4>
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>在 GitHub 建立新 Repo（例：<code>ui-ux-standards-template</code>）。</li>
+                <li>上傳框架與基礎樣式。</li>
+                <li>勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
 
-        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>建立作業並連結範本倉庫。</li>
+                <li><strong>重點：</strong>勾選 <strong>"Enable feedback pull requests"</strong> 以便進行設計點評。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (User Test)</strong></p>
+            <ol>
+                <li>學生 Clone 並進行 <strong>Push 代碼</strong>。</li>
+                <li>在 PR 中描述他們為何選擇特定的顏色編碼。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Design Review)</strong></p>
+            <ol>
+                <li>開啟 Feedback PR。</li>
+                <li>在代碼行旁點評：「這裡的警告顏色太淡，陽光下可能看不清」。</li>
+            </ol>
+        </div>
+
+        <hr>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
             <thead>
-                <tr style="background-color: #f3f4f6;">
-                    <th style="padding: 8px; text-align: left;">任務</th>
-                    <th style="padding: 8px; text-align: left;">評分標準 (透過 GitHub 檢查)</th>
-                    <th style="padding: 8px; text-align: left;">課堂討論議題</th>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td style="padding: 8px;"><strong>3-1</strong></td>
-                    <td style="padding: 8px;">核心按鈕是否位於「自然操作區（Natural Zone）」？</td>
-                    <td style="padding: 8px;">如果使用者是左撇子，目前的 UI 該如何調整？</td>
-                </tr>
-                <tr style="background-color: #f9fafb;">
-                    <td style="padding: 8px;"><strong>3-2</strong></td>
-                    <td style="padding: 8px;">HUD 資訊是否精簡？有無遮擋中央 50% 的核心視野？</td>
-                    <td style="padding: 8px;">在強烈陽光下，哪種顏色的 HUD 文字辨識度最高？</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看 UI/UX 規範影片，完成 3-1 的初步佈局並 Push。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>觀察學生對按鈕大小的預設偏好。
+                    </td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px;"><strong>3-3</strong></td>
-                    <td style="padding: 8px;">回饋機制是否即時？是否正確使用顏色傳遞緊張感？</td>
-                    <td style="padding: 8px;">除了視覺，還有哪些方式可以提醒使用者「斷線了」？</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實機操作遙控車，測試 3-2 的 HUD 辨識度並修改。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>PR Review：</strong>點評 UI
+                        是否符合「高速操作」下的直覺。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">完成 3-3 的異常提示動畫，撰寫設計心得於 PR。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>根據「資訊降噪」原則核發最終評語。
+                    </td>
                 </tr>
             </tbody>
         </table>
-        <hr>
-
-        <h3>總結評價</h3>
-        <p>單元 2 與 3 的作業旨在建立學生<strong>從代碼到體驗的轉化能力</strong>。在 GitHub Classroom 上，老師可以透過學生提交的 UI
-            截圖或代碼結構，快速判斷其「排版邏輯」與「設計直覺」。建議課堂上讓同學交換手機測試對方的 UI，實機體驗所謂的「拇指操作區」。</p>
     </section>
 
 </body>

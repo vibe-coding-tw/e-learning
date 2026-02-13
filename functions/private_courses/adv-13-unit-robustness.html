@@ -328,13 +328,149 @@ void onPacketReceived() {
 
     </main>
 
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/-KKVmdfN920",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vTYKFbBeqSbJZZgwDXw9KzUK9L2_fe879xlBw7mVkRLi6Djl1vGze4csr7ccV9-E0y1a4QL89OKrwh3/pub?embedded=true"
-        };
-    </script>
-    <script src="/js/course-shared.js"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 1-1：「暴力輸入」壓力測試</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 全端開發工程師。</li>
+            <li><strong>執行方式：</strong> 修改 ESP32 韌體，加入數值過濾（Clamping）與 JSON 格式驗證。</li>
+            <li><strong>評分重點：</strong> 當從網頁發送非法字串或超出範圍的 PWM 值時，硬體是否能穩定執行而不重啟。</li>
+        </ul>
+
+        <h3>作業 1-2：「斷網救援」模擬演習</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 安全工程師。</li>
+            <li><strong>執行方式：</strong> 實作 millis() 心跳機制。在車子全速前進時手動斷開 BLE。</li>
+            <li><strong>評分重點：</strong> 車子是否能在 1 秒內自動觸發 stopCar() 防止撞牆，並能重新被連線。</li>
+        </ul>
+
+        <h3>作業 1-3：異常狀態回報介面</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> UI/UX 設計師。</li>
+            <li><strong>執行方式：</strong> 在 Dashboard 上增加故障燈號，監測 BLE 訊號強度與指令延遲。</li>
+            <li><strong>評分重點：</strong> 當檢測到高延遲或特定錯誤碼時，UI 是否能即時彈出 Toast 提示駕駛者。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── src/
+│   ├── main.cpp            # 整合 WDT 與通訊心跳骨架
+│   └── error_codes.h       # 故障等級與錯誤代碼定義
+├── public/
+│   └── dashboard.js        # 延遲統計與異常回報邏輯
+└── docs/
+    └── safety_report.md    # 系統防禦性測試報告</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🧪</span>
+                            <p class="text-sm text-gray-700"><strong>異常韌性測試：</strong> 發送損壞封包，檢查 WDT 是否重啟或系統是否穩定跳過。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🛡️</span>
+                            <p class="text-sm text-gray-700"><strong>斷線 Fail-safe：</strong> 模擬通訊超時，檢測馬達輸出是否歸零。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">建立通訊與 WDT 安全機制骨架及故障代碼定義檔。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「防禦性編程」評分點。引導紀錄系統破壞測試過程。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">透過壓力測試找出脆弱點並實作 Fail-safe。提交報告 PR。執行 Git Push。
+                    </p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對邊界檢查完整度、心跳偵測及 WDT 處理進行 Review。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">學習 WDT 與防禦性編程概念，思考常見通訊故障場景。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「系統魯棒性」導讀。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，實作 Fail-safe 機制，自定義故障診斷 UI。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，分享常見防禦性代碼坑，討論錯誤分級。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">完成壓力測試報告並 Push，閱讀回覆 PR 以優化異常處理代碼。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，引導學員建立「為失敗而設計」的工程思維。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 </body>
 
 </html>

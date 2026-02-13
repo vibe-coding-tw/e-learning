@@ -300,6 +300,152 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 3-1：視覺追蹤閉迴路整合實作</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 自動化控制工程師。</li>
+            <li><strong>執行方式：</strong> 串接前兩課的成果，將計算出的「視覺誤差」作為輸入，餵入 P 控制器函式中。產出的轉向指令需透過 BLE 即時發送給無人車。實現「車隨人走」的自動對準功能。
+            </li>
+            <li><strong>評分重點：</strong> 代碼中是否正確建立「影像擷取 -> 計算質心 -> 誤差運算 -> 藍牙發送」的閉環邏輯循環。</li>
+        </ul>
+
+        <h3>作業 3-2：階躍響應 (Step Response) 觀察實驗</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 系統性能分析師。</li>
+            <li><strong>執行方式：</strong> 在網頁端設置一個「階躍測試」按鈕，按下後在馬達出力中加入一個瞬間的偏差。利用 Chart.js 紀錄車頭質心恢復到中心點的時間（Settling Time）。
+            </li>
+            <li><strong>評分重點：</strong> 實驗報告是否能指出增加 $K_p$ 值後，系統恢復速度與過衝 (Overshoot) 震盪之間的關係。</li>
+        </ul>
+
+        <h3>作業 3-3：極限壓力：斷點與恢復測試</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 韌性開發工程師。</li>
+            <li><strong>執行方式：</strong> 模擬傳輸延遲或影像消失（手遮鏡頭）的情境。撰寫一個「安全超時 (Failsafe)」機制：若連續 5 幀影像無法提取有效特徵，則無人車自動停機並發出警報。
+            </li>
+            <li><strong>評分重點：</strong> 在極端不穩定或失去回饋的情況下，系統是否能保持安全狀態。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── js/
+│   ├── control_loop.js   # 主要時序控制循環
+│   └── p_controller.js   # P 控制律公式
+├── simulation/           # Web 虛擬環境
+│   └── virtual_car.js    # 模擬馬達與阻力
+└── README.md              # Kp 調校與 Failsafe 紀錄</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">📉</span>
+                            <p class="text-sm text-gray-700"><strong>控制精度評分：</strong> 在模擬環境中，自動偵測是否能在 5 秒內將質心維持在預設誤差內。
+                            </p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">⏱️</span>
+                            <p class="text-sm text-gray-700"><strong>延遲補償測試：</strong> 對控制指令注入人工延遲，評估調校參數在非理想環境下的穩定性。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供封裝好的 <code>requestAnimationFrame</code>
+                        框架與虛擬環境，設定為 Template repository。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「動態收斂曲線」驗證。指導學員如何錄製「震盪衰減圖」並嵌入 README。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業觀察「效能隨 $K_p$ 變化的趨勢」並完成報告。執行 Git Push。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對學員如何處理「相位滯後」或「指令抖動」問題予以回饋。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">觀看關於「開迴路 vs 閉迴路」差異的比較影片。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「PID 基礎」圖解。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，實測無人車能否鎖定紅色標籤進行追蹤。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，解答馬達快速左右切換的常見問題。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">完成 Failsafe 韌性測試並 Push，閱讀教師回覆 PR。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，檢核針對「斷訊情境」是否有設計保護邏輯。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/N-GVgwKwMFI",

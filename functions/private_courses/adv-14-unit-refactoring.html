@@ -307,6 +307,150 @@
 
     </main>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 3-1：「手術台」：解構大雜燴程式碼</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 代碼外科醫生。</li>
+            <li><strong>執行方式：</strong> 將提供一段所有功能都塞在 <code>loop()</code> 裡的「義大利麵代碼」，將其拆解為具備單一職責的 Function。</li>
+            <li><strong>評分重點：</strong> 代碼的可讀性（命名是否優雅）、全域變數的減少程度，以及是否成功將 Kp/Ki/Kd 封裝成 Config 物件。</li>
+        </ul>
+
+        <h3>作業 3-2：打造「通訊模組」Class</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 軟體架構師。</li>
+            <li><strong>執行方式：</strong> 利用 JavaScript Class 封裝 Web Bluetooth API，對外僅暴露 <code>connect()</code> 與
+                <code>sendJson()</code> 介面。
+            </li>
+            <li><strong>評分重點：</strong> 介面隔離 (Interface Segregation) 的落實程度，以及主程式是否能完全不知曉底層 BLE 的實作細節。</li>
+        </ul>
+
+        <h3>作業 3-3：「插件化」影像處理鏈</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 系統擴充工程師。</li>
+            <li><strong>執行方式：</strong> 設計一個處理鏈模式 (Pipeline Pattern)，能夠動態地將「灰階」、「二值化」、「濾波」等模組 push 進入處理陣列中。</li>
+            <li><strong>評分重點：</strong> 是否落實「對擴展開放，對修改封閉」原則，在不修改主迴圈的情況下即可增加新濾鏡。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── src/
+│   ├── spaghetti_code.cpp  # 重構區：命名模糊的代碼
+│   └── ble_manager.js      # 封裝區：OOP Class 模組骨架
+├── platformio.ini          # 環境設定
+└── docs/
+    └── refactor_notes.md   # Pattern 應用與性能比較</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">📏</span>
+                            <p class="text-sm text-gray-700"><strong>循環複雜度檢測：</strong> 檢查函式長度與巢狀深度，確保代碼維持在低複雜度狀態。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🧱</span>
+                            <p class="text-sm text-gray-700"><strong>多實例封裝驗證：</strong> 嘗試建立多個實例，驗證有無全域變數污染或硬體競爭。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">上傳原始代碼與骨架。提供重構日誌模板。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定 Code Review 機制。Discussion 探討代碼平衡點。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，執行解構與封裝。提交包含維護性分析的 PR。執行 Git Push。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對介面落實與擴充性優雅度點評，給予命名建議。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">學習 Clean Code 與 OOP 思想，思考如何將混亂代碼轉化為結構化 Class。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「重構的藝術」導讀。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，實施「拆解手術」，分組探討封裝策略。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，針對命名哲學引發討論。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">完成重構日誌並 Push，閱讀回覆 PR 以最佳化架構優雅度。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，引導理解良好架構的重要性。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/PWrwVgsj4ow",

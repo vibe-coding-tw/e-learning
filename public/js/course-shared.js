@@ -43,9 +43,9 @@ function injectMediaOverlay() {
 
     const overlayHTML = `
     <div id="media-overlay" class="fixed inset-0 bg-black hidden flex flex-col overflow-hidden" style="z-index: 1000000 !important;">
-        <!-- Doc Container -->
-        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-white flex justify-center">
-            <iframe id="doc-frame" class="border-0 bg-white origin-top"
+        <!-- Doc Container (Responsive Padding) -->
+        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-gray-100 flex justify-center p-0 md:p-4">
+            <iframe id="doc-frame" class="border-0 bg-white shadow-2xl origin-top"
                 style="width: 100%; min-height: 100%; transition: transform 0.2s ease;" src="">
             </iframe>
         </div>
@@ -61,7 +61,7 @@ function injectMediaOverlay() {
         <!-- Close Button (Fixed) -->
         <button onclick="closeModal()"
             style="z-index: 1000001 !important;"
-            class="close-video-btn fixed top-4 right-4 text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded-full shadow-lg transition cursor-pointer pointer-events-auto flex items-center gap-2">
+            class="close-video-btn fixed top-3 right-3 md:top-6 md:right-6 text-white bg-red-600 hover:bg-red-700 px-3 py-1.5 md:px-5 md:py-2.5 rounded-full shadow-xl transition cursor-pointer pointer-events-auto flex items-center gap-2 text-xs md:text-sm font-bold">
             <span>✕</span> 關閉 (Close)
         </button>
     </div>
@@ -377,7 +377,7 @@ function autoFitZoom() {
 
     // Standard Scaling Logic (for Desktop or non-Google-Doc mobile)
     // Use full width for both desktop and mobile
-    iframe.style.width = '100.2%';
+    iframe.style.width = '100%';
     iframe.style.maxWidth = 'none';
 
     // Standard Google Doc content width is ~820px
@@ -385,10 +385,13 @@ function autoFitZoom() {
     let scale = availableWidth / baseWidth;
 
     if (isMobile) {
-        // Increase zoom on mobile (smaller denominator = larger scale)
-        // This ensures the document text is large enough to read on small screens
-        const minReadableScale = (availableWidth / 450);
-        if (scale < minReadableScale) scale = minReadableScale;
+        // [FIXED v11.3.11] More aggressive scaling for small screens
+        // Target a standard mobile viewport width (e.g. 430px) to ensure no gaps
+        const mobileBase = 430;
+        scale = availableWidth / mobileBase;
+
+        // Safety cap for mobile zoom
+        if (scale < 0.8) scale = 0.8;
     } else {
         // Desktop: Allow full expansion ("Page Width")
         // Keeping this untouched to satisfy user requirement
@@ -537,10 +540,16 @@ function initFirebaseFeatures() {
         
         // Helper to log
         const log = async (action, duration = 0, metadata = {}) => {
+            // [MODIFIED] User verification
             const user = auth.currentUser;
             if (!user) {
-                console.log("[Tracking] Skipped: No user logged in.");
+                // console.log("[Tracking] Skipped: No user logged in.");
                 return;
+            }
+
+            // [NEW] Disable Page View Logging
+            if (action === 'PAGE_VIEW') {
+                return; 
             }
             
             // Get Page ID from URL

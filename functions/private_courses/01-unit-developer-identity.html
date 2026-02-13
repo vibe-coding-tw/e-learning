@@ -587,55 +587,103 @@
             resetBtn.classList.add('hidden');
         }
     </script>
+
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 1：打造專業 Profile (數位名片)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 開源冒險者。</li>
+            <li><strong>執行方式：</strong> 學生在個人特殊 Repo (Username/Username) 中撰寫 README，並上傳頭像。</li>
+            <li><strong>評分重點：</strong> Markdown 語法的使用（標題、列表、鏈接）以及自我介紹的完整度。</li>
+        </ul>
+
+        <h3>作業 2：Hello World Repository (第一個公開專案)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 專案管理員。</li>
+            <li><strong>執行方式：</strong> 建立一個名為 <code>hello-world</code> 的 Public Repo，實作「第一個 Commit」。</li>
+            <li><strong>評分重點：</strong> 確認 Repo 為 Public 且包含初始化 README.md。</li>
+        </ul>
+
+    </section>
+
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h4>教學重點</h4>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>本單元雖然著重個人 Repo，但可透過 Classroom 建立一個 <strong>"Profile Challenge"</strong> 作業：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── profile-template.md  # 提供基礎的 Markdown 模板
+└── instructions.md      # 作業要求清單</code></pre>
+
+        <h3>B. 自動評分 (Autograding) 的設計</h3>
         <ul>
-            <li><strong>OAuth 原理：</strong>強調「第三方登入」的安全性。GitHub 不需要知道你的 Google 密碼。</li>
-            <li><strong>2FA 的必要性：</strong>這不是為了煩學生，而是為了保護程式碼資產。一旦被駭，所有專案都會面臨風險。</li>
-            <li><strong>專業身分：</strong>Username 是開發者的名片，建議選擇專業且好記的名稱（如英文名+姓）。</li>
+            <li><strong>Markdown 檢查：</strong> 檢查 README.md 是否包含 <code># </h1></code> 標題。</li>
+            <li><strong>GitHub ID 綁定：</strong> Classroom 會自動將 GitHub ID 與學生本人關聯，方便老師在網頁端一次檢視所有人的 Profile 連結。</li>
         </ul>
 
         <hr>
 
-        <h4>GitHub Classroom 運作指南</h4>
-        <ol>
-            <li><strong>建立作業：</strong>在 GitHub Classroom 建立 "Developer Identity" 作業並取得 Invitation URL。</li>
-            <li><strong>Dashboard 配置：</strong>於 Dashboard「課程設定」中將連結貼入對應單元的 GitHub Classroom 欄位。</li>
-            <li><strong>學生領取：</strong>學生點擊頁面上的作業卡片，將自動導向邀請頁面建立私有 Repo。</li>
-            <li><strong>最終繳交：</strong>學生完成後，按住 <strong>Shift</strong> 點擊作業卡片，在彈出的視窗貼上 Repo 連結進行最終繳交。</li>
-        </ol>
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>建立一個內含 Markdown 練習題的範本倉庫。</li>
+                <li>設定為 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>在 Classroom 建立 Individual Assignment。</li>
+                <li>連結上述範本。</li>
+                <li><strong>啟用反饋 PR：</strong> 這對於點評學生的 Markdown 排版非常有用。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作</strong></p>
+            <ol>
+                <li>學生領取作業，練習 Markdown 語法。</li>
+                <li><strong>Push</strong> 後，老師可即時看到排版渲染結果。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋</strong></p>
+            <ol>
+                <li>在 PR 中給予 Markdown 使用建議。</li>
+                <li>評分後點擊 <strong>"Merge"</strong> 或 <strong>"Closed"</strong> 完成任務。</li>
+            </ol>
+        </div>
 
         <hr>
 
-        <h4>常見問題 (FAQ)</h4>
-        <ul>
-            <li><strong>驗證碼收不到：</strong>檢查垃圾信箱，或嘗試從 Google 帳號設定中先確認信箱是否已驗證。</li>
-            <li><strong>Username 被用過：</strong>建議加上數字（如 <code>rover-chen-88</code>）或改變大小寫。</li>
-            <li><strong>2FA 找不到 App：</strong>建議使用 Google Authenticator 或 GitHub Mobile。</li>
-        </ul>
-
-        <hr>
-
-        <h4>評分標準 (Checkpoint)</h4>
-        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
-            <thead style="background-color: #f3f4f6;">
-                <tr>
-                    <th style="padding: 8px;">任務</th>
-                    <th style="padding: 8px;">評分標準</th>
-                    <th style="padding: 8px;">檢核要點</th>
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td style="padding: 8px;">打造專業 Profile</td>
-                    <td style="padding: 8px;">完整度</td>
-                    <td style="padding: 8px;">是否有清楚頭像、填寫 Bio、建立個人 README 並有 Markdown 內容。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">透過 OAuth 互動實驗室理解登入原理，完成帳號註冊與 2FA。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認所有學生都已設置 2FA
+                        以保證後續作業安全。</td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px;">Hello World</td>
-                    <td style="padding: 8px;">流程正確性</td>
-                    <td style="padding: 8px;">Repo 名稱為 hello-world、設為 Public、包含 README.md。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作作業 1，學習 Markdown 並 Push 到個人主頁。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>互動：</strong>引導學生互看彼此的 Profile，交流
+                        Markdown 技巧。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">完成 <code>hello-world</code> Repo，學習 Git
+                        基本概念（Commit, Repo）。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>檢視學生是否理解「公開倉庫」的意義。</td>
                 </tr>
             </tbody>
         </table>

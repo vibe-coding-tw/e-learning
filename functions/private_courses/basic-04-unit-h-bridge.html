@@ -380,6 +380,140 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" class="hidden">
+        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="guide-section">
+            <h3>1. GitHub Classroom 設定</h3>
+            <ul>
+                <li>點擊儀表板「領取作業」按鈕，進入 GitHub Classroom 並獲取 `basic-04-h-bridge-logic`。</li>
+                <li>將個人作業儲存庫 Clone 至本地。</li>
+                <li>檢測 `src/main.cpp` 中對於馬達驅動引腳的定義，確保與硬體連接一致。</li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h3>2. 翻轉課堂學習策略</h3>
+            <ul>
+                <li><strong>課前預習</strong>：觀看「H 橋電路原理：如何控制馬達轉向與速度」影片。</li>
+                <li><strong>課中實作</strong>：測試四種狀態（前進、後退、煞車、放行），並特別注意「貫通 (Shoot-through)」的危險性。</li>
+                <li><strong>課後思考</strong>：為什麼馬達不能直接接在 ESP32 的引腳上？「煞車 (Brake)」與「放行 (Coast)」在物理感官上有什麼差別？</li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h3>3. 單元實作任務</h3>
+            <ul>
+                <li><strong>作業 4-1 (30%)</strong>：驗證 H 橋真值表，手動給予引腳高低電位使馬達轉動並截圖 Serial 紀錄。</li>
+                <li><strong>作業 4-2 (40%)</strong>：實作 `drive(int speed)` 函式，參數正值為前進，負值為後退，0 為煞車。</li>
+                <li><strong>作業 4-3 (30%)</strong>：進行「低速啟動測試」，找出馬達能克服靜摩擦力開始轉動的最小 Duty Cycle。</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" class="hidden">
+        <h2>講師手冊 (Instructor Guide)</h2>
+        <div class="guide-section">
+            <h3>1. 教學重點 (Teaching Points)</h3>
+            <ul>
+                <li>解釋 H 橋內四個開關（電晶體/MOSFET）的對角線導通原則。</li>
+                <li>討論「反向電動勢 (Back EMF)」的保護機制：為什麼驅動晶片需要續流二極體。</li>
+                <li>強調外部供電的必要性 (External Power Source) 與共地 (Common Ground) 的重要性。</li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h3>2. 常見問題 (Common Issues)</h3>
+            <ul>
+                <li><strong>馬達沒反應</strong>：檢查動力電池是否有電，以及驅動晶片的 STBY 引腳是否被拉高。</li>
+                <li><strong>馬達只會轉一邊</strong>：通常是其中一個方向的邏輯引腳接觸不良。</li>
+                <li><strong>ESP32 異常重啟</strong>：可能是馬達啟動瞬間負載過大導致電壓驟降，引導學生使用電解電容儲能。</li>
+            </ul>
+        </div>
+        <div class="guide-section bg-gray-50 p-4 rounded-lg">
+            <h3 class="font-bold mb-2 text-sm text-gray-900">3. 評分標準 (Grading Criteria)</h3>
+            <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
+                <li><strong>基礎分</strong>：能正確控制馬達雙向轉動與停止。</li>
+                <li><strong>進階分</strong>：能實現平滑的速度控制，並解釋過低頻率 PWM 對馬達造成的震動感。</li>
+            </ul>
+        </div>
+
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mt-6">
+            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
+                <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
+.
+├── src/             # 包含 H 橋邏輯 (IN1, IN2) 與 PWM (PWM_CH) 控制的 main.cpp
+├── README.md        # 測試報告：真值表觀察結果與低速啟動 Duty Cycle 數據
+└── .github/         # 自動評分配置</pre>
+                <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
+                <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                    <li><strong>核心配置檢查：</strong> 掃描程式中是否包含 <code>digitalWrite</code> 與 <code>ledcWrite</code>
+                        的組合應用，驗證馬達控制邏輯。</li>
+                    <li><strong>狀態機演算法：</strong> 透過測試腳本模擬不同輸入值（如 speed = -200），驗證 H 橋引腳狀態是否符合預期（如 IN1=Low, IN2=High）。
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mt-6 bg-white p-4 border border-gray-200 rounded-lg">
+            <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
+            <div class="space-y-4 text-sm text-gray-600">
+                <div>
+                    <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
+                    <p>建立包含對接馬達驅動模組引腳定義但「未實作控制逻辑內容」的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
+                    <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以便對其 H 橋真值表與封裝 API 進行點評。</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
+                    <p>學生點擊作業連結，獲得個人專屬 Repo，實作雙向轉動與煞車控制後 Push。</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
+                    <p>進入 Feedback PR，針對學生的「死區補償 (Deadband Compensation)」與「保護邏輯」設計予以回饋。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section mt-6">
+            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border-collapse border border-gray-200">
+                    <thead class="bg-gray-50 text-left text-gray-800">
+                        <tr>
+                            <th class="border border-gray-200 p-2">階段</th>
+                            <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
+                            <th class="border border-gray-200 p-2">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600">
+                        <tr>
+                            <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
+                            <td class="border border-gray-200 p-2">研究馬達驅動晶片（如 TB6612 或 L298N）的內部架構。</td>
+                            <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員理解為什麼需要外部供電。</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
+                            <td class="border border-gray-200 p-2">領取 Classroom 作業，對比「煞車」與「空轉」在實機運作上的差異產生的煞車距離。</td>
+                            <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
+                            <td class="border border-gray-200 p-2">封裝更強大的 <code>VehicleControl</code> 類別並 Push，閱讀教師回覆
+                                PR。</td>
+                            <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         // Define Resources
         window.RESOURCES = {

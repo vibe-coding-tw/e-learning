@@ -342,6 +342,160 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
+    <section id="assignment-guide" class="hidden">
+        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="space-y-6">
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h3 class="font-bold text-blue-800">1. GitHub Classroom 設定</h3>
+                <p class="text-sm">請將對應的 Repository (例如：<code>esp32-sampling-rate-lab</code>)
+                    設定至課程儀表板，練習優化數據採集頻率與系統負荷之間的平衡。</p>
+            </div>
+
+            <div class="bg-indigo-50 p-4 rounded-lg">
+                <h3 class="font-bold text-indigo-800">2. 翻轉課堂策略</h3>
+                <ul class="list-disc list-inside text-sm">
+                    <li>課前預習：觀看 8 分鐘關於奈奎斯特採樣定理 (Nyquist Theorem) 與 aliasing (混疊) 的動態演示。</li>
+                    <li>課中實作：透過調整程式中的採樣頻率 (10Hz 到 1000Hz)，觀察對馬達 PID 控制穩定度與序列埠數據流的影響。</li>
+                </ul>
+            </div>
+
+            <div class="bg-white p-4 border border-gray-200 rounded-lg">
+                <h3 class="font-bold mb-2">3. 單元任務 (Unit Tasks)</h3>
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-100 text-left">
+                        <tr>
+                            <th class="p-2">任務說明</th>
+                            <th class="p-2">建議時間</th>
+                            <th class="p-2">配分</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="p-2">【作業 2-1】實例化不同頻率的採樣任務</td>
+                            <td class="p-2">45 min</td>
+                            <td class="p-2">40 pts</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">【作業 2-2】觀測並計算系統的 Loop Time</td>
+                            <td class="p-2">30 min</td>
+                            <td class="p-2">30 pts</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">【作業 2-3】實作簡單的低通濾波器 (Low-pass Filter)</td>
+                            <td class="p-2">45 min</td>
+                            <td class="p-2">30 pts</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="instructor-guide" class="hidden">
+        <h2>講師手冊 (Instructor Guide)</h2>
+        <div class="space-y-6">
+            <div>
+                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">教學重點 (Teaching Points)</h3>
+                <ul class="list-disc list-inside text-sm space-y-2">
+                    <li>頻率的權衡：為什麼不是採樣越快越好（CPU 負擔、電力消耗、無線傳輸頻寬）。</li>
+                    <li>奈奎斯特準則：解釋採樣頻率必須大於訊號最高頻率的兩倍，否則會失真。</li>
+                    <li>即時性 (Real-time)：探討採樣頻率對無人車反應速度的直接影響。</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">學生常見問題 (Common Issues)</h3>
+                <ul class="list-disc list-inside text-sm space-y-2 text-red-600">
+                    <li>採樣頻率設定太高，導致序列埠 (Serial) 輸出阻塞，反而拖慢了整個 loop。</li>
+                    <li>忘記轉換單位：混淆了 Hz (次/秒) 與 ms (毫秒/次) 的計算。</li>
+                    <li>不理解為什麼慢速採樣會導致感測器數據噴發「鋸齒狀」的雜訊。</li>
+                </ul>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="font-bold mb-2 text-sm">評分標準 (Grading)</h3>
+                <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
+                    <li><strong>優 (90-100):</strong> 能準確設計多個頻率層級的採樣任務，且理解其對系統性能的量化影響。</li>
+                    <li><strong>可 (70-89):</strong> 基本功能達成，但對採樣頻率的選擇缺乏理論支持（如：隨機設定數字）。</li>
+                    <li><strong>待加強 (Below 70):</strong> 無法穩定控制採樣頻率，導致數據流混亂。</li>
+                </ul>
+            </div>
+
+            <!-- NEW: Practical Deployment Recommendations -->
+            <div>
+                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
+.
+├── src/             # 包含多執行緒採樣架構的 main.cpp
+├── README.md        # 採樣頻率 vs 系統負載分析曲線圖
+└── .github/         # 自動評核配置</pre>
+                    <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
+                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                        <li><strong>Loop Time 監測：</strong> 檢查提交的日誌數據，確認 Loop Time 是否在 1000Hz 採樣下仍維持穩定。</li>
+                        <li><strong>計算正確性：</strong> 驗證學生對採樣週期與頻率的單位換算邏輯（Hz 與 ms 轉換）。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- NEW: Detailed operations guide -->
+            <div class="bg-white p-4 border border-gray-200 rounded-lg">
+                <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
+                <div class="space-y-4 text-sm text-gray-600">
+                    <div>
+                        <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
+                        <p>建立包含「採樣頻率可調式」框架的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
+                        <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以便對其濾波與採樣策略進行點評。</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
+                        <p>學生領取作業，獲得個人專屬 Repo，實作 2-1 等採樣任務並繪製性能分析曲線後 Push。</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
+                        <p>進入 Feedback PR，針對學生對「數據精確度 vs 系統資源耗用」權衡的理解給予回饋。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEW: Flipped classroom strategy table -->
+            <div>
+                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm border-collapse border border-gray-200">
+                        <thead class="bg-gray-50 text-left text-gray-800">
+                            <tr>
+                                <th class="border border-gray-200 p-2">階段</th>
+                                <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
+                                <th class="border border-gray-200 p-2">教師/平台角色</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-600">
+                            <tr>
+                                <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
+                                <td class="border border-gray-200 p-2">研究數位信號處理中的「混疊現象」原理動畫。</td>
+                                <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員對「採樣定律」有基礎概念。</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
+                                <td class="border border-gray-200 p-2">領取 Classroom 作業，動態調整採樣頻率觀察感測器回傳品質。</td>
+                                <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
+                                <td class="border border-gray-200 p-2">實作簡易低通濾波器優化抖動並 Push，閱讀教師回覆 PR。</td>
+                                <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
 </body>
 
 </html>

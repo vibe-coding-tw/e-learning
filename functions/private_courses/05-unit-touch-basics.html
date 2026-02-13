@@ -507,6 +507,97 @@ box.addEventListener(<span class="text-green-400">'touchmove'</span>, (e) => {
 
 
     </script>
+
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 1-1：零延遲按鈕 (Touchstart Integration)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 前端優化師。</li>
+            <li><strong>執行方式：</strong> 將控制按鈕的 <code>click</code> 事件替換為 <code>touchstart</code>，並觀察響應速度的提升。</li>
+            <li><strong>評分重點：</strong> 是否成功消除 300ms 延遲，並在觸控時給予立即的視覺回饋（如顏色變化）。</li>
+        </ul>
+
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元建議搭配 <strong>"Touch Event Lifecycle Challenge"</strong> 作業：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html
+└── js/touch.js      # (重點) 需實作座標映射的部分</code></pre>
+
+        <h3>B. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>事件類型檢查：</strong> 檢查程式碼是否包含 <code>addEventListener('touchstart', ...)</code>。</li>
+        </ul>
+
+        <hr>
+
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>上傳基礎專案。</li>
+                <li>勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>建立作業並連結範本。</li>
+                <li><strong>重點：</strong> 向學生解釋為何每個 Repo 最上方都有一個 "Open in Codespaces" 按鈕。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (雲端開發)</strong></p>
+            <ol>
+                <li>學生在 GitHub 直接點擊 "Code" > "Codespaces" 啟動。</li>
+                <li>完成 <strong>Commit & Push</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋</strong></p>
+            <ol>
+                <li>打開 Feedback PR，確認學生是否掌握了雲端開發的基本流程。</li>
+            </ol>
+        </div>
+
+        <hr>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">在手機上開啟測試頁面，觀察觸控點座標的變化紀錄。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>檢查學生預預習紀錄。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作 <code>touchstart</code>
+                        事件，並處理多點觸控可能引發的邏輯衝突。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>助教角色：</strong>協助引導學生理解
+                        <code>e.touches</code> 陣列結構。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">將觸控座標處理 logic 模組化，並 Commit 到 GitHub。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核程式碼的重用性與觸控穩定度。
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
 </body>
 
 </html>

@@ -272,6 +272,152 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 2-1：封包工廠：狀態物件序列化</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 前端資料處理員。</li>
+            <li><strong>執行方式：</strong> 建立一個包含 `battery` (0-100)、`is_moving` (bool)、`speed` (float) 的 JS 物件，使用
+                `JSON.stringify()` 轉換後，計算字串的大小（位元組），並與原始物件在記憶體中的推估大小做對比。</li>
+            <li><strong>評分重點：</strong> 能否寫出結構完整、符合規範的 JSON 字串。</li>
+        </ul>
+
+        <h3>作業 2-2：解析挑戰：防礙型 JSON 除錯</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 軟體除錯工程師。</li>
+            <li><strong>執行方式：</strong> 故意傳入一個格式錯誤的字串（如遺失雙引號或多出逗號），撰寫 `try...catch` 捕捉錯誤，並回傳一個「預設狀態物件」以確保系統不崩潰。</li>
+            <li><strong>評分重點：</strong> 代碼是否有考慮到「防禦性編程」的概念。</li>
+        </ul>
+
+        <h3>作業 2-3：數據精簡賽：Payload 瘦身計劃</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 系統架構師。</li>
+            <li><strong>執行方式：</strong> 將 `{"distance": 12.34567, "status": "active"}` 精簡為縮寫鍵名與截斷小數點後的版本（如
+                `{"d":12.3,"s":1}`），並測量節省了多少物理頻寬。</li>
+            <li><strong>評分重點：</strong> 精簡後的 JSON 是否仍具備可讀性與唯一性。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── src/
+│   ├── encoder.js    # 實現序列化邏輯
+│   └── decoder.js    # 實現反序列化與校驗
+├── test/
+│   └── schema.test.js # 校驗 JSON 格式
+└── README.md         # 紀錄：ArduinoJson 記憶體分配報告</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">📜</span>
+                            <p class="text-sm text-gray-700"><strong>格式嚴格性：</strong> 透過 Linter 檢查生成的 JSON 是否符合標準 RFC 規範。
+                            </p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">✅</span>
+                            <p class="text-sm text-gray-700"><strong>解析成功率：</strong> 模擬傳入 10 組 JSON，自動檢查數值是否與原始數據一致。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供包含 <code>JSON.parse</code> 基礎案例，設定為 Template
+                        repository。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「單元測試」為自動運行。教導學生如何閱讀 JSON Schema 規範。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，獲得個人專屬 Repo，在線上工具驗證。在 PR 說明優化方案。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對 <code>ArduinoJson</code> 限制補充（如 Static vs
+                        Dynamic 記憶體分配）。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">理解為什麼通訊媒介（藍牙）只能傳送字串位元組。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，展示「家具裝箱與組裝」的視覺化圖解。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，實測在大循環下頻繁序列化對 CPU 的負擔。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，解答為什麼 JSON 在 ESP32 讀出來是空等問題。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">設計支援「命令收發」的無人車 JSON 短語集並 Push，閱讀回覆。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，檢核學生是否掌握 Key-Value 結構的靈活性。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/Vy8sjvHk0vw",

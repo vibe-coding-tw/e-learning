@@ -282,6 +282,151 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 3-1：「偽代碼建築師」：邏輯規劃</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 架構設計師。</li>
+            <li><strong>執行方式：</strong> 在不寫實際 C++ 代碼的情況下，用中文偽代碼描述整個 PID 迴圈的執行流程。</li>
+            <li><strong>評分重點：</strong> 能否清晰標註出「讀取」、「計算」、「輸出」與「採樣控制」的先後順序及邏輯判斷。</li>
+        </ul>
+
+        <h3>作業 3-2：「採樣頻率大探索」：時間穩定性</h3>
+        <ul>
+            <li><strong>角色扮演：：</strong> 性能測試員。</li>
+            <li><strong>執行方式：</strong> 故意將採樣時間從 10ms 調整到 100ms，觀察無人車循航穩定性的急遽惡化。</li>
+            <li><strong>評分重點：</strong> 紀錄不同採樣頻率下的控制波形，並推導出適合本硬體設備的「黃金採樣週期」。</li>
+        </ul>
+
+        <h3>作業 3-3：「非阻塞代碼重構」：millis() 實戰</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 代碼優化師。</li>
+            <li><strong>執行方式：：</strong> 將一段包含 <code>delay()</code> 的舊代碼改寫為基於 <code>millis()</code> 的狀態機結構。</li>
+            <li><strong>評分重點：</strong> 代碼執行時能否同時閃爍 LED 燈而不影響 PID 的精準計時（多工驗證）。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── src/
+│   ├── legacy_blocking.cpp # 含有 delay() 的舊代碼
+│   └── main_loop.cpp       # millis() 狀態機模板
+├── platformio.ini          # 環境設定
+└── docs/
+    └── jitter_analysis.md  # 採樣週期分析紀錄表</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🧪</span>
+                            <p class="text-sm text-gray-700"><strong>時間戳記驗證：</strong> 分析 <code>loop()</code>
+                                執行間隔，檢查採樣週期是否穩定。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🔍</span>
+                            <p class="text-sm text-gray-700"><strong>靜態掃描：</strong> 比對 <code>delay()</code>
+                                關鍵字，確保核心迴圈中移除阻塞指令。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供包含 `millis()` 挑戰骨架與 Log 輸出範例的專案樣板。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「採樣週期穩定度」評分點。引導學員說明如何消除阻塞行為。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業測試 `delay()` 與 `millis()` 差異。提交重構代碼 PR。執行
+                        Git Push。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對代碼重構擴展性，以及對狀態機概念的應用予以點評。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">學習 `millis()` 原理，理解 `delay()` 導致控制失靈的原因。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「從阻塞到併發」導讀。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，測量最佳採樣率，重構狀態機代碼。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，引導討論採樣頻率與計算量權衡。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">完成非阻塞架構轉換並 Push，閱讀教師回覆 PR 優化擴展性。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，引導思考高效邏輯對硬體控制的支撐價值。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/wrcmKrYpNA0",

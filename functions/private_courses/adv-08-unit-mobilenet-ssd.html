@@ -257,6 +257,150 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 4-1：「模型效能診斷」：MobileNet 分類測試</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> AI 模型評測員。</li>
+            <li><strong>執行方式：</strong> 利用 TensorFlow.js 加載 MobileNet 模型。拿取教室內常見的 5 種物品（如：手機、筆記本、水瓶等）進行辨識，記錄每個物品的置信度
+                (Confidence Score)。</li>
+            <li><strong>評分重點：</strong> 能否寫出觀察結論，解釋為什麼某些背景下模型會產生誤判，以及「硬體加速」對辨識速度的影響。</li>
+        </ul>
+
+        <h3>作業 4-2：SSD 物體偵測與「區域警戒 (ROI)」過濾</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 安全監控工程師。</li>
+            <li><strong>執行方式：</strong> 實作 SSD 偵測模組。在影像畫面上手動劃定一個「紅色警戒區」。當偵測到「人 (Person)」進入該區域時，才觸發網頁警報聲。</li>
+            <li><strong>評分重點：</strong> 數據清洗能力，即如何從 SSD 回傳的多個 Bounding Boxes 中取出特定類別（Label）並判斷其座標是否在警戒區內。</li>
+        </ul>
+
+        <h3>作業 4-3：AI 無人車自動避障決策</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 自動駕駛演算法工程師。</li>
+            <li><strong>執行方式：</strong> 將 SSD 的輸出座標轉換為無人車的轉向誤差。若偵測到前方物體（如交通錐）寬度佔據畫面 50% 以上，強制執行「緊急停止」。</li>
+            <li><strong>評分重點：</strong> 「感知到決策」的邏輯完整性。即如何利用 Bounding Box 的數據來量化目標的「距離」與「偏移」，並給出合理的馬達指令。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── js/
+│   ├── model_loader.js  # 模型載入與預熱
+│   └── tracker_ssd.js   # 偵測與 Bounding Box 繪製
+├── tests/
+│   └── inference.test.js # 測試：驗證決策邏輯
+└── README.md              # 信心門檻調校與誤判分析紀錄</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">⏱️</span>
+                            <p class="text-sm text-gray-700"><strong>推理速度監測：</strong> 檢查執行頻率，若低於 1 FPS 則提示檢查硬體加速。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🧠</span>
+                            <p class="text-sm text-gray-700"><strong>決策邏輯測試：</strong> 提供模擬數據，檢查能否正確給出導航指令。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供已引入 TensorFlow.js 與 MobileNet-SSD
+                        權重載入邏輯的基礎樣板。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「邏輯判定」評分標準。指導如何開啟 WebGL 確保執行效能。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">進行模型對抗測試（如測試香蕉誤判）。紀錄誤判原因並 Push 至 Repo。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對「機率」應用，以及信心門檻設計合理性予以回饋。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">觀看影片，理解「影像分類」與「物件偵測」的本質差異。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「神經網路如何看世界」導讀。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，實測信心門檻對系統穩定性的影響。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時排除阻礙，解答關於「偵測框框頻繁閃爍」的濾波原理。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">完成「特定物件過濾」導航邏輯並 Push，閱讀教師回覆 PR。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，評估平衡精度與延遲的綜合決策能力。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/w9c1ukAfO3o?autoplay=1",

@@ -281,58 +281,101 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
+
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 2-1：安裝硬體大腦 PlatformIO</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 韌體工程師.</li>
+            <li><strong>執行方式：</strong> 在 VS Code 安裝 PlatformIO IDE 擴充功能，並截圖 PIO Home 畫面。</li>
+            <li><strong>評分重點：</strong> 確認 👽 圖示出現且 PIO Core 已成功安裝（以便開發 ESP32）。</li>
+        </ul>
+
+        <h3>作業 2-2：Git 帳號同步</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 雲端同步專家。</li>
+            <li><strong>執行方式：</strong> 在 VS Code 登入 GitHub 並開啟 Settings Sync。</li>
+            <li><strong>評分重點：</strong> 左下角 👤 圖示顯示已登入帳號。</li>
+        </ul>
+
+    </section>
+
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h4>教學重點</h4>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>建議為 VS Code 環境架設建立一個 <strong>"Dev Environment"</strong> 驗證作業：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── platformio.ini   # 預置的 ESP32 設定檔，測試擴充功能是否能識別
+├── .vscode/         # 包含推薦擴充功能清單 (extensions.json)
+└── env-check.md     # 環境檢查表，學生需勾選完成項目</code></pre>
+
+        <h3>B. 自動評分 (Autograding) 的設計</h3>
         <ul>
-            <li><strong>本機版的必要性：</strong>既然有網頁版，為什麼還要裝本機版？因為網頁版無法直接驅動編譯器進行 ESP32 的代碼編譯與韌體上傳（除非使用特殊的 Web Serial
-                協定，但功能有限）。</li>
-            <li><strong>PlatformIO：</strong>這是嵌入式開發的核心。安裝過程會下載大量的 Python 與編譯器組件，務必提醒學生在良好的網路環境下進行。</li>
-            <li><strong>Open with Code：</strong>這是 Windows 用戶最常忽略的步驟，會大幅影響後續開啟專案的效率。</li>
+            <li><strong>設定檔檢查：</strong> 檢查 <code>env-check.md</code> 是否已填寫。</li>
+            <li><strong>環境截圖：</strong> 要求學生將 VS Code 視窗（需含 PIO 圖示與登入狀態）截圖存入 Repo。</li>
         </ul>
 
         <hr>
 
-        <h4>GitHub Classroom 運作指南</h4>
-        <ol>
-            <li><strong>建立作業：</strong>在 GitHub Classroom 建立 "VSCode Setup" 作業。建議上傳一個包含 <code>platformio.ini</code>
-                的基礎專案模板。</li>
-            <li><strong>Dashboard 配置：</strong>將作業邀請連結填入 Dashboard 的對應欄位。</li>
-            <li><strong>學生領取：</strong>學生點擊作業卡片後建立 Repo。</li>
-            <li><strong>同場檢查：</strong>老師可引導學生領取 Repo 後，在本機 VS Code 中使用 <code>git clone</code> 或直接在課程頁面點擊進入 codespace 觀察。
-            </li>
-        </ol>
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>上傳包含 <code>extensions.json</code> 的範本倉庫.</li>
+                <li>勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>建立 Individual Assignment，關聯範本。</li>
+                <li><strong>重點：</strong> 這一步是為了讓老師能一併看到所有學生的環境準備狀況。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作</strong></p>
+            <ol>
+                <li>學生 Clone 到本機後，VS Code 會自動提示「是否要安裝推薦的擴充功能」。</li>
+                <li>學生安裝後 <strong>Push 進度</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋</strong></p>
+            <ol>
+                <li>在 Feedback PR 的圖片評論中給予鼓勵或修正建議。</li>
+            </ol>
+        </div>
 
         <hr>
 
-        <h4>常見問題 (FAQ)</h4>
-        <ul>
-            <li><strong>PlatformIO 安裝很久：</strong>這是正常的，它在背景下載 Core 文件。請學生耐心等待，或重啟 VS Code 觸發重試。</li>
-            <li><strong>👽 圖示沒出現：</strong>檢查 C/C++ 擴充套件是否已安裝，並確認沒有被防火牆擋住下載。</li>
-            <li><strong>右鍵沒有「以程式碼開啟」：</strong>只能請學生重新執行安裝程式，並務必勾選該選項。</li>
-        </ul>
-
-        <hr>
-
-        <h4>評分標準 (Checkpoint)</h4>
-        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
-            <thead style="background-color: #f3f4f6;">
-                <tr>
-                    <th style="padding: 8px;">任務</th>
-                    <th style="padding: 8px;">評分標準</th>
-                    <th style="padding: 8px;">檢核要點</th>
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td style="padding: 8px;">安裝 PlatformIO</td>
-                    <td style="padding: 8px;">環境就緒</td>
-                    <td style="padding: 8px;">左側出現 👽 圖示，且點擊後能進入 PIO Home。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">根據講義下載 VS Code，完成繁體中文化。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>支援：</strong>在討論區排除 Windows/Mac
+                        下載版本不相符的問題。</td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px;">Git 帳號同步</td>
-                    <td style="padding: 8px;">功能開啟</td>
-                    <td style="padding: 8px;">左下角 👤 已登入個人 GitHub 帳號並顯示同步中。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">課堂安裝 PlatformIO（大檔案下載），並開啟 Sync 同步。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>巡堂：</strong>檢查誰卡在「PIO Core
+                        載入中」，協助手動除錯。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">建立一個空白 PIO 專案，上傳至 GitHub 觀察環境是否一致。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>檢核學生提供的 PIO 設定截圖。
+                    </td>
                 </tr>
             </tbody>
         </table>

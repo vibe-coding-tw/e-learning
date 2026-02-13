@@ -1,4 +1,4 @@
-console.log("Dashboard Script v11 Loaded");
+console.log("Dashboard Script v11.3.10 Loaded");
 // alert("Dashboard Script v5 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -33,10 +33,7 @@ const assignmentTableBody = document.getElementById('assignment-table-body');
 
 // Admin UI
 const adminPanel = document.getElementById('admin-panel');
-const adminEmailInput = document.getElementById('admin-email');
-const adminRoleSelect = document.getElementById('admin-role');
-const adminSetBtn = document.getElementById('btn-set-role');
-const adminMsg = document.getElementById('admin-msg');
+
 
 let myRole = null;
 let charts = {};
@@ -44,40 +41,8 @@ let dashboardData = null;
 let lessonsMap = {};
 let allLessons = [];
 
-const MASTER_UNIT_MAPPING = {
-    "00-master-wifi-motor.html": ["00-unit-wifi-setup.html", "00-unit-motor-ramping.html"],
-    "01-master-getting-started.html": ["01-unit-developer-identity.html", "01-unit-vscode-setup.html", "01-unit-vscode-online.html"],
-    "02-master-web-app.html": ["02-unit-html5-basics.html", "02-unit-flexbox-layout.html", "02-unit-ui-ux-standards.html"],
-    "03-master-web-ble.html": ["03-unit-ble-security.html", "03-unit-ble-async.html", "03-unit-typed-arrays.html"],
-    "04-master-remote-control.html": ["04-unit-control-panel.html", "04-unit-data-json.html", "04-unit-flow-logic.html"],
-    "05-master-touch-events.html": ["05-unit-touch-basics.html", "05-unit-long-press.html", "05-unit-prevent-default.html"],
-    "06-master-joystick-lab.html": ["06-unit-touch-vs-mouse.html", "06-unit-canvas-joystick.html", "06-unit-joystick-math.html"],
-    "basic-01-master-environment.html": ["basic-01-unit-esp32-architecture.html", "basic-01-unit-platformio-setup.html", "basic-01-unit-drivers-ports.html"],
-    "basic-02-master-ota-architecture.html": ["basic-02-unit-partition-table.html", "basic-02-unit-ota-principles.html", "basic-02-unit-ota-security.html"],
-    "basic-03-master-io-mapping.html": ["basic-03-unit-pinout.html", "basic-03-unit-pullup-debounce.html", "basic-03-unit-adc-resolution.html"],
-    "basic-04-master-pwm-control.html": ["basic-04-unit-pwm-basics.html", "basic-04-unit-h-bridge.html", "basic-04-unit-ledc-syntax.html"],
-    "basic-05-master-ble-gatt.html": ["basic-05-unit-gatt-structure.html", "basic-05-unit-advertising-connection.html", "basic-05-unit-ble-properties.html"],
-    "basic-06-master-http-web.html": ["basic-06-unit-fetch-api.html", "basic-06-unit-http-request.html", "basic-06-unit-cors-security.html"],
-    "basic-07-master-wifi-modes.html": ["basic-07-unit-wifi-ap-sta.html", "basic-07-unit-http-lifecycle.html", "basic-07-unit-async-webserver.html"],
-    "basic-08-master-joystick-math.html": ["basic-08-unit-joystick-mapping.html", "basic-08-unit-unicycle-model.html", "basic-08-unit-response-curves.html"],
-    "basic-09-master-multitasking.html": ["basic-09-unit-millis.html", "basic-09-unit-hardware-timer.html", "basic-09-unit-sampling-rate.html"],
-    "basic-10-master-fsm.html": ["basic-10-unit-fsm.html", "basic-10-unit-ui-design.html", "basic-10-unit-state-consistency.html"],
-    "adv-01-master-s3-cam.html": ["adv-01-unit-s3-interfaces.html", "adv-01-unit-mjpeg-stream.html", "adv-01-unit-jpeg-quality.html"],
-    "adv-02-master-video.html": ["adv-02-unit-video-streaming.html", "adv-02-unit-canvas-image.html", "adv-02-unit-bandwidth-fps.html"],
-    "adv-03-master-ble-advanced.html": ["adv-03-unit-ble-notify.html", "adv-03-unit-json-serialization.html", "adv-03-unit-ble-mtu.html"],
-    "adv-04-master-sensors.html": ["adv-04-unit-i2c-spi.html", "adv-04-unit-json-rest.html", "adv-04-unit-filter-algorithms.html"],
-    "adv-05-master-cv.html": ["adv-05-unit-feature-extraction.html", "adv-05-unit-centroid-error.html", "adv-05-unit-closed-loop.html"],
-    "adv-06-master-cv-advanced.html": ["adv-06-unit-threshold-filter.html", "adv-06-unit-centroid-algorithm.html", "adv-06-unit-hsv-math.html", "adv-06-unit-look-ahead.html"],
-    "adv-07-master-ui-framework.html": ["adv-07-unit-ui-framework.html", "adv-07-unit-chart-canvas.html", "adv-07-unit-json-parsing.html", "adv-07-unit-event-polling.html"],
-    "adv-08-master-image-processing.html": ["adv-08-unit-color-spaces.html", "adv-08-unit-error-calculation.html", "adv-08-unit-p-control.html", "adv-08-unit-mobilenet-ssd.html"],
-    "adv-09-master-ai-recognition.html": ["adv-09-unit-cnn-audio.html", "adv-09-unit-teachable-machine.html", "adv-09-unit-webspeech-api.html", "adv-09-unit-flow-control.html"],
-    "adv-10-master-diff-drive.html": ["adv-10-unit-icc-geometry.html", "adv-10-unit-api-design.html", "adv-10-unit-pwm-limits.html"],
-    "adv-11-master-photoelectric.html": ["adv-11-unit-sensor-principles.html", "adv-11-unit-hardware-interrupts.html", "adv-11-unit-speed-algorithms.html"],
-    "adv-12-master-pid.html": ["adv-12-unit-pid-control.html", "adv-12-unit-pid-math.html", "adv-12-unit-code-logic.html"],
-    "adv-13-master-robustness.html": ["adv-13-unit-robustness.html", "adv-13-unit-system-perf.html", "adv-13-unit-technical-narrative.html"],
-    "adv-14-master-debugging-art.html": ["adv-14-unit-debugging-art.html", "adv-14-unit-kpi-definition.html", "adv-14-unit-refactoring.html"],
-    "adv-15-master-architecture.html": ["adv-15-unit-data-flow.html", "adv-15-unit-ble-async.html", "adv-15-unit-pid-simulation.html", "adv-15-unit-image-dma.html"]
-};
+// [REMOVED] MASTER_UNIT_MAPPING is now standardized in lessons.json
+
 
 // [Global UI Init] Check for Iframe Mode immediately
 (function initIframeMode() {
@@ -158,10 +123,10 @@ async function loadDashboard() {
 
         if (myRole === 'admin' || myRole === 'teacher' || isAuthorizedTeacher) {
             // Admin/Teacher View (Management)
-            renderAdminDashboard(data, filterUnitId);
             setupAdminFeatures();
             setupGradingFunctions();
             setupSettingsFeature();
+            renderAdminDashboard(data, filterUnitId);
 
             // [MODIFIED] Automatically refresh the UI and handle tab switching for filtered units
             const activeTab = document.querySelector('.tab-btn.text-blue-600');
@@ -173,22 +138,10 @@ async function loadDashboard() {
                     // Default to assignments if filtered to a unit
                     switchTab('assignments');
                 } else {
-                    // Refresh current tab
                     if (tabId === 'admin') renderAdminConsole();
                     if (tabId === 'settings') renderSettingsTab(filterUnitId);
                     if (tabId === 'assignments') {
-                        let displayAssignments = data.assignments;
-                        const urlParams = new URLSearchParams(window.location.search);
-                        let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
-
-                        if (filterCourseId) {
-                            if (filterUnitId) {
-                                displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId && a.unitId === filterUnitId);
-                            } else {
-                                displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
-                            }
-                        }
-                        renderAssignments(displayAssignments);
+                        // Handled by renderAdminDashboard or switchTab
                     }
                 }
             }
@@ -201,13 +154,21 @@ async function loadDashboard() {
 
     } catch (error) {
         console.error("Dashboard Load Error:", error);
-        showAccessDenied();
+        showAccessDenied(error.message);
     }
 }
 
-function showAccessDenied() {
+function showAccessDenied(errorMsg = "") {
     loadingState.classList.add('hidden');
     accessDenied.classList.remove('hidden');
+
+    if (errorMsg) {
+        // [DEBUG] Show error to user to help pinpoint if it's a code crash
+        const errorDisplay = document.createElement('div');
+        errorDisplay.className = 'mt-4 p-2 bg-red-50 text-red-600 text-xs font-mono rounded border border-red-100';
+        errorDisplay.innerText = `Error: ${errorMsg}`;
+        accessDenied.appendChild(errorDisplay);
+    }
 
     const user = auth.currentUser;
     if (user && userUidDisplay) {
@@ -421,8 +382,11 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
     // Settings Tab (Admin OR Teacher with authorized courses)
     const settingsTabBtn = document.getElementById('tab-btn-settings');
+    const urlParams = new URLSearchParams(window.location.search);
+    let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
+
     if (settingsTabBtn) {
-        // [MODIFIED] If filtered, check if authorized for THIS course. If not filtered, check if authorized for ANY.
+        // Parse courseId for Admin View to filter stats
         let isAuthorized = false;
         if (myRole === 'admin') {
             isAuthorized = true;
@@ -443,14 +407,11 @@ function renderAdminDashboard(data, filterUnitId = null) {
     if (stats.students) stats.students.textContent = data.summary.totalStudents;
     if (stats.hours) stats.hours.textContent = data.summary.totalHours.toFixed(1);
 
-    // Parse courseId for Admin View to filter stats
-    const urlParams = new URLSearchParams(window.location.search);
-    let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
 
-    // [NEW] Hide Overview Tab if filtered to a specific course
+    // [NEW] Hide Overview Tab if filtered to a specific unit
     const overviewTabBtn = document.getElementById('tab-btn-overview');
     if (overviewTabBtn) {
-        if (filterCourseId) {
+        if (filterUnitId) { // [USER_REQUEST] Use unitId here
             overviewTabBtn.classList.add('hidden');
             // Logic moved to loadDashboard for better flow
         } else {
@@ -525,15 +486,15 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
             // Render Main Course Row
             let html = `
-                <tr class="${bgClass} text-xs border-b border-gray-100 cursor-pointer hover:bg-gray-100" onclick="toggleCourseRows('${courseUnitsId}', event)">
-                    <td class="pl-8 py-2 border-l-4 ${isMatch ? 'border-blue-400 font-bold' : 'border-gray-200'} text-gray-800 flex items-center gap-2">
+                <tr class="${bgClass} text-[10px] md:text-xs border-b border-gray-100 cursor-pointer hover:bg-gray-100" onclick="toggleCourseRows('${courseUnitsId}', event)">
+                    <td class="pl-4 md:pl-8 py-1.5 md:py-2 border-l-4 ${isMatch ? 'border-blue-400 font-bold' : 'border-gray-200'} text-gray-800 flex items-center gap-1 md:gap-2">
                         <span id="icon-${courseUnitsId}" class="text-[8px] transform transition-transform">▶</span>
                         <span>${escapeHtml(courseTitle)}</span>
                     </td>
-                    <td class="text-right py-2 font-bold">${(progress.total / 60).toFixed(0)}m</td>
-                    <td class="text-right py-2 text-blue-600">${(progress.video / 60).toFixed(0)}m</td>
-                    <td class="text-right py-2 text-purple-600">${(progress.doc / 60).toFixed(0)}m</td>
-                    <td class="py-2"></td>
+                    <td class="text-right py-1.5 md:py-2 font-bold">${(progress.total / 60).toFixed(0)}m</td>
+                    <td class="text-right py-1.5 md:py-2 text-blue-600">${(progress.video / 60).toFixed(0)}m</td>
+                    <td class="text-right py-1.5 md:py-2 text-purple-600">${(progress.doc / 60).toFixed(0)}m</td>
+                    <td class="py-1.5 md:py-2"></td>
                 </tr>
             `;
 
@@ -582,8 +543,8 @@ function renderAdminDashboard(data, filterUnitId = null) {
                         </td>
                         <td class="text-right py-1">${(unitStats.total / 60).toFixed(0)}m</td>
                         <td class="text-right py-1">${(unitStats.video / 60).toFixed(0)}m</td>
-                        <td class="text-right py-1">${(unitStats.doc / 60).toFixed(0)}m</td>
-                        <td class="py-1"></td>
+                        <td class="text-right py-1 md:py-1">${(unitStats.doc / 60).toFixed(0)}m</td>
+                        <td class="py-1 md:py-1"></td>
                     </tr>
                     ${logRowsHtml}
                     `;
@@ -595,20 +556,19 @@ function renderAdminDashboard(data, filterUnitId = null) {
         }).join('');
 
         return `
-        <tr class="hover:bg-gray-50 transition border-b border-gray-100 cursor-pointer" onclick="toggleRow('${s.uid}')">
-            <td class="py-3 px-2 font-medium text-gray-800 flex items-center gap-2">
-                <span id="icon-${s.uid}" class="text-gray-400 w-4 inline-block transform transition-transform">▶</span>
-                ${escapeHtml(s.email)}
+        <tr class="hover:bg-gray-50 transition border-b border-gray-100 cursor-pointer text-xs md:text-sm" onclick="toggleRow('${s.uid}')">
+            <td class="py-2 px-1 sm:py-3 sm:px-2 font-medium text-gray-800 flex items-center gap-1 md:gap-2">
+                <span id="icon-${s.uid}" class="text-gray-400 w-3 md:w-4 inline-block transform transition-transform">▶</span>
+                <span class="truncate max-w-[120px] md:max-w-none">${escapeHtml(s.email)}</span>
             </td>
-            <td class="py-3 px-2 text-right font-mono text-blue-600">${(displayTotal / 3600).toFixed(1)}h</td>
-            <td class="py-3 px-2 text-right text-gray-500 text-xs text-nowrap">
+            <td class="py-2 px-1 sm:py-3 sm:px-2 text-right font-mono text-blue-600">${(displayTotal / 3600).toFixed(1)}h</td>
+            <td class="py-2 px-1 sm:py-3 sm:px-2 text-right text-gray-500 text-[10px] md:text-xs text-nowrap">
                 <span title="Video">${(displayVideo / 60).toFixed(0)}m</span>
             </td>
-            <td class="py-3 px-2 text-right text-gray-500 text-xs text-nowrap">
+            <td class="py-2 px-1 sm:py-3 sm:px-2 text-right text-gray-500 text-[10px] md:text-xs text-nowrap">
                 <span title="Doc">${(displayDoc / 60).toFixed(0)}m</span>
             </td>
-            <td class="py-3 px-2 text-right text-xs text-gray-400 hidden sm:table-cell">
-            <td class="py-3 px-2 text-right text-xs text-gray-400 hidden sm:table-cell">
+            <td class="py-2 px-1 sm:py-3 sm:px-2 text-right text-[10px] md:text-xs text-gray-400 hidden sm:table-cell">
                 ${s.lastActive && !isNaN(new Date(s.lastActive)) ? new Date(s.lastActive).toLocaleString() : '-'}
             </td>
         </tr>
@@ -618,76 +578,10 @@ function renderAdminDashboard(data, filterUnitId = null) {
         `;
     }).join('');
 
-    window.toggleCourseRows = function (id, event) {
-        if (event) event.stopPropagation();
-        const rows = document.querySelectorAll(`.course-unit-${id}`);
-        const icon = document.getElementById(`icon-${id}`);
-
-        let isNowVisible = false;
-        rows.forEach(row => {
-            if (row.style.getPropertyValue('display') === 'none' || row.style.display === 'none') {
-                row.style.setProperty('display', 'table-row', 'important');
-                isNowVisible = true;
-            } else {
-                row.style.setProperty('display', 'none', 'important');
-                // Also hide any active logs under these units
-                const unitLogsIdMatch = row.onclick.toString().match(/toggleUnitLogs\('(.+?)'/);
-                if (unitLogsIdMatch) {
-                    const unitLogsId = unitLogsIdMatch[1];
-                    const logs = document.querySelectorAll(`.unit-log-${unitLogsId}`);
-                    logs.forEach(l => l.style.setProperty('display', 'none', 'important'));
-                    const subIcon = document.getElementById(`icon-${unitLogsId}`);
-                    if (subIcon) subIcon.classList.remove('rotate-90');
-                }
-                isNowVisible = false;
-            }
-        });
-
-        if (icon) {
-            if (isNowVisible) icon.classList.add('rotate-90');
-            else icon.classList.remove('rotate-90');
-        }
-    };
-
-    window.toggleUnitLogs = function (id, event) {
-        if (event) event.stopPropagation();
-        const rows = document.querySelectorAll(`.unit-log-${id}`);
-        const icon = document.getElementById(`icon-${id}`);
-
-        let isNowVisible = false;
-        rows.forEach(row => {
-            if (row.style.getPropertyValue('display') === 'none' || row.style.display === 'none') {
-                row.style.setProperty('display', 'table-row', 'important');
-                isNowVisible = true;
-            } else {
-                row.style.setProperty('display', 'none', 'important');
-                isNowVisible = false;
-            }
-        });
-
-        if (icon) {
-            if (isNowVisible) {
-                icon.classList.add('rotate-90');
-            } else {
-                icon.classList.remove('rotate-90');
-            }
-        }
-    };
-
-    window.toggleRow = function (uid) {
-        const detail = document.getElementById(`detail-${uid}`);
-        const icon = document.getElementById(`icon-${uid}`);
-        if (detail.classList.contains('hidden')) {
-            detail.classList.remove('hidden');
-            icon.textContent = '▼';
-        } else {
-            detail.classList.add('hidden');
-            icon.textContent = '▶';
-        }
-    };
-
-    // [Fix] Filter chart data if courseId is present
+    // [NEW] Use filterUnitId for chart and assignment filtering if courseId is present
     let chartData = data.students;
+    let displayAssignments = data.assignments;
+
     if (filterCourseId) {
         chartData = data.students.map(s => {
             const courses = s.courseProgress || {};
@@ -706,11 +600,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
                 pageTime: finalStats.page || finalStats.pageTime || 0
             };
         });
-    }
 
-    // [Fix] Filter assignments based on courseId and unitId
-    let displayAssignments = data.assignments;
-    if (filterCourseId) {
         if (filterUnitId) {
             displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId && a.unitId === filterUnitId);
         } else {
@@ -718,9 +608,114 @@ function renderAdminDashboard(data, filterUnitId = null) {
         }
     }
 
+    const guideContent = resolveAssignmentGuide(data, filterCourseId, filterUnitId);
+
     renderChart(chartData);
-    renderAssignments(displayAssignments);
+    renderAssignments(displayAssignments, guideContent);
 }
+
+// Helper: Resolve assignment guide for a unit
+function resolveAssignmentGuide(data, filterCourseId, filterUnitId) {
+    if (!filterCourseId || !filterUnitId) return "";
+
+    try {
+        const rawInstructor = (data.courseConfigs && data.courseConfigs[filterCourseId]) ? data.courseConfigs[filterCourseId].instructorGuide : null;
+        const rawAssignment = (data.courseConfigs && data.courseConfigs[filterCourseId]) ? data.courseConfigs[filterCourseId].assignmentGuide : null;
+
+        const guideData = robustExtractGuideSegments(rawInstructor, rawAssignment);
+
+        // Flexible resolution: try raw, then with .html, then without .html, then unit number
+        const cleanUnitId = filterUnitId.replace('.html', '');
+        let assignmentGuide = guideData.assignmentGuides[filterUnitId] ||
+            guideData.assignmentGuides[cleanUnitId] ||
+            guideData.assignmentGuides[cleanUnitId + '.html'] || "";
+
+        if (!assignmentGuide.trim()) {
+            const lesson = allLessons.find(l => l.courseId === filterCourseId);
+            const units = lesson?.courseUnits || [];
+
+            // Search using clean names
+            const unitIdx = units.findIndex(u => u.replace('.html', '') === cleanUnitId);
+            if (unitIdx !== -1) {
+                assignmentGuide = (guideData.assignmentGuides[unitIdx + 1] || "").trim();
+            }
+        }
+        console.log(`[Debug] Guide resolution for ${filterUnitId}: ${assignmentGuide ? 'Found' : 'Not Found'}`);
+        return assignmentGuide;
+    } catch (err) {
+        console.error("[Debug] Error resolving assignment guide:", err);
+        return "";
+    }
+}
+
+// --- Global Toggle Functions ---
+window.toggleCourseRows = function (id, event) {
+    if (event) event.stopPropagation();
+    const rows = document.querySelectorAll(`.course-unit-${id}`);
+    const icon = document.getElementById(`icon-${id}`);
+
+    let isNowVisible = false;
+    rows.forEach(row => {
+        if (row.style.getPropertyValue('display') === 'none' || row.style.display === 'none') {
+            row.style.setProperty('display', 'table-row', 'important');
+            isNowVisible = true;
+        } else {
+            row.style.setProperty('display', 'none', 'important');
+            // Also hide any active logs under these units
+            const unitLogsIdMatch = row.onclick.toString().match(/toggleUnitLogs\('(.+?)'/);
+            if (unitLogsIdMatch) {
+                const unitLogsId = unitLogsIdMatch[1];
+                const logs = document.querySelectorAll(`.unit-log-${unitLogsId}`);
+                logs.forEach(l => l.style.setProperty('display', 'none', 'important'));
+                const subIcon = document.getElementById(`icon-${unitLogsId}`);
+                if (subIcon) subIcon.classList.remove('rotate-90');
+            }
+            isNowVisible = false;
+        }
+    });
+
+    if (icon) {
+        if (isNowVisible) icon.classList.add('rotate-90');
+        else icon.classList.remove('rotate-90');
+    }
+};
+
+window.toggleUnitLogs = function (id, event) {
+    if (event) event.stopPropagation();
+    const rows = document.querySelectorAll(`.unit-log-${id}`);
+    const icon = document.getElementById(`icon-${id}`);
+
+    let isNowVisible = false;
+    rows.forEach(row => {
+        if (row.style.getPropertyValue('display') === 'none' || row.style.display === 'none') {
+            row.style.setProperty('display', 'table-row', 'important');
+            isNowVisible = true;
+        } else {
+            row.style.setProperty('display', 'none', 'important');
+            isNowVisible = false;
+        }
+    });
+
+    if (icon) {
+        if (isNowVisible) {
+            icon.classList.add('rotate-90');
+        } else {
+            icon.classList.remove('rotate-90');
+        }
+    }
+};
+
+window.toggleRow = function (uid) {
+    const detail = document.getElementById(`detail-${uid}`);
+    const icon = document.getElementById(`icon-${uid}`);
+    if (detail.classList.contains('hidden')) {
+        detail.classList.remove('hidden');
+        icon.textContent = '▼';
+    } else {
+        detail.classList.add('hidden');
+        icon.textContent = '▶';
+    }
+};
 
 window.handleAssignmentClick = function (courseId, unitId) {
     const cfg = (dashboardData && dashboardData.courseConfigs) ? dashboardData.courseConfigs[courseId] : null;
@@ -737,66 +732,96 @@ window.handleAssignmentClick = function (courseId, unitId) {
     }
 };
 
-function renderAssignments(assignments) {
-    if (!assignments || assignments.length === 0) {
-        if (assignmentTableBody) assignmentTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">尚無作業繳交紀錄</td></tr>`;
-        return;
+function renderAssignments(assignments, guideContent = "") {
+    if (assignmentTableBody) {
+        if (!assignments || assignments.length === 0) {
+            assignmentTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">尚無作業繳交紀錄</td></tr>`;
+        } else {
+            assignmentTableBody.innerHTML = assignments.map(a => {
+                // Safe date handling
+                let submittedDate = 'N/A';
+                const ts = a.updatedAt || a.submittedAt;
+                if (ts) {
+                    if (ts._seconds) submittedDate = new Date(ts._seconds * 1000).toLocaleString();
+                    else if (ts.seconds) submittedDate = new Date(ts.seconds * 1000).toLocaleString();
+                    else submittedDate = new Date(ts).toLocaleString();
+                }
+
+                const title = lessonsMap[a.courseId] || a.courseId;
+                const currentStatus = a.currentStatus || a.status || 'new'; // Fallback to 'status' field
+
+                const statusColors = {
+                    'submitted': 'bg-yellow-100 text-yellow-800',
+                    'graded': 'bg-green-100 text-green-800',
+                    'new': 'bg-gray-100 text-gray-800'
+                };
+                const statusLabel = {
+                    'submitted': '待評分',
+                    'graded': '已評分',
+                    'new': '新作業'
+                };
+                const badge = `<span class="${statusColors[currentStatus] || 'bg-gray-100'} px-2 py-0.5 rounded text-xs font-bold">${statusLabel[currentStatus] || currentStatus}</span>`;
+
+                // Clean up Unit ID for display
+                let displayUnit = a.unitId || '';
+                displayUnit = displayUnit.replace('.html', '').replace(/-/g, ' ');
+                const unitMatch = displayUnit.match(/unit\s+(.+)/i);
+                if (unitMatch) displayUnit = unitMatch[1]; // Try to extract meaningful part
+
+                return `
+                <tr class="lg:hover:bg-blue-50/50 transition border-b border-gray-100 cursor-pointer group text-xs md:text-sm" onclick="handleAssignmentClick('${a.courseId}', '${a.unitId}')">
+                    <td class="py-2 px-1 sm:py-3 sm:px-2 text-gray-800">
+                        <div class="font-medium group-hover:text-blue-600 transition-colors truncate max-w-[100px] md:max-w-none">${escapeHtml(a.studentEmail || a.userEmail)}</div>
+                    </td>
+                    <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] md:text-sm text-gray-600">
+                        <div class="font-bold text-[10px] md:text-xs text-gray-700 truncate max-w-[80px] md:max-w-none">${escapeHtml(title)}</div>
+                        <div class="text-[10px] text-gray-500 capitalize">${escapeHtml(displayUnit)}</div>
+                    </td>
+                    <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-500">${submittedDate}</td>
+                    <td class="py-2 px-1 sm:py-3 sm:px-2">${badge}</td>
+                    <td class="py-2 px-1 sm:py-3 sm:px-2 font-bold text-gray-700">${a.grade !== null && a.grade !== undefined ? a.grade : '-'}</td>
+                    <td class="py-2 px-1 sm:py-3 sm:px-2 text-right">
+                        <button onclick="event.stopPropagation(); openGradingModal('${a.id}')" 
+                            class="bg-blue-100 hover:bg-blue-600 hover:text-white text-blue-700 px-2 py-0.5 sm:px-3 sm:py-1 rounded text-[10px] sm:text-xs font-bold transition">
+                            評分
+                        </button>
+                    </td>
+                </tr>
+            `}).join('');
+        }
     }
 
-    if (assignmentTableBody) {
-        assignmentTableBody.innerHTML = assignments.map(a => {
-            // Safe date handling
-            let submittedDate = 'N/A';
-            const ts = a.updatedAt || a.submittedAt;
-            if (ts) {
-                if (ts._seconds) submittedDate = new Date(ts._seconds * 1000).toLocaleString();
-                else if (ts.seconds) submittedDate = new Date(ts.seconds * 1000).toLocaleString();
-                else submittedDate = new Date(ts).toLocaleString();
-            }
+    // [NEW] Append Assignment Guide below the table
+    if (guideContent) {
+        const guideHtml = `
+            <div class="mt-8 p-4 md:p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner overflow-x-auto">
+                <div class="instructor-guide-content text-sm md:text-base text-blue-900/90 leading-relaxed prose prose-blue max-w-none">
+                    ${guideContent}
+                </div>
+            </div>
+        `;
+        // Find existing or append
+        const container = document.getElementById('view-assignments');
+        if (container) {
+            // Remove old guide if any to avoid duplicates
+            const oldGuide = container.querySelector('.bg-blue-50');
+            if (oldGuide) oldGuide.remove();
 
-            const title = lessonsMap[a.courseId] || a.courseId;
-            const currentStatus = a.currentStatus || a.status || 'new'; // Fallback to 'status' field
-
-            const statusColors = {
-                'submitted': 'bg-yellow-100 text-yellow-800',
-                'graded': 'bg-green-100 text-green-800',
-                'new': 'bg-gray-100 text-gray-800'
-            };
-            const statusLabel = {
-                'submitted': '待評分',
-                'graded': '已評分',
-                'new': '新作業'
-            };
-            const badge = `<span class="${statusColors[currentStatus] || 'bg-gray-100'} px-2 py-0.5 rounded text-xs font-bold">${statusLabel[currentStatus] || currentStatus}</span>`;
-
-            // Clean up Unit ID for display
-            let displayUnit = a.unitId || '';
-            displayUnit = displayUnit.replace('.html', '').replace(/-/g, ' ');
-            const unitMatch = displayUnit.match(/unit\s+(.+)/i);
-            if (unitMatch) displayUnit = unitMatch[1]; // Try to extract meaningful part
-
-            return `
-            <tr class="lg:hover:bg-blue-50/50 transition border-b border-gray-100 cursor-pointer group" onclick="handleAssignmentClick('${a.courseId}', '${a.unitId}')">
-                <td class="py-3 px-2 text-gray-800">
-                    <div class="font-medium group-hover:text-blue-600 transition-colors">${escapeHtml(a.studentEmail || a.userEmail)}</div>
-                </td>
-                <td class="py-3 px-2 text-sm text-gray-600">
-                    <div class="font-bold text-xs text-gray-700">${escapeHtml(title)}</div>
-                    <div class="text-xs text-gray-500 capitalize">${escapeHtml(displayUnit)}</div>
-                </td>
-                <td class="py-3 px-2 text-xs text-gray-500">${submittedDate}</td>
-                <td class="py-3 px-2">${badge}</td>
-                <td class="py-3 px-2 font-bold text-gray-700">${a.grade !== null && a.grade !== undefined ? a.grade : '-'}</td>
-                <td class="py-3 px-2 text-right">
-                    <button onclick="event.stopPropagation(); openGradingModal('${a.id}')" 
-                        class="bg-blue-100 hover:bg-blue-600 hover:text-white text-blue-700 px-3 py-1 rounded text-xs font-bold transition">
-                        評分
-                    </button>
-                </td>
-            </tr>
-        `}).join('');
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = guideHtml;
+            container.appendChild(wrapper.firstElementChild);
+        }
+    } else {
+        // Clear guide if none
+        const container = document.getElementById('view-assignments');
+        if (container) {
+            const oldGuide = container.querySelector('.bg-blue-50');
+            if (oldGuide) oldGuide.remove();
+        }
     }
 }
+
+window.renderAssignments = renderAssignments;
 
 function renderChart(students) {
     const ctx = document.getElementById('chart-activity').getContext('2d');
@@ -869,7 +894,38 @@ window.switchTab = function (tabName) {
                 displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
             }
         }
-        renderAssignments(displayAssignments);
+
+        // [NEW] Extract and pass assignment guide
+        let assignmentGuide = "";
+        if (filterCourseId && filterUnitId) {
+            try {
+                const rawInstructor = (dashboardData.courseConfigs && dashboardData.courseConfigs[filterCourseId]) ? dashboardData.courseConfigs[filterCourseId].instructorGuide : null;
+                const rawAssignment = (dashboardData.courseConfigs && dashboardData.courseConfigs[filterCourseId]) ? dashboardData.courseConfigs[filterCourseId].assignmentGuide : null;
+
+                const guideData = robustExtractGuideSegments(rawInstructor, rawAssignment);
+
+                // Flexible resolution: try raw, then with .html, then without .html, then unit number
+                const cleanUnitId = filterUnitId.replace('.html', '');
+                assignmentGuide = (guideData.assignmentGuides[filterUnitId] ||
+                    guideData.assignmentGuides[cleanUnitId] ||
+                    guideData.assignmentGuides[cleanUnitId + '.html'] || "").trim();
+
+                if (!assignmentGuide) {
+                    const lesson = allLessons.find(l => l.courseId === filterCourseId);
+                    const units = lesson?.courseUnits || [];
+
+                    // Search using clean names
+                    const unitIdx = units.findIndex(u => u.replace('.html', '') === cleanUnitId);
+                    if (unitIdx !== -1) {
+                        assignmentGuide = (guideData.assignmentGuides[unitIdx + 1] || "").trim();
+                    }
+                }
+                console.log(`[Debug] Guide resolution (switchTab) for ${filterUnitId}: ${assignmentGuide ? 'Found' : 'Not Found'}`);
+            } catch (guideErr) {
+                console.error("[Debug] Error resolving assignment guide in switchTab:", guideErr);
+            }
+        }
+        renderAssignments(displayAssignments, assignmentGuide);
     }
     if (tabName === 'admin') {
         renderAdminConsole();
@@ -885,101 +941,114 @@ function renderAdminConsole() {
     if (myRole !== 'admin') return;
 
     const urlParams = new URLSearchParams(window.location.search);
-    const filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
+    // [MODIFIED] Unit-Centric Management: We focus on unitId, removing courseId filtering
+    const filterUnitId = urlParams.get('unitId');
 
     const adminPanel = document.getElementById('admin-panel');
     if (!adminPanel) return;
 
-    // Redesigned Header and Role Management (hidden/removed for now as per previous logic)
     let html = `
         <div class="flex items-center justify-between mb-8">
-            <h3 class="text-xl font-extrabold text-orange-900 flex items-center gap-3">
-                <span class="p-2 bg-orange-100 rounded-lg">🛠️</span> 
-                管理員控制台 (Admin Console)
+            <h3 class="text-2xl font-black text-orange-900 flex items-center gap-3">
+                <span class="p-2.5 bg-orange-100 rounded-xl">🛠️</span> 
+                課程管理控制台 (Course Management)
             </h3>
-            <p id="admin-msg" class="text-xs font-medium text-orange-500 animate-pulse"></p>
+            <p id="admin-msg" class="text-sm font-bold text-orange-600 animate-pulse"></p>
         </div>
     `;
 
-    // ADDED: Course-Specific Teacher List with Premium Design
-    if (filterCourseId) {
-        const courseTitle = lessonsMap[filterCourseId] || filterCourseId;
-        const config = dashboardData?.courseConfigs?.[filterCourseId] || {};
-        const teachers = config.authorizedTeachers || [];
+    // [MODIFIED] Standardized Grid Header - Scaled up font
+    html += `
+        <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm font-mono text-sm">
+            <div class="hidden md:grid md:grid-cols-[1fr,1.5fr] bg-gray-50/80 text-gray-500 font-bold border-b border-gray-100 px-6 py-4 uppercase tracking-wider text-xs">
+                <div>課程 (Course)</div>
+                <div>授權教師 (Authorized Teachers)</div>
+            </div>
+            <div class="divide-y divide-gray-100">
+                ${allLessons.map(lesson => {
+        const config = dashboardData?.courseConfigs?.[lesson.courseId] || {};
 
-        html += `
-            <div class="bg-white/50 backdrop-blur-sm rounded-2xl border border-orange-100 p-6 shadow-sm">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                    <div>
-                        <h4 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                            <span class="text-orange-500 text-xl">🎓</span> 
-                            ${escapeHtml(courseTitle)}
-                        </h4>
-                        <p class="text-xs text-gray-400 mt-1">管理此課程的授權教師清單</p>
+        // [MODIFIED] Use standardized courseUnits from lessons.json
+        let units = lesson.courseUnits || [];
+
+        // Use unit-level classroom URLs from the course document (only if they exist as keys)
+        const unitConfigs = config.githubClassroomUrls || {};
+
+        // Combine all unit sources, excluding master files
+        let allFiles = Array.from(new Set([...units, ...Object.keys(unitConfigs)]))
+            .filter(f => f && !f.includes('-master-'));
+
+        // [NEW] Strict Filtering by unitId if provided in URL
+        if (filterUnitId) {
+            allFiles = allFiles.filter(f => f === filterUnitId);
+        }
+
+        return allFiles.map(unitFile => {
+            // [NEW] Look for teachers in unit-specific doc if it exists, otherwise fall back to course doc logic
+            const unitDocConfig = dashboardData?.courseConfigs?.[unitFile] || {};
+            const unitTeachersArr = Array.isArray(unitDocConfig.authorizedTeachers) ? unitDocConfig.authorizedTeachers : [];
+
+            // Legacy/Fallback: Teachers specifically authorized for THIS unit in course doc
+            const legacyTeachers = (unitConfigs[unitFile] && typeof unitConfigs[unitFile] === 'object') ? Object.keys(unitConfigs[unitFile]) : [];
+
+            const unitTeachers = Array.from(new Set([...unitTeachersArr, ...legacyTeachers])).filter(t => t && t !== 'default');
+            const unitName = formatUnitName(unitFile) || unitFile;
+
+            // Optional: Highlight row if it matches filterUnitId
+            const isSelected = filterUnitId && unitFile === filterUnitId;
+            const containerClass = isSelected ? "bg-blue-50/60 border-l-4 border-blue-500 shadow-sm z-10" : "hover:bg-orange-50/30 transition-colors";
+
+            // [NEW] Truly Unique Input ID per row (including courseId to prevent collisions)
+            const inputId = `input-auth-${lesson.courseId}-${unitFile}`.replace(/[^a-z0-9]/gi, '-');
+
+            return `
+                <div class="grid grid-cols-1 md:grid-cols-[1fr,1.5fr] ${containerClass} p-5 md:px-6 md:py-6 gap-5 md:gap-0 relative">
+                    <!-- Column 1: Unit Info -->
+                    <div class="flex flex-col justify-center">
+                        <div class="md:hidden text-[11px] text-orange-400 font-black uppercase mb-1.5 tracking-widest">課程單元 / Unit</div>
+                        <div class="text-xs text-gray-400 font-mono mb-1 leading-relaxed">${escapeHtml(lesson.title)}</div>
+                        <div class="text-base font-black text-gray-800 flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded text-[10px] uppercase bg-gray-100 text-gray-600 font-black">單元</span>
+                            ${escapeHtml(unitName)}
+                        </div>
+                        <div class="text-xs text-gray-400 font-mono mt-1.5 opacity-80">${escapeHtml(unitFile)}</div>
+                    </div>
+
+                    <!-- Column 2: Teacher Management -->
+                    <div class="flex flex-col justify-center">
+                        <div class="md:hidden text-[11px] text-orange-400 font-black uppercase mb-2.5 tracking-widest">授權教師 / Teachers</div>
+                        <div class="flex flex-wrap gap-2.5">
+                            ${unitTeachers.length > 0
+                    ? unitTeachers.map(email => `
+                                <span class="inline-flex items-center px-3 py-1 bg-orange-100/80 text-orange-700 rounded-lg text-xs font-bold font-mono group/tag border border-orange-200/50">
+                                    ${escapeHtml(email)}
+                                    <button onclick="handleUnitTeacherAuth('${lesson.courseId}', '${unitFile}', '${email}', 'remove')" 
+                                        class="ml-2 hover:text-red-600 transition-colors hidden group-hover/tag:block">
+                                        ✕
+                                    </button>
+                                </span>
+                            `).join('')
+                    : '<span class="text-gray-300 italic text-xs">目前無授權教師</span>'
+                }
+                        </div>
+
+                        <!-- [MODIFIED] Management UI always available now -->
+                        <div class="mt-5 flex flex-col sm:flex-row gap-3">
+                            <input type="email" id="${inputId}" placeholder="教師 Email (e.g. user@gmail.com)" 
+                                class="flex-grow px-4 py-2 text-xs border border-orange-100 rounded-xl outline-none focus:ring-2 focus:ring-orange-200 bg-white/90 shadow-sm transition-all">
+                            <button onclick="handleUnitTeacherAuth('${lesson.courseId}', '${unitFile}', document.getElementById('${inputId}').value, 'add')"
+                                class="px-6 py-2 bg-orange-500 text-white rounded-xl text-xs font-black hover:bg-orange-600 transition-all shadow-md active:scale-95 whitespace-nowrap">
+                                新增授權 👤
+                            </button>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="bg-white rounded-xl border border-gray-100 overflow-hidden mb-6 shadow-inner">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-gray-50/80 text-gray-500 font-semibold border-b border-gray-100">
-                            <tr>
-                                <th class="px-6 py-3 uppercase tracking-wider text-[10px]">教師電子郵件 (Teacher Email)</th>
-                                <th class="px-6 py-3 text-right uppercase tracking-wider text-[10px]">管理操作</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-50">
-                            ${teachers.length === 0 ? `
-                                <tr>
-                                    <td colspan="2" class="px-6 py-10 text-center text-gray-400">
-                                        <div class="flex flex-col items-center gap-2">
-                                            <span class="text-3xl opacity-20">👤</span>
-                                            <p class="italic">目前尚無獲准管理的老師</p>
-                                        </div>
-                                    </td>
-                                </tr>` :
-                teachers.map(email => `
-                                <tr class="hover:bg-orange-50/30 transition-colors group">
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 text-xs font-bold">
-                                                ${email.substring(0, 1).toUpperCase()}
-                                            </div>
-                                            <span class="font-medium text-gray-700 font-mono">${escapeHtml(email)}</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 text-right">
-                                        <button onclick="handleTeacherAuth('${filterCourseId}', '${email}', 'remove')" 
-                                            class="inline-flex items-center gap-1 text-red-400 hover:text-red-600 font-bold text-xs transition-all opacity-0 group-hover:opacity-100 px-3 py-1 hover:bg-red-50 rounded-lg">
-                                            <span>✕</span> 移除權限
-                                        </button>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="flex flex-col sm:flex-row gap-3 items-center bg-orange-50/50 p-4 rounded-xl border border-orange-100/50">
-                    <div class="relative flex-grow w-full">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">✉️</span>
-                        <input type="email" id="new-teacher-email" placeholder="輸入要新增的老師 Email..." 
-                            class="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:ring-4 focus:ring-orange-100 focus:border-orange-400 transition-all shadow-sm">
-                    </div>
-                    <button onclick="handleTeacherAuth('${filterCourseId}', document.getElementById('new-teacher-email').value, 'add')"
-                        class="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-2.5 rounded-xl hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all font-bold text-sm flex items-center justify-center gap-2">
-                        <span>➕</span> 新增授權
-                    </button>
-                </div>
+            `;
+        }).join('');
+    }).join('')}
             </div>
-        `;
-    } else {
-        html += `
-            <div class="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
-                <span class="text-4xl mb-4 block">🔍</span>
-                <p class="text-gray-500 font-medium">請先從上方選擇課程，以管理授權教師。</p>
-            </div>
-        `;
-    }
+        </div>
+    `;
 
     adminPanel.innerHTML = html;
 }
@@ -1000,6 +1069,27 @@ window.handleTeacherAuth = async function (courseId, teacherEmail, action) {
     } catch (e) {
         console.error(e);
         alert("設定失敗：" + e.message);
+    } finally {
+        if (msg) msg.textContent = "";
+    }
+};
+
+window.handleUnitTeacherAuth = async function (courseId, unitFile, teacherEmail, action) {
+    if (!teacherEmail) return alert("請輸入 Email");
+    const msg = document.getElementById('admin-msg');
+
+    try {
+        if (msg) msg.textContent = action === 'add' ? "正在新增單元授權..." : "正在移除單元授權...";
+
+        // [MODIFIED] Use the unit filename as the courseId for the auth function
+        // This targets course_configs/{unitFileName}
+        const authFunc = httpsCallable(functions, 'authorizeTeacherForCourse');
+        await authFunc({ courseId: unitFile, teacherEmail, action });
+
+        loadDashboard(); // Refresh UI
+    } catch (e) {
+        console.error("Unit Auth Error:", e);
+        alert("授權失敗: " + e.message);
     } finally {
         if (msg) msg.textContent = "";
     }
@@ -1034,7 +1124,7 @@ function setupGradingFunctions() {
             }
 
             return `
-                <div class="mb-2 pb-2 border-b border-gray-200 last:border-0">
+        <div class="mb-2 pb-2 border-b border-gray-200 last:border-0" >
                     <div class="flex justify-between text-xs text-gray-500">
                         <span>${safeTime}</span>
                         <span class="font-bold text-blue-600">${h.action || 'SUBMIT'}</span>
@@ -1043,7 +1133,7 @@ function setupGradingFunctions() {
                     ${h.note ? `<div class="text-xs text-gray-400 italic">Note: ${escapeHtml(h.note)}</div>` : ''}
                     ${h.grader ? `<div class="text-xs text-orange-600 mt-1">Graded by Teacher</div>` : ''}
                 </div>
-             `;
+        `;
         }).join('');
 
         historyContainer.innerHTML = historyMap || '<p class="text-gray-400 text-center">No history</p>';
@@ -1135,7 +1225,7 @@ function aggregateData(data) {
 
         Object.entries(rawProgress).forEach(([key, stats]) => {
             const realId = findCourseId(key);
-            // console.log(`Mapping ${key} -> ${realId}`);
+            // console.log(`Mapping ${ key } -> ${ realId } `);
 
             if (!aggregated[realId]) {
                 aggregated[realId] = { total: 0, video: 0, doc: 0, page: 0, units: {}, logs: [] };
@@ -1167,7 +1257,7 @@ function aggregateData(data) {
         data.assignments.forEach(a => {
             const realId = findCourseId(a.courseId);
             if (realId && realId !== a.courseId) {
-                // console.log(`Mapping Assignment ${a.id} courseId ${a.courseId} -> ${realId}`);
+                // console.log(`Mapping Assignment ${ a.id } courseId ${ a.courseId } -> ${ realId } `);
                 a.courseId = realId;
             }
         });
@@ -1221,10 +1311,7 @@ function findCourseId(key) {
 let courseConfigs = {};
 
 function setupSettingsFeature() {
-    const saveBtn = document.getElementById('btn-save-settings');
-    if (saveBtn) {
-        saveBtn.onclick = saveAllSettings;
-    }
+    // Buttons are now rendered individually in each row
 }
 
 async function renderSettingsTab(filterUnitId = null) {
@@ -1248,7 +1335,7 @@ async function renderSettingsTab(filterUnitId = null) {
         }
 
         if (authorizedLessons.length === 0) {
-            container.innerHTML = `<div class="text-center py-20 text-gray-400">目前尚無獲准管理的課程。</div>`;
+            container.innerHTML = `<div class="text-center py-20 text-gray-400" > 目前尚無獲准管理的課程。</div> `;
             return;
         }
 
@@ -1256,7 +1343,7 @@ async function renderSettingsTab(filterUnitId = null) {
             const configs = courseConfigs[course.courseId]?.githubClassroomUrls || {};
 
             const masterFile = (course.classroomUrl && typeof course.classroomUrl === 'string') ? course.classroomUrl.split('/').pop() : null;
-            const units = (masterFile && MASTER_UNIT_MAPPING[masterFile]) ? MASTER_UNIT_MAPPING[masterFile] : [];
+            const units = Array.isArray(course.courseUnits) ? [...course.courseUnits] : [];
             const isMasterFileSelected = filterUnitId && filterUnitId.includes('-master-');
             if (isMasterFileSelected && masterFile) units.unshift(masterFile);
 
@@ -1265,14 +1352,17 @@ async function renderSettingsTab(filterUnitId = null) {
             const allUnits = Array.from(new Set([...units, ...configUnits]));
 
             // [NEW] Extract guide segments
-            const guideData = robustExtractGuideSegments(courseConfigs[course.courseId]?.instructorGuide);
+            const rawInstructor = courseConfigs[course.courseId]?.instructorGuide;
+            const rawAssignment = courseConfigs[course.courseId]?.assignmentGuide;
+            const guideData = robustExtractGuideSegments(rawInstructor, rawAssignment);
             const usedSegments = new Set();
 
             // [MODIFIED] Respect filterUnitId if present
             const unitRows = allUnits
                 .filter(f => {
                     const isMaster = f.includes('-master-');
-                    if (isMaster) return false; // Never show master rows
+                    // [MODIFIED] Restore master row if it's the specific target or if no filters are active
+                    if (isMaster && filterUnitId !== f && filterUnitId !== null) return false;
 
                     // If filtered to a specific unit, only show that unit
                     if (filterUnitId && !filterUnitId.includes('-master-')) {
@@ -1319,7 +1409,7 @@ async function renderSettingsTab(filterUnitId = null) {
             });
 
             // Construct final footer content (Header + Footer + ANY non-rendered segments)
-            let footerContent = guideData.header ? `<div class="mb-4">${guideData.header}</div>` : "";
+            let footerContent = guideData.header ? `<div class="mb-4" > ${guideData.header}</div> ` : "";
             if (guideData.footer || extraFooter) {
                 if (footerContent) footerContent += "<hr>";
                 footerContent += (guideData.footer || "") + (extraFooter ? (guideData.footer ? "<hr>" : "") + extraFooter : "");
@@ -1330,161 +1420,138 @@ async function renderSettingsTab(filterUnitId = null) {
             const showFooter = footerContent && (filterUnitId || units.length > 0);
 
             return `
-                <div class="p-6 bg-white border border-gray-100 rounded-xl shadow-sm space-y-4">
+        <div class="p-4 md:p-6 bg-white border border-gray-100 rounded-xl shadow-sm space-y-4" >
                     <div class="flex flex-col md:flex-row md:justify-between md:items-center border-b pb-3 gap-2">
                         <div class="flex items-center gap-3">
                             <span class="text-2xl">${course.icon || '📚'}</span>
                             <div>
-                                <h4 class="font-bold text-gray-800">${cardTitle}</h4>
-                                <p class="text-[10px] text-gray-400 font-mono">${filterUnitId || course.courseId}</p>
+                                <h4 class="font-bold text-gray-800 text-sm md:text-base">${cardTitle}</h4>
+                                <p class="text-[9px] md:text-[10px] text-gray-400 font-mono">${filterUnitId || course.courseId}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-4" id="units-list-${course.courseId}">
+                    <div class="grid grid-cols-1 gap-3 md:gap-4" id="units-list-${course.courseId}">
                         ${unitRows}
                     </div>
                     
                     ${showFooter ? `
-                        <div class="mt-8 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-                            <h5 class="text-blue-800 font-bold flex items-center gap-2 mb-4">
+                        <div class="mt-6 md:mt-8 p-3 md:p-6 bg-blue-50/50 border border-blue-100 rounded-xl shadow-inner overflow-x-auto">
+                            <h5 class="text-blue-800 font-bold flex items-center gap-2 mb-3 md:mb-4 text-xs md:text-base">
                                 <span>💡</span> 教師指南 (Instructor Guide)
                             </h5>
-                            <div class="instructor-guide-content text-base text-blue-900/90 leading-relaxed prose prose-blue max-w-none">
+                            <div class="instructor-guide-content text-xs md:text-base text-blue-900/90 leading-relaxed prose prose-blue max-w-none">
                                 ${footerContent}
                             </div>
                         </div>
-                    ` : ''}
+                    ` : ''
+                }
                 </div>
-            `;
+        `;
         }).join('');
 
     } catch (e) {
         console.error("Failed to render settings:", e);
         alert("Error mapping settings: " + e.message + "\nStack: " + e.stack);
-        container.innerHTML = `<div class="text-red-500 p-4">載入失敗: ${e.message}</div>`;
+        container.innerHTML = `<div class="text-red-500 p-4" > 載入失敗: ${e.message}</div> `;
     }
 }
 
 // Helper to split instructor guide into parts
-function robustExtractGuideSegments(inputArg) {
-    console.log("[Debug] robustExtractGuideSegments start. Type:", typeof inputArg, inputArg);
+function robustExtractGuideSegments(instructorInput, assignmentInput = null) {
+    console.log("[Debug] robustExtractGuideSegments init.",
+        "Instructor type:", typeof instructorInput,
+        "Assignment type:", typeof assignmentInput);
 
-    if (inputArg === null || inputArg === undefined) {
-        return { header: '', segments: {}, footer: '' };
-    }
+    const result = { header: '', segments: {}, footer: '', assignmentGuides: {} };
 
-    // [NEW] Handle structured object from backend
-    if (typeof inputArg === 'object' && !Array.isArray(inputArg)) {
-        const result = { header: '', segments: {}, footer: '' };
-        Object.entries(inputArg).forEach(([fileName, content]) => {
-            if (typeof content !== 'string') {
-                console.warn("[Debug] Non-string content in guide object for", fileName, content);
-                return;
-            }
+    // 1. Process Instructor Guides (Main segments)
+    if (instructorInput && typeof instructorInput === 'object' && !Array.isArray(instructorInput)) {
+        Object.entries(instructorInput).forEach(([fileName, content]) => {
+            if (typeof content !== 'string') return;
             if (fileName.includes('-master-')) {
-                // General content usually comes from master
                 result.footer += (result.footer ? "<hr>" : "") + content;
             } else {
+                // [MODIFIED] No more legacy extraction. Use raw content.
                 result.segments[fileName] = content;
             }
         });
-        return result;
+    } else if (typeof instructorInput === 'string') {
+        // [MODIFIED] Simplified fallback: treat as footer/header total if raw string
+        result.footer = instructorInput;
     }
 
-    // Legacy string-based split by <hr>
-    if (typeof inputArg !== 'string') {
-        console.warn("[Debug] inputArg is not a string or object:", typeof inputArg, inputArg);
-        return { header: '', segments: {}, footer: '' };
+    // 2. Process Dedicated Assignment Guides
+    if (assignmentInput && typeof assignmentInput === 'object' && !Array.isArray(assignmentInput)) {
+        Object.entries(assignmentInput).forEach(([fileName, content]) => {
+            if (typeof content !== 'string') return;
+            result.assignmentGuides[fileName] = content;
+            result.assignmentGuides[fileName.replace('.html', '')] = content;
+        });
     }
 
-    const sections = inputArg.split(/<hr\s*\/?>/i);
-    const segments = {};
-    let header = "";
-    let footer = "";
-
-    let firstUnitFound = false;
-    let lastUnitIdx = -1;
-
-    // First pass: Identify sections that explicitly belong to a unit
-    sections.forEach((section, idx) => {
-        // Look for: <h4>X. , 【作業 X-Y】, 任務 X-Y, etc.
-        const unitMatch = section.match(/<h4>(\d+)\./i) ||
-            section.match(/【(?:作業|任務)\s*(\d+)-\d+】/i) ||
-            section.match(/<h4>【(?:作業|任務)\s*(\d+)-\d+】/i);
-
-        if (unitMatch) {
-            const unitIdx = parseInt(unitMatch[1]);
-            if (!segments[unitIdx]) segments[unitIdx] = "";
-            segments[unitIdx] += (segments[unitIdx] ? "<hr>" : "") + section;
-            firstUnitFound = true;
-            lastUnitIdx = idx;
-        } else {
-            if (!firstUnitFound) {
-                header += (header ? "<hr>" : "") + section;
-            }
-        }
-    });
-
-    // Second pass: Handle gaps and trailing sections
-    let currentUnit = -1;
-    sections.forEach((section, idx) => {
-        const unitMatch = section.match(/<h4>(\d+)\./i) ||
-            section.match(/【(?:作業|任務)\s*(\d+)-\d+】/i) ||
-            section.match(/<h4>【(?:作業|任務)\s*(\d+)-\d+】/i);
-
-        if (unitMatch) {
-            currentUnit = parseInt(unitMatch[1]);
-        } else if (idx > lastUnitIdx) {
-            footer += (footer ? "<hr>" : "") + section;
-        } else if (firstUnitFound && currentUnit !== -1 && idx > 0) {
-            // This is content that follows a unit section but doesn't have its own ID
-            // Append it to the current unit segment
-            segments[currentUnit] += "<hr>" + section;
-        }
-    });
-
-    return { header, segments, footer };
+    return result;
 }
+
 
 function renderUnitRow(courseId, fileName, teacherMap = {}, guideSegment = "") {
     // teacherMap: { "default": "...", "teacher_a": "..." }
     const entries = Object.entries(teacherMap);
     if (entries.length === 0) entries.push(['default', '']);
 
+    const unitName = formatUnitName(fileName);
+
     return `
-        <div class="unit-config-card bg-gray-50 p-4 rounded-xl border border-gray-100 hover:border-blue-100 transition shadow-sm relative group">
+        <div class="unit-config-card bg-gray-50 p-3 md:p-4 rounded-xl border border-gray-100 hover:border-blue-100 transition shadow-sm relative group"
+    data-course-id="${courseId}" data-file-name="${fileName}">
             
-            <div class="space-y-3 teacher-links-container">
+            <div class="mb-3 md:mb-4 border-b border-gray-200 pb-2 md:pb-3">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-blue-500 text-sm md:text-base">📄</span>
+                    <h4 class="text-xs md:text-sm font-bold text-gray-800">${escapeHtml(unitName || fileName.replace('.html', ''))}</h4>
+                </div>
+                <div class="text-[9px] md:text-[10px] font-mono text-gray-400 pl-6">${escapeHtml(fileName)}</div>
+            </div>
+
+            <div class="space-y-3 assignment-links-container">
                 ${entries.map(([teacher, url], idx) => `
-                    <div class="space-y-1 teacher-link-row">
+                    <div class="space-y-1 assignment-link-row">
                         <div class="flex justify-between items-center">
-                            <label class="text-[9px] font-bold text-gray-400 uppercase">${teacher === 'default' ? '作業連結' : '教師 ID: ' + teacher}</label>
-                            <input type="hidden" class="teacher-id-input" value="${escapeHtml(teacher)}">
+                            <label class="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase">${teacher === 'default' ? '作業連結' : '教師 ID: ' + teacher}</label>
+                            <input type="hidden" class="assignment-id-input" value="${escapeHtml(teacher)}">
                         </div>
-                        <input type="url" placeholder="貼上 GitHub Classroom 邀請連結 (https://classroom.github.com/a/...)" 
-                            value="${escapeHtml(url)}" 
-                            class="teacher-url-input w-full px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        <div class="flex gap-2">
+                            <input type="url" placeholder="貼上 GitHub Classroom 邀請連結" 
+                                value="${escapeHtml(url)}" 
+                                class="assignment-url-input flex-grow px-2 md:px-3 py-1.5 md:py-2 text-[11px] md:text-xs border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition">
+                            <button onclick="saveAllSettings(this)"
+                                class="bg-blue-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg hover:bg-blue-700 transition text-[11px] md:text-xs font-bold shadow-sm whitespace-nowrap btn-save-individual">
+                                儲存
+                            </button>
+                        </div>
                     </div>
                 `).join('')}
             </div>
 
             ${guideSegment ? `
-                <div class="mt-4 p-5 bg-blue-50/50 border border-blue-100 rounded-lg text-sm text-blue-900/90 leading-relaxed instructor-guide-content">
+                <div class="mt-3 md:mt-4 p-3 md:p-5 bg-blue-50/50 border border-blue-100 rounded-lg text-[11px] md:text-sm text-blue-900/90 leading-relaxed instructor-guide-content overflow-x-auto">
                     ${guideSegment}
                 </div>
-            ` : ''}
+            ` : ''
+        }
         </div>
-    `;
+        `;
 }
 
+window.saveAllSettings = async function (clickedBtn = null) {
+    const btns = clickedBtn ? [clickedBtn] : document.querySelectorAll('.btn-save-individual');
 
-
-async function saveAllSettings() {
-    const btn = document.getElementById('btn-save-settings');
-    const originalText = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = "儲存中...";
+    const originalTexts = new Map();
+    btns.forEach(btn => {
+        originalTexts.set(btn, btn.textContent);
+        btn.disabled = true;
+        btn.textContent = "儲存中...";
+    });
 
     const configsByCourse = {};
 
@@ -1496,9 +1563,9 @@ async function saveAllSettings() {
         if (!configsByCourse[cid]) configsByCourse[cid] = {};
 
         const teacherMap = {};
-        card.querySelectorAll('.teacher-link-row').forEach(row => {
-            const tid = row.querySelector('.teacher-id-input').value.trim();
-            const url = row.querySelector('.teacher-url-input').value.trim();
+        card.querySelectorAll('.assignment-link-row').forEach(row => {
+            const tid = row.querySelector('.assignment-id-input').value.trim();
+            const url = row.querySelector('.assignment-url-input').value.trim();
             if (tid && url) {
                 teacherMap[tid] = url;
             }
@@ -1524,10 +1591,16 @@ async function saveAllSettings() {
         console.error("Save failed:", e);
         alert("儲存失敗: " + e.message);
     } finally {
-        btn.disabled = false;
-        btn.textContent = originalText;
+        btns.forEach(btn => {
+            btn.disabled = false;
+            btn.textContent = originalTexts.get(btn) || "儲存變更";
+        });
     }
 }
+
+// --- Global Function Exports ---
+// [CLEANUP] Redundant window exports removed, ensuring functions are defined in correct scope.
+window.handleTeacherAuth = handleTeacherAuth;
 
 // --- Global Fixes: Esc Key handling ---
 document.addEventListener('keydown', (e) => {

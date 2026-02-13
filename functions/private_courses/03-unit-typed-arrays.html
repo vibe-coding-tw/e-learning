@@ -481,45 +481,104 @@
         changeView('uint8');
 
     </script>
-    <section id="instructor-guide" style="display: none;">
-        <h4>實作任務：封裝與解碼</h4>
 
-        <p><strong>【作業 3-1】馬達指令封裝</strong></p>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 3-1：馬達指令封裝</h3>
         <ul>
-            <li><strong>任務內容：</strong>將左右輪速度 (0-255) 封入 2-byte 的 Uint8Array。</li>
-            <li><strong>陣列製作：</strong><code>const packet = new Uint8Array([left, right])</code>。</li>
-            <li><strong>Hex 核對：</strong>確認 100 換算為 0x64，255 換算為 0xFF。</li>
+            <li><strong>角色扮演：</strong> 通訊協定設計師 (Protocol Architect)。</li>
+            <li><strong>執行方式：</strong> 學生需撰寫一個函式，將兩個數字 (0-255) 放入一個長度為 2 的 <code>Uint8Array</code> 中。</li>
+            <li><strong>評分重點：</strong> 確認陣列索引順序是否正確，以及是否理解 1 Byte 的數值範圍限制。</li>
         </ul>
 
-        <p><strong>【作業 3-2】感測器數據解碼</strong></p>
+        <h3>作業 3-2：感測器數據解碼</h3>
         <ul>
-            <li><strong>任務內容：</strong>使用 DataView 解碼 16-bit 距離數據。</li>
-            <li><strong>Endianness：</strong>掌握 <code>getUint16(0, false)</code> 的用法。</li>
-            <li><strong>邏輯驗證：</strong>輸入 "03 E8" 是否能正確得到 1000？</li>
+            <li><strong>角色扮演：</strong> 數據逆向工程師 (Data Reverse Engineer)。</li>
+            <li><strong>執行方式：</strong> 使用 <code>DataView</code> 從 2-byte 的 Buffer 中還原成 16-bit 整數。</li>
+            <li><strong>評分重點：</strong> 掌握 <code>getUint16(0, false)</code> 的大端序/小端序參數切換，確保結果與預期吻合。</li>
+        </ul>
+
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>建議範本倉庫設置如下：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html       # 包含數據輸入與 Hex 預覽介面
+├── parser.js        # (核心) 學生需在此實作 encode/decode 函式
+└── test/            # 預置的基礎單元測試（檢查 Buffer 長度）</code></pre>
+
+        <h3>B. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>Buffer 長度檢查：</strong> 檢查 3-1 產出的 ArrayBuffer 長度是否精確為 2。</li>
+            <li><strong>數值測試：</strong> 傳入 <code>0x03E8</code>，檢查解碼結果是否為 <code>1000</code>。</li>
         </ul>
 
         <hr>
 
-        <h4>4. 評分標準與探討 (Checkpoint)</h4>
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>上傳框架代碼。</li>
+                <li>勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
 
-        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>建立作業並連結範本。</li>
+                <li><strong>啟用自動評分：</strong> 定義測項，確保學生產出的 Byte 格式完全正確。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生 Clone 到本地。</li>
+                <li>實作邏輯後 <strong>Commit & Push</strong>，觀察 GitHub Actions 是否通過（綠色勾勾）。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>查看學生對 Endianness 參數的處理。</li>
+                <li>針對 16-bit 合併邏輯給予加分回饋。</li>
+            </ol>
+        </div>
+
+        <hr>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
             <thead>
-                <tr style="background-color: #f3f4f6;">
-                    <th style="padding: 8px; text-align: left;">任務</th>
-                    <th style="padding: 8px; text-align: left;">評分標準</th>
-                    <th style="padding: 8px; text-align: left;">課堂討論議題</th>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td style="padding: 8px;"><strong>3-1</strong></td>
-                    <td style="padding: 8px;">Uint8Array 的索引與長度是否正確？Hex 是否吻合？</td>
-                    <td style="padding: 8px;">為什麼不傳送 "L100,R100" 字串就好？頻寬與功耗的影響？</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">操作 Module 1 的 JSON vs Binary 對比實驗，理解數據壓縮的重要性。
+                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學生已體驗過「10
+                        倍效率提升」的數據。</td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px;"><strong>3-2</strong></td>
-                    <td style="padding: 8px;">是否正確選用 DataView？大/小端序判定是否正確？</td>
-                    <td style="padding: 8px;">如果高低位放反了，1000 會變成多少？(0xE803 = 59395)</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，實作 <code>Uint8Array</code> 封裝並
+                        Push 同步。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>互動討論：</strong>在大螢幕展示不同學生的 Hex 結果，討論
+                        Endianness 陷阱。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">完成 3-2 解碼挑戰，解決 16-bit 數據的高低位反轉問題。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>核發評語，確認其具備處理二進位底層數據的能力。</td>
                 </tr>
             </tbody>
         </table>

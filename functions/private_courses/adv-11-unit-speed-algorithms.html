@@ -49,6 +49,7 @@
         .gradient-text {
             background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
     </style>
@@ -396,68 +397,148 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 3-1：「高速穩定王」：頻率法實作</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 速度分析師。</li>
+            <li><strong>執行方式：</strong> 利用定時中斷計算每 100ms 的脈衝數，並實作移動平均濾波。</li>
+            <li><strong>評分重點：</strong> 確認時間視窗讀取與歸零邏輯，並觀察其在低速下的解像力表現。</li>
+        </ul>
+
+        <h3>作業 3-2：「低速精準儀」：週期法實作</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 精準測量專家。</li>
+            <li><strong>執行方式：</strong> 利用 micros() 測量相鄰脈衝間隔（RISING 中斷），換算為轉速。</li>
+            <li><strong>評分重點：</strong> 檢查 1/delta_t 的倒數運算邏輯，並觀察計時誤差對高速數據的影響。</li>
+        </ul>
+
+        <h3>作業 3-3：「智能切換」混合演算法</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 演算法架構師。</li>
+            <li><strong>執行方式：</strong> 根據脈衝間隔時間（如 50ms 為界）動態切換頻率法與週期法。</li>
+            <li><strong>評分重點：</strong> 檢查臨界點判斷邏輯，確保兩種演算法轉換時速度曲線平滑無跳變。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h4>實作任務：打造你的工業級測速核心</h4>
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── src/
+│   ├── M_Method/        # 頻率法邏輯
+│   ├── T_Method/        # 週期法邏輯
+│   └── Hybrid_Method/   # 智能切換演算法
+├── tests/
+│   └── speed.test.js    # 測試：驗證運算精度
+└── README.md             # 低速/高速解析度分析報告</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🧪</span>
+                            <p class="text-sm text-gray-700"><strong>數學邏輯檢查：</strong> 模擬脈衝輸入，檢查週期法中「倒數運算」是否正確處理誤差。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🔍</span>
+                            <p class="text-sm text-gray-700"><strong>靜態掃描：</strong> 檢查是否正確配置 <code>micros()</code>
+                                高解析計時與中斷。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <p><strong>【作業 3-1】頻率法實作</strong></p>
-        <ul>
-            <li><strong>任務內容：</strong>利用定時中斷計算每 100ms 的脈衝數。</li>
-            <li><strong>時間視窗：</strong>每 100ms 讀取並歸零</li>
-            <li><strong>數據平滑：</strong>實作移動平均濾波</li>
-            <li><strong>低速觀察：</strong>體會低速解像力不足</li>
-        </ul>
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供預置各演算法框架與移動平均濾波模板的專案樣板。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">建立作業並啟用 Feedback PR。比對 M 法與 T 法同一實驗數據抖動差異。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業測試，記錄速度跳變現象。提交包含速度曲線圖 PR。執行 Git Push。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對切換閾值的合理性，以及混合法平滑處理代碼予以點評。</p>
+                </div>
+            </div>
+        </div>
 
-        <p><strong>【作業 3-2】週期法實作</strong></p>
-        <ul>
-            <li><strong>任務內容：</strong>利用 <code>micros()</code> 測量相鄰脈衝間隔。</li>
-            <li><strong>高解析計時：</strong>RISING 中斷紀錄時間</li>
-            <li><strong>倒數運算：</strong>1 / delta_t 換算速度</li>
-            <li><strong>高速觀察：</strong>體會雜訊對短週期的影響</li>
-        </ul>
-
-        <p><strong>【作業 3-3】智能混合法</strong></p>
-        <ul>
-            <li><strong>任務內容：</strong>動態切換演算法以適應全速域。</li>
-            <li><strong>臨界點判斷：</strong><code>if (dt > 50ms) ...</code></li>
-            <li><strong>平滑過渡：</strong>確保切換無明顯跳變</li>
-            <li><strong>Web 儀表板：</strong>繪製完整的速度曲線</li>
-        </ul>
-
-        <hr>
-
-        <h4>翻轉教室中的評分標準 (Checkpoint)</h4>
-
-        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
-            <thead>
-                <tr style="background-color: #f3f4f6;">
-                    <th style="padding: 8px; text-align: left;">任務</th>
-                    <th style="padding: 8px; text-align: left;">評分標準 (透過 GitHub 檢查)</th>
-                    <th style="padding: 8px; text-align: left;">課堂討論議題</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 8px;"><strong>3-1</strong></td>
-                    <td style="padding: 8px;">是否實作移動平均濾波？100ms 取樣是否準確？</td>
-                    <td style="padding: 8px;">為什麼低速時速度跳動很大？</td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px;"><strong>3-2</strong></td>
-                    <td style="padding: 8px;">是否正確使用 <code>micros()</code>？速度換算邏輯是否正確？</td>
-                    <td style="padding: 8px;">為什麼高速時速度顯得不穩定？</td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px;"><strong>3-3</strong></td>
-                    <td style="padding: 8px;">混合切換是否平滑？Web 曲線是否穩定？</td>
-                    <td style="padding: 8px;">臨界點 50ms 是如何根據硬體規格計算出來的？</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <h4>總結評價</h4>
-        <p>這套作業非常硬實，且<strong>邏輯錯誤（如忘記寫 volatile 或在 ISR 用 delay）</strong>非常典型。透過 GitHub
-            Classroom，您可以在課前就將這些常見錯誤「批改完畢」，上課時就能直接進入「馬達全速運轉、誤差校準」等更高層次的挑戰。</p>
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">觀看測速原理影片，撰寫基礎實作，思考低高轉速局限性。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「混合演算法」導讀。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，測量各轉速數據現象，調校切換閾值。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，引導討論臨界點切換抖動問題。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">優化曲線圖，確保全速域數據無縫接軌並 Push，閱讀回覆 PR。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，引導理解高靈敏速度反饋對運動控制的價值。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </section>
 </body>
 

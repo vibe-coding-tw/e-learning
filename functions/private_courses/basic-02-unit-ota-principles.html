@@ -324,6 +324,139 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" class="hidden">
+        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="guide-section">
+            <h3>1. GitHub Classroom 設定</h3>
+            <ul>
+                <li>點擊儀表板「領取作業」按鈕，進入 GitHub Classroom 並獲取 `basic-02-ota-principles`。</li>
+                <li>將個人作業儲存庫本地化。本次作業包含一個簡單的 Web Server 範例。</li>
+                <li>確保 ESP32 已連接至可存取的 Wi-Fi 環境。</li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h3>2. 翻轉課堂學習策略</h3>
+            <ul>
+                <li><strong>課前預習</strong>：觀看「OTA 運作原理」影片，瞭解空中升級的風險與補救機制。</li>
+                <li><strong>課中實作</strong>：建立 Web 升級頁面，並實測斷電後的 Rollback（回滾）行為。</li>
+                <li><strong>課後思考</strong>：為什麼 OTA 需要兩組 Partition (ota_0, ota_1) 而不是直接覆蓋目前執行的代碼？</li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h3>3. 單元實作任務</h3>
+            <ul>
+                <li><strong>作業 2-1 (30%)</strong>：建立 OTA 伺服器並成功與手機/電腦建立連線。</li>
+                <li><strong>作業 2-2 (40%)</strong>：透過無線方式成功更新韌體版本（由 V1 改為 V2）。</li>
+                <li><strong>作業 2-3 (30%)</strong>：模擬升級失敗情境，並驗證 ESP32 是否能自動跳回上一個版本。</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" class="hidden">
+        <h2>講師手冊 (Instructor Guide)</h2>
+        <div class="guide-section">
+            <h3>1. 教學重點 (Teaching Points)</h3>
+            <ul>
+                <li>解釋 ESP32 的啟動引導程式 (Bootloader) 如何判斷應該執行哪一個 Partition。</li>
+                <li>討論 HTTP 傳輸過程中的完整性校驗 (MD5/SHA256)。</li>
+                <li>強調「優雅失敗」的重要性：確保設備即使在升級中斷後也不會變磚。</li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h3>2. 常見問題 (Common Issues)</h3>
+            <ul>
+                <li><strong>空間不足 (Magic signature mismatch)</strong>：檢查 Partition Table 分配是否給予 OTA 槽位足夠的大小。</li>
+                <li><strong>連線中斷</strong>：如果是校園網，請確認 AP 偵測是否禁止設備間通訊 (AP Isolation)。</li>
+                <li><strong>版本衝突</strong>：確保燒錄進去的韌體有確實修改版本號字串，以供辨識。</li>
+            </ul>
+        </div>
+        <div class="guide-section bg-gray-50 p-4 rounded-lg">
+            <h3 class="font-bold mb-2 text-sm text-gray-900">3. 評分標準 (Grading Criteria)</h3>
+            <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
+                <li><strong>基礎分</strong>：能成功透過 Web 介面完成一次韌體更新。</li>
+                <li><strong>進階分</strong>：能完整描述 `esp_ota_mark_app_valid_cancel_rollback()` 的調用時機。</li>
+            </ul>
+        </div>
+
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mt-6">
+            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
+                <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
+.
+├── src/             # 包含 OTA WebServer 與 Rollback 邏輯的 main.cpp
+├── README.md        # 實驗紀錄：OTA 更新日誌、分區表映射圖與回滾驗證截圖
+└── .github/         # 自動評核配置</pre>
+                <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
+                <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                    <li><strong>二進位結構檢核：</strong> 驗證 <code>platformio.ini</code> 中是否正確配置了
+                        <code>board_build.partitions</code> 以支援 OTA。</li>
+                    <li><strong>功能關鍵字檢查：</strong> 掃描程式中對 <code>ArduinoOTA</code> 或 <code>esp_ota</code> API
+                        的調用，確認升級流程的完整性。</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mt-6 bg-white p-4 border border-gray-200 rounded-lg">
+            <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
+            <div class="space-y-4 text-sm text-gray-600">
+                <div>
+                    <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
+                    <p>建立包含基礎 WiFi 連線但「不具備 OTA 功能」的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
+                    <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以點評學生的網路安全配置與回滾 (Rollback) 策略。</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
+                    <p>學生領取作業，獲得個人專屬 Repo，實作空中升級介面並透過無線方式成功更新韌體後 Push。</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
+                    <p>進入 Feedback PR，針對學生的「升級狀態回饋 (UI Feedback)」與「異常中斷處理」予以回饋。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section mt-6">
+            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border-collapse border border-gray-200">
+                    <thead class="bg-gray-50 text-left text-gray-800">
+                        <tr>
+                            <th class="border border-gray-200 p-2">階段</th>
+                            <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
+                            <th class="border border-gray-200 p-2">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600">
+                        <tr>
+                            <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
+                            <td class="border border-gray-200 p-2">觀看「OTA 空中升級：分區表 (Partition Table) 的設計思考」影片。</td>
+                            <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員理解為什麼需要 A/B 分區備援。</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
+                            <td class="border border-gray-200 p-2">領取 Classroom 作業，實作 OTA 網頁端並模擬「升級到一半斷網」的情境。</td>
+                            <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
+                            <td class="border border-gray-200 p-2">實作具備數位簽章驗證 (Secure OTA) 的進階邏輯並 Push，閱讀教師回覆 PR。</td>
+                            <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         // Define Resources
         window.RESOURCES = {

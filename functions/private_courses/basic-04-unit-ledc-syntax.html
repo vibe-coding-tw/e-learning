@@ -320,6 +320,138 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" class="hidden">
+        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="guide-section">
+            <h3>1. GitHub Classroom 設定</h3>
+            <ul>
+                <li>點擊儀表板「領取作業」按鈕，進入 GitHub Classroom 並獲取 `basic-04-ledc-api`。</li>
+                <li>將個人作業儲存庫 Clone 至本地。</li>
+                <li>檢測 `src/main.cpp` 中對於 LEDC 引腳與頻率的定義。</li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h3>2. 翻轉課堂學習策略</h3>
+            <ul>
+                <li><strong>課前預習</strong>：觀看「ESP32 LEDC 語法與硬體資源分配」教學影片。</li>
+                <li><strong>課中實作</strong>：測試不同解析度 (8-bit vs 13-bit) 對亮度細膩度的影響，並嘗試驅動多路 LED。</li>
+                <li><strong>課後思考</strong>：為什麼 ESP32 把 PWM 控制器稱為 "LEDC"？它與傳統 Arduino `analogWrite()` 有什麼差異？</li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h3>3. 單元實作任務</h3>
+            <ul>
+                <li><strong>作業 4-1 (30%)</strong>：配置 `ledcSetup` 並使用三個不同通道控制 RGB LED。</li>
+                <li><strong>作業 4-2 (40%)</strong>：實作一個包含 `freq` 與 `res` 參數的初始化函式，根據不同情境動態調整。</li>
+                <li><strong>作業 4-3 (30%)</strong>：解決「通道衝突」實驗：觀察若兩個引腳接在同一個 Channel 會發生什麼事？</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" class="hidden">
+        <h2>講師手冊 (Instructor Guide)</h2>
+        <div class="guide-section">
+            <h3>1. 教學重點 (Teaching Points)</h3>
+            <ul>
+                <li>解析 LEDC 的四大要素：Timer (時鐘源), Frequency (頻率), Resolution (解析度), Channel (通道)。</li>
+                <li>介紹 ESP32 的 16 個獨立通道分配邏輯。</li>
+                <li>強調 `ledcAttachPin` 與 `ledcWrite` 的正確調用順序。</li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h3>2. 常見問題 (Common Issues)</h3>
+            <ul>
+                <li><strong>頻率與解析度超限</strong>：如果設為 5000Hz 卻用 20-bit 解析度，會導致初始化失敗。提醒學生參考技術手冊的限制公式。</li>
+                <li><strong>忘記 `ledcAttachPin`</strong>：語法上 `ledcSetup` 只是設定硬體參數，必須掛載到實體引腳才有輸出。</li>
+                <li><strong>通道重複使用</strong>：確保每個獨立控制的負載都有專屬的 Channel ID。</li>
+            </ul>
+        </div>
+        <div class="guide-section bg-gray-50 p-4 rounded-lg">
+            <h3 class="font-bold mb-2 text-sm text-gray-900">3. 評分標準 (Grading Criteria)</h3>
+            <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
+                <li><strong>基礎分</strong>：能正確使用 LEDC 函式控制單路 LED。</li>
+                <li><strong>進階分</strong>：能理解 10-bit (0-1023) 與 8-bit (0-255) 在 `ledcWrite` 時的數據對應關係。</li>
+            </ul>
+        </div>
+
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mt-6">
+            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
+                <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
+.
+├── src/             # 包含 ledcSetup 與動態参数初始化 logic 的 main.cpp
+├── README.md        # 實驗紀錄：解析度與細膩度觀察報告
+└── .github/         # 自動評分配置</pre>
+                <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
+                <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                    <li><strong>參數合法性檢查：</strong> 驗證頻率與解析度的乘積是否在 ESP32 系統時脈容許範圍內。</li>
+                    <li><strong>語法結構分析：</strong> 偵測 <code>ledcAttachPin</code> 的掛載參數，確保通道分配無衝突。</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mt-6 bg-white p-4 border border-gray-200 rounded-lg">
+            <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
+            <div class="space-y-4 text-sm text-gray-600">
+                <div>
+                    <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
+                    <p>建立包含基礎 LED 腳位宏定義但「未調用任何 LEDC 函式」的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
+                    <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以便對其硬體資源分配邏輯進行點評。</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
+                    <p>學生點擊作業連結，獲得個人專屬 Repo，實作具備靈活參數的 PWM 初始化封裝後 Push。</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
+                    <p>進入 Feedback PR，針對學生的「多通道同步管理」與「定時器共享策略」予以回饋。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section mt-6">
+            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border-collapse border border-gray-200">
+                    <thead class="bg-gray-50 text-left text-gray-800">
+                        <tr>
+                            <th class="border border-gray-200 p-2">階段</th>
+                            <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
+                            <th class="border border-gray-200 p-2">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600">
+                        <tr>
+                            <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
+                            <td class="border border-gray-200 p-2">觀看「ESP32 硬體 PWM：Timer 與 Channel 的資源分配」影片。</td>
+                            <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員理解「數位控制頻率」的本質。</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
+                            <td class="border border-gray-200 p-2">領取 Classroom 作業，對比不同 Resolution 下 LED 漸亮過程的「階梯感
+                                (Stepping)」。</td>
+                            <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
+                            <td class="border border-gray-200 p-2">實作具備 Gamma 修正的 PWM 控制邏輯並 Push，閱讀教師回覆 PR。</td>
+                            <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         // Define Resources
         window.RESOURCES = {

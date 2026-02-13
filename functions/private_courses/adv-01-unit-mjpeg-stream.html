@@ -272,8 +272,154 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 2-1：封包解剖師：觀察 HTTP 串流頭</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 網路分析工程師。</li>
+            <li><strong>執行方式：</strong> 在網頁端使用 F12 開發者工具，觀察 MJPEG 串流的 Response Header，找出 `Content-Type` 中的 `boundary`
+                標籤，並紀錄兩次 `boundary` 出現的間隔時間。</li>
+            <li><strong>評分重點：</strong> 能否準確指出 `multipart/x-mixed-replace` 的作用。</li>
+        </ul>
+
+        <h3>作業 2-2：手動拼接 HTTP 數據流</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 韌體工程師。</li>
+            <li><strong>執行方式：</strong> 棄用現成庫，使用 `client.print()` 手動發送 HTTP Header 與 JSON 封裝的影像邊界，實作一個「最輕量」的影像發送邏輯。</li>
+            <li><strong>評分重點：</strong> 影像能否在網頁端正常顯示且不產生斷裂。</li>
+        </ul>
+
+        <h3>作業 2-3：串流穩定性與 MTU 優化</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 傳輸優化專家。</li>
+            <li><strong>執行方式：</strong> 在高負載下（例如傳送彩色大圖），觀察影像是否產生撕裂 (Tearing)，並嘗試透過調整 TCP 緩衝區大小來改善。</li>
+            <li><strong>評分重點：</strong> 提交一份優化前後的延遲對比數據。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── src/
+│   ├── server.cpp    # 包含待填充的 Boundary 邏輯
+│   └── web_assets.h  # 前端監控頁面
+├── test/
+│   └── sniffer.py    # 檢查 HTTP 正確性
+└── README.md         # 實驗紀錄：MJPEG Header 解析</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🧪</span>
+                            <p class="text-sm text-gray-700"><strong>協議遵循檢查：：</strong> 自動測試連接 80 Port，檢查 Header 是否包含正確
+                                <code>boundary</code>。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🛡️</span>
+                            <p class="text-sm text-gray-700"><strong>斷線保護測試：</strong> 模擬瀏覽器斷開，檢查是否正確呼叫
+                                <code>client.stop()</code> 釋放資源。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供基礎 <code>WiFiServer</code> 框架，故意留空 MJPEG
+                        Header 部分，設定為 Template repository。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">建立作業並設定「通訊協議驗證」測試。強調「手動拼接」而非直接調用萬用庫。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">先在 Local 進行 Packets 觀察。完成串流核心實作並 Push 到
+                        GitHub。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">進入 Feedback PR，審查學生的
+                        <code>Content-Length</code> 計算邏輯是否精確予以回饋。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">理解 HTTP 1.1 的 Keep-Alive 與 Multipart 原理。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，確認為何 MJPEG 串流不需要「關閉」連線。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，親手寫出 <code>HTTP/1.1 200 OK</code> 等關鍵字。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，討論當多個客戶端同時連線時，ESP32 記憶體對策。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">進行高負載測試，優化串流的平滑度並 Push，閱讀教師回覆 PR。</td>
+                            <td class="px-4 py-4 text-xs">核發最終課程評量與評分。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
-        // Define Resources
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/moyotioE18s",
             doc: "https://docs.google.com/document/d/e/2PACX-1vQU_xbj5iaj_XWXxuAfwCXoaNdhmIrz3agrXnpSPfeOtaQ76ZjotEczMAhUlkQSOMn1sy64yZbvjuj8/pub?embedded=true"

@@ -281,6 +281,150 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 4-1：動態 PID 儀表板</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 控制系統工程師。</li>
+            <li><strong>執行方式：</strong> 在網頁前端實作可即時調整 Kp, Ki, Kd 的 Slider，並利用 ECharts 或 Chart.js 繪製目標值與實際值的觀測波形。</li>
+            <li><strong>評分重點：</strong> UI 是否能即時反應調校後的波形變化，並具備「波形凍結」與「數據匯出」功能以便紀錄實驗結果。</li>
+        </ul>
+
+        <h3>作業 4-2：「終極調校」挑戰賽</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 調校專家。</li>
+            <li><strong>執行方式：</strong> 在給定的模擬擾動（Simulated Disturbance）下，尋找一組能讓系統最快達到穩定且超調量 (Overshoot) 最小的參數。</li>
+            <li><strong>評分重點：</strong> 提交一份「調校日誌」，詳細記錄 Ziegler-Nichols 方法的實施過程與最終參數的驗證數據。</li>
+        </ul>
+
+        <h3>作業 4-3：系統限流與安全保護</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 韌體安全工程師。</li>
+            <li><strong>執行方式：</strong> 實作積分飽和抑制 (Anti-windup) 與輸出限幅 (Output Clamping)，防止電機因為過大的 PID 輸出而損毀。</li>
+            <li><strong>評分重點：</strong> 當目標值發生突變時，系統是否能平滑地過渡而非產生劇烈的硬體衝擊。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── src/
+│   ├── pid_core.cpp        # 算法：積分飽和抑制與輸出限幅
+│   └── simulator.h         # 模擬：虛擬馬達與擾動模型
+├── public/
+│   └── pid_chart.js        # 可視化：目標與觀測動態波形
+└── docs/
+    └── tuning_log.md       # 紀錄：調校日誌與參數對比</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">📊</span>
+                            <p class="text-sm text-gray-700"><strong>波形穩定度分析：</strong> 計算「到達穩定時間」與「超調量」是否進入合格範圍。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🛡️</span>
+                            <p class="text-sm text-gray-700"><strong>安全閾值檢查：</strong> 驗證輸入突變時，輸出是否正確限制在安全區間。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">上傳馬達模擬引擎與基礎 PID 框架。說明模擬環境變因調整方法。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">建立作業並公佈調校排行榜。引導討論不同場景下的參數權重。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，執行儀表板開發與調校。提交包含實驗數據與波形的 PR。執行 Git Push。
+                    </p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">評論學員對「系統震盪」的物理分析深度，針對安全限制邏輯給予指導。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">學習 PID 參數物理意義，利用模擬器體驗參數對系統反應的影響。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「控制理論」導讀。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，實施儀表板開發，參與「PID 終極調校競賽」。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，分享真實雜訊對 D 項的影響，引導深度思考。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">完成飽和抑制與輸出限幅邏輯並 Push，閱讀回覆 PR 以最佳化參數調校。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，引導學員理解 PID 在現代工業與機器人領域的價值。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/m1Mpa4X8ESc",

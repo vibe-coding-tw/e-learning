@@ -299,13 +299,148 @@
 
     </main>
 
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/q7qjcrXW5pI",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vTU7WfzMaQV96vBzCwXC7usM86n93lOC5J4BRrYbtRYLG5HHaJF1iqnJb78biQPVxGn4saoqcZpAB0e/pub?embedded=true"
-        };
-    </script>
-    <script src="/js/course-shared.js"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 2-1：「瓶頸偵探」：控制循環性能分析</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 系統性能分析師。</li>
+            <li><strong>執行方式：</strong> 在 ESP32 代碼中對影像處理、PID 計算、BLE 發送分別計時，並透過 Serial 印出耗時百分比。</li>
+            <li><strong>評分重點：</strong> 能否準確識別出哪一部分是系統的「木桶短板」，並提出代碼層級的優化構想（如減少不必要的浮點運算）。</li>
+        </ul>
+
+        <h3>作業 2-2：「輕量化大挑戰」：自定義二進位協議</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 通訊協議專家。</li>
+            <li><strong>執行方式：</strong> 放棄冗長的 JSON 格式，改用 Typed Array (Uint8Array) 封裝指令，手動進行 Byte 級別的打包。</li>
+            <li><strong>評分重點：</strong> 單次封包大小是否減少 50% 以上，以及在藍牙傳輸高壓下，原本的「斷點」現象是否消失。</li>
+        </ul>
+
+        <h3>作業 2-3：「性能極限測試」：壓榨硬體潛能</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 硬體優化大師。</li>
+            <li><strong>執行方式：</strong> 嘗試提升 Task 的優先級或是利用雙核心處理，將採樣時間壓低到硬體極限（如 5ms）。</li>
+            <li><strong>評分重點：</strong> 紀錄並對比優化前後的「控制延遲」數據，並附上波形穩定性的證據。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── src/
+│   ├── perf_timer.h        # 高精度性能計時器工具
+│   └── binary_proto.cpp    # JSON 到二進位協議轉換核心
+├── platformio.ini          # 環境設定
+└── docs/
+    └── benchmark_results.md # Latency 分佈與吞吐量對比</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">📉</span>
+                            <p class="text-sm text-gray-700"><strong>協議壓縮率檢查：</strong> 擷取封包長度，驗證自定義協議比 JSON 減少 50% 以上。
+                            </p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">⚡</span>
+                            <p class="text-sm text-gray-700"><strong>性能閾值挑戰：</strong> 驗證單次控制循環執行時間穩定低於 10ms 基準。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">上傳性能分析框架與二進位傳輸範例。定義基準測試 CSV 規範。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定性能門檻 (Latency < 10ms)。引導討論性能取捨。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">執行性能診斷與協議實現。提交包含對比數據的 PR。執行 Git Push。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對 Byte Order、數據對齊及過度優化問題進行 Review。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">學習二進位打包概念，理解 JSON 在高頻控制循環中成為瓶頸的原因。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「從文字到位元」導讀。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，實施性能診斷，分組測試 JSON 與 Binary 協議差異。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，分享 Chrome DevTools 監測流量技巧。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">完成前端 Canvas 渲染優化與性能壓榨並 Push，閱讀回覆 PR 優化 Byte 對齊。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，引導思考極致優化在 IoT 中的價值。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 </body>
 
 </html>

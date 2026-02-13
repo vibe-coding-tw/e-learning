@@ -216,7 +216,7 @@
                             <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs text-left">
                                 <li>盲測：僅用 delay() 和固定 PWM，測 5 次。</li>
                                 <li>數據紀錄：計算誤差標準差。</li>
-                                <li>干擾測試：車上放重物或換地毯再測。</li>
+                                <li>干擾測試：車上放重物 or 換地面再測。</li>
                             </ul>
                         </div>
                     </div>
@@ -284,10 +284,153 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 1-1：「盲人領航員」：開迴路實驗</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 盲測工程師。</li>
+            <li><strong>執行方式：</strong> 不看感測器，僅用 delay() 和固定 PWM 嘗試讓車子停在 1 公尺處。</li>
+            <li><strong>評分重點：</strong> 紀錄 5 次誤差值，計算標準差，體會環境干擾（摩擦力、電壓）對系統的影響。</li>
+        </ul>
+
+        <h3>作業 1-2：「比例的力量」：實作 P 控制器</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 控制工程師。</li>
+            <li><strong>執行方式：</strong> 利用影像質心實作 turn_output = Kp * Error。</li>
+            <li><strong>評分重點：</strong> 觀察並記錄 Kp 增加時系統從穩定到「蛇行」的臨界點，理解 P 項的物理意義。</li>
+        </ul>
+
+        <h3>作業 1-3：「靜態誤差挑戰」：對抗阻力</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 系統優化師。</li>
+            <li><strong>執行方式：</strong> 在緩坡或摩擦力較大的地面測試 P 控制。</li>
+            <li><strong>評分重點：</strong> 觀察並解釋為何系統無法精準到達目標點（殘餘誤差），並嘗試手動給予微小補償，建立對 I 項的需求感。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── src/
+│   ├── open_loop_test.cpp  # 單純 PWM 驅動測試
+│   └── p_control_ready.cpp # 比例控制器骨架
+├── platformio.ini          # 環境設定
+└── docs/
+    └── experiment_log.md   # 蛇行臨界點觀察日誌</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🧪</span>
+                            <p class="text-sm text-gray-700"><strong>架構合規性檢查：</strong> 驗證是否將 <code>Kp</code>
+                                定義為獨立參數，避免硬編碼。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">📊</span>
+                            <p class="text-sm text-gray-700"><strong>實驗日誌完整性：</strong> 檢查 <code>experiment_log.md</code>
+                                是否包含誤差計算與現象描述。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供實驗日誌模板與 P 控制器骨架的專案樣板。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「Kp 調校實驗」評分。引導學員在 PR 註明 Kp 臨界值。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，觀察 P 控制修正能力，記錄靜態誤差並提交 PR。執行 Git Push。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對閉迴路差異理解與 P 項增益平衡分析予以點評。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">觀看 PID 直觀解釋影片，完成開迴路盲測實驗，紀錄誤差分佈。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「開迴路與閉迴路」導讀。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，實作 P 控制並觀察震盪，嘗試排除靜態誤差。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，引導討論 Kp 對穩定性的影響。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">整理調校數據與現象心得並 Push，閱讀回覆 PR 優化控制邏輯。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，引導思考比例控制與環境動態關係。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/VWZ6QTFCod4",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vTEikPfietsTdOfTag1LTnRZiiFd55svK6ZhaD7TDAhm4VWJgH2IAqU15ninVMrCqylgZA8p9H448Gf/pub?embedded=true"
+            youtube: "https://www.youtube.com/embed/z9eX61iST0k",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vTQOeZStAJUwGm1JlEo2r6vGVx20USevDP69swtB7BSJY33Jq9A5dYSQiey6nFjXs1IL3D6ibH5UySB/pub?embedded=true"
         };
     </script>
     <script src="/js/course-shared.js"></script>

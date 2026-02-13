@@ -258,6 +258,150 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 3-1：數據秤重：解析度與封包體積實測</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 韌體效能優化師。</li>
+            <li><strong>執行方式：</strong> 在不同解析度 (160x120 vs 640x480) 下傳送 100 幀影像，紀錄 ESP32 端回報的累計發送
+                Bytes，並對比「純色地面」與「複雜雜亂區」的封包體積差異。</li>
+            <li><strong>評分重點：</strong> 能否推導出平均單幀的大小並計算出達成 24 FPS 穩定串流所需的 Mbps。</li>
+        </ul>
+
+        <h3>作業 3-2：流暢度優化：FPS 瓶頸除錯</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 網路架構師。</li>
+            <li><strong>執行方式：</strong> 模擬弱網環境 (Wi-Fi 訊號差)，實作兩套優化策略：(A) 維持高解析但降低 JPEG 品質；(B)
+                維持高品質但大幅降低解析度，並測量哪種策略下的「操控體感」較好。</li>
+            <li><strong>評分重點：</strong> 實驗報告是否能清楚界定「解析度」與「流暢度」對駕駛任務的貢獻。</li>
+        </ul>
+
+        <h3>作業 3-3：動態頻寬適應 (ABR) 邏輯設計</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> AI 系統開發者。</li>
+            <li><strong>執行方式：</strong> 設計一套偽代碼邏輯 (Closed-loop Logic)：當前端檢測到影像延遲超過 200ms 時，自動發送指令通知 ESP32 降低 Quality 或
+                FPS，直到延遲恢復正常。</li>
+            <li><strong>評分重點：</strong> 邏輯是否包含「狀態恢復 (Recovery)」機制，即網路好轉時是否會自動調回高品質。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── src/             # 包含頻寬統計 API 範本
+├── docs/            # 頻寬報告模板
+└── README.md        # 紀錄：ABR 算法測試日誌</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">📏</span>
+                            <p class="text-sm text-gray-700"><strong>數學正確性檢核：</strong> 自動檢查報告中的計算公式是否符合 $FPS \times Size
+                                \times 8$。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🔄</span>
+                            <p class="text-sm text-gray-700"><strong>邏輯分支測試：</strong> 模擬不同的延遲輸入 ABR 算法，檢查輸出的 Q 值是否符合預期。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供包含「頻寬統計 API」的韌體與前端 Dashboard 範本，設定為 Template
+                        repository。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「數據報告」為必要繳交檔案。利用 Issues 分享不同網段實測結果。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">在實驗課室進行真實的 Wi-Fi 壓力測試。完成 ABR 邏輯設計並提交 PR。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對學生對「穩定性」與「畫質」之間優先級的判斷予以回饋。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">觀看影片，掌握 24 FPS、30 FPS、60 FPS 所需的理論頻寬差異。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，引導學員使用「頻寬計算機」小工具。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，實測並找出造成 FPS 掉幀的「木桶最短板」。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，討論偵測到 CPU 負載過高而非頻寬不足時對策。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">優化 ABR 邏輯中的「震盪 (Oscillation)」問題並 Push，閱讀回覆。</td>
+                            <td class="px-4 py-4 text-xs">核發最終課程評量與評分。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/7SBO8kGX5tE",

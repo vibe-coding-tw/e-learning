@@ -291,6 +291,140 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" class="hidden">
+        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="guide-section">
+            <h3>1. GitHub Classroom 設定</h3>
+            <ul>
+                <li>點擊儀表板「領取作業」按鈕，獲取 `basic-02-ota-security` 作業儲存庫。</li>
+                <li>檢視專案中的 `certs` 資料夾，了解根憑證 (Root CA) 的存放位置。</li>
+                <li>確保 PlatformIO 專案已正確配置 `board_build.embed_txtfiles` 以嵌入憑證。</li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h3>2. 翻轉課堂學習策略</h3>
+            <ul>
+                <li><strong>課前預習</strong>：觀看「物聯網安全：OTA 攻擊面分析」影片，理解為什麼明文升級很危險。</li>
+                <li><strong>課中實作</strong>：實施 HTTPS 升級實驗，並嘗試使用錯誤的簽章來誘發升級失敗。</li>
+                <li><strong>課後思考</strong>：如果 private key（私鑰）外洩，對於已售出的數萬台設備會有什麼影響？如何補救？</li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h3>3. 單元實作任務</h3>
+            <ul>
+                <li><strong>作業 2-1 (40%)</strong>：建立 HTTPS 連線，並成功獲取伺服器上的韌體資訊檔。</li>
+                <li><strong>作業 2-2 (30%)</strong>：實作韌體簽章驗證 (Firmware Signature)，確保只有授權的二進位檔能被執行。</li>
+                <li><strong>作業 2-3 (30%)</strong>：撰寫安全分析報告，列出三種可能的 OTA 攻擊路徑與對應防治方法。</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" class="hidden">
+        <h2>講師手冊 (Instructor Guide)</h2>
+        <div class="guide-section">
+            <h3>1. 教學重點 (Teaching Points)</h3>
+            <ul>
+                <li>對比 HTTP vs HTTPS 在 OTA 上的效能與安全權衡。</li>
+                <li>解釋「公鑰基礎設施 (PKI)」在嵌入式系統中的簡化應用。</li>
+                <li>強調「防止降級攻擊 (Anti-rollback)」的必要性：防止駭客將系統退回有漏洞的舊版本。</li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h3>2. 常見問題 (Common Issues)</h3>
+            <ul>
+                <li><strong>SSL 握手失敗 (Handshake failed)</strong>：通常是 ESP32 系統時間不正確導致憑證過期判定，需先實作 NTP 校時。</li>
+                <li><strong>堆疊溢位 (Stack overflow)</strong>：HTTPS 的加密運算極耗記憶體，需注意任務的 Stack 大小分配。</li>
+                <li><strong>憑證管理</strong>：提醒學生切勿將私鑰上傳到公開的 GitHub Repo。</li>
+            </ul>
+        </div>
+        <div class="guide-section bg-gray-50 p-4 rounded-lg">
+            <h3 class="font-bold mb-2 text-sm text-gray-900">3. 評分標準 (Grading Criteria)</h3>
+            <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
+                <li><strong>基礎分</strong>：能正確載入根憑證並與 HTTPS 伺服器通訊。</li>
+                <li><strong>進階分</strong>：能理解安全啟動 (Secure Boot) 與加密 OTA 的關聯性。</li>
+            </ul>
+        </div>
+
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mt-6">
+            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
+                <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
+.
+├── src/             # 包含 HTTPS Client 與憑證嵌入邏輯的 main.cpp
+├── certs/           # 包含 root_ca.pem 的憑證資料夾
+├── README.md        # 實驗紀錄：HTTPS 握手日誌、安全分析報告與攻擊路徑圖
+└── .github/         # 自動評核配置</pre>
+                <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
+                <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                    <li><strong>資源依附性檢查：</strong> 驗證 <code>platformio.ini</code> 中是否正確配置了
+                        <code>board_build.embed_txtfiles</code> 關鍵字。</li>
+                    <li><strong>安全協定檢測：</strong> 透過測試腳本搜尋代碼中的 <code>WiFiClientSecure</code> 使用情況，確保升級流程並非明文 HTTP。</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mt-6 bg-white p-4 border border-gray-200 rounded-lg">
+            <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
+            <div class="space-y-4 text-sm text-gray-600">
+                <div>
+                    <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
+                    <p>建立包含基礎 OTA 外殼但「未實作 HTTPS 加密」的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
+                    <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以便對其憑證管理與 NTP 校核邏輯進行點評。</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
+                    <p>學生領取作業，獲得個人專屬 Repo，實作雙向憑證校驗邏輯與簽章驗證功能後 Push。</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
+                    <p>進入 Feedback PR，針對學生的「私鑰保護機制」與「SSL 資源優化」設計予以回饋。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section mt-6">
+            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border-collapse border border-gray-200">
+                    <thead class="bg-gray-50 text-left text-gray-800">
+                        <tr>
+                            <th class="border border-gray-200 p-2">階段</th>
+                            <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
+                            <th class="border border-gray-200 p-2">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600">
+                        <tr>
+                            <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
+                            <td class="border border-gray-200 p-2">觀看「網路安全 101：為什麼物聯網設備需要 HTTPS？」教學影片。</td>
+                            <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員掌握 PKI 公鑰私鑰的基本概念。</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
+                            <td class="border border-gray-200 p-2">領取 Classroom 作業，實機測試 SSL 握手過程並排除「時間不準」導致的過期問題。</td>
+                            <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
+                            <td class="border border-gray-200 p-2">封裝具備防降級攻擊 (Anti-rollback) 的升級守護進程並 Push，閱讀教師回覆 PR。
+                            </td>
+                            <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         // Define Resources
         window.RESOURCES = {

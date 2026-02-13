@@ -293,6 +293,160 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
+    <section id="assignment-guide" class="hidden">
+        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="space-y-6">
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h3 class="font-bold text-blue-800">1. GitHub Classroom 設定</h3>
+                <p class="text-sm">請將對應的 Repository (例如：<code>esp32-millis-multitasking-lab</code>)
+                    設定至課程儀表板，練習如何擺脫延遲函數，實現真正的多工並行。</p>
+            </div>
+
+            <div class="bg-indigo-50 p-4 rounded-lg">
+                <h3 class="font-bold text-indigo-800">2. 翻轉課堂策略</h3>
+                <ul class="list-disc list-inside text-sm">
+                    <li>課前預習：觀看 10 分鐘關於 <code>delay()</code> 造成 CPU 阻塞的動畫演示。</li>
+                    <li>課中實作：將原本含有 <code>delay()</code> 的閃爍燈程式改寫為 <code>millis()</code> 版本，並同時讓馬達進行非同步運動。</li>
+                </ul>
+            </div>
+
+            <div class="bg-white p-4 border border-gray-200 rounded-lg">
+                <h3 class="font-bold mb-2">3. 單元任務 (Unit Tasks)</h3>
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-100 text-left">
+                        <tr>
+                            <th class="p-2">任務說明</th>
+                            <th class="p-2">建議時間</th>
+                            <th class="p-2">配分</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="p-2">【作業 1-1】實作「非阻塞」LED 呼吸燈</td>
+                            <td class="p-2">30 min</td>
+                            <td class="p-2">30 pts</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">【作業 1-2】雙緒平行作業 (LED + 序列輸出)</td>
+                            <td class="p-2">45 min</td>
+                            <td class="p-2">40 pts</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">【作業 1-3】處理 <code>millis()</code> 的溢出 (Overflow) 問題</td>
+                            <td class="p-2">30 min</td>
+                            <td class="p-2">30 pts</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="instructor-guide" class="hidden">
+        <h2>講師手冊 (Instructor Guide)</h2>
+        <div class="space-y-6">
+            <div>
+                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">教學重點 (Teaching Points)</h3>
+                <ul class="list-disc list-inside text-sm space-y-2">
+                    <li>阻塞 vs 非阻塞：<code>delay()</code> 是在罰站，而 <code>millis()</code> 是在看錶。</li>
+                    <li>時間差 (Delta Time) 的概念：$t_{now} - t_{last}$ 的邏輯是所有遊戲引擎與即時系統的基礎。</li>
+                    <li>任務調度 (Task Scheduling)：如何在單核心的情況下模擬出並行的視覺效果。</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">學生常見問題 (Common Issues)</h3>
+                <ul class="list-disc list-inside text-sm space-y-2 text-red-600">
+                    <li>忘記更新 <code>previousMillis</code> 導致任務只執行一次或頻率失控。</li>
+                    <li>使用 <code>int</code> 而非 <code>unsigned long</code> 儲存時間，導致程式運行一段時間後崩潰。</li>
+                    <li>不理解為什麼 <code>millis()</code> 在 <code>setup()</code> 裡面也能工作。</li>
+                </ul>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="font-bold mb-2 text-sm">評分標準 (Grading)</h3>
+                <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
+                    <li><strong>優 (90-100):</strong> 能流暢地實作多個獨立週期的任務，且程式碼結構清晰。</li>
+                    <li><strong>可 (70-89):</strong> 基本功能達成，但任務間存在不必要的耦合，或時間計算有微小誤差。</li>
+                    <li><strong>待加強 (Below 70):</strong> 仍然依賴 <code>delay()</code> 導致系統無法對即時事件作出反應。</li>
+                </ul>
+            </div>
+
+            <!-- NEW: Practical Deployment Recommendations -->
+            <div>
+                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
+.
+├── src/             # 包含 millis() 計時任務框架的 main.cpp
+├── README.md        # 執行紀錄與多工運行影片連結
+└── .github/         # 自動評分配置</pre>
+                    <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
+                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                        <li><strong>關鍵字掃描：</strong> 檢查是否包含 <code>unsigned long</code> 變數與 <code>millis()</code> 呼叫。</li>
+                        <li><strong>時間區間驗證：</strong> 透過測試報告檢查各任務的調度頻率是否符合預期（如 LED 每 500ms 閃爍一次）。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- NEW: Detailed operations guide -->
+            <div class="bg-white p-4 border border-gray-200 rounded-lg">
+                <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
+                <div class="space-y-4 text-sm text-gray-600">
+                    <div>
+                        <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
+                        <p>建立包含「非阻塞式編程」示例的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
+                        <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以便點評學生的任務調度邏輯。</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
+                        <p>學生領取作業，獲得個人專屬 Repo，將 `delay` 程式碼重構為 `millis` 架構並 Push 回傳。</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
+                        <p>進入 Feedback PR，針對學生的調度器優雅程度（如是否封裝成函式）給予回饋。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEW: Flipped classroom strategy table -->
+            <div>
+                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm border-collapse border border-gray-200">
+                        <thead class="bg-gray-50 text-left text-gray-800">
+                            <tr>
+                                <th class="border border-gray-200 p-2">階段</th>
+                                <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
+                                <th class="border border-gray-200 p-2">教師/平台角色</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-600">
+                            <tr>
+                                <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
+                                <td class="border border-gray-200 p-2">觀看「為什麼 delay() 是有害的」觀念影片。</td>
+                                <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員理解阻塞與非阻塞的差異。</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
+                                <td class="border border-gray-200 p-2">領取 Classroom 作業，實作多個不同頻率的非同步任務。</td>
+                                <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
+                                <td class="border border-gray-200 p-2">挑戰處理 49 天溢出(Overflow)情境並 Push，閱讀教師回覆 PR。</td>
+                                <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
 </body>
 
 </html>

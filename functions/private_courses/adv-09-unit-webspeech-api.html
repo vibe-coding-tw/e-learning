@@ -289,6 +289,152 @@ recognition.onerror = (e) => {
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 3-1：「聲控指令集」開發與模糊匹配</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 介面開發工程師。</li>
+            <li><strong>執行方式：</strong> 實作 `SpeechRecognition` 功能，建立一個關鍵字字典（如："前進", "停止", "左轉"）。使用字串包含 (`includes`)
+                邏輯處理使用者的自然口語。</li>
+            <li><strong>評分重點：</strong> 能否正確處理模糊指令，例如當使用者說「請快點停下來」時，程式能否精準抓到「停」並觸發正確的馬達動作。</li>
+        </ul>
+
+        <h3>作業 3-2：環境噪音下的「信心分數」過濾器</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 語音演算法工程師。</li>
+            <li><strong>執行方式：</strong> 在網頁介面上即時顯示語音辨識的 `confidence` 分數。實作一個門檻 (Threshold) 判斷，低於 0.8 時程式會回應「聽不清楚，請再說一次」。
+            </li>
+            <li><strong>評分重點：</strong> 代碼中對 `onresult` 事件的處理是否嚴謹，以及能否透過 `SpeechSynthesis` 給予流暢的使用者回饋。</li>
+        </ul>
+
+        <h3>作業 3-3：聲控狀態機 (Voice FSM) 整合</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 系統整合專家。</li>
+            <li><strong>執行方式：</strong> 將語音指令與無人車的 FSM 深度串接。例如：說出「進入自動模式」時，UI 與車體狀態同步切換至 `AUTO_NAV`。</li>
+            <li><strong>評分重點：</strong> 處理「連續辨識 (Continuous)」的生命週期，確保辨識器不會因為短暫沉默而中斷，並在 `onend` 時自動重啟辨識。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── js/
+│   ├── speech_engine.js # Web Speech API 初始化
+│   └── intent_parser.js # 意圖解析與關鍵字對應
+├── tests/
+│   └── speech.test.js   # 測試：驗證關鍵字與重啟機制
+└── README.md            # 指令表、門檻與噪音報告</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🎙️</span>
+                            <p class="text-sm text-gray-700"><strong>關鍵字回呼測試：</strong> 模擬 Result 字串，檢查是否正確呼叫對應的馬達執行函式。
+                            </p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🔄</span>
+                            <p class="text-sm text-gray-700"><strong>重啟機制驗證：</strong> 確保在 <code>onend</code>
+                                事件中實作重啟，防止辨識器中斷。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供包裝好 SpeechRecognition 與意圖解析框架的網頁專案樣板。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「隱私權授權」指南。強調 HTTPS 必要性與持久權限設定。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">在不同噪音下測試信心值變化。提交指令表與結果至 PR。執行 Git Push。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對「語音延遲」策略，以及對非同步事件衝突預防點評。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">理解 STT 與 TTS 原理，實測網頁端語音輸入。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「Web Speech API 快速入門」導讀。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，體驗「語音開車」紀錄噪音下的信心值。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，解答關於「辨識自動關閉」的生命週期機制。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">整合 FSM 聲控邏輯並 Push，閱讀回覆 PR 以最佳化預防機制。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，引導思考 VUI 在 IoT 中的價值與延遲威脅。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/4PDB_LF0wt8?autoplay=1",

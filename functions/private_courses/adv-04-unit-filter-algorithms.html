@@ -331,6 +331,150 @@
     </footer>
 
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 2-1：濾波器實驗室實作</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 數據視覺化工程師。</li>
+            <li><strong>執行方式：</strong> 在網頁端實作一個滑動窗口 (Sliding Window)，對傳入的原始數據進行均值濾波。使用 Chart.js
+                同時顯示「原始」與「濾波後」的曲線，並觀察視窗大小 $N$ 對延遲與平滑度的影響。</li>
+            <li><strong>評分重點：</strong> 能否寫出正確的 FIFO (先進先出) 陣列操作邏輯。</li>
+        </ul>
+
+        <h3>作業 2-2：中值濾波抗干擾挑戰</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 訊號處理專家。</li>
+            <li><strong>執行方式：</strong> 模擬環境中出現突然的「尖峰脈衝雜訊」(Spike
+                Noise)。實作中值濾波器（取視窗內的中位數）對比均值濾波器，觀察哪種算法更能有效剔除極端異常值而不影響整體趨勢。</li>
+            <li><strong>評分重點：</strong> 實驗報告是否能解釋為什麼中值濾波對「胡椒鹽雜訊」效果更好。</li>
+        </ul>
+
+        <h3>作業 2-3：動態 α 濾波器：靈敏與平穩的平衡</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 自駕車演算法工程師。</li>
+            <li><strong>執行方式：</strong> 實作動態一階低通濾波：當數據變化劇烈時，自動調大 $\alpha$ 以追求響應速度；當數據穩定時，自動調小 $\alpha$ 以追求靜態平穩。</li>
+            <li><strong>評分重點：</strong> 邏輯設計是否合理（例如：是否包含根據 $Error$ 大小調整 $\alpha$ 的步進機制）。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── js/
+│   ├── filters.js       # 需實作三種濾波算法
+│   └── simulator.js     # 雜訊產生器邏輯
+├── tests/
+│   └── filter.test.js   # Jest 單元測試
+└── README.md             # 參數實測紀錄</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">📐</span>
+                            <p class="text-sm text-gray-700"><strong>算法數學驗證：</strong> 提供含雜訊數據，自動比對學生濾鏡輸出是否與標竿一致。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">⏱️</span>
+                            <p class="text-sm text-gray-700"><strong>收斂速度測試：</strong> 測量面對「階躍訊號」時，達到穩定值所需樣本數是否符合公式。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供整合好 Chart.js 的顯示與模擬環境，設定為 Template
+                        repository。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「自動化邏輯校驗」。利用 GitHub Wiki 讓學生撰寫濾波器分析。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業進行視覺化調整參數。完成適應性算法並 Push。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對學生對「計算開銷」與「濾波效果」權衡的理解予以回饋。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">觀看關於 LPF 公式推導的影片並完成預習問卷。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，展示「各種雜訊模型」對比影片。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，調整 N 與 α 並記錄「相位滯後」現象。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，引導探討 α 太小時對系統響應的影響。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">完成適應性濾波並錄製對比錄影後 Push，閱讀教師回覆 PR。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，檢核針對「極端雜訊」的例外處理邏輯。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/owgr6C5rksY",

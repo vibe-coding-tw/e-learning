@@ -263,6 +263,152 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 3-1：「封包拆解員」：動態資訊看板</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 系統整合工程師。</li>
+            <li><strong>執行方式：</strong> 模擬從 ESP32 每秒接收一個 JSON 字串（包含 `bat`, `temp`, `rpm`）。實作一個解析函式，使用 ES6 物件解構語法提取這些數值。
+            </li>
+            <li><strong>評分重點：</strong> 代碼中是否使用了 `try...catch` 來處理無效的 JSON 字串，並能將解構出的數據即時顯示在網頁 UI 上。</li>
+        </ul>
+
+        <h3>作業 3-2：多階層配置 (Nested Config) 管理器</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 後端通訊專家。</li>
+            <li><strong>執行方式：</strong> 建立一個複雜的巢狀組態物件（例如：`config: { motor: { kp: 1.2, speed: 100 }
+                }`）。練習如何精準解構出深層數據，並將其修改後重新透過 `JSON.stringify()` 轉為字串。</li>
+            <li><strong>評分重點：</strong> 對於深層物件解構語法的正確應用，以及序列化後的字串格式是否合法。</li>
+        </ul>
+
+        <h3>作業 3-3：數據壓縮挑戰：精簡 JSON</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 性能優化工程師。</li>
+            <li><strong>執行方式：</strong> 在不影響功能的前提下，嘗試縮短 JSON 的金鑰長度（例如把 `"motorSpeed"` 改為 `"s"`），並移除不必要的空白。</li>
+            <li><strong>評分重點：</strong> 測量並比較壓縮前後的封包大小（Byte），體會大規模通訊中節約頻寬的重要性。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── js/
+│   ├── parser.js       # 核心解構與解析邏輯
+│   └── mock_data.json  # 合法與損壞樣本素材
+├── tests/
+│   └── parser.test.js  # 測試：驗證解構與異常處理
+└── README.md              # 封包大小優化報告紀錄</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">✨</span>
+                            <p class="text-sm text-gray-700"><strong>解構語法檢查：</strong> 透過靜態掃描，確保學員使用 ES6 物件解構而非傳統點選取。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🛡️</span>
+                            <p class="text-sm text-gray-700"><strong>健全性測試：</strong> 傳入缺失欄位 JSON，檢查是否實作預設值與容錯機制。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供模擬獲取 JSON 的 Promise 介面與測試腳本，設定為 Template
+                        repository。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「協議健壯性」驗證。指導識別 <code>JSON.parse</code>
+                        觸發錯誤的原因。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，紀錄命名對封包影響。在 PR 展示解析深層物件的代碼。執行 Git Push。
+                    </p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對「序列化」意義理解以及「數據協議版本化」的思考予以回饋。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">閱讀 JSON 結構，嘗試手動拆解出特定感測器欄位。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，釋出「JSON 在物聯網角色」短評。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，實踐 <code>try...catch</code> 確保程式不因垃圾數據崩潰。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，解答關於 <code>SyntaxError</code> 的困惑。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">挑戰在維持可讀性下，最小化感測器封包大小並 Push，閱讀回覆。</td>
+                            <td class="px-4 py-4 text-xs">核發課程評量，思考設計具備「自述性」與「壓縮率」平衡的格式。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/Eug1scRXLgg?autoplay=1",

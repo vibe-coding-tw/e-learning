@@ -299,6 +299,152 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 2-1：即時濾鏡開發師：灰階與反相</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 前端影像工程師。</li>
+            <li><strong>執行方式：</strong> 實作一個循環，每秒 30 次從 `<video>` 擷取畫面至 Canvas，並對 `ImageData.data` 進行線性變換（如灰階與負片效果）。</li>
+            <li><strong>評分重點：</strong> 能否正確計算索引 $Index = (y \times Width + x) \times 4$。</li>
+        </ul>
+
+        <h3>作業 2-2：視覺準星：動態標註系統</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> UI/UX 互動設計師。</li>
+            <li><strong>執行方式：</strong> 在影像 Canvas 上疊加第二層透明 Canvas，繪製一個會隨鼠標或物體位置移動的十字準星，並即時顯示該點的 RGBA 數值。</li>
+            <li><strong>評分重點：</strong> 代碼結構是否將「影像擷取」與「標註繪製」邏輯分離。</li>
+        </ul>
+
+        <h3>作業 2-3：影像數據鏡像與 ROI 提取</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 視覺導航工程師。</li>
+            <li><strong>執行方式：</strong> 實作影像水平鏡像反轉，並從原始畫面中提取中間 100x100 的局部區域 (Region of Interest)，放大顯示在畫布角落。</li>
+            <li><strong>評分重點：</strong> 對座標空間變換 $(x' = Width - 1 - x)$ 的理解是否正確。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── index.html        # Video 與 Canvas 佈局
+├── js/
+│   ├── processor.js  # 像素處理邏輯
+│   └── viewer.js     # UI 渲染
+└── tests/
+    └── pixel.test.js # 驗證轉換公式</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🧪</span>
+                            <p class="text-sm text-gray-700"><strong>像素轉換測試：</strong> 提供基準圖片，對比濾鏡輸出與標竿演算法差異。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">⚡</span>
+                            <p class="text-sm text-gray-700"><strong>效能檢核：</strong> 測量處理一幀的時間，若超過 33ms (影響 30FPS) 給予建議。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供已完成 <code>getUserMedia</code> (攝像頭調用) 的
+                        HTML，設定為 Template repository。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「自動化視覺測試」。使用 Cypress 或 Jest 模擬 Canvas
+                        環境進行測試。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，獲得專屬 Repo，排查 <code>y * Width</code>
+                        等索引越界錯誤。執行 <code>npm test</code>。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對學生對「像素內聯處理 (Pixel Manipulation)」的使用效率予以回饋。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">理解 Uint8ClampedArray 的特性與 RGB 排列。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，引導觀看「如何 debug ImageData」短影片。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，實作即時的「小地圖」ROI 提取功能。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，解答為什麼 Canvas 畫面會「黑掉」等問題。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">作品 Push 至 GitHub Page 展示，閱讀教師回覆 PR。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，自動部署作品至靜態網頁供全班觀摩。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/LxFFeB16bKY",

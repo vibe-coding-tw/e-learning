@@ -283,6 +283,151 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 3-1：「飽和失控」觀測實驗</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 系統分析師。</li>
+            <li><strong>執行方式：</strong> 故意在代碼中輸入不合理的參數（如：超高車速 \(V\) 搭配小轉彎半徑 \(R\)）。先使用簡單的 `constrain(pwm, 0, 255)` 處理輸出。
+            </li>
+            <li><strong>評分重點：</strong> 在 README 中記錄並分析為什麼「直接裁剪 (Clipping)」會導致車子跑出奇怪的軌跡（例如：原本要轉彎卻變成直線）。理解「比例」被破壞的後果。</li>
+        </ul>
+
+        <h3>作業 3-2：「比例保衛戰」：實作等比例縮放 (Scaling)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 運動控制演算法工程師。</li>
+            <li><strong>執行方式：</strong> 實作 `normalizePWM(left, right)` 函式。若任一輪需求大於 255，則將兩者同時除以一個縮放係數，使最大者剛好等於 255。</li>
+            <li><strong>評分重點：</strong> 重新執行 3-1 的測試。觀測即使在「飽和」狀態下，車子是否仍能維持正確的轉彎半徑（僅是速度變慢）。</li>
+        </ul>
+
+        <h3>作業 3-3：克服死區 (Deadzone) 與線性化補償</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 硬體調校專家。</li>
+            <li><strong>執行方式：</strong> 慢慢增加 PWM 數值，記錄馬達剛好能轉動的最小值 \(PWM_{min}\)。使用 `map()` 函式將邏輯上的 0-255 映射到實際的
+                \(PWM_{min}\) 到 255。</li>
+            <li><strong>評分重點：</strong> 調校後的車子在極低速下是否能流暢行駛，而非發出嗡嗡聲卻卡住。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── js/
+│   ├── motor_model.js    # 模擬飽和與死區特性
+│   └── normalizer.js     # PWM 歸一化與縮放邏輯
+├── tests/
+│   └── motor.test.js     # 測試：驗證縮放比例與補償
+└── README.md             # 飽和分析與修正軌跡紀錄</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">⚖️</span>
+                            <p class="text-sm text-gray-700"><strong>歸一化校驗：</strong> 模擬超出範圍輸入，檢查是否等比例縮放而非單純截斷。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🛠️</span>
+                            <p class="text-sm text-gray-700"><strong>死區補償測試：</strong> 檢查是否正確應用 <code>PWM_MIN</code>
+                                參數化映射與補償。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供內建 Telemetry Dashboard 可繪製馬達輸出曲線的專案樣板。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「物理現象解釋」加分題。引導理解代碼與物理驅動非線性關係。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，測試馬達死區。提交「飽和修正軌跡比較」PR。執行 Git Push。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對極限飽和權衡策略，以及對數據歸一化理解予以點評。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">理解飽和與死區概念，觀察執行器限制實例。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「認識執行器飽和與死區」導讀。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，觀察「比例縮放」如何修正軌跡，實測最小起動電力。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，解答關於「不同車子死區差異大」的硬體問題。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">完成死區補償並 Push，閱讀回覆 PR 以最佳化映射邏輯。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，引導學員思考「系統安全」與「任務精度」的權衡。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/GOo0dZy5IXo",

@@ -274,6 +274,148 @@ function update(currentVal) {
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 4-1：實作「搖桿節流器 (Throttle)」</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 介面效能優化師。</li>
+            <li><strong>執行方式：</strong> 在 `onMove` 搖桿事件中限制發送頻率。使用一個全域變數記錄「上一次發送時間」，確保兩次傳輸之間至少間隔 50ms (20Hz)。</li>
+            <li><strong>評分重點：</strong> 代碼中是否正確使用了 `Date.now()` 的差值判斷，以及能否解釋為什麼 20Hz 對馬達控制是足夠的。</li>
+        </ul>
+
+        <h3>作業 4-2：數據過濾器：閾值 (Threshold) 與死區 (Deadzone)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 訊號處理工程師。</li>
+            <li><strong>執行方式：</strong> 實作一個數值過濾器。當搖桿在中心 \(\pm 10\) 範圍內時強制發送 0（死區）；且當數值變化小於 5 單位時不發送（閾值）。</li>
+            <li><strong>評分重點：</strong> 能否顯著減少「冗餘封包」的數量，並解決馬達在搖桿回彈時產生的低頻嗡嗡聲。</li>
+        </ul>
+
+        <h3>作業 4-3：極限壓力測試與操控感調校</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 系統測試員。</li>
+            <li><strong>執行方式：</strong> 測試不同的節流區間（10ms 到 500ms），記錄在高速過彎時，「流控」對操作延遲感的影響。</li>
+            <li><strong>評分重點：</strong> 在 README 中總結出一個平衡點（在不塞爆 BLE 緩衝區的前提下，維持最高的操控靈活性）。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── js/
+│   ├── throttle.js       # 節流 (Throttling) 邏輯
+│   └── telemetry.js      # 速率監控與 Chart.js 繪圖
+├── tests/
+│   └── throttle.test.js  # 測試：驗證頻率與死區邏輯
+└── README.md              # 速率對比與冗餘度分析紀錄</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">📈</span>
+                            <p class="text-sm text-gray-700"><strong>發送頻率監測：</strong> 模擬移動搖桿，檢查請求是否嚴格控制在每秒 25 次以內。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🎯</span>
+                            <p class="text-sm text-gray-700"><strong>死區邏輯測試：</strong> 自動傳入偏移，檢查輸出是否正確歸零，消除物理誤差。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供內建封包計數器 (Packet Counter) 與節流框架的除錯介面樣板。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「封包減量百分比」評等標準。指導查看網延遲與執行時間。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">領取 Repo，觀察節流開啟前後的負載差異。提交速率截圖至 PR。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對「即時性 vs 穩定度」權衡，以及「數據冗餘度」分析予以點評。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">理解「瓶頸」概念，思考高頻發送對硬體造成壓力。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「發送太快導致死機」導讀。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，實測過濾器如何消除搖桿誤觸。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，解答關於「節流後反應變慢」的調校問題。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">測試流控對伺服器影響並 Push，閱讀教師回覆 PR。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，引導思考「資源精算」的核心價值。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/ydWS55Tp2MM?autoplay=1",

@@ -533,60 +533,113 @@ navigator.bluetooth.requestDevice({...})
         };
     </script>
     <script src="/js/course-shared.js"></script>
-    <section id="instructor-guide" style="display: none;">
-        <h4>實作任務：強韌的非同步架構</h4>
 
-        <p><strong>【作業 2-1】「逐步點亮」狀態機實作</strong></p>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 2-1：「逐步點亮」狀態機實作</h3>
         <ul>
-            <li><strong>任務內容：</strong>隨著 await 進度更新 UI 狀態（Idle -> Searching -> Connecting -> Ready）。</li>
-            <li><strong>按鈕防跳：</strong>當狀態為 Connecting 時，按鈕必須設為 disabled 防止重複觸發。</li>
-            <li><strong>UI 反饋：</strong>確保每個狀態都有視覺上的變化（文字、顏色或 Spinner）。</li>
+            <li><strong>角色扮演：</strong> 系統架構師。</li>
+            <li><strong>執行方式：</strong> 學生需實作一個 UI 狀態標籤（如 <code>&lt;span id="status"&gt;</code>），隨著 <code>await</code>
+                的每一階段（Request -> Connect -> Service -> Characteristic）更新內容。</li>
+            <li><strong>評分重點：</strong> 按鈕是否在 <code>Connecting</code> 狀態下被 <code>disabled</code> 以防止重複請求。</li>
         </ul>
 
-        <p><strong>【作業 2-2】處理並發與競爭 (Race Condition)</strong></p>
+        <h3>作業 2-2：處理並發與競爭 (Race Condition)</h3>
         <ul>
-            <li><strong>任務內容：</strong>設計機制確保 BLE 指令依序發送。</li>
-            <li><strong>Flag 機制：</strong>使用 <code>isBusy</code> flag 鎖定發送功能。</li>
-            <li><strong>佇列優化：</strong>進階同學可以嘗試實作 Command Queue。</li>
+            <li><strong>角色扮演：</strong> 同步控制專家。</li>
+            <li><strong>執行方式：</strong> 當使用者快速點擊多個指令時，設計一個 <code>isBusy</code> flag 鎖定 GATT 操作。</li>
+            <li><strong>評分重點：</strong> 在快速點擊下是否還會出現 "GATT operation already in progress" 的錯誤。</li>
         </ul>
 
-        <p><strong>【作業 2-3】不同步超時保護 (Timeout)</strong></p>
+        <h3>作業 2-3：不同步超時保護 (Timeout)</h3>
         <ul>
-            <li><strong>任務內容：</strong>實作 10 秒超時機制。</li>
-            <li><strong>Promise.race：</strong>結合連線 Promise 與 <code>setTimeout</code> 返回的 Promise。</li>
-            <li><strong>錯誤處理：</strong>超時後主動 catch 並提示使用者重試。</li>
+            <li><strong>角色扮演：</strong> 穩定性測試工程師。</li>
+            <li><strong>執行方式：</strong> 使用 <code>Promise.race</code> 實作 10 秒超時機制。</li>
+            <li><strong>評分重點：</strong> 當硬體關閉時，網頁是否能在 10 秒後主動報錯並提示使用者，而非永久轉圈。</li>
         </ul>
 
         <hr>
 
-        <h4>4. 評分標準與探討 (Checkpoint)</h4>
-
-        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
             <thead>
-                <tr style="background-color: #f3f4f6;">
-                    <th style="padding: 8px; text-align: left;">任務</th>
-                    <th style="padding: 8px; text-align: left;">評分標準</th>
-                    <th style="padding: 8px; text-align: left;">課堂討論議題</th>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td style="padding: 8px;"><strong>2-1</strong></td>
-                    <td style="padding: 8px;">是否確實防止重複點擊？狀態切換是否流暢？</td>
-                    <td style="padding: 8px;">為何硬體操作需要「進度感」？思考使用者心理。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">操作本頁的 Sync vs Async 實驗室，理解「阻塞」對 UI 的負面影響。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>觀察學生是否完成「卡死 3
+                        秒」與「平滑連線」的體驗對照。</td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px;"><strong>2-2</strong></td>
-                    <td style="padding: 8px;">是否實作 flag 鎖或 Queue？併發報錯是否消失？</td>
-                    <td style="padding: 8px;">GATT 操作為何不能並行？這跟藍牙單工通訊的關係？</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom Repo，實作非同步連線鏈 (2-1) 並 Push。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>助教角色：</strong>針對 await 忘記寫 try...catch
+                        的學生給予提醒。</td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px;"><strong>2-3</strong></td>
-                    <td style="padding: 8px;">Promise.race 邏輯是否正確？超時提示是否出現？</td>
-                    <td style="padding: 8px;">如果設備一直連不上，除了超時我們還能做什麼？</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">挑戰 2-2 與 2-3，提升 App 的強韌度並撰寫 PR 心得。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>檢視學生的 Promise
+                        鏈接邏輯是否嚴謹。</td>
                 </tr>
             </tbody>
         </table>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>建議範本倉庫設置如下：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html       # 包含連線按鈕與狀態顯示區域
+├── ble-handler.js   # (重點) 提供 async/await 的註解框架
+└── README.md        # 供學生解釋如何處理 Race Condition</code></pre>
+
+        <h3>B. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>語法檢查：</strong> 掃描 <code>ble-handler.js</code> 是否包含 <code>async</code> 與 <code>await</code> 關鍵字。
+            </li>
+            <li><strong>邏輯檢查：</strong> 掃描是否使用了 <code>Promise.race</code>（用於 2-3）。</li>
+        </ul>
+
+        <hr>
+
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>上傳帶有 <code>// TODO: Implement async flow</code> 註解的範本。</li>
+                <li>勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>建立作業並連結範本。</li>
+                <li><strong>啟用反饋 PR：</strong> 這對於糾正學生常見的 Promise nesting 錯誤非常有效。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Coding)</strong></p>
+            <ol>
+                <li>學生實作 <code>try...catch</code> 與 <code>await</code> 鏈接。</li>
+                <li><strong>Push</strong> 後在 PR 中提問。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR 的 Files Changed。</li>
+                <li>在程式碼行旁給予「這裡可以優化為更簡潔的 await」等建議。</li>
+            </ol>
+        </div>
     </section>
 </body>
 

@@ -254,8 +254,148 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 3-1：「品質、大小與 FPS」關聯測試</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 性能優化工程師。</li>
+            <li><strong>執行方式：</strong> 在 Web 介面循環切換 Quality (10, 30, 60, 90)，紀錄各等級的「平均幀大小 (KB)」與「實際 FPS」。</li>
+            <li><strong>評分重點：</strong> 能否從數據中分析出「品質提升」與「頻寬消耗」的拐點，通常 Q > 80 後大小劇增但畫質提升不明顯。</li>
+        </ul>
+
+        <h3>作業 3-2：品質對「質心計算」的干擾實驗</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> AI 視覺工程師。</li>
+            <li><strong>執行方式：</strong> 在 Quality 80 與 Quality 5 兩種極端下計算同一條循跡線的質心 $x$ 座標，觀察方塊雜訊 (Artifacts) 是否導致座標產生抖動
+                (Jitter)。</li>
+            <li><strong>評分重點：</strong> 是否觀察到「假邊緣」對算法的干擾，並提出解決方案。</li>
+        </ul>
+
+        <h3>作業 3-3：「動態品質切換」策略開發</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 系統開發人員。</li>
+            <li><strong>執行方式：</strong> 實作一個自動邏輯：當無人車「靜止」時自動切換至 Q=80 (高清晰觀察)；當無人車「加速」時自動降至 Q=20 (低延遲優先)。</li>
+            <li><strong>評分重點：</strong> 策略是否能有效在移動過程中降低影像卡頓。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── src/             # 帶有 JSON API 可遠端修改 Q 值的韌體
+├── README.md        # 效能分析表格
+└── .github/         # 自動評核配置</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">📊</span>
+                            <p class="text-sm text-gray-700"><strong>數據採集驗證：</strong> 檢查提交的 CSV 報告中，Q 值與大小是否呈非線性增長。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">⚡</span>
+                            <p class="text-sm text-gray-700"><strong>FPS 門檻檢查：</strong> 在給定頻寬下，若 Q=90 時 FPS 低於 5
+                                則視為性能不達標。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供帶有 JSON API 可遠端修改 Q 值的韌體範本，設定為 Template
+                        repository。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">建立作業並提供「效能分析表格」範本。指引學生關注「有損壓縮」的代價。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">實地觀察不同 Q 值的畫質差異。實作動態權重算法並 Push。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對學生對「視覺冗餘 (Visual Redundancy)」的理解予以回饋。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">理解 DCT（離散餘弦轉換）在 JPEG 壓縮中的角色。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，確認為何壓縮會導致「方塊效應」。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，進行實機測試，繪製畫質/效能曲線圖。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，探討不同光照下的「最佳 Q 值」。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">完成動態品質策略並 Push，閱讀教師回覆 PR。</td>
+                            <td class="px-4 py-4 text-xs">核發最終課程評量與評分。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
-        // Define Resources
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/5n5zUxMxmtk",
             doc: "https://docs.google.com/document/d/e/2PACX-1vTkveWfTUa36K7vghBuyVs7Ic8Q9W4ca3aokYH4wdkgNTOrYmgPTTwqBPhTG51rYlFtUlzusOgcSkwP/pub?embedded=true"

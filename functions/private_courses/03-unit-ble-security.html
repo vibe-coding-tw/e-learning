@@ -305,88 +305,117 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
+
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 1-1：「授權失敗」模擬與排除</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 異常處理工程師。</li>
+            <li><strong>執行方式：</strong> 實作 <code>try...catch</code> 機制，擷取 <code>NotFoundError</code>（使用者按取消）並顯示自定義 Alert。
+            </li>
+            <li><strong>評分重點：</strong> 代碼中是否正確攔截錯誤名稱，而非任由 Console 出現紅字。</li>
+        </ul>
+
+        <h3>作業 1-2：多裝置環境下的「精準過濾」</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 安全通訊專家。</li>
+            <li><strong>執行方式：</strong> 在 <code>requestDevice</code> 中使用 <code>filters</code> (如 <code>namePrefix</code>)
+                鎖定特定名稱的 ESP32。</li>
+            <li><strong>評分重點：</strong> 在全班多裝置環境下，是否能精準找到自己的設備而不受干擾。</li>
+        </ul>
+
+        <h3>作業 1-3：跨平台權限大調查</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 跨平台相容性測試員。</li>
+            <li><strong>執行方式：</strong> 使用不同手機（iOS Bluefy / Android Chrome）測試，並上傳截圖至 Repo。</li>
+            <li><strong>評分重點：</strong> 觀察並紀錄不同瀏覽器對權限要求的 UI 差異。</li>
+        </ul>
+
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h4>1. 為什麼適合在 GitHub Classroom 進行？</h4>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元著重於 <strong>"Security Implementation"</strong>：</p>
 
-        <p><strong>作業 1-1：try-catch 機制（邏輯優化）</strong></p>
-        <ul>
-            <li><strong>GitHub 優勢：</strong>這是標準的代碼品質測試。你可以透過自動評分檢查學生的 <code>index.js</code> 是否包含 <code>try-catch</code>
-                區塊，以及是否正確判斷了 <code>NotFoundError</code>。</li>
-            <li><strong>翻轉教學：</strong>學生在課前練習「失敗處理」。課堂上，老師可以關掉藍牙或故意點取消，測試誰的程式碼會「當掉」，誰的會「優雅提示」。</li>
-        </ul>
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html       # 附帶 GitHub Pages 部署設定
+├── app.js           # 留空讓學生填寫 requestDevice filters
+└── screenshots/     # 存放作業 1-3 要求的跨平台對比圖</code></pre>
 
-        <p><strong>作業 1-2：精準過濾（實務應用）</strong></p>
+        <h3>B. 自動評分 (Autograding) 的設計</h3>
         <ul>
-            <li><strong>GitHub 優勢：</strong>適合練習 <strong>環境變數或組態管理</strong>。你可以要求學生在代碼中定義一個 <code>CONFIG</code>
-                物件來存放過濾條件。</li>
-            <li><strong>翻轉教學：</strong>這是課堂實作的高潮。全班 20 台車同時開啟，若學生沒做好過濾，會連到別人的車。這是一個極佳的「現場除錯」教學點，學生可以直接在 GitHub
-                更新代碼並重新部署（如使用 GitHub Pages）來即時修正。</li>
-        </ul>
-
-        <p><strong>作業 1-3：跨平台調查（文件化與協作）</strong></p>
-        <ul>
-            <li><strong>GitHub 優勢：</strong>適合練習使用 <strong>Markdown (README.md) 或 GitHub
-                    Wiki</strong>。這份作業不需要寫太多程式碼，而是要學生紀錄觀察結果。</li>
-            <li><strong>翻轉教學：</strong>學生將不同裝置的配對截圖傳到 <code>screenshots/</code> 資料夾。課堂上可以利用 GitHub 的 <strong>Pull Request
-                    比較功能</strong>，快速投放在大螢幕上對比 Android 與 iOS 的介面差異。</li>
+            <li><strong>關鍵字檢查：</strong> 檢查 <code>app.js</code> 是否包含 <code>filters</code> 或 <code>namePrefix</code>。</li>
+            <li><strong>README 檢查：</strong> 確認 <code>README.md</code> 內容非預設文字。</li>
         </ul>
 
         <hr>
 
-        <h4>2. 在 GitHub Classroom 上的設定建議</h4>
-        <p>針對這系列 Web BLE 任務，建議將它們合併為一個名為 <strong><code>BLE-Connection-Lab</code></strong> 的 Assignment。</p>
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>上傳基礎結構。</li>
+                <li>勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
 
-        <h5>A. 範本倉庫建議結構</h5>
-        <pre style="background-color: #f3f4f6; padding: 10px; border-radius: 4px; font-family: monospace;">
-.
-├── index.html       # 包含連線按鈕與訊息顯示區域
-├── app.js           # 學生主要實作區 (1-1, 1-2)
-├── screenshots/     # 存放作業 1-3 的跨平台截圖
-└── README.md        # 紀錄 1-3 的調查結果與排除心得</pre>
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>建立作業。</li>
+                <li><strong>重點設定：</strong> 啟用 <strong>"Enable feedback pull requests"</strong>，方便對比不同平台的 UI 截圖。</li>
+            </ol>
 
-        <h5>B. 自動評分 (Autograding) 配置</h5>
-        <p>你可以針對 <strong>1-1</strong> 與 <strong>1-2</strong> 設定簡單的字串檢查：</p>
-        <ul>
-            <li><strong>測試 1 (1-1)：</strong>檢查是否使用了 <code>catch</code> 與
-                <code>NotFoundError</code>。<br>指令：<code>grep "catch" app.js && grep "NotFoundError" app.js</code>
-            </li>
-            <li><strong>測試 2 (1-2)：</strong>檢查是否使用了 <code>filters</code> 或
-                <code>optionalServices</code>。<br>指令：<code>grep "filters" app.js || grep "namePrefix" app.js</code>
-            </li>
-        </ul>
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取 Repo 並本地預覽 (Localhost) 測試。</li>
+                <li><strong>Push</strong> 上去後，透過 GitHub Pages 提供的 HTTPS 連結在手機端測試。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>查看 PR 中的 <code>screenshots/</code>。</li>
+                <li>針對學生的錯誤處理邏輯給予具體回饋。</li>
+            </ol>
+        </div>
 
         <hr>
 
-        <h4>3. 給老師的翻轉課堂執行建議</h4>
-        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
             <thead>
-                <tr style="background-color: #f3f4f6;">
-                    <th style="padding: 8px; text-align: left;">階段</th>
-                    <th style="padding: 8px; text-align: left;">任務內容</th>
-                    <th style="padding: 8px; text-align: left;">老師如何利用 GitHub</th>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td style="padding: 8px;"><strong>課前 (自主學習)</strong></td>
-                    <td style="padding: 8px;">閱讀 Web BLE 文件，完成 1-1 的錯誤處理邏輯。</td>
-                    <td style="padding: 8px;">查看學生的 <strong>Commit History</strong>，確認誰已經開始動手寫。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px;"><strong>課中 (實作對抗)</strong></td>
-                    <td style="padding: 8px;">進行 1-2 的「多車連線挑戰」。學生必須修改過濾條件以連上自己的 ESP32。</td>
-                    <td style="padding: 8px;"><strong>Live View：</strong>透過 GitHub Pages，學生修改完 Push 後，手機重新整理即可測試新邏輯。
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">閱讀本頁的安全三鐵律，理解為什麼 Local 開發可用 HTTP，但上線必須 HTTPS。
+                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學生已初步理解安全沙箱概念。
                     </td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px;"><strong>課後 (總結)</strong></td>
-                    <td style="padding: 8px;">整理 1-3 的跨平台差異，提交最終報告。</td>
-                    <td style="padding: 8px;"><strong>Code Review：</strong>老師在學生提交的 PR 下方給予回饋，特別是針對錯誤處理的完整度。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">進行現場「大亂鬥連線」，修正過濾條件 (1-2) 並 Push 觸發 GitHub
+                        Pages 部署。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>現場演示：</strong>對比沒寫 try...catch (1-1)
+                        導致 UI 死掉的慘狀。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">彙整 cross-platform 測試結果 (1-3) 寫入 README.md
+                        並提交最後 Commit。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>評點截圖完整度與對安全機制理解的深度。</td>
                 </tr>
             </tbody>
         </table>
-
-        <p class="mt-4"><strong>這組作業非常有「現場感」，特別是 1-2 的過濾功能，在教室環境下是非常強大的教學工具。</strong></p>
     </section>
 </body>
 

@@ -274,6 +274,160 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
+    <section id="assignment-guide" class="hidden">
+        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="space-y-6">
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h3 class="font-bold text-blue-800">1. GitHub Classroom 設定</h3>
+                <p class="text-sm">請將對應的 Repository (例如：<code>esp32-async-webserver-lab</code>) 設定至課程儀表板，練習建立高效能的非阻塞 Web
+                    伺服器。</p>
+            </div>
+
+            <div class="bg-indigo-50 p-4 rounded-lg">
+                <h3 class="font-bold text-indigo-800">2. 翻轉課堂策略</h3>
+                <ul class="list-disc list-inside text-sm">
+                    <li>課前預習：觀看 10 分鐘關於 ESPAsyncWebServer 函式庫與同步伺服器的效能對比。</li>
+                    <li>課中實作：實作多個路由處裡函式，並練習利用非同步事件發送資料給網頁。</li>
+                </ul>
+            </div>
+
+            <div class="bg-white p-4 border border-gray-200 rounded-lg">
+                <h3 class="font-bold mb-2">3. 單元任務 (Unit Tasks)</h3>
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-100 text-left">
+                        <tr>
+                            <th class="p-2">任務說明</th>
+                            <th class="p-2">建議時間</th>
+                            <th class="p-2">配分</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="p-2">【作業 3-1】實作多路由控制面板 (LED, 感測器)</td>
+                            <td class="p-2">45 min</td>
+                            <td class="p-2">40 pts</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">【作業 3-2】處理網頁傳遞的 Query Parameters</td>
+                            <td class="p-2">30 min</td>
+                            <td class="p-2">30 pts</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">【作業 3-3】靜態網頁檔案 (HTML) 的服務實作</td>
+                            <td class="p-2">45 min</td>
+                            <td class="p-2">30 pts</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="instructor-guide" class="hidden">
+        <h2>講師手冊 (Instructor Guide)</h2>
+        <div class="space-y-6">
+            <div>
+                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">教學重點 (Teaching Points)</h3>
+                <ul class="list-disc list-inside text-sm space-y-2">
+                    <li>非阻塞的概念：為什麼使用 ESPAsyncWebServer 不會拖慢 <code>loop()</code> 的執行速度。</li>
+                    <li>路由 (Routing) 邏輯：如何將不同的 URL 路徑對應到特定的功能塊。</li>
+                    <li>HTTP 參數處理：如何從 GET 請求的 URL 中提取數值。</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">學生常見問題 (Common Issues)</h3>
+                <ul class="list-disc list-inside text-sm space-y-2 text-red-600">
+                    <li>在非同步回呼函式中直接呼叫耗時操作（如 delay），這會破壞非同步的優勢。</li>
+                    <li>忘記定義 404 Not Found 處理，導致輸入錯誤網址時伺服器無響應。</li>
+                    <li>不理解指標 (Pointer) 在 <code>on()</code> 函式中的參數傳遞。</li>
+                </ul>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="font-bold mb-2 text-sm">評分標準 (Grading)</h3>
+                <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
+                    <li><strong>優 (90-100):</strong> 能高效地組織路由代碼，正確處裡各類請求參數，且伺服器表現極致流暢。</li>
+                    <li><strong>可 (70-89):</strong> 基本伺服器功能正常，但代碼重用性較低，或對非同步請求的底層原理不夠熟悉。</li>
+                    <li><strong>待加強 (Below 70):</strong> 無法成功架設 Web 伺服器，或在處理請求時造成 ESP32 系統死機。</li>
+                </ul>
+            </div>
+
+            <!-- NEW: Practical Deployment Recommendations -->
+            <div>
+                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
+.
+├── src/             # 包含多重路由 (Routing) 框架的 main.cpp
+├── README.md        # 測試報告：控制面板截圖與 API 回應時間紀錄
+└── .github/         # 自動評分配置</pre>
+                    <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
+                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                        <li><strong>路由有效性檢測：</strong> 透過網路腳本發送 HTTP 請求（如 /status, /toggle），驗證是否能獲取 200 OK 響應。</li>
+                        <li><strong>非同步安全性檢查：</strong> 掃描是否存在 `delay` 關鍵字，確保學生正確應用非同步編程模型。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- NEW: Detailed operations guide -->
+            <div class="bg-white p-4 border border-gray-200 rounded-lg">
+                <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
+                <div class="space-y-4 text-sm text-gray-600">
+                    <div>
+                        <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
+                        <p>建立包含基礎非同步伺服器框架的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
+                        <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以便對其路由設計進行點評。</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
+                        <p>學生領取作業，獲得個人專屬 Repo，實作多路徑控制並上傳控制面板靜態資源後 Push。</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
+                        <p>進入 Feedback PR，針對學生的「請求資源分配」與「錯誤處理路由」給予回饋。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEW: Flipped classroom strategy table -->
+            <div>
+                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm border-collapse border border-gray-200">
+                        <thead class="bg-gray-50 text-left text-gray-800">
+                            <tr>
+                                <th class="border border-gray-200 p-2">階段</th>
+                                <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
+                                <th class="border border-gray-200 p-2">教師/平台角色</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-600">
+                            <tr>
+                                <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
+                                <td class="border border-gray-200 p-2">研究什麼是 HTTP Request 以及常見的狀態碼 (200, 404)。</td>
+                                <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員對「網頁伺服器」有基礎想像。</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
+                                <td class="border border-gray-200 p-2">領取 Classroom 作業，實作異步路由並動態讀取 Query 參數。</td>
+                                <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
+                                <td class="border border-gray-200 p-2">優化網頁載入速度並 Push，閱讀教師回覆 PR。</td>
+                                <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
 </body>
 
 </html>

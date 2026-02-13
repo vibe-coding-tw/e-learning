@@ -254,6 +254,155 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 4-1：實作「多層次 ROI」檢測器</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 自動駕駛視覺工程師。</li>
+            <li><strong>執行方式：</strong> 在影像處理流程中定義三條不同高度（近、中、遠）的掃描線。計算每條線上的質心位置，並在 Canvas 上用三種不同顏色的點標註出來。</li>
+            <li><strong>評分重點：</strong> 能否正確在 Canvas 上視覺化這三層檢測點，並觀察在進入彎道時，三點位移的先後順序。</li>
+        </ul>
+
+        <h3>作業 4-2：自適應預覽距離 (Adaptive Look-ahead)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 控制系統優化師。</li>
+            <li><strong>執行方式：</strong> 撰寫一段邏輯，根據無人車目前的速度（由網頁端模擬或實際數值）動態調整 Y 軸的預覽高度。速度越快，預覽點應越往畫面上方（遠方）移動。</li>
+            <li><strong>評分重點：</strong> 代碼中是否建立了「速度-高度」的正相關函數，且變化是否平滑。</li>
+        </ul>
+
+        <h3>作業 4-3：預覽點與 P-Control 整合除錯</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 系統整合專家。</li>
+            <li><strong>執行方式：</strong> 將「預覽點」的水平偏差作為 Error 輸入到 P 控制器中。透過 BLE 發送指令並觀察實車在直線加速與進入大彎道時的穩定度。</li>
+            <li><strong>評分重點：</strong> 是否能有效減少只看近處時產生的「畫龍 (Zig-zag)」震盪現象。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元建議搭配 <strong>"Look-ahead Navigation Lab"</strong> 作業：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── js/
+│   ├── tracker.js       # 核心質心計算 (含多高度掃描)
+│   └── navigation.js    # 預覽點 (Look-ahead) 選取
+├── tests/
+│   └── look_ahead.test.js # 測試：驗證不同高度座標提取
+└── README.md             # 記錄：預覽高度與轉向穩定度分析</pre>
+        </div>
+        <div class="space-y-4">
+            <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                B. 自動評估 (Autograding) 的設計
+            </h4>
+            <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                <div class="flex gap-3">
+                    <span class="text-blue-500">📈</span>
+                    <p class="text-sm text-gray-700"><strong>多點質心校驗：</strong> 模擬彎道影像，自動檢查學員程式是否能在指定的 Y 軸高度正確提取質心座標。</p>
+                </div>
+                <div class="flex gap-3">
+                    <span class="text-blue-500">⏱️</span>
+                    <p class="text-sm text-gray-700"><strong>響應延遲測試：</strong> 在影像反饋中人工加入延遲，評估「預覽機制」是否能有效抵消物理處理延遲。</p>
+                </div>
+            </div>
+        </div>
+        </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供封裝好的 <code>getCentroidAtY(y)</code>
+                        輔導函式與循跡框架，設定為 Template repository。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「高速循跡穩定性」驗證。指導學員學會使用
+                        <code>performance.now()</code> 測量循環頻率。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，錄製遠看 vs 近看過彎對比影片並上傳 PR，分析預覽高度對穩定度影響。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對「截彎取直」現象觀察，以及如何平衡預覽距離與跟隨精度的代碼邏輯予以回饋。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">觀看關於「專業賽車手視線點」的科普短片。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「預覽控制 (Look-ahead)」幾何示意動畫。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，實測哪一個掃描高度最能應對 90 度彎。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，解答看太遠（雜訊放大）導致車體亂轉的邏輯問題。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">完成多層次質心加權平均導航點實作並 Push，閱讀教師回覆 PR。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，檢核對「預覽延遲補償」的建模與適應能力。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/z0hYhCD8FX4",

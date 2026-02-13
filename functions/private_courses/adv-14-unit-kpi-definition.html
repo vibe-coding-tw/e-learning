@@ -263,6 +263,151 @@
 
     </main>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 2-1：「數位儀表板」實作</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 資料可視化工程師。</li>
+            <li><strong>執行方式：</strong> 在網頁前端利用 <code>performance.now()</code> 計算控制循環的耗時，並計算最近 10 幀的平均延遲。</li>
+            <li><strong>評分重點：</strong> UI 能否根據平均延遲自動切換燈號（<50ms 綠燈、>150ms 紅燈），並正確顯示 FPS。</li>
+        </ul>
+
+        <h3>作業 2-2：「壓力極限測試」實驗</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 基準測試 (Benchmarking) 專家。</li>
+            <li><strong>執行方式：</strong> 逐步提升影像解析度或降低 BLE 傳輸間隔，直到車子出現明顯控制落後，紀錄此時的 KPI。</li>
+            <li><strong>評分重點：</strong> 提交一份「官方性能規格書」，註明在不同環境變因下，系統能維持穩定運行的「最大負載邊界」。</li>
+        </ul>
+
+        <h3>作業 2-3：「KPI 優化賽」</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 優化工程師。</li>
+            <li><strong>執行方式：</strong> 針對某一項 KPI（如：縮短延遲）進行代碼優化（如：優化 JSON 資料結構），並進行優化前後的對比。</li>
+            <li><strong>評分重點：</strong> 優化率 (%) 的計算是否合理，且優化後的控制穩定性是否有實質提升。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── src/
+│   └── telemetry.cpp       # 遙測區：已實作基礎數據發送
+├── public/
+│   └── charts.js           # 圖表區：可視化 (Canvas/Chart.js)
+├── platformio.ini          # 環境設定
+└── docs/
+    └── kpi_spec.md         # 性能規格書與數據對比</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 評估 (Evaluation) 標準
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">📏</span>
+                            <p class="text-sm text-gray-700"><strong>指標準確性：</strong> 檢查 FPS 與 Latency 數學模型是否正確，排除 RTT
+                                網路干擾因素。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">📈</span>
+                            <p class="text-sm text-gray-700"><strong>優化效益量化：</strong> 確認包含清晰實驗對照數據，驗證優化策略是否確實提升系統 KPI。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">上傳遙測機制框架與規格書模板。預定義 CSV 規範。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">公佈優化排行榜規則。引導分享發現的性能瓶頸。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，執行面板製作與壓力測試。提交包含數據對比的 PR。執行 Git Push。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">審核規格書的工程說服力，點評優化策略（如簡化 JSON 結構）的可行性。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">觀看影片，思考嵌入式環境中「採樣率與反應延遲」之間的權衡關係。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「量化開發」導讀。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，執行「性能極限挑戰賽」，找出各場景下的穩定控制閾值。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，分享數據平滑技巧。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">完成性能規格書並 Push，閱讀回覆 PR 以最佳化數據解讀精確度。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，引導理解 KPI 的核心價值。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/VKYpQdzm6o8",

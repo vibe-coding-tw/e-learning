@@ -277,13 +277,149 @@
 
     </main>
 
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/-wDMxfnqsE8",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vTZ-U4xMCI1QfPK4IOYp3tDyrYIBNx2nyEzsifSgHtYQlK7f1lfPGnqVkW62iedjIh6bDF4EeNwB_-a/pub?embedded=true"
-        };
-    </script>
-    <script src="/js/course-shared.js"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 2-1：「人肉 PID」平衡實驗</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 感測器與控制器（雙人組隊）。</li>
+            <li><strong>執行方式：</strong> 一人觀察偏差，一人操作馬達輸出。分別測試純 P、P+I 與 P+D 模式。</li>
+            <li><strong>評分重點：</strong> 能否直觀描述三種模式在收斂速度與震盪上的差異，並記錄手動積分的困難點。</li>
+        </ul>
+
+        <h3>作業 2-2：「參數調校馬拉松」</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 調校工程師。</li>
+            <li><strong>執行方式：</strong> 依序找出最佳的 Kp, Ki, Kd 組合，觀察波形變化。</li>
+            <li><strong>評分重點：</strong> Kp 震盪臨界點的準確紀錄，以及加入 Kd 後過彎絲滑程度的量化對比。</li>
+        </ul>
+
+        <h3>作業 2-3：「雜訊大挑戰」</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 訊號處理師。</li>
+            <li><strong>執行方式：</strong> 加入人工雜訊注入，觀察 D 項對馬達聲音與運行抖動的影響。</li>
+            <li><strong>評分重點：</strong> 體驗數學公式在物理世界中的侷限性，並提出初步的濾波構想。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── src/
+│   ├── pid_impl.cpp        # 待實作的完整 $P+I+D$ 邏輯
+│   └── tuning_sliders.js   # 滑桿與波形繪製工具
+├── platformio.ini          # 環境設定
+└── docs/
+    └── tuning_report.md    # 階躍響應截圖與參數分析</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🧪</span>
+                            <p class="text-sm text-gray-700"><strong>數學邏輯測試：</strong> 比對 <code>pid_calculate()</code>
+                                輸出是否符合離散 PID 模型。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">📊</span>
+                            <p class="text-sm text-gray-700"><strong>波形完整性檢查：</strong> 確認 <code>docs/</code>
+                                目錄包含至少三組不同參數組合的波形。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供 `pid_impl.cpp` 骨架與互動式調參網頁的專案樣板。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">建立作業並啟用 Feedback PR。要求 Commit 註明調整參數階段。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，完成演算法實作與波形調校。提交截圖分析 PR。執行 Git Push。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對對積分飽和的觀察、微分項雜訊處理策略予以點評。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">學習 PID 數學原理，理解離散代碼轉化，思考積分上限限制必要性。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「離散與連續」導讀。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，進行人肉 PID 競賽，實作網頁波形即時調校。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，分享參數差異，討論抗噪處理。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">完成雜訊挑戰實驗，優化抗干擾能力並 Push，閱讀回覆 PR 優化邏輯。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，引導理解控制演算法在自駕中的地位。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 </body>
 
 </html>

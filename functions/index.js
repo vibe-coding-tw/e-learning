@@ -286,14 +286,20 @@ const LESSONS_URL = "https://e-learning-942f7.web.app/lessons.json";
 
 async function getLessons() {
     const now = Date.now();
-    // 優先嘗試讀取本地檔案 (針對 Local Emulator 開發環境)
+    // 優先嘗試讀取本地檔案
     try {
-        const localPath = path.join(__dirname, "../public/lessons.json");
-        if (fs.existsSync(localPath)) {
-            // 在開發環境不 Cache 或 Cache 時間短一點，這裡直接每次讀取確保最新
-            const data = fs.readFileSync(localPath, "utf8");
-            console.log("Loaded lessons.json from local file");
-            return JSON.parse(data);
+        // [FIXED v11.3.7] Check both relative to root and current dir
+        const localPaths = [
+            path.join(__dirname, "lessons.json"),            // Production/Bundled
+            path.join(__dirname, "../public/lessons.json")   // Local Emulator
+        ];
+
+        for (const lp of localPaths) {
+            if (fs.existsSync(lp)) {
+                const data = fs.readFileSync(lp, "utf8");
+                console.log(`Loaded lessons.json from local file: ${lp}`);
+                return JSON.parse(data);
+            }
         }
     } catch (e) {
         console.warn("Local lessons.json read failed, falling back to URL:", e.message);
@@ -343,13 +349,22 @@ exports.checkPaymentAuthorization = functions.region(REGION).https.onRequest(asy
 
         // 1. Load lessons data
         const lessons = await getLessons();
-        // Find course by pageId (mapping to courseId in JSON)
-        const course = lessons.find(l => l.courseId === pageId);
+
+        // [FIXED v11.3.9] Robust Course Identification
+        // Match by courseId, current fileName (unit), or classroomUrl (master)
+        const course = lessons.find(l =>
+            l.courseId === pageId ||
+            (fileName && l.courseUnits && l.courseUnits.includes(fileName)) ||
+            (fileName && l.classroomUrl && l.classroomUrl.endsWith(fileName))
+        );
+
+        // Normalize pageId if we matched by file
+        const effectiveCourseId = course ? course.courseId : pageId;
 
         // 2. Check if course exists and is free (price === 0) - Prioritize this!
         if (course && course.price === 0) {
-            console.log(`Course ${pageId} is free, authorizing...`);
-            const token = generateToken(pageId, fileName);
+            console.log(`Course ${effectiveCourseId} is free, authorizing...`);
+            const token = generateToken(effectiveCourseId, fileName);
             return res.status(200).json({ result: { authorized: true, token: token } });
         }
 
@@ -365,6 +380,62 @@ exports.checkPaymentAuthorization = functions.region(REGION).https.onRequest(asy
         }
 
         if (!uid) return res.status(200).json({ result: { authorized: false, message: "User not logged in" } });
+
+        // ---------------------------------------------------------
+        // [NEW v11.3.9] Role-Based Access for Teachers & Admins (Unit-Driven)
+        // ---------------------------------------------------------
+        try {
+            const userRole = await getRole(uid);
+            const userRecord = await admin.auth().getUser(uid);
+            const userEmail = userRecord.email;
+
+            if (userRole === 'admin' || userRole === 'teacher') {
+                console.log(`[checkPaymentAuthorization] Verifying ${userRole} ${userEmail} for course ${effectiveCourseId}`);
+
+                // Collect all possible authorization sources
+                const authSources = [];
+
+                // Source A: Course-level config doc (legacy/global)
+                authSources.push(effectiveCourseId);
+
+                // Source B: All associated unit files for this course
+                if (course && course.courseUnits) {
+                    authSources.push(...course.courseUnits);
+                }
+
+                // Parallel check all sources in Firestore
+                const authSnapshots = await Promise.all(
+                    authSources.map(docId => admin.firestore().collection('course_configs').doc(docId).get())
+                );
+
+                const isAuthorized = authSnapshots.some(snap => {
+                    if (!snap.exists) return false;
+                    const data = snap.data();
+
+                    // Check authorizedTeachers array
+                    if (data.authorizedTeachers && data.authorizedTeachers.includes(userEmail)) return true;
+
+                    // Check legacy linkMap in classroomUrls
+                    const unitUrls = data.githubClassroomUrls || {};
+                    for (const linkMap of Object.values(unitUrls)) {
+                        if (linkMap && typeof linkMap === 'object' && linkMap[userEmail]) return true;
+                    }
+
+                    return false;
+                });
+
+                if (isAuthorized) {
+                    console.log(`[checkPaymentAuthorization] ${userRole} ${userEmail} authorized for ${effectiveCourseId} via unit-driven check`);
+                    const token = generateToken(effectiveCourseId, effectiveCourseId); // Issue broad course token
+                    return res.status(200).json({ result: { authorized: true, token: token, role: userRole } });
+                }
+
+                console.warn(`[checkPaymentAuthorization] ${userRole} ${userEmail} NOT authorized for course ${effectiveCourseId}`);
+            }
+        } catch (roleErr) {
+            console.error("[checkPaymentAuthorization] Role check failed:", roleErr);
+        }
+        // ---------------------------------------------------------
 
         // ---------------------------------------------------------
         // [NEW] Trial Check: New users (< 30 days) get "started" courses for free
@@ -441,13 +512,13 @@ exports.checkPaymentAuthorization = functions.region(REGION).https.onRequest(asy
     }
 });
 
-// ==========================================
 // 4. 安全檔案服務 (serveCourse)
 // ==========================================
-exports.serveCourse = functions.region(REGION).https.onRequest((req, res) => {
+exports.serveCourse = functions.region(REGION).https.onRequest(async (req, res) => {
     // 1. Parsing Path (e.g. /courses/ble-connection-master.html)
     const urlPath = req.path; // /courses/foo.html
-    const fileName = urlPath.replace('/courses/', '');
+    // [FIXED v11.3.8] More robust fileName extraction (strips leading slashes)
+    const fileName = urlPath.split('/').filter(Boolean).pop();
 
     // 2. Security Check (Token)
     const token = req.query.token;
@@ -482,111 +553,43 @@ exports.serveCourse = functions.region(REGION).https.onRequest((req, res) => {
             return res.status(403).send("Access Denied: Token expired.");
         }
 
-        // C. Validate File Scope
-        // scopePart IS the allowed filename.
-        // Special Exception for Tab Container: getting-started.html can access its children
-        const isGettingStartedGroup = (scopePart === "01-master-getting-started.html") &&
-            (fileName === "01-unit-developer-identity.html" || fileName === "01-unit-vscode-setup.html" || fileName === "01-unit-vscode-online.html");
+        // C. Validate File Scope Dynamic Logic [REFACTORED v11.3.8]
+        let isAuthorizedScope = (scopePart === fileName);
+        let debugInfo = "None";
 
-        const isWebAppGroup = (scopePart === "02-master-web-app.html") &&
-            (fileName === "02-unit-html5-basics.html" || fileName === "02-unit-flexbox-layout.html" || fileName === "02-unit-ui-ux-standards.html");
+        if (!isAuthorizedScope) {
+            try {
+                // Use the centralized getLessons helper [FIXED v11.3.6]
+                const lessons = await getLessons();
 
-        const isWebBleGroup = (scopePart === "03-master-web-ble.html") &&
-            (fileName === "03-unit-ble-security.html" || fileName === "03-unit-ble-async.html" || fileName === "03-unit-typed-arrays.html");
+                // Find the course by pageId/courseId or scopePart
+                const course = lessons.find(l =>
+                    l.courseId === scopePart ||
+                    (l.classroomUrl && l.classroomUrl.endsWith(scopePart))
+                );
 
-        const isWebRemoteControlGroup = (scopePart === "04-master-remote-control.html") &&
-            (fileName === "04-unit-control-panel.html" || fileName === "04-unit-data-json.html" || fileName === "04-unit-flow-logic.html");
+                if (course) {
+                    const masterFile = (course.classroomUrl || "").split('/').pop();
+                    const isMasterMatch = (fileName === masterFile);
+                    const isUnitMatch = course.courseUnits && course.courseUnits.includes(fileName);
+                    debugInfo = `CourseFound: ${course.courseId}, isMasterMatch: ${isMasterMatch}, isUnitMatch: ${isUnitMatch}, masterFile: ${masterFile}`;
 
-        const isTouchEventsGroup = (scopePart === "05-master-touch-events.html") &&
-            (fileName === "05-unit-touch-basics.html" || fileName === "05-unit-long-press.html" || fileName === "05-unit-prevent-default.html");
+                    if (isMasterMatch || isUnitMatch) {
+                        isAuthorizedScope = true;
+                        console.log(`[serveCourse] ${fileName} authorized via dynamic course-scope: ${scopePart}`);
+                    }
+                } else {
+                    debugInfo = `CourseNotFound for Scope: ${scopePart}. LessonsCount: ${lessons.length}`;
+                }
+            } catch (jsonErr) {
+                console.error("[serveCourse] JSON Scope check failed:", jsonErr);
+                debugInfo = `JSON Error: ${jsonErr.message}`;
+            }
+        }
 
-        const isJoystickLabGroup = (scopePart === "06-master-joystick-lab.html") &&
-            (fileName === "06-unit-touch-vs-mouse.html" || fileName === "06-unit-canvas-joystick.html" || fileName === "06-unit-joystick-math.html");
-
-        const isWifiBleSetupGroup = (scopePart === "00-master-wifi-motor.html") &&
-            (fileName === "00-unit-wifi-setup.html" || fileName === "00-unit-motor-ramping.html");
-
-        const isBasicEnvGroup = (scopePart === "basic-01-master-environment.html") &&
-            (fileName === "basic-01-unit-esp32-architecture.html" || fileName === "basic-01-unit-platformio-setup.html" || fileName === "basic-01-unit-drivers-ports.html");
-
-        const isBasicOtaGroup = (scopePart === "basic-02-master-ota-architecture.html") &&
-            (fileName === "basic-02-unit-partition-table.html" || fileName === "basic-02-unit-ota-principles.html" || fileName === "basic-02-unit-ota-security.html");
-
-        const isBasicIOMappingGroup = (scopePart === "basic-03-master-io-mapping.html") &&
-            (fileName === "basic-03-unit-pinout.html" || fileName === "basic-03-unit-pullup-debounce.html" || fileName === "basic-03-unit-adc-resolution.html");
-
-        const isBasicPwmGroup = (scopePart === "basic-04-master-pwm-control.html") &&
-            (fileName === "basic-04-unit-pwm-basics.html" || fileName === "basic-04-unit-h-bridge.html" || fileName === "basic-04-unit-ledc-syntax.html");
-
-        const isBasicBleGattGroup = (scopePart === "basic-05-master-ble-gatt.html") &&
-            (fileName === "basic-05-unit-gatt-structure.html" || fileName === "basic-05-unit-advertising-connection.html" || fileName === "basic-05-unit-ble-properties.html");
-
-        const isBasicHttpGroup = (scopePart === "basic-06-master-http-web.html") &&
-            (fileName === "basic-06-unit-fetch-api.html" || fileName === "basic-06-unit-http-request.html" || fileName === "basic-06-unit-cors-security.html");
-
-        const isBasicWifiModesGroup = (scopePart === "basic-07-master-wifi-modes.html") &&
-            (fileName === "basic-07-unit-wifi-ap-sta.html" || fileName === "basic-07-unit-http-lifecycle.html" || fileName === "basic-07-unit-async-webserver.html");
-
-        const isBasicJoystickGroup = (scopePart === "basic-08-master-joystick-math.html") &&
-            (fileName === "basic-08-unit-joystick-mapping.html" || fileName === "basic-08-unit-unicycle-model.html" || fileName === "basic-08-unit-response-curves.html");
-
-        const isBasicMultitaskingGroup = (scopePart === "basic-09-master-multitasking.html") &&
-            (fileName === "basic-09-unit-millis.html" || fileName === "basic-09-unit-hardware-timer.html" || fileName === "basic-09-unit-sampling-rate.html");
-
-        const isBasicFsmGroup = (scopePart === "basic-10-master-fsm.html") &&
-            (fileName === "basic-10-unit-fsm.html" || fileName === "basic-10-unit-ui-design.html" || fileName === "basic-10-unit-state-consistency.html");
-
-        const isAdvS3CamGroup = (scopePart === "adv-01-master-s3-cam.html") &&
-            (fileName === "adv-01-unit-s3-interfaces.html" || fileName === "adv-01-unit-mjpeg-stream.html" || fileName === "adv-01-unit-jpeg-quality.html");
-
-        const isAdvVideoStreamingGroup = (scopePart === "adv-02-master-video.html") &&
-            (fileName === "adv-02-unit-video-streaming.html" || fileName === "adv-02-unit-canvas-image.html" || fileName === "adv-02-unit-bandwidth-fps.html");
-
-        const isAdvBleAdvancedGroup = (scopePart === "adv-03-master-ble-advanced.html") &&
-            (fileName === "adv-03-unit-ble-notify.html" || fileName === "adv-03-unit-json-serialization.html" || fileName === "adv-03-unit-ble-mtu.html");
-
-        const isAdvSensorsGroup = (scopePart === "adv-04-master-sensors.html") &&
-            (fileName === "adv-04-unit-i2c-spi.html" || fileName === "adv-04-unit-json-rest.html" || fileName === "adv-04-unit-filter-algorithms.html");
-
-        const isAdvCvGroup = (scopePart === "adv-05-master-cv.html") &&
-            (fileName === "adv-05-unit-feature-extraction.html" || fileName === "adv-05-unit-centroid-error.html" || fileName === "adv-05-unit-closed-loop.html");
-
-        const isAdvCvAdvancedGroup = (scopePart === "adv-06-master-cv-advanced.html") &&
-            (fileName === "adv-06-unit-threshold-filter.html" || fileName === "adv-06-unit-centroid-algorithm.html" || fileName === "adv-06-unit-hsv-math.html" || fileName === "adv-06-unit-look-ahead.html");
-
-        const isAdvUiFrameworkGroup = (scopePart === "adv-07-master-ui-framework.html") &&
-            (fileName === "adv-07-unit-ui-framework.html" || fileName === "adv-07-unit-chart-canvas.html" || fileName === "adv-07-unit-json-parsing.html" || fileName === "adv-07-unit-event-polling.html");
-
-        const isAdvColorSpaceGroup = (scopePart === "adv-08-master-image-processing.html") &&
-            (fileName === "adv-08-unit-color-spaces.html" || fileName === "adv-08-unit-error-calculation.html" || fileName === "adv-08-unit-p-control.html" || fileName === "adv-08-unit-mobilenet-ssd.html");
-
-        const isAdvAiRecognitionGroup = (scopePart === "adv-09-master-ai-recognition.html") &&
-            (fileName === "adv-09-unit-cnn-audio.html" || fileName === "adv-09-unit-teachable-machine.html" || fileName === "adv-09-unit-webspeech-api.html" || fileName === "adv-09-unit-flow-control.html");
-
-        const isAdvDiffDriveGroup = (scopePart === "adv-10-master-diff-drive.html") &&
-            (fileName === "adv-10-unit-icc-geometry.html" || fileName === "adv-10-unit-api-design.html" || fileName === "adv-10-unit-pwm-limits.html");
-
-        const isAdvPhotoelectricGroup = (scopePart === "adv-11-master-photoelectric.html") &&
-            (fileName === "adv-11-unit-sensor-principles.html" || fileName === "adv-11-unit-hardware-interrupts.html" || fileName === "adv-11-unit-speed-algorithms.html");
-
-        const isAdvPidGroup = (scopePart === "adv-12-master-pid.html") &&
-            (fileName === "adv-12-unit-pid-control.html" || fileName === "adv-12-unit-pid-math.html" || fileName === "adv-12-unit-code-logic.html");
-
-        const isAdvRobustnessGroup = (scopePart === "adv-13-master-robustness.html") &&
-            (fileName === "adv-13-unit-robustness.html" || fileName === "adv-13-unit-system-perf.html" || fileName === "adv-13-unit-technical-narrative.html");
-
-        const isAdvDebuggingArtGroup = (scopePart === "adv-14-master-debugging-art.html") &&
-            (fileName === "adv-14-unit-debugging-art.html" || fileName === "adv-14-unit-kpi-definition.html" || fileName === "adv-14-unit-refactoring.html");
-
-        const isAdvArchitectureGroup = (scopePart === "adv-15-master-architecture.html") &&
-            (fileName === "adv-15-unit-data-flow.html" || fileName === "adv-15-unit-ble-async.html" || fileName === "adv-15-unit-pid-simulation.html" || fileName === "adv-15-unit-image-dma.html");
-
-        if (scopePart !== "ANY" && scopePart !== fileName &&
-            !isGettingStartedGroup && !isWebAppGroup && !isWebBleGroup &&
-            !isWebRemoteControlGroup && !isTouchEventsGroup && !isJoystickLabGroup &&
-            !isWifiBleSetupGroup && !isBasicEnvGroup && !isBasicOtaGroup && !isBasicIOMappingGroup && !isBasicPwmGroup && !isBasicBleGattGroup && !isBasicHttpGroup && !isBasicWifiModesGroup && !isBasicJoystickGroup && !isBasicMultitaskingGroup && !isBasicFsmGroup && !isAdvS3CamGroup && !isAdvVideoStreamingGroup && !isAdvBleAdvancedGroup && !isAdvSensorsGroup && !isAdvCvGroup && !isAdvCvAdvancedGroup && !isAdvUiFrameworkGroup && !isAdvColorSpaceGroup && !isAdvAiRecognitionGroup && !isAdvDiffDriveGroup && !isAdvPhotoelectricGroup && !isAdvPidGroup && !isAdvRobustnessGroup && !isAdvDebuggingArtGroup && !isAdvArchitectureGroup) {
-            console.error(`Access Denied Debug: Scope=${scopePart}, File=${fileName}, isBasicEnv=${isBasicEnvGroup}, isBasicOta=${isBasicOtaGroup}, isBasicIOMapping=${isBasicIOMappingGroup}, isBasicBleGatt=${isBasicBleGattGroup}, isBasicHttp=${isBasicHttpGroup}, isBasicWifiModes=${isBasicWifiModesGroup}, isBasicJoystick=${isBasicJoystickGroup}, isBasicMultitasking=${isBasicMultitaskingGroup}, isBasicFsm=${isBasicFsmGroup}, isAdvS3CamGroup=${isAdvS3CamGroup}, isAdvVideoStreamingGroup=${isAdvVideoStreamingGroup}, isAdvBleAdvancedGroup=${isAdvBleAdvancedGroup}, isAdvSensorsGroup=${isAdvSensorsGroup}, isAdvCvGroup=${isAdvCvGroup}, isAdvCvAdvancedGroup=${isAdvCvAdvancedGroup}, isAdvUiFrameworkGroup=${isAdvUiFrameworkGroup}, isAdvColorSpaceGroup=${isAdvColorSpaceGroup}, isAdvAiRecognitionGroup=${isAdvAiRecognitionGroup}, isAdvDiffDriveGroup=${isAdvDiffDriveGroup}`);
-            return res.status(403).send(`Access Denied: Token valid for ${scopePart}, but requested ${fileName}. Debug: isAdvPidGroup=${isAdvPidGroup}`);
+        if (!isAuthorizedScope) {
+            console.error(`Access Denied Debug: Scope=${scopePart}, File=${fileName}, Debug=${debugInfo}`);
+            return res.status(403).send(`Access Denied: Token valid for ${scopePart}, but requested ${fileName}. (Debug: ${debugInfo})`);
         }
 
         // 3. Serve File
@@ -667,6 +670,11 @@ exports.logActivity = functions.region(REGION).https.onCall(async (data, context
 
     if (!courseId || !action) {
         throw new functions.https.HttpsError('invalid-argument', 'Missing courseId or action.');
+    }
+
+    // [NEW] Disable Page View Logging
+    if (action === 'PAGE_VIEW') {
+        return { success: true, message: "Page view logging disabled" };
     }
 
     try {
@@ -803,11 +811,15 @@ exports.getDashboardData = functions.region(REGION).https.onCall(async (data, co
         const courseConfigs = {};
         const configsSnapshot = await db.collection('course_configs').get();
         configsSnapshot.forEach(doc => {
-            const cfg = doc.data();
-            const isAuthorized = requesterRole === 'admin' || (cfg.authorizedTeachers && cfg.authorizedTeachers.includes(email));
-            if (isAuthorized) {
-                authorizedCourseIds.push(doc.id);
-                courseConfigs[doc.id] = cfg;
+            try {
+                const cfg = doc.data();
+                const isAuthorized = requesterRole === 'admin' || (Array.isArray(cfg.authorizedTeachers) && cfg.authorizedTeachers.includes(email));
+                if (isAuthorized) {
+                    authorizedCourseIds.push(doc.id);
+                    courseConfigs[doc.id] = cfg;
+                }
+            } catch (err) {
+                console.error(`Error processing config for course ${doc.id}:`, err);
             }
         });
 
@@ -848,18 +860,30 @@ exports.getDashboardData = functions.region(REGION).https.onCall(async (data, co
                         for (const file of relatedFiles) {
                             const filePath = path.join(privateCoursesDir, file);
                             const html = fs.readFileSync(filePath, 'utf8');
+
                             const guideMatch = html.match(/<section id="instructor-guide"[^>]*>([\s\S]*?)<\/section>/);
+                            const assignMatch = html.match(/<section id="assignment-guide"[^>]*>([\s\S]*?)<\/section>/);
+
                             if (guideMatch && guideMatch[1]) {
                                 const guideContent = guideMatch[1].trim();
                                 if (guideContent) {
-                                    aggregatedGuides[file] = guideContent;
+                                    if (!aggregatedGuides.instructor) aggregatedGuides.instructor = {};
+                                    aggregatedGuides.instructor[file] = guideContent;
+                                }
+                            }
+                            if (assignMatch && assignMatch[1]) {
+                                const assignContent = assignMatch[1].trim();
+                                if (assignContent) {
+                                    if (!aggregatedGuides.assignment) aggregatedGuides.assignment = {};
+                                    aggregatedGuides.assignment[file] = assignContent;
                                 }
                             }
                         }
 
                         if (Object.keys(aggregatedGuides).length > 0) {
                             if (!courseConfigs[cid]) courseConfigs[cid] = {};
-                            courseConfigs[cid].instructorGuide = aggregatedGuides;
+                            courseConfigs[cid].instructorGuide = aggregatedGuides.instructor || {};
+                            courseConfigs[cid].assignmentGuide = aggregatedGuides.assignment || {};
                         }
                     }
                 } catch (e) {
@@ -913,6 +937,10 @@ exports.getDashboardData = functions.region(REGION).https.onCall(async (data, co
 
         logsSnapshot.forEach(doc => {
             const log = doc.data();
+
+            // [NEW] Filter out PAGE_VIEW
+            if (log.action === 'PAGE_VIEW') return;
+
             const sid = log.uid;
             const cid = log.courseId || 'unknown';
 
@@ -937,7 +965,7 @@ exports.getDashboardData = functions.region(REGION).https.onCall(async (data, co
                 studentStats[sid].totalTime += duration;
                 if (log.action === 'VIDEO') studentStats[sid].videoTime += duration;
                 if (log.action === 'DOC') studentStats[sid].docTime += duration;
-                if (log.action === 'PAGE_VIEW') studentStats[sid].pageTime += duration;
+                // if (log.action === 'PAGE_VIEW') studentStats[sid].pageTime += duration; // Disabled
 
                 if (!studentStats[sid].lastActive) {
                     studentStats[sid].lastActive = log.timestamp ? log.timestamp.toDate() : null;

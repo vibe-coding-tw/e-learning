@@ -299,6 +299,153 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 2-1：實作「質心追蹤器」函式</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 視覺導航工程師。</li>
+            <li><strong>執行方式：</strong> 撰寫一個 JS 函式遍歷二值化後的 ImageData。當像素為 0（黑色目標）時，將其 $X$ 與 $Y$ 座標分別累加至 `sumX` 與
+                `sumY`，並計算總點數 `count`。最後計算平均座標 $(\bar{x}, \bar{y})$ 並在畫面上標註。</li>
+            <li><strong>評分重點：</strong> 能否正確排除 $count = 0$ 的除以零情況，並在 Canvas 上精確點出物體中心。</li>
+        </ul>
+
+        <h3>作業 2-2：「質心穩定化」過濾器</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 訊號處理專家。</li>
+            <li><strong>執行方式：</strong> 為質心數據加上簡單的「面積門檻」與「一階低通濾波 (LPF)」。當目標總點數低於 50 像素時，視為雜訊而不更新座標。若更新，則與前一幀座標進行
+                $0.7/0.3$ 的加權平滑。</li>
+            <li><strong>評分重點：</strong> 在物體快速移動或有背景雜點干擾時，質心標記點是否仍能保持穩定不跳動。</li>
+        </ul>
+
+        <h3>作業 2-3：質心誤差與轉向控制連動</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 機器人系統整合師。</li>
+            <li><strong>執行方式：</strong> 計算質心 $x$ 座標與畫面中心線 (160) 的偏差值。將此偏差值乘以一個增益系數 (Gain)，轉換為無人車的轉向角度 $\theta$ 並透過藍牙發送。
+            </li>
+            <li><strong>評分重點：</strong> 系統能否達成「物體左移，車頭跟著左轉」的即時追蹤閉環。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── js/
+│   ├── tracker.js       # 核心質心計算邏輯
+│   └── controller.js    # 誤差轉換與 BLE 發送
+├── tests/
+│   └── tracker.test.js  # 測試：驗證計算正確性
+└── README.md             # 紀錄：精度測試與平滑對比</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">📍</span>
+                            <p class="text-sm text-gray-700"><strong>座標算術校驗：</strong> 模擬傳入一組 L 型分布像素點，自動檢查學生的質心運算是否精確無誤。
+                            </p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🚧</span>
+                            <p class="text-sm text-gray-700"><strong>邊界處理檢查：</strong> 測試當物體移出畫面時，程式是否能正確保持位置或安全停機。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供已預設好二值化影像介面與 <code>canvas</code> 繪製框架，設定為
+                        Template repository。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「視覺控制迴圈」驗證。指導使用 PR 提交不同 $K_p$ 參數下的追蹤錄影。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，獲得個人專屬 Repo，在 Discussion 中討論「質心 vs 邊框中心」。
+                    </p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對學員如何處理「多個物體」出現在畫面時的質心跳動問題予以專業指導。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">手動計算三個點的座標平均值，理解質心公式。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「幾何學看質心」互動動畫。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，觀察紅色準星如何精準跟隨黑色目標塊。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，解答座標系原點與陣列索引對應的邏輯偏差。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">完成控制增益調校並 Push，閱讀教師回覆 PR。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，檢核對「系統動態響應」與「震盪衰減」的思考。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/3QiHX6yH7yA",

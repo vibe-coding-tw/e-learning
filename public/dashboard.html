@@ -29,7 +29,7 @@
         renderNav('.', { showAuth: true, brandSuffix: '| Dashboard' });
     </script>
 
-    <main class="container mx-auto px-4 py-8 flex-grow">
+    <main class="container mx-auto px-2 py-4 sm:px-4 sm:py-8 flex-grow">
 
         <!-- Loading State -->
         <div id="loading-state" class="text-center py-20">
@@ -62,19 +62,19 @@
             <!-- Tab Navigation -->
             <div class="flex border-b border-gray-200 mb-6 overflow-x-auto">
                 <button onclick="switchTab('overview')" id="tab-btn-overview"
-                    class="tab-btn px-6 py-3 text-blue-600 border-b-2 border-blue-600 font-medium whitespace-nowrap focus:outline-none">
+                    class="tab-btn px-4 py-2 md:px-6 md:py-3 text-blue-600 border-b-2 border-blue-600 font-medium whitespace-nowrap focus:outline-none">
                     概覽 (Overview)
                 </button>
                 <button onclick="switchTab('assignments')" id="tab-btn-assignments"
-                    class="tab-btn px-6 py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none">
+                    class="tab-btn px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none">
                     作業 (Assignments)
                 </button>
                 <button onclick="switchTab('settings')" id="tab-btn-settings"
-                    class="tab-btn hidden px-6 py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none">
+                    class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none">
                     課程設定 (Course Settings)
                 </button>
                 <button onclick="switchTab('admin')" id="tab-btn-admin"
-                    class="tab-btn hidden px-6 py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none">
+                    class="tab-btn hidden px-4 py-2 md:px-6 md:py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap focus:outline-none">
                     管理員控制台 (Admin Console)
                 </button>
             </div>
@@ -82,18 +82,18 @@
             <!-- TAB CONTENT: OVERVIEW -->
             <div id="view-overview" class="tab-content space-y-8 animate-fade-in block">
                 <!-- Header Stats -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="card border-l-4 border-blue-500">
-                        <p class="text-gray-500 text-sm font-medium">總學生數</p>
-                        <h3 class="text-3xl font-bold text-gray-800 mt-1" id="stat-students">0</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
+                    <div class="card border-l-4 border-blue-500 p-4 sm:p-6">
+                        <p class="text-gray-500 text-xs sm:text-sm font-medium">總學生數</p>
+                        <h3 class="text-2xl sm:text-3xl font-bold text-gray-800 mt-1" id="stat-students">0</h3>
                     </div>
-                    <div class="card border-l-4 border-purple-500">
-                        <p class="text-gray-500 text-sm font-medium">總學習時數 (小時)</p>
-                        <h3 class="text-3xl font-bold text-gray-800 mt-1" id="stat-hours">0.0</h3>
+                    <div class="card border-l-4 border-purple-500 p-4 sm:p-6">
+                        <p class="text-gray-500 text-xs sm:text-sm font-medium">總學習時數 (小時)</p>
+                        <h3 class="text-2xl sm:text-3xl font-bold text-gray-800 mt-1" id="stat-hours">0.0</h3>
                     </div>
-                    <div class="card border-l-4 border-green-500">
-                        <p class="text-gray-500 text-sm font-medium">活躍狀態</p>
-                        <h3 class="text-3xl font-bold text-gray-800 mt-1" id="stat-active">正常</h3>
+                    <div class="card border-l-4 border-green-500 p-4 sm:p-6">
+                        <p class="text-gray-500 text-xs sm:text-sm font-medium">活躍狀態</p>
+                        <h3 class="text-2xl sm:text-3xl font-bold text-gray-800 mt-1" id="stat-active">正常</h3>
                     </div>
                 </div>
 
@@ -106,12 +106,12 @@
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse">
                                 <thead>
-                                    <tr class="text-sm text-gray-500 border-b">
-                                        <th class="py-3 px-2">學生 Email</th>
-                                        <th class="py-3 px-2 text-right">總時數</th>
-                                        <th class="py-3 px-2 text-right">影片</th>
-                                        <th class="py-3 px-2 text-right">文件</th>
-                                        <th class="py-3 px-2 text-right hidden sm:table-cell">最後活動</th>
+                                    <tr class="text-xs sm:text-sm text-gray-500 border-b">
+                                        <th class="py-2 px-1 sm:py-3 sm:px-2">學生 Email</th>
+                                        <th class="py-2 px-1 sm:py-3 sm:px-2 text-right">時數</th>
+                                        <th class="py-2 px-1 sm:py-3 sm:px-2 text-right">影片</th>
+                                        <th class="py-2 px-1 sm:py-3 sm:px-2 text-right">文件</th>
+                                        <th class="py-2 px-1 sm:py-3 sm:px-2 text-right hidden sm:table-cell">最後活動</th>
                                     </tr>
                                 </thead>
                                 <tbody id="student-table-body" class="text-sm text-gray-700 divide-y">
@@ -141,13 +141,13 @@
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
-                                <tr class="text-sm text-gray-500 border-b">
-                                    <th class="py-3 px-2">學生</th>
-                                    <th class="py-3 px-2">課程/單元</th>
-                                    <th class="py-3 px-2">提交時間</th>
-                                    <th class="py-3 px-2">狀態</th>
-                                    <th class="py-3 px-2">分數</th>
-                                    <th class="py-3 px-2 text-right">操作</th>
+                                <tr class="text-xs sm:text-sm text-gray-500 border-b">
+                                    <th class="py-2 px-1 sm:py-3 sm:px-2">學生</th>
+                                    <th class="py-2 px-1 sm:py-3 sm:px-2">課程/單元</th>
+                                    <th class="py-2 px-1 sm:py-3 sm:px-2">時間</th>
+                                    <th class="py-2 px-1 sm:py-3 sm:px-2">狀態</th>
+                                    <th class="py-2 px-1 sm:py-3 sm:px-2">分</th>
+                                    <th class="py-2 px-1 sm:py-3 sm:px-2 text-right">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="assignment-table-body" class="text-sm text-gray-700 divide-y">
@@ -162,28 +162,7 @@
             <div id="view-admin" class="tab-content hidden space-y-6 animate-fade-in">
                 <!-- Admin Panel (Only visible to admin) -->
                 <div id="admin-panel" class="card border border-orange-200 bg-orange-50">
-                    <h3 class="text-lg font-bold text-orange-800 mb-4 flex items-center gap-2">🛠️ 管理員控制台</h3>
-                    <div class="flex flex-col md:flex-row gap-4 items-end">
-                        <div class="flex-grow w-full">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">用戶 Email</label>
-                            <input type="email" id="admin-email" placeholder="user@example.com"
-                                class="w-full px-4 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-orange-500 outline-none">
-                        </div>
-                        <div class="w-full md:w-48">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">設定角色</label>
-                            <select id="admin-role"
-                                class="w-full px-4 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-orange-500 outline-none bg-white">
-                                <option value="teacher">👨‍🏫 老師 (Teacher)</option>
-                                <option value="admin">🔧 管理員 (Admin)</option>
-                                <option value="student">🎓 學生 (Student)</option>
-                            </select>
-                        </div>
-                        <button id="btn-set-role"
-                            class="w-full md:w-auto bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded font-bold transition whitespace-nowrap">
-                            任命
-                        </button>
-                    </div>
-                    <p id="admin-msg" class="text-sm mt-2 text-gray-600 h-5"></p>
+                    <!-- Dynamic Admin Content Injected Here -->
                 </div>
             </div>
 
@@ -194,10 +173,6 @@
                         <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
                             <span>⚙️</span> GitHub Classroom 作業連結與教學指引
                         </h3>
-                        <button id="btn-save-settings"
-                            class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-bold shadow-md">
-                            儲存變更
-                        </button>
                     </div>
 
                     <div id="settings-container" class="space-y-8">
@@ -252,10 +227,11 @@
         </div>
 
         <footer class="text-center py-4 text-gray-400 text-[10px]">
-            Vibe Coding &copy; 2026 | System v11.0.8
+            Vibe Coding &copy; 2026 | v11.3.10 | RWD Optimized Access
         </footer>
 
-        <script type="module" src="js/dashboard.js?v=11.0.8"></script>
+        <!-- Scripts -->
+        <script type="module" src="js/dashboard.js?v=11.3.10"></script>
 </body>
 
 </html>

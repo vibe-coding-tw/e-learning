@@ -267,6 +267,151 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 2-1：「環境適應」模型微調實驗</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> AI 訓練師 (AI Trainer)。</li>
+            <li><strong>執行方式：</strong> 在教室環境下採集「左轉」、「右轉」、「前進」三種手勢，並加入「負樣本」（如走動的人影或空背景）。</li>
+            <li><strong>評分重點：</strong> 模型在真實多變環境下的置信度 (Confidence) 是否能穩定維持在 85% 以上，且不會因為路人經過而誤判。</li>
+        </ul>
+
+        <h3>作業 2-2：AI 指令轉發器實作</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 韌體整合工程師。</li>
+            <li><strong>執行方式：</strong> 在 BLE 控制網頁中整合 Google Teachable Machine 導出的 `model.json`。當 AI 判定手勢為「左轉」且機率大於 0.9
+                時，自動發送指令給車子。</li>
+            <li><strong>評分重點：</strong> 確保只在「高信心」狀態下才發出指令，避免車子 because 誤判而亂跑。</li>
+        </ul>
+
+        <h3>作業 2-3：AI 駕駛員壓力測試 (Fail-safe)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 安全測試工程師。</li>
+            <li><strong>執行方式：</strong> 模擬極端情況（如遮住鏡頭）。實作「失效保護 (Fail-safe)」邏輯：當所有標籤的置信度都低於 0.5 時，強制執行 `EMERGENCY_STOP`。
+            </li>
+            <li><strong>評分重點：</strong> 理解 AI 判斷的不確定性，並在代碼中展現對系統安全性的考量。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── js/
+│   ├── ai_logic.js       # 模型載入與預測處理
+│   └── ble_bridge.js     # 信心分數映射為 BLE 指令
+├── tests/
+│   └── ai.test.js        # 測試：驗證低信心停車保護
+└── README.md              # 模型 URL、調校日誌與展示</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🔗</span>
+                            <p class="text-sm text-gray-700"><strong>模型網址檢查：</strong> 掃描 README，自動驗證 Teachable Machine
+                                連結有效性。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🛡️</span>
+                            <p class="text-sm text-gray-700"><strong>邏輯穩定性：</strong> 模擬邊界預測，檢查是否觸發「防位移」保護避免誤判時亂跑。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供串接好 Camera Preview 與 TF.js TM 函式庫的骨架專案。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「置信度閥值」與「預測節流」，確保 BLE 指令發送不溢出。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">挑戰訓練手勢模型。提交訓練紀錄截圖與控制錄影至 PR。執行 Git Push。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對處理「標籤過少」誤判策略，以及負樣本與運用點評。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">自主實驗 Teachable Machine，理解「分類器」與「資料標記」邏輯。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「如何訓練一個不發瘋的模型」教學。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，實測解決光線/背景干擾導致預測不穩定的問題。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，針對「無法導出模型」的瀏覽器相容性 Debug。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">挑戰極限環境測試並 Push，閱讀教師回覆 PR 以最佳化閥值判定邏輯。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，引發對「AI 決策透明度」與「AI 倫理」的思考。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/lY-mCI5YXxE?autoplay=1",

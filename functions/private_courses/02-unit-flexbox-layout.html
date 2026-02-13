@@ -469,59 +469,119 @@
     </script>
     <script src="/js/course-shared.js"></script>
 
-    <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" style="display: none;">
-        <h4>CSS Flexbox：遙控器排版的神器</h4>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
 
-        <p><strong>【作業 2-1】十字方向鍵佈局 (幾何對稱挑戰)</strong></p>
+        <h3>作業 2-1：十字方向鍵 (幾何對稱挑戰)</h3>
         <ul>
-            <li><strong>GitHub 角色：</strong> 佈局工程師。</li>
-            <li><strong>執行方式：</strong> 學生需使用 <code>flex-direction</code> 組合巢狀容器，達成 D-pad 的十字排列。</li>
-            <li><strong>評分重點：</strong> 是否正確應用 <code>justify-content: center</code> 與 <code>align-items: center</code>。
+            <li><strong>技術點：</strong> 巢狀容器（Nested Containers）的運用與軸線向性。</li>
+            <li><strong>GitHub 優勢：</strong> 這是練習 <strong>Code Review</strong> 的好機會。你可以檢查學生是否為了達成對齊而使用了不必要的
+                <code>margin</code>，「抓出」那些沒用到 Flexbox 優勢的寫法（如手動推位置）。
             </li>
         </ul>
 
-        <p><strong>【作業 2-2】響應式儀表板 (佈局切換)</strong></p>
+        <h3>作業 2-2：響應式佈局 (RWD 切換)</h3>
         <ul>
-            <li><strong>GitHub 角色：</strong> 前端開發工程師。</li>
-            <li><strong>執行方式：</strong> 利用 Media Queries，在手機橫向時將選單從「下方」移至「側邊」。</li>
-            <li><strong>評分重點：</strong> <code>flex-direction</code> 的切換邏輯，以及 <code>flex-grow: 1</code> 的正確應用。</li>
+            <li><strong>技術點：</strong> <code>flex-direction</code> 隨螢幕寬度改變的邏輯判斷。</li>
+            <li><strong>GitHub 優勢：</strong> 學生提交 PR 時，助教可以在 <strong>Files Changed</strong> 中直接對比不同中斷點（Breakpoint）下的 CSS
+                數值變動，確保其 <code>flex-grow</code> 或 <code>flex-shrink</code> 設定符合邏輯。</li>
         </ul>
 
-        <p><strong>【作業 2-3】間距與觸控優化 (精確控制)</strong></p>
+        <h3>作業 2-3：間距與觸控優化 (精確控制)</h3>
         <ul>
-            <li><strong>GitHub 角色：</strong> 介面優化師。</li>
-            <li><strong>執行方式：</strong> 使用 <code>gap</code> 屬性取代傳統 margin，並實作寬度平分的控制組。</li>
-            <li><strong>評分重點：</strong> <code>gap</code> 數值的合理性，以及 <code>flex: 1</code> 在等寬佈局中的使用。</li>
+            <li><strong>技術點：</strong> <code>gap</code> 屬性取代傳統 margin 的效率。</li>
+            <li><strong>GitHub 優勢：</strong> 透過 **Commit History**，你可以看到學生如何微調 <code>gap</code> 數值，這反映了他們在不同模擬設備上測試佈局的過程。
+            </li>
+        </ul>
+
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>建議範本倉庫設置如下：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html       # 遙控器主頁面（HTML 框架已定）
+├── style.css        # (重點) 學生需在此實作 Flexbox 佈局屬性
+├── assets/          # 遙控器需要的圖示資產
+└── README.md        # 教導如何使用 Chrome DevTools 模擬不同手機</code></pre>
+
+        <h3>B. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>屬性檢查：</strong> 自動掃描 CSS 文件，確認是否使用了 <code>display: flex;</code> 及對應的主軸對齊語句。</li>
+            <li><strong>佈局驗證：</strong> 利用簡單的 JS 腳本檢測關鍵元素（如 <code>.d-pad</code>）的子元素是否具備正確的 `offsetWidth`，以判定是否真正達成平分或對齊。
+            </li>
         </ul>
 
         <hr>
 
-        <h4>4. 翻轉教室中的評分標準 (Checkpoint)</h4>
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>在 GitHub 建立新 Repo（名為 <code>flexbox-remote-template</code>）。</li>
+                <li>上傳基礎 HTML/CSS 框架。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
 
-        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>進入 <a href="https://classroom.github.com/" target="_blank">GitHub Classroom</a>，建立新作業。</li>
+                <li>選擇「Individual Assignment」，並連結上述的範本倉庫。</li>
+                <li><strong>重點設定：</strong>勾選 <strong>"Enable feedback pull requests"</strong>。這會自動建立一個 PR 供你留言與 Code
+                    Review。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生點擊作業連結，獲得個人專屬 Repo。</li>
+                <li>使用 VS Code Clone 到本地或直接在 GitHub Codespaces 開發。</li>
+                <li><strong>Push 代碼：</strong>只要學生 Push，GitHub 就會自動更新 PR 中的「檔案比對」。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 GitHub Classroom 儀表板，點擊學生的 Repo 連結。</li>
+                <li>進入 <strong>Pull Requests</strong> 分頁，點擊 "Feedback" PR。</li>
+                <li>在 <strong>Files Changed</strong> 中，直接在代碼行旁點擊「+」號留言回饋（例如：「這裡的 justify-content 建議改用 space-around
+                    會更平衡」）。</li>
+            </ol>
+        </div>
+
+        <hr>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
             <thead>
-                <tr style="background-color: #f3f4f6;">
-                    <th style="padding: 8px; text-align: left;">任務</th>
-                    <th style="padding: 8px; text-align: left;">評分標準 (透過 GitHub 檢查)</th>
-                    <th style="padding: 8px; text-align: left;">課堂討論議題</th>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; text-align: left; border: 1px solid #e2e8f0;">階段</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #e2e8f0;">學生行動</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #e2e8f0;">老師/GitHub 角色</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td style="padding: 8px;"><strong>2-1</strong></td>
-                    <td style="padding: 8px;">十字鍵是否正確對齊？巢狀容器結構是否清晰？</td>
-                    <td style="padding: 8px;">如果其中一個按鈕隱藏了，Flexbox 會如何自動調整位置？</td>
-                </tr>
-                <tr style="background-color: #f9fafb;">
-                    <td style="padding: 8px;"><strong>2-2</strong></td>
-                    <td style="padding: 8px;">Media Query 觸發點是否合理？佈局切換是否平滑？</td>
-                    <td style="padding: 8px;">在摺疊手機上，這套佈局會遇到什麼挑戰？</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">完成 Flexbox Froggy 遊戲，撰寫基礎排版 CSS 並
+                        <strong>Push</strong>。
+                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>老師確認學生是否已掌握基礎對齊語法。
+                    </td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px;"><strong>2-3</strong></td>
-                    <td style="padding: 8px;">gap 應用是否一致？flex: 1 是否讓寬度正確平分？</td>
-                    <td style="padding: 8px;">為什麼有些設計師偏好用 gap 而不是 margin？</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">在 Vibe Coding 平台優化遙控器介面，解決實際螢幕上的層級嵌套跑版。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Issues：</strong>學生上傳跑版截圖，透過 Issue
+                        討論如何修正「怪異的間隙」。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作 <code>gap</code> 優化觸控體驗，並提交最終 PR。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>老師根據介面美觀度與代碼精簡度給予最終評語。</td>
                 </tr>
             </tbody>
         </table>

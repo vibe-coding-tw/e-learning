@@ -516,6 +516,98 @@ return JSON.stringify(complexData);</textarea>
             }
         }
     </script>
+
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 2-2：封包瘦身 (Optimization)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 韌體工程師。</li>
+            <li><strong>執行方式：</strong> 將 JSON 物件中的 Key 缩寫化（例如 <code>velocity</code> 改為 <code>v</code>），並重新計算字節長度。</li>
+            <li><strong>評分重點：</strong> 封包長度是否縮短至 20 bytes 以內，並保持邏輯清晰。</li>
+        </ul>
+
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元建議搭配 <strong>"JSON Protocol Design Challenge"</strong> 作業：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── protocol.json    # JSON 通訊範本
+└── validator.js     # 用於檢查 JSON 格式的腳本</code></pre>
+
+        <h3>B. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>字節檢查：</strong> 使用腳本檢查產生的 JSON 字串長度。</li>
+        </ul>
+
+        <hr>
+
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>上傳基礎專案。</li>
+                <li>勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>建立作業並連結範本。</li>
+                <li><strong>重點：</strong> 向學生解釋為何每個 Repo 最上方都有一個 "Open in Codespaces" 按鈕。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (雲端開發)</strong></p>
+            <ol>
+                <li>學生在 GitHub 直接點擊 "Code" > "Codespaces" 啟動。</li>
+                <li>完成 <strong>Commit & Push</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋</strong></p>
+            <ol>
+                <li>打開 Feedback PR，確認學生是否掌握了雲端開發的基本流程。</li>
+            </ol>
+        </div>
+
+        <hr>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">閱讀講義中的 JSON 格式定義，嘗試在互動編輯器中手寫一個簡單的 JSON
+                        物件並通過驗證。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>檢查學生預習紀錄。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">在 GitHub Codespace 中實作
+                        <code>JSON.stringify()</code> 邏輯，並進行封包長度優化挑戰。
+                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>助教角色：</strong>引導學生理解 JSON 在不同場景下的優缺點。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">將優化後的 JSON 傳輸協議文件化，並 Commit 到 GitHub。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>檢視通訊協議的設計是否具備擴展性。
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
 </body>
 
 </html>

@@ -271,6 +271,161 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
+    <section id="assignment-guide" class="hidden">
+        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="space-y-6">
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h3 class="font-bold text-blue-800">1. GitHub Classroom 設定</h3>
+                <p class="text-sm">請將對應的 Repository (例如：<code>esp32-hardware-timer-lab</code>)
+                    設定至課程儀表板，練習使用硬體定時器實現極高精度的定時任務。</p>
+            </div>
+
+            <div class="bg-indigo-50 p-4 rounded-lg">
+                <h3 class="font-bold text-indigo-800">2. 翻轉課堂策略</h3>
+                <ul class="list-disc list-inside text-sm">
+                    <li>課前預習：觀看 10 分鐘關於硬體中斷 (Interrupt) 與 ISR (中斷服務常式) 的底層運作原理。</li>
+                    <li>課中實作：實作一個以 1000Hz 頻率運行的硬體定時器任務，並嘗試在 ISR 中控制 LED 的切換。</li>
+                </ul>
+            </div>
+
+            <div class="bg-white p-4 border border-gray-200 rounded-lg">
+                <h3 class="font-bold mb-2">3. 單元任務 (Unit Tasks)</h3>
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-100 text-left">
+                        <tr>
+                            <th class="p-2">任務說明</th>
+                            <th class="p-2">建議時間</th>
+                            <th class="p-2">配分</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="p-2">【作業 3-1】實作高精度定時器 (1ms 觸發一次)</td>
+                            <td class="p-2">45 min</td>
+                            <td class="p-2">40 pts</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">【作業 3-2】中斷變數安全性 (volatile 關鍵字實踐)</td>
+                            <td class="p-2">30 min</td>
+                            <td class="p-2">30 pts</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">【作業 3-3】ISR 內的計數器與標誌位 (Flag) 通訊</td>
+                            <td class="p-2">45 min</td>
+                            <td class="p-2">30 pts</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="instructor-guide" class="hidden">
+        <h2>講師手冊 (Instructor Guide)</h2>
+        <div class="space-y-6">
+            <div>
+                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">教學重點 (Teaching Points)</h3>
+                <ul class="list-disc list-inside text-sm space-y-2">
+                    <li>硬體優先權：解釋為什麼定時器中斷可以「強行暫停」loop 的執行。</li>
+                    <li>ISR 的規範：強烈要求不要在 ISR 中放入 Serial.print 或 delay（會導致系統鎖死）。</li>
+                    <li>volatile 的含義：為什麼跨線程/中斷共用的變數需要這個關鍵字（防止編譯器優化導致的舊值問題）。</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">學生常見問題 (Common Issues)</h3>
+                <ul class="list-disc list-inside text-sm space-y-2 text-red-600">
+                    <li>程式一直重啟 (Watchdog Timer Error)：通常是在 ISR 裡面做了太多事情，佔用 CPU 太久。</li>
+                    <li>忘記附加中斷 (timerAttachInterrupt)：導致定時器設定了但永遠不會觸發。</li>
+                    <li>變數同步問題：loop 中讀到的計數器數值與 ISR 中的實際值不符。</li>
+                </ul>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="font-bold mb-2 text-sm">評分標準 (Grading)</h3>
+                <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
+                    <li><strong>優 (90-100):</strong> 能編寫出精簡且安全的 ISR，正確使用 volatile 並實現精確的時間控制。</li>
+                    <li><strong>可 (70-89):</strong> 定時器能運作，但 ISR 過於肥大或忽略了 <code>volatile</code> 導致數據不一致。</li>
+                    <li><strong>待加強 (Below 70):</strong> 無法成功配置硬體定時器，或程式因中斷邏輯錯誤而頻繁崩潰。</li>
+                </ul>
+            </div>
+
+            <!-- NEW: Practical Deployment Recommendations -->
+            <div>
+                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
+.
+├── src/             # 包含 Interrupt Service Routine (ISR) 框架的 main.cpp
+├── README.md        # 定時器精確度量測截圖
+└── .github/         # 自動評分配置</pre>
+                    <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
+                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                        <li><strong>關鍵字篩選：</strong> 偵測程式碼中是否出現 <code>volatile</code> 宣告與 <code>timerBegin/Attach</code>。
+                        </li>
+                        <li><strong>安全性檢核：</strong> 掃描 ISR 函式內是否包含禁用的 `Serial.print` 或 `delay` 語句。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- NEW: Detailed operations guide -->
+            <div class="bg-white p-4 border border-gray-200 rounded-lg">
+                <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
+                <div class="space-y-4 text-sm text-gray-600">
+                    <div>
+                        <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
+                        <p>建立包含硬體定時器初始化代碼的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
+                        <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以便對其 ISR 設計安全性進行點評。</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
+                        <p>學生領取作業，獲得個人專屬 Repo，實作高精度定時器邏輯並解決變數同步問題後 Push。</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
+                        <p>進入 Feedback PR，針對學生對「中斷優先級」與「原子性操作」的實作給予專業建議。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEW: Flipped classroom strategy table -->
+            <div>
+                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm border-collapse border border-gray-200">
+                        <thead class="bg-gray-50 text-left text-gray-800">
+                            <tr>
+                                <th class="border border-gray-200 p-2">階段</th>
+                                <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
+                                <th class="border border-gray-200 p-2">教師/平台角色</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-600">
+                            <tr>
+                                <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
+                                <td class="border border-gray-200 p-2">觀看「多工處理：從軟體排成到硬體中斷」的演進影片。</td>
+                                <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員理解「搶佔」的概念。</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
+                                <td class="border border-gray-200 p-2">領取 Classroom 作業，實作硬體定時器並處理 volatile 變數共享。</td>
+                                <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
+                                <td class="border border-gray-200 p-2">實作雙定時器協同運作並 Push，閱讀教師回覆 PR。</td>
+                                <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
 </body>
 
 </html>

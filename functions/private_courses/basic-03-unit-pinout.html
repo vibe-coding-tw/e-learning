@@ -340,6 +340,138 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" class="hidden">
+        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="guide-section">
+            <h3>1. GitHub Classroom 設定</h3>
+            <ul>
+                <li>點擊儀表板「領取作業」按鈕，進入 GitHub Classroom 並獲取 `basic-03-pin-mapping`。</li>
+                <li>將個人作業儲存庫本地化。</li>
+                <li>檢測專案中的 `README.md`，了解實驗電路連接需求。</li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h3>2. 翻轉課堂學習策略</h3>
+            <ul>
+                <li><strong>課前預習</strong>：觀看「ESP32 引腳地圖全解析」影片，認識「地雷引腳」。</li>
+                <li><strong>課中實作</strong>：進行 Strapping Pins 實驗，觀察在不同重啟條件下引腳電位的影響。</li>
+                <li><strong>課後思考</strong>：為什麼 GPIO 34-39 不能用做 Output？這在設計硬體時會造成什麼限制？</li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h3>3. 單元實作任務</h3>
+            <ul>
+                <li><strong>作業 3-1 (30%)</strong>：建立一個引腳資源表，列出你目前開發板上所有可用於 PWM、I2C 的引腳。</li>
+                <li><strong>作業 3-2 (40%)</strong>：驗證 Input-only 引腳，嘗試在其上配置 `pinMode(OUTPUT)` 並觀察現象。</li>
+                <li><strong>作業 3-3 (30%)</strong>：實作硬體序列埠重定向 (Hardware Serial Redirect)，將 TX/RX 移至非預設引腳。</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" class="hidden">
+        <h2>講師手冊 (Instructor Guide)</h2>
+        <div class="guide-section">
+            <h3>1. 教學重點 (Teaching Points)</h3>
+            <ul>
+                <li>強調 ESP32 的引腳多樣性：並非所有 GPIO 都是一樣的。</li>
+                <li>解釋 Strapping Pins (GPIO 0, 2, 5, 12, 15) 對啟動模式 (Boot Mode) 的決定性影響。</li>
+                <li>討論何謂「類比引腳」與「觸摸引腳」的分配優先級。</li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h3>2. 常見問題 (Common Issues)</h3>
+            <ul>
+                <li><strong>無法燒錄</strong>：通常是 GPIO 0 被拉高或 GPIO 12 被拉錯電位。</li>
+                <li><strong>程式會莫名重啟</strong>：檢查是否在 GPIO 15 上接了會造成電位波動的負載。</li>
+                <li><strong>輸出沒反應</strong>：學生常誤用 GPIO 34, 35, 36, 39 作為輸出引腳。</li>
+            </ul>
+        </div>
+        <div class="guide-section bg-gray-50 p-4 rounded-lg">
+            <h3 class="font-bold mb-2 text-sm text-gray-900">3. 評分標準 (Grading Criteria)</h3>
+            <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
+                <li><strong>基礎分</strong>：能正確列出引腳資源表並解釋其功能限制。</li>
+                <li><strong>進階分</strong>：能說明 ESP32 內部 Mux (多工器) 如何動態分配功能。</li>
+            </ul>
+        </div>
+
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mt-6">
+            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
+                <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
+.
+├── src/             # 包含引腳映射驗證邏輯的 main.cpp
+├── README.md        # 實驗紀錄：ESP32 Pinout 資源對照表與 Strapping Pins 觀察
+└── .github/         # 自動評核配置</pre>
+                <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
+                <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                    <li><strong>語法規則檢查：</strong> 偵測程式中是否使用了 Input-only 引腳（如 GPIO 36）進行 <code>digitalWrite</code> 調用。
+                    </li>
+                    <li><strong>鏈結相符性驗證：</strong> 透過編譯時間宏 (Macro) 檢查針對不同硬體版本（ESP32-S3, C3）的引腳定義是否正確。</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mt-6 bg-white p-4 border border-gray-200 rounded-lg">
+            <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
+            <div class="space-y-4 text-sm text-gray-600">
+                <div>
+                    <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
+                    <p>建立包含基礎 GPIO 框架但「引腳定義錯誤」的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
+                    <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以點評學生的引腳規劃合理性。</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
+                    <p>學生領取作業，獲得個人專屬 Repo，修正引腳衝突並實作 IO 重定向邏輯後 Push。</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
+                    <p>進入 Feedback PR，針對學生的「Strapping Pins 衝突處理」與「硬體電路解耦」設計予以回饋。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section mt-6">
+            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border-collapse border border-gray-200">
+                    <thead class="bg-gray-50 text-left text-gray-800">
+                        <tr>
+                            <th class="border border-gray-200 p-2">階段</th>
+                            <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
+                            <th class="border border-gray-200 p-2">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600">
+                        <tr>
+                            <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
+                            <td class="border border-gray-200 p-2">觀看「ESP32 引腳地圖：為什麼有些腳位不能隨便接？」教學影片。</td>
+                            <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員掌握 GPIO 與實體連接的關係。</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
+                            <td class="border border-gray-200 p-2">領取 Classroom 作業，對比開發板絲印 (Silkscreen) 與代碼引腳編號的差異。</td>
+                            <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
+                            <td class="border border-gray-200 p-2">實作具備自動檢測 IO 可用性的軟體層並 Push，閱讀教師回覆 PR。</td>
+                            <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         // Define Resources
         window.RESOURCES = {

@@ -284,6 +284,139 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" class="hidden">
+        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="guide-section">
+            <h3>1. GitHub Classroom 設定</h3>
+            <ul>
+                <li>點擊儀表板「領取作業」按鈕，進入 GitHub Classroom 並獲取 `basic-05-gatt-design`。</li>
+                <li>將個人作業儲存庫 Clone 至本地。</li>
+                <li>檢測 `src/main.cpp` 中對於 Service UUID 與 Characteristic UUID 的定義。</li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h3>2. 翻轉課堂學習策略</h3>
+            <ul>
+                <li><strong>課前預習</strong>：觀看「BLE 核心架構：GATT 協議與階層」教學影片。</li>
+                <li><strong>課中實作</strong>：設計出一套屬於你自己對戰小車的「通訊地圖」，包含動力 Service 與感測器 Service。</li>
+                <li><strong>課後思考</strong>：為什麼我們不把所有數據（轉速、電量、名稱）都塞在同一個特徵值裡，而是要分開？這與程式碼的解耦 (Decoupling) 有什麼關係？</li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h3>3. 單元實作任務</h3>
+            <ul>
+                <li><strong>作業 5-1 (30%)</strong>：使用 UUID 生成器產生兩組唯一的 UUID，並在 ESP32 上成功實作兩個不同的 Service。</li>
+                <li><strong>作業 5-2 (40%)</strong>：在同一個 Service 下建立三個特徵值，分別代表「目前速度」、「目標速度」與「煞車狀態」。</li>
+                <li><strong>作業 5-3 (30%)</strong>：使用 nRF Connect 的圖形化介面，完整截圖你的 GATT 階層架構，並標註各項 UUID。</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" class="hidden">
+        <h2>講師手冊 (Instructor Guide)</h2>
+        <div class="guide-section">
+            <h3>1. 教學重點 (Teaching Points)</h3>
+            <ul>
+                <li>深入解析 GATT 結構：Profile > Service > Characteristic > Descriptor。</li>
+                <li>解釋 UUID 的生成邏輯：16-bit (SIG 標準) 與 128-bit (Vendor 特有) 的區別。</li>
+                <li>討論資料同步的封裝邏輯：如何將多個感測數值打包進同一個 Characteristic 以提升效率。</li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h3>2. 常見問題 (Common Issues)</h3>
+            <ul>
+                <li><strong>UUID 重複</strong>：提醒學生複製範例代碼時一定要重新生成 UUID，否則多台車在現場會發生混淆。</li>
+                <li><strong>服務未廣播</strong>：確保 `pAdvertising->addServiceUUID(SERVICE_UUID)` 被調用，否則手機掃描時看不到該服務。</li>
+                <li><strong>屬性權限衝突</strong>：特徵值建立後，若未正確開啟加密 (Security) 卻嘗試連連，可能造成連線失敗。</li>
+            </ul>
+        </div>
+        <div class="guide-section bg-gray-50 p-4 rounded-lg">
+            <h3 class="font-bold mb-2 text-sm text-gray-900">3. 評分標準 (Grading Criteria)</h3>
+            <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
+                <li><strong>基礎分</strong>：能完整實作自定義 GATT 架構並被手機正確解析。</li>
+                <li><strong>進階分</strong>：能合理解釋各項 Service 的設計意圖，並具備良好的協議擴充性。</li>
+            </ul>
+        </div>
+
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mt-6">
+            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
+                <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
+.
+├── src/             # 包含自定義 GATT 服務與多特徵值架構的 main.cpp
+├── README.md        # 實作紀錄：GATT 階層圖與 UUID 分配清單
+└── .github/         # 自動評分配置</pre>
+                <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
+                <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                    <li><strong>UUID 格式檢核：</strong> 驗證學生提交的 UUID 是否遵循 RFC 4122 標準，避免使用預設範例 ID。</li>
+                    <li><strong>架構完整性驗證：</strong> 偵測 Service 數量與 Characteristic 的歸屬關係，確保符合任務設計的層級結構。</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mt-6 bg-white p-4 border border-gray-200 rounded-lg">
+            <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
+            <div class="space-y-4 text-sm text-gray-600">
+                <div>
+                    <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
+                    <p>建立包含 BLE 基本連線外殼但「不含 Service 與 Characteristic」的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
+                    <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以點評學生的通訊協定語義與規格化程度。</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
+                    <p>學生領取作業，獲得個人專屬 Repo，實作雙 Service 架構並透過 nRF Connect 確認階層顯示正確後 Push。</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
+                    <p>進入 Feedback PR，針對學生的「UUID 命名空間管理」與「Service 邏輯劃分」予以回饋。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section mt-6">
+            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border-collapse border border-gray-200">
+                    <thead class="bg-gray-50 text-left text-gray-800">
+                        <tr>
+                            <th class="border border-gray-200 p-2">階段</th>
+                            <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
+                            <th class="border border-gray-200 p-2">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600">
+                        <tr>
+                            <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
+                            <td class="border border-gray-200 p-2">觀看「UUID 生成與 GATT 多層架構」教學影片，了解階層關係。</td>
+                            <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員掌握 Service 與
+                                Characteristic 的父子關係。</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
+                            <td class="border border-gray-200 p-2">領取 Classroom 作業，對比單一 Service 與多個 Service 在 App
+                                顯示上的結構差異。</td>
+                            <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
+                            <td class="border border-gray-200 p-2">實作動態 Service 添加邏輯並 Push，閱讀教師回覆 PR。</td>
+                            <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         // Define Resources
         window.RESOURCES = {

@@ -253,6 +253,152 @@
         </div>
     </footer>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 4-1：效率大挑戰：從輪詢到監聽</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 介面效能優化師。</li>
+            <li><strong>執行方式：</strong> 實作一個 WiFi 密碼輸入框。先使用 `setInterval` 每 100ms 檢查一次內容長度（輪詢），再改用 `input`
+                事件監聽器（事件驅動）實作一樣的功能。</li>
+            <li><strong>評分重點：</strong> 能否說明「事件驅動」在輸入框場景下為什麼能節省不必要的 CPU 運算。</li>
+        </ul>
+
+        <h3>作業 4-2：「手感微調」：搖桿的自適應輪詢</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 遙控系統開發者。</li>
+            <li><strong>執行方式：</strong> 實作一個「定時發送器」。將搖桿 `mousemove` 事件的高頻座標存入變數，但限制每隔 50ms 才從該變數撈出數值並透過藍牙發出一次。</li>
+            <li><strong>評分重點：</strong> 此種「混合模式 (Hybrid)」是否能有效解決數據發送過快導致的 BLE 連線崩潰問題，並在畫面上顯示數據流入與發出的頻率對比。</li>
+        </ul>
+
+        <h3>作業 4-3：硬體緊急停止 (Fail-safe) 實作</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 安全系統工程師。</li>
+            <li><strong>執行方式：</strong> 模擬「中斷 (Interrupt)」的概念。利用藍牙的 `gattserverdisconnected`
+                事件，一旦連線中斷，立即彈出全畫面警告並清空所有馬達指令。</li>
+            <li><strong>評分重點：</strong> 系統對於「突發事件」的反饋及時性，對比「定時詢問是否斷線」所造成的延遲差異。</li>
+        </ul>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <!-- NEW: Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
+            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
+                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        A. 範本倉庫 (Template Repo) 結構
+                    </h4>
+                    <pre
+                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+.
+├── js/
+│   ├── event_handlers.js # 實作事件監聽 (Listener)
+│   └── polling_logic.js  # 實作輪詢 (Timer-based)
+├── tests/
+│   └── latency.test.js   # 測試：響應延遲與資源佔用
+└── README.md              # 對比分析與煞車系統邏輯紀錄</pre>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        B. 自動評估 (Autograding) 的設計
+                    </h4>
+                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">⏱️</span>
+                            <p class="text-sm text-gray-700"><strong>響應時間測試：</strong> 模擬隨機訊號，自動記錄從「訊號出現」到「攔截」的毫秒數。</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-blue-500">🔋</span>
+                            <p class="text-sm text-gray-700"><strong>資源消耗校驗：</strong> 監控 Timer 數量與壓力，確保學員未濫用
+                                <code>setInterval</code>。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed operations guide -->
+        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🛠️</span> GitHub Classroom 詳細操作指南
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        1</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">提供串接好 Log 追蹤工具與模擬訊號源的 JS 環境，設定為 Template
+                        repository。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        2</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「優化通訊」驗證。提供「中斷向量表」與「Event Loop」的解析圖。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        3</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，討論生活場景。提交包含 Performance 面板截圖的報告。執行 Git
+                        Push。</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                    <span
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        4</span>
+                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">針對「Race Condition」理解以及「即時性系統」評估標準的認知予以回饋。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Flipped classroom strategy table -->
+        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>🔄</span> 翻轉教室的實施策略
+            </h3>
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3">階段</th>
+                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
+                            <th class="px-4 py-3">教師/平台角色</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
+                            <td class="px-4 py-4">理解「鬧鐘 (事件)」與「每五分鐘看手錶 (輪詢)」的比喻。</td>
+                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供不同架構下數據流動的模擬動畫。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
+                            <td class="px-4 py-4">領取 Classroom 作業，實測 10Hz vs 100Hz 輪詢速率對控制手感的影響。</td>
+                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，解答監聽器過多時網頁變慢的底層原理。</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
+                            <td class="px-4 py-4">設計最安全反應最快的「緊急煞車系統」並 Push，閱讀教師回覆 PR。</td>
+                            <td class="px-4 py-4 text-xs">核發評量，啟發學員探究「中斷優先級」在物聯網設備中的價值。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/Eug1scRXLgg?autoplay=1",

@@ -408,46 +408,110 @@
     </script>
     <script src="/js/course-shared.js"></script>
 
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>作業指引 (Assignment Guide)</h2>
+
+        <h3>作業 1-1：實機部署與跨裝置連線</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 部署工程師。</li>
+            <li><strong>執行方式：</strong> 學生 Clone 範本後，在 <code>README.md</code> 貼上手機成功連線電腦 Live Server 的截圖。</li>
+            <li><strong>評分重點：</strong> 確認學生能正確識別網段（WiFi）並完成跨端預覽。</li>
+        </ul>
+
+        <h3>作業 1-2：觸控友善性優化 (CSS)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 介面工程師。</li>
+            <li><strong>執行方式：</strong> 在 <code>style.css</code> 中實作防止誤觸的屬性（如 <code>touch-action</code>）。</li>
+            <li><strong>評分重點：</strong> 是否使用了 <code>user-select: none</code> 與正確的按鈕間距。</li>
+        </ul>
+
+        <h3>作業 1-3：FPV 影像容器佈局</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 前端開發者。</li>
+            <li><strong>執行方式：</strong> 使用 <code>object-fit</code> 處理不同比例（16:9, 4:3）的影像容器。</li>
+            <li><strong>評分重點：</strong> 影像不變形且能夠滿板顯示。</li>
+        </ul>
+
+    </section>
+
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h4>Web App 開發環境與 HTML5 基礎</h4>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>建議範本倉庫設置如下：</p>
 
-        <p><strong>【作業 1-1】實機部署與跨裝置連線</strong></p>
-        <ul>
-            <li><strong>執行方式：</strong> 提供基本 HTML 模板，學生克隆 (Clone) 後在 README.md 貼上手機連線截圖。</li>
-            <li><strong>評分重點：</strong> 確認學生能正確在區域網路內模擬伺服器並進行跨端預覽。</li>
-        </ul>
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html       # 基礎 HTML 結構（含 meta viewport）
+├── style.css        # 學生需在此填寫觸控優化 CSS
+├── assets/          # 預置的 ESP32-CAM 測試影像
+└── README.md        # 供學生貼上手機連線截圖</code></pre>
 
-        <p><strong>【作業 1-2】觸控友善性優化 (CSS)</strong></p>
+        <h3>B. 自動評分 (Autograding) 的設計</h3>
         <ul>
-            <li><strong>自動評分：</strong> 建議檢查 <code>touch-action: manipulation</code> 與 <code>user-select: none</code>。
-            </li>
-            <li><strong>引導：</strong> 在 PR 中引導學生思考：若無設定這些屬性，對遙控操作會產生哪些具體延遲？</li>
-        </ul>
-
-        <p><strong>【作業 1-3】FPV 影像容器佈局</strong></p>
-        <ul>
-            <li><strong>視覺挑戰：</strong> 掌握 <code>object-fit: cover</code> 處理不同比例背景。</li>
-            <li><strong>Git 策略：</strong> 鼓勵學生建立 feature 分支來測試不同螢幕尺寸的兼容性。</li>
+            <li><strong>關鍵字檢查：</strong> 掃描 <code>style.css</code> 是否包含 <code>width=device-width</code>。</li>
+            <li><strong>README 檢查：</strong> 確認 <code>README.md</code> 中的圖片鏈接是否已更新（非預設占位圖）。</li>
         </ul>
 
         <hr>
 
-        <h4>4. 翻轉教室中的評分標準 (Checkpoint)</h4>
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>在 GitHub 建立新 Repo（名為 <code>html5-basics-template</code>）。</li>
+                <li>上傳基礎結構。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
 
-        <table border="1" style="width:100%; border-collapse: collapse; font-size: 13px;">
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>進入 GitHub Classroom 建立新作業。</li>
+                <li>選擇「Individual Assignment」，並連結上述的範本倉庫。</li>
+                <li><strong>重點設定：</strong>勾選 <strong>"Enable feedback pull requests"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生點擊作業連結，獲得個人專屬 Repo。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>針對學生的 CSS 優化細節給予專業建議。</li>
+            </ol>
+        </div>
+
+        <hr>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
             <thead>
-                <tr style="background-color: #f3f4f6;">
-                    <th style="padding: 8px; text-align: left;">任務</th>
-                    <th style="padding: 8px; text-align: left;">評分標準 (透過 GitHub 檢查)</th>
-                    <th style="padding: 8px; text-align: left;">課堂討論議題</th>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td style="padding: 8px;"><strong>1-1</strong></td>
-                    <td style="padding: 8px;">README 是否有截圖？能否正確描述本機 IP 位址？</td>
-                    <td style="padding: 8px;">若 WiFi 與電腦不同網段，為何無法連線？</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看環境架設影片，Clone 倉庫並完成 1-1 截圖。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>檢查誰還沒成功建立本地環境。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">分組測試不同手機的反饋，完成 1-2 優化並 Push。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>PR Review：</strong>在代碼中點評 CSS 屬性的正確性。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">挑戰 1-3 的 FPV 佈局，解決不同裝置的比例問題。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>核發最終評語，確認理解「行動優先」概念。</td>
                 </tr>
             </tbody>
         </table>
