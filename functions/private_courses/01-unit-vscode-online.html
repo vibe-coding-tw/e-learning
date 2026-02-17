@@ -438,20 +438,62 @@
 
         <!-- Instructor Guide (Hidden) -->
         <section id="instructor-guide" style="display: none;">
+            <h2>GitHub Classroom 詳細操作指南</h2>
+            <div class="classroom-guide">
+                <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+                <ol>
+                    <li>包含 <code>.devcontainer</code> 設定，確保學生開啟 Codespace 時工具已就位。</li>
+                    <li>勾選 <strong>"Template repository"</strong>。</li>
+                </ol>
+
+                <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+                <ol>
+                    <li>在 Classroom 設定中連結此位範本倉庫。</li>
+                    <li><strong>重點設定：</strong>勾選 <strong>"Enable feedback pull requests"</strong> 以便進行代碼審查。</li>
+                </ol>
+
+                <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+                <ol>
+                    <li>學生按下 <strong>"."</strong> 進入 Web VS Code 或啟動 <strong>Codespaces</strong>。</li>
+                    <li>修改程式碼後 <strong>Push 代碼</strong>。</li>
+                </ol>
+
+                <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+                <ol>
+                    <li>檢查學生 PR 中的 Commit 時序，確認其理解跨裝置同步的邏輯。</li>
+                </ol>
+            </div>
+
             <h2>在 GitHub Classroom 的實戰部署建議</h2>
-            <p>此單元建議搭配 <strong>"Cloud Development Challenge"</strong> 作業：</p>
+            <p>此單元建議搭配 <strong>"Cloud Development Challenge"</strong> 作業，建議範本倉庫設置如下：</p>
 
             <h3>A. 範本倉庫 (Template Repo) 結構</h3>
             <pre><code>.
 ├── .devcontainer/   # (核心) 讓學生一進入 Codespace 就有自動配置好的環境
+├── src/             # 存放學生的練習程式碼
 └── cloud-test.js    # 一個簡單的小程式供學生運行</code></pre>
 
-            <h3>B. 自動評分 (Autograding) 的設計</h3>
-            <ul>
-                <li><strong>Codespace 啟動檢查：</strong> 雖然難意自動偵測是否「在雲端跑」，但可點評 <code>cloud-test.js</code> 的執行結果截圖。</li>
-            </ul>
+            <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+            <p><strong>.devcontainer/devcontainer.json (自動環境配置)</strong></p>
+            <pre><code>{
+    "name": "Node.js & PlatformIO",
+    "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:1": {}
+    },
+    "postCreateCommand": "npm install -g platformio"
+}</code></pre>
 
-            <hr>
+            <p><strong>cloud-test.js (雲端運行測試)</strong></p>
+            <pre><code>console.log("🚀 雲端開發環境運行成功！");
+console.log("當前時間：", new Date().toLocaleString());
+console.log("Node 版本：", process.version);</code></pre>
+
+            <h3>C. 自動評分 (Autograding) 的設計</h3>
+            <ul>
+                <li><strong>Codespace 啟動檢查：：</strong> 雖然難以自動偵測是否「在雲端跑」，但可點評 <code>cloud-test.js</code> 的執行結果截圖。</li>
+                <li><strong>Commit 紀錄檢查：</strong> 透過 GitHub API 或 Dashboard 檢查學生是否有「.」變身後的 Commit 紀錄。</li>
+            </ul>
 
             <h2>翻轉教室的實施策略</h2>
             <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
@@ -462,7 +504,7 @@
                         <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody style="color: #4b5563;">
                     <tr>
                         <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
                         <td style="padding: 12px; border: 1px solid #e2e8f0;">使用互動模擬器體驗按下 <code>.</code>

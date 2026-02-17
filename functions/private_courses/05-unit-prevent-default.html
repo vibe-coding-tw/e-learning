@@ -356,48 +356,61 @@ document.addEventListener(<span class="text-green-400">'touchmove'</span>, (e) =
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元建議搭配 <strong>"Native Web UX Challenge"</strong> 作業：</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── index.html
-└── js/ux.js        # (重點) 需實作阻止預設行為的代碼</code></pre>
-
-        <h3>B. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>CSS 檢查：</strong> 檢查 <code>touch-action</code> 或 <code>user-select</code> 屬性是否正確套用。</li>
-        </ul>
-
-        <hr>
-
         <h2>GitHub Classroom 詳細操作指南</h2>
-        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+        <div class="classroom-guide">
             <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
             <ol>
-                <li>上傳基礎專案。</li>
-                <li>勾選 <strong>"Template repository"</strong>。</li>
+                <li>上傳帶有「橡皮筋回彈」問題的框架代碼，並勾選 <strong>"Template repository"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
             <ol>
-                <li>建立作業並連結範本。</li>
-                <li><strong>重點：</strong> 向學生解釋為何每個 Repo 最上方都有一個 "Open in Codespaces" 按鈕。</li>
+                <li>建立作業並連結範本，啟用 <strong>"Enable feedback pull requests"</strong> 以便對比優化前後的觸控體感。</li>
             </ol>
 
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (雲端開發)</strong></p>
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
             <ol>
-                <li>學生在 GitHub 直接點擊 "Code" > "Codespaces" 啟動。</li>
-                <li>完成 <strong>Commit & Push</strong>。</li>
+                <li>學生領取作業，實作 <code>preventDefault()</code> 攔截與 CSS <code>touch-action</code> 鎖定。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
             </ol>
 
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋</strong></p>
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
             <ol>
-                <li>打開 Feedback PR，確認學生是否掌握了雲端開發的基本流程。</li>
+                <li>打開 Feedback PR，確認學生是否正確使用 <code>{passive: false}</code> 並針對 iOS Safari 的相容性處理給予評價。</li>
             </ol>
         </div>
 
-        <hr>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元引導學生優化網頁的移動端體驗，透過阻止預設行為使 Web App 表現得像原生 App，建議範本倉庫設置如下：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html       # 包含 Viewport 設定與按鈕介面
+├── style.css        # (重點) 需加入 touch-action: none 與選取遏止
+├── js/ux.js         # (重點) 實作 preventDefault() 攔截邏輯
+└── README.md        # 體驗優化規範與 iOS/Android 兼容測試報告</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>ux.js (阻止滾動與彈回)</strong></p>
+        <pre><code>// 鎖定全螢幕，防止手機端下拉重新整理或底層捲動
+document.addEventListener('touchmove', (e) => {
+    if (window.isLocked) {
+        e.preventDefault();
+    }
+}, { passive: false }); // 必須設為 passive: false 才能 preventDefault</code></pre>
+
+        <p><strong>style.css (手勢鎖定)</strong></p>
+        <pre><code>.control-pad {
+    touch-action: none;   /* 徹底禁止瀏覽器處理手勢 (縮放/捲動) */
+    user-select: none;    /* 防止長按選取文字 */
+    -webkit-touch-callout: none; /* 防止 iOS 彈出選單 */
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>語法檢查：</strong> 使用 Actions 掃描 <code>ux.js</code> 是否正確聲明了 <code>{passive: false}</code>。</li>
+            <li><strong>樣式屬性：</strong> 驗證 <code>style.css</code> 中是否包含 <code>touch-action: none</code> 以解決縮放延遲。</li>
+        </ul>
 
         <h2>翻轉教室的實施策略</h2>
         <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
@@ -408,28 +421,26 @@ document.addEventListener(<span class="text-green-400">'touchmove'</span>, (e) =
                     <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody style="color: #4b5563;">
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀察當前網頁在手機上滑動按鈕時，背景是否會跟著跳動。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學生已體驗講義中的問題範例。
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">操作本頁的互動對比實驗，觀察普通網頁與 App 在滑動時的體感差異。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>Dashboard：</strong>確認學生已體驗講義中的「反面教材」案例。
                     </td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實裝 <code>{ passive: false }</code> 並調用
-                        <code>preventDefault()</code> 鎖定螢幕。
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作全螢幕鎖定 (3-1) 並處理 iOS Safari 的相容性挑戰後 Commit。
                     </td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>助教角色：</strong>協助解決 iOS 與 Chrome 的
-                        <code>passive</code> 事件預設行為差異。
-                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>互動演示：</strong>分享學生優化後的頁面，討論「攔截」與「讓渡」的平衡。</td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">撰寫關於瀏覽器預設行為與 App 體感差異的短文，並 Commit 到 GitHub。
-                    </td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核學生對於 Web 轉 App
-                        體驗優化的理解深度。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">挑戰局部滾動區鎖定 (3-3) 並在 README 記錄優化前後的心得。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核學生對事件冒泡與網頁轉 App
+                        體驗優化的理解。</td>
                 </tr>
             </tbody>
         </table>

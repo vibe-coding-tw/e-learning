@@ -499,8 +499,33 @@
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>在 GitHub 建立新 Repo 名為 <code>flexbox-remote-template</code> 並上傳基礎框架，最後勾選 <strong>"Template
+                        repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>建立 Individual Assignment 並連結上述範本，重點是勾選 <strong>"Enable feedback pull requests"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，在本地或 Codespaces 完成佈局。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>，直接留言回饋佈局細節。</li>
+            </ol>
+        </div>
+
         <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>建議範本倉庫設置如下：</p>
+        <p>此單元建議搭配 <strong>"Flexbox Remote Challenge"</strong> 作業，建議範本倉庫設置如下：</p>
 
         <h3>A. 範本倉庫 (Template Repo) 結構</h3>
         <pre><code>.
@@ -509,73 +534,65 @@
 ├── assets/          # 遙控器需要的圖示資產
 └── README.md        # 教導如何使用 Chrome DevTools 模擬不同手機</code></pre>
 
-        <h3>B. 自動評分 (Autograding) 的設計</h3>
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>index.html (佈局結構)</strong></p>
+        <pre><code>&lt;div class="remote-control"&gt;
+    &lt;div class="d-pad"&gt;
+        &lt;button class="up"&gt;▲&lt;/button&gt;
+        &lt;div class="horizontal"&gt;
+            &lt;button class="left"&gt;◀&lt;/button&gt;
+            &lt;button class="right"&gt;▶&lt;/button&gt;
+        &lt;/div&gt;
+        &lt;button class="down"&gt;▼&lt;/button&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+        <p><strong>style.css (Flexbox 核心)</strong></p>
+        <pre><code>.remote-control {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.d-pad {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+.horizontal {
+    display: flex;
+    gap: 40px; /* 寬大的左右間距防止誤觸 */
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
         <ul>
             <li><strong>屬性檢查：</strong> 自動掃描 CSS 文件，確認是否使用了 <code>display: flex;</code> 及對應的主軸對齊語句。</li>
-            <li><strong>佈局驗證：</strong> 利用簡單的 JS 腳本檢測關鍵元素（如 <code>.d-pad</code>）的子元素是否具備正確的 `offsetWidth`，以判定是否真正達成平分或對齊。
-            </li>
+            <li><strong>佈局驗證：</strong> 利用簡單的 JS 腳本檢測關鍵元素（如 <code>.d-pad</code>）的子元素是否真正達成平分或對齊。</li>
         </ul>
-
-        <hr>
-
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>在 GitHub 建立新 Repo（名為 <code>flexbox-remote-template</code>）。</li>
-                <li>上傳基礎 HTML/CSS 框架。</li>
-                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>進入 <a href="https://classroom.github.com/" target="_blank">GitHub Classroom</a>，建立新作業。</li>
-                <li>選擇「Individual Assignment」，並連結上述的範本倉庫。</li>
-                <li><strong>重點設定：</strong>勾選 <strong>"Enable feedback pull requests"</strong>。這會自動建立一個 PR 供你留言與 Code
-                    Review。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生點擊作業連結，獲得個人專屬 Repo。</li>
-                <li>使用 VS Code Clone 到本地或直接在 GitHub Codespaces 開發。</li>
-                <li><strong>Push 代碼：</strong>只要學生 Push，GitHub 就會自動更新 PR 中的「檔案比對」。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 GitHub Classroom 儀表板，點擊學生的 Repo 連結。</li>
-                <li>進入 <strong>Pull Requests</strong> 分頁，點擊 "Feedback" PR。</li>
-                <li>在 <strong>Files Changed</strong> 中，直接在代碼行旁點擊「+」號留言回饋（例如：「這裡的 justify-content 建議改用 space-around
-                    會更平衡」）。</li>
-            </ol>
-        </div>
-
-        <hr>
 
         <h2>翻轉教室的實施策略</h2>
         <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
             <thead>
                 <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; text-align: left; border: 1px solid #e2e8f0;">階段</th>
-                    <th style="padding: 12px; text-align: left; border: 1px solid #e2e8f0;">學生行動</th>
-                    <th style="padding: 12px; text-align: left; border: 1px solid #e2e8f0;">老師/GitHub 角色</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody style="color: #4b5563;">
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">完成 Flexbox Froggy 遊戲，撰寫基礎排版 CSS 並
-                        <strong>Push</strong>。
-                    </td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>老師確認學生是否已掌握基礎對齊語法。
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">完成 Flexbox Froggy 遊戲，撰寫基礎排版 CSS。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學生是否掌握基礎對齊語法。
                     </td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">在 Vibe Coding 平台優化遙控器介面，解決實際螢幕上的層級嵌套跑版。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Issues：</strong>學生上傳跑版截圖，透過 Issue
-                        討論如何修正「怪異的間隙」。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">在 Vibe Coding 優化遙控器介面，解決層級嵌套跑版。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>Issues：</strong>學生上傳跑版截圖，討論如何修正「怪異的間隙」。
+                    </td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>

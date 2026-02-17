@@ -350,111 +350,96 @@
     </section>
 
     <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" class="hidden">
-        <h2>講師手冊 (Instructor Guide)</h2>
-        <div class="guide-section">
-            <h3>1. 教學重點 (Teaching Points)</h3>
-            <ul>
-                <li>強調 PlatformIO 的跨平台一致性：同一個專案配置隨處可編譯。</li>
-                <li>介紹 `platformio.ini` 中的 `monitor_speed` 與 `upload_speed` 設定。</li>
-                <li>解析 `src/main.cpp` 與一般 `.ino` 檔在 `#include <Arduino.h>` 上的差異。</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>2. 常見問題 (Common Issues)</h3>
-            <ul>
-                <li><strong>初始化極慢</strong>：通常是網路防火牆或代理伺服器攔截了依賴下載。</li>
-                <li><strong>編譯錯誤：No such file or directory</strong>：檢查是否忘記 `#include <Arduino.h>` 或資料夾路徑含中文。</li>
-                <li><strong>IntelliSense 報紅線</strong>：執行「PIO -> Miscellaneous -> Rebuild IntelliSense Index」。</li>
-            </ul>
-        </div>
-        <div class="guide-section bg-gray-50 p-4 rounded-lg">
-            <h3 class="font-bold mb-2 text-sm text-gray-900">3. 評分標準 (Grading Criteria)</h3>
-            <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
-                <li><strong>基礎分</strong>：專案能成功編譯並上傳。</li>
-                <li><strong>進階分</strong>：能正確在 `platformio.ini` 宣告依賴庫，並理解 Library Manager 的運作。</li>
-            </ul>
+    <section id="instructor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>上傳包含基礎 Hello World 但「故意缺少必要函式庫設定 (lib_deps)」的專案框架，並勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>建立作業並連結範本。建議開啟 <strong>Feedback Pull Requests</strong> 選項以便對比學生的 IDE 配置與依賴管理邏輯。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，獲得個人專屬 Repo，設定編譯環境、安裝依賴庫、達成編譯成功並印出驗證訊息。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>打開 Feedback PR，針對學生的「IntelliSense 障礙排除思維」與「編譯日誌 (Build Log) 分析能力」予以具體回饋。</li>
+            </ol>
         </div>
 
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mt-6">
-            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
-                <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
-.
-├── src/             # 包含 Serial "Ready" 輸出邏輯的 main.cpp
-├── lib/             # 測試函式庫放置區
-├── platformio.ini   # 專案配置文件
-├── README.md        # 實驗紀錄：編譯成功截圖、Library 安裝紀錄與專案目錄結構分析
-└── .github/         # 自動評核配置</pre>
-                <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
-                <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-                    <li><strong>專案結構檢核：</strong> 驗證學生提交的檔案中是否包含了必要的 <code>platformio.ini</code> 與
-                        <code>src/main.cpp</code>。</li>
-                    <li><strong>相依性掃描：</strong> 解析 <code>platformio.ini</code>，確認 <code>lib_deps</code> 中是否正確新增了指定之程式庫（如
-                        <code>ArduinoJson</code>）。</li>
-                </ul>
-            </div>
-        </div>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元引導學生從傳統 IDE 轉向現代化的 CLI+Ext 開發流，掌握工程化的專案依賴管理工具，建議範本倉庫設置如下：</p>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mt-6 bg-white p-4 border border-gray-200 rounded-lg">
-            <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
-            <div class="space-y-4 text-sm text-gray-600">
-                <div>
-                    <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
-                    <p>建立包含基礎 Hello World 但「缺少特定 Library 設定」的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
-                    <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以點評學員對 IDE 操作與依賴管理 (Dependency
-                        Management) 的熟悉度。</p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
-                    <p>學生領取作業，獲得個人專屬 Repo，設定環境、安裝 Library、編譯並通過代碼印出驗證後 Push。</p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
-                    <p>進入 Feedback PR，針對學生的「IntelliSense 障礙排除」與「編譯日誌分析」予以回饋。</p>
-                </div>
-            </div>
-        </div>
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── platformio.ini   # (重點) 需包含 upload_speed 與 lib_deps 練習
+├── src/main.cpp      # 包含 Serial "Ready" 輸出邏輯
+└── README.md        # 編譯成功截圖、專案目錄層次分析與 Library 安裝紀錄</code></pre>
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section mt-6">
-            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm border-collapse border border-gray-200">
-                    <thead class="bg-gray-50 text-left text-gray-800">
-                        <tr>
-                            <th class="border border-gray-200 p-2">階段</th>
-                            <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
-                            <th class="border border-gray-200 p-2">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-600">
-                        <tr>
-                            <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
-                            <td class="border border-gray-200 p-2">觀看「為什麼我們選擇 VS Code + PlatformIO 而非 Arduino IDE？」影片。
-                            </td>
-                            <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員安裝好開發必備的延伸套件。</td>
-                        </tr>
-                        <tr>
-                            <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
-                            <td class="border border-gray-200 p-2">領取 Classroom 作業，對比在不同作業系統下初始化專案的時間差異與常見權限問題。</td>
-                            <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
-                        </tr>
-                        <tr>
-                            <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
-                            <td class="border border-gray-200 p-2">將個人常用之程式碼片段封裝成可重複使用之專案範本並 Push，閱讀教師回覆 PR。</td>
-                            <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>platformio.ini (依賴管理練習)</strong></p>
+        <pre><code>[env:esp32dev]
+platform = espressif32
+board = esp32dev
+framework = arduino
+monitor_speed = 115200
+upload_speed = 921600
+
+; 學生作業：需自行新增 ArduinoJson 依賴
+lib_deps =
+    bblanchon/ArduinoJson @ ^6.21.0</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>依賴項檢核：</strong> 使用 Actions 解析 <code>platformio.ini</code>，確認 <code>lib_deps</code> 中是否正確包含了指定版本。
+            </li>
+            <li><strong>結構驗證：</strong> 檢測是否包含 <code>.gitignore</code> 以確保學生理解「不提交編譯產物」的工程規範。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody style="color: #4b5563;">
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「為什麼我們選擇 VS Code + PlatformIO 而非 Arduino
+                        IDE？」影片並預先安裝 PIO 插件。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學生已完成 IDE
+                        初期配置，準備好跨平台編譯環境。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業對比不同 OS 下初始化專案的時間差與常見 C++ 語法高亮
+                        (IntelliSense) 紅線問題。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>助教角色：</strong>引導學生理解
+                        <code>Rebuild IntelliSense Index</code> 的必要性與 <code>#include &lt;Arduino.h&gt;</code> 在 PIO
+                        中的地位。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作具備 Library 呼叫邏輯的範本專案並 Push 最终 README 分析报告。
+                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>審核學生對專案目錄結構理解度與依賴版本控制的嚴謹度。
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 
     <script>

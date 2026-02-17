@@ -337,51 +337,67 @@
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>上傳基礎連線框架並勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>連結範本倉庫並勾選 <strong>"Enable feedback pull requests"</strong> 以便進行設計點評與跨平台對比回饋。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，實作 <code>requestDevice</code> 過濾器與安全沙箱例外處理。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR 查看 <code>screenshots/</code> 的跨平台對比，並針對錯誤處理邏輯、HTTPS 限制理解度給予回饋。</li>
+            </ol>
+        </div>
+
         <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元著重於 <strong>"Security Implementation"</strong>：</p>
+        <p>此單元著重於 <strong>"BLE Security Implementation"</strong>，引導學生實作正確的設備過濾與錯誤處理，建議範本倉庫設置如下：</p>
 
         <h3>A. 範本倉庫 (Template Repo) 結構</h3>
         <pre><code>.
 ├── index.html       # 附帶 GitHub Pages 部署設定
 ├── app.js           # 留空讓學生填寫 requestDevice filters
-└── screenshots/     # 存放作業 1-3 要求的跨平台對比圖</code></pre>
+├── screenshots/     # 存放作業 1-3 要求的跨平台對比圖
+└── README.md        # 撰寫對 HTTPS 與 User Gesture 安全特性的心得</code></pre>
 
-        <h3>B. 自動評分 (Autograding) 的設計</h3>
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>app.js (精準設備過濾)</strong></p>
+        <pre><code>async function requestMyDevice() {
+  const options = {
+    filters: [{ namePrefix: 'VibeCar-' }], // 班級前綴，避免掃到鄰座
+    optionalServices: ['heart_rate']
+  };
+  const device = await navigator.bluetooth.requestDevice(options);
+  // ... 連線邏輯
+}</code></pre>
+
+        <p><strong>error-handling.js (授權異常處理)</strong></p>
+        <pre><code>try {
+  await requestMyDevice();
+} catch (error) {
+  if (error.name === 'NotFoundError') {
+    alert("❌ 未選擇設備或藍牙已關閉");
+  } else if (error.name === 'SecurityError') {
+    alert("❌ 必須點擊按鈕才能觸發藍牙視窗 (User Gesture)");
+  }
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
         <ul>
             <li><strong>關鍵字檢查：</strong> 檢查 <code>app.js</code> 是否包含 <code>filters</code> 或 <code>namePrefix</code>。</li>
-            <li><strong>README 檢查：</strong> 確認 <code>README.md</code> 內容非預設文字。</li>
+            <li><strong>例外處理：</strong> 驗證是否包含 <code>try...catch</code> 或對 <code>device.gatt.connect()</code> 的超時判定。</li>
         </ul>
-
-        <hr>
-
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>上傳基礎結構。</li>
-                <li>勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>建立作業。</li>
-                <li><strong>重點設定：</strong> 啟用 <strong>"Enable feedback pull requests"</strong>，方便對比不同平台的 UI 截圖。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取 Repo 並本地預覽 (Localhost) 測試。</li>
-                <li><strong>Push</strong> 上去後，透過 GitHub Pages 提供的 HTTPS 連結在手機端測試。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>查看 PR 中的 <code>screenshots/</code>。</li>
-                <li>針對學生的錯誤處理邏輯給予具體回饋。</li>
-            </ol>
-        </div>
-
-        <hr>
 
         <h2>翻轉教室的實施策略</h2>
         <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
@@ -392,25 +408,23 @@
                     <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody style="color: #4b5563;">
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">閱讀本頁的安全三鐵律，理解為什麼 Local 開發可用 HTTP，但上線必須 HTTPS。
-                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">閱讀本頁的安全三鐵律，理解 HTTPS 與 User Gesture 的重要性。</td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學生已初步理解安全沙箱概念。
                     </td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">進行現場「大亂鬥連線」，修正過濾條件 (1-2) 並 Push 觸發 GitHub
-                        Pages 部署。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">進行現場「大亂鬥連線」，修正過濾條件 (1-2) 並 Push 觸發部署。</td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>現場演示：</strong>對比沒寫 try...catch (1-1)
-                        導致 UI 死掉的慘狀。</td>
+                        導致 UI 崩潰的慘狀。</td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">彙整 cross-platform 測試結果 (1-3) 寫入 README.md
-                        並提交最後 Commit。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">彙整 cross-platform 測試結果 (1-3) 寫入 README 並提交最後一次
+                        Commit。</td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
                             PR：</strong>評點截圖完整度與對安全機制理解的深度。</td>
                 </tr>

@@ -437,26 +437,8 @@
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>建議範本倉庫設置如下：</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── index.html       # 基礎 HTML 結構（含 meta viewport）
-├── style.css        # 學生需在此填寫觸控優化 CSS
-├── assets/          # 預置的 ESP32-CAM 測試影像
-└── README.md        # 供學生貼上手機連線截圖</code></pre>
-
-        <h3>B. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>關鍵字檢查：</strong> 掃描 <code>style.css</code> 是否包含 <code>width=device-width</code>。</li>
-            <li><strong>README 檢查：</strong> 確認 <code>README.md</code> 中的圖片鏈接是否已更新（非預設占位圖）。</li>
-        </ul>
-
-        <hr>
-
         <h2>GitHub Classroom 詳細操作指南</h2>
-        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+        <div class="classroom-guide">
             <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
             <ol>
                 <li>在 GitHub 建立新 Repo（名為 <code>html5-basics-template</code>）。</li>
@@ -484,7 +466,69 @@
             </ol>
         </div>
 
-        <hr>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>建議範本倉庫設置如下：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html       # 基礎 HTML 結構（含 meta viewport）
+├── style.css        # 學生需在此填寫觸控優化 CSS
+├── assets/          # 預置的 ESP32-CAM 測試影像
+└── README.md        # 供學生貼上手機連線截圖</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>index.html (基礎結構)</strong></p>
+        <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;link rel="stylesheet" href="style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="video-container"&gt;
+        &lt;img src="assets/esp32-stream.jpg" id="live-feed"&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+        <p><strong>style.css (觸控優化)</strong></p>
+        <pre><code>.video-container {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #000;
+}
+#live-feed {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* 確保不變形 */
+}</code></pre>
+
+        <p><strong>README.md (作業報告樣板)</strong></p>
+        <pre><code># HTML5 基礎實作：ESP32-CAM 監控介面
+- 姓名：[您的名字]
+- 學號：[您的學號]
+
+## 實作截圖
+![手機連線截圖](assets/my-result.jpg)
+> 請將您的手機瀏覽截圖命名為 my-result.jpg 並放入 assets 檔案夾。
+
+## 心得反饋
+- 遇到的挑戰：[例如：object-fit 的比例調整...]
+- 如何解決：[例如：查閱 MDN 文件...]</code></pre>
+
+        <p><strong>assets/ (資源目錄)</strong></p>
+        <ul>
+            <li>請預放一張名為 <code>esp32-stream.jpg</code> 的測試圖片供 <code>index.html</code> 預設顯示。</li>
+            <li>提醒學生將測試截圖存入此目錄。</li>
+        </ul>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>關鍵字檢查：</strong> 掃描 <code>style.css</code> 是否包含 <code>width=device-width</code> (雖然常在
+                HTML，但練習中可要求 CSS 註解或特定屬性)。</li>
+            <li><strong>README 檢查：</strong> 確認 <code>README.md</code> 中的圖片鏈接是否已更新（非預設占位圖）。</li>
+        </ul>
 
         <h2>翻轉教室的實施策略</h2>
         <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">

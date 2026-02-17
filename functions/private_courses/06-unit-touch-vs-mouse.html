@@ -400,48 +400,75 @@ function <span class="text-yellow-300">getPosition</span>(e) {
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元建議搭配 <strong>"Cross-Device Event Challenge"</strong> 作業：</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── index.html
-└── js/events.js      # (重點) 需加入跨平台座標解析器</code></pre>
-
-        <h3>B. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>事件覆蓋檢查：</strong> 檢查是否同時監聽了 mousedown 與 touchstart。</li>
-        </ul>
-
-        <hr>
-
         <h2>GitHub Classroom 詳細操作指南</h2>
-        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+        <div class="classroom-guide">
             <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
             <ol>
-                <li>上傳基礎專案。</li>
-                <li>勾選 <strong>"Template repository"</strong>。</li>
+                <li>上傳帶有「300ms 延遲」模擬工具與 <code>log</code> 日誌區域的框架，並勾選 <strong>"Template repository"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
             <ol>
-                <li>建立作業並連結範本。</li>
-                <li><strong>重點：</strong> 向學生解釋為何每個 Repo 最上方都有一個 "Open in Codespaces" 按鈕。</li>
+                <li>建立作業並連結範本。建議開啟 <strong>Feedback Pull Requests</strong> 選項以便討論 Mouse 與 Touch 事件的冒泡優先級。</li>
             </ol>
 
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (雲端開發)</strong></p>
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
             <ol>
-                <li>學生張貼在 GitHub 直接點擊 "Code" > "Codespaces" 啟動。</li>
-                <li>完成 <strong>Commit & Push</strong>。</li>
+                <li>學生領取作業，實作萬用跨平台座標解析器與「零延遲」觸控攔截邏輯。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
             </ol>
 
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋</strong></p>
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
             <ol>
-                <li>打開 Feedback PR，確認學生是否掌握了雲端開發的基本流程。</li>
+                <li>打開 Feedback PR，檢查學生是否正確阻止了「幽靈點擊 (Ghost Clicks)」以及長按時的系統選單彈出 (contextmenu) 處理。</li>
             </ol>
         </div>
 
-        <hr>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元引導學生實作通用的事件處理器，解決跨平台交互中的座標解析與冒泡衝突，建議範本倉庫設置如下：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html       # 包含測試按鈕與多維日誌區域
+├── js/events.js      # (重點) 需加入跨平台座標解析器與防冒泡邏輯
+└── README.md        # 跨平台事件字典與 300ms 延遲解決方案報告</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>events.js (萬用座標解析器)</strong></p>
+        <pre><code>function getPosition(e) {
+  let x, y;
+  
+  if (e.type.includes('mouse')) {
+    // 1. 滑鼠事件直接提取
+    x = e.clientX;
+    y = e.clientY;
+  } else {
+    // 2. 觸控事件需區分 touches 與 changedTouches
+    let touch = e.touches[0] || e.changedTouches[0];
+    x = touch.clientX;
+    y = touch.clientY;
+  }
+  
+  return { x, y };
+}
+
+// 萬用按鈕範例 (作業 2-1)
+btn.addEventListener('touchstart', (e) => {
+  e.preventDefault(); // 核心：阻止 300ms 後的模擬 mousedown
+  handleAction();
+}, { passive: false });
+
+btn.addEventListener('mousedown', (e) => {
+  // 如果是觸控觸發，此處會被 preventDefault 攔截
+  handleAction();
+});</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>事件監聽檢查：</strong> 使用 Actions 掃描程式碼是否同時包含 <code>mousedown</code> 與 <code>touchstart</code> 監聽。
+            </li>
+            <li><strong>邏輯健壯性：</strong> 測試 <code>getPosition</code> 函數在傳入不同模擬事件物件時，是否能產出正確的座標格式。</li>
+        </ul>
 
         <h2>翻轉教室的實施策略</h2>
         <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
@@ -452,24 +479,25 @@ function <span class="text-yellow-300">getPosition</span>(e) {
                     <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody style="color: #4b5563;">
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">研讀關於「300ms 點擊延遲」的歷史背景與現代解決方案。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學生已體驗過兩者的反應時間差。
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">操作本頁的延遲工具，體驗「300ms 點擊延遲」對遙控靈敏度的具體影響。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學生已體驗過 Mouse 與
+                        Touch 的反應時間差。
                     </td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">調度 Mouse 與 Touch 事件，並實現「寫一次、跑萬端」的座標歸一化函數。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>助教角色：</strong>引導學生理解 Chrome DevTools
-                        執行時的移動端模擬限制。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">同步調度 Mouse 與 Touch 事件 (2-1) 並實現全平台兼容後提交。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>互動診斷：</strong>分享學生頁面，使用手機實機展示「幽靈點擊」引發的指令連發問題。</td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實裝「長按禁止選單」等進階 UX 優化，並 Commit 到 GitHub。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核學生對全平台交互一致性的設計.
-                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實裝「原生 App 級」交互優化 (2-3) 並撰寫事件冒泡一致性心得。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>審核學生對跨平台交互一致性的理解與邊界處理。</td>
                 </tr>
             </tbody>
         </table>

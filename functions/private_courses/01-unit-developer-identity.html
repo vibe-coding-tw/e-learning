@@ -610,51 +610,63 @@
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>本單元雖然著重個人 Repo，但可透過 Classroom 建立一個 <strong>"Profile Challenge"</strong> 作業：</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── profile-template.md  # 提供基礎的 Markdown 模板
-└── instructions.md      # 作業要求清單</code></pre>
-
-        <h3>B. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>Markdown 檢查：</strong> 檢查 README.md 是否包含 <code># </h1></code> 標題。</li>
-            <li><strong>GitHub ID 綁定：</strong> Classroom 會自動將 GitHub ID 與學生本人關聯，方便老師在網頁端一次檢視所有人的 Profile 連結。</li>
-        </ul>
-
-        <hr>
-
         <h2>GitHub Classroom 詳細操作指南</h2>
-        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+        <div class="classroom-guide">
             <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
             <ol>
-                <li>建立一個內含 Markdown 練習題的範本倉庫。</li>
-                <li>設定為 <strong>"Template repository"</strong>。</li>
+                <li>建立一個內含 Markdown 練習題的範本倉庫並設定為 <strong>"Template repository"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
             <ol>
-                <li>在 Classroom 建立 Individual Assignment。</li>
-                <li>連結上述範本。</li>
-                <li><strong>啟用反饋 PR：</strong> 這對於點評學生的 Markdown 排版非常有用。</li>
+                <li>在 Classroom 建立 Individual Assignment 並連結範本。</li>
+                <li><strong>重點設定：</strong>勾選 <strong>"Enable feedback pull requests"</strong>。這對於點評學生的 Markdown 排版非常有用。
+                </li>
             </ol>
 
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作</strong></p>
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
             <ol>
-                <li>學生領取作業，練習 Markdown 語法。</li>
-                <li><strong>Push</strong> 後，老師可即時看到排版渲染結果。</li>
+                <li>學生領取作業，練習 Markdown 語法完成自我介紹。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
             </ol>
 
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋</strong></p>
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
             <ol>
-                <li>在 PR 中給予 Markdown 使用建議。</li>
-                <li>評分後點擊 <strong>"Merge"</strong> 或 <strong>"Closed"</strong> 完成任務。</li>
+                <li>在 Feedback PR 中給予 Markdown 使用建議，確認其理解「公開倉庫」的意義。</li>
             </ol>
         </div>
 
-        <hr>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>本單元雖然著重個人 Repo，但可透過 Classroom 建立一個 <strong>"Profile Challenge"</strong> 作業，建議範本倉庫設置如下：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── profile-template.md  # 提供基礎的 Markdown 模板
+├── images/              # 存放個人頭像或展示圖片
+└── instructions.md      # 作業要求清單</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>profile-template.md (個人主頁模板)</strong></p>
+        <pre><code># Hi, I'm [Your Name] 👋
+- 🔭 I’m currently learning **Hardware/Software Integration**
+- 🌱 I’m currently focused on **ESP32 & Web Connectivity**
+- ⚡ Fun fact: I love robotic cars!
+
+### My Skills
+- 💻 Languages: HTML, CSS, C++ (Arduino)
+- 🛠️ Tools: VS Code, GitHub</code></pre>
+
+        <p><strong>instructions.md (作業清單)</strong></p>
+        <pre><code>## 任務清單
+1. [ ] 完成 2FA 雙重驗證。
+2. [ ] 在 GitHub 建立個人主頁倉庫（倉庫名需與帳號名一致）。
+3. [ ] 使用 Markdown 語法完成自我介紹並 Push。</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>Markdown 檢查：</strong> 檢查 README.md 是否包含 <code># </h1></code> 標題。</li>
+            <li><strong>GitHub ID 綁定：</strong> Classroom 會自動將 GitHub ID 與學生本人關聯，方便老師在一處檢視所有人的 Profile。</li>
+        </ul>
 
         <h2>翻轉教室的實施策略</h2>
         <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
@@ -665,7 +677,7 @@
                     <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody style="color: #4b5563;">
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;">透過 OAuth 互動實驗室理解登入原理，完成帳號註冊與 2FA。</td>

@@ -354,107 +354,104 @@
     </section>
 
     <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" class="hidden">
-        <h2>講師手冊 (Instructor Guide)</h2>
-        <div class="guide-section">
-            <h3>1. 教學重點 (Teaching Points)</h3>
-            <ul>
-                <li>解釋什麼是「量化 (Quantization)」與解析度 (Resolution)。</li>
-                <li>介紹 ESP32 ADC 的特殊性：非線性區間 (Non-linearity) 與 11dB 衰減 (Attenuation) 設定。</li>
-                <li>討論 ADC2 與 Wi-Fi 的衝突問題（Wi-Fi 開啟時 ADC2 無法使用）。</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>2. 常見問題 (Common Issues)</h3>
-            <ul>
-                <li><strong>數值亂跳</strong>：引導學生檢查是否有共地問題 (Common Ground)，或引腳處於浮空狀態。</li>
-                <li><strong>讀取總是一樣的值</strong>：檢查是否接錯引腳，或是電壓超過了 ADC 容忍範圍 (3.3V)。</li>
-                <li><strong>Wi-Fi 開啟後讀不到值</strong>：提醒學生改用 ADC1 引腳 (GPIO 32-39)。</li>
-            </ul>
-        </div>
-        <div class="guide-section bg-gray-50 p-4 rounded-lg">
-            <h3 class="font-bold mb-2 text-sm text-gray-900">3. 評分標準 (Grading Criteria)</h3>
-            <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
-                <li><strong>基礎分</strong>：能成功讀取並印出隨旋鈕變化的數值。</li>
-                <li><strong>進階分</strong>：能解釋 `map()` 函式的數學公式原理，並能正確處理邊界值。</li>
-            </ul>
+    <section id="instructor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>上傳包含基礎 Serial 設定但「未實作類比讀取與 map 轉換」的 Repo 框架，並勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>建立作業並連結範本。建議開啟 <strong>Feedback Pull Requests</strong> 選項以便對比學生的數據平滑演算法與解析度設定策略。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，獲得個人專屬 Repo，實作 ADC 讀取、數據百分比轉換與「死區 (Dead zone)」過濾邏輯。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>打開 Feedback PR，針對學生的「雜訊抑制策略 (Smoothing)」與「硬體非線性校準」分析給予具體回饋。</li>
+            </ol>
         </div>
 
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mt-6">
-            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
-                <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
-.
-├── src/             # 包含 ADC 初始化 (analogReadResolution) 與數據處理的 main.cpp
-├── README.md        # 實驗紀錄：解析度與數值跳動觀察報告
-└── .github/         # 自動評核配置</pre>
-                <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
-                <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-                    <li><strong>核心配置檢核：</strong> 偵測程式中是否使用了 <code>analogRead</code> 並正確設定
-                        <code>analogSetAttenuation</code> 以應對 3.3V 範圍。</li>
-                    <li><strong>邏輯演算法驗證：</strong> 透過測試腳本模擬不同輸入數值，驗證 <code>map()</code> 函式的轉換映射與「死區」過濾邏輯是否符合預期。</li>
-                </ul>
-            </div>
-        </div>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元聚焦於類比與數位訊號的轉換橋樑，引導學生處理現實世界的雜訊與映射邏輯，建議範本倉庫設置如下：</p>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mt-6 bg-white p-4 border border-gray-200 rounded-lg">
-            <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
-            <div class="space-y-4 text-sm text-gray-600">
-                <div>
-                    <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
-                    <p>建立包含基礎 Serial 設定但「未實作類比讀取與 map 轉換」的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
-                    <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以點評學生的數據平滑演算法與解析度設定策略。</p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
-                    <p>學生領取作業，獲得個人專屬 Repo，實作 ADC 讀取、數據百分比轉換與死區過濾邏輯後 Push。</p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
-                    <p>進入 Feedback PR，針對學生的「雜訊抑制策略」與「硬體線性度補償」予以回饋。</p>
-                </div>
-            </div>
-        </div>
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── platformio.ini   # 包含基礎開發環境配置
+├── src/main.cpp      # (重點) 需實作 analogRead 與 map 邏輯
+└── README.md        # 實驗紀錄：ADC 解析度設定、數據跳動觀察報告與曲線圖</code></pre>
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section mt-6">
-            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm border-collapse border border-gray-200">
-                    <thead class="bg-gray-50 text-left text-gray-800">
-                        <tr>
-                            <th class="border border-gray-200 p-2">階段</th>
-                            <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
-                            <th class="border border-gray-200 p-2">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-600">
-                        <tr>
-                            <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
-                            <td class="border border-gray-200 p-2">觀看「類比訊號讀取：從電壓到數位數值的轉換」影片。</td>
-                            <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員掌握解析度 (Resolution) 概念。
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
-                            <td class="border border-gray-200 p-2">領取 Classroom 作業，對比電位計旋轉至極值時 ADC 讀值的最大與最小值偏差。</td>
-                            <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
-                        </tr>
-                        <tr>
-                            <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
-                            <td class="border border-gray-200 p-2">實作動態解析度校準 logic 並 Push，閱讀教師回覆 PR。</td>
-                            <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>main.cpp (ADC 讀取與映射)</strong></p>
+        <pre><code>#include &lt;Arduino.h&gt;
+
+const int potPin = 32; // 使用 ADC1 引腳避開 Wi-Fi 衝突
+
+void setup() {
+  Serial.begin(115200);
+  // 設定 ADC 解析度為 12-bit (0-4095)
+  analogReadResolution(12);
+  // 設定衰減量以讀取 3.3V 全量程
+  analogSetAttenuation(ADC_11db);
+}
+
+void loop() {
+  int rawValue = analogRead(potPin);
+  // 映射到 0-100% 且具備死區處理
+  int percent = map(rawValue, 0, 4095, 0, 100);
+  
+  Serial.printf("Raw: %d | Percent: %d%%\n", rawValue, percent);
+  delay(100);
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>核心 API 檢索：</strong> 偵測程式中是否呼叫了 <code>analogRead()</code> 與 <code>analogSetAttenuation()</code>。
+            </li>
+            <li><strong>邏輯邊界測試：</strong> 透過腳本驗證學生的 <code>map()</code> 參數是否正確對齊 12-bit 解析度 (4095)。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody style="color: #4b5563;">
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「類比訊號讀取：從電壓到數位數值的量化 (Quantization) 過程」影片。
+                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員理解解析度
+                        (Resolution) 與 Bit depth 的數學關係。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業對比旋鈕撥至極值時的數據偏差，實作簡單的移動平均 (Moving Average)
+                        濾波。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>現場指導：</strong>解釋 ADC2 與 Wi-Fi
+                        共用無線電資源導致的衝突機制與避障引腳選取。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">撰寫「環境雜訊抑制報告」並 Push 最終改善代碼至 PR。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>審核學生對「數據穩定性」與「硬體限制 (Non-linearity)」的應對策略。
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 
     <script>

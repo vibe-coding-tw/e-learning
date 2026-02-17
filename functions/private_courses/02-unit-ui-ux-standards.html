@@ -416,54 +416,79 @@
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>上傳框架與基礎樣式（含預置的模擬串流圖片）並勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>連結範本倉庫並勾選 <strong>"Enable feedback pull requests"</strong> 以便進行設計點評。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，實作 HUD 疊加層與視覺降噪邏輯。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>在 Feedback PR 的代碼行旁點評，給予視覺一致性、資訊層級與反應速度方面的建議。</li>
+            </ol>
+        </div>
+
         <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>建議範本倉庫設置如下：</p>
+        <p>建議搭配 <strong>"HUD Design Challenge"</strong> 作業，引導學生實作專業的視覺層級，建議範本倉庫設置如下：</p>
 
         <h3>A. 範本倉庫 (Template Repo) 結構</h3>
         <pre><code>.
 ├── index.html       # 遙控介面主結構
 ├── style.css        # (重點) 實作 z-index 與透明度 CSS
-├── assets/          # 預置的圖標與模擬數據
+├── assets/          # 預置的圖標與模擬串流數據 (stream.jpg)
 └── README.md        # 紀錄可用性測試的數據 (盲操成功率)</code></pre>
 
-        <h3>B. 自動評分 (Autograding) 的設計</h3>
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>index.html (HUD 結構)</strong></p>
+        <pre><code>&lt;!-- FPV 影像容器 --&gt;
+&lt;div class="video-container"&gt;
+    &lt;img src="assets/stream.jpg"&gt;
+    &lt;!-- HUD 疊加層 --&gt;
+    &lt;div class="hud-overlay"&gt;
+        &lt;div class="telemetry"&gt;Ping: 20ms&lt;/div&gt;
+        &lt;div class="warning"&gt;LOW BATTERY&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+        <p><strong>style.css (視覺層級)</strong></p>
+        <pre><code>.hud-overlay {
+    position: absolute;
+    top: 5%;
+    left: 5%;
+    z-index: 100; /* 確保在影像上方 */
+    background: rgba(0, 0, 0, 0.4); /* 半透明背景增加對比 */
+    color: #00ff00; /* 高飽和度螢光色 */
+    padding: 10px;
+    border-radius: 5px;
+}
+.warning {
+    animation: blink 1s infinite;
+    color: #ff4d4d;
+    font-weight: bold;
+}
+@keyframes blink {
+    50% { opacity: 0; }
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
         <ul>
             <li><strong>層級檢查：</strong> 掃描 <code>style.css</code> 確認是否使用了 <code>opacity</code> 或 <code>rgba</code> 屬性。
             </li>
-            <li><strong>佈局檢查：</strong> 檢查 <code>.hud-layer</code> 的 <code>z-index</code> 是否高於影像容器。</li>
+            <li><strong>佈局檢查：</strong> 檢查 <code>.hud-overlay</code> 的 <code>z-index</code> 是否大於影像層的
+                <code>z-index</code>。</li>
         </ul>
-
-        <hr>
-
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>在 GitHub 建立新 Repo（例：<code>ui-ux-standards-template</code>）。</li>
-                <li>上傳框架與基礎樣式。</li>
-                <li>勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>建立作業並連結範本倉庫。</li>
-                <li><strong>重點：</strong>勾選 <strong>"Enable feedback pull requests"</strong> 以便進行設計點評。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (User Test)</strong></p>
-            <ol>
-                <li>學生 Clone 並進行 <strong>Push 代碼</strong>。</li>
-                <li>在 PR 中描述他們為何選擇特定的顏色編碼。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Design Review)</strong></p>
-            <ol>
-                <li>開啟 Feedback PR。</li>
-                <li>在代碼行旁點評：「這裡的警告顏色太淡，陽光下可能看不清」。</li>
-            </ol>
-        </div>
-
-        <hr>
 
         <h2>翻轉教室的實施策略</h2>
         <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
@@ -474,18 +499,18 @@
                     <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody style="color: #4b5563;">
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看 UI/UX 規範影片，完成 3-1 的初步佈局並 Push。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>觀察學生對按鈕大小的預設偏好。
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看 UI/UX 規範影片，完成 3-1 的初步佈局。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>觀察學生對按鈕大小與間距的預設偏好。
                     </td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實機操作遙控車，測試 3-2 的 HUD 辨識度並修改。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實機操作遙控車，測試 3-2 的 HUD 辨識度並修改代碼。</td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>PR Review：</strong>點評 UI
-                        是否符合「高速操作」下的直覺。</td>
+                        是否符合「高速操作」下的直覺與安全性。</td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
@@ -495,6 +520,7 @@
                 </tr>
             </tbody>
         </table>
+    </section>
     </section>
 
 </body>

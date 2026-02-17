@@ -436,114 +436,107 @@
     </section>
 
     <section id="instructor-guide" class="hidden">
-        <h2>講師手冊 (Instructor Guide)</h2>
-        <div class="space-y-6">
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">教學重點 (Teaching Points)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2">
-                    <li>安全性限制：Web Bluetooth API 僅能在 HTTPS 或 Localhost 環境下運行。</li>
-                    <li>連線生命週期：從請求裝置、建立連線、尋找服務到讀寫特徵值的完整流程。</li>
-                    <li>使用者體驗 (UX)：解釋為什麼需要明確的連線進度提示（如 Loading Dot）。</li>
-                </ul>
-            </div>
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>上傳基礎連線框架但扣除「資料接收回呼」的實作，勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
 
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">學生常見問題 (Common Issues)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2 text-red-600">
-                    <li>瀏覽器不支援：提醒學生避免使用手機 App 內的 Webview 或不支援 BLE 的瀏覽器。</li>
-                    <li>Android 系統權限：解釋 Android 12 以下版本需要開啟定位權限才能進行藍牙掃描。</li>
-                    <li>寫入失敗：引導學生檢查特徵值 UUID 是否與 ESP32 韌體中的定義一致。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>建立作業並連結範本。啟用 <strong>"Feedback pull requests"</strong> 以便檢視學生的配網容錯設計。</li>
+            </ol>
 
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="font-bold mb-2 text-sm">評分標準 (Grading)</h3>
-                <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
-                    <li><strong>優 (90-100):</strong> 能流暢排除環境障礙，成功完成 WiFi 配網，且能解釋 BLE 特徵值傳輸原理。</li>
-                    <li><strong>可 (70-89):</strong> 在引導下完成連線與配網，但在排除瀏覽器權限問題時較為費時。</li>
-                    <li><strong>待加強 (Below 70):</strong> 無法與 ESP32 建立穩定連線，或不理解 WiFi 資訊是如何從網頁傳送到硬體的。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，實作 BLE 資料解析並透過本課網頁介面確認配網成功。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+            </ol>
 
-            <!-- NEW: Practical Deployment Recommendations -->
-            <div class="guide-section mt-6">
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
-                    <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
-.
-├── src/             # 包含 BLE 配網邏輯與 WiFi 連線狀態管理的 main.cpp
-├── README.md        # 測試報告：成功連網後的 IP 位址截圖與配網流程紀錄
-└── .github/         # 自動評核配置</pre>
-                    <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
-                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-                        <li><strong>核心 API 檢查：</strong> 偵測程式中是否包含了 <code>BLEDevice::init()</code> 與
-                            <code>WiFi.begin()</code>。</li>
-                        <li><strong>連線狀態驗證：</strong> 透過模擬序列埠輸出或是簡單的 HTTP 回傳，驗證 ESP32 是否能正確解析網頁傳來的 SSID 與 PWD 並建立連線。</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- NEW: Detailed operations guide -->
-            <div class="guide-section mt-6 bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
-                <div class="space-y-4 text-sm text-gray-600">
-                    <div>
-                        <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
-                        <p>建立包含 BLE 與 WiFi 基礎初始化流程但「尚未處理 SSID 接收寫入邏輯」的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
-                        <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以便對其 BLE 事件回呼 (Callback) 設計進行點評。
-                        </p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
-                        <p>學生領取作業，獲得個人專屬 Repo，實作 BLE Data Received 處理邏輯，透過本課網頁介面完成配網後 Push。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
-                        <p>進入 Feedback PR，針對學生的「配網成功率處理」與「網路例外情況（如密碼錯誤）」予以回饋。</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- NEW: Flipped classroom strategy table -->
-            <div class="guide-section mt-6">
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm border-collapse border border-gray-200">
-                        <thead class="bg-gray-50 text-left text-gray-800">
-                            <tr>
-                                <th class="border border-gray-200 p-2">階段</th>
-                                <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
-                                <th class="border border-gray-200 p-2">教師/平台角色</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-gray-600">
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
-                                <td class="border border-gray-200 p-2">研讀「Web Bluetooth 為什麼安全？」與「BLE 廣播原理」。</td>
-                                <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習紀錄，確認學員已具備基礎 BLE 術語
-                                    (Service/UUID) 認知。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
-                                <td class="border border-gray-200 p-2">領取 Classroom 作業，對比在 Chrome 與其他瀏覽器上執行 Web BLE 的差異。
-                                </td>
-                                <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
-                                <td class="border border-gray-200 p-2">將 WiFi 憑證持久化儲存 (NVS) 的邏輯加入專案並 Push，閱讀教師回覆 PR。
-                                </td>
-                                <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR，針對學生的「重連機制」與「WiFi 例外狀況處理」予以建議。</li>
+            </ol>
         </div>
+
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元引導學生掌握 Web Bluetooth 與 ESP32 的交互，實作 WiFi 帳密的遠端配網流程，建議範本倉庫設置如下：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── src/main.cpp      # (重點) 包含 BLE UART Service 與 WiFi 連線邏輯
+├── include/nvs_util.h # NVS 讀寫工具函式
+└── README.md        # 測試報告：截圖展示 Serial Monitor 獲取 IP 的過程</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>main.cpp (BLE 接收並寫入 NVS)</strong></p>
+        <pre><code>// 1. 定義 BLE UART Service
+#define SERVICE_UUID           "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
+#define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
+
+// 2. 回呼函數處理接收到的資料
+class MyCallbacks: public BLECharacteristicCallbacks {
+    void onWrite(BLECharacteristic *pCharacteristic) {
+      std::string value = pCharacteristic->getValue();
+      if (value.length() > 0) {
+        // 解析指令範例: SSID:MyWiFi
+        if (value.find("SSID:") == 0) {
+            String ssid = String(value.c_str()).substring(5);
+            saveToNVS("wifi_ssid", ssid.c_str());
+        }
+        Serial.println("Received Record: " + String(value.c_str()));
+      }
+    }
+};</code></pre>
+
+        <p><strong>WiFi Connection (長連邏輯)</strong></p>
+        <pre><code>void connectWiFi() {
+  String ssid = readFromNVS("wifi_ssid");
+  String pass = readFromNVS("wifi_pass");
+  if (ssid != "") {
+    WiFi.begin(ssid.c_str(), pass.c_str());
+    // 處理連線狀態顯示...
+  }
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>核心 API 檢查：</strong> 檢查 <code>main.cpp</code> 是否包含 <code>BLEDevice::init()</code>。</li>
+            <li><strong>連線邏輯：</strong> 驗證是否調用了 <code>WiFi.begin()</code> 並處理了連線超時的判定。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody style="color: #4b5563;">
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">學習 Web Bluetooth 的基本連接流程 (Request Device)。
+                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學生是否能成功搜尋到開發板。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作配網狀態機，處理連線中、成功、失敗的三種 UI 反饋。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>助教角色：</strong>解決部分 Android 裝置 MTU
+                        限制導致的字串截斷問題。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">優化自動重新連線邏輯，並撰寫穩定性測試心得。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>核發評語，確認其理解異步開發的錯誤捕捉。</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </body>
 

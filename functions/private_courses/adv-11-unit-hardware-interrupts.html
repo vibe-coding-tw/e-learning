@@ -309,6 +309,7 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
+    
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
@@ -337,119 +338,120 @@
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        A. 範本倉庫 (Template Repo) 結構
-                    </h4>
-                    <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
-.
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>包含基礎中斷處理框架與 Serial 圖表顯示建議的範例專案樣板。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>設定「ISR 效能優化」評分。引導學員透過 PR 提交去彈跳截圖。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>領取作業，對比輪詢與中斷法反應差異。</li>
+                <li>提交包含分析報告的 PR。</li>
+                <li>執行 Git Push。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>針對學員平衡「延時」與「即時性」策略，以及 ISR 優化予以點評。</li>
+            </ol>
+        </div>
+
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>建議範本倉庫設置如下：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
 ├── src/
 │   ├── basic_interrupt.cpp # 中斷法實作框架
 │   └── polling_check.cpp   # 對照：傳統輪詢法
 ├── tests/
 │   └── debounce.test.cpp   # 測試：去彈跳時間驗證
-└── README.md               # 反應時間對比與壓力報告</pre>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        B. 自動評估 (Autograding) 的設計
-                    </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🧪</span>
-                            <p class="text-sm text-gray-700"><strong>關鍵字過濾：</strong> 靜態掃描檢查是否正確使用
-                                <code>attachInterrupt</code> 與 <code>volatile</code>。</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🔍</span>
-                            <p class="text-sm text-gray-700"><strong>邏輯單元測試：</strong> 模擬按鈕抖動，驗證 ISR 是否具備正確的軟體去彈跳機制。</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+└── README.md               # 反應時間對比與壓力報告</code></pre>
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>src/basic_interrupt.cpp (中斷法框架)</strong></p>
+        <pre><code>volatile unsigned long last_time = 0;
+volatile int count = 0;
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">包含基礎中斷處理框架與 Serial 圖表顯示建議的範例專案樣板。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「ISR 效能優化」評分。引導學員透過 PR 提交去彈跳截圖。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，對比輪詢與中斷法反應差異。提交包含分析報告的 PR。執行 Git Push。
-                    </p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對學員平衡「延時」與「即時性」策略，以及 ISR 優化予以點評。</p>
-                </div>
-            </div>
-        </div>
+void IRAM_ATTR handleInterrupt() {
+  unsigned long now = millis();
+  if (now - last_time > 50) { // 軟體去彈跳
+    count++;
+  }
+  last_time = now;
+}
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
-            </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
-                        <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">觀看中斷觀念影片，撰寫對比代碼，體會中斷的「即時搶佔」特性。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 預習進度，確保理解 <code>attachInterrupt</code> 配置。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，實作軟體去彈跳與編碼器計數，解決物理雜訊。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，引導討論訊號抖動觀察並調校過濾閾值。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">優化 ISR 效能，完成高頻壓力測試並 Push，閱讀教師回覆 PR。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，引導思考中斷機制對硬體即時響應的核心價值。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+void setup() {
+  Serial.begin(115200);
+  attachInterrupt(D2, handleInterrupt, FALLING);
+}
+
+void loop() {
+  Serial.printf("Count: %d\n", count);
+  delay(100);
+}</code></pre>
+
+        <p><strong>src/polling_check.cpp (傳統輪詢法對照)</strong></p>
+        <pre><code>void loop() {
+  if (digitalRead(D2) == LOW) {
+    // 輪詢法容易因 loop 內的其他延遲（如以下 delay）而漏計
+    count++; 
+    delay(5); // 模擬去彈跳
+  }
+  delay(100); // 模擬其他繁重任務
+}</code></pre>
+
+        <p><strong>README.md (分析報告樣板)</strong></p>
+        <pre><code># 中斷效能分析報告
+- 測試環境：ESP32-C3 + 光電編碼器
+- 觀察結果：
+  1. 輪詢法在全速轉動時丟失約 30% 脈衝。
+  2. 中斷法透過 IRAM_ATTR 實現微秒級響應。
+  3. 軟體去彈跳閾值設定為 50ms 最為穩定。</code></pre>
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>關鍵字過濾：</strong> 靜態掃描檢查是否正確使用
+                <code>attachInterrupt</code> 與 <code>volatile</code>。
+            </li>
+            <li><strong>邏輯單元測試：：</strong> 模擬按鈕抖動，驗證 ISR 是否具備正確的軟體去彈跳機制。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody style="color: #4b5563;">
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看中斷觀念影片，撰寫對比代碼，體會中斷的「即時搶佔」特性。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">檢查 Dashboard 預習進度，確保理解
+                        <code>attachInterrupt</code> 配置。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，實作軟體去彈跳與編碼器計數，解決物理雜訊。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0; color: #1d4ed8;">即時連線排除阻礙，引導討論訊號抖動觀察並調校過濾閾值。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">優化 ISR 效能，完成高頻壓力測試並 Push，閱讀教師回覆 PR。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">核發評量，引導思考中斷機制對硬體即時響應的核心價值。</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </body>
 

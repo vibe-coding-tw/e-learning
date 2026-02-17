@@ -440,85 +440,74 @@
             <li><strong>執行方式：</strong> 實作 <code>touchend</code> 事件，當手指離開螢幕時，確保搖桿頭立即（或平滑地）歸零到 (0,0) 位置。</li>
             <li><strong>評分重點：</strong> 狀態重置的即時性，以及是否正確停止相關的傳輸指令。</li>
         </ul>
-
-        <hr>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">複習三角形幾何學與平方根計算公式。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學生已閱覽幾何原理講義。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作 Clamping 邏輯，並透過即時數據預覽（作業 3-2）驗證數學計算的正確性。
-                    </td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>助教角色：</strong>協助 debug 當距離為 0
-                        時除以零的可能性。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作帶有動畫過渡的回彈效果，並 Commit 到 GitHub。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>檢視數學邏輯與邊界處理程式碼的優雅度。</td>
-                </tr>
-            </tbody>
-        </table>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元建議搭配 <strong>"Joystick Physics Engine Challenge"</strong> 作業：</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── index.html
-└── js/math-logic.js  # (重點) 需加入限位演算函數</code></pre>
-
-        <h3>B. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>距離檢查：</strong> 對提交的座標進行後驗，確保其歐幾里得距離不超過 R。</li>
-        </ul>
-
-        <hr>
-
         <h2>GitHub Classroom 詳細操作指南</h2>
-        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+        <div class="classroom-guide">
             <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
             <ol>
-                <li>上傳基礎專案。</li>
-                <li>勾選 <strong>"Template repository"</strong>。</li>
+                <li>上傳框架代碼（含 <code>Math.sqrt</code> 與 <code>Math.atan2</code> 註解框架）並勾選 <strong>"Template
+                        repository"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
             <ol>
-                <li>建立作業並連結範本。</li>
-                <li><strong>重點：</strong> 向學生解釋為何每個 Repo 最上方都有一個 "Open in Codespaces" 按鈕。</li>
+                <li>建立作業並連結範本。建議開啟 <strong>Feedback Pull Requests</strong> 選項以便對比學生的幾何限位與回彈邏輯。</li>
             </ol>
 
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (雲端開發)</strong></p>
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
             <ol>
-                <li>學生在 GitHub 直接點擊 "Code" > "Codespaces" 啟動。</li>
-                <li>完成 <strong>Commit & Push</strong>。</li>
+                <li>學生領取作業，實作搖桿的圓形限位（Clamping）與自動回彈機制。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
             </ol>
 
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋</strong></p>
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
             <ol>
-                <li>打開 Feedback PR，確認學生是否掌握了雲端開發的基本流程。</li>
+                <li>打開 Feedback PR，檢查學生對「除以零」邊界狀況的處理、座標歸一化公式及角度運算（atan2）的正確性。</li>
             </ol>
         </div>
 
-        <hr>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元引導學生將幾何數學應用於介面交互，實作搖桿的「邊界限位」與「自動回彈」機制，建議範本倉庫設置如下：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html       # 包含搖桿底座與手柄 Canvas 介面
+├── js/math-logic.js  # (重點) 需實作幾何限位與歸一化演算邏輯
+└── README.md        # 三角函數與圓形限位公式推導報告</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>math-logic.js (搖桿幾何限位)</strong></p>
+        <pre><code>function updateJoystick(touchX, touchY) {
+  const dx = touchX - centerX;
+  const dy = touchY - centerY;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  let finalX = touchX;
+  let finalY = touchY;
+
+  // 1. 邊界限位 (Clamping)
+  if (distance > maxRadius) {
+    const ratio = maxRadius / distance; // 注意：需判斷 distance 是否為 0
+    finalX = centerX + dx * ratio;
+    finalY = centerY + dy * ratio;
+  }
+
+  render(finalX, finalY);
+
+  // 2. 數據解算 (歸一化)
+  const power = Math.min(distance / maxRadius, 1.0);
+  const angle = Math.atan2(dy, dx);
+  updateHardware(power * 100, angle);
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>限位驗證：</strong> 提供一組超出半徑 R 的座標測試點，驗證函數輸出的座標距離是否被精確鎖定在 R。</li>
+            <li><strong>角度檢查：</strong> 驗證不同象限的座標點是否能產出正確的弧度/角度值。</li>
+        </ul>
 
         <h2>翻轉教室的實施策略</h2>
         <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
@@ -529,24 +518,26 @@
                     <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody style="color: #4b5563;">
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">複習三角形幾何學與平方根計算公式。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學生已閱覽幾何原理講義。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">複習三角形幾何學與平方根公式，預填講義中的座標轉換表格。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>Dashboard：</strong>確認學生已初步具備幾何限位的基礎數學背景。</td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作 Clamping 邏輯，並透過即時數據預覽（作業 3-2）驗證數學計算的正確性。
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作圓形限位邏輯 (3-1) 並透過即時數據預覽 (3-2) 提交修正後的代碼。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課堂演示：</strong>討論「除以零」引發的手柄瞬移（Infinity
+                        座標）現象及修復。
                     </td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>助教角色：</strong>協助 debug 當距離為 0
-                        時除以零的可能性。</td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作帶有動畫過渡的回彈效果，並 Commit 到 GitHub。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">挑戰帶有物理動效的自動回彈 (3-3) 並在 README 中記錄演算心得。</td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>檢視數學邏輯與邊界處理程式碼的優雅度。</td>
+                            PR：</strong>審核數學演算的嚴謹度、代碼優雅度與邊界穩健度。
+                    </td>
                 </tr>
             </tbody>
         </table>

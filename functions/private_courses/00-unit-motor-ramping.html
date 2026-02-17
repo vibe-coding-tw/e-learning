@@ -505,112 +505,108 @@
     </section>
 
     <section id="instructor-guide" class="hidden">
-        <h2>講師手冊 (Instructor Guide)</h2>
-        <div class="space-y-6">
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">教學重點 (Teaching Points)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2">
-                    <li>Ramping 的物理意義：平滑化的加速度如何降低瞬時電流對電池的壓降影響。</li>
-                    <li>二進位傳輸：解釋為什麼在低頻藍牙環境下，使用 `memcpy` 傳送 Struct 會比 JSON 效率更高。</li>
-                    <li>PWM 起步特性：探討馬達在低佔空比下「鳴叫但不旋轉」的原因 (PWM 能量不足以克服轉子慣性)。</li>
-                </ul>
-            </div>
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>提供完整的 BLE 框架但空出 <code>loop()</code> 中的漸進演算邏輯，勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
 
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">學生常見問題 (Common Issues)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2 text-red-600">
-                    <li>結構體對齊 (Memory Alignment)：引導學生注意 C++ 與 JavaScript 之間對齊不一致導致的數值偏移。</li>
-                    <li>Accel Step 過大：馬達反應變得跟傳統 `delay` 方式一樣突兀，失去 Ramping 的美感。</li>
-                    <li>忘記飽和處理 (Clamping)：數值超過 255 導致整數溢出，使馬達突然停轉或倒轉。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>建立作業並連結範本。鼓勵學生使用 <strong>PlatformIO</strong> 進行編譯，並利用本單元網頁介面動態調參。</li>
+            </ol>
 
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="font-bold mb-2 text-sm">評分標準 (Grading)</h3>
-                <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
-                    <li><strong>優 (90-100):</strong> 能在網頁端精確控制硬體參數，且馬達起跑與波形過渡展現極致平滑度。</li>
-                    <li><strong>可 (70-89):</strong> 基礎配網與參數寫入功能正常，但對於 Accel Step 或 Start Kick 的物理意義掌握較淺。</li>
-                    <li><strong>待加強 (Below 70):</strong> 無法成功同步參數，或設定值導致硬體運作邏輯錯誤 (如：起步劇烈跳動)。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，實作線性插值或簡單的 <code>currentPWM += step</code> 邏輯。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+            </ol>
 
-            <!-- NEW: Practical Deployment Recommendations -->
-            <div class="guide-section mt-6">
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
-                    <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
-.
-├── src/             # 包含馬達控制結構體與 Ramping 狀態機的 main.cpp
-├── README.md        # 實驗紀錄：不同 Accel Step 下的轉速曲線圖與靜摩擦力克服參數表
-└── .github/         # 自動評核配置</pre>
-                    <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
-                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-                        <li><strong>結構對齊檢核：</strong> 偵測程式中是否精確定義了 28-byte 的二進位通訊結構體，確認學員處理了 Memory Alignment。</li>
-                        <li><strong>飽和邏輯驗證：</strong> 透過編譯時間測試，模擬極端輸入（如 PWM > 255）驗證代碼中是否包含了正確的 Clamping 處理。</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- NEW: Detailed operations guide -->
-            <div class="guide-section mt-6 bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
-                <div class="space-y-4 text-sm text-gray-600">
-                    <div>
-                        <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
-                        <p>建立包含 BLE 與二進位通訊框架但「尚未實作 PWM 漸進與漸弱」邏輯的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
-                        <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以便對其「線性內插」與「硬體資源管理」設計進行點評。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
-                        <p>學生領取作業，獲得個人專屬 Repo，實作 Ramping 邏輯，透過本課網頁介面動態調參找尋最佳馬達特性後 Push。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
-                        <p>進入 Feedback PR，針對學生的「平滑度演算法」與「機械結構保護思維」予以回饋。</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- NEW: Flipped classroom strategy table -->
-            <div class="guide-section mt-6">
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm border-collapse border border-gray-200">
-                        <thead class="bg-gray-50 text-left text-gray-800">
-                            <tr>
-                                <th class="border border-gray-200 p-2">階段</th>
-                                <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
-                                <th class="border border-gray-200 p-2">教師/平台角色</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-gray-600">
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
-                                <td class="border border-gray-200 p-2">觀看「為什麼馬達不能瞬間給滿電？」與「PWM Ramping 基礎演算法」教學影片。</td>
-                                <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員掌握 PWM
-                                    佔空比與馬達扭力的非線性關係。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
-                                <td class="border border-gray-200 p-2">領取 Classroom 作業，對比在有無 Ramping
-                                    下，齒輪箱發出的聲音與機體產生的瞬間震動。</td>
-                                <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
-                                <td class="border border-gray-200 p-2">將不同馬達類型（如 TT 馬達 vs N20 馬達）的預測參數封裝成 Profile 並
-                                    Push，閱讀教師回覆 PR。</td>
-                                <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR，重點檢查學生是否處理了「浮點數運算」在嵌入式端的效能開銷與整數溢出問題。</li>
+            </ol>
         </div>
+
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元引導學生理解馬達 Ramping (漸進加速) 的物理意義，並實作二進位結構體 (Binary Struct) 的通訊協議，建議範本倉庫設置如下：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── src/main.cpp      # (重點) 包含馬達控制結構體與 Ramping 狀態機
+├── include/config.h  # 固定參數配置
+└── README.md        # 實驗紀錄：探討不同 Accel Step 下的加速響應</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>main.cpp (二進位結構體定義與接收)</strong></p>
+        <pre><code>// 1. 強制 1-byte 對齊，確保與 JS DataView 一致
+#pragma pack(push, 1)
+struct MotorConfig_t {
+  uint32_t controlTimeoutMs;
+  int32_t  pwmEffectiveLimitT;
+  int32_t  rampAccelStepT;
+  // ... 其他欄位 (共 28 Bytes)
+};
+#pragma pack(pop)
+
+// 2. BLE 回呼函數中直接映射
+void onWrite(BLECharacteristic* pChar) {
+  std::string value = pChar->getValue();
+  if (value.length() == sizeof(MotorConfig_t)) {
+    MotorConfig_t incoming;
+    memcpy(&incoming, value.data(), sizeof(MotorConfig_t));
+    // 套用設定到全域變數...
+  }
+}</code></pre>
+
+        <p><strong>Motor Control Logic (Ramping 狀態機)</strong></p>
+        <pre><code>void applyRamping() {
+  if (targetPWM > currentPWM) {
+    currentPWM = min(targetPWM, currentPWM + rampAccelStepT);
+  } else if (targetPWM < currentPWM) {
+    currentPWM = max(targetPWM, currentPWM - rampAccelStepT);
+  }
+  ledcWrite(CHANNEL, currentPWM);
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>結構檢查：</strong> 檢查 <code>main.cpp</code> 是否包含 <code>#pragma pack(1)</code> 或正確的偏移量計算。</li>
+            <li><strong>飽和邏輯：</strong> 驗證代碼中是否包含了正確的 <code>constrain(pwm, 0, limit)</code> 飽和處理。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody style="color: #4b5563;">
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">研讀「軟啟動」與「瞬間大電流對鋰電池壓降」的關聯。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學生已體驗過馬達起步的劇烈震動。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作二進位結構體映射 (2-1)，並透過網頁介面尋找最佳 Ramping Step。
+                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>助教角色：</strong>協助解決 Memory Alignment
+                        導致的數值解析位移。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">將不同馬達型號的參數封裝成 Profile 並 Commit 至 GitHub。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>核發最終評量與演算法優化建議。
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </body>
 

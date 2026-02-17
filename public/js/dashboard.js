@@ -32,7 +32,7 @@ const stats = {
 const assignmentTableBody = document.getElementById('assignment-table-body');
 
 // Admin UI
-const adminPanel = document.getElementById('admin-panel');
+//const adminPanel = document.getElementById('admin-panel');
 
 
 let myRole = null;
@@ -957,67 +957,49 @@ function renderAdminConsole() {
         </div>
     `;
 
-    // [MODIFIED] Standardized Grid Header - Scaled up font
+    // [MODIFIED] Full-Width Single-Column Layout
     html += `
-        <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm font-mono text-sm">
-            <div class="hidden md:grid md:grid-cols-[1fr,1.5fr] bg-gray-50/80 text-gray-500 font-bold border-b border-gray-100 px-6 py-4 uppercase tracking-wider text-xs">
-                <div>課程 (Course)</div>
-                <div>授權教師 (Authorized Teachers)</div>
-            </div>
+        <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm font-mono text-sm w-full">
             <div class="divide-y divide-gray-100">
                 ${allLessons.map(lesson => {
         const config = dashboardData?.courseConfigs?.[lesson.courseId] || {};
-
-        // [MODIFIED] Use standardized courseUnits from lessons.json
         let units = lesson.courseUnits || [];
-
-        // Use unit-level classroom URLs from the course document (only if they exist as keys)
         const unitConfigs = config.githubClassroomUrls || {};
-
-        // Combine all unit sources, excluding master files
         let allFiles = Array.from(new Set([...units, ...Object.keys(unitConfigs)]))
             .filter(f => f && !f.includes('-master-'));
 
-        // [NEW] Strict Filtering by unitId if provided in URL
         if (filterUnitId) {
             allFiles = allFiles.filter(f => f === filterUnitId);
         }
 
         return allFiles.map(unitFile => {
-            // [NEW] Look for teachers in unit-specific doc if it exists, otherwise fall back to course doc logic
             const unitDocConfig = dashboardData?.courseConfigs?.[unitFile] || {};
             const unitTeachersArr = Array.isArray(unitDocConfig.authorizedTeachers) ? unitDocConfig.authorizedTeachers : [];
-
-            // Legacy/Fallback: Teachers specifically authorized for THIS unit in course doc
             const legacyTeachers = (unitConfigs[unitFile] && typeof unitConfigs[unitFile] === 'object') ? Object.keys(unitConfigs[unitFile]) : [];
-
             const unitTeachers = Array.from(new Set([...unitTeachersArr, ...legacyTeachers])).filter(t => t && t !== 'default');
             const unitName = formatUnitName(unitFile) || unitFile;
 
-            // Optional: Highlight row if it matches filterUnitId
             const isSelected = filterUnitId && unitFile === filterUnitId;
-            const containerClass = isSelected ? "bg-blue-50/60 border-l-4 border-blue-500 shadow-sm z-10" : "hover:bg-orange-50/30 transition-colors";
-
-            // [NEW] Truly Unique Input ID per row (including courseId to prevent collisions)
+            const containerClass = isSelected ? "bg-blue-50/60 border-l-4 border-blue-500 shadow-sm z-10" : "hover:bg-orange-50/20 transition-colors";
             const inputId = `input-auth-${lesson.courseId}-${unitFile}`.replace(/[^a-z0-9]/gi, '-');
 
             return `
-                <div class="grid grid-cols-1 md:grid-cols-[1fr,1.5fr] ${containerClass} p-5 md:px-6 md:py-6 gap-5 md:gap-0 relative">
-                    <!-- Column 1: Unit Info -->
-                    <div class="flex flex-col justify-center">
-                        <div class="md:hidden text-[11px] text-orange-400 font-black uppercase mb-1.5 tracking-widest">課程單元 / Unit</div>
+                <div class="flex flex-col ${containerClass} p-6 gap-6 relative">
+                    <!-- Section 1: Unit Info -->
+                    <div>
+                        <div class="text-[11px] text-orange-400 font-black uppercase mb-1.5 tracking-widest">課程單元 / Unit</div>
                         <div class="text-xs text-gray-400 font-mono mb-1 leading-relaxed">${escapeHtml(lesson.title)}</div>
-                        <div class="text-base font-black text-gray-800 flex items-center gap-2">
-                            <span class="px-2 py-0.5 rounded text-[10px] uppercase bg-gray-100 text-gray-600 font-black">單元</span>
-                            ${escapeHtml(unitName)}
-                        </div>
+                        <div class="text-lg font-black text-gray-800 flex items-center gap-2">${escapeHtml(unitName)}</div>
                         <div class="text-xs text-gray-400 font-mono mt-1.5 opacity-80">${escapeHtml(unitFile)}</div>
                     </div>
 
-                    <!-- Column 2: Teacher Management -->
-                    <div class="flex flex-col justify-center">
-                        <div class="md:hidden text-[11px] text-orange-400 font-black uppercase mb-2.5 tracking-widest">授權教師 / Teachers</div>
-                        <div class="flex flex-wrap gap-2.5">
+                    <!-- Separator -->
+                    <div class="h-px bg-orange-100/50 w-full"></div>
+
+                    <!-- Section 2: Teacher Management -->
+                    <div>
+                        <div class="text-[11px] text-orange-400 font-black uppercase mb-3.5 tracking-widest">授權教師管理 / Teachers</div>
+                        <div class="flex flex-wrap gap-2.5 mb-5">
                             ${unitTeachers.length > 0
                     ? unitTeachers.map(email => `
                                 <span class="inline-flex items-center px-3 py-1 bg-orange-100/80 text-orange-700 rounded-lg text-xs font-bold font-mono group/tag border border-orange-200/50">
@@ -1028,16 +1010,15 @@ function renderAdminConsole() {
                                     </button>
                                 </span>
                             `).join('')
-                    : '<span class="text-gray-300 italic text-xs">目前無授權教師</span>'
+                    : '<span class="text-gray-300 italic text-xs">目前無核心授權教師</span>'
                 }
                         </div>
 
-                        <!-- [MODIFIED] Management UI always available now -->
-                        <div class="mt-5 flex flex-col sm:flex-row gap-3">
+                        <div class="flex flex-col sm:flex-row gap-3 max-w-2xl">
                             <input type="email" id="${inputId}" placeholder="教師 Email (e.g. user@gmail.com)" 
-                                class="flex-grow px-4 py-2 text-xs border border-orange-100 rounded-xl outline-none focus:ring-2 focus:ring-orange-200 bg-white/90 shadow-sm transition-all">
+                                class="flex-grow px-4 py-2.5 text-xs border border-orange-100 rounded-xl outline-none focus:ring-2 focus:ring-orange-200 bg-white shadow-sm transition-all font-mono">
                             <button onclick="handleUnitTeacherAuth('${lesson.courseId}', '${unitFile}', document.getElementById('${inputId}').value, 'add')"
-                                class="px-6 py-2 bg-orange-500 text-white rounded-xl text-xs font-black hover:bg-orange-600 transition-all shadow-md active:scale-95 whitespace-nowrap">
+                                class="px-8 py-2.5 bg-orange-500 text-white rounded-xl text-xs font-black hover:bg-orange-600 transition-all shadow-md active:scale-95 whitespace-nowrap">
                                 新增授權 👤
                             </button>
                         </div>
@@ -1052,27 +1033,6 @@ function renderAdminConsole() {
 
     adminPanel.innerHTML = html;
 }
-
-
-window.handleTeacherAuth = async function (courseId, teacherEmail, action) {
-    if (!teacherEmail) return alert("請輸入 Email");
-    const msg = document.getElementById('admin-msg');
-
-    try {
-        if (msg) msg.textContent = action === 'add' ? "正在新增授權..." : "正在移除授權...";
-        const authFunc = httpsCallable(functions, 'authorizeTeacherForCourse');
-        await authFunc({ courseId, teacherEmail, action });
-
-        // alert("設定成功！");
-        // Reload dashboard data
-        loadDashboard();
-    } catch (e) {
-        console.error(e);
-        alert("設定失敗：" + e.message);
-    } finally {
-        if (msg) msg.textContent = "";
-    }
-};
 
 window.handleUnitTeacherAuth = async function (courseId, unitFile, teacherEmail, action) {
     if (!teacherEmail) return alert("請輸入 Email");
@@ -1186,7 +1146,6 @@ function setupGradingFunctions() {
     }
 }
 
-
 // Utils
 function escapeHtml(text) {
     if (!text) return "";
@@ -1246,10 +1205,6 @@ function aggregateData(data) {
         });
 
         student.courseProgress = aggregated;
-
-        // Also fix totalTime recalculation? 
-        // totalTime is usually a sum of all progress, but if we had duplicate keys (filename vs real id), 
-        // we might want to recalc. For now, trust the server's totalTime or recalc if needed.
     });
 
     // Fix assignments courseId if needed
@@ -1314,18 +1269,52 @@ function setupSettingsFeature() {
     // Buttons are now rendered individually in each row
 }
 
+/**
+ * Checks if a user is explicitly authorized as a teacher for a specific unit.
+ * Logic matches renderAdminConsole: unit-level authorizedTeachers OR legacy classroom URL keys.
+ */
+function isUserAuthorizedForUnit(unitFile, courseId, email) {
+    if (!email) return false;
+    const courseConfig = dashboardData?.courseConfigs?.[courseId] || {};
+    const unitConfigs = courseConfig.githubClassroomUrls || {};
+
+    // 1. Check unit-specific document for authorizedTeachers array
+    const unitDocConfig = dashboardData?.courseConfigs?.[unitFile] || {};
+    const unitTeachersArr = Array.isArray(unitDocConfig.authorizedTeachers) ? unitDocConfig.authorizedTeachers : [];
+
+    // 2. Legacy/Fallback: Teachers specifically authorized for THIS unit in course-level doc
+    const legacyTeachers = (unitConfigs[unitFile] && typeof unitConfigs[unitFile] === 'object') ? Object.keys(unitConfigs[unitFile]) : [];
+
+    const allAuthorized = new Set([...unitTeachersArr, ...legacyTeachers]);
+    return allAuthorized.has(email);
+}
+
 async function renderSettingsTab(filterUnitId = null) {
     const container = document.getElementById('settings-container');
     if (!container) return;
 
     try {
+        const userEmail = auth.currentUser?.email;
+        if (!userEmail) {
+            container.innerHTML = `<div class="text-center py-20 text-gray-400">請先登入以查看設定。</div>`;
+            return;
+        }
+
         // Use pre-loaded data instead of extra call
         courseConfigs = dashboardData?.courseConfigs || {};
 
-        // 2. Render Course List (Only those the user is authorized for)
-        let authorizedLessons = allLessons.filter(l =>
-            myRole === 'admin' || courseConfigs[l.courseId]
-        );
+        // 2. Render Course List (Strict Filtering: ONLY search for units where user is authorized)
+        let authorizedLessons = allLessons.filter(course => {
+            const courseConfig = courseConfigs[course.courseId] || {};
+            const unitConfigs = courseConfig.githubClassroomUrls || {};
+            const units = Array.isArray(course.courseUnits) ? course.courseUnits : [];
+
+            // Combine unit sources (excluding master files)
+            const allFiles = Array.from(new Set([...units, ...Object.keys(unitConfigs)]))
+                .filter(f => f && !f.includes('-master-'));
+
+            return allFiles.some(f => isUserAuthorizedForUnit(f, course.courseId, userEmail));
+        });
 
         // [NEW] If filtered to a specific course, only show that course in settings
         const urlParams = new URLSearchParams(window.location.search);
@@ -1335,7 +1324,7 @@ async function renderSettingsTab(filterUnitId = null) {
         }
 
         if (authorizedLessons.length === 0) {
-            container.innerHTML = `<div class="text-center py-20 text-gray-400" > 目前尚無獲准管理的課程。</div> `;
+            container.innerHTML = `<div class="text-center py-20 text-gray-400" > 目前尚無獲准管理的課程（需為單元合格教師）。</div> `;
             return;
         }
 
@@ -1357,26 +1346,25 @@ async function renderSettingsTab(filterUnitId = null) {
             const guideData = robustExtractGuideSegments(rawInstructor, rawAssignment);
             const usedSegments = new Set();
 
-            // [MODIFIED] Respect filterUnitId if present
+            // [MODIFIED] Respect filterUnitId AND check strict authorization
             const unitRows = allUnits
                 .filter(f => {
                     const isMaster = f.includes('-master-');
-                    // [MODIFIED] Restore master row if it's the specific target or if no filters are active
-                    if (isMaster && filterUnitId !== f && filterUnitId !== null) return false;
 
-                    // If filtered to a specific unit, only show that unit
+                    // 1. Strict Authorization Check
+                    if (!isUserAuthorizedForUnit(f, course.courseId, userEmail)) return false;
+
+                    // 2. Filter logic (same as before)
+                    if (isMaster && filterUnitId !== f && filterUnitId !== null) return false;
                     if (filterUnitId && !filterUnitId.includes('-master-')) {
                         const cleanF = f.replace('.html', '');
                         const cleanFilter = filterUnitId.replace('.html', '');
                         return cleanF === cleanFilter;
                     }
-
                     return true;
                 })
                 .map((fileName) => {
                     const isMaster = fileName.includes('-master-');
-                    // [FIX] Map unitNum correctly: master is skipped in numbering for guides
-                    // Find actual unit index among unit-only files
                     const realUnitsOnly = allUnits.filter(u => !u.includes('-master-'));
                     const unitIdx = realUnitsOnly.indexOf(fileName);
                     const unitNum = unitIdx !== -1 ? unitIdx + 1 : null;
@@ -1387,9 +1375,12 @@ async function renderSettingsTab(filterUnitId = null) {
                         usedSegments.add(fileName);
                         if (unitNum) usedSegments.add(unitNum.toString());
                     }
-                    return renderUnitRow(course.courseId, fileName, configs[fileName], segment);
+                    return renderUnitRow(course.courseId, fileName, configs[fileName], segment, course.title);
                 })
                 .join('');
+
+            // If no units are rendered for this course, don't show the course card at all (safety check)
+            if (!unitRows) return "";
 
             // Collect unused segments for footer
             let extraFooter = "";
@@ -1408,46 +1399,13 @@ async function renderSettingsTab(filterUnitId = null) {
                 }
             });
 
-            // Construct final footer content (Header + Footer + ANY non-rendered segments)
-            let footerContent = guideData.header ? `<div class="mb-4" > ${guideData.header}</div> ` : "";
-            if (guideData.footer || extraFooter) {
-                if (footerContent) footerContent += "<hr>";
-                footerContent += (guideData.footer || "") + (extraFooter ? (guideData.footer ? "<hr>" : "") + extraFooter : "");
-            }
-
-            const cardName = filterUnitId ? formatUnitName(filterUnitId) : "";
-            const cardTitle = cardName || escapeHtml(course.title);
-            const showFooter = footerContent && (filterUnitId || units.length > 0);
-
             return `
-        <div class="p-4 md:p-6 bg-white border border-gray-100 rounded-xl shadow-sm space-y-4" >
-                    <div class="flex flex-col md:flex-row md:justify-between md:items-center border-b pb-3 gap-2">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">${course.icon || '📚'}</span>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-sm md:text-base">${cardTitle}</h4>
-                                <p class="text-[9px] md:text-[10px] text-gray-400 font-mono">${filterUnitId || course.courseId}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-3 md:gap-4" id="units-list-${course.courseId}">
+                <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm font-mono text-sm mb-12 w-full">
+                    <div class="divide-y divide-gray-100">
                         ${unitRows}
                     </div>
-                    
-                    ${showFooter ? `
-                        <div class="mt-6 md:mt-8 p-3 md:p-6 bg-blue-50/50 border border-blue-100 rounded-xl shadow-inner overflow-x-auto">
-                            <h5 class="text-blue-800 font-bold flex items-center gap-2 mb-3 md:mb-4 text-xs md:text-base">
-                                <span>💡</span> 教師指南 (Instructor Guide)
-                            </h5>
-                            <div class="instructor-guide-content text-xs md:text-base text-blue-900/90 leading-relaxed prose prose-blue max-w-none">
-                                ${footerContent}
-                            </div>
-                        </div>
-                    ` : ''
-                }
                 </div>
-        `;
+            `;
         }).join('');
 
     } catch (e) {
@@ -1493,54 +1451,68 @@ function robustExtractGuideSegments(instructorInput, assignmentInput = null) {
     return result;
 }
 
+function renderUnitRow(courseId, fileName, teacherMap = {}, guideSegment = "", courseTitle = "") {
+    const userEmail = auth.currentUser?.email;
 
-function renderUnitRow(courseId, fileName, teacherMap = {}, guideSegment = "") {
     // teacherMap: { "default": "...", "teacher_a": "..." }
-    const entries = Object.entries(teacherMap);
-    if (entries.length === 0) entries.push(['default', '']);
+    let entries = Object.entries(teacherMap);
+
+    // [STRICT] Only show current user's entry in settings (teacher view)
+    entries = entries.filter(([teacher]) => teacher === userEmail);
+
+    if (entries.length === 0 && userEmail) {
+        entries.push([userEmail, '']);
+    }
 
     const unitName = formatUnitName(fileName);
 
     return `
-        <div class="unit-config-card bg-gray-50 p-3 md:p-4 rounded-xl border border-gray-100 hover:border-blue-100 transition shadow-sm relative group"
-    data-course-id="${courseId}" data-file-name="${fileName}">
+        <div class="flex flex-col hover:bg-blue-50/10 transition-colors p-6 gap-6 relative unit-config-card border-b border-gray-100 last:border-0"
+             data-course-id="${courseId}" data-file-name="${fileName}">
             
-            <div class="mb-3 md:mb-4 border-b border-gray-200 pb-2 md:pb-3">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="text-blue-500 text-sm md:text-base">📄</span>
-                    <h4 class="text-xs md:text-sm font-bold text-gray-800">${escapeHtml(unitName || fileName.replace('.html', ''))}</h4>
+            <!-- Section 1: Unit Info (High Hierarchy) -->
+            <div>
+                <div class="text-[10px] text-blue-500 font-black uppercase mb-2 tracking-widest flex items-center gap-2">
+                   <span class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
+                   課程單元 / Unit
                 </div>
-                <div class="text-[9px] md:text-[10px] font-mono text-gray-400 pl-6">${escapeHtml(fileName)}</div>
+                <div class="text-[11px] text-gray-400 font-mono mb-1 leading-relaxed opacity-80">${escapeHtml(courseTitle)}</div>
+                <div class="text-xl font-black text-gray-800 tracking-tight leading-tight">${escapeHtml(unitName)}</div>
+                <div class="text-[11px] text-gray-300 font-mono mt-1.5">${escapeHtml(fileName)}</div>
             </div>
 
-            <div class="space-y-3 assignment-links-container">
-                ${entries.map(([teacher, url], idx) => `
-                    <div class="space-y-1 assignment-link-row">
-                        <div class="flex justify-between items-center">
-                            <label class="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase">${teacher === 'default' ? '作業連結' : '教師 ID: ' + teacher}</label>
-                            <input type="hidden" class="assignment-id-input" value="${escapeHtml(teacher)}">
-                        </div>
-                        <div class="flex gap-2">
-                            <input type="url" placeholder="貼上 GitHub Classroom 邀請連結" 
-                                value="${escapeHtml(url)}" 
-                                class="assignment-url-input flex-grow px-2 md:px-3 py-1.5 md:py-2 text-[11px] md:text-xs border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition">
-                            <button onclick="saveAllSettings(this)"
-                                class="bg-blue-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg hover:bg-blue-700 transition text-[11px] md:text-xs font-bold shadow-sm whitespace-nowrap btn-save-individual">
-                                儲存
-                            </button>
-                        </div>
+            <!-- Separator -->
+            <div class="h-px bg-gray-100/60 w-full"></div>
+
+            <!-- Section 2: Assignment Config -->
+            <div class="flex flex-col gap-5 assignment-links-container">
+                <div>
+                   <div class="text-[10px] text-blue-400 font-black uppercase mb-3 tracking-widest">作業連結設定 / Assignment</div>
+                   ${entries.map(([teacher, url]) => `
+                       <div class="flex flex-col sm:flex-row gap-3 assignment-link-row">
+                           <input type="hidden" class="assignment-id-input" value="${escapeHtml(teacher)}">
+                           <input type="url" placeholder="貼上 GitHub Classroom 邀請連結" 
+                               value="${escapeHtml(url)}" 
+                               class="assignment-url-input flex-grow px-4 py-2.5 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-100 bg-white/50 shadow-sm transition-all font-mono">
+                           <button onclick="saveAllSettings(this)"
+                               class="px-8 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-700 transition-all shadow-md active:scale-95 whitespace-nowrap btn-save-individual">
+                               儲存連結 🔗
+                           </button>
+                       </div>
+                   `).join('')}
+                </div>
+
+                ${guideSegment ? `
+                <div class="instructor-guide-wrapper">
+                    <div class="text-[10px] text-blue-400 font-black uppercase mb-3 tracking-widest">單元教學指引 / Unit Guide</div>
+                    <div class="p-5 bg-blue-50/30 border border-blue-100/20 rounded-2xl text-xs text-blue-900/70 leading-relaxed instructor-guide-content overflow-x-auto w-full italic">
+                        ${guideSegment}
                     </div>
-                `).join('')}
-            </div>
-
-            ${guideSegment ? `
-                <div class="mt-3 md:mt-4 p-3 md:p-5 bg-blue-50/50 border border-blue-100 rounded-lg text-[11px] md:text-sm text-blue-900/90 leading-relaxed instructor-guide-content overflow-x-auto">
-                    ${guideSegment}
                 </div>
-            ` : ''
-        }
+                ` : ''}
+            </div>
         </div>
-        `;
+    `;
 }
 
 window.saveAllSettings = async function (clickedBtn = null) {
@@ -1598,11 +1570,7 @@ window.saveAllSettings = async function (clickedBtn = null) {
     }
 }
 
-// --- Global Function Exports ---
-// [CLEANUP] Redundant window exports removed, ensuring functions are defined in correct scope.
-window.handleTeacherAuth = handleTeacherAuth;
-
-// --- Global Fixes: Esc Key handling ---
+// --- Global Function Exports : Esc Key handling ---
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         // 1. Close Modal if open

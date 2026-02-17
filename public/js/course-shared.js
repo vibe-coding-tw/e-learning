@@ -125,17 +125,25 @@ function enterMediaMode(mode, url) {
         if (mode === 'doc') {
             docWrapper.classList.remove('hidden');
 
-            // [NEW] Native Mobile Doc Feel Transformation
-            const isMobile = window.innerWidth < 768;
+            // [FIXED v11.3.12] Robust Google Doc Native Reflow & Optimization
             let finalSrc = targetSrc;
-            if (isMobile && targetSrc.includes('docs.google.com')) {
-                console.log("[Media] Mobile detected, optimizing Google Doc URL...");
-                // Transform to mobilebasic for native reflow
-                if (finalSrc.includes('/edit')) {
-                    finalSrc = finalSrc.replace(/\/edit.*$/, '/mobilebasic');
-                } else if (!finalSrc.includes('/mobilebasic')) {
-                    // Append mobilebasic if not present
-                    finalSrc = finalSrc.includes('?') ? finalSrc + '&rm=mobile' : finalSrc + '/mobilebasic';
+            if (targetSrc.includes('docs.google.com/document/d/')) {
+                const isPublished = targetSrc.includes('/pub');
+                const isStandard = !isPublished;
+
+                if (isStandard) {
+                    console.log("[Media] Standard Doc detected, forcing /mobilebasic for native reflow...");
+                    // Transform /edit, /view, etc. to /mobilebasic
+                    finalSrc = finalSrc.replace(/\/document\/d\/([^/]+)\/.*$/, '/document/d/$1/mobilebasic');
+                    if (!finalSrc.includes('/mobilebasic')) {
+                        finalSrc = finalSrc.replace(/\/document\/d\/([^/]+)$/, '/document/d/$1/mobilebasic');
+                    }
+                } else {
+                    console.log("[Media] Published Doc detected, keeping /pub with UI optimization...");
+                    // Just append rm=mobile for a cleaner (but not reflowed) view
+                    if (!finalSrc.includes('rm=mobile')) {
+                        finalSrc += (finalSrc.includes('?') ? '&' : '?') + "rm=mobile";
+                    }
                 }
             }
 
@@ -364,10 +372,11 @@ function autoFitZoom() {
     const availableWidth = wrapper.clientWidth;
     const isMobile = window.innerWidth < 768;
 
-    // [NEW] If this is a mobile-optimized Google Doc, DISABLE manual scaling
-    // This allows Google's native mobile engine to handle reflow perfectly.
-    if (isMobile && iframe.src.includes('docs.google.com') && iframe.src.includes('mobile')) {
-        console.log("[Media] Native Mobile Doc detected, using standard scaling.");
+    // [FIXED v11.3.12] Only disable manual scaling IF using /mobilebasic
+    // Standard docs with /mobilebasic support native reflow, making manual scaling counter-productive.
+    // Published docs (/pub) do NOT reflow and MUST still use manual scaling.
+    if (iframe.src.includes('docs.google.com') && iframe.src.includes('mobilebasic')) {
+        console.log("[Media] Native Reflow Doc detected, disabling manual scaling.");
         iframe.style.width = '100%';
         iframe.style.height = '100%';
         iframe.style.transform = 'none';

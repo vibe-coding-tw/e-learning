@@ -378,106 +378,102 @@
     </section>
 
     <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" class="hidden">
-        <h2>講師手冊 (Instructor Guide)</h2>
-        <div class="guide-section">
-            <h3>1. 教學重點 (Teaching Points)</h3>
-            <ul>
-                <li>強調 PWM 是一種「數位對類比的模擬」，電壓本質上仍是 0 與 3.3V。</li>
-                <li>解釋工作週期 (Duty Cycle) 的計算公式：$D = \frac{T_{on}}{T_{total}}$。</li>
-                <li>引導學生思考能量等效原理：平均電壓 $V_{avg} = V_{max} \times D$。</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>2. 常見問題 (Common Issues)</h3>
-            <ul>
-                <li><strong>誤以為電壓被降下來了</strong>：提醒學生若用三用電表測量，看到的是平均值，但示波器會顯示脈衝。</li>
-                <li><strong>頻率選取不當</strong>：頻率太低會導致肉眼可見的閃爍 (Flicker)；太高則會增加電磁干擾或驅動電路損耗。</li>
-                <li><strong>亮度不均</strong>：解釋 LED 亮度與電流呈現非線性關係，50% Duty Cycle 不代表一半的流明感。</li>
-            </ul>
-        </div>
-        <div class="guide-section bg-gray-50 p-4 rounded-lg">
-            <h3 class="font-bold mb-2 text-sm text-gray-900">3. 評分標準 (Grading Criteria)</h3>
-            <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
-                <li><strong>基礎分</strong>：能正確理解 Duty Cycle 並實作出呼吸燈效果。</li>
-                <li><strong>進階分</strong>：能解釋視覺暫留 (Persistence of Vision, POV) 如何使我們感知平滑的亮度變化。</li>
-            </ul>
+    <section id="instructor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>上傳包含基礎 GPIO 定義但「未實作 PWM 初始化與控制代碼」的 Repo 框架，並勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>建立作業並連結範本。建議開啟 <strong>Feedback Pull Requests</strong> 選項以便對比學生的頻率選擇與工作週期 (Duty Cycle) 映射邏輯。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，獲得個人專屬 Repo，實作呼吸燈效果或 LED 亮度階梯式調整功能。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>打開 Feedback PR，針對學生的「硬體通道分配 (LEDC Channel)」與「視覺暫留 (POV) 應用思維」予以具體回饋。</li>
+            </ol>
         </div>
 
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mt-6">
-            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
-                <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
-.
-├── src/             # 包含 PWM 初始化 (ledcSetup) 與控制邏輯的 main.cpp
-├── README.md        # 實驗紀錄：不同工作週期下的亮度變化對比表與截圖
-└── .github/         # 自動評分配置</pre>
-                <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
-                <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-                    <li><strong>語法關鍵字檢查：</strong> 掃描 <code>ledcWrite</code> 與 <code>ledcAttachPin</code> 的使用，確保符合 ESP32
-                        專有的 PWM 操作規範。</li>
-                    <li><strong>邏輯驗證：</strong> 透過模擬波形輸出，驗證 Duty Cycle 的數值映射（如 0-255）是否符合 8-bit 解析度要求。</li>
-                </ul>
-            </div>
-        </div>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元引導學生掌握「數位模擬類比」的核心技術，理解電壓等效原理與 PWM 波形控制，建議範本倉庫設置如下：</p>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mt-6 bg-white p-4 border border-gray-200 rounded-lg">
-            <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
-            <div class="space-y-4 text-sm text-gray-600">
-                <div>
-                    <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
-                    <p>建立包含基礎 GPIO 定義但「未含 PWM 控制代碼」的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
-                    <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以點評學生的解析度 (Resolution) 與頻率選擇策略。</p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
-                    <p>學生點擊作業連結，獲得個人專屬 Repo，實作呼吸燈或馬達調速邏輯後 Push。</p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
-                    <p>進入 Feedback PR，針對學生的「數學運算效率」與「定時器通道衝突」給予建議。</p>
-                </div>
-            </div>
-        </div>
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── platformio.ini   # 包含基礎開發環境配置
+├── src/main.cpp      # (重點) 需實作 ledcSetup、ledcAttachPin 與 ledcWrite
+└── README.md        # 不同 Duty Cycle 下的亮度觀察表、呼吸燈週期計算與實驗日誌</code></pre>
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section mt-6">
-            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm border-collapse border border-gray-200">
-                    <thead class="bg-gray-50 text-left text-gray-800">
-                        <tr>
-                            <th class="border border-gray-200 p-2">階段</th>
-                            <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
-                            <th class="border border-gray-200 p-2">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-600">
-                        <tr>
-                            <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
-                            <td class="border border-gray-200 p-2">觀看「PWM：如何用數位方式模擬類比輸出」影片。</td>
-                            <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員理解「平均電壓」概念。</td>
-                        </tr>
-                        <tr>
-                            <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
-                            <td class="border border-gray-200 p-2">領取 Classroom 作業，實作不同工作週期的亮度測試，記錄「視覺飽和點」。</td>
-                            <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
-                        </tr>
-                        <tr>
-                            <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
-                            <td class="border border-gray-200 p-2">實作非線性亮度補償 (Gamma Correction) 並 Push，閱讀教師回覆 PR。</td>
-                            <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>main.cpp (基礎 LEDC 應用)</strong></p>
+        <pre><code>#include &lt;Arduino.h&gt;
+
+const int ledPin = 2; // 選取具備 PWM 功能的 GPIO
+const int freq = 5000;
+const int ledChannel = 0;
+const int resolution = 8; // 8-bit 解析度 (0-255)
+
+void setup() {
+  // 設定 LEDC 屬性
+  ledcSetup(ledChannel, freq, resolution);
+  // 將頻道連結至 GPIO
+  ledcAttachPin(ledPin, ledChannel);
+}
+
+void loop() {
+  // 呼吸燈效果
+  for(int dutyCycle = 0; dutyCycle <= 255; dutyCycle++){   
+    ledcWrite(ledChannel, dutyCycle);
+    delay(7);
+  }
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>核心語法檢索：</strong> 偵測程式中是否呼叫了 <code>ledcWrite()</code> 與 <code>ledcSetup()</code>。</li>
+            <li><strong>配置參數驗證：</strong> 驗證學生設定的解析度是否與其迴圈邊界 (如 0-255) 相互匹配。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody style="color: #4b5563;">
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「PWM：如何用數位開關速度模擬類比輸出電壓？」教學影片。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>Dashboard：</strong>確認學員理解「平均電壓」等效概念與視覺暫留原理。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實作亮度階梯測試，記錄 LED 在不同工作週期下是否呈現線性感受。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>解釋頻率太低導致的閃爍 (Flicker)
+                        現象與馬達驅動時的頻率限制。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作「Gamma 亮度校正演算法」並 Push 提交至 PR，增強視覺變化平滑度。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>審核學生對「定時器資源分配」與「能耗優化」的工程設計水平。
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 
     <script>

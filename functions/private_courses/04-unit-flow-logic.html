@@ -379,48 +379,72 @@
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元建議搭配 <strong>"Robust Command Flow Challenge"</strong> 作業：</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── index.html
-└── js/logic.js      # (重點) 需補完計時器清除邏輯</code></pre>
-
-        <h3>B. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>發送頻率測試：</strong> 透過模擬器測試指令發送時間間隔。</li>
-        </ul>
-
-        <hr>
-
         <h2>GitHub Classroom 詳細操作指南</h2>
-        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+        <div class="classroom-guide">
             <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
             <ol>
-                <li>上傳基礎專案。</li>
-                <li>勾選 <strong>"Template repository"</strong>。</li>
+                <li>上傳框架代碼到 Repo 並勾選 <strong>"Template repository"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
             <ol>
-                <li>建立作業並連結範本。</li>
-                <li><strong>重點：</strong> 向學生解釋為何每個 Repo 最上方都有一個 "Open in Codespaces" 按鈕。</li>
+                <li>建立作業並連結範本，建議設定 <strong>"Enable feedback pull requests"</strong> 以糾正 Timer 洩漏與重複觸發問題。</li>
             </ol>
 
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (雲端開發)</strong></p>
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
             <ol>
-                <li>學生在 GitHub 直接點擊 "Code" > "Codespaces" 啟動。</li>
-                <li>完成 <strong>Commit & Push</strong>。</li>
+                <li>學生領取作業，實作雙向 <code>setInterval</code> 指令流與安全停機邏輯。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
             </ol>
 
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋</strong></p>
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
             <ol>
-                <li>打開 Feedback PR，確認學生是否掌握了雲端開發的基本流程。</li>
+                <li>打開 Feedback PR，檢查學生是否有妥善處理「按住按鈕後滑出熱區」或「切換視窗」的停機機制（Dead Man's Switch）。</li>
             </ol>
         </div>
 
-        <hr>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元引導學生實作穩固的指令流與安全停機機制 (Dead Man's Switch)，建議範本倉庫設置如下：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html       # 包含控制按鈕與日誌區域
+├── js/logic.js      # (重點) 需實作計時器與安全停機邏輯
+└── README.md        # 穩定性設計規範與指令頻率分析</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>logic.js (指令流控制)</strong></p>
+        <pre><code>let flowInterval = null;
+
+function startFlow() {
+  if (flowInterval) return; // 防止重複啟動
+  // 每 100ms 發送一次指令 (Task 3-1)
+  flowInterval = setInterval(() => {
+    sendBuffer(new Uint8Array([0x01])); 
+  }, 100);
+}
+
+function stopFlow() {
+  if (flowInterval) {
+    clearInterval(flowInterval);
+    flowInterval = null;
+  }
+  sendBuffer(new Uint8Array([0x00])); // 停止指令
+}</code></pre>
+
+        <p><strong>safety.js (斷訊自動停止)</strong></p>
+        <pre><code>// 模擬斷訊安全機制 (Task 3-3)
+window.addEventListener('blur', () => {
+    console.warn("視窗失去焦點，觸發安全停機");
+    stopFlow();
+});</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>關鍵字檢查：</strong> 檢查 <code>logic.js</code> 是否包含 <code>setInterval</code> 與
+                <code>clearInterval</code>。</li>
+            <li><strong>頻率驗證：</strong> 透過 Actions 模擬點擊，檢查指令發送的時間間隔是否符合設定（如 100ms ± 20%）。</li>
+        </ul>
 
         <h2>翻轉教室的實施策略</h2>
         <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
@@ -431,23 +455,26 @@
                     <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody style="color: #4b5563;">
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看關於 <code>setInterval</code> 與發送頻率控制的講義。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認預習紀錄。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看計時器原理講義，觀察本頁 Lab 中的指令日誌跳動頻率。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>Dashboard：</strong>確認學生已初步理解「指令連發」的需求與風險。
+                    </td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作指令流發送邏輯，並測試在不同網路環境下的穩定性。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>助教角色：</strong>協助解決計時器堆疊引發的「指令暴衝」問題。
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作指令流發送 (3-1) 並修正狀態機衝突 (3-2) 後更新代碼。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>助教角色：</strong>協助解決計時器堆疊引發的「指令暴衝」或硬體當機問題。
                     </td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">優化斷訊自動停止邏輯，確保安全性。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">優化斷訊安全機制 (3-3) 並提交最後一次 Commit 與筆記。</td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>檢視邏輯邊界狀況（如系統當機）的處理。</td>
+                            PR：</strong>檢視邏輯邊界狀況（如視窗切換、按鈕黏滯）的處理是否嚴謹。</td>
                 </tr>
             </tbody>
         </table>

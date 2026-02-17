@@ -466,48 +466,74 @@ function draw() {
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元建議搭配 <strong>"Virtual Joystick UI Challenge"</strong> 作業：</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── index.html
-└── js/joystick.js    # (重點) 需加入座標歸一化邏輯</code></pre>
-
-        <h3>B. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>座標範圍檢查：</strong> 驗證輸出的數據是否嚴格落在 [-100, 100] 之間。</li>
-        </ul>
-
-        <hr>
-
         <h2>GitHub Classroom 詳細操作指南</h2>
-        <div style="background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+        <div class="classroom-guide">
             <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
             <ol>
-                <li>上傳基礎專案。</li>
-                <li>勾選 <strong>"Template repository"</strong>。</li>
+                <li>上傳基礎專案框架（含 <code><canvas></code> 元素背景）與 <code>joystick.js</code> 註解框架，並勾選 <strong>"Template
+                        repository"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
             <ol>
-                <li>建立作業並連結範本。</li>
-                <li><strong>重點：</strong> 向學生解釋為何每個 Repo 最上方都有一個 "Open in Codespaces" 按鈕。</li>
+                <li>建立作業並連結範本。建議開啟 <strong>Feedback Pull Requests</strong> 選項以便對比學生的渲染循環與座標映射邏輯。</li>
             </ol>
 
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (雲端開發)</strong></p>
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
             <ol>
-                <li>學生在 GitHub 直接點擊 "Code" > "Codespaces" 啟動。</li>
-                <li>完成 <strong>Commit & Push</strong>。</li>
+                <li>學生領取作業，實作從 DOM 座標到 Canvas 像素的映射與動態搖桿繪製。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
             </ol>
 
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋</strong></p>
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
             <ol>
-                <li>打開 Feedback PR，確認學生是否掌握了雲端開發的基本流程。</li>
+                <li>打開 Feedback PR，重點檢查學生對 <code>clearRect</code> 的調用位置、座標歸一化公式及資源管理（如 <code>save/restore</code>）的嚴謹度。
+                </li>
             </ol>
         </div>
 
-        <hr>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元引導學生從 DOM 操作轉向高性能的 Canvas 繪圖，並實作基礎的虛擬搖桿渲染，建議範本倉庫設置如下：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html       # 包含畫布元素 <canvas id="joystick">
+├── js/joystick.js    # (重點) 需實作繪圖循環與座標歸一化邏輯
+└── README.md        # 座標歸一化公式推導與 Canvas 效能評測報告</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>joystick.js (Canvas 渲染循環)</strong></p>
+        <pre><code>const canvas = document.getElementById('joystick');
+const ctx = canvas.getContext('2d');
+
+function drawJoystick(x, y) {
+  // 1. 清除舊畫面，防止殘影
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // 2. 繪製底座 (固定)
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, baseRadius, 0, Math.PI * 2);
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.stroke();
+
+  // 3. 繪製搖桿頭 (隨觸控點動態移動)
+  ctx.beginPath();
+  ctx.arc(x, y, stickRadius, 0, Math.PI * 2);
+  ctx.fillStyle = '#6366f1';
+  ctx.fill();
+
+  // 4. 指令歸一化 (Task 1-1)
+  const normalizedX = Math.round((x - centerX) / baseRadius * 100);
+  const normalizedY = Math.round((y - centerY) / baseRadius * -100); 
+  sendJoyData(normalizedX, normalizedY);
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>渲染檢查：</strong> 使用 Actions 檢查 <code>joystick.js</code> 是否包含必要的繪圖指令如 <code>clearRect</code> 與
+                <code>arc</code>。</li>
+            <li><strong>範圍驗證：</strong> 傳入極限座標值，驗證輸出的歸一化數值是否嚴格控制在 [-100, 100] 的整數區間內。</li>
+        </ul>
 
         <h2>翻轉教室的實施策略</h2>
         <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
@@ -518,23 +544,25 @@ function draw() {
                     <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody style="color: #4b5563;">
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">複習講義中關於 CSS 圓形佈局與百分比定位的基礎知識。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學生已完成座標基礎練習。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">研讀 Canvas 與 DOM 性能對抗實驗，觀察本頁 Lab 中的座標日誌。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>Dashboard：</strong>確認學生已初步具備座標系變換的基本概念。</td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">先完成 CSS 版搖桿，再嘗試使用 Canvas 渲染座標基準線與動態數值。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>助教角色：</strong>引導學生區分 DOM 操作與 Canvas
-                        渲染的效能差異。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業完成搖桿基礎渲染與座標歸一化核心邏輯 (1-1) 並更新代碼。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>現場觀察：</strong>展示學生繪製的不同搖桿風格，討論渲染層的回刷開銷。
+                    </td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">優化 Canvas 繪圖頻率（RequestAnimationFrame），並 Commit
-                        到 GitHub。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核繪圖邏輯的流暢度與資源管理.
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">挑戰動態儀表板或多層繪圖特效 (1-2) 並提交最終 PR 筆記。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核繪圖函數的重用性、代碼優雅度與
+                        resource-cleanup 的嚴謹度。
                     </td>
                 </tr>
             </tbody>

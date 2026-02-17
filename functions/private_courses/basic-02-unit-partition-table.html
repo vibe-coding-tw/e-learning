@@ -342,113 +342,92 @@
     </section>
 
     <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" class="hidden">
-        <h2>講師手冊 (Instructor Guide)</h2>
-        <div class="guide-section">
-            <h3>1. 教學重點 (Teaching Points)</h3>
-            <ul>
-                <li>解釋 Flash 映射與虛擬記憶體的概念。</li>
-                <li>介紹 Wear Leveling (磨損均衡) 機制，為什麼 Flash 不能無限次寫入。</li>
-                <li>對比 SPIFFS, LittleFS 與 FATFS 的優缺點（如：檔案數量、系統穩定性）。</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>2. 常見問題 (Common Issues)</h3>
-            <ul>
-                <li><strong>分區表衝突 (Overlap)</strong>：提醒學生地址計算必須精確， offsets 不能重疊。</li>
-                <li><strong>找不到檔案系統</strong>：燒錄程式後，往往忘記執行 "Upload Filesystem Image" 命令。</li>
-                <li><strong>NVS 損毀</strong>：解釋如果 `nvs_flash_init()` 失敗，需要先執行 `nvs_flash_erase()` 再初始化。</li>
-            </ul>
-        </div>
-        <div class="guide-section bg-gray-50 p-4 rounded-lg">
-            <h3 class="font-bold mb-2 text-sm text-gray-900">3. 評分標準 (Grading Criteria)</h3>
-            <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
-                <li><strong>基礎分</strong>：能正確自定義分區並成功儲存與讀取資料。</li>
-                <li><strong>進階分</strong>：能解釋 `0x10000` 為何是 APP 分區的慣用起始地址（對齊要求）。</li>
-            </ul>
+    <section id="instructor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>上傳包含基礎檔案讀寫框架但「分區表 configuration 損毀或不對齊」的 Repo 框架，並勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>建立作業並連結範本。建議開啟 <strong>Feedback Pull Requests</strong> 選項以便點評學員對 Flash 空間規劃與磨損均衡 (Wear Leveling)
+                    的理解。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，獲得個人專屬 Repo，修正分區衝突、實作 SPIFFS/Preferences 存取邏輯並成功持久化資料。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>打開 Feedback PR，針對學生的「分區地址計算精確度」與「異常狀態下 (如 NVS 損毀) 的初始復原思維」予以具體回饋。</li>
+            </ol>
         </div>
 
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mt-6">
-            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
-                <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
-.
-├── src/             # 包含 NVS 與 SPIFFS 檔案讀寫邏輯的 main.cpp
-├── data/            # 包含要燒錄進檔案系統的初始檔案 (SPIFFS Upload)
-├── partitions.csv   # 自定義 Flash 分區表檔案
-├── README.md        # 實驗紀錄：分區空間配置計算表、燒錄成功日誌與檔案讀取截圖
-└── .github/         # 自動評核配置</pre>
-                <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
-                <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-                    <li><strong>分區語法校驗：</strong> 透過測試腳本解析 <code>partitions.csv</code>，驗證 Offset 地址是否重疊 (Overlap) 且大小為
-                        4KB 對齊。</li>
-                    <li><strong>程式庫關聯檢查：</strong> 掃描程式中對 <code>SPIFFS.begin()</code> 或 <code>Preferences.h</code>
-                        的使用，確認學生是否有正確實作持久化儲存。</li>
-                </ul>
-            </div>
-        </div>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元引導學生深入 Flash 映射層級，掌握嵌入式系統中非揮發性記憶體的管理技巧，建議範本倉庫設置如下：</p>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mt-6 bg-white p-4 border border-gray-200 rounded-lg">
-            <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
-            <div class="space-y-4 text-sm text-gray-600">
-                <div>
-                    <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
-                    <p>建立包含基礎檔案讀寫框架但「分區表損毀」或「不完整」的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
-                    <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以便對其 Flash 空間規劃與磨損均衡 (Wear Leveling)
-                        概念進行點評。</p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
-                    <p>學生領取作業，獲得個人專屬 Repo，修正分區衝突、燒錄檔案系統鏡像檔並成功讀取資料後 Push。</p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
-                    <p>進入 Feedback PR，針對學生的「分區優先級分配」與「檔案系統可靠性」予以回饋。</p>
-                </div>
-            </div>
-        </div>
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── platformio.ini   # (重點) 需加入 board_build.partitions = partitions.csv
+├── partitions.csv   # 自定義 Flash 分區表設定
+├── src/main.cpp      # 包含 Preferences (NVS) 與 SPIFFS 讀寫邏輯
+└── README.md        # 分區空間配置計算表、燒錄日誌與檔案讀取截圖</code></pre>
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section mt-6">
-            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm border-collapse border border-gray-200">
-                    <thead class="bg-gray-50 text-left text-gray-800">
-                        <tr>
-                            <th class="border border-gray-200 p-2">階段</th>
-                            <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
-                            <th class="border border-gray-200 p-2">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-600">
-                        <tr>
-                            <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
-                            <td class="border border-gray-200 p-2">觀看「ESP32 記憶體管理：為什麼要自定義分區表？」教學影片。</td>
-                            <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員掌握偏移量 (Offset) 與大小
-                                (Size) 的概念。</td>
-                        </tr>
-                        <tr>
-                            <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
-                            <td class="border border-gray-200 p-2">領取 Classroom 作業，對比 SPIFFS 與 NVS
-                                在儲存「單一數值」與「大容量檔案」時的開發難度。</td>
-                            <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
-                        </tr>
-                        <tr>
-                            <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
-                            <td class="border border-gray-200 p-2">將本地設定封裝成單一 JSON 檔儲存於 SPIFFS 並實作讀取 Push，閱讀教師回覆 PR。
-                            </td>
-                            <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>partitions.csv (分區表練習)</strong></p>
+        <pre><code># Name,   Type, SubType, Offset,  Size, Flags
+nvs,      data, nvs,     ,        0x4000,
+otadata,  data, ota,     ,        0x2000,
+phy_init, data, phy,     ,        0x1000,
+factory,  app,  factory, ,        1M,
+storage,  data, spiffs,  ,        2M,</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>語法校驗：</strong> 解析 <code>partitions.csv</code>，驗證 Offset 地址是否重疊 (Overlap) 且 Size 是否符合 4KB 對齊要求。
+            </li>
+            <li><strong>邏輯健壯性：</strong> 搜尋 <code>main.cpp</code> 中是否包含 <code>nvs_flash_erase()</code> 應急處理邏輯。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody style="color: #4b5563;">
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「ESP32 記憶體管理：為什麼要自定義分區表？」教學影片。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員掌握偏移量 (Offset)
+                        與類型 (Type) 的對應關係。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實作持久化儲存 (2-3)，對比 Preferences 與 SPIFFS
+                        在存取「配置數值」與「大檔案」時的效能差。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>解釋 Wear Leveling (磨損均衡)
+                        機制，為什麼 Flash 不能無限次重複擦寫。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作具備 JSON 參數解析功能的 SPIFFS 讀取腳本並 Push 最終 PR。
+                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>審核學生對「分區對齊規則」與「檔案系統可靠性」的工程化實操細節。
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 
     <script>
