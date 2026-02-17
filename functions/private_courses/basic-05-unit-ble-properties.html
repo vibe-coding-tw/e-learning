@@ -291,137 +291,130 @@ class MyCallbacks: public BLECharacteristicCallbacks {
     </footer>
 
     <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" class="hidden">
+    <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
-        <div class="guide-section">
-            <h3>1. GitHub Classroom 設定</h3>
-            <ul>
-                <li>點擊儀表板「領取作業」按鈕，獲取 `basic-05-ble-prop` 作業儲存庫。</li>
-                <li>將個人作業儲存庫 Clone 至本地。</li>
-                <li>開啟專案，檢視 `BLECharacteristic` 的屬性設置。</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>2. 翻轉課堂學習策略</h3>
-            <ul>
-                <li><strong>課前預習</strong>：觀看「BLE 讀取、寫入與通知 (Properties)」教學影片。</li>
-                <li><strong>課中實作</strong>：在同一個 Service 下管理不同屬性，實作 Write 控制 LED 與 Notify 即時傳送數值。</li>
-                <li><strong>課後思考</strong>：為什麼對於「連續變動」的數據（如車速、轉速），使用 Notify 比 Read 更合適？</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>3. 單元實作任務</h3>
-            <ul>
-                <li><strong>作業 5-1 (30%)</strong>：配置一個可讀取的特徵值，回應學生的學號。</li>
-                <li><strong>作業 5-2 (40%)</strong>：配置一個可寫入的特徵值，控制板載 LED 的閃爍頻率。</li>
-                <li><strong>作業 5-3 (30%)</strong>：配置一個具備 Notify 屬性的特徵值，每 500ms 或是當感測器數值變動超過 5% 時主動推送。</li>
-            </ul>
-        </div>
+
+        <h3>【作業 3-1】「儀表板實作」：混合屬性配置</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 嵌入式 UI 工程師 (Embedded UI Engineer)。</li>
+            <li><strong>執行方式：</strong> 在同一個 BLE Service 下配置多個特徵值：一個可讀取學員學號，一個可寫入控制板載 LED，一個每秒推送隨機模擬感測數據。使用手機端 App
+                進行全面測試。</li>
+            <li><strong>評分重點 :</strong> 成功在一個服務中管理多種屬性，且各功能與預期一致且無干擾。</li>
+        </ul>
+
+        <h3>【作業 3-2】「指令延遲大挑戰」：Write vs NoResp</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 通訊效能分析師 (Communication Performance Analyst)。</li>
+            <li><strong>執行方式：</strong> 每秒發送 50 次指令，比較 <code>PROPERTY_WRITE</code> 與 <code>PROPERTY_WRITE_NR</code>
+                在高頻控制下的表現，記錄是否會產生指令堆疊與延遲（Lag）。</li>
+            <li><strong>評分重點 :</strong> 數據記錄詳實，能清晰描述兩種寫入模式在不同應用場景下的優缺點。</li>
+        </ul>
+
+        <h3>【作業 3-3】「智慧推播：條件式 Notify」</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 低功耗系統設計師 (Low Power System Designer)。</li>
+            <li><strong>執行方式：</strong> 實作「有意義才通知」邏輯：只有當感測器數值變動超過 5%-10% 時，ESP32 才觸發
+                <code>notify()</code>。觀察並記錄在靜止與劇烈變動情況下的通訊封包密度差異。</li>
+            <li><strong>評分重點 :</strong> 代碼邏輯正確且能顯著減少不必要的數據推播，展現對省電設計的理解。</li>
+        </ul>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" class="hidden">
-        <h2>講師手冊 (Instructor Guide)</h2>
-        <div class="guide-section">
-            <h3>1. 教學重點 (Teaching Points)</h3>
-            <ul>
-                <li>對比傳輸模式：Read (主動索取), Write (下令控制), Notify (即時推播)。</li>
-                <li>解釋 Write with Response (可靠但慢) 與 Write Without Response (快速但不保證) 的場景應用。</li>
-                <li>引導學生設計「省電且高效」的通訊策略，減少不必要的數據包交換。</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>2. 常見問題 (Common Issues)</h3>
-            <ul>
-                <li><strong>Notify 不會動</strong>：檢查是否調用了 `pChar->notify()`，以及是否正確添加了 Client Characteristic Configuration
-                    Descriptor (CCCD)。</li>
-                <li><strong>無法寫入資料</strong>：確認特徵值在建立時有設定 `PROPERTY_WRITE`。</li>
-                <li><strong>數據格式錯亂</strong>：提醒學生 BLE 傳輸的是 Byte Array，接收端需進行正確的型別轉換 (String/Int)。</li>
-            </ul>
-        </div>
-        <div class="guide-section bg-gray-50 p-4 rounded-lg">
-            <h3 class="font-bold mb-2 text-sm text-gray-900">3. 評分標準 (Grading Criteria)</h3>
-            <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
-                <li><strong>基礎分</strong>：能正確實作 Read 與 Write 屬性並成功與 App 互動。</li>
-                <li><strong>進階分</strong>：能實作「條件式通知」(Conditional Notify)，僅在資料有感變動時才推送。</li>
-            </ul>
+    <section id="instructor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>在 GitHub 建立新 Repo（名為 <code>basic-05-ble-prop-template</code>）。</li>
+                <li>上傳包含基礎連線代碼但「未設定 Property」且「未實作回呼 (Callbacks)」的 Repo 框架。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
+                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，獲得個人專屬 Repo。</li>
+                <li>配置各式屬性權限並實作對應的回呼邏輯，透過手機 App 進行互動測試。</li>
+                <li>本地開發後 <strong>Push 代碼</strong> 提交進度。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>針對學生的「通訊封裝效率（Byte Array 處理）」與「條件通知設計 (Conditional Notify)」予以回饋。</li>
+            </ol>
         </div>
 
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mt-6">
-            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
-                <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
-.
-├── src/             # 包含 BLE 特徵值 (Characteristic) 讀寫邏輯的 main.cpp
-├── README.md        # 測試報告：Property 設定表與手機讀寫數值日誌
-└── .github/         # 自動評分配置</pre>
-                <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
-                <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-                    <li><strong>核心配置檢核：</strong> 透過測試腳本讀取 UUID，驗證各特徵值是否正確具備 Read/Write/Notify 屬性。</li>
-                    <li><strong>資料流驗證：</strong> 模擬寫入指定數值，檢查 ESP32 是否能正確解析並反映在變數（或硬體輸出）中。</li>
-                </ul>
-            </div>
-        </div>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元聚焦於 BLE 的數據通訊模型，引導學生設計「高效、省電且可靠」的雙向通訊協議。</p>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mt-6 bg-white p-4 border border-gray-200 rounded-lg">
-            <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
-            <div class="space-y-4 text-sm text-gray-600">
-                <div>
-                    <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
-                    <p>建立包含基礎連線代碼但「未設定 Property」的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
-                    <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以便對其數據通訊模型（是主動 Read 還是被動 Notify）進行點評。
-                    </p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
-                    <p>學生領取作業，獲得個人專屬 Repo，實作各式屬性與回呼邏輯並透過手機 App 觀察數值變化後 Push。</p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
-                    <p>進入 Feedback PR，針對學生的「通訊封裝效率」與「回呼函式安全性」予以回饋。</p>
-                </div>
-            </div>
-        </div>
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── platformio.ini   # 包含基礎開發環境配置
+├── src/
+│   └── main.cpp      # (重點) 需設定特徵值的 Property (Read/Write/Notify)
+└── README.md        # 測試報告：Property 設定表、高頻寫入測試日誌</code></pre>
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section mt-6">
-            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm border-collapse border border-gray-200">
-                    <thead class="bg-gray-50 text-left text-gray-800">
-                        <tr>
-                            <th class="border border-gray-200 p-2">階段</th>
-                            <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
-                            <th class="border border-gray-200 p-2">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-600">
-                        <tr>
-                            <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
-                            <td class="border border-gray-200 p-2">研究手機連接智慧手錶時，心跳率通常是用 Read 還是 Notify？為什麼？</td>
-                            <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員理解「推送與詢問」的差異。</td>
-                        </tr>
-                        <tr>
-                            <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
-                            <td class="border border-gray-200 p-2">領取 Classroom 作業，實作多特徵值環境並管理不同權限（Read-Only,
-                                Write-Only）。</td>
-                            <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
-                        </tr>
-                        <tr>
-                            <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
-                            <td class="border border-gray-200 p-2">實作複雜的二進位數據 (Byte Array) 封裝並 Push，閱讀教師回覆 PR。</td>
-                            <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>main.cpp (條件式 Notify)</strong></p>
+        <pre><code>#include &lt;BLEDevice.h&gt;
+
+int lastVal = 0;
+// ... 初始化代碼 ...
+
+void loop() {
+  int currentVal = analogRead(32);
+  if (abs(currentVal - lastVal) > 100) { // 變動超過阈值
+    pCharacteristic->setValue(currentVal);
+    pCharacteristic->notify();
+    lastVal = currentVal;
+    Serial.println("Notified!");
+  }
+  delay(10);
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>屬性標記檢核：：</strong> 透過測試代碼自動讀取特徵值屬性，驗證是否正確包含 <code>PROPERTY_WRITE</code> 或
+                <code>PROPERTY_NOTIFY</code>。</li>
+            <li><strong>邏輯流程驗證：：</strong> 模擬數值小幅變動，驗證是否正確「不觸發」推送，以節省能耗。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">研究手機連接智慧燈泡時，控制亮度與讀取剩餘壽命分別使用什麼屬性？</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>Dashboard：</strong>確認學員理解「主動詢問」與「被動接收」的本質差異。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，實作多特徵值環境並觀察不同寫入模式下的硬體延遲感。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>解釋 CCCD 對於 Notify
+                        權限的重要性。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">優化數據推播頻率並 Push，閱讀教師回覆 PR 並調整通訊協議設計。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核學生對「封包風暴
+                        (Packet Storm)」的處理能力。</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 
     <script>

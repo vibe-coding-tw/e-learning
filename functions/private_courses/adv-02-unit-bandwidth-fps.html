@@ -22,23 +22,14 @@
         <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
 
         <div class="container mx-auto px-4 relative z-10 text-center">
-            <div
-                class="badge-header inline-flex items-center gap-2 px-4 py-1 rounded-full bg-purple-500/20 text-purple-200 border border-purple-400/30 backdrop-blur-sm mb-6 text-xs font-semibold tracking-wide uppercase font-[Outfit]">
-                進階 2 - 單元 3
-            </div>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
-                網路頻寬與 FPS<br>的數學關係
-            </h1>
-            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
-                像素與頻寬的博弈：計算、權衡並優化你的影像傳輸效率。
-            </p>
-
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/7SBO8kGX5tE')"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vR9PxhvlWr4eMEI-idYZtAOuh_xg67mQrXvHD49h5IqXpNKXHfvfmKs6GzH-1ZrAmY7iSGKMsJBR8Ao/pub?embedded=true')"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -167,77 +158,81 @@
             </div>
         </section>
 
-        <!-- Assignments Section -->
-        <section>
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：頻寬與 FPS 優化實戰</h2>
-            <p class="text-center text-gray-500 mb-12">透過實測與除錯，掌握數據傳輸的工程取捨 (Trade-off)。</p>
-
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Task 3-1 -->
-                <div onclick="openSubmissionModal('adv-02-bandwidth-weigh', '【作業 3-1】數據秤重：解析度與封包體積實實測')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-blue-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">⚖️</span>
-                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
-                            3-1】數據秤重</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務目標：</strong>實測不同設定下，ESP32 傳出的真實數據量。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>紀錄 160x120 品質 10 下 100 幀的總 Size</li>
-                                <li>對比「純色桌面」與「複雜雜亂區」封包變化</li>
-                                <li>計算達成 24 FPS 穩定串流所需的 Mbps</li>
-                            </ul>
+        <!-- Assignment Highlights -->
+        <section class="module-section">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                        <div>
+                            <h2 class="text-3xl font-bold text-white mb-2">頻寬與 FPS 優化實戰：實作任務</h2>
+                            <p class="text-slate-400">透過實測與除錯，掌握數據傳輸的工程取捨 (Trade-off)。</p>
                         </div>
                     </div>
-                </div>
 
-                <!-- Task 3-2 -->
-                <div onclick="openSubmissionModal('adv-02-fps-bottleneck', '【作業 3-2】流暢度優化：FPS 瓶頸除錯')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-cyan-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🚀</span>
-                            <span class="bg-cyan-50 text-cyan-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-cyan-600 transition">【作業
-                            3-2】流暢度優化</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務目標：</strong>在固定頻寬環境下，找出提升 FPS 的最佳路徑。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>使用 Chrome 網路限制 (Throttling) 模擬弱網</li>
-                                <li>策略 A：維持高解析度，降低品質</li>
-                                <li>策略 B：維持高品質，降低解析度</li>
+                    <div class="grid md:grid-cols-2 gap-8 mb-12">
+                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
+                            <div class="flex items-center gap-4 mb-6">
+                                <span class="text-2xl">📡</span>
+                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
+                            </div>
+                            <p class="mb-4 text-slate-400">在任務中，GitHub 是你的「基地台」。請確保每完成一個里程碑，就將數據回傳。</p>
+                            <ul class="space-y-2 text-slate-300">
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 1.</span>
+                                    <span>接受 GitHub Classroom 邀請，複製 (Clone) 專屬任務倉庫。</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 2.</span>
+                                    <span>完成代碼撰寫後，執行 <code
+                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code>
+                                        將進度上傳。</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 3.</span>
+                                    <span>自動化助理會即時在 PR (Pull Request) 中回饋評分結果。</span>
+                                </li>
                             </ul>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Task 3-3 -->
-                <div onclick="openSubmissionModal('adv-02-abr-logical', '【作業 3-3】動態頻寬適應 (ABR) 邏輯設計')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-indigo-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🤖</span>
-                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">45
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
-                            3-3】ABR 邏輯設計</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務目標：</strong>設計一套偽代碼邏輯，讓系統自動調整 FPS。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>設計延遲超過 200ms 時的執行動作</li>
-                                <li>設計 JSON 回傳包通知 ESP32 調整參數</li>
-                                <li>建立「自我調節系統」的閉迴路思考</li>
-                            </ul>
+                        <div class="grid gap-4">
+                            <!-- Task 3-1 -->
+                            <div onclick="openSubmissionModal('adv-02-bandwidth-weigh', '【作業 3-1】數據秤重：解析度與封包體積實測')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition">作業
+                                        3-1</h3>
+                                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">數據秤重</h4>
+                                <p class="text-sm text-gray-500">實測不同解析度下的真實數據量，推導頻寬需求。</p>
+                            </div>
+
+                            <!-- Task 3-2 -->
+                            <div onclick="openSubmissionModal('adv-02-fps-bottleneck', '【作業 3-2】流暢度優化：FPS 瓶頸除錯')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-cyan-600 transition">作業
+                                        3-2</h3>
+                                    <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">流暢度優化</h4>
+                                <p class="text-sm text-gray-500">模擬弱網環境，對比不同優化策略的操控體感。</p>
+                            </div>
+
+                            <!-- Task 3-3 -->
+                            <div onclick="openSubmissionModal('adv-02-abr-logical', '【作業 3-3】動態頻寬適應 (ABR) 邏輯設計')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-indigo-600 transition">
+                                        作業 3-3</h3>
+                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">45
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">ABR 邏輯設計</h4>
+                                <p class="text-sm text-gray-500">設計延遲反饋迴路，自動調節影像品質與 FPS。</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -265,149 +260,103 @@
         <h3>作業 3-1：數據秤重：解析度與封包體積實測</h3>
         <ul>
             <li><strong>角色扮演：</strong> 韌體效能優化師。</li>
-            <li><strong>執行方式：</strong> 在不同解析度 (160x120 vs 640x480) 下傳送 100 幀影像，紀錄 ESP32 端回報的累計發送
-                Bytes，並對比「純色地面」與「複雜雜亂區」的封包體積差異。</li>
-            <li><strong>評分重點：</strong> 能否推導出平均單幀的大小並計算出達成 24 FPS 穩定串流所需的 Mbps。</li>
+            <li><strong>執行方式：</strong> 在不同解析度下傳送影像，紀錄 ESP32 端回報的累計發送位元組，對比純色與複雜畫面的體積差異。</li>
+            <li><strong>評分重點：</strong> 能否推導出平均單幀大小並計算達成 24 FPS 所需的 Mbps。</li>
         </ul>
 
         <h3>作業 3-2：流暢度優化：FPS 瓶頸除錯</h3>
         <ul>
             <li><strong>角色扮演：</strong> 網路架構師。</li>
-            <li><strong>執行方式：</strong> 模擬弱網環境 (Wi-Fi 訊號差)，實作兩套優化策略：(A) 維持高解析但降低 JPEG 品質；(B)
-                維持高品質但大幅降低解析度，並測量哪種策略下的「操控體感」較好。</li>
+            <li><strong>執行方式：</strong> 模擬弱網環境，實作解析度 vs 品質的對比實驗，分析哪種策略在控制延遲上更具優勢。</li>
             <li><strong>評分重點：</strong> 實驗報告是否能清楚界定「解析度」與「流暢度」對駕駛任務的貢獻。</li>
         </ul>
 
         <h3>作業 3-3：動態頻寬適應 (ABR) 邏輯設計</h3>
         <ul>
             <li><strong>角色扮演：</strong> AI 系統開發者。</li>
-            <li><strong>執行方式：</strong> 設計一套偽代碼邏輯 (Closed-loop Logic)：當前端檢測到影像延遲超過 200ms 時，自動發送指令通知 ESP32 降低 Quality 或
-                FPS，直到延遲恢復正常。</li>
-            <li><strong>評分重點：</strong> 邏輯是否包含「狀態恢復 (Recovery)」機制，即網路好轉時是否會自動調回高品質。</li>
+            <li><strong>執行方式：</strong> 設計一套偽代碼邏輯：當延遲超過 200ms 時，自動降級 Quality，並包含網路恢復時的調回機制。</li>
+            <li><strong>評分重點：</strong> 邏輯是否包含「狀態恢復 (Recovery)」機制，避免系統進入死迴圈。</li>
         </ul>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        A. 範本倉庫 (Template Repo) 結構
-                    </h4>
-                    <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
-.
-├── src/             # 包含頻寬統計 API 範本
-├── docs/            # 頻寬報告模板
-└── README.md        # 紀錄：ABR 算法測試日誌</pre>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        B. 自動評估 (Autograding) 的設計
-                    </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">📏</span>
-                            <p class="text-sm text-gray-700"><strong>數學正確性檢核：</strong> 自動檢查報告中的計算公式是否符合 $FPS \times Size
-                                \times 8$。</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🔄</span>
-                            <p class="text-sm text-gray-700"><strong>邏輯分支測試：</strong> 模擬不同的延遲輸入 ABR 算法，檢查輸出的 Q 值是否符合預期。
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>在 GitHub 建立 Repo（例如 <code>adv-bandwidth-fps-template</code>）。</li>
+                <li>包含頻寬統計 API 的韌體範本與前端 Dashboard。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>進入 GitHub Classroom 建立新 Individual Assignment。</li>
+                <li>連結上述的範本倉庫並設定為 Private。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，進行 Wi-Fi 壓力實測。</li>
+                <li>完成 ABR 邏輯設計文件並 <strong>Push</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 GitHub PR，審核學生的 ABR 邏輯分支與數學計算正確性。</li>
+            </ol>
         </div>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供包含「頻寬統計 API」的韌體與前端 Dashboard 範本，設定為 Template
-                        repository。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「數據報告」為必要繳交檔案。利用 Issues 分享不同網段實測結果。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">在實驗課室進行真實的 Wi-Fi 壓力測試。完成 ABR 邏輯設計並提交 PR。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對學生對「穩定性」與「畫質」之間優先級的判斷予以回饋。</p>
-                </div>
-            </div>
-        </div>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── src/             # 頻寬統計 API 範本
+├── docs/            # 頻寬報告模板 (.md)
+└── README.md        # ABR 算法測試日誌</code></pre>
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
-            </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
-                        <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">觀看影片，掌握 24 FPS、30 FPS、60 FPS 所需的理論頻寬差異。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，引導學員使用「頻寬計算機」小工具。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，實測並找出造成 FPS 掉幀的「木桶最短板」。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，討論偵測到 CPU 負載過高而非頻寬不足時對策。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">優化 ABR 邏輯中的「震盪 (Oscillation)」問題並 Push，閱讀回覆。</td>
-                            <td class="px-4 py-4 text-xs">核發最終課程評量與評分。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>頻寬計算邏輯 (JavaScript)</strong></p>
+        <pre><code>const bitrate = (avgFrameSize * 8 * fps) / 1000000; // Mbps</code></pre>
+
+        <h3>C. 自動評估 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>數學正確性檢核：</strong> 檢查報告中的公式是否符合 $FPS \times Size \times 8$。</li>
+            <li><strong>邏輯分支測試：</strong> 模擬延遲輸入，檢查 ABR 算法輸出是否正確。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看影片，計算不同解析度的理論頻寬需求。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員掌握解析度與數據量的比例關係。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實測 Wi-Fi 壓力，找出造成 FPS 掉幀的瓶頸並 Push。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>實體協助：</strong>討論偵測到 CPU
+                        負載過高而非頻寬不足時的對策。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">優化 ABR 邏輯中的震盪問題並閱讀 PR 回饋。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>PR
+                            Review：</strong>就學生對穩定性與畫質優先級的平衡給予回饋。</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/7SBO8kGX5tE",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vR9PxhvlWr4eMEI-idYZtAOuh_xg67mQrXvHD49h5IqXpNKXHfvfmKs6GzH-1ZrAmY7iSGKMsJBR8Ao/pub?embedded=true"
-        };
-    </script>
     <script src="/js/course-shared.js"></script>
 </body>
 

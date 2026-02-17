@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
 <body id="page-advanced" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
@@ -50,23 +51,37 @@
         const tabBandwidth = document.getElementById('tab-bandwidth-fps');
 
         // Initial Load
-        loadContent('adv-02-unit-video-streaming.html');
+        loadFromHash();
+
+        function loadFromHash() {
+            const hash = window.location.hash.substring(1);
+            if (hash === 'canvas-image') {
+                switchTab('canvas-image');
+            } else if (hash === 'bandwidth-fps') {
+                switchTab('bandwidth-fps');
+            } else {
+                switchTab('video-streaming');
+            }
+        }
 
         function switchTab(tab) {
             // Reset all tabs
             [tabVideo, tabCanvas, tabBandwidth].forEach(t => {
-                t.classList.remove('active');
+                if (t) t.classList.remove('active');
             });
 
             if (tab === 'video-streaming') {
                 tabVideo.classList.add('active');
                 loadContent('adv-02-unit-video-streaming.html');
+                window.location.hash = 'video-streaming';
             } else if (tab === 'canvas-image') {
                 tabCanvas.classList.add('active');
                 loadContent('adv-02-unit-canvas-image.html');
+                window.location.hash = 'canvas-image';
             } else if (tab === 'bandwidth-fps') {
                 tabBandwidth.classList.add('active');
                 loadContent('adv-02-unit-bandwidth-fps.html');
+                window.location.hash = 'bandwidth-fps';
             }
         }
 

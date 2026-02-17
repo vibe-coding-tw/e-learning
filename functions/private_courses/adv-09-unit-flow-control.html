@@ -33,13 +33,15 @@
                 優化數據傳輸頻率，消除硬體延遲與不必要的運算，讓操控體驗更絲滑。
             </p>
 
-            <div class="mt-10 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/j_8uPizf_K8')"
                     class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-red-900/20">
                     <span class="text-xl group-hover:animate-pulse">📺</span>
                     <span>觀看教學影片</span>
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vR6UuT8vT9Jm2uK7k0Y5P_L-pM8rN0s7i_m2yU7X3A1v8l-kR_m_j_R6_uH_h/pub?embedded=true')"
                     class="group flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-blue-900/20">
                     <span class="text-xl group-hover:bounce">📄</span>
                     <span>閱讀課程講義</span>
@@ -187,73 +189,109 @@ function update(currentVal) {
         </section>
 
         <!-- Section 4: Assignments -->
-        <section>
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">流控實驗室：打造絲滑操控</h2>
-            <p class="text-center text-gray-500 mb-12">透過代碼與參數調校，在靈敏度與效能之間找到黃金平衡點。</p>
+        <section id="assignments" class="mb-20">
+            <div class="text-center mb-12">
+                <span
+                    class="px-4 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold tracking-widest uppercase">Practical
+                    Lab</span>
+                <h2 class="text-4xl font-black text-gray-900 mt-4 mb-4 font-[Outfit]">核心實驗室：流量緩衝與控制</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">優化 IoT 系統的通訊負載，實現流暢且穩定的遠端控制。</p>
+            </div>
 
             <div class="grid md:grid-cols-3 gap-8">
                 <!-- Task 4-1 -->
-                <div onclick="openSubmissionModal('adv-09-throttle-joy', '【作業 9-4-1】實作搖桿節流器')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-orange-500 h-2"></div>
+                <div onclick="window.courseShared.openSubmissionModal('adv-09-throttle-slidex', '【作業 9-4-1】「精準節流」Slider 控制優化')"
+                    class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-indigo-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-indigo-200/50 cursor-pointer">
+                    <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <span class="text-6xl font-black">01</span>
+                    </div>
                     <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">⏱️</span>
-                            <span class="bg-orange-50 text-orange-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div
+                                class="w-12 h-12 bg-indigo-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform duration-500">
+                                🎛️</div>
+                            <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git Branch:
+                                <span class="text-indigo-600">feature/throttle-slider</span></span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-orange-600 transition">【作業
-                            4-1】搖桿節流器</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>在 <code>onMove</code> 事件中限制發送頻率。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>計時器限制：利用 setTimeout 確保頻率不超過 20Hz (50ms)。</li>
-                                <li>效能觀測：使用 Chrome DevTools 比較加入前後的封包量。</li>
-                            </ul>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 group-hover:text-indigo-600 transition-colors">
+                            【作業 4-1】精準節流</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed mb-6">為 Slider 的 <code>oninput</code> 事件加入節流機制。
+                        </p>
+                        <div class="space-y-3 border-t border-slate-50 pt-6">
+                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                <span
+                                    class="w-5 h-5 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-bold">1</span>
+                                限制發送頻率不超過 100ms 一次
+                            </div>
+                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                <span
+                                    class="w-5 h-5 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-bold">2</span>
+                                觀察 Web Serial/BLE 控制台有無掉包
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Task 4-2 -->
-                <div onclick="openSubmissionModal('adv-09-deadzone', '【作業 9-4-2】閾值與死區開發')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-purple-500 h-2"></div>
+                <div onclick="window.courseShared.openSubmissionModal('adv-09-debounce-keyboard', '【作業 9-4-2】「流暢防抖」鍵盤輸入優化')"
+                    class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-cyan-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-cyan-200/50 cursor-pointer">
+                    <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <span class="text-6xl font-black">02</span>
+                    </div>
                     <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🎯</span>
-                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div
+                                class="w-12 h-12 bg-cyan-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-cyan-200 group-hover:scale-110 transition-transform duration-500">
+                                ⌨️</div>
+                            <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git Branch:
+                                <span class="text-cyan-600">feature/debounce-keys</span></span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
-                            4-2】數據過濾</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>實作數值過濾器，減少無效傳輸。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>Deadzone：中心 \(\pm 10\%\) 強制歸零。</li>
-                                <li>變動觸發：數值變化 \(> Threshold\) 才發送。</li>
-                            </ul>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 group-hover:text-cyan-600 transition-colors">【作業
+                            4-2】流暢防抖</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed mb-6">實作長按鍵盤時的緩衝發送邏輯。</p>
+                        <div class="space-y-3 border-t border-slate-50 pt-6">
+                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                <span
+                                    class="w-5 h-5 bg-cyan-50 text-cyan-600 rounded-full flex items-center justify-center font-bold">1</span>
+                                使用 <code>leading: true</code> 確保及時起步
+                            </div>
+                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                <span
+                                    class="w-5 h-5 bg-cyan-50 text-cyan-600 rounded-full flex items-center justify-center font-bold">2</span>
+                                避免連續觸發导致的指令堆積
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Task 4-3 -->
-                <div onclick="openSubmissionModal('adv-09-stress-test', '【作業 9-4-3】壓力測試與調校')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-cyan-500 h-2"></div>
+                <div onclick="window.courseShared.openSubmissionModal('adv-09-perf-analysis', '【作業 9-4-3】系統通訊性能診斷')"
+                    class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-amber-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-amber-200/50 cursor-pointer">
+                    <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <span class="text-6xl font-black">03</span>
+                    </div>
                     <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">📉</span>
-                            <span class="bg-cyan-50 text-cyan-700 text-xs px-3 py-1 rounded-full font-bold">45
-                                min</span>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div
+                                class="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-amber-200 group-hover:scale-110 transition-transform duration-500">
+                                📊</div>
+                            <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git Branch:
+                                <span class="text-amber-600">feature/perf-debug</span></span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-cyan-600 transition">【作業
-                            4-3】壓力測試</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>模擬極限情況並找出最佳參數。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>延遲測量：記錄這「按下」到「ESP32收到」的時間。</li>
-                                <li>參數優化：測試 10ms - 500ms 節流區間的手感變化。</li>
-                            </ul>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 group-hover:text-amber-600 transition-colors">
+                            【作業 4-3】性能診斷</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed mb-6">利用 Chrome DevTools 觀看事件處理延遲。</p>
+                        <div class="space-y-3 border-t border-slate-50 pt-6">
+                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                <span
+                                    class="w-5 h-5 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center font-bold">1</span>
+                                比較「原裝」與「優化後」的網路佔用
+                            </div>
+                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                <span
+                                    class="w-5 h-5 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center font-bold">2</span>
+                                撰寫分析報告說明 Kp 響應與通訊頻率關係
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -274,33 +312,6 @@ function update(currentVal) {
         </div>
     </footer>
 
-    <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
-
-        <h3>作業 4-1：實作「搖桿節流器 (Throttle)」</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 介面效能優化師。</li>
-            <li><strong>執行方式：</strong> 在 `onMove` 搖桿事件中限制發送頻率。使用一個全域變數記錄「上一次發送時間」，確保兩次傳輸之間至少間隔 50ms (20Hz)。</li>
-            <li><strong>評分重點：</strong> 代碼中是否正確使用了 `Date.now()` 的差值判斷，以及能否解釋為什麼 20Hz 對馬達控制是足夠的。</li>
-        </ul>
-
-        <h3>作業 4-2：數據過濾器：閾值 (Threshold) 與死區 (Deadzone)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 訊號處理工程師。</li>
-            <li><strong>執行方式：</strong> 實作一個數值過濾器。當搖桿在中心 \(\pm 10\) 範圍內時強制發送 0（死區）；且當數值變化小於 5 單位時不發送（閾值）。</li>
-            <li><strong>評分重點：</strong> 能否顯著減少「冗餘封包」的數量，並解決馬達在搖桿回彈時產生的低頻嗡嗡聲。</li>
-        </ul>
-
-        <h3>作業 4-3：極限壓力測試與操控感調校</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 系統測試員。</li>
-            <li><strong>執行方式：</strong> 測試不同的節流區間（10ms 到 500ms），記錄在高速過彎時，「流控」對操作延遲感的影響。</li>
-            <li><strong>評分重點：</strong> 在 README 中總結出一個平衡點（在不塞爆 BLE 緩衝區的前提下，維持最高的操控靈活性）。</li>
-        </ul>
-    </section>
-
-    <!-- Instructor Guide (Hidden) -->
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
         <!-- NEW: Practical Deployment Recommendations -->
@@ -416,13 +427,13 @@ function update(currentVal) {
         </div>
     </section>
 
+    <script src="/js/course-shared.js"></script>
     <script>
         window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/ydWS55Tp2MM?autoplay=1",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vR7bgssty2l_oF0F7NrFFT0DWjlrSz9Z_shaScRjTRg1WFrfn5_JWviSnh1TsqprmUkaJOoaJlKWCDZ/pub?embedded=true"
+            youtube: "https://www.youtube.com/embed/j_8uPizf_K8?autoplay=1",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vR6UuT8vT9Jm2uK7k0Y5P_L-pM8rN0s7i_m2yU7X3A1v8l-kR_m_j_R6_uH_h/pub?embedded=true"
         };
     </script>
-    <script src="/js/course-shared.js"></script>
 </body>
 
 </html>

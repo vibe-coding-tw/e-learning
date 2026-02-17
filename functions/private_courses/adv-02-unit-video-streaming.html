@@ -22,23 +22,14 @@
         <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
 
         <div class="container mx-auto px-4 relative z-10 text-center">
-            <div
-                class="badge-header inline-flex items-center gap-2 px-4 py-1 rounded-full bg-blue-500/20 text-blue-200 border border-blue-400/30 backdrop-blur-sm mb-6 text-xs font-semibold tracking-wide uppercase font-[Outfit]">
-                進階 2 - 單元 1
-            </div>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
-                影像串流原理：<br>MJPEG vs. H.264
-            </h1>
-            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
-                從「簡單暴力」到「聰明預測」：理解串流技術如何權衡運算、頻寬與延遲。
-            </p>
-
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/P6nBc6KT2Kw')"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vQB6v5Q2JwSsC1JWi0kYmew7fuAlO013SZHvF5pEHA5Z4n6eKrX9r77_pGwYUqVDGdh5iJVCBMKjttD/pub?embedded=true')"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -187,77 +178,81 @@
             </div>
         </section>
 
-        <!-- Assignments Section -->
-        <section>
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：影像效能實戰</h2>
-            <p class="text-center text-gray-500 mb-12">透過數據紀錄與對比，掌握不同編碼策略的平衡點。</p>
-
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Task 1-1 -->
-                <div onclick="openSubmissionModal('adv-02-mjpeg-test', '【作業 1-1】頻寬殺手：MJPEG 壓力測試')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-blue-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">💥</span>
-                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
-                            1-1】MJPEG 壓力測試</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務目標：</strong>找出畫質與流量的臨界點。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500">
-                                <li>動態調整 JPEG Quality (0-63)</li>
-                                <li>紀錄不同畫質下的單幀大小 (KB)</li>
-                                <li>計算維持 15 FPS 需多少 Mbps</li>
-                            </ul>
+        <!-- Assignment Highlights -->
+        <section class="module-section">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                        <div>
+                            <h2 class="text-3xl font-bold text-white mb-2">核心實驗室：影像效能實戰</h2>
+                            <p class="text-slate-400">透過數據紀錄與對比，掌握不同編碼策略的平衡點。</p>
                         </div>
                     </div>
-                </div>
 
-                <!-- Task 1-2 -->
-                <div onclick="openSubmissionModal('adv-02-h264-latency', '【作業 1-2】時空旅人：H.264 延遲觀測實驗')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-cyan-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">⏱️</span>
-                            <span class="bg-cyan-50 text-cyan-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-cyan-600 transition">【作業
-                            1-2】H.264 延遲觀測</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務目標：</strong>測量編解碼帶來的「時差」。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500">
-                                <li>使用毫秒計時器測算延遲</li>
-                                <li>搖晃相機觀察 H.264 數據噴發</li>
-                                <li>實驗緩衝 (Buffer) 如何影響平滑度</li>
+                    <div class="grid md:grid-cols-2 gap-8 mb-12">
+                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
+                            <div class="flex items-center gap-4 mb-6">
+                                <span class="text-2xl">📡</span>
+                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
+                            </div>
+                            <p class="mb-4 text-slate-400">在任務中，GitHub 是你的「基地台」。請確保每完成一個里程碑，就將數據回傳。</p>
+                            <ul class="space-y-2 text-slate-300">
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 1.</span>
+                                    <span>接受 GitHub Classroom 邀請，複製 (Clone) 專屬任務倉庫。</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 2.</span>
+                                    <span>完成代碼撰寫後，執行 <code
+                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code>
+                                        將進度上傳。</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 3.</span>
+                                    <span>自動化助理會即時在 PR (Pull Request) 中回饋評分結果。</span>
+                                </li>
                             </ul>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Task 1-3 -->
-                <div onclick="openSubmissionModal('adv-02-scenario-design', '【作業 1-3】情境化編碼選擇')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-indigo-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🏎️</span>
-                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">45
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
-                            1-3】編碼情境設計</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務目標：</strong>針對不同任務配置最佳參數。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500">
-                                <li><strong>場景 A (低延遲)：</strong>高速避障參數</li>
-                                <li><strong>場景 B (高畫質)：</strong>風景巡航參數</li>
-                                <li>撰寫設計說明與切換邏輯</li>
-                            </ul>
+                        <div class="grid gap-4">
+                            <!-- Task 1-1 -->
+                            <div onclick="openSubmissionModal('adv-02-mjpeg-test', '【作業 1-1】頻寬殺手：MJPEG 壓力測試')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition">作業
+                                        1-1</h3>
+                                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">MJPEG 壓力測試</h4>
+                                <p class="text-sm text-gray-500">動態調整 JPEG Quality，紀錄單幀大小並計算 Mbps 需求。</p>
+                            </div>
+
+                            <!-- Task 1-2 -->
+                            <div onclick="openSubmissionModal('adv-02-h264-latency', '【作業 1-2】時空旅人：H.264 延遲觀測實驗')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-cyan-600 transition">作業
+                                        1-2</h3>
+                                    <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">H.264 延遲觀測</h4>
+                                <p class="text-sm text-gray-500">測量編解碼產生的端對端延遲，分析 I/P 幀對畫面的影響。</p>
+                            </div>
+
+                            <!-- Task 1-3 -->
+                            <div onclick="openSubmissionModal('adv-02-scenario-design', '【作業 1-3】情境化編碼選擇')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-indigo-600 transition">
+                                        作業 1-3</h3>
+                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">45
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">編碼情境設計</h4>
+                                <p class="text-sm text-gray-500">針對低延遲遙控與省空間錄影，配置最佳編碼參數邏輯。</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -285,148 +280,103 @@
         <h3>作業 1-1：MJPEG 壓力測試</h3>
         <ul>
             <li><strong>角色扮演：</strong> 傳輸效能測試員。</li>
-            <li><strong>執行方式：</strong> 透過控制台切換 JPEG 品質 (Quality 10-90)，紀錄在 2.4GHz Wi-Fi 下能穩定維持的最高 FPS，並觀察畫面是否有撕裂。</li>
-            <li><strong>評分重點：</strong> 能否準確找出品質與 FPS 的反比曲線拐點。</li>
+            <li><strong>執行方式：</strong> 切換 JPEG 品質 (Quality 10-90)，紀錄在 Wi-Fi 下能穩定維持的最高 FPS，並觀察畫面現象。</li>
+            <li><strong>評分重點：</strong> 能否準確找出畫質與 FPS 的關係曲線拐點。</li>
         </ul>
 
         <h3>作業 1-2：H.264 延遲觀測</h3>
         <ul>
             <li><strong>角色扮演：</strong> 影音協議工程師。</li>
-            <li><strong>執行方式：</strong> 使用「手機計時器對準鏡頭」法，計算從實體動作到網頁畫面出現的延遲 (End-to-End Latency)，對比靜止畫面與劇烈運動時的延遲變動。</li>
-            <li><strong>評分重點：</strong> 數據紀要是否反映了 I-Frame 與 P-Frame 的特徵。</li>
+            <li><strong>執行方式：</strong> 使用計時器對準鏡頭，計算 End-to-End Latency，對比靜止與運動時的延遲變動。</li>
+            <li><strong>評分重點：</strong> 數據是否反映了 I/P 幀對頻寬與延遲的特徵。</li>
         </ul>
 
         <h3>作業 1-3：編碼情境設計</h3>
         <ul>
             <li><strong>角色扮演：</strong> 產品方案架構師。</li>
-            <li><strong>執行方式：</strong> 撰寫一段系統邏輯：在「遠程遙控」模式下切換至低解析 MJPEG (低延遲)；在「雲端存檔」模式下切換至高解析 H.264 (省空間)。</li>
-            <li><strong>評分重點：</strong> 設計說明是否合乎工程邏輯（運算資源 vs 頻寬開銷）。</li>
+            <li><strong>執行方式：</strong> 撰寫邏輯：遙控模式下切換至低延遲 MJPEG；錄影模式下切換至高壓縮 H.264。</li>
+            <li><strong>評分重點：</strong> 設計說明是否合乎工程邏輯（運算 vs 頻寬）。</li>
         </ul>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        A. 範本倉庫 (Template Repo) 結構
-                    </h4>
-                    <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
-.
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>在 GitHub 建立 Repo（例如 <code>adv-video-streaming-template</code>）。</li>
+                <li>提供預裝好了 MJPEG 與 H.264 編碼器 API 的基礎代碼。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>進入 GitHub Classroom 建立新 Independent Assignment。</li>
+                <li>設定自動化測試，驗證串流輸出是否符合 MIME 規範。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>領取作業，完成畫質與延遲測試數據填寫。</li>
+                <li>提交 PR 進行同儕互評 (Peer Review)。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>針對學生對 I-Frame 遺失導致馬賽克現象的解釋予以回饋。</li>
+            </ol>
+        </div>
+
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
 ├── src/
 │   └── switch.cpp    # 實作協議切換邏輯
 ├── tools/
 │   └── validator.py  # 驗證串流格式
-└── README.md         # 紀錄：編碼延遲對比</pre>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        B. 自動評估 (Autograding) 的設計
-                    </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🔍</span>
-                            <p class="text-sm text-gray-700"><strong>碼流結構檢查：</strong> 檢查輸出的串流是否符合 MIME 規範與 HTTP MJPEG
-                                協議。</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">📜</span>
-                            <p class="text-sm text-gray-700"><strong>實驗報告檢核：</strong> 檢查紀錄檔是否符合規範，且數據是否在合理範圍。</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+└── README.md         # 紀錄：編碼延遲對比報告</code></pre>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供預裝好了兩種編碼器 API 的基礎代碼，設定為 Template repository。
-                    </p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">建立作業並上傳自動化檢查。指導如何使用 DevTools 觀察「網路封包佔比」。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">完成畫質測試，將數據填入紀錄檔。提交 PR 進行同儕互評 (Peer Review)。
-                    </p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對學生對「關鍵幀 (I-Frame)」遺失導致馬賽克現象的解釋予以回饋。</p>
-                </div>
-            </div>
-        </div>
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>延遲測算邏輯 (Conceptual)</strong></p>
+        <pre><code>latency = web_receive_time - camera_capture_time;</code></pre>
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
-            </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
-                        <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">閱讀關於 P-Frame 與運動補償的基礎知識。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，展示強光下編碼差異的對比影片。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，進行實機測試，挑戰將總延遲降至 200ms 以下。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，分享如何關閉「播放緩衝」以減少延遲。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">撰寫設計方案報告並 Push，閱讀教師回覆 PR。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，檢核是否考慮到 CPU 指令集對編碼速度的影響。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <h3>C. 自動評估 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>碼流結構檢查：</strong> 檢查輸出的串流是否符合 HTTP MJPEG 協議規範。</li>
+            <li><strong>實驗報告檢核：</strong> 檢查紀錄檔數據是否在合理範圍。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">理解 P-Frame 與運動補償基礎知識。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>展示強光下編碼差異對比。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">進行實機效能測試，挑戰極限延遲優化。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>實體協助：</strong>分享如何關閉播放緩衝以減少延遲。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">撰寫設計方案報告並 Push。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>PR Review：</strong>檢核是否考慮到 CPU
+                        指令集對編碼速度影響。</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/P6nBc6KT2Kw",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vQB6v5Q2JwSsC1JWi0kYmew7fuAlO013SZHvF5pEHA5Z4n6eKrX9r77_pGwYUqVDGdh5iJVCBMKjttD/pub?embedded=true"
-        };
-    </script>
     <script src="/js/course-shared.js"></script>
 </body>
 

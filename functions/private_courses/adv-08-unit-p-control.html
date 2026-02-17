@@ -33,16 +33,16 @@
                 賦予機器人「直覺」：學習如何利用數學公式讓無人車根據誤差大小，聰明地調整轉向力道。
             </p>
 
-            <div class="mt-10 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
-                    class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-red-900/20">
-                    <span class="text-xl group-hover:animate-pulse">📺</span>
-                    <span>觀看教學影片</span>
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/9Bv_3WclP7c?autoplay=1')"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
-                    class="group flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-blue-900/20">
-                    <span class="text-xl group-hover:bounce">📄</span>
-                    <span>閱讀課程講義</span>
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vT17770_LhB_O6-tHizwW75k1PizI_gV_v_e66M8W667107770/pub?embedded=true')"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
                 </button>
             </div>
         </div>
@@ -248,8 +248,8 @@
 
         <!-- Section 4: Assignments -->
         <section>
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實驗室任務：P 控制實戰</h2>
-            <p class="text-center text-gray-500 mb-12">從公式到程式，親手調校出最完美的追蹤曲線。</p>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：P 控制與穩定性調校</h2>
+            <p class="text-center text-gray-500 mb-12">採用 <b>Git Workflow</b>：領取 GitHub Classroom 任務，實作控制算法並提交 PR。</p>
 
             <div class="grid md:grid-cols-3 gap-8">
                 <!-- Task 3-1 -->
@@ -332,148 +332,230 @@
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
                 <span>進階課程 8 - 單元 3</span>
                 <span class="hidden md:inline">|</span>
-                <span>視覺追蹤比例控制策略</span>
+                <span>比例控制 (P-Control) 理論與實踐</span>
             </div>
         </div>
     </footer>
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="guide-header mb-12 border-b-2 border-indigo-200 pb-6">
+            <h2 class="text-4xl font-black text-indigo-900 mb-2 text-justify">作業指引 (Assignment Guide)</h2>
+            <p class="text-indigo-600 font-bold uppercase tracking-widest text-sm text-justify">進階 8 - P 控制實戰</p>
+        </div>
 
-        <h3>作業 3-1：實作 P-Controller 核心函式</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 控制系統工程師。</li>
-            <li><strong>執行方式：</strong> 在網頁端實作 `calculatePControl(error, Kp)` 函式。將誤差乘上比例增益，並加上一個「限幅
-                (Saturation)」邏輯，確保輸出不超過馬達的極限值。</li>
-            <li><strong>評分重點：</strong> 代碼邏輯是否簡潔且具備防止「輸出溢位 (Overflow)」的保護機制。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-justify">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3 font-black text-justify">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-indigo-600 text-white rounded-xl text-lg font-black text-justify">3-1</span>
+                「P 震盪器」：尋找臨界穩定點
+            </h3>
+            <div class="space-y-4 text-gray-700 text-justify">
+                <p><strong>角色扮演：</strong> 控制理論工程師。</p>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 text-justify">
+                    <p class="font-bold mb-2 text-indigo-900">執行步驟：</p>
+                    <ol class="list-decimal list-inside space-y-1 text-sm text-justify">
+                        <li>在程式中實作 $Output = Kp \times Error$。</li>
+                        <li>慢慢調大 $Kp$ 滑桿，直到車體出現「等幅震盪」。</li>
+                        <li>記錄此時的 $Kp$ 值與震盪週期。</li>
+                    </ol>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 能否透過實驗找出讓系統開始「發散」或「震盪」的 $Kp$ 臨界值，並理解增益與穩定性的權衡。</p>
+            </div>
+        </div>
 
-        <h3>作業 3-2：「Kp 調音師」：動態參數調校</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 現場與調試工程師 (Field Engineer)。</li>
-            <li><strong>執行方式：</strong> 透過控制介面的 Kp 滑桿，觀察無人車在跟隨目標時的表現。紀錄三個關鍵 Kp 值：剛好動不了、完美追隨、開始瘋狂震盪 (Over-shooting)。</li>
-            <li><strong>評分重點：</strong> 能否在 GitHub README 中清楚分析不同 $Kp$ 值對系統「穩定性 (Stability)」與「反應速度 (Responsiveness)」的影響。
-            </li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-justify text-left">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3 font-black text-left">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-xl text-lg">3-2</span>
+                靜態誤差 (Steady-State Error) 觀察室
+            </h3>
+            <div class="space-y-4 text-gray-700 text-justify text-left">
+                <p><strong>角色扮演：</strong> 自動駕駛測試員。</p>
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-justify text-left">
+                    <p class="font-bold mb-2 text-blue-900 text-justify text-left">執行步驟：</p>
+                    <ul class="list-disc list-inside space-y-1 text-sm text-justify text-left">
+                        <li>將 $Kp$ 設為較小的穩定值。</li>
+                        <li>觀察當車體接近目標時，是否會停在一個「差一點點」的位置。</li>
+                        <li>手動計算此時的靜態誤差值。</li>
+                    </ul>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 正確解釋為何單純的 P 控制無法消除「靜態誤差」，並紀錄不同 $Kp$ 下殘餘誤差的大小。</p>
+            </div>
+        </div>
 
-        <h3>作業 3-3：追蹤壓力測試（速度 vs. 誤差）</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 系統魯棒性測試員。</li>
-            <li><strong>執行方式：</strong> 在維持 $Kp$ 的情況下，逐漸提升車子的「基礎前行速度」。觀察在高速彎道中，單純的 P 控制是否還能將誤差維持在容許範圍內。</li>
-            <li><strong>評分重點：</strong> 發現並描述 P 控制在處理高速慣性時的極限（例如追不到彎或是嚴重蛇行），作為後續引進 D (微分) 控制的動機。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-justify text-left">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3 font-black text-left">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-emerald-600 text-white rounded-xl text-lg">3-3</span>
+                視覺伺服 (Visual Servoing) 追隨實驗
+            </h3>
+            <div class="space-y-4 text-gray-700 text-justify text-left">
+                <p><strong>角色扮演：</strong> 控制演算法工程師。</p>
+                <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100 text-justify text-left text-justify">
+                    <p class="font-bold mb-2 text-emerald-900 text-justify text-left text-justify">執行步驟：</p>
+                    <ul class="list-disc list-inside space-y-1 text-sm text-justify text-left">
+                        <li>結合前一單元的「影像誤差」作為 P 控制器的輸入。</li>
+                        <li>調整 $Kp$ 讓無人車能流暢追隨移動的小球。</li>
+                        <li>紀錄系統反應是否有延遲 (Lag)。</li>
+                    </ul>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 整體系統的聯動性，即影像偵測頻率與控制指令頻度是否匹配，讓「追隨動作」看起來自然且精確。</p>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+        <div class="guide-header mb-12 border-b-2 border-emerald-200 pb-6 text-justify">
+            <h2 class="text-4xl font-black text-emerald-900 mb-2 text-justify text-left">講師指引 (Instructor Guide)</h2>
+            <p class="text-emerald-600 font-bold uppercase tracking-widest text-sm text-justify text-left">GitHub
+                Classroom & Flipped Teaching</p>
+        </div>
+
+        <!-- Practical Deployment Recommendations -->
+        <div
+            class="guide-section mb-10 p-8 bg-blue-50 border border-blue-100 rounded-3xl shadow-inner text-justify text-left">
+            <h3 class="text-2xl font-bold text-blue-900 mb-6 flex items-center gap-3 text-justify text-left">
+                <span class="text-3xl font-black">🚀</span> 在 GitHub Classroom 的實戰部署
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-justify text-left">
                 <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                    <h4 class="font-bold text-blue-800 text-sm mb-4 flex items-center gap-2 font-black">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full font-black text-left"></span>
                         A. 範本倉庫 (Template Repo) 結構
                     </h4>
                     <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+                        class="bg-gray-900 text-gray-100 p-6 rounded-2xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700 text-justify text-left">
 .
 ├── js/
-│   ├── pid_controller.js # P 控制核心邏輯
-│   └── telemetry.js      # 誤差與出力繪圖 (Chart.js)
+│   ├── controller.js     # 核心 P 控制算法庫
+│   └── telemetry.js      # 數據回傳與曲線繪製
 ├── tests/
-│   └── pid.test.js       # 測試：驗證計算與限幅邏輯
-└── README.md              # 調校紀錄、波形分析與報告</pre>
+│   └── p_control.test.js # 測試：驗證飽和限制 (Saturation)
+└── README.md              # 臨界 Kp 值與震盪現象觀察報告</pre>
                 </div>
                 <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                    <h4
+                        class="font-bold text-blue-800 text-sm mb-4 flex items-center gap-2 font-black text-left text-justify">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full font-black text-justify text-left"></span>
                         B. 自動評估 (Autograding) 的設計
                     </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">➕</span>
-                            <p class="text-sm text-gray-700"><strong>數學邏輯測試：</strong> 自動測試
-                                <code>calculatePControl</code> 增益計算是否符合公式。</p>
+                    <div
+                        class="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-blue-100 space-y-4 text-justify text-left">
+                        <div class="flex gap-4">
+                            <span class="text-2xl">📉</span>
+                            <p class="text-sm text-gray-700"><strong>控制指令驗證：</strong> 給予固定 Error，檢查 Output 是否符合 $Kp
+                                \times Error$ 比例。</p>
                         </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🚫</span>
-                            <p class="text-sm text-gray-700"><strong>限幅邏輯校驗：</strong> 模擬大誤差，檢查輸出是否正確截斷在 Max Power 內。</p>
+                        <div class="flex gap-4">
+                            <span class="text-2xl">⛔</span>
+                            <p class="text-sm text-gray-700"><strong>飽和限制檢查：</strong> 驗證當 Output 超過 PWM 最大值 (255)
+                                時，是否有做抗飽和處理。</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
+        <!-- Detailed operations guide -->
+        <div
+            class="guide-section mb-10 p-8 bg-white border border-gray-200 rounded-3xl text-justify text-left text-justify">
+            <h3
+                class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3 text-justify text-left text-justify font-black">
+                <span class="text-3xl font-black text-justify text-left">🛠️</span> GitHub Classroom 詳細操作指南
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-justify text-left text-justify">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify text-left">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full text-justify text-left font-black">STEP
                         1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供已串接好 Chart.js 即時波形視窗與調試介面的專案模板。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify text-left font-black">
+                        準備範本專案</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify text-left">提供具備動態圖表顯示 Error
+                        曲線的控制介面，預留 $Kp$ 計算介面，設定為 Template repository。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div
+                    class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify text-left text-justify">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full text-justify text-left text-justify font-black">STEP
                         2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「調校報告」驗證。指導利用 GitHub Project 看板追蹤測試。 </p>
+                    <p
+                        class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify text-left text-justify font-black">
+                        建立 Classroom 作業</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify text-left text-justify">
+                        設定「抗飽和邏輯」驗證。提示學生思考「如果控制目標是反向的，Kp 應該正值還是負值？」。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div
+                    class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify text-left text-justify">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full text-justify text-left text-justify font-black">STEP
                         3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">觀察波形。提交包含「臨界震盪」波形截圖的 PR。執行 Git Push。</p>
+                    <p
+                        class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify text-left text-justify font-black">
+                        學生端作業 (Flipped)</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify text-left text-justify">調校
+                        $Kp$ 並觀察波形。提交「穩定」 vs 「震盪」的圖表對比及參數值。執行 Git Push。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div
+                    class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify text-left text-justify">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full text-justify text-left text-justify font-black">STEP
                         4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對對「阻尼」現象觀察，以及「系統震盪」成因分析予以回饋。</p>
+                    <p
+                        class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify text-left text-justify font-black">
+                        教師代碼審閱 (Review)</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify text-left text-justify">
+                        針對「參數選擇理由」以及對「系統不穩定性兆頭」的分析深度予以回饋。</p>
                 </div>
             </div>
         </div>
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
+        <!-- Flipped classroom strategy table -->
+        <div
+            class="guide-section p-8 bg-blue-50/50 border border-blue-100 rounded-3xl text-justify text-left text-justify">
+            <h3
+                class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3 text-justify text-left text-justify">
+                <span class="text-3xl font-black text-justify text-left text-justify">🔄</span> 翻轉教室的實施策略
             </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div
+                class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg text-justify text-left text-justify">
                 <table class="w-full text-sm text-left">
                     <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
                         <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
+                            <th class="px-6 py-4 text-justify text-left text-justify">階段</th>
+                            <th class="px-6 py-4 text-justify text-left text-justify">學生行動 (Git Workflow)</th>
+                            <th class="px-6 py-4 text-justify text-left text-justify">教師/平台角色</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                    <tbody class="divide-y divide-gray-100 text-gray-600 text-justify text-left text-justify">
                         <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">觀看影片，理解定速巡航如何維持目標值的原理。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，發布「控制系統性格學」趣味導讀。</td>
+                            <td
+                                class="px-6 py-5 font-black text-slate-800 bg-slate-50/50 w-32 text-center uppercase tracking-tighter">
+                                Pre-class<br><span class="text-[10px] font-normal text-slate-400">課前</span></td>
+                            <td class="px-6 py-5">理解「負回饋」概念。預習 P 控制公式的物理意義。</td>
+                            <td class="px-6 py-5 text-xs text-justify text-left text-justify">評估回饋：檢查 Dashboard
+                                進度，提供「震盪與發散」視覺化模擬器。</td>
                         </tr>
                         <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，體驗透過滑桿改變車子跟隨性格。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，解答關於「Kp 過大導致過衝」的技術細節。</td>
+                            <td
+                                class="px-6 py-5 font-black text-blue-800 bg-blue-50/30 w-32 text-center uppercase tracking-tighter font-black">
+                                In-class<br><span class="text-[10px] font-normal text-blue-400 font-black">課中</span>
+                            </td>
+                            <td class="px-6 py-5 font-medium text-slate-900 text-justify text-left text-justify">領取
+                                Classroom 作業，以「盲調」方式體驗增益對系統即時動態的影響。</td>
+                            <td class="px-6 py-5 text-xs text-blue-700 text-justify text-left text-justify">
+                                引導思考：解答關於「為什麼車子會左右蛇行」的相位延遲與增益關係。</td>
                         </tr>
                         <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">執行壓力測試，思考 P 控制面對「大轉彎」的極限並 Push。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，引導探究 D 與 I 控制在複雜場景的價值。</td>
+                            <td
+                                class="px-6 py-5 font-black text-slate-800 bg-slate-50/50 w-32 text-center uppercase tracking-tighter text-justify text-left text-justify">
+                                Post-class<br><span class="text-[10px] font-normal text-slate-400 font-black">課後</span>
+                            </td>
+                            <td class="px-6 py-5 text-justify text-left text-justify">分析「負載增加」後原本 $Kp$ 是否仍然適用並
+                                Push，閱讀回覆。</td>
+                            <td class="px-6 py-5 text-xs text-justify text-left text-justify">核發評量：評估學生對控制系統魯棒性
+                                (Robustness) 的直觀理解。</td>
                         </tr>
                     </tbody>
                 </table>
@@ -481,12 +563,6 @@
         </div>
     </section>
 
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/9zPLHyswwro?autoplay=1",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vQ866xRHusp9fKpp98Ppk-9_gCps52iUeut3_lSJ8mTkzdV441tov7D5oZ60FKUVrX7b_rGqNU8ay4A/pub?embedded=true"
-        };
-    </script>
     <script src="/js/course-shared.js"></script>
 </body>
 

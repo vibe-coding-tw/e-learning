@@ -51,23 +51,37 @@
         const tabMtu = document.getElementById('tab-ble-mtu');
 
         // Initial Load
-        loadContent('adv-03-unit-ble-notify.html');
+        loadFromHash();
+
+        function loadFromHash() {
+            const hash = window.location.hash.substring(1);
+            if (hash === 'json-serialization') {
+                switchTab('json-serialization');
+            } else if (hash === 'ble-mtu') {
+                switchTab('ble-mtu');
+            } else {
+                switchTab('ble-notify');
+            }
+        }
 
         function switchTab(tab) {
             // Reset all tabs
             [tabNotify, tabJson, tabMtu].forEach(t => {
-                t.classList.remove('active');
+                if (t) t.classList.remove('active');
             });
 
             if (tab === 'ble-notify') {
                 tabNotify.classList.add('active');
                 loadContent('adv-03-unit-ble-notify.html');
+                window.location.hash = 'ble-notify';
             } else if (tab === 'json-serialization') {
                 tabJson.classList.add('active');
                 loadContent('adv-03-unit-json-serialization.html');
+                window.location.hash = 'json-serialization';
             } else if (tab === 'ble-mtu') {
                 tabMtu.classList.add('active');
                 loadContent('adv-03-unit-ble-mtu.html');
+                window.location.hash = 'ble-mtu';
             }
         }
 

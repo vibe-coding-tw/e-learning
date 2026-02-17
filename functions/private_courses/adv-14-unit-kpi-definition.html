@@ -51,11 +51,11 @@
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                <button onclick="window.courseShared.enterMediaMode('video', window.RESOURCES.youtube)"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                <button onclick="window.courseShared.enterMediaMode('doc', window.RESOURCES.doc)"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -171,77 +171,92 @@
             </div>
         </section>
 
-        <!-- Assignments Section -->
-        <section>
-            <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center">
-                <span class="mr-3">📝</span> 實作任務 (Classroom Challenges)
-            </h2>
-
-            <!-- Assignment 1 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-md cursor-pointer"
-                onclick="openSubmissionModal('adv-14-kpi-dashboard', 'Task 2-1: 數位儀表板實作')">
-                <div class="p-6 border-b border-gray-100 bg-gray-50">
-                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
-                        <span class="bg-blue-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 2-1</span>
-                        「數位儀表板」實作 (60 min)
-                    </h3>
-                </div>
-                <div class="p-6">
-                    <div class="mb-4">
-                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
-                        <p class="text-gray-700">讓抽象的指標變成具體的可視化資訊，在 Web UI 上實作即時性能監控面板。</p>
+        <!-- Assignment Highlights -->
+        <section class="module-section">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                        <div>
+                            <h2
+                                class="text-3xl font-bold text-white mb-2 underline decoration-blue-500 underline-offset-8">
+                                實作任務：數據說話</h2>
+                            <p class="text-slate-400">定義、測量並優化系統指標，讓你的優化成果「有據可查」。</p>
+                        </div>
                     </div>
-                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
-                        <li><strong>即時計算：</strong>在 JavaScript 中使用 <code>performance.now()</code> 計算每輪控制循環的精確耗時。</li>
-                        <li><strong>滾動平均：</strong>計算最近 10 幀的平均延遲，避免數據跳動過劇烈。</li>
-                        <li><strong>視覺化：</strong>在網頁上用紅/黃/綠燈號標示狀態（例如：&lt; 50ms 為綠燈，&gt; 150ms 為紅燈）。</li>
-                    </ul>
+
+                    <div class="grid md:grid-cols-2 gap-8 mb-12">
+                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-2xl">
+                                    📡</div>
+                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
+                            </div>
+                            <p class="mb-4 text-slate-400">完成任務後，請將數據與結果推送到你的專屬倉庫。</p>
+                            <ul class="space-y-3 text-slate-300">
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">1</span>
+                                    <span>接受 GitHub Classroom 邀請並 Clone 倉庫</span>
+                                </li>
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">2</span>
+                                    <span>完成代碼後執行 <code
+                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code></span>
+                                </li>
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">3</span>
+                                    <span>在 PR 中查看自動化評分與教師回饋</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="grid gap-4">
+                            <!-- Task 2-1 -->
+                            <div onclick="window.courseShared.openSubmissionModal('adv-14-kpi-dashboard', '【作業 2-1】「數位儀表板」實作')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition">作業
+                                        2-1</h3>
+                                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">「數位儀表板」實作</h4>
+                                <p class="text-sm text-gray-500">實作即時性能監控面板，根據延遲自動切換紅黃綠狀態燈號。</p>
+                            </div>
+
+                            <!-- Task 2-2 -->
+                            <div onclick="window.courseShared.openSubmissionModal('adv-14-kpi-stress', '【作業 2-2】「壓力極限測試」實驗')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-indigo-600 transition">
+                                        作業 2-2</h3>
+                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">「壓力極限測試」實驗</h4>
+                                <p class="text-sm text-gray-500">執行各項變因測試並產出性能規格書，找出系統最大負載邊界。</p>
+                            </div>
+
+                            <!-- Task 2-3 -->
+                            <div onclick="window.courseShared.openSubmissionModal('adv-14-kpi-optimize', '【作業 2-3】「KPI 優化賽」')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-cyan-600 transition">作業
+                                        2-3</h3>
+                                    <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold">45
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">「KPI 優化賽」</h4>
+                                <p class="text-sm text-gray-500">針對延遲或精準度進行數據驅動開發，實測並量化優化效益。</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <!-- Assignment 2 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-md cursor-pointer"
-                onclick="openSubmissionModal('adv-14-kpi-stress', 'Task 2-2: Stress Limit Test')">
-                <div class="p-6 border-b border-gray-100 bg-gray-50">
-                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
-                        <span class="bg-blue-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 2-2</span>
-                        「壓力極限測試」實驗 (60 min)
-                    </h3>
-                </div>
-                <div class="p-6">
-                    <div class="mb-4">
-                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
-                        <p class="text-gray-700">透過人為增加負載，找出系統崩潰的臨界點，並學習硬體基準測試 (Benchmarking)。</p>
-                    </div>
-                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
-                        <li><strong>變因測試：</strong>逐步增加影像解析度 (QVGA -> VGA)，觀察 FPS 下降到多少時，車子開始無法穩定循跡。</li>
-                        <li><strong>誤差紀錄：</strong>紀錄在不同車速下，過彎時的「最大瞬間誤差值」。</li>
-                        <li><strong>產出：</strong>為你的無人車寫下「官方性能規格書」。</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Assignment 3 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md cursor-pointer"
-                onclick="openSubmissionModal('adv-14-kpi-optimize', 'Task 2-3: KPI Optimization')">
-                <div class="p-6 border-b border-gray-100 bg-gray-50">
-                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
-                        <span class="bg-blue-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 2-3</span>
-                        「KPI 優化賽」 (45 min)
-                    </h3>
-                </div>
-                <div class="p-6">
-                    <div class="mb-4">
-                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
-                        <p class="text-gray-700">練習數據驅動開發 (Data-driven Development)，針對某一項 KPI 進行針對性優化。</p>
-                    </div>
-                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
-                        <li><strong>選擇目標：</strong>選擇「降低延遲」或「提高精準度」作為單一目標。</li>
-                        <li><strong>實驗對照：</strong>修改代碼（如優化 JSON 打包或調整濾波演算法），並與優化前的數據對比。</li>
-                        <li><strong>效益分析：</strong>計算並提交你的「優化率 %」。</li>
-                    </ul>
-                </div>
-            </div>
+        </section>
 
         </section>
 

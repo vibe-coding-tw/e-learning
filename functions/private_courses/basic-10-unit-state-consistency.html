@@ -259,159 +259,122 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
-    <section id="assignment-guide" class="hidden">
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
-        <div class="space-y-6">
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h3 class="font-bold text-blue-800">1. GitHub Classroom 設定</h3>
-                <p class="text-sm">請將對應的 Repository (例如：<code>esp32-state-sync-lab</code>) 設定至課程儀表板，練習在非同步環境下維持數據的最終一致性。
-                </p>
-            </div>
 
-            <div class="bg-indigo-50 p-4 rounded-lg">
-                <h3 class="font-bold text-indigo-800">2. 翻轉課堂策略</h3>
-                <ul class="list-disc list-inside text-sm">
-                    <li>課前預習：觀看 8 分鐘關於 Race Condition (競爭條件) 與分散式系統同步問題的動畫。</li>
-                    <li>課中實作：模擬網路延遲環境，並實作版本序號 (Sequence Number) 與 ACK/NACK 機制，觀察其對 UI 閃爍與邏輯錯誤的修復效果。</li>
-                </ul>
-            </div>
+        <h3>【作業 3-1】實作「版本序號」同步法</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 分散式系統工程師 (Distributed Systems Engineer)。</li>
+            <li><strong>執行方式：</strong> 為狀態變更封包加上遞增的 Sequence
+                Number。在網頁端實作邏輯：僅接受序號大於目前存儲值的資料包。模擬網路延遲環境，測試系統是否能自動過濾「遲到」的過時訊息。</li>
+            <li><strong>評分重點 :</strong> 成功偵測並忽略舊序號封包，UI 狀態不再因延遲而產生「時光倒流」的閃爍現象。</li>
+        </ul>
 
-            <div class="bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold mb-2">3. 單元任務 (Unit Tasks)</h3>
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-100 text-left">
-                        <tr>
-                            <th class="p-2">任務說明</th>
-                            <th class="p-2">建議時間</th>
-                            <th class="p-2">配分</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 3-1】實作「版本序號」過濾舊封包邏輯</td>
-                            <td class="p-2">60 min</td>
-                            <td class="p-2">40 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 3-2】實作具備重試機制的 ACK 應答系統</td>
-                            <td class="p-2">60 min</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 3-3】SSoT 重構：確保 UI 僅由硬體狀態驅動</td>
-                            <td class="p-2">45 min</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <h3>【作業 3-2】實作應答確認機制 (ACK/NACK)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 通訊協定設計師 (Communication Protocol Designer)。</li>
+            <li><strong>執行方式：</strong> 實作具備「超時重試」與「狀態回執」功能的發送框架。在網頁按鈕點擊後顯示「讀取中」動畫，直到收到硬體回傳的 ACK (確認) 或 NACK (拒絕) 為止。
+            </li>
+            <li><strong>評分重點 :</strong> 成功處理指令丟包情況，具備自動重試邏輯，且 UI 能清晰反饋指令的執行結果。</li>
+        </ul>
+
+        <h3>【作業 3-3】真值來源 (SSoT) 重構</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 系統架構師 (System Architect)。</li>
+            <li><strong>執行方式：</strong> 強制 UI 模式遵循「單向數據流」：點擊按鈕不立即改變狀態，而是等待硬體端的主動推送（通知）。對比「樂觀更新」與「SSoT 控制」在不穩定的無線通訊下的穩定表現。
+            </li>
+            <li><strong>評分重點 :</strong> 徹底移除 UI 端的所有「先行假設」，確保網頁顯示與機器人物理現狀 100% 一致。</li>
+        </ul>
     </section>
 
-    <section id="instructor-guide" class="hidden">
-        <h2>講師手冊 (Instructor Guide)</h2>
-        <div class="space-y-6">
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">教學重點 (Teaching Points)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2">
-                    <li>非同步的代價：解釋為什麼「發送順序」不等於「抵達順序」。</li>
-                    <li>樂觀更新 (Optimistic UI) 的適用場景：什麼時候可以使用？（如點讚）什麼時候禁止？（如啟動馬達）。</li>
-                    <li>單一真值來源 (SSoT)：強調分散式控制系統中，實體硬體的狀態才是最終真理。</li>
-                </ul>
-            </div>
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>在 GitHub 建立新 Repo（名為 <code>basic-10-sync-template</code>）。</li>
+                <li>上傳包含藍牙通訊框架但「未處理數據競爭 (Racing)」的實驗程式。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
 
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">學生常見問題 (Common Issues)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2 text-red-600">
-                    <li>不理解為什麼介面會「跳動」：這是因為舊的狀態回傳蓋掉了新的操作指令。</li>
-                    <li>ACK 機制寫得太複雜，導致網路擁塞（解釋指數退避或簡單超時計數）。</li>
-                    <li>混淆了 TCP 的穩定性與應用層的狀態一致性。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
+                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
+            </ol>
 
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="font-bold mb-2 text-sm">評分標準 (Grading)</h3>
-                <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
-                    <li><strong>優 (90-100):</strong> 能完美解決 Race Condition，UI 在極端延遲下仍能展現正確且穩定的狀態。</li>
-                    <li><strong>可 (70-89):</strong> 具備基本的同步意識，但在邏輯邊界情況（如極短時間內連續連擊）可能失效。</li>
-                    <li><strong>待加強 (Below 70):</strong> UI 與硬體狀態長期不一致，且無任何錯誤過濾機制。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，獲得個人專屬 Repo。</li>
+                <li>模擬長延遲 (Long Latency) 環境，實作版本序號過濾器與 ACK 重傳邏輯。</li>
+                <li>完成 SSoT 結構重構後 <strong>Push 代碼</strong> 提交進度。</li>
+            </ol>
 
-            <!-- NEW: Practical Deployment Recommendations -->
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
-                    <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
-.
-├── src/             # 包含網路延遲模擬與 ACK 邏輯的 main.cpp
-├── README.md        # 測試報告：在 500ms 延遲下的 UI 穩定性截圖
-└── .github/         # 自動評估系統</pre>
-                    <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
-                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-                        <li><strong>數據一致性檢查：</strong> 模擬亂序封包，檢查學生代碼是否能透過 Sequence Number 過濾舊數據。</li>
-                        <li><strong>通訊效率評核：</strong> 檢查 ACK 回傳頻率，避免無意義的頻繁應答導致網路擁塞。</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- NEW: Detailed operations guide -->
-            <div class="bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
-                <div class="space-y-4 text-sm text-gray-600">
-                    <div>
-                        <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
-                        <p>建立包含 SSoT (單一真值來源) 框架的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
-                        <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以進行細部代碼通訊邏輯點評。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
-                        <p>學生點擊作業連結，獲得個人專屬 Repo，Clone 到本地開發並 Push 回傳觀察其對「非同步衝突」的處理能力。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
-                        <p>進入 Feedback PR，針對學生的 Sequence Number 與 ACK 機制實作方案給予回饋。</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- NEW: Flipped classroom strategy table -->
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm border-collapse border border-gray-200">
-                        <thead class="bg-gray-50 text-left text-gray-800">
-                            <tr>
-                                <th class="border border-gray-200 p-2">階段</th>
-                                <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
-                                <th class="border border-gray-200 p-2">教師/平台角色</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-gray-600">
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
-                                <td class="border border-gray-200 p-2">觀看 Race Condition 與分散式一致性概論影片。</td>
-                                <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員對「延遲」有基礎認知。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
-                                <td class="border border-gray-200 p-2">領取 Classroom 作業，在延遲環境下實作狀態同步機制。</td>
-                                <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
-                                <td class="border border-gray-200 p-2">優化 Optimistic UI 的處理邏輯並 Push，閱讀教師回覆 PR。</td>
-                                <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>重點評價學生對「安全（精確性）高於體驗（反應速度）」這一權衡的理解程度。</li>
+            </ol>
         </div>
+
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元聚焦於「分散式系統的一致性」，引導學生理解在不穩定的無線環境下，如何建立強韌的雙向通訊協議。</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── src/
+│   └── main.cpp      # (重點) 需實作 Sequence Check 邏輯
+├── tests/            # 模擬封包丟失與亂序的測試腳本
+└── README.md         # 實驗心得：版本序號如何解決 UI 閃跳問題</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>main.cpp (Sequence Filter)</strong></p>
+        <pre><code>static uint32_t lastSeq = 0;
+void onData(Data d) {
+  if (d.seq > lastSeq) {
+    lastSeq = d.seq;
+    updateUI(d.state);
+  }
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>一致性檢測：：</strong> 透過 Python 測試腳本連續發送亂序封包，驗證 UI 最終狀態是否停留在最新序號的資料。</li>
+            <li><strong>ACK 健全度：：</strong> 斷開一部分通訊，檢查學生程式是否會觸發自動重傳 (Exponential Backoff 為優)。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「當螢幕說謊時：同步的代價」技術短片。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>Dashboard：</strong>確認學員理解「發送順序不等於抵達順序」的痛點。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，在刻意製造的亂序網路中實作計時與序號同步。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>演示「單一真值來源 (SSoT)」如何簡化 UI
+                        更新邏輯。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">挑戰實作對話式應答 (Handshake) 邏輯並 Push，閱讀教師回覆 PR。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核學生對「系統魯棒性
+                        (Robustness)」的概念掌握。</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </body>
 

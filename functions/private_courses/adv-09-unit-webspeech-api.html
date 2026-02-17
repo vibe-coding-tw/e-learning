@@ -33,13 +33,15 @@
                 利用 JavaScript 原生 API 實現語音辨識與合成，探索雲端分析與本地引擎的權衡。
             </p>
 
-            <div class="mt-10 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/4PDB_LF0wt8')"
                     class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-red-900/20">
                     <span class="text-xl group-hover:animate-pulse">📺</span>
                     <span>觀看教學影片</span>
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vR-n5S783GICTPTe7YFqmi85R13soE6bX26narP8b4C9P6maXJ6nm_YM6vMeEoW_PEUwm6fH6UrwrQf/pub?embedded=true')"
                     class="group flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-blue-900/20">
                     <span class="text-xl group-hover:bounce">📄</span>
                     <span>閱讀課程講義</span>
@@ -204,76 +206,115 @@ recognition.onerror = (e) => {
 
         <!-- Section 4: Assignments -->
         <section>
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：語音控制實戰</h2>
-            <p class="text-center text-gray-500 mb-12">將語音指令轉化為精確的硬體動作，打造智慧無人車。</p>
+            <section id="assignments" class="mb-20">
+                <div class="text-center mb-12">
+                    <span
+                        class="px-4 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold tracking-widest uppercase">Practical
+                        Lab</span>
+                    <h2 class="text-4xl font-black text-gray-900 mt-4 mb-4 font-[Outfit]">核心實驗室：語音控制實戰</h2>
+                    <p class="text-gray-600 max-w-2xl mx-auto">將語音指令轉化為精確的硬體動作，打造智慧無人車。</p>
+                </div>
 
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Task 3-1 -->
-                <div onclick="openSubmissionModal('adv-09-voice-commands', '【作業 9-3-1】「聲控指令集」開發')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-blue-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">⌨️</span>
-                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Task 3-1 -->
+                    <div onclick="window.courseShared.openSubmissionModal('adv-09-voice-commands', '【作業 9-3-1】「聲控指令集」開發')"
+                        class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-blue-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-blue-200/50 cursor-pointer">
+                        <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <span class="text-6xl font-black">01</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
-                            3-1】聲控指令集</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>在 BLE 控制介面中整合語音辨識功能。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>關鍵字過濾：當結果包含「前進」、「左轉」時觸發函式</li>
-                                <li>模糊匹配：使用者說「請停下來」時應識別出「停」</li>
-                            </ul>
+                        <div class="p-8">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div
+                                    class="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform duration-500">
+                                    ⌨️</div>
+                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git
+                                    Branch: <span class="text-blue-600">feature/voice-commands</span></span>
+                            </div>
+                            <h3
+                                class="text-xl font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors">
+                                【作業 3-1】聲控指令集</h3>
+                            <p class="text-gray-600 text-sm leading-relaxed mb-6">在 BLE 控制介面中整合語音辨識功能。</p>
+                            <div class="space-y-3 border-t border-slate-50 pt-6">
+                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                    <span
+                                        class="w-5 h-5 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold">1</span>
+                                    當結果包含「前進/左轉」時觸發函式
+                                </div>
+                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                    <span
+                                        class="w-5 h-5 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold">2</span>
+                                    實作模糊匹配，識別口語中的關鍵字
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Task 3-2 -->
+                    <div onclick="window.courseShared.openSubmissionModal('adv-09-voice-noise', '【作業 9-3-2】環境噪音下的語音對抗')"
+                        class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-emerald-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-emerald-200/50 cursor-pointer">
+                        <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <span class="text-6xl font-black">02</span>
+                        </div>
+                        <div class="p-8">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div
+                                    class="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform duration-500">
+                                    🔊</div>
+                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git
+                                    Branch: <span class="text-emerald-600">feature/voice-noise</span></span>
+                            </div>
+                            <h3
+                                class="text-xl font-bold text-gray-900 mb-4 group-hover:text-emerald-600 transition-colors">
+                                【作業 3-2】噪音對抗</h3>
+                            <p class="text-gray-600 text-sm leading-relaxed mb-6">優化在多人吵雜環境下的辨識成功率。</p>
+                            <div class="space-y-3 border-t border-slate-50 pt-6">
+                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                    <span
+                                        class="w-5 h-5 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center font-bold">1</span>
+                                    顯示信心指標，低於 0.8 則忽略指令
+                                </div>
+                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                    <span
+                                        class="w-5 h-5 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center font-bold">2</span>
+                                    透過 SpeechSynthesis 語音回饋確認
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Task 3-3 -->
+                    <div onclick="window.courseShared.openSubmissionModal('adv-09-voice-fsm', '【作業 9-3-3】語音與狀態機的深度整合')"
+                        class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-red-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-red-200/50 cursor-pointer">
+                        <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <span class="text-6xl font-black">03</span>
+                        </div>
+                        <div class="p-8">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div
+                                    class="w-12 h-12 bg-red-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-red-200 group-hover:scale-110 transition-transform duration-500">
+                                    🔄</div>
+                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git
+                                    Branch: <span class="text-red-600">feature/voice-fsm</span></span>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-900 mb-4 group-hover:text-red-600 transition-colors">
+                                【作業 3-3】FSM 整合</h3>
+                            <p class="text-gray-600 text-sm leading-relaxed mb-6">利用語音切換無人車的工作模式。</p>
+                            <div class="space-y-3 border-t border-slate-50 pt-6">
+                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                    <span
+                                        class="w-5 h-5 bg-red-50 text-red-600 rounded-full flex items-center justify-center font-bold">1</span>
+                                    說出「進入自動模式」時 UI 同步切換
+                                </div>
+                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                    <span
+                                        class="w-5 h-5 bg-red-50 text-red-600 rounded-full flex items-center justify-center font-bold">2</span>
+                                    在 <code>onend</code> 觸發時自動重啟辨識
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Task 3-2 -->
-                <div onclick="openSubmissionModal('adv-09-voice-noise', '【作業 9-3-2】環境噪音下的語音對抗')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-emerald-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🔊</span>
-                            <span class="bg-emerald-50 text-emerald-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-emerald-600 transition">【作業
-                            3-2】噪音對抗</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>優化在多人吵雜環境下的辨識成功率。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>信心指標 (Confidence)：顯示分數，低於 0.8 則忽略</li>
-                                <li>語音回饋：透過 SpeechSynthesis 回應「收到，開始前進」</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Task 3-3 -->
-                <div onclick="openSubmissionModal('adv-09-voice-fsm', '【作業 9-3-3】語音與狀態機的深度整合')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-red-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🔄</span>
-                            <span class="bg-red-50 text-red-700 text-xs px-3 py-1 rounded-full font-bold">45 min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-red-600 transition">【作業 3-3】FSM
-                            整合</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>利用語音切換無人車的工作模式。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>模式切換：說出「進入自動模式」時 UI 同步切換</li>
-                                <li>異常重啟：當 <code>onend</code> 觸發時自動重啟辨識</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+            </section>
 
     </main>
 
@@ -435,13 +476,13 @@ recognition.onerror = (e) => {
         </div>
     </section>
 
+    <script src="/js/course-shared.js"></script>
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/4PDB_LF0wt8?autoplay=1",
             doc: "https://docs.google.com/document/d/e/2PACX-1vR-n5S783GICTPTe7YFqmi85R13soE6bX26narP8b4C9P6maXJ6nm_YM6vMeEoW_PEUwm6fH6UrwrQf/pub?embedded=true"
         };
     </script>
-    <script src="/js/course-shared.js"></script>
 </body>
 
 </html>

@@ -349,32 +349,30 @@
     </footer>
 
     <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" class="hidden">
+    <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
-        <div class="guide-section">
-            <h3>1. GitHub Classroom 設定</h3>
-            <ul>
-                <li>點擊儀表板「領取作業」按鈕，進入 GitHub Classroom 並獲取 `basic-04-pwm-basics`。</li>
-                <li>將個人作業儲存庫 Clone 至本地。</li>
-                <li>檢視 `platformio.ini`，確認燒錄頻率設定。</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>2. 翻轉課堂學習策略</h3>
-            <ul>
-                <li><strong>課前預習</strong>：觀看「PWM 基礎：脈衝寬度調變與能量等效」影片。</li>
-                <li><strong>課中實作</strong>：使用示波器（或其模擬軟體）觀察不同 Duty Cycle 下的波形變化。</li>
-                <li><strong>課後思考</strong>：為什麼 PWM 的頻率越高，LED 閃爍感越低？有沒有頻率太高導致的問題？</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>3. 單元實作任務</h3>
-            <ul>
-                <li><strong>作業 4-1 (30%)</strong>：計算並實作 25%、50%、75% 工作週期的 LED 亮度對比。</li>
-                <li><strong>作業 4-2 (40%)</strong>：建立一個「呼吸燈」效果，由暗到亮、再由亮到暗循環。</li>
-                <li><strong>作業 4-3 (30%)</strong>：撰寫實驗記錄，探討人類視覺對亮度的非線性感知（例如：50% 能量看起來是否有 50% 亮度？）。</li>
-            </ul>
-        </div>
+
+        <h3>作業 1-1：「捉摸不定的波形」：示波器實測</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 訊號分析工程師 (Signal Analysis Engineer)。</li>
+            <li><strong>執行方式：</strong> 觀察占空比從 10% 到 90% 的寬度變化，記錄 LED 亮度變化，並嘗試降低頻率（例如 10Hz）觀察馬達的抖動現象，驗證有效電壓公式。</li>
+            <li><strong>評分重點 :</strong> 能成功捕獲不同占空比下的波形變化，並能口頭或文字解釋平均電壓與占空比的關係。</li>
+        </ul>
+
+        <h3>作業 1-2：「呼吸燈與線性感知」</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> UI/UX 燈光設計師 (UI/UX Lighting Designer)。</li>
+            <li><strong>執行方式：</strong>
+                實作呼吸燈效果。挑戰題目：探討人類對亮度的非線性感知。嘗試使用平方關係（例如：<code>duty = i * i / 255</code>）讓燈光變化看起來比純線性遞增更平滑。</li>
+            <li><strong>評分重點 :</strong> 呼吸燈效果流暢，且能比較線性與非線性（Gamma 校正）在視覺感受上的差異。</li>
+        </ul>
+
+        <h3>作業 1-3：「馬達啟動挑戰」：克服靜摩擦力</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 動力系統工程師 (Power System Engineer)。</li>
+            <li><strong>執行方式：</strong> 尋找馬達啟動的「死區 (Dead Zone)」，記錄在多少 PWM 值以下馬達只會發出嗡嗡聲但不轉動。撰寫一段代碼來自動補償初始動力。</li>
+            <li><strong>評分重點 :</strong> 找出精確的死區臨界值，並實作補償邏輯讓馬達能從極低速平穩啟動。</li>
+        </ul>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
@@ -383,63 +381,66 @@
         <div class="classroom-guide">
             <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
             <ol>
-                <li>上傳包含基礎 GPIO 定義但「未實作 PWM 初始化與控制代碼」的 Repo 框架，並勾選 <strong>"Template repository"</strong>。</li>
+                <li>在 GitHub 建立新 Repo（名為 <code>basic-04-pwm-template</code>）。</li>
+                <li>上傳包含基礎引腳定義但「未實作 PWM 初始化與控制邏輯」的 Repo 框架。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
             <ol>
-                <li>建立作業並連結範本。建議開啟 <strong>Feedback Pull Requests</strong> 選項以便對比學生的頻率選擇與工作週期 (Duty Cycle) 映射邏輯。</li>
+                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
+                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
             <ol>
-                <li>學生領取作業，獲得個人專屬 Repo，實作呼吸燈效果或 LED 亮度階梯式調整功能。</li>
-                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+                <li>學生領取作業，獲得個人專屬 Repo。</li>
+                <li>實作呼吸燈效果或 LED 亮度階梯式調整功能。</li>
+                <li>本地開發後 <strong>Push 代碼</strong> 提交進度。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
             <ol>
-                <li>打開 Feedback PR，針對學生的「硬體通道分配 (LEDC Channel)」與「視覺暫留 (POV) 應用思維」予以具體回饋。</li>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>針對學生的「LEDC Channel 分配」與「占空比映射與解析度匹配度」予以具體點評。</li>
             </ol>
         </div>
 
         <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元引導學生掌握「數位模擬類比」的核心技術，理解電壓等效原理與 PWM 波形控制，建議範本倉庫設置如下：</p>
+        <p>此單元引導學生掌握「數位模擬類比」的核心技術，理解電壓等效原理與 PWM 波形控制。</p>
 
         <h3>A. 範本倉庫 (Template Repo) 結構</h3>
         <pre><code>.
 ├── platformio.ini   # 包含基礎開發環境配置
-├── src/main.cpp      # (重點) 需實作 ledcSetup、ledcAttachPin 與 ledcWrite
-└── README.md        # 不同 Duty Cycle 下的亮度觀察表、呼吸燈週期計算與實驗日誌</code></pre>
+├── src/
+│   └── main.cpp      # (重點) 需實作 ledcSetup、ledcAttachPin 與 ledcWrite
+└── README.md        # 不同 Duty Cycle 亮度觀察、呼吸燈計算公式與實驗日誌</code></pre>
 
         <h3>B. 參考範例代碼 (Reference Example Code)</h3>
         <p><strong>main.cpp (基礎 LEDC 應用)</strong></p>
         <pre><code>#include &lt;Arduino.h&gt;
 
-const int ledPin = 2; // 選取具備 PWM 功能的 GPIO
+const int ledPin = 2; // PWM 引腳
 const int freq = 5000;
 const int ledChannel = 0;
-const int resolution = 8; // 8-bit 解析度 (0-255)
+const int resolution = 8; // 8-bit (0-255)
 
 void setup() {
-  // 設定 LEDC 屬性
   ledcSetup(ledChannel, freq, resolution);
-  // 將頻道連結至 GPIO
   ledcAttachPin(ledPin, ledChannel);
 }
 
 void loop() {
-  // 呼吸燈效果
-  for(int dutyCycle = 0; dutyCycle <= 255; dutyCycle++){   
-    ledcWrite(ledChannel, dutyCycle);
+  for(int duty = 0; duty <= 255; duty++){   
+    ledcWrite(ledChannel, duty);
     delay(7);
   }
 }</code></pre>
 
         <h3>C. 自動評分 (Autograding) 的設計</h3>
         <ul>
-            <li><strong>核心語法檢索：</strong> 偵測程式中是否呼叫了 <code>ledcWrite()</code> 與 <code>ledcSetup()</code>。</li>
-            <li><strong>配置參數驗證：</strong> 驗證學生設定的解析度是否與其迴圈邊界 (如 0-255) 相互匹配。</li>
+            <li><strong>核心語法檢索：：</strong> 偵測程式中是否呼叫了 <code>ledcWrite()</code> 與 <code>ledcSetup()</code>。</li>
+            <li><strong>配置參數驗證：：</strong> 驗證學生設定的解析度是否與其迴圈邊界 (如 0-255) 相互匹配。</li>
         </ul>
 
         <h2>翻轉教室的實施策略</h2>
@@ -451,26 +452,24 @@ void loop() {
                     <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
-            <tbody style="color: #4b5563;">
+            <tbody>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「PWM：如何用數位開關速度模擬類比輸出電壓？」教學影片。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>Dashboard：</strong>確認學員理解「平均電壓」等效概念與視覺暫留原理。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「PWM：如何用數位開關模擬類比輸出？」教學影片。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員理解「平均電壓」等效概念。
+                    </td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實作亮度階梯測試，記錄 LED 在不同工作週期下是否呈現線性感受。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>解釋頻率太低導致的閃爍 (Flicker)
-                        現象與馬達驅動時的頻率限制。
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實作亮度測試，記錄 LED 在不同工作週期下視覺感受。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>解釋頻率太低導致的閃爍 (POV) 現象。
                     </td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作「Gamma 亮度校正演算法」並 Push 提交至 PR，增強視覺變化平滑度。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作「Gamma 校正呼吸燈」並提交至 PR。</td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>審核學生對「定時器資源分配」與「能耗優化」的工程設計水平。
-                    </td>
+                            PR：</strong>審核學生對「定時器資源分配」的理解。</td>
                 </tr>
             </tbody>
         </table>

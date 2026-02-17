@@ -347,32 +347,30 @@
     </footer>
 
     <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" class="hidden">
+    <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
-        <div class="guide-section">
-            <h3>1. GitHub Classroom 設定</h3>
-            <ul>
-                <li>點擊儀表板「領取作業」按鈕，獲取 `basic-01-esp32-arch` 作業儲存庫。</li>
-                <li>將專案 Clone 至本地，並在 PlatformIO 中開啟。</li>
-                <li>檢視 `src/main.cpp` 中預設的硬體資訊查詢代碼。</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>2. 翻轉課堂學習策略</h3>
-            <ul>
-                <li><strong>課前預習</strong>：觀看「ESP32 硬體架構」教學影片，認識核心組成。</li>
-                <li><strong>課中實作</strong>：進行硬體偵錯實驗，觀察不同狀態下的電壓變化。</li>
-                <li><strong>課後思考</strong>：為什麼 ESP32 需要設計兩個核心？在什麼場景下會有優勢？</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>3. 單元實作任務</h3>
-            <ul>
-                <li><strong>作業 1-1 (40%)</strong>：辨識開發板上的主要晶片型號（如 CP2102, AMS1117）並完成填空。</li>
-                <li><strong>作業 1-2 (30%)</strong>：撰寫代碼控制板載 LED 以 1Hz 頻率閃爍。</li>
-                <li><strong>作業 1-3 (30%)</strong>：透過 Serial 印出 ESP32 的 Chip Model 與 Core Count。</li>
-            </ul>
-        </div>
+
+        <h3>作業 1-1：硬體連通性與燒錄測試</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 韌體工程師 (Firmware Engineer)。</li>
+            <li><strong>執行方式：</strong> 成功上傳第一個「Blink」程式。更進一步，讓 LED 閃爍出「SOS」摩斯密碼 (三短、三長、三短)。</li>
+            <li><strong>評分重點：</strong> 確認學生能正確識別板載 LED 引腳並完成基本的代碼燒錄。</li>
+        </ul>
+
+        <h3>作業 1-2：串口通訊的偵探遊戲</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 系統分析師 (System Analyst)。</li>
+            <li><strong>執行方式：</strong> 撰寫代碼並透過 Serial Monitor 讀取晶片資訊（如 MAC Address, Chip Model）。嘗試不同 Baud Rate
+                觀察並紀錄亂碼現象。</li>
+            <li><strong>評分重點：</strong> 紀錄對 Baud Rate 不匹配的觀察細節。</li>
+        </ul>
+
+        <h3>作業 1-3：電源與發熱量監測</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 硬體測試專家 (Hardware QA)。</li>
+            <li><strong>執行方式：</strong> 觀察開機時 Bootloader 原始訊息。在執行 WiFi 掃描等高功耗任務時，觀察晶片溫度變化，並建立對「電源穩定性」的物理感知。</li>
+            <li><strong>評分重點：</strong> 能辨識並記錄 Bootloader 的基本參數輸出。</li>
+        </ul>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
@@ -381,33 +379,39 @@
         <div class="classroom-guide">
             <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
             <ol>
-                <li>上傳包含基礎 Serial 設定但「未實作晶片資訊查詢」的 Repo 框架，並勾選 <strong>"Template repository"</strong>。</li>
+                <li>在 GitHub 建立新 Repo（名為 <code>basic-01-esp32-arch-template</code>）。</li>
+                <li>上傳包含基礎 Serial 設定但僅有「空框架」的專案結構。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
             <ol>
-                <li>建立作業並連結範本。建議開啟 <strong>Feedback Pull Requests</strong> 選項以便對比學生的硬體識讀分析與系統資源調配邏輯。</li>
+                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
+                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
             <ol>
-                <li>學生領取作業，觀察開發板實體元件（LDO 穩壓器、WROOM 模組等），實作核心資訊讀取代碼並驗證。</li>
-                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+                <li>學生領取作業，觀察開發板實體元件（LDO 穩壓器、WROOM 模組等）。</li>
+                <li>依照範本實作核心資訊讀取代碼 (使用 <code>esp_chip_info</code>)，並驗證輸出結果。</li>
+                <li>本地開發後 <strong>Push 代碼</strong> 提交進度。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
             <ol>
-                <li>打開 Feedback PR，針對學生的「硬體架構圖解」與「電源穩定性分析（Brownout 預防）」予以具體回饋。</li>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>針對學生的「硬體元件辨識準確率」與「系統資源讀取邏輯」予以具體點評。</li>
             </ol>
         </div>
 
         <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元聚焦於 ESP32 的 SoC 架構認知與硬體元件辨識，引導學生理解 MCU 的資源邊界，建議範本倉庫設置如下：</p>
+        <p>此單元聚焦於 ESP32 的 SoC 架構認知與硬體元件辨識，引導學生理解 MCU 的資源邊界。</p>
 
         <h3>A. 範本倉庫 (Template Repo) 結構</h3>
         <pre><code>.
 ├── platformio.ini   # 包含基礎開發環境配置
-├── src/main.cpp      # (重點) 需加入 esp_chip_info 讀取框架
+├── src/
+│   └── main.cpp      # (重點) 需加入 esp_chip_info 讀取框架
 └── README.md        # 紀錄晶片型號、核心數量、記憶體大小與硬體標註照片</code></pre>
 
         <h3>B. 參考範例代碼 (Reference Example Code)</h3>
@@ -435,7 +439,7 @@ void loop() {}</code></pre>
         <h3>C. 自動評分 (Autograding) 的設計</h3>
         <ul>
             <li><strong>語法掃描：</strong> 檢查 <code>main.cpp</code> 是否包含了 <code>esp_chip_info</code> 相關函數調用。</li>
-            <li><strong>邏輯健壯性：</strong> 驗證學生在 README 中對「3.3V 穩壓器」位置的標註是否與目前實機使用的開發板一致。</li>
+            <li><strong>邏輯檢核：</strong> 驗證學生在 README 中對「3.3V 穩壓器」位置的標註是否與實機一致。</li>
         </ul>
 
         <h2>翻轉教室的實施策略</h2>
@@ -447,7 +451,7 @@ void loop() {}</code></pre>
                     <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
-            <tbody style="color: #4b5563;">
+            <tbody>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「ESP32 內部之心：SoC 與多核心架構」影片。</td>
@@ -458,15 +462,13 @@ void loop() {}</code></pre>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實作系統資訊讀取 (1-1) 並透過 Serial 觀看數據分布。</td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>互動演示：</strong>解釋 Brownout detector
-                        無限重啟的供電成因與解方。
-                    </td>
+                        無限重啟的供電成因與解方。</td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">撰寫「開發板元件識讀」分析報告並提交 PR 心得。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核學生對硬體架構邊界與
-                        3.3V/5V 電源準位的理解深度。
-                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">撰寫「開發板元件識讀」分析報告並提交最終 PR。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>審核學生對硬體架構邊界與電源準位的理解深度。</td>
                 </tr>
             </tbody>
         </table>

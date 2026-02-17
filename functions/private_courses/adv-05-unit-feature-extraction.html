@@ -22,10 +22,6 @@
         <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
 
         <div class="container mx-auto px-4 relative z-10 text-center">
-            <div
-                class="badge-header inline-flex items-center gap-2 px-4 py-1 rounded-full bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 backdrop-blur-sm mb-6 text-xs font-semibold tracking-wide uppercase font-[Outfit]">
-                進階 5 - 單元 1
-            </div>
             <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
                 像機器一樣看見：<br>特徵提取的藝術
             </h1>
@@ -34,11 +30,13 @@
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/BXhOqLNPfBw')"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vRqWBuf52ZV69F3jozz8NaMYeJnIIRDrXZ8ga6w6Em_FDM6JhfeW-epM6qkvYuZMPGYmpBM9xCHU-pk/pub?embedded=true')"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -228,77 +226,81 @@
             </div>
         </section>
 
-        <!-- Section 5: Assignments -->
-        <section>
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：特徵提取實戰</h2>
-            <p class="text-center text-gray-500 mb-12">從像素操作到邏輯決策，建立無人車的感知層。</p>
-
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Task 1-1 -->
-                <div onclick="openSubmissionModal('adv-05-edge-hunter', '【作業 1-1】「邊緣獵人」：Canny 參數動態調校')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-indigo-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🎮</span>
-                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
-                            1-1】「邊緣獵人」</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>實作 Web 版邊緣偵測器，尋找教具無人車的最佳輪廓。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>建立 Threshold 1 &amp; 2 動態滑桿</li>
-                                <li>預處理整合：加入高斯模糊開關</li>
-                                <li>對比降噪前後邊緣的乾淨程度</li>
-                            </ul>
+        <!-- Assignment Highlights -->
+        <section class="module-section">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                        <div>
+                            <h2 class="text-3xl font-bold text-white mb-2">核心實驗室：特徵提取實戰</h2>
+                            <p class="text-slate-400">從像素操作到邏輯決策，建立無人車的感知層。</p>
                         </div>
                     </div>
-                </div>
 
-                <!-- Task 1-2 -->
-                <div onclick="openSubmissionModal('adv-05-shape-filter', '【作業 1-2】「幾何篩選器」：形狀識別實戰')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-purple-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🔶</span>
-                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
-                            1-2】「幾何篩選器」</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>利用輪廓特徵，讓網頁只鎖定畫面中的「圓形標誌」。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>使用 findContours 找出所有物體</li>
-                                <li>計算 `面積 / (周長^2)` 比值</li>
-                                <li>視覺標註：綠框標圓形，紅框標其他</li>
+                    <div class="grid md:grid-cols-2 gap-8 mb-12">
+                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
+                            <div class="flex items-center gap-4 mb-6">
+                                <span class="text-2xl">📡</span>
+                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
+                            </div>
+                            <p class="mb-4 text-slate-400">在任務中，GitHub 是你的「基地台」。請確保每完成一個里程碑，就將數據回傳。</p>
+                            <ul class="space-y-2 text-slate-300">
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 1.</span>
+                                    <span>接受 GitHub Classroom 邀請，複製 (Clone) 專屬任務倉庫。</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 2.</span>
+                                    <span>完成代碼撰寫後，執行 <code
+                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code>
+                                        將進度上傳。</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 3.</span>
+                                    <span>自動化助理會即時在 PR (Pull Request) 中回饋評分結果。</span>
+                                </li>
                             </ul>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Task 1-3 -->
-                <div onclick="openSubmissionModal('adv-05-feature-decision', '【作業 1-3】特徵提取與決策連動')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-green-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🚗</span>
-                            <span class="bg-green-50 text-green-700 text-xs px-3 py-1 rounded-full font-bold">45
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-green-600 transition">【作業
-                            1-3】特徵與決策</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>當提取到特定特徵時，觸發無人車的行為。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>偵測停車線（橫向長方形）</li>
-                                <li>自動發送 BLE 指令 STOP 給 ESP32</li>
-                                <li>旋轉穩定性驗證與演算法優化</li>
-                            </ul>
+                        <div class="grid gap-4">
+                            <!-- Task 1-1 -->
+                            <div onclick="openSubmissionModal('adv-05-edge-hunter', '【作業 1-1】「邊緣獵人」：Canny 參數動態調校')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-indigo-600 transition">
+                                        作業 1-1</h3>
+                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">「邊緣獵人」</h4>
+                                <p class="text-sm text-gray-500">實作 Web 版邊緣偵測器，尋找教具無人車的最佳輪廓。</p>
+                            </div>
+
+                            <!-- Task 1-2 -->
+                            <div onclick="openSubmissionModal('adv-05-shape-filter', '【作業 1-2】「幾何篩選器」：形狀識別實戰')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-purple-600 transition">
+                                        作業 1-2</h3>
+                                    <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">「幾何篩選器」</h4>
+                                <p class="text-sm text-gray-500">利用輪廓特徵，讓網頁只鎖定畫面中的「圓形標誌」。</p>
+                            </div>
+
+                            <!-- Task 1-3 -->
+                            <div onclick="openSubmissionModal('adv-05-feature-decision', '【作業 1-3】特徵提取與決策連動')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-green-600 transition">作業
+                                        1-3</h3>
+                                    <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded font-bold">45
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">特徵與決策</h4>
+                                <p class="text-sm text-gray-500">當提取到特定特徵時，觸發無人車的行為。</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -326,150 +328,98 @@
         <h3>作業 1-1：「邊緣獵人」：Canny 參數動態調校</h3>
         <ul>
             <li><strong>角色扮演：</strong> 視覺演算法工程師。</li>
-            <li><strong>執行方式：</strong> 在網頁端實作 Canny 邊緣偵測，並建立 Threshold 1 &amp; 2
-                的滑桿。觀察在不同光線下，特定的門檻值如何影響物體輪廓的穩定度，並紀錄一組能精確勾勒出「黑線」或「色塊」邊緣的參數。</li>
+            <li><strong>執行方式：</strong> 在網頁端實作 Canny 邊緣偵測，並建立 Threshold 1 & 2 的滑桿。</li>
             <li><strong>評分重點：</strong> 代碼中是否整合了「高斯模糊」預處理，以減少雜訊干擾。</li>
         </ul>
 
         <h3>作業 1-2：「幾何篩選器」：形狀識別實戰</h3>
         <ul>
             <li><strong>角色扮演：</strong> 自動化檢測工程師。</li>
-            <li><strong>執行方式：</strong> 從所有提取出的輪廓中，計算每個輪廓的「圓度」(Roundness)。設計一個過濾器，自動在 Canvas
-                上用綠框標註出畫面中的「圓形」（如交通標誌），而將其他形狀標為紅框。</li>
-            <li><strong>評分重點：</strong> 圓度公式的實作是否正確，且篩選邏輯是否具備一定的容錯率（例如 Roundness > 0.85 即認定為圓）。</li>
+            <li><strong>執行方式：</strong> 從所有提取出的輪廓中，計算每個輪廓的「圓度」(Roundness)。</li>
+            <li><strong>評分重點：</strong> 圓度公式的實作是否正確，且篩選邏輯是否具備一定的容錯率。</li>
         </ul>
 
         <h3>作業 1-3：特徵提取與決策連動</h3>
         <ul>
             <li><strong>角色扮演：</strong> 機器人系統架構師。</li>
-            <li><strong>執行方式：</strong> 結合面積與形狀特徵，當畫面中偵測到「橫向長方形」（模擬停車線）且面積達到一定比例時，自動透過 BLE 發送 `STOP` 指令給無人車。</li>
-            <li><strong>評分重點：</strong> 系統反應的即時性，以及是否能避免因背景雜訊誤觸停機指令。</li>
+            <li><strong>執行方式：</strong> 結合面積與形狀特徵，當偵測到「橫向長方形」時，自動發送 STOP 指令。</li>
+            <li><strong>評分重點：</strong> 系統反應的即時性，以及是否能避免雜訊誤觸。</li>
         </ul>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        A. 範本倉庫 (Template Repo) 結構
-                    </h4>
-                    <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
-.
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本專案</strong></p>
+            <ol>
+                <li>提供封裝好的 cv.findContours 介面與測試素材，設定為 Template repository。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>設定「視覺識別跑分」。</li>
+                <li>指引學員討論不同 HSV 區間對提取穩定性的影響。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>領取作業，錄製幾何篩選器運作畫面並上傳至 PR 描述。執行 Git Push。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>針對學員處理「重疊輪廓」或「空心物體」的特徵選取邏輯予以回饋。</li>
+            </ol>
+        </div>
+
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
 ├── js/
 │   ├── edge_detector.js  # 實作 Canny 與 Sobel
 │   └── contour_logic.js  # 輪廓過濾與幾何計算
 ├── data/
 │   └── test_images/      # 挑戰度測試素材
-└── README.md              # 門檻調校與形狀識別報告</pre>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        B. 自動評估 (Autograding) 的設計
-                    </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">📊</span>
-                            <p class="text-sm text-gray-700"><strong>形狀分類準確率：</strong> 模擬傳入幾何圖片，自動檢查程式輸出分類結果正確率。</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">⚡</span>
-                            <p class="text-sm text-gray-700"><strong>效能邊界檢查：</strong> 對 1080p 影像提取特徵，檢測代碼是否渲染卡頓，評估算法優化度。
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+└── README.md              # 門檻調校與形狀識別報告</code></pre>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供封裝好的 <code>cv.findContours</code>
-                        介面與測試素材，設定為 Template repository。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「視覺識別跑分」。指引學員討論不同 HSV 區間對提取穩定性的影響。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，錄製幾何篩選器運作畫面並上傳至 PR 描述。執行 Git Push。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對學員處理「重疊輪廓」或「空心物體」的特徵選取邏輯予以回饋。</p>
-                </div>
-            </div>
-        </div>
+        <h3>B. 自動評估 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>形狀分類準確率：</strong> 模擬傳入幾何圖片，自動檢查程式輸出分類結果正確率。</li>
+            <li><strong>效能邊界檢查：</strong> 對 1080p 影像提取特徵，檢測代碼是否渲染卡頓。</li>
+        </ul>
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
-            </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
-                        <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">觀看 HSV 顏色空間與二值化原理短片。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「像素矩陣提取物體」動畫。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，調整門檻以剔除雜訊並鎖定圓形目標。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，解答與雜訊處理相關的問題。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">完成停車線偵測邏輯並 Push，閱讀教師回覆 PR。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，檢核對「交通標誌」與「行為決策」對應表的設計。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看 HSV 顏色空間與二值化原理短片。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>Dashboard：</strong>檢查進度，提供「像素矩陣提取物體」動畫。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，調整門檻以剔除雜訊並鎖定圓形目標。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>實體協助：</strong>解答與雜訊處理相關的問題。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">完成停車線偵測邏輯並 Push。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>PR
+                            Review：</strong>檢核對「交通標誌」與「行為決策」對應表的設計。</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/BXhOqLNPfBw",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vRqWBuf52ZV69F3jozz8NaMYeJnIIRDrXZ8ga6w6Em_FDM6JhfeW-epM6qkvYuZMPGYmpBM9xCHU-pk/pub?embedded=true"
-        };
-    </script>
     <script src="/js/course-shared.js"></script>
 </body>
 

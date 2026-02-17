@@ -34,11 +34,13 @@
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/Sshx9Vre-H8')"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vSohwD-vUv498O0vR-1cW7x22b2idXvG8lW7X2_p7SSc-K263zS_n4U6lqf_7_p6E2m6uF3l7vG8l4M/pub?embedded=true')"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -207,8 +209,8 @@
 
         <!-- Section 4: Assignments -->
         <section>
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">影像處理實驗室：濾波與分割</h2>
-            <p class="text-center text-gray-500 mb-12">打造穩定的視覺感知核心。</p>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：影像二值化實戰</h2>
+            <p class="text-center text-gray-500 mb-12">採用 <b>Git Workflow</b>：領取 GitHub Classroom 任務，實作過濾算法並提交 PR。</p>
 
             <div class="grid md:grid-cols-3 gap-8">
                 <!-- Task 1-1 -->
@@ -291,149 +293,205 @@
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
                 <span>進階課程 6 - 單元 1</span>
                 <span class="hidden md:inline">|</span>
-                <span>二值化與濾波</span>
+                <span>影像過濾與二值化</span>
             </div>
         </div>
     </footer>
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="guide-header mb-12 border-b-2 border-indigo-200 pb-6">
+            <h2 class="text-4xl font-black text-indigo-900 mb-2">作業指引 (Assignment Guide)</h2>
+            <p class="text-indigo-600 font-bold uppercase tracking-widest text-sm">進階 6 - 影像過濾與二值化</p>
+        </div>
 
-        <h3>作業 1-1：實作「互動式二值化工具」</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 影像處理工程師。</li>
-            <li><strong>執行方式：</strong> 在網頁端實作一個滑桿 (Slider)，範圍 0-255。當使用者滑動時，即時將 Canvas
-                中的彩色影像轉為灰階，並根據滑桿數值進行二值化處理（大於門檻變白，小於變黑）。</li>
-            <li><strong>評分重點：</strong> 二值化邏輯是否正確，以及畫面更新是否即時且流暢。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-indigo-600 text-white rounded-xl text-lg">1-1</span>
+                實作「灰階化」濾鏡
+            </h3>
+            <div class="space-y-4 text-gray-700">
+                <p><strong>角色扮演：</strong> 影像處理工程師。</p>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <p class="font-bold mb-2 text-indigo-900">執行步驟：</p>
+                    <ol class="list-decimal list-inside space-y-1 text-sm">
+                        <li>撰寫 JS 迴圈遍歷 <code>ImageData</code> 陣列。</li>
+                        <li>使用公式 $Gray = 0.299R + 0.587G + 0.114B$。</li>
+                        <li>將 R, G, B 三個通道都設為 $Gray$ 值，並將 $A$ 設為 255。</li>
+                    </ol>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 畫面是否正確轉化為黑白影像而不失真。</p>
+            </div>
+        </div>
 
-        <h3>作業 1-2：「噪點消滅者」：中值濾波實戰</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 視覺演算法開發者。</li>
-            <li><strong>執行方式：</strong> 故意在二值化影像中加入模擬的「鹽椒雜訊」。實作一個 $3 \times 3$ 的「中值濾波器 (Median
-                Filter)」函式，觀察其對雜訊的去除效果。並對照「均值濾波 (Mean Filter)」的結果差異。</li>
-            <li><strong>評分重點：</strong> 能否清楚說明為何中值濾波在處理極端噪點時優於均值濾波。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-xl text-lg">1-2</span>
+                手動門檻值 (Thresholding) 調校
+            </h3>
+            <div class="space-y-4 text-gray-700">
+                <p><strong>角色扮演：</strong> 視覺系統部署專員。</p>
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <p class="font-bold mb-2 text-blue-900">執行步驟：</p>
+                    <ul class="list-disc list-inside space-y-1 text-sm text-justify">
+                        <li>實作邏輯：若 $Gray < Threshold$，則設為 0；否則設為 255。</li>
+                        <li>建立 <code>&lt;input type="range"&gt;</code> 滑桿。</li>
+                        <li>觀察在不同光線環境下，使「黑線與背景」分離度最高的門檻數值。</li>
+                    </ul>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 能否從彩色畫面中，精確地「挖出」黑色的賽道線段。</p>
+            </div>
+        </div>
 
-        <h3>作業 1-3：形態學「線條修復」實驗</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 系統魯棒性測試員。</li>
-            <li><strong>執行方式：</strong> 模擬循跡線斷開的情境。撰寫「擴張 (Dilation)」運算邏輯，嘗試將細小的斷裂處重新連結。</li>
-            <li><strong>評分重點：</strong> 代碼中是否考慮到卷積核 (Kernel) 對影像邊緣的處理。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-emerald-600 text-white rounded-xl text-lg">1-3</span>
+                反色過濾與自定義邏輯
+            </h3>
+            <div class="space-y-4 text-gray-700 text-justify">
+                <p><strong>角色扮演：</strong> 創意視覺設計師。</p>
+                <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100 text-justify">
+                    <p class="font-bold mb-2 text-emerald-900">執行步驟：</p>
+                    <ul class="list-disc list-inside space-y-1 text-sm">
+                        <li>嘗試讓「深色變白，淺色變黑」，或者只保留特定通道的顏色。</li>
+                        <li>分析这种处理方式对于寻找白色物体（如白球）是否有幫助。</li>
+                    </ul>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 學生能否根據任務需求，調整代碼邏輯以解決特殊的偵測問題。</p>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+        <div class="guide-header mb-12 border-b-2 border-emerald-200 pb-6">
+            <h2 class="text-4xl font-black text-emerald-900 mb-2">講師指引 (Instructor Guide)</h2>
+            <p class="text-emerald-600 font-bold uppercase tracking-widest text-sm">GitHub Classroom & Flipped Teaching
+            </p>
+        </div>
+
+        <!-- Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-8 bg-blue-50 border border-blue-100 rounded-3xl shadow-inner">
+            <h3 class="text-2xl font-bold text-blue-900 mb-6 flex items-center gap-3">
+                <span class="text-3xl">🚀</span> 在 GitHub Classroom 的實戰部署
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                    <h4 class="font-bold text-blue-800 text-sm mb-4 flex items-center gap-2">
                         <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
                         A. 範本倉庫 (Template Repo) 結構
                     </h4>
                     <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+                        class="bg-gray-900 text-gray-100 p-6 rounded-2xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
 .
 ├── js/
-│   ├── processor.js     # 二值化與濾波函式庫
-│   └── ui.js            # 滑桿與 Canvas 更新
-├── assets/
-│   └── noisy_lane.png   # 包含各種雜訊的循跡圖
-└── README.md             # 記錄：最佳門檻與濾波對照</pre>
+│   ├── filter.js        # 需實作的各種濾鏡演算法
+│   └── app.js           # 影像串流與 UI 控制
+├── tests/
+│   └── threshold.test.js # 測試：驗證二值化邊界邏輯
+└── README.md             # 記錄：分析不同光照下的 Threshold 值</pre>
                 </div>
                 <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                    <h4 class="font-bold text-blue-800 text-sm mb-4 flex items-center gap-2">
                         <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
                         B. 自動評估 (Autograding) 的設計
                     </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">📏</span>
-                            <p class="text-sm text-gray-700"><strong>像素比對測試：</strong> 給予固定特徵像素陣列，檢測二值化函式輸出是否符合邏輯。</p>
+                    <div class="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-blue-100 space-y-4">
+                        <div class="flex gap-4">
+                            <span class="text-2xl">📸</span>
+                            <p class="text-sm text-gray-700"><strong>像素值匹配測試：</strong> 提供一張預設的彩圖，檢查學員產出的灰階/二值化 Repo
+                                像素點是否符合基準。</p>
                         </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🧼</span>
-                            <p class="text-sm text-gray-700"><strong>雜訊抑制率：</strong> 自動計算經過中值濾波處理後，影像中孤立「鹽椒噪點」的減少比例。</p>
+                        <div class="flex gap-4">
+                            <span class="text-2xl">⚠️</span>
+                            <p class="text-sm text-gray-700"><strong>邊界溢位檢查：</strong> 測試學生程式在處理最大值 (255) 與最小值 (0) 時的穩定性。
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
+        <!-- Detailed operations guide -->
+        <div class="guide-section mb-10 p-8 bg-white border border-gray-200 rounded-3xl">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <span class="text-3xl">🛠️</span> GitHub Classroom 詳細操作指南
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-justify">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
                         1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供已預置 Canvas 渲染介面與 <code>ImageData</code>
-                        獲取邏輯的 JS 框架，設定為 Template repository。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">準備範本專案</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-justify">將影像二值化 UI 架構上傳至 GitHub 並啟用
+                        <b>Template repository</b> 選項。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
                         2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「濾波性能跑分」。指導學員在 GitHub Issue
-                        貼出濾波前後的二值化對照圖並分析。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">建立 Classroom 作業</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-justify">設定為 <b>Individual
+                            Assignment</b>，並要求學員在 README 中貼上各環境下的效能數據。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
                         3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，獲得個人專屬 Repo，將環境光與門檻的相關性寫入 PR 描述中。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">學生端作業 (Flipped)</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left">領取作業後，學生在本地或 WebIDE 實作演算法，並 Pull Request
+                        同儕互查邏輯正確性。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
                         4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對卷積計算的效率優化策略以及針對「邊緣處理」的邏輯予以回饋。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">教師代碼審閱 (Review)</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left">針對學生所寫的 for 迴圈效率（如處理千萬級像素時的效能瓶頸）提出優化建議。
+                    </p>
                 </div>
             </div>
         </div>
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
+        <!-- Flipped classroom strategy table -->
+        <div class="guide-section p-8 bg-blue-50/50 border border-blue-100 rounded-3xl">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <span class="text-3xl">🔄</span> 翻轉教室的實施策略
             </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg">
                 <table class="w-full text-sm text-left">
                     <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
                         <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
+                            <th class="px-6 py-4">階段</th>
+                            <th class="px-6 py-4">學生行動 (Git Workflow)</th>
+                            <th class="px-6 py-4">教師/平台角色</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 text-gray-600">
                         <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">觀看「影像如何變為數字」的科普影片並完成預習。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，釋出互動式二值化/濾波原理動畫。</td>
+                            <td
+                                class="px-6 py-5 font-black text-slate-800 bg-slate-50/50 w-32 text-center uppercase tracking-tighter">
+                                Pre-class<br><span class="text-[10px] font-normal text-slate-400">課前</span></td>
+                            <td class="px-6 py-5">觀看「什麼是二值化」影片，學習像素陣列與顏色深度觀念。</td>
+                            <td class="px-6 py-5 text-xs">檢查 Dashboard 預習流量，透過公告鼓勵學員挑戰極限門檻值。</td>
                         </tr>
                         <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，調整滑桿找到讓線條最清晰、雜訊最少的平衡點。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，解答關於「為什麼濾波會讓影像邊緣變模糊」的困惑。</td>
+                            <td
+                                class="px-6 py-5 font-black text-blue-800 bg-blue-50/30 w-32 text-center uppercase tracking-tighter">
+                                In-class<br><span class="text-[10px] font-normal text-blue-400">課中</span></td>
+                            <td class="px-6 py-5 font-medium text-slate-900">領取 Classroom 作業，實際用 OpenCV.js 或 Vanilla JS
+                                實現濾鏡實作。</td>
+                            <td class="px-6 py-5 text-xs text-blue-700">連線解決個別学員的 <code>Canvas</code> 渲染及迴圈索引錯誤。</td>
                         </tr>
                         <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">嘗試設計「自適應二值化」算法並 Push，閱讀教師回覆 PR。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，檢核針對「形態學」運算在修復斷線處的實踐力。</td>
+                            <td
+                                class="px-6 py-5 font-black text-slate-800 bg-slate-50/50 w-32 text-center uppercase tracking-tighter">
+                                Post-class<br><span class="text-[10px] font-normal text-slate-400">課後</span></td>
+                            <td class="px-6 py-5">提交 PR，並閱讀教師對於其優化演算法的建議回覆。</td>
+                            <td class="px-6 py-5 text-xs">核發進度徽章（進階影像處理入門），並預告質心算法單元。</td>
                         </tr>
                     </tbody>
                 </table>
@@ -441,12 +499,6 @@
         </div>
     </section>
 
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/qlbnYL2_NWc",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vQx3w_C_A4JDaq_ggeJoNDK9WdWH9BOf9vl8zmxcIiWk6RA5zx5m7AnHVZ5suKKcqvAKSpidegnq66f/pub?embedded=true"
-        };
-    </script>
     <script src="/js/course-shared.js"></script>
 </body>
 

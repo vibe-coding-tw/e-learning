@@ -40,13 +40,17 @@
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
-                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
-                    <span>📺</span> 觀看教學影片
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/Ib8EuusyuA8')"
+                    class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-red-900/20">
+                    <span class="text-xl group-hover:animate-pulse">📺</span>
+                    <span>觀看教學影片</span>
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
-                    class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
-                    <span>📄</span> 閱讀課程講義
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vS1mhPDhfPDONAk2kLFxKn0Wa2wx-PwwUyrtsSxHM3e8-vesL6LwRWkaYLbqNa7o01FFKc1wFRDq_2Z/pub?embedded=true')"
+                    class="group flex items-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-indigo-900/20">
+                    <span class="text-xl group-hover:bounce">📄</span>
+                    <span>閱讀課程講義</span>
                 </button>
             </div>
         </div>
@@ -195,76 +199,108 @@
         </section>
 
         <!-- Section 4: Assignments -->
-        <section>
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實驗室：差速驅動實戰</h2>
-            <p class="text-center text-gray-500 mb-12">從幾何理論到地面實測，驗證你的數學模型。</p>
+        <section id="assignments" class="mb-20">
+            <div class="text-center mb-12">
+                <span
+                    class="px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-bold tracking-widest uppercase">Practical
+                    Lab</span>
+                <h2 class="text-4xl font-black text-gray-900 mt-4 mb-4 font-[Outfit]">實驗室：差速驅動實戰</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">從幾何理論到地面實測，驗證你的數學模型。</p>
+            </div>
 
             <div class="grid md:grid-cols-3 gap-8">
-                <!-- Task 1-1 -->
-                <div onclick="openSubmissionModal('adv-10-circle-control', '【作業 10-1-1】「圓周運動」精準控制')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-blue-500 h-2"></div>
+                <!-- Task 10-1-1 -->
+                <div onclick="window.courseShared.openSubmissionModal('adv-10-circle-control', '【作業 10-1-1】「圓周運動」精準控制')"
+                    class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-blue-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-blue-200/50 cursor-pointer">
+                    <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <span class="text-6xl font-black">01</span>
+                    </div>
                     <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🏹</span>
-                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div
+                                class="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform duration-500">
+                                🏹</div>
+                            <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git Branch:
+                                <span class="text-blue-600">feature/circle-control</span></span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors">【作業
                             1-1】圓周控制</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>輸入目標半徑 R，讓車子畫出完美的圓。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>實作 setSteering(R, V) 函式</li>
-                                <li>地面實測：設定 R=50cm，用捲尺測量實際誤差</li>
-                                <li>目標：理解幾何模型如何指導硬體控制</li>
-                            </ul>
+                        <p class="text-gray-600 text-sm leading-relaxed mb-6">輸入目標半徑 R，讓車子畫出完美的圓。</p>
+                        <div class="space-y-3 border-t border-slate-50 pt-6">
+                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                <span
+                                    class="w-5 h-5 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold">1</span>
+                                實作 setSteering(R, V) 函式
+                            </div>
+                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                <span
+                                    class="w-5 h-5 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold">2</span>
+                                測量實際誤差並記錄
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Task 1-2 -->
-                <div onclick="openSubmissionModal('adv-10-zero-turn', '【作業 10-1-2】「原地迴轉」極限測試')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-red-500 h-2"></div>
+                <!-- Task 10-1-2 -->
+                <div onclick="window.courseShared.openSubmissionModal('adv-10-zero-turn', '【作業 10-1-2】「原地迴轉」極限測試')"
+                    class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-red-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-red-200/50 cursor-pointer">
+                    <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <span class="text-6xl font-black">02</span>
+                    </div>
                     <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🌪️</span>
-                            <span class="bg-red-50 text-red-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div
+                                class="w-12 h-12 bg-red-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-red-200 group-hover:scale-110 transition-transform duration-500">
+                                🌪️</div>
+                            <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git Branch:
+                                <span class="text-red-600">feature/zero-turn</span></span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-red-600 transition">【作業
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 group-hover:text-red-600 transition-colors">【作業
                             1-2】原地迴轉</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>測試車輛在不同表面上的「零半徑旋轉」。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>設定 V<sub>L</sub> = 100, V<sub>R</sub> = -100</li>
-                                <li>觀察滑順桌面 vs 粗糙地毯的震盪差異</li>
-                                <li>目標：體會旋轉中心飄移現象</li>
-                            </ul>
+                        <p class="text-gray-600 text-sm leading-relaxed mb-6">測試車輛在不同表面上的「零半徑旋轉」。</p>
+                        <div class="space-y-3 border-t border-slate-50 pt-6">
+                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                <span
+                                    class="w-5 h-5 bg-red-50 text-red-600 rounded-full flex items-center justify-center font-bold">1</span>
+                                設定 V<sub>L</sub> = 100, V<sub>R</sub> = -100
+                            </div>
+                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                <span
+                                    class="w-5 h-5 bg-red-50 text-red-600 rounded-full flex items-center justify-center font-bold">2</span>
+                                體會旋轉中心飄移現象
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Task 1-3 -->
-                <div onclick="openSubmissionModal('adv-10-dynamic-icc', '【作業 10-1-3】動態 ICC 軌跡規劃')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-purple-500 h-2"></div>
+                <!-- Task 10-1-3 -->
+                <div onclick="window.courseShared.openSubmissionModal('adv-10-dynamic-icc', '【作業 10-1-3】動態 ICC 軌跡規劃')"
+                    class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-purple-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-purple-200/50 cursor-pointer">
+                    <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <span class="text-6xl font-black">03</span>
+                    </div>
                     <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🐚</span>
-                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div
+                                class="w-12 h-12 bg-purple-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-purple-200 group-hover:scale-110 transition-transform duration-500">
+                                🐚</div>
+                            <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git Branch:
+                                <span class="text-purple-600">feature/dynamic-icc</span></span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
-                            1-3】螺旋軌跡</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>實作能平滑改變轉向半徑的螺旋線。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>讓 R 從 20cm 逐漸變大到 100cm</li>
-                                <li>透過 Web/BLE 回傳理論 ICC 座標</li>
-                                <li>目標：掌握動態轉向參數調整</li>
-                            </ul>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 group-hover:text-purple-600 transition-colors">
+                            【作業 1-3】螺旋軌跡</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed mb-6">實作能平滑改變轉向半徑的螺旋線。</p>
+                        <div class="space-y-3 border-t border-slate-50 pt-6">
+                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                <span
+                                    class="w-5 h-5 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center font-bold">1</span>
+                                讓 R 從 20cm 逐漸變大到 100cm
+                            </div>
+                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                <span
+                                    class="w-5 h-5 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center font-bold">2</span>
+                                回傳理論 ICC 座標
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -428,13 +464,13 @@
         </div>
     </section>
 
+    <script src="/js/course-shared.js"></script>
     <script>
         window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/Ib8EuusyuA8",
+            youtube: "https://www.youtube.com/embed/Ib8EuusyuA8?autoplay=1",
             doc: "https://docs.google.com/document/d/e/2PACX-1vS1mhPDhfPDONAk2kLFxKn0Wa2wx-PwwUyrtsSxHM3e8-vesL6LwRWkaYLbqNa7o01FFKc1wFRDq_2Z/pub?embedded=true"
         };
     </script>
-    <script src="/js/course-shared.js"></script>
 </body>
 
 </html>

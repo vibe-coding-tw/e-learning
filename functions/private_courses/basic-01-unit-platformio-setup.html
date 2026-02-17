@@ -321,32 +321,32 @@
     </footer>
 
     <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" class="hidden">
+    <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
-        <div class="guide-section">
-            <h3>1. GitHub Classroom 設定</h3>
-            <ul>
-                <li>點擊儀表板「領取作業」按鈕，獲取 `basic-01-pio-setup` 作業儲存庫。</li>
-                <li>將專案 Clone 至本地，確保專案路徑不含中文或特殊字元。</li>
-                <li>使用 VS Code 開啟資料夾，等待 PlatformIO 完成環境初始化。</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>2. 翻轉課堂學習策略</h3>
-            <ul>
-                <li><strong>課前預習</strong>：觀看「PlatformIO 安裝與基礎操作」教學影片。</li>
-                <li><strong>課中實作</strong>：完成第一個 HelloWorld 專案並嘗試修改 `platformio.ini`。</li>
-                <li><strong>課後思考</strong>：相較於 Arduino IDE，PlatformIO 的專案結構（如 src, lib）有什麼優點？</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>3. 單元實作任務</h3>
-            <ul>
-                <li><strong>作業 1-1 (40%)</strong>：成功建立專案並通過 Build（編譯）流程，截圖編譯成功畫面。</li>
-                <li><strong>作業 1-2 (30%)</strong>：修改代碼使 Serial 每隔 500ms 印出「Vibe Coding Ready」。</li>
-                <li><strong>作業 1-3 (30%)</strong>：在 `platformio.ini` 中新增一個指定的 Library（如 ArduinoJson）並編譯通過。</li>
-            </ul>
-        </div>
+
+        <h3>作業 1-1：新環境的首航</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 韌體開發實習生 (Firmware Intern)。</li>
+            <li><strong>執行方式：</strong> 在 VS Code 中建立一個全新的 PlatformIO 專案，將原本的 <code>.ino</code> 程式碼移植到
+                <code>main.cpp</code>，成功編譯並上傳 Blink 程式。</li>
+            <li><strong>評分重點：</strong> 確認編譯輸出視窗顯示 [SUCCESS]，且學生能正確手動包含 <code>#include &lt;Arduino.h&gt;</code>。</li>
+        </ul>
+
+        <h3>作業 1-2：函式庫管家 (Library Manager)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 軟體套件管理員 (Package Manager)。</li>
+            <li><strong>執行方式：</strong> 練習「配置即安裝」。在 <code>platformio.ini</code> 中使用 <code>lib_deps</code> 加入
+                <code>Adafruit NeoPixel</code> 或指定的 Library，並截圖證明自動下載過程。</li>
+            <li><strong>評分重點：</strong> 展現對 <code>platformio.ini</code> 依賴管理機制的理解，而非手動下載 ZIP。</li>
+        </ul>
+
+        <h3>作業 1-3：多環境並行配置</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 自動化工程師 (DevOps Engineer)。</li>
+            <li><strong>執行方式：</strong> 設定 <code>monitor_speed</code> 解決串口亂碼。嘗試在 <code>platformio.ini</code> 中建立
+                <code>[env:debug]</code> 與 <code>[env:release]</code> 兩個環境。</li>
+            <li><strong>評分重點：</strong> 能在不同 Profile 間切換並解釋 <code>monitor_speed</code> 的物理意義。</li>
+        </ul>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
@@ -355,33 +355,39 @@
         <div class="classroom-guide">
             <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
             <ol>
-                <li>上傳包含基礎 Hello World 但「故意缺少必要函式庫設定 (lib_deps)」的專案框架，並勾選 <strong>"Template repository"</strong>。</li>
+                <li>在 GitHub 建立新 Repo（名為 <code>basic-01-pio-setup-template</code>）。</li>
+                <li>上傳包含基礎 Hello World 但「故意缺少必要函式庫設定 (lib_deps)」的專案框架。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
             <ol>
-                <li>建立作業並連結範本。建議開啟 <strong>Feedback Pull Requests</strong> 選項以便對比學生的 IDE 配置與依賴管理邏輯。</li>
+                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
+                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
             <ol>
-                <li>學生領取作業，獲得個人專屬 Repo，設定編譯環境、安裝依賴庫、達成編譯成功並印出驗證訊息。</li>
-                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+                <li>學生領取作業，獲得個人專屬 Repo。</li>
+                <li>設定編譯環境、嘗試安裝依賴庫、完成編譯並印出驗證訊息。</li>
+                <li>本地開發後 <strong>Push 代碼</strong> 提交進度。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
             <ol>
-                <li>打開 Feedback PR，針對學生的「IntelliSense 障礙排除思維」與「編譯日誌 (Build Log) 分析能力」予以具體回饋。</li>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>針對學生的「IntelliSense 障礙排除思維」與「編譯日誌 (Build Log) 分析能力」予以具體回饋。</li>
             </ol>
         </div>
 
         <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元引導學生從傳統 IDE 轉向現代化的 CLI+Ext 開發流，掌握工程化的專案依賴管理工具，建議範本倉庫設置如下：</p>
+        <p>此單元引導學生從傳統 IDE 轉向現代化的 CLI+Ext 開發流，掌握工程化的專案依賴管理工具。</p>
 
         <h3>A. 範本倉庫 (Template Repo) 結構</h3>
         <pre><code>.
 ├── platformio.ini   # (重點) 需包含 upload_speed 與 lib_deps 練習
-├── src/main.cpp      # 包含 Serial "Ready" 輸出邏輯
+├── src/
+│   └── main.cpp      # 包含 Serial "Ready" 輸出邏輯
 └── README.md        # 編譯成功截圖、專案目錄層次分析與 Library 安裝紀錄</code></pre>
 
         <h3>B. 參考範例代碼 (Reference Example Code)</h3>
@@ -413,7 +419,7 @@ lib_deps =
                     <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
-            <tbody style="color: #4b5563;">
+            <tbody>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「為什麼我們選擇 VS Code + PlatformIO 而非 Arduino
@@ -423,20 +429,15 @@ lib_deps =
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業對比不同 OS 下初始化專案的時間差與常見 C++ 語法高亮
-                        (IntelliSense) 紅線問題。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>助教角色：</strong>引導學生理解
-                        <code>Rebuild IntelliSense Index</code> 的必要性與 <code>#include &lt;Arduino.h&gt;</code> 在 PIO
-                        中的地位。
-                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業對比不同 OS 下初始化時間差與 IntelliSense 紅線問題。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>助教角色：</strong>引導學生理解 IntelliSense
+                        重建必要性與 <code>Arduino.h</code> 的地位。</td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作具備 Library 呼叫邏輯的範本專案並 Push 最终 README 分析报告。
-                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">完成 Library 呼叫實驗，提交最終 README 報告。</td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>審核學生對專案目錄結構理解度與依賴版本控制的嚴謹度。
-                    </td>
+                            PR：</strong>審核學生對專案目錄結構理解度與版本控制嚴謹度。</td>
                 </tr>
             </tbody>
         </table>

@@ -283,159 +283,120 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
-    <section id="assignment-guide" class="hidden">
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
-        <div class="space-y-6">
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h3 class="font-bold text-blue-800">1. GitHub Classroom 設定</h3>
-                <p class="text-sm">請將對應的 Repository (例如：<code>web-ui-tactical-panel-lab</code>)
-                    設定至課程儀表板，練習設計兼具美感與功能性的機器人控制面板。</p>
-            </div>
 
-            <div class="bg-indigo-50 p-4 rounded-lg">
-                <h3 class="font-bold text-indigo-800">2. 翻轉課堂策略</h3>
-                <ul class="list-disc list-inside text-sm">
-                    <li>課前預習：觀看 10 分鐘關於 UI 視覺層級 (Visual Hierarchy) 與響應式佈局的基本設計原則。</li>
-                    <li>課中實作：實作一個包含 Manual/Auto 切換的戰術面板，並加入緊急停機 (E-Stop) 的滿版警告遮罩與手機震動回饋。</li>
-                </ul>
-            </div>
+        <h3>【作業 2-1】「戰術面板」：CSS 狀態切換實作</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 介面設計工程師 (UI/UX Engineer)。</li>
+            <li><strong>執行方式：</strong> 為 Manual、Auto-Pilot、Eco-Mode 設計一組戰術按鈕。利用 JavaScript 切換 CSS 類別（例如
+                <code>.active</code>）讓當前選中的按鈕變色或發光。當切換至 Auto-Pilot 時，手動搖桿應自動變為「半透明且禁用觸控」。</li>
+            <li><strong>評分重點 :</strong> 成功實作動態 CSS 狀態且 UI 邏輯嚴密，能有效利用視覺遮擋或禁用狀態防止誤觸。</li>
+        </ul>
 
-            <div class="bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold mb-2">3. 單元任務 (Unit Tasks)</h3>
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-100 text-left">
-                        <tr>
-                            <th class="p-2">任務說明</th>
-                            <th class="p-2">建議時間</th>
-                            <th class="p-2">配分</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 2-1】「戰術面板」CSS 狀態切換與發光效果</td>
-                            <td class="p-2">60 min</td>
-                            <td class="p-2">40 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 2-2】雙向狀態同步與 UI 自動校正 (Sync)</td>
-                            <td class="p-2">60 min</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 2-3】緊急停機遮罩與 <code>navigator.vibrate()</code></td>
-                            <td class="p-2">45 min</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <h3>【作業 2-2】雙向狀態同步 (WebSocket/BLE 回傳)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 全端開發工程師 (Full-stack Developer)。</li>
+            <li><strong>執行方式：</strong> 實作「心跳同步」邏輯：ESP32 每隔一秒主動向上層 App 推送目前當前的 FSM
+                狀態。網頁端收到後應立即校正介面顯示，確保使用者看到的開關位置與機器人真實現狀 100% 吻合。</li>
+            <li><strong>評分重點 :</strong> 成功實作「推送模式 (Push Mode)」狀態同步，UI 能在硬體狀態意外改變時（如斷電重啟）自動恢復一致。</li>
+        </ul>
+
+        <h3>【作業 2-3】緊急停機與視覺警告</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 安全互動設計師 (Safety Interaction Designer)。</li>
+            <li><strong>執行方式：</strong> 實作 E-Stop 緊急停機功能。當按下按鈕時，網頁彈出紅色滿版遮罩鎖死所有操作，並呼叫 <code>navigator.vibrate()</code>
+                觸發手機震動回饋，確保危險發生時使用者能即時獲得多感官警示。</li>
+            <li><strong>評分重點 :</strong> 緊急機制優先權最高，遮罩邏輯嚴謹，且成功整合 Haptic Feedback (觸覺反饋) 以提升安全性。</li>
+        </ul>
     </section>
 
-    <section id="instructor-guide" class="hidden">
-        <h2>講師手冊 (Instructor Guide)</h2>
-        <div class="space-y-6">
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">教學重點 (Teaching Points)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2">
-                    <li>控制項的語意化：解釋何時該用 Segmented Control，何時該用 Toggle Switch。</li>
-                    <li>防誤觸設計：探討 UI 佈局如何影響操作安全（如：不要把「自爆」按鈕放在「加速」按鈕旁邊）。</li>
-                    <li>多重感官回饋：強調在戶外強光下，單純的顏色變化可能不夠，需要震動或彈出遮罩。</li>
-                </ul>
-            </div>
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>在 GitHub 建立新 Repo（名為 <code>basic-10-ui-template</code>）。</li>
+                <li>上傳包含 `course-shared.js` 與基礎控制項 CSS 框架的網頁專案。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
 
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">學生常見問題 (Common Issues)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2 text-red-600">
-                    <li>觸控熱區太小：在手機上很難點中特定的按鈕（建議 <code>min-height: 44px</code>）。</li>
-                    <li>狀態回彈：當硬體還沒切換成功前，UI 就先跳過去了（討論回歸 SSoT 的重要性）。</li>
-                    <li>忘記禁用受限操作：在自動駕駛模式下仍然允許編輯路徑參數（可能引發崩潰）。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
+                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
+            </ol>
 
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="font-bold mb-2 text-sm">評分標準 (Grading)</h3>
-                <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
-                    <li><strong>優 (90-100):</strong> UI 極致精美流暢，具備清晰的視覺層級，且安全機制（如 E-Stop）實作完善。</li>
-                    <li><strong>可 (70-89):</strong> 基本控制功能正常，但 UI 美感不足，或在手機上的操作便利性待提升。</li>
-                    <li><strong>待加強 (Below 70):</strong> 介面凌亂，無法建立起使用者與硬體之間的直覺連結。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，獲得個人專屬 Repo。</li>
+                <li>研究 UI 視覺層級，實作具備 <code>.active</code> 樣式切換的戰術面板。</li>
+                <li>整合 E-Stop 遮罩與 <code>vibrate()</code> API 後 <strong>Push 代碼</strong>。</li>
+            </ol>
 
-            <!-- NEW: Practical Deployment Recommendations -->
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
-                    <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
-.
-├── src/             # 包含 UI 組件與震動 API 呼叫的 main.cpp
-├── README.md        # UI/UX 設計文件與操作錄影
-└── .github/         # 自動評核腳本</pre>
-                    <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
-                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-                        <li><strong>交互覆蓋率：</strong> 檢查 <code>index.html</code> (Dashboard 注入) 是否包含定義的 UI 控制項 ID。</li>
-                        <li><strong>邊界反應速度：</strong> 驗證按下 E-Stop 按鈕後，是否立即向硬體發送高優先權停機指令。</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- NEW: Detailed operations guide -->
-            <div class="bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
-                <div class="space-y-4 text-sm text-gray-600">
-                    <div>
-                        <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
-                        <p>建立包含基礎戰術面板樣式的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
-                        <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以便對其 UI 佈局與事件處理進行點評。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
-                        <p>學生領取作業，獲得個人專屬 Repo，實作 UI 同步邏輯與震動回饋並 Push 觀察其在不同裝置上的呈現。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
-                        <p>進入 Feedback PR，針對學生的「多重感官回饋」設計巧思給予專業建議。</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- NEW: Flipped classroom strategy table -->
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm border-collapse border border-gray-200">
-                        <thead class="bg-gray-50 text-left text-gray-800">
-                            <tr>
-                                <th class="border border-gray-200 p-2">階段</th>
-                                <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
-                                <th class="border border-gray-200 p-2">教師/平台角色</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-gray-600">
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
-                                <td class="border border-gray-200 p-2">研究現代無人車或是工業控制面板的 UI 分佈邏輯。</td>
-                                <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員對「安全控制」有共識。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
-                                <td class="border border-gray-200 p-2">領取 Classroom 作業，實作高互動性的操作面板並與實機同步。</td>
-                                <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
-                                <td class="border border-gray-200 p-2">完成全螢幕沉浸式切換與 ESC 退出邏輯並 Push。</td>
-                                <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>重點點評學生對「控制語義化」的理解（如：互斥選項是否使用了正確的 UI 組件）。</li>
+            </ol>
         </div>
+
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元聚焦於「人機互動安全 (Safety in HMI)」，引導學生透過 UI/UX 技巧降低複雜機器人操作中的誤觸風險。</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html        # 戰術面板主介面
+├── style.css         # (重點) 需實作 .active 與警告動畫
+└── main.js           # 處理模式切換與硬體同步的 JS 邏輯</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>main.js (Modal Alert)</strong></p>
+        <pre><code>function emergencyStop() {
+  overlay.show(); // 覆蓋所有操作按鈕
+  navigator.vibrate([100, 50, 100]); // 震動警告
+  sendBLE("STOP_ALL");
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>佈局檢查：：</strong> 驗證緊急鈕 (E-Stop) 是否位於視覺中心且具備明顯區隔度。</li>
+            <li><strong>交互測試：：</strong> 模擬切換至 AUTO 模式，檢查手動搖桿 (Joystick) 的 DOM 屬性是否被正確設為 <code>disabled</code>。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">研究現代戰機或是特斯拉控制面板的模式切換 UX 特點。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>Dashboard：</strong>確認學員對「視覺引導」與「防呆設計」有初步概念。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，實作高對比、易觸控的 Dashboard 並串接硬體心跳包。
+                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>設計評論：</strong>指出學生介面中可能導致誤點的潛在風險點。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">挑戰實作黑暗模式 (Dark Mode) 適配與高難度動畫回饋並 Push。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>審核學生對「多感官互動」的整合能力與代碼優雅度。</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </body>
 

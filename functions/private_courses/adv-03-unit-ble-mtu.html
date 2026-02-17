@@ -22,23 +22,14 @@
         <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
 
         <div class="container mx-auto px-4 relative z-10 text-center">
-            <div
-                class="badge-header inline-flex items-center gap-2 px-4 py-1 rounded-full bg-purple-500/20 text-purple-200 border border-purple-400/30 backdrop-blur-sm mb-6 text-xs font-semibold tracking-wide uppercase font-[Outfit]">
-                進階 3 - 單元 3
-            </div>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
-                MTU 與分段傳輸<br>破除藍牙傳輸邊界
-            </h1>
-            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
-                當 JSON 數據過長時該怎麼辦？學習如何優化 MTU 交涉與實作高效的分段傳輸策略。
-            </p>
-
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/gb2uX7gimfE')"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vTcpsdcFOY6LFWe9F51ajvCuK6snTbaDXZKWbt8Z29OaN8tyzh0B3VONv_bfYKdO6EtlebvSWYK3Yfk/pub?embedded=true')"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -174,77 +165,81 @@
             </div>
         </section>
 
-        <!-- Assignments Section -->
-        <section>
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">數據傳輸實驗室：分段傳輸專家</h2>
-            <p class="text-center text-gray-500 mb-12">突破實體限制，建立穩健的大數據回傳機制。</p>
-
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Task 3-1 -->
-                <div onclick="openSubmissionModal('adv-03-mtu-fragmenter', '【作業 3-1】「電梯拆解工」：手動分段發送器')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-blue-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">✂️</span>
-                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
-                            3-1】電梯拆解工</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務目標：</strong>編寫一個 JavaScript 函式，將長字串依據指定長度自動切割。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>實作 `fragmentData(text, size)` 函式</li>
-                                <li>使用 for 迴圈配合 await，每隔 50ms 發送一個片段</li>
-                                <li>邊界測試：傳送剛好是 MTU 倍數長度的字串</li>
-                            </ul>
+        <!-- Assignment Highlights -->
+        <section class="module-section">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                        <div>
+                            <h2 class="text-3xl font-bold text-white mb-2">數據傳輸實驗室：分段傳輸專家</h2>
+                            <p class="text-slate-400">突破實體限制，建立穩健的大數據回傳機制。</p>
                         </div>
                     </div>
-                </div>
 
-                <!-- Task 3-2 -->
-                <div onclick="openSubmissionModal('adv-03-puzzle-reassembler', '【作業 3-2】「拼圖高手」：緩衝區重組器')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-indigo-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🧩</span>
-                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
-                            3-2】拼圖高手</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務目標：</strong>在接收端實作數據拼接與終止符偵測邏輯。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>建立字串變數作為 `buffer`</li>
-                                <li>偵測 `\n` 符號作為傳輸結束標誌</li>
-                                <li>成功解析後執行 `JSON.parse()` 並更新 UI</li>
+                    <div class="grid md:grid-cols-2 gap-8 mb-12">
+                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
+                            <div class="flex items-center gap-4 mb-6">
+                                <span class="text-2xl">📡</span>
+                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
+                            </div>
+                            <p class="mb-4 text-slate-400">在任務中，GitHub 是你的「基地台」。請確保每完成一個里程碑，就將數據回傳。</p>
+                            <ul class="space-y-2 text-slate-300">
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 1.</span>
+                                    <span>接受 GitHub Classroom 邀請，複製 (Clone) 專屬任務倉庫。</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 2.</span>
+                                    <span>完成代碼撰寫後，執行 <code
+                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code>
+                                        將進度上傳。</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 3.</span>
+                                    <span>自動化助理會即時在 PR (Pull Request) 中回饋評分結果。</span>
+                                </li>
                             </ul>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Task 3-3 -->
-                <div onclick="openSubmissionModal('adv-03-mtu-performance', '【作業 3-3】MTU 請求與效能分析')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-indigo-900 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">📊</span>
-                            <span class="bg-slate-100 text-slate-700 text-xs px-3 py-1 rounded-full font-bold">45
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-slate-600 transition">【作業
-                            3-3】效能分析大賽</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務目標：</strong>比較「手動分段」與「提升 MTU 權限」的效能差異。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>嘗試執行 `requestMTU(247)`</li>
-                                <li>傳送一組低解析度影像數據進行壓力測試</li>
-                                <li>對比「50 個小包」與「1 個大包」的總傳輸時間</li>
-                            </ul>
+                        <div class="grid gap-4">
+                            <!-- Task 3-1 -->
+                            <div onclick="openSubmissionModal('adv-03-mtu-fragmenter', '【作業 3-1】「電梯拆解工」：手動分段發送器')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition">作業
+                                        3-1</h3>
+                                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">電梯拆解工</h4>
+                                <p class="text-sm text-gray-500">實作數據手動分段邏輯，確保長字串能被順利傳輸。</p>
+                            </div>
+
+                            <!-- Task 3-2 -->
+                            <div onclick="openSubmissionModal('adv-03-puzzle-reassembler', '【作業 3-2】「拼圖高手」：緩衝區重組器')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-indigo-600 transition">
+                                        作業 3-2</h3>
+                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">拼圖高手</h4>
+                                <p class="text-sm text-gray-500">在接收端實作緩衝區重組與終止符偵測機制。</p>
+                            </div>
+
+                            <!-- Task 3-3 -->
+                            <div onclick="openSubmissionModal('adv-03-mtu-performance', '【作業 3-3】MTU 請求與效能分析')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-slate-600 transition">作業
+                                        3-3</h3>
+                                    <span class="bg-slate-100 text-slate-700 text-xs px-2 py-1 rounded font-bold">45
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">效能分析大賽</h4>
+                                <p class="text-sm text-gray-500">比較提升 MTU 與手動分段的傳輸效率差異。</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -272,23 +267,22 @@
         <h3>作業 3-1：電梯拆解工：手動分段發送器</h3>
         <ul>
             <li><strong>角色扮演：</strong> 通訊底層工程師。</li>
-            <li><strong>執行方式：</strong> 撰寫一個 `fragmentData(text, size)` 函式，將長度為 100 Bytes 的 JSON 字串，依據 20 Bytes 的傳輸邊界切分為
-                5 個片段，並使用 `await` 配合 `setTimeout` 每隔 50ms 發送一個片段。</li>
+            <li><strong>執行方式：</strong> 撰寫 `fragmentData(text, size)` 函式，將長 JSON 字串依據邊界（如 20 Bytes）切分，並定時發送片段。</li>
             <li><strong>評分重點：</strong> 能否正確處理字串長度非倍數時的最後一個片段。</li>
         </ul>
 
         <h3>作業 3-2：拼圖高手：緩衝區重組器</h3>
         <ul>
             <li><strong>角色扮演：</strong> 前端系統整合員。</li>
-            <li><strong>執行方式：</strong> 在接收端建立一個緩衝區 (`buffer`)，持續累加片段，並在偵測到結尾符（如 `\n`）時觸發 `JSON.parse()` 並將結果更新於網頁上。</li>
+            <li><strong>執行方式：</strong> 在接收端建立緩衝區 (`buffer`)，持續累加片段，並在偵測到結尾符（如 `\n`）時觸發解析。</li>
             <li><strong>評分重點：</strong> 代碼是否有防錯機制，防止在數據殘缺時解析 JSON 導致崩潰。</li>
         </ul>
 
         <h3>作業 3-3：效能分析大賽：MTU 請求實驗</h3>
         <ul>
             <li><strong>角色扮演：</strong> 效能優化專家。</li>
-            <li><strong>執行方式：</strong> 使用 `requestMTU(247)` 嘗試提升傳輸權限，並對比「連續發送 10 個小包」與「發送 1 個大包」的總耗時與成功率。</li>
-            <li><strong>評分重點：</strong> 實驗報告是否能清楚闡述硬體限制 (手機端硬體) 對 MTU 提升的影響。</li>
+            <li><strong>執行方式：</strong> 嘗試提升 MTU 權限，對比「連續小包」與「單一長包」的耗時。</li>
+            <li><strong>評分重點：</strong> 實驗報告是否能清楚闡述硬體限制對 MTU 提升的影響。</li>
         </ul>
     </section>
 
@@ -298,125 +292,87 @@
         <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
             <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
                 <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        A. 範本倉庫 (Template Repo) 結構
-                    </h4>
-                    <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
-.
+                <!-- Instructor Guide (Hidden) -->
+                <section id="instructor-guide" style="display: none;">
+                    <h2>GitHub Classroom 詳細操作指南</h2>
+                    <div class="classroom-guide">
+                        <p><strong>第一步：準備範本專案</strong></p>
+                        <ol>
+                            <li>提供能模擬 BLE MTU 限制的瀏覽器測試環境。</li>
+                            <li>設定為 Template repository。</li>
+                        </ol>
+
+                        <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+                        <ol>
+                            <li>設定「大負載壓力測試」腳本，自動檢查字串完整性。</li>
+                        </ol>
+
+                        <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+                        <ol>
+                            <li>完成自研「終止符協議」實作。</li>
+                            <li>提交 PR 紀錄 MTU 提升實驗數據。</li>
+                        </ol>
+
+                        <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+                        <ol>
+                            <li>針對 Buffer 溢位或傳輸超時的防護邏輯予以回饋。</li>
+                        </ol>
+                    </div>
+
+                    <h2>在 GitHub Classroom 的實戰部署建議</h2>
+                    <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+                    <pre><code>.
 ├── src/
 │   ├── fragment_logic.js  # 實現手動分段 logic
 │   └── reassembler.js     # 實現緩衝區重組
 ├── examples/
 │   └── large_payload.json # 測試用的超大型 JSON
-└── README.md             # 記錄：MTU 限制測試報告</pre>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        B. 自動評估 (Autograding) 的設計
-                    </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">📏</span>
-                            <p class="text-sm text-gray-700"><strong>片段完整性測試：</strong> 模擬傳送 500 Bytes
-                                數據，檢查學生重組出的字串與原文是否一致。</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">⏱️</span>
-                            <p class="text-sm text-gray-700"><strong>時序穩定性檢查：</strong> 檢查重組代碼是否能處理「乱序」或「重複受包」的情況。</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+└── README.md             # 記錄：MTU 限制測試報告</code></pre>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供能模擬 BLE MTU 限制的瀏覽器測試環境，設定為 Template
-                        repository。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「大負載壓力測試」腳本。指導如何使用
-                        <code>TextEncoder.encode()</code>。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，獲得個人專屬 Repo，展示自研「終止符協議」。分享 MTU 請求差異。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對學生代碼中對於「Buffer 溢位」與「傳輸超時」的處理方式予以回饋。</p>
-                </div>
-            </div>
-        </div>
+                    <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+                    <p><strong>手動分段邏輯 (Conceptual)</strong></p>
+                    <pre><code>for (let i = 0; i < data.length; i += size) send(data.substring(i, i + size));</code></pre>
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
-            </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
-                        <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">理解「電梯限重」比喻與 BLE 物理層的 MTU 限制。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，引導學員觀察「封包切片流程圖」。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，實現穩定的大數據回傳系統。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，探討提升 MTU 的穩定性考量。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">撰寫效能對比文檔並 Push，閱讀教師回覆 PR。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，思考自定義協議 (ACK 機制) 的價值。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
+                    <h3>C. 自動評估 (Autograding) 的設計</h3>
+                    <ul>
+                        <li><strong>片段完整性測試：</strong> 模擬傳送 500 Bytes 數據，檢查學生重組出的字串與原文是否一致。</li>
+                        <li><strong>時序穩定性檢查：</strong> 檢查重組代碼是否能處理亂序的情況。</li>
+                    </ul>
 
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/gb2uX7gimfE",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vTcpsdcFOY6LFWe9F51ajvCuK6snTbaDXZKWbt8Z29OaN8tyzh0B3VONv_bfYKdO6EtlebvSWYK3Yfk/pub?embedded=true"
-        };
-    </script>
-    <script src="/js/course-shared.js"></script>
+                    <h2>翻轉教室的實施策略</h2>
+                    <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+                        <thead>
+                            <tr style="background-color: #f8fafc;">
+                                <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                                <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git
+                                    Workflow)</th>
+                                <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;">理解 BLE 物理層的 MTU 物理限制。</td>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                                    <strong>Dashboard：</strong>觀察「封包切片流程圖」。</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業，實現穩定的大數據回傳系統。</td>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>實體協助：</strong>探討提升 MTU
+                                    的穩定性考量。</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;">撰寫效能對比文檔並 Push。</td>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>PR Review：</strong>思考自定義協議
+                                    (ACK 機制) 的價值。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <script src="/js/course-shared.js"></script>
 </body>
 
 </html>

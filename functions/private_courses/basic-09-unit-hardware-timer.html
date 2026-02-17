@@ -271,160 +271,119 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
-    <section id="assignment-guide" class="hidden">
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
-        <div class="space-y-6">
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h3 class="font-bold text-blue-800">1. GitHub Classroom 設定</h3>
-                <p class="text-sm">請將對應的 Repository (例如：<code>esp32-hardware-timer-lab</code>)
-                    設定至課程儀表板，練習使用硬體定時器實現極高精度的定時任務。</p>
-            </div>
 
-            <div class="bg-indigo-50 p-4 rounded-lg">
-                <h3 class="font-bold text-indigo-800">2. 翻轉課堂策略</h3>
-                <ul class="list-disc list-inside text-sm">
-                    <li>課前預習：觀看 10 分鐘關於硬體中斷 (Interrupt) 與 ISR (中斷服務常式) 的底層運作原理。</li>
-                    <li>課中實作：實作一個以 1000Hz 頻率運行的硬體定時器任務，並嘗試在 ISR 中控制 LED 的切換。</li>
-                </ul>
-            </div>
+        <h3>【作業 2-1】精確頻率：硬體定時器閃燈</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 嵌入式系統開發者 (Embedded Systems Developer)。</li>
+            <li><strong>執行方式：</strong> 利用硬體定時器，每隔精確的 1,000,000 微秒 (1秒) 切換一次 LED 狀態。在主程式 loop 裡刻意加入
+                <code>delay(5000)</code>，觀察 LED 是否依然能維持每秒閃爍。</li>
+            <li><strong>評分重點 :</strong> 成功配置硬體定時器與 ISR，且 LED 閃爍完全不受 loop 阻塞影響。</li>
+        </ul>
 
-            <div class="bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold mb-2">3. 單元任務 (Unit Tasks)</h3>
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-100 text-left">
-                        <tr>
-                            <th class="p-2">任務說明</th>
-                            <th class="p-2">建議時間</th>
-                            <th class="p-2">配分</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 3-1】實作高精度定時器 (1ms 觸發一次)</td>
-                            <td class="p-2">45 min</td>
-                            <td class="p-2">40 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 3-2】中斷變數安全性 (volatile 關鍵字實踐)</td>
-                            <td class="p-2">30 min</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 3-3】ISR 內的計數器與標誌位 (Flag) 通訊</td>
-                            <td class="p-2">45 min</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <h3>【作業 2-2】轉速計實作：計算馬達 Encoder 訊號</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 自動駕駛演算法工程師 (Autonomous Driving Algorithm Engineer)。</li>
+            <li><strong>執行方式：</strong> 設定定時器每 100ms 觸發一次中斷。在 ISR 中快照目前馬達轉動步數，並計算出目前的 RPM (每分鐘轉數)。</li>
+            <li><strong>評分重點 :</strong> 成功實作定時快照，RPM 計算邏輯正確，並展現出穩定的輸出頻率。</li>
+        </ul>
+
+        <h3>【作業 2-3】安全保護：硬體級 Watchdog</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 工業安全工程師 (Industrial Safety Engineer)。</li>
+            <li><strong>執行方式：</strong> 實作一個看門狗保護機制。如果 2 秒內未收到心跳指令，定時器中斷將強制停止所有馬達。模擬當主程式陷入死迴圈或藍牙斷線時的自動安全防範。</li>
+            <li><strong>評分重點 :</strong> 安全保護機制確實發揮作用，並能在中斷端完成硬體緊急剎車操作。</li>
+        </ul>
     </section>
 
-    <section id="instructor-guide" class="hidden">
-        <h2>講師手冊 (Instructor Guide)</h2>
-        <div class="space-y-6">
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">教學重點 (Teaching Points)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2">
-                    <li>硬體優先權：解釋為什麼定時器中斷可以「強行暫停」loop 的執行。</li>
-                    <li>ISR 的規範：強烈要求不要在 ISR 中放入 Serial.print 或 delay（會導致系統鎖死）。</li>
-                    <li>volatile 的含義：為什麼跨線程/中斷共用的變數需要這個關鍵字（防止編譯器優化導致的舊值問題）。</li>
-                </ul>
-            </div>
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>在 GitHub 建立新 Repo（名為 <code>basic-09-timer-template</code>）。</li>
+                <li>上傳包含 `timerBegin()` 配置但「ISR 函式處於空白」的專案框架。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
 
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">學生常見問題 (Common Issues)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2 text-red-600">
-                    <li>程式一直重啟 (Watchdog Timer Error)：通常是在 ISR 裡面做了太多事情，佔用 CPU 太久。</li>
-                    <li>忘記附加中斷 (timerAttachInterrupt)：導致定時器設定了但永遠不會觸發。</li>
-                    <li>變數同步問題：loop 中讀到的計數器數值與 ISR 中的實際值不符。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
+                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
+            </ol>
 
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="font-bold mb-2 text-sm">評分標準 (Grading)</h3>
-                <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
-                    <li><strong>優 (90-100):</strong> 能編寫出精簡且安全的 ISR，正確使用 volatile 並實現精確的時間控制。</li>
-                    <li><strong>可 (70-89):</strong> 定時器能運作，但 ISR 過於肥大或忽略了 <code>volatile</code> 導致數據不一致。</li>
-                    <li><strong>待加強 (Below 70):</strong> 無法成功配置硬體定時器，或程式因中斷邏輯錯誤而頻繁崩潰。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，獲得個人專屬 Repo。</li>
+                <li>閱讀單元內的「中斷禁忌」，實作基於 `volatile` 變數的高頻率採購 (Sampling) 邏輯。</li>
+                <li>解決 Watchdog 觸發重啟的問題後 <strong>Push 代碼</strong>。</li>
+            </ol>
 
-            <!-- NEW: Practical Deployment Recommendations -->
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
-                    <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
-.
-├── src/             # 包含 Interrupt Service Routine (ISR) 框架的 main.cpp
-├── README.md        # 定時器精確度量測截圖
-└── .github/         # 自動評分配置</pre>
-                    <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
-                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-                        <li><strong>關鍵字篩選：</strong> 偵測程式碼中是否出現 <code>volatile</code> 宣告與 <code>timerBegin/Attach</code>。
-                        </li>
-                        <li><strong>安全性檢核：</strong> 掃描 ISR 函式內是否包含禁用的 `Serial.print` 或 `delay` 語句。</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- NEW: Detailed operations guide -->
-            <div class="bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
-                <div class="space-y-4 text-sm text-gray-600">
-                    <div>
-                        <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
-                        <p>建立包含硬體定時器初始化代碼的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
-                        <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以便對其 ISR 設計安全性進行點評。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
-                        <p>學生領取作業，獲得個人專屬 Repo，實作高精度定時器邏輯並解決變數同步問題後 Push。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
-                        <p>進入 Feedback PR，針對學生對「中斷優先級」與「原子性操作」的實作給予專業建議。</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- NEW: Flipped classroom strategy table -->
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm border-collapse border border-gray-200">
-                        <thead class="bg-gray-50 text-left text-gray-800">
-                            <tr>
-                                <th class="border border-gray-200 p-2">階段</th>
-                                <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
-                                <th class="border border-gray-200 p-2">教師/平台角色</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-gray-600">
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
-                                <td class="border border-gray-200 p-2">觀看「多工處理：從軟體排成到硬體中斷」的演進影片。</td>
-                                <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員理解「搶佔」的概念。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
-                                <td class="border border-gray-200 p-2">領取 Classroom 作業，實作硬體定時器並處理 volatile 變數共享。</td>
-                                <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
-                                <td class="border border-gray-200 p-2">實作雙定時器協同運作並 Push，閱讀教師回覆 PR。</td>
-                                <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>重點審核學生是否在 ISR 中誤用了 `delay()` 或過長的運算邏輯。</li>
+            </ol>
         </div>
+
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元聚焦於「從查詢模式轉向事件驅動」，引導學生理解如何利用硬體層級的搶佔機制，讓系統兼顧高頻即時性與複雜邏輯處理能力。</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── src/
+│   └── main.cpp      # (重點) 需填充 IRAM_ATTR 修飾的 ISR
+├── include/
+│   └── safety.h      # 提供給看門狗任務的硬體封鎖 API
+└── README.md         # 壓力測試：展示 loop 負載如何不影響定時器精度</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>main.cpp (Hardware Timer & volatile)</strong></p>
+        <pre><code>volatile int cnt = 0; 
+void IRAM_ATTR onTimer() { 
+  cnt++; // 極簡邏輯
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>關鍵字篩選：：</strong> 偵測程式碼中是否正確使用了 `IRAM_ATTR` 修飾詞與 `volatile` 聲明。</li>
+            <li><strong>靜態分析：：</strong> 檢查 ISR 函式內是否存在 `Serial.print` 等通訊語句，確保中斷安全性。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「多工處理：為什麼高級工程師都愛用硬體中斷？」影片。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員理解「搶佔
+                        (Preemption)」的概念。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，對比 millis() 與 Timer 在負載增加（如
+                        loop 內有 1s 忙碌等待）時的精度表現。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>演示定時中斷如何作為系統的「最後一道防線
+                        (Safety Guard)」。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">優化 RPM 採樣率平滑演算法並 Push，閱讀教師回覆 PR。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>審核學生對「中斷優先級」與「數據原子化 (Atomicity)」的概念理解。</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </body>
 

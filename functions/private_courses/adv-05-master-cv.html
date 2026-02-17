@@ -52,7 +52,18 @@
         const tabClosedLoop = document.getElementById('tab-closed-loop');
 
         // Initial Load
-        loadContent('adv-05-unit-feature-extraction.html');
+        loadFromHash();
+
+        function loadFromHash() {
+            const hash = window.location.hash.substring(1);
+            if (hash === 'centroid-error') {
+                switchTab('centroid-error');
+            } else if (hash === 'closed-loop') {
+                switchTab('closed-loop');
+            } else {
+                switchTab('feature-extraction');
+            }
+        }
 
         function switchTab(tab) {
             // Reset all tabs
@@ -63,12 +74,15 @@
             if (tab === 'feature-extraction') {
                 tabFeature.classList.add('active');
                 loadContent('adv-05-unit-feature-extraction.html');
+                window.location.hash = 'feature-extraction';
             } else if (tab === 'centroid-error') {
                 tabCentroid.classList.add('active');
                 loadContent('adv-05-unit-centroid-error.html');
+                window.location.hash = 'centroid-error';
             } else if (tab === 'closed-loop') {
                 tabClosedLoop.classList.add('active');
                 loadContent('adv-05-unit-closed-loop.html');
+                window.location.hash = 'closed-loop';
             }
         }
 

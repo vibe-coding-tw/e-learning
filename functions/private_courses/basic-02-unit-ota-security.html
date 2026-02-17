@@ -292,32 +292,32 @@
     </footer>
 
     <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" class="hidden">
+    <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
-        <div class="guide-section">
-            <h3>1. GitHub Classroom 設定</h3>
-            <ul>
-                <li>點擊儀表板「領取作業」按鈕，獲取 `basic-02-ota-security` 作業儲存庫。</li>
-                <li>檢視專案中的 `certs` 資料夾，了解根憑證 (Root CA) 的存放位置。</li>
-                <li>確保 PlatformIO 專案已正確配置 `board_build.embed_txtfiles` 以嵌入憑證。</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>2. 翻轉課堂學習策略</h3>
-            <ul>
-                <li><strong>課前預習</strong>：觀看「物聯網安全：OTA 攻擊面分析」影片，理解為什麼明文升級很危險。</li>
-                <li><strong>課中實作</strong>：實施 HTTPS 升級實驗，並嘗試使用錯誤的簽章來誘發升級失敗。</li>
-                <li><strong>課後思考</strong>：如果 private key（私鑰）外洩，對於已售出的數萬台設備會有什麼影響？如何補救？</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>3. 單元實作任務</h3>
-            <ul>
-                <li><strong>作業 2-1 (40%)</strong>：建立 HTTPS 連線，並成功獲取伺服器上的韌體資訊檔。</li>
-                <li><strong>作業 2-2 (30%)</strong>：實作韌體簽章驗證 (Firmware Signature)，確保只有授權的二進位檔能被執行。</li>
-                <li><strong>作業 2-3 (30%)</strong>：撰寫安全分析報告，列出三種可能的 OTA 攻擊路徑與對應防治方法。</li>
-            </ul>
-        </div>
+
+        <h3>作業 3-1：「數位守門員」實作 OTA 密碼鎖</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 安全工程師 (Security Engineer)。</li>
+            <li><strong>執行方式：</strong> 為 <code>/update</code> 路由增加 HTTP Basic Auth。帳密應從 NVS (Preferences) 讀取，並實作「密碼錯誤 3
+                次後鎖定 5 分鐘」的簡單計數器。</li>
+            <li><strong>評分重點：</strong> 帳密驗證邏輯的正確性，以及密碼錯誤時的鎖定機制是否生效。</li>
+        </ul>
+
+        <h3>作業 3-2：「防呆機制」韌體版本號檢查</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 韌體驗證工程師 (Firmware QA)。</li>
+            <li><strong>執行方式：</strong> 定義 <code>APP_VERSION</code>，在上傳前讀取 <code>.bin</code> 標記。若版本較舊，利用
+                <code>Update.abort()</code> 中止更新並回傳「禁止降級」。</li>
+            <li><strong>評分重點：</strong> 能在 <code>Update.write()</code> 之前攔截錯誤版本，並提供友善的報錯訊息。</li>
+        </ul>
+
+        <h3>作業 3-3：「硬體適配」硬體 ID 驗證</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 系統整合專家 (System Integrator)。</li>
+            <li><strong>執行方式：</strong> 使用 <code>ESP.getChipModel()</code> 檢測硬體型號。在 OTA 封包中加入應配對的硬體名稱。嘗試將錯誤型號韌體上傳並觀察攔截結果。
+            </li>
+            <li><strong>評分重點：</strong> 確保韌體與硬體型號匹配，防止因硬體架構不同而導致的更新後無法開機。</li>
+        </ul>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
@@ -326,34 +326,40 @@
         <div class="classroom-guide">
             <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
             <ol>
-                <li>上傳包含基礎 OTA 外殼但「未實作 HTTPS 加密與憑證嵌入」的 Repo 框架，並勾選 <strong>"Template repository"</strong>。</li>
+                <li>在 GitHub 建立新 Repo（名為 <code>basic-02-ota-security-template</code>）。</li>
+                <li>上傳包含基礎 OTA 外殼但「未實作 HTTPS 加密與憑證嵌入」的 Repo 框架。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
             <ol>
-                <li>建立作業並連結範本。建議開啟 <strong>Feedback Pull Requests</strong> 選項以便對比學生的憑證管理邏輯與 NTP 校時策略。</li>
+                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
+                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
             <ol>
-                <li>學生領取作業，獲得個人專屬 Repo，實作 HTTPS 握手校驗邏輯與數位簽章驗證功能。</li>
-                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+                <li>學生領取作業，獲得個人專屬 Repo。</li>
+                <li>實作 HTTPS 握手校驗邏輯與數位簽章驗證。</li>
+                <li>本地開發後 <strong>Push 代碼</strong> 提交進度。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
             <ol>
-                <li>打開 Feedback PR，針對學生的「私鑰管理風險意識」與「SSL 加密資源調優」予以具體回饋。</li>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>針對學生的「憑證管理邏輯」與「校時失敗容錯處理」予以具體點評。</li>
             </ol>
         </div>
 
         <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元引導學生理解物聯網安全的物理實踐，從明文傳輸轉向加密校驗流程，建議範本倉庫設置如下：</p>
+        <p>此單元引導學生理解物聯網安全的實踐，從明文傳輸轉向加密校驗流程。</p>
 
         <h3>A. 範本倉庫 (Template Repo) 結構</h3>
         <pre><code>.
 ├── platformio.ini   # (重點) 需加入 board_build.embed_txtfiles = certs/root_ca.pem
 ├── certs/           # 包含升級伺服器的根憑證
-├── src/main.cpp      # 包含 HTTPS Client 與 NTP 校時邏輯
+├── src/
+│   └── main.cpp      # 包含 HTTPS Client 與 NTP 校時邏輯
 └── README.md        # HTTPS 握手日誌、安全分析報告與憑證部署截圖</code></pre>
 
         <h3>B. 參考範例代碼 (Reference Example Code)</h3>
@@ -376,9 +382,8 @@ void setup() {
 
         <h3>C. 自動評分 (Autograding) 的設計</h3>
         <ul>
-            <li><strong>資源嵌入檢核：</strong> 檢查 <code>platformio.ini</code> 是否包含了 <code>embed_txtfiles</code> 語法，確保憑證已編譯入
-                Binary。</li>
-            <li><strong>安全協定檢測：</strong> 掃描程式中是否使用了 <code>WiFiClientSecure</code> 而非普通的 <code>WiFiClient</code>。</li>
+            <li><strong>資源嵌入檢核：：</strong> 檢查 <code>platformio.ini</code> 是否包含了 <code>embed_txtfiles</code> 語法。</li>
+            <li><strong>安全協定檢測：：</strong> 掃描程式中是否使用了 <code>WiFiClientSecure</code>。</li>
         </ul>
 
         <h2>翻轉教室的實施策略</h2>
@@ -390,28 +395,24 @@ void setup() {
                     <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
-            <tbody style="color: #4b5563;">
+            <tbody>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「為什麼物聯網設備需要 HTTPS？PKI 基礎原理」教學影片。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「為什麼物聯網設備需要 HTTPS？PKI 基礎原理」影片。</td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>Dashboard：</strong>確認學員理解公鑰基礎設施在嵌入式系統中的簡化應用。</td>
+                        <strong>Dashboard：</strong>確認學員理解公鑰基礎設施在嵌入式系統中的應用。</td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實機測試 SSL 握手過程，並解決因「NTP 時間不同步」導致的憑證失效障礙。
-                    </td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>安全顧問：</strong>解釋堆疊溢位 (Stack overflow)
-                        在進行加密運算時的成因與 Stack 大小分配。
-                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實機測試 SSL 握手，解決因「NTP 不同步」導致的憑證失效問題。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>安全顧問：</strong>解釋加密運算中的堆疊溢位 (Stack
+                        overflow) 與解決方案。</td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作具備「防止降級攻擊 (Anti-rollback)」的版本校驗腳本並 Push 提交最終
-                        PR。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作「防止降級攻擊」校驗腳本並完成最終提交。</td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>審核學生對「憑證生命週期管理」與「攻擊路徑防禦」的理解深度。
-                    </td>
+                            PR：</strong>審核學員對憑證管理與攻擊防禦的理解深度。</td>
                 </tr>
             </tbody>
         </table>

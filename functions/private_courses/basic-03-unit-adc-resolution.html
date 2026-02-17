@@ -325,32 +325,30 @@
     </footer>
 
     <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" class="hidden">
+    <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
-        <div class="guide-section">
-            <h3>1. GitHub Classroom 設定</h3>
-            <ul>
-                <li>點擊儀表板「領取作業」按鈕，進入 GitHub Classroom 並獲取 `basic-03-adc-pro`。</li>
-                <li>將個人作業儲存庫 Clone 至本地。</li>
-                <li>確保 PlatformIO 專案已正確識別 ESP32 開發板。</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>2. 翻轉課堂學習策略</h3>
-            <ul>
-                <li><strong>課前預習</strong>：觀看「類比訊號與解析度：從 0 到 4095」影片，認識 ADC 讀取邏輯。</li>
-                <li><strong>課中實作</strong>：連接電位計 (Potentiometer)，觀察旋轉時 Serial 數值的跳動，並嘗試降低雜訊。</li>
-                <li><strong>課後思考</strong>：為什麼 12 位元解析度比 10 位元更精確？在什麼場景下我們會需要主動「降低」解析度？</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>3. 單元實作任務</h3>
-            <ul>
-                <li><strong>作業 3-1 (30%)</strong>：讀取電位計數值並印出。</li>
-                <li><strong>作業 3-2 (40%)</strong>：使用 `map()` 函式將 0-4095 對應到 0-100（百分比）。</li>
-                <li><strong>作業 3-3 (30%)</strong>：實作一個簡單的類比死區 (Dead-zone) 邏輯，避免數值在靜止時微幅跳動。</li>
-            </ul>
-        </div>
+
+        <h3>作業 3-1：「數位量尺」：電壓量測實驗</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 測試工程師 (Test Engineer)。</li>
+            <li><strong>執行方式：</strong> 使用可變電阻，建立 ADC 讀值與實際電壓（由三用電表量測）的對應表。記錄並觀察 ESP32 的 0V-0.1V 與 3.2V-3.3V 的死區
+                (Dead-zone) 現象。</li>
+            <li><strong>評分重點 :</strong> 成功量測並記錄至少 5 個電壓點與對應的 ADC 數值。</li>
+        </ul>
+
+        <h3>作業 3-2：「自製感測器變量儀」</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 控制系統工程師 (Control Systems Engineer)。</li>
+            <li><strong>執行方式：</strong> 將 ADC 讀值映射為 PWM 輸出以控制 LED 亮度。實作「反向控制」（數據越大燈越暗）與簡單的「移動平均」濾波演算法。</li>
+            <li><strong>評分重點 :</strong> 程式能流暢地根據類比輸入改變 LED 亮度，且數據跳動明顯減少。</li>
+        </ul>
+
+        <h3>作業 3-3：「精準轉向模擬器」</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 運動控制專家 (Motion Control Specialist)。</li>
+            <li><strong>執行方式：</strong> 利用可變電阻模擬搖桿，計算左右輪速差。實作「死區設定」（中心點 ±50 範圍內不觸發），以消除靜態時的小幅跳動。</li>
+            <li><strong>評分重點 :</strong> 掌握線性映射邏輯，並能有效實作死區過濾以提升系統穩定性。</li>
+        </ul>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
@@ -359,33 +357,39 @@
         <div class="classroom-guide">
             <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
             <ol>
-                <li>上傳包含基礎 Serial 設定但「未實作類比讀取與 map 轉換」的 Repo 框架，並勾選 <strong>"Template repository"</strong>。</li>
+                <li>在 GitHub 建立新 Repo（名為 <code>basic-03-adc-template</code>）。</li>
+                <li>上傳包含基礎 Serial 設定但「未實作類比讀取與 map 轉換」的 Repo 框架。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
             <ol>
-                <li>建立作業並連結範本。建議開啟 <strong>Feedback Pull Requests</strong> 選項以便對比學生的數據平滑演算法與解析度設定策略。</li>
+                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
+                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
             <ol>
-                <li>學生領取作業，獲得個人專屬 Repo，實作 ADC 讀取、數據百分比轉換與「死區 (Dead zone)」過濾邏輯。</li>
-                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+                <li>學生領取作業，獲得個人專屬 Repo。</li>
+                <li>實作 ADC 讀取、數據映射與「死區 (Dead zone)」過濾。</li>
+                <li>本地開發後 <strong>Push 代碼</strong> 提交進度。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
             <ol>
-                <li>打開 Feedback PR，針對學生的「雜訊抑制策略 (Smoothing)」與「硬體非線性校準」分析給予具體回饋。</li>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>針對學生的「雜訊抑制策略 (Smoothing)」與「硬體非線性校準」予以具體點評。</li>
             </ol>
         </div>
 
         <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元聚焦於類比與數位訊號的轉換橋樑，引導學生處理現實世界的雜訊與映射邏輯，建議範本倉庫設置如下：</p>
+        <p>此單元聚焦於類比與數位訊號的轉換橋樑，處理現實世界的雜訊與映射邏輯。</p>
 
         <h3>A. 範本倉庫 (Template Repo) 結構</h3>
         <pre><code>.
 ├── platformio.ini   # 包含基礎開發環境配置
-├── src/main.cpp      # (重點) 需實作 analogRead 與 map 邏輯
+├── src/
+│   └── main.cpp      # (重點) 需實作 analogRead 與 map 邏輯
 └── README.md        # 實驗紀錄：ADC 解析度設定、數據跳動觀察報告與曲線圖</code></pre>
 
         <h3>B. 參考範例代碼 (Reference Example Code)</h3>
@@ -396,26 +400,22 @@ const int potPin = 32; // 使用 ADC1 引腳避開 Wi-Fi 衝突
 
 void setup() {
   Serial.begin(115200);
-  // 設定 ADC 解析度為 12-bit (0-4095)
-  analogReadResolution(12);
-  // 設定衰減量以讀取 3.3V 全量程
-  analogSetAttenuation(ADC_11db);
+  analogReadResolution(12); // 設定 ADC 解析度為 12-bit
+  analogSetAttenuation(ADC_11db); // 設定衰減量以讀取 3.3V
 }
 
 void loop() {
   int rawValue = analogRead(potPin);
-  // 映射到 0-100% 且具備死區處理
+  // 映射到 0-100%
   int percent = map(rawValue, 0, 4095, 0, 100);
-  
   Serial.printf("Raw: %d | Percent: %d%%\n", rawValue, percent);
   delay(100);
 }</code></pre>
 
         <h3>C. 自動評分 (Autograding) 的設計</h3>
         <ul>
-            <li><strong>核心 API 檢索：</strong> 偵測程式中是否呼叫了 <code>analogRead()</code> 與 <code>analogSetAttenuation()</code>。
-            </li>
-            <li><strong>邏輯邊界測試：</strong> 透過腳本驗證學生的 <code>map()</code> 參數是否正確對齊 12-bit 解析度 (4095)。</li>
+            <li><strong>核心 API 檢索：：</strong> 偵測程式中是否呼叫了 <code>analogRead()</code>。</li>
+            <li><strong>邏輯邊界測試：：</strong> 透過腳本驗證學員的 <code>map()</code> 參數是否對齊 12-bit 解析度 (4095)。</li>
         </ul>
 
         <h2>翻轉教室的實施策略</h2>
@@ -427,28 +427,24 @@ void loop() {
                     <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
-            <tbody style="color: #4b5563;">
+            <tbody>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「類比訊號讀取：從電壓到數位數值的量化 (Quantization) 過程」影片。
-                    </td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員理解解析度
-                        (Resolution) 與 Bit depth 的數學關係。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「類比訊號讀取：從電壓到數位的量化過程」影片。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員理解解析度與 Bit
+                        depth 的數學關係。</td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業對比旋鈕撥至極值時的數據偏差，實作簡單的移動平均 (Moving Average)
-                        濾波。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>現場指導：</strong>解釋 ADC2 與 Wi-Fi
-                        共用無線電資源導致的衝突機制與避障引腳選取。
-                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實作移動平均 (Moving Average) 濾波。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>現場指導：：</strong>解釋 ADC2 與 Wi-Fi
+                        共用資源導致的衝突機制。</td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">撰寫「環境雜訊抑制報告」並 Push 最終改善代碼至 PR。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">撰寫「環境雜訊抑制報告」並提交最終改善代碼。</td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>審核學生對「數據穩定性」與「硬體限制 (Non-linearity)」的應對策略。
-                    </td>
+                            PR：</strong>審核學生對數據穩定性與硬體限制的應對策略。</td>
                 </tr>
             </tbody>
         </table>

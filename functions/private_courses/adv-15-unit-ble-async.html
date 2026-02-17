@@ -42,11 +42,11 @@
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                <button onclick="window.courseShared.enterMediaMode('video', window.RESOURCES.youtube)"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                <button onclick="window.courseShared.enterMediaMode('doc', window.RESOURCES.doc)"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -156,75 +156,88 @@
             </div>
         </section>
 
-        <!-- Assignments Section -->
+        <!-- Assignment Highlights -->
         <section class="module-section">
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實作：健壯連線控制</h2>
-            <p class="text-center text-gray-500 mb-12">打造具備自癒能力的連線模組，解決現實世界的網路不穩定性。</p>
-
-            <div class="grid md:grid-cols-3 gap-6 px-4">
-                <!-- Task 2-1 -->
-                <div onclick="openSubmissionModal('adv-15-linear-connect', 'Task 2-1: 線性化連線序列')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-blue-500 h-2"></div>
-                    <div class="p-8 flex-grow">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🔗</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                        <div>
+                            <h2
+                                class="text-3xl font-bold text-white mb-2 underline decoration-indigo-500 underline-offset-8">
+                                實作任務：健壯連線</h2>
+                            <p class="text-slate-400">打造自癒系統，解決現實世界的網路不穩定性。</p>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 2-1】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">線性化連線序列</h4>
-                        <p class="text-sm text-gray-600 mb-4">利用 async/await 將連線步驟線性化，消除重複觸發錯誤。</p>
-                        <ul class="text-xs text-gray-500 space-y-1 list-disc list-inside">
-                            <li>使用 try...catch 捕捉取消動作</li>
-                            <li>連線時鎖定 UI 按鈕 (Disabled)</li>
-                            <li>顯示詳細的連線階段提示</li>
-                        </ul>
                     </div>
-                </div>
 
-                <!-- Task 2-2 -->
-                <div onclick="openSubmissionModal('adv-15-autoreconnect', 'Task 2-2: 斷線自動重連機制')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-cyan-500 h-2"></div>
-                    <div class="p-8 flex-grow">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🔄</span>
-                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                    <div class="grid md:grid-cols-2 gap-8 mb-12">
+                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-2xl">
+                                    📡</div>
+                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
+                            </div>
+                            <p class="mb-4 text-slate-400">完成任務後，請將數據與結果推送到你的專屬倉庫。</p>
+                            <ul class="space-y-3 text-slate-300">
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">1</span>
+                                    <span>接受 GitHub Classroom 邀請並 Clone 倉庫</span>
+                                </li>
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">2</span>
+                                    <span>完成代碼後執行 <code
+                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code></span>
+                                </li>
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">3</span>
+                                    <span>在 PR 中查看自動化評分與教師回饋</span>
+                                </li>
+                            </ul>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition">【作業 2-2】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">斷線自動重連機制</h4>
-                        <p class="text-sm text-gray-600 mb-4">實作「自癒」系統，偵測斷開後自動嘗試復原。</p>
-                        <ul class="text-xs text-gray-500 space-y-1 list-disc list-inside">
-                            <li>監聽 gattserverdisconnected 事件</li>
-                            <li>實作 3 次自動重連重試</li>
-                            <li>重連期間顯示「黃色狀態警告」</li>
-                        </ul>
-                    </div>
-                </div>
 
-                <!-- Task 2-3 -->
-                <div onclick="openSubmissionModal('adv-15-bi-stream', 'Task 2-3: 非同步並行處理：讀寫同步')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-indigo-500 h-2"></div>
-                    <div class="p-8 flex-grow">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🛤️</span>
-                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">45
-                                min</span>
+                        <div class="grid gap-4">
+                            <!-- Task 2-1 -->
+                            <div onclick="window.courseShared.openSubmissionModal('adv-15-linear-connect', '【作業 2-1】線性化連線序列')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition">作業
+                                        2-1</h3>
+                                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">線性化連線序列</h4>
+                                <p class="text-sm text-gray-500">利用 async/await 將連線步驟線性化，並正確處理使用者取消動作。</p>
+                            </div>
+
+                            <!-- Task 2-2 -->
+                            <div onclick="window.courseShared.openSubmissionModal('adv-15-autoreconnect', '【作業 2-2】斷線自動重連機制')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-cyan-600 transition">作業
+                                        2-2</h3>
+                                    <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">斷線自動重連機制</h4>
+                                <p class="text-sm text-gray-500">監聽斷線事件並實作三次自動重連機制，維持系統的高可用性。</p>
+                            </div>
+
+                            <!-- Task 2-3 -->
+                            <div onclick="window.courseShared.openSubmissionModal('adv-15-bi-stream', '【作業 2-3】非同步並行處理')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-indigo-600 transition">
+                                        作業 2-3</h3>
+                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">45
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">非同步並行處理</h4>
+                                <p class="text-sm text-gray-500">實現寫入指令與接收電量數據並行的雙向流控處理。</p>
+                            </div>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 2-3】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">非同步並行處理</h4>
-                        <p class="text-sm text-gray-600 mb-4">實現寫入指令與接收遙測數據並行的雙向互動。</p>
-                        <ul class="text-xs text-gray-500 space-y-1 list-disc list-inside">
-                            <li>100ms 間隔的指令寫入</li>
-                            <li>同步處理回傳的感測器事件</li>
-                            <li>防止競爭條件 (Race Condition)</li>
-                        </ul>
                     </div>
                 </div>
             </div>

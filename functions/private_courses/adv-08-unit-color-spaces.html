@@ -33,16 +33,16 @@
                 理解 RGB、HSV 與 YUV 的本質差異。學習在不同的場景下選擇最適合的「色彩語言」。
             </p>
 
-            <div class="mt-10 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
-                    class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-red-900/20">
-                    <span class="text-xl group-hover:animate-pulse">📺</span>
-                    <span>觀看教學影片</span>
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/0NEy0eWTcIM?autoplay=1')"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
-                    class="group flex items-center gap-3 bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-purple-900/20">
-                    <span class="text-xl group-hover:bounce">📄</span>
-                    <span>閱讀課程講義</span>
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vSvOHvkHt6fsbUw0LC9PVWRjbYogoskPytKhNRlcNac4aIoJprKR7dElIgyZR4-dnhWAcFGBiEUjREF/pub?embedded=true')"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
                 </button>
             </div>
         </div>
@@ -162,8 +162,8 @@
 
         <!-- Section 4: Assignments -->
         <section>
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：影像處理實戰</h2>
-            <p class="text-center text-gray-500 mb-12">掌握顏色過濾與數據壓縮，打造魯棒的視覺追蹤系統。</p>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：影像處理實務</h2>
+            <p class="text-center text-gray-500 mb-12">採用 <b>Git Workflow</b>：領取 GitHub Classroom 任務，實作過濾算法並提交 PR。</p>
 
             <div class="grid md:grid-cols-3 gap-8">
                 <!-- Task 1-1 -->
@@ -253,45 +253,94 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="guide-header mb-12 border-b-2 border-indigo-200 pb-6">
+            <h2 class="text-4xl font-black text-indigo-900 mb-2">作業指引 (Assignment Guide)</h2>
+            <p class="text-indigo-600 font-bold uppercase tracking-widest text-sm">進階 8 - 顏色空間應用</p>
+        </div>
 
-        <h3>作業 1-1：「色彩獵人」：實作即時 HSV 過濾器</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 影像處理工程師。</li>
-            <li><strong>執行方式：</strong> 在控制網頁上實作六個滑桿 (H min/max, S min/max, V min/max)。即時解析相機流，將符合範圍的像素設為白色，其餘設為黑色。</li>
-            <li><strong>評分重點：</strong> 二值化過濾的邏輯是否正確，以及在複雜背景下是否能精準穩定地鎖定「紅色圓球」。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-indigo-600 text-white rounded-xl text-lg">1-1</span>
+                「色彩獵人」：實作即時 HSV 過濾器
+            </h3>
+            <div class="space-y-4 text-gray-700">
+                <p><strong>角色扮演：</strong> 影像處理工程師。</p>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 text-justify">
+                    <p class="font-bold mb-2 text-indigo-900">執行步驟：</p>
+                    <ol class="list-decimal list-inside space-y-1 text-sm">
+                        <li>在控制網頁上實作六個滑桿 (H min/max, S min/max, V min/max)。</li>
+                        <li>即時解析相機流，將符合範圍的像素設為白色，其餘設為黑色。</li>
+                        <li>實作背景過濾邏輯。</li>
+                    </ol>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 二值化過濾的邏輯是否正確，以及在複雜背景下是否能精準穩定地鎖定「紅色圓球」。</p>
+            </div>
+        </div>
 
-        <h3>作業 1-2：RGB565 記憶體瘦身計畫</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 嵌入式系統優化師。</li>
-            <li><strong>執行方式：</strong> 實作一個位元轉換函式，將畫面的 24-bit RGB 像素壓為 16-bit RGB565 格式（R:5, G:6, B:5）。</li>
-            <li><strong>評分重點：</strong> 理解位元移動 (Bitwise Shift) 的計算過程，並正確算出在 320x240 解析度下節省了多少 KB 的傳輸頻寬。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-xl text-lg">1-2</span>
+                RGB565 記憶體瘦身計畫
+            </h3>
+            <div class="space-y-4 text-gray-700 text-justify">
+                <p><strong>角色扮演：</strong> 嵌入式系統優化師。</p>
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-justify">
+                    <p class="font-bold mb-2 text-blue-900">執行步驟：</p>
+                    <ul class="list-disc list-inside space-y-1 text-sm text-justify">
+                        <li>實作一個位元轉換函式。</li>
+                        <li>將畫面的 24-bit RGB 像素壓為 16-bit RGB565 格式（R:5, G:6, B:5）。</li>
+                        <li>計算節省的傳輸頻寬。</li>
+                    </ul>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 理解位元移動 (Bitwise Shift) 的計算過程，並正確算出在 320x240 解析度下節省了多少 KB
+                    的傳輸頻寬。</p>
+            </div>
+        </div>
 
-        <h3>作業 1-3：亮度自適應 (Auto-Leveling) 實驗</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 控制演算法工程師。</li>
-            <li><strong>執行方式：</strong> 從影像流中提取 YUV 空間中的 Y 頻道（亮度）。判斷畫面平均亮度，若過暗則動態增加 V 值（HSV）來補償。</li>
-            <li><strong>評分重點：</strong> 系統是否能在「強光下」與「陰影下」維持一致的物體識別效果，展現演算法的魯棒性。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-emerald-600 text-white rounded-xl text-lg">1-3</span>
+                亮度自適應 (Auto-Leveling) 實驗
+            </h3>
+            <div class="space-y-4 text-gray-700">
+                <p><strong>角色扮演：</strong> 控制演算法工程師。</p>
+                <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                    <p class="font-bold mb-2 text-emerald-900">執行步驟：</p>
+                    <ul class="list-disc list-inside space-y-1 text-sm text-justify">
+                        <li>從影像流中提取 YUV 空間中的 Y 頻道（亮度）。</li>
+                        <li>判斷畫面平均亮度。</li>
+                        <li>若過暗則動態增加 V 值（HSV）或 Y 值來補償。</li>
+                    </ul>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 系統是否能在「強光下」與「陰影下」維持一致的物體識別效果，展現演算法的魯棒性。</p>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+        <div class="guide-header mb-12 border-b-2 border-emerald-200 pb-6">
+            <h2 class="text-4xl font-black text-emerald-900 mb-2">講師指引 (Instructor Guide)</h2>
+            <p class="text-emerald-600 font-bold uppercase tracking-widest text-sm">GitHub Classroom & Flipped Teaching
+            </p>
+        </div>
+
+        <!-- Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-8 bg-blue-50 border border-blue-100 rounded-3xl shadow-inner text-justify">
+            <h3 class="text-2xl font-bold text-blue-900 mb-6 flex items-center gap-3">
+                <span class="text-3xl">🚀</span> 在 GitHub Classroom 的實戰部署
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                    <h4 class="font-bold text-blue-800 text-sm mb-4 flex items-center gap-2">
                         <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
                         A. 範本倉庫 (Template Repo) 結構
                     </h4>
                     <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+                        class="bg-gray-900 text-gray-100 p-6 rounded-2xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700 text-justify text-left">
 .
 ├── js/
 │   ├── color_utils.js    # 顏色空間轉換函式庫
@@ -303,17 +352,17 @@
 └── README.md              # HSV 調校與適應測試成果紀錄</pre>
                 </div>
                 <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                    <h4 class="font-bold text-blue-800 text-sm mb-4 flex items-center gap-2">
                         <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
                         B. 自動評估 (Autograding) 的設計
                     </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🎨</span>
+                    <div class="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-blue-100 space-y-4">
+                        <div class="flex gap-4">
+                            <span class="text-2xl">🎨</span>
                             <p class="text-sm text-gray-700"><strong>轉換精準度：</strong> 傳入 RGB 值，比對轉出的 HSV 是否符合數學模型。</p>
                         </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">⚡</span>
+                        <div class="flex gap-4">
+                            <span class="text-2xl">⚡</span>
                             <p class="text-sm text-gray-700"><strong>效能基準測試：</strong> 針對大量像素處理，檢查位元運算高效解法防止卡頓。</p>
                         </div>
                     </div>
@@ -321,73 +370,84 @@
             </div>
         </div>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
+        <!-- Detailed operations guide -->
+        <div class="guide-section mb-10 p-8 bg-white border border-gray-200 rounded-3xl">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <span class="text-3xl">🛠️</span> GitHub Classroom 詳細操作指南
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
                         1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供串接好 Canvas 影像獲取與滑桿 UI 的基礎框架，設定為 Template
-                        repository。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">準備範本專案</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">提供串接好 Canvas 影像獲取與滑桿 UI
+                        的基礎框架，設定為 Template repository。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
                         2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「顏色過濾成功率」驗證。提示注意 HSV 空間中 H 值的邊界處理。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">建立 Classroom 作業</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">設定「顏色過濾成功率」驗證。提示注意 HSV 空間中
+                        H 值的邊界處理。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
                         3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業進行壓力測試。提交極端光源下識別成功的錄影。執行 Git Push。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">學生端作業 (Flipped)</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">
+                        領取作業進行壓力測試。提交極端光源下識別成功的錄影。執行 Git Push。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
                         4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對「S 與 V 寬容度」策略，以及對「邊界情況」的代碼處理予以回饋。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">教師代碼審閱 (Review)</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">針對「S 與 V
+                        寬容度」策略，以及對「邊界情況」的代碼處理予以回饋。</p>
                 </div>
             </div>
         </div>
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
+        <!-- Flipped classroom strategy table -->
+        <div class="guide-section p-8 bg-blue-50/50 border border-blue-100 rounded-3xl">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <span class="text-3xl">🔄</span> 翻轉教室的實施策略
             </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg text-justify text-left">
                 <table class="w-full text-sm text-left">
                     <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
                         <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
+                            <th class="px-6 py-4">階段</th>
+                            <th class="px-6 py-4">學生行動 (Git Workflow)</th>
+                            <th class="px-6 py-4">教師/平台角色</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 text-gray-600">
                         <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">理解在 RGB 下調整亮度會改變顏色感知的物理規律。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「色偏視覺錯覺」導讀實驗。</td>
+                            <td
+                                class="px-6 py-5 font-black text-slate-800 bg-slate-50/50 w-32 text-center uppercase tracking-tighter">
+                                Pre-class<br><span class="text-[10px] font-normal text-slate-400">課前</span></td>
+                            <td class="px-6 py-5">理解在 RGB 下調整亮度會改變顏色感知的物理規律。</td>
+                            <td class="px-6 py-5 text-xs">檢查 Dashboard 進度，提供「色偏視覺錯覺」導讀實驗。</td>
                         </tr>
                         <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，調校滑桿找出當前環境下的特徵值。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，解答關於 RGB565 位元移動優化的細節。</td>
+                            <td
+                                class="px-6 py-5 font-black text-blue-800 bg-blue-50/30 w-32 text-center uppercase tracking-tighter">
+                                In-class<br><span class="text-[10px] font-normal text-blue-400">課中</span></td>
+                            <td class="px-6 py-5 font-medium text-slate-900 text-justify">領取 Classroom
+                                作業，調校滑桿找出當前環境下的特徵值。</td>
+                            <td class="px-6 py-5 text-xs text-blue-700 text-justify">即時連線排除阻礙，解答關於 RGB565 位元移動優化的細節。
+                            </td>
                         </tr>
                         <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">完成極端光源下「亮度自適應」演算法並 Push，閱讀回覆。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，引發思考色彩空間在電腦視覺中的地位。</td>
+                            <td
+                                class="px-6 py-5 font-black text-slate-800 bg-slate-50/50 w-32 text-center uppercase tracking-tighter">
+                                Post-class<br><span class="text-[10px] font-normal text-slate-400">課後</span></td>
+                            <td class="px-6 py-5">完成極端光源下「亮度自適應」演算法並 Push，閱讀回覆。</td>
+                            <td class="px-6 py-5 text-xs">核發評量，引發思考色彩空間在電腦視覺中的地位。</td>
                         </tr>
                     </tbody>
                 </table>
@@ -395,12 +455,6 @@
         </div>
     </section>
 
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/0NEy0eWTcIM?autoplay=1",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vSvOHvkHt6fsbUw0LC9PVWRjbYogoskPytKhNRlcNac4aIoJprKR7dElIgyZR4-dnhWAcFGBiEUjREF/pub?embedded=true"
-        };
-    </script>
     <script src="/js/course-shared.js"></script>
 </body>
 

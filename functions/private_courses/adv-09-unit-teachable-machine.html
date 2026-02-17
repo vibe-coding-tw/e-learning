@@ -33,13 +33,15 @@
                 利用翻轉教室概念，親手體驗機器學習三部曲：數據收集、模型訓練與即時預覽。
             </p>
 
-            <div class="mt-10 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/lY-mCI5YXxE')"
                     class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-red-900/20">
                     <span class="text-xl group-hover:animate-pulse">📺</span>
                     <span>觀看教學影片</span>
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vRvfsjpuncC9YSkGrZ0vz9JOmHtJ9qXj-jMmgzM63uUHdMQ36jjlvRAPbU2SBgzTJsrvWasuK7GN-iJ/pub?embedded=true')"
                     class="group flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-blue-900/20">
                     <span class="text-xl group-hover:bounce">📄</span>
                     <span>閱讀課程講義</span>
@@ -178,80 +180,116 @@
 
         <!-- Section 4: Assignments -->
         <section>
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：建模與指令整合</h2>
-            <p class="text-center text-gray-500 mb-12">針對真實場景進行優化，實作具备視覺能力的控制介面。</p>
-
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Task 2-1 -->
-                <div onclick="openSubmissionModal('adv-09-env-tuning', '【作業 9-2-1】「環境適應」模型微調')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-indigo-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🏢</span>
-                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
-                            2-1】環境適應</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>針對教室現場的「場景」進行模型優化。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>實地採集：採集「直行」、「左轉」、「右轉」三種標籤照片</li>
-                                <li>負樣本訓練：建立一個「雜訊/閒置」類別，加入走動人影</li>
-                                <li>目標：讓 AI 模型在真實環境下達到 90% 以上置信度</li>
-                            </ul>
-                        </div>
-                    </div>
+            <section id="assignments" class="mb-20">
+                <div class="text-center mb-12">
+                    <span
+                        class="px-4 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold tracking-widest uppercase">Practical
+                        Lab</span>
+                    <h2 class="text-4xl font-black text-gray-900 mt-4 mb-4 font-[Outfit]">核心實驗室：建模與指令整合</h2>
+                    <p class="text-gray-600 max-w-2xl mx-auto">針對真實場景進行優化，實作具备視覺能力的控制介面。</p>
                 </div>
 
-                <!-- Task 2-2 -->
-                <div onclick="openSubmissionModal('adv-09-ai-forwarder', '【作業 9-2-2】AI 指令轉發器實作')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-cyan-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🛰️</span>
-                            <span class="bg-cyan-50 text-cyan-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Task 2-1 -->
+                    <div onclick="window.courseShared.openSubmissionModal('adv-09-env-tuning', '【作業 9-2-1】「環境適應」模型微調')"
+                        class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-indigo-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-indigo-200/50 cursor-pointer">
+                        <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <span class="text-6xl font-black">01</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-cyan-600 transition">【作業
-                            2-2】指令轉發</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>在 BLE 控制網頁中整合 Teachable Machine 模型。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>模型載入：利用 <code>tmImage.load()</code> 導入訓練好的模型</li>
-                                <li>數據流連通：當機率 > 0.9 時，自動呼叫 <code>sendConfig</code> 發送 BLE</li>
-                                <li>視覺回饋：在網頁 UI 上即時顯示 AI 目前「看見」了什麼</li>
-                            </ul>
+                        <div class="p-8">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div
+                                    class="w-12 h-12 bg-indigo-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform duration-500">
+                                    🏢</div>
+                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git
+                                    Branch: <span class="text-indigo-600">feature/env-tuning</span></span>
+                            </div>
+                            <h3
+                                class="text-xl font-bold text-gray-900 mb-4 group-hover:text-indigo-600 transition-colors">
+                                【作業 2-1】環境適應</h3>
+                            <p class="text-gray-600 text-sm leading-relaxed mb-6">針對教室現場的「場景」進行模型優化。</p>
+                            <div class="space-y-3 border-t border-slate-50 pt-6">
+                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                    <span
+                                        class="w-5 h-5 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-bold">1</span>
+                                    採集「直行/左轉/右轉」標籤照片
+                                </div>
+                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                    <span
+                                        class="w-5 h-5 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-bold">2</span>
+                                    建立負樣本類別，加入人影干擾
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Task 2-3 -->
-                <div onclick="openSubmissionModal('adv-09-stress-test', '【作業 9-2-3】AI 駕駛員壓力測試')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-amber-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">⚖️</span>
-                            <span class="bg-amber-50 text-amber-700 text-xs px-3 py-1 rounded-full font-bold">45
-                                min</span>
+                    <!-- Task 2-2 -->
+                    <div onclick="window.courseShared.openSubmissionModal('adv-09-ai-forwarder', '【作業 9-2-2】AI 指令轉發器實作')"
+                        class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-cyan-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-cyan-200/50 cursor-pointer">
+                        <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <span class="text-6xl font-black">02</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-amber-600 transition">【作業
-                            2-3】壓力測試</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>模擬極端情況，設計系統的備援機制。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>低信心處理：信心值 < 50% 時，程式應自動停車 (Fail-safe)</li>
-                                <li>延遲測量：測量「看到影像 -> 模型推論 -> 指令發送」的總延遲</li>
-                                <li>目標：優化決策流程，提升系統的反應速度與安全性</li>
-                            </ul>
+                        <div class="p-8">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div
+                                    class="w-12 h-12 bg-cyan-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-cyan-200 group-hover:scale-110 transition-transform duration-500">
+                                    🛰️</div>
+                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git
+                                    Branch: <span class="text-cyan-600">feature/ai-forwarder</span></span>
+                            </div>
+                            <h3
+                                class="text-xl font-bold text-gray-900 mb-4 group-hover:text-cyan-600 transition-colors">
+                                【作業 2-2】指令轉發</h3>
+                            <p class="text-gray-600 text-sm leading-relaxed mb-6">在 BLE 控制網頁中整合 Teachable Machine 模型。
+                            </p>
+                            <div class="space-y-3 border-t border-slate-50 pt-6">
+                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                    <span
+                                        class="w-5 h-5 bg-cyan-50 text-cyan-600 rounded-full flex items-center justify-center font-bold">1</span>
+                                    導入 <code>tmImage.load()</code> 載入模型
+                                </div>
+                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                    <span
+                                        class="w-5 h-5 bg-cyan-50 text-cyan-600 rounded-full flex items-center justify-center font-bold">2</span>
+                                    信心度 > 0.9 時自動呼叫 <code>sendConfig</code>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </section>
+
+                    <!-- Task 2-3 -->
+                    <div onclick="window.courseShared.openSubmissionModal('adv-09-stress-test', '【作業 9-2-3】AI 駕駛員壓力測試')"
+                        class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-amber-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-amber-200/50 cursor-pointer">
+                        <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <span class="text-6xl font-black">03</span>
+                        </div>
+                        <div class="p-8">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div
+                                    class="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-amber-200 group-hover:scale-110 transition-transform duration-500">
+                                    ⚖️</div>
+                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git
+                                    Branch: <span class="text-amber-600">feature/ai-fail-safe</span></span>
+                            </div>
+                            <h3
+                                class="text-xl font-bold text-gray-900 mb-4 group-hover:text-amber-600 transition-colors">
+                                【作業 2-3】壓力測試</h3>
+                            <p class="text-gray-600 text-sm leading-relaxed mb-6">模擬極端情況，設計系統的備援機制。</p>
+                            <div class="space-y-3 border-t border-slate-50 pt-6">
+                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                    <span
+                                        class="w-5 h-5 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center font-bold">1</span>
+                                    信心值 < 50% 時自動停車 (Fail-safe) </div>
+                                        <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                            <span
+                                                class="w-5 h-5 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center font-bold">2</span>
+                                            測量 AI 辨識到發送指令的總延遲
+                                        </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </section>
 
     </main>
 
@@ -412,13 +450,13 @@
         </div>
     </section>
 
+    <script src="/js/course-shared.js"></script>
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/lY-mCI5YXxE?autoplay=1",
             doc: "https://docs.google.com/document/d/e/2PACX-1vRvfsjpuncC9YSkGrZ0vz9JOmHtJ9qXj-jMmgzM63uUHdMQ36jjlvRAPbU2SBgzTJsrvWasuK7GN-iJ/pub?embedded=true"
         };
     </script>
-    <script src="/js/course-shared.js"></script>
 </body>
 
 </html>

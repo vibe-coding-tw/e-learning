@@ -42,11 +42,11 @@
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                <button onclick="window.courseShared.enterMediaMode('video', window.RESOURCES.youtube)"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                <button onclick="window.courseShared.enterMediaMode('doc', window.RESOURCES.doc)"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -191,75 +191,88 @@
             </div>
         </section>
 
-        <!-- Assignments Section -->
+        <!-- Assignment Highlights -->
         <section class="module-section">
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實作：高速邊緣視覺</h2>
-            <p class="text-center text-gray-500 mb-12">驅動 S3 影像引擎，實現數據流的高速擷取與分析。</p>
-
-            <div class="grid md:grid-cols-3 gap-6 px-4">
-                <!-- Task 4-1 -->
-                <div onclick="openSubmissionModal('adv-15-dma-capture', 'Task 4-1: 「零延遲」影像擷取測試')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-indigo-500 h-2"></div>
-                    <div class="p-8 flex-grow">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">📷</span>
-                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                        <div>
+                            <h2
+                                class="text-3xl font-bold text-white mb-2 underline decoration-indigo-500 underline-offset-8">
+                                實作任務：邊緣視覺</h2>
+                            <p class="text-slate-400">驅動 S3 影像引擎，實現數據流的高速擷取與分析。</p>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 4-1】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「零延遲」影像擷取測試</h4>
-                        <p class="text-sm text-gray-600 mb-4">配置 S3 DMA 模式驅動攝像頭，並實作雙緩衝機制。</p>
-                        <ul class="text-xs text-gray-500 space-y-1 list-disc list-inside">
-                            <li>設定 Double Buffer 異步寫入</li>
-                            <li>對比輪詢模式下的 CPU 負擔</li>
-                            <li>檢測大數據傳輸下的中斷穩定性</li>
-                        </ul>
                     </div>
-                </div>
 
-                <!-- Task 4-2 -->
-                <div onclick="openSubmissionModal('adv-15-stream-analyzer', 'Task 4-2: 影像數據流分析儀')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-blue-500 h-2"></div>
-                    <div class="p-8 flex-grow">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">📊</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                    <div class="grid md:grid-cols-2 gap-8 mb-12">
+                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-2xl">
+                                    📡</div>
+                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
+                            </div>
+                            <p class="mb-4 text-slate-400">完成任務後，請將數據與結果推送到你的專屬倉庫。</p>
+                            <ul class="space-y-3 text-slate-300">
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">1</span>
+                                    <span>接受 GitHub Classroom 邀請並 Clone 倉庫</span>
+                                </li>
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">2</span>
+                                    <span>完成代碼後執行 <code
+                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code></span>
+                                </li>
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">3</span>
+                                    <span>在 PR 中查看自動化評分與教師回饋</span>
+                                </li>
+                            </ul>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 4-2】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">影像數據流分析儀</h4>
-                        <p class="text-sm text-gray-600 mb-4">在控制網頁實作接收解析器，即時顯示 FPS 與延遲。</p>
-                        <ul class="text-xs text-gray-500 space-y-1 list-disc list-inside">
-                            <li>處理 JPEG 二進位數據流</li>
-                            <li>即時計算數據封包大小與延遲</li>
-                            <li>支援不同 Quality 設定的對比測試</li>
-                        </ul>
-                    </div>
-                </div>
 
-                <!-- Task 4-3 -->
-                <div onclick="openSubmissionModal('adv-15-pixel-filter', 'Task 4-3: 簡易影像濾鏡處理')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-cyan-500 h-2"></div>
-                    <div class="p-8 flex-grow">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🎬</span>
-                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase">45
-                                min</span>
+                        <div class="grid gap-4">
+                            <!-- Task 4-1 -->
+                            <div onclick="window.courseShared.openSubmissionModal('adv-15-dma-capture', '【作業 4-1】「零延遲」影像擷取測試')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-indigo-600 transition">
+                                        作業 4-1</h3>
+                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">「零延遲」影像擷取測試</h4>
+                                <p class="text-sm text-gray-500">配置 S3 DMA 模式驅動攝像頭，並實作雙緩衝機制以釋放 CPU 負擔。</p>
+                            </div>
+
+                            <!-- Task 4-2 -->
+                            <div onclick="window.courseShared.openSubmissionModal('adv-15-stream-analyzer', '【作業 4-2】影像數據流分析儀')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition">作業
+                                        4-2</h3>
+                                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">影像數據流分析儀</h4>
+                                <p class="text-sm text-gray-500">在控制網頁實作接收解析器，即時監測 JPEG 數據流的 FPS 與傳輸延遲。</p>
+                            </div>
+
+                            <!-- Task 4-3 -->
+                            <div onclick="window.courseShared.openSubmissionModal('adv-15-pixel-filter', '【作業 4-3】簡易影像濾鏡處理')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-cyan-600 transition">作業
+                                        4-3</h3>
+                                    <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold">45
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">簡易影像濾鏡處理</h4>
+                                <p class="text-sm text-gray-500">實作二值化與局部裁切傳輸，觀察數據量優化對系統穩定性的影響。</p>
+                            </div>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition">【作業 4-3】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">簡易影像濾鏡處理</h4>
-                        <p class="text-sm text-gray-600 mb-4">實作初步像素運算，體會「減少數據量」的穩定性優勢。</p>
-                        <ul class="text-xs text-gray-500 space-y-1 list-disc list-inside">
-                            <li>二值化處理（循跡線基礎）</li>
-                            <li>局部裁切傳輸 (Region of Interest)</li>
-                            <li>觀察 FPS 與頻寬占用的連動關係</li>
-                        </ul>
                     </div>
                 </div>
             </div>

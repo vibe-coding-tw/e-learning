@@ -33,16 +33,16 @@
                 解構現代網頁的核心：從 React 哲學到組件封裝，學習如何打造可重複使用且高效的介面模組。
             </p>
 
-            <div class="mt-10 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
-                    class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-red-900/20">
-                    <span class="text-xl group-hover:animate-pulse">📺</span>
-                    <span>觀看教學影片</span>
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/6m6uT_fP79k?autoplay=1')"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
-                    class="group flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-blue-900/20">
-                    <span class="text-xl group-hover:bounce">📄</span>
-                    <span>閱讀課程講義</span>
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vTq9rNl6V6cRz1bW3R_8UjXz_m7uVq5pS-k_3Lq_R9q_g_h_S_W_O_G_H_I_J_K_L_M_N_O_P_Q/pub?embedded=true')"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
                 </button>
             </div>
         </div>
@@ -190,8 +190,8 @@
 
         <!-- Section 5: Assignments -->
         <section>
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：元件化開發實戰</h2>
-            <p class="text-center text-gray-500 mb-12">從原子元件到複雜佈局，打造專業級的控制中心。</p>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：元件化 UI 開發</h2>
+            <p class="text-center text-gray-500 mb-12">採用 <b>Git Workflow</b>：領取 GitHub Classroom 任務，實作過濾算法並提交 PR。</p>
 
             <div class="grid md:grid-cols-3 gap-8">
                 <!-- Task 1-1 -->
@@ -272,153 +272,211 @@
         <div class="container mx-auto px-4 text-center">
             <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
-                <span>進階課程 7 - 單元 1</span>
+                <span>進階課程 7 - 單元 3</span>
                 <span class="hidden md:inline">|</span>
-                <span>UI 框架與元件化設計</span>
+                <span>前端 UI 框架與元件化開發實務</span>
             </div>
         </div>
     </footer>
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="guide-header mb-12 border-b-2 border-indigo-200 pb-6">
+            <h2 class="text-4xl font-black text-indigo-900 mb-2">作業指引 (Assignment Guide)</h2>
+            <p class="text-indigo-600 font-bold uppercase tracking-widest text-sm">進階 7 - UI 框架與元件化</p>
+        </div>
 
-        <h3>作業 1-1：實作「原子元件」：可重用儀表盤</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 前端介面工程師。</li>
-            <li><strong>執行方式：</strong> 設計一個接收 `label`, `value`, `color` 三個 Props 的通用數值顯示元件（如：BatteryCard）。</li>
-            <li><strong>評分重點：</strong> 元件是否能根據 Props 動態改變樣式（例如電量低於 20% 自動變紅），且能在頁面中多次重複調用。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-indigo-600 text-white rounded-xl text-lg">3-1</span>
+                原子化標籤組件 (Atom Component)
+            </h3>
+            <div class="space-y-4 text-gray-700">
+                <p><strong>角色扮演：</strong> 前端 UI 設計師。</p>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 text-justify">
+                    <p class="font-bold mb-2 text-indigo-900">執行步驟：</p>
+                    <ol class="list-decimal list-inside space-y-1 text-sm">
+                        <li>設計一個名為 <code>StatusBadge</code> 的 JS 函式。</li>
+                        <li>接收一個 <code>type</code> 參數（如 <code>online</code>, <code>offline</code>）。</li>
+                        <li>根據 <code>type</code> 返回帶有不同 CSS 樣式的 HTML 字串片段（如綠色或紅色提示燈）。</li>
+                    </ol>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 函式是否能根據參數正確渲染對應的樣式，展現「樣式封裝」的思維。</p>
+            </div>
+        </div>
 
-        <h3>作業 1-2：「搖桿元件」與事件映射</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 互動設計師。</li>
-            <li><strong>執行方式：</strong> 將 Canvas 搖桿邏輯封裝進一個獨立元件。元件只負責計算座標並透過「自定義事件 (Custom Event)」將數據傳給父層。</li>
-            <li><strong>評分重點：</strong> 是否達成「視覺歸元件，通訊歸父層」的邏輯解耦，元件本身不應含有藍牙發送代碼。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-xl text-lg">3-2</span>
+                數據卡片工廠 (Card Factory)
+            </h3>
+            <div class="space-y-4 text-gray-700 text-justify">
+                <p><strong>角色扮演：</strong> 介面模組化專家。</p>
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-justify">
+                    <p class="font-bold mb-2 text-blue-900">執行步驟：</p>
+                    <ul class="list-disc list-inside space-y-1 text-sm text-justify">
+                        <li>實作一個 <code>DeviceCard</code> 元件。</li>
+                        <li>該元件包含裝置名稱、即時數據、以及一個控制按鈕。</li>
+                        <li>將按鈕的 <code>onclick</code> 事件也封裝在元件生成過程中。</li>
+                    </ul>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 元件是否具備完整的「自包含力 (Self-contained)」，即 HTML、樣式與基本互動邏輯是否封裝在一起。</p>
+            </div>
+        </div>
 
-        <h3>作業 1-3：佈局優化：Grid 與 Responsive Design</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> UX 體驗專家。</li>
-            <li><strong>執行方式：</strong> 利用 CSS Grid 設計適應手機與電腦的儀表板。當螢幕寬度小於 600px 時，自動切換為單欄垂直排列。</li>
-            <li><strong>評分重點：</strong> 在不同裝置下的易用性，以及「連線後」全局元件進入 Active 模式的狀態同步是否準確。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-emerald-600 text-white rounded-xl text-lg">3-3</span>
+                佈局重構挑戰
+            </h3>
+            <div class="space-y-4 text-gray-700">
+                <p><strong>角色扮演：</strong> 系統架構師。</p>
+                <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                    <p class="font-bold mb-2 text-emerald-900">執行步驟：</p>
+                    <ul class="list-disc list-inside space-y-1 text-sm text-justify">
+                        <li>將原本雜亂的 `index.html` 中的資料欄位改寫。</li>
+                        <li>完全替換為由 JS 動態生成的「元件列」。</li>
+                        <li>確保在新增新感測器時，只需要更動數據陣列，而不需更動 HTML 結構。</li>
+                    </ul>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 頁面結構是否變得簡潔，並體會到「關注點分離 (Separation of Concerns)」在大型專案中的重要性。</p>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+        <div class="guide-header mb-12 border-b-2 border-emerald-200 pb-6">
+            <h2 class="text-4xl font-black text-emerald-900 mb-2">講師指引 (Instructor Guide)</h2>
+            <p class="text-emerald-600 font-bold uppercase tracking-widest text-sm">GitHub Classroom & Flipped Teaching
+            </p>
+        </div>
+
+        <!-- Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-8 bg-blue-50 border border-blue-100 rounded-3xl shadow-inner text-justify">
+            <h3 class="text-2xl font-bold text-blue-900 mb-6 flex items-center gap-3">
+                <span class="text-3xl">🚀</span> 在 GitHub Classroom 的實戰部署
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                    <h4 class="font-bold text-blue-800 text-sm mb-4 flex items-center gap-2">
                         <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
                         A. 範本倉庫 (Template Repo) 結構
                     </h4>
                     <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+                        class="bg-gray-900 text-gray-100 p-6 rounded-2xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700 text-justify text-left">
 .
 ├── components/
-│   ├── Gauge.js         # 指針元件範本
-│   └── MotorSwitch.js   # 開關元件範本
-├── styles/
-│   └── theme.css        # 全局變數定義
+│   ├── badge.js      # 原子化組件
+│   └── card.js       # 裝置卡片組件
+├── js/
+│   └── app.js        # 元件裝配與渲染邏輯
 ├── tests/
-│   └── ui.test.js       # 測試：驗證 Props 與佈局響應
-└── index.html           # 主頁面佈局 (CSS Grid)</pre>
+│   └── dom.test.js   # 測試：驗證 DOM 結構生成
+└── README.md          # 元件 API 文檔紀錄</pre>
                 </div>
                 <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                    <h4 class="font-bold text-blue-800 text-sm mb-4 flex items-center gap-2">
                         <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
                         B. 自動評估 (Autograding) 的設計
                     </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🎨</span>
-                            <p class="text-sm text-gray-700"><strong>元件屬性測試：</strong> 模擬數據，檢查元件是否正確接收並渲染對應的
-                                <code>Props</code>。</p>
+                    <div class="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-blue-100 space-y-4">
+                        <div class="flex gap-4">
+                            <span class="text-2xl">🧱</span>
+                            <p class="text-sm text-gray-700"><strong>元件純粹性測試：</strong> 模擬注入不同的 Props（屬性），檢查生成出的 HTML
+                                字串是否符合預期的數據對應。</p>
                         </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">📱</span>
-                            <p class="text-sm text-gray-700"><strong>佈局斷點檢查：</strong> 模擬螢幕尺寸，驗證 CSS Grid 媒體查詢是否實現響應式佈局。
-                            </p>
+                        <div class="flex gap-4">
+                            <span class="text-2xl">⚡</span>
+                            <p class="text-sm text-gray-700"><strong>互動事件綁定測試：</strong> 觸發模擬點擊，驗證封裝在元件內部的
+                                <code>onclick</code> 處理程序是否被正確執行。</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
+        <!-- Detailed operations guide -->
+        <div class="guide-section mb-10 p-8 bg-white border border-gray-200 rounded-3xl">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <span class="text-3xl">🛠️</span> GitHub Classroom 詳細操作指南
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
                         1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供封裝環境變數與 Tailwind CSS 基礎版型的專案模板，設定為 Template
-                        repository。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">準備範本專案</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">提供空元件資料夾與 JSDoc
+                        格式定義的介面說明，引導學員建立 Template repository。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
                         2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「UI 元件化」驗證。README 中明確定義各元件的 Props 與 Events
-                        規格。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">建立 Classroom 作業</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">設定「UI
+                        一致性」驗證。著重於將「數據處理」與「畫面渲染」拆分為不同檔案。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
                         3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業規劃組件拆解圖。提交包含多端 UI 截圖的 PR。執行 Git Push。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">學生端作業 (Flipped)</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">
+                        領取作業，對比重構前後的程式碼行數。提交包含「元件複用性」說明的 PR。執行 Git Push。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
                         4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對「狀態管理」合理性，以及代碼可讀度與組件復用率予以回饋。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">教師代碼審閱 (Review)</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">
+                        審核元件是否具備「高內聚低耦合」的特徵，回饋針對不同屏幕尺寸的適配建議。</p>
                 </div>
             </div>
         </div>
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
+        <!-- Flipped classroom strategy table -->
+        <div class="guide-section p-8 bg-blue-50/50 border border-blue-100 rounded-3xl">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <span class="text-3xl">🔄</span> 翻轉教室的實施策略
             </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg text-justify text-left">
                 <table class="w-full text-sm text-left">
                     <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
                         <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
+                            <th class="px-6 py-4">階段</th>
+                            <th class="px-6 py-4">學生行動 (Git Workflow)</th>
+                            <th class="px-6 py-4">教師/平台角色</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 text-gray-600">
                         <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">拆解日常 App (如 IG) 的 UI，辨識其中的重複元件。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「原子設計」導讀文件。</td>
+                            <td
+                                class="px-6 py-5 font-black text-slate-800 bg-slate-50/50 w-32 text-center uppercase tracking-tighter">
+                                Pre-class<br><span class="text-[10px] font-normal text-slate-400">課前</span></td>
+                            <td class="px-6 py-5">觀看關於「樂高式 UI 開發」的技術導引並完成預習問卷。</td>
+                            <td class="px-6 py-5 text-xs">檢查 Dashboard 進度，收集學員對「全域 CSS」與「局部元件樣式」的疑慮。</td>
                         </tr>
                         <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，實踐修改中央 Props，全局按鈕同步變色。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，解答關於「父子元件數據傳遞」的技術細節。</td>
+                            <td
+                                class="px-6 py-5 font-black text-blue-800 bg-blue-50/30 w-32 text-center uppercase tracking-tighter">
+                                In-class<br><span class="text-[10px] font-normal text-blue-400">課中</span></td>
+                            <td class="px-6 py-5 font-medium text-slate-900 text-justify">領取 Classroom 作業，實施代碼重構，將靜態
+                                HTML 轉化為動態標籤。</td>
+                            <td class="px-6 py-5 text-xs text-blue-700 text-justify">即時連線排除阻礙，解答樣式衝突 (CSS Conflict)
+                                與元件命名衝突的解決方案。</td>
                         </tr>
                         <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">設計「深色/淺色模式」切換功能並 Push，閱讀教師回覆 PR。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，評分 UI 視覺美感與前端代碼維護性的綜合能力。</td>
+                            <td
+                                class="px-6 py-5 font-black text-slate-800 bg-slate-50/50 w-32 text-center uppercase tracking-tighter">
+                                Post-class<br><span class="text-[10px] font-normal text-slate-400">課後</span></td>
+                            <td class="px-6 py-5">嘗試將自己的元件庫發佈為簡易的模組並 Push，閱讀教師回覆 PR。</td>
+                            <td class="px-6 py-5 text-xs text-justify">核發評量，引導學員思考 React/Vue 等框架誕生前的前端開發困局。</td>
                         </tr>
                     </tbody>
                 </table>
@@ -426,12 +484,6 @@
         </div>
     </section>
 
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/Eug1scRXLgg?autoplay=1",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vQYojXkmg-_K5jXRtyqhpTG-9OEyvVrhjlfiifb9sJQDeoSJ7JJKOB1Y9n2Hw-VYyvDjxQNfqol9bnN/pub?embedded=true"
-        };
-    </script>
     <script src="/js/course-shared.js"></script>
 </body>
 

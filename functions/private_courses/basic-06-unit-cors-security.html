@@ -303,163 +303,130 @@ DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "Content-Ty
         };
     </script>
     <script src="/js/course-shared.js"></script>
-    <section id="assignment-guide" class="hidden">
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
-        <div class="space-y-6">
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h3 class="font-bold text-blue-800">1. GitHub Classroom 設定</h3>
-                <p class="text-sm">請將對應的 Repository (例如：<code>web-security-cors-lab</code>)
-                    設定至課程儀表板，學生應掌握如何在不穩定網路環境下保持通訊安全。</p>
-            </div>
 
-            <div class="bg-indigo-50 p-4 rounded-lg">
-                <h3 class="font-bold text-indigo-800">2. 翻轉課堂策略</h3>
-                <ul class="list-disc list-inside text-sm">
-                    <li>課前預習：觀看 10 分鐘關於 CORS 與 Same-Origin Policy 的基本概念。</li>
-                    <li>課中實作：透過開發者工具觀察 Preflight 請求，並實作硬體端的 Access-Control-Allow-Origin 設定。</li>
-                </ul>
-            </div>
+        <h3>【作業 3-1】解碼 CORS 錯誤與診斷</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 網路診斷工程師 (Network Diagnostic Engineer)。</li>
+            <li><strong>執行方式：</strong> 嘗試使用 <code>fetch()</code> 存取一個未優化 CORS 的站點。觀察 DevTools 控制台中的紅色錯誤訊息，並在 Network
+                面板中找出遺失的 <code>Access-Control-Allow-Origin</code> 標頭。</li>
+            <li><strong>評分重點 :</strong> 能準確描述錯誤原因，並成功定位出導致攔截的關鍵 Response Header。</li>
+        </ul>
 
-            <div class="bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold mb-2">3. 單元任務 (Unit Tasks)</h3>
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-100 text-left">
-                        <tr>
-                            <th class="p-2">任務說明</th>
-                            <th class="p-2">建議時間</th>
-                            <th class="p-2">配分</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 3-1】硬體端 CORS 許可設定實作</td>
-                            <td class="p-2">45 min</td>
-                            <td class="p-2">40 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 3-2】自定義 Header 驗證與 Preflight 觀察</td>
-                            <td class="p-2">30 min</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 3-3】基礎密碼學驗證邏輯 (Simple Auth)</td>
-                            <td class="p-2">45 min</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <h3>【作業 3-2】開發環境的「應急方案」</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 獨立開發者 (Full-stack Developer)。</li>
+            <li><strong>執行方式：</strong> 學習在開發階段（後端尚未配置 CORS 時）的臨時解決方案。練習使用 CORS 代理（如 cors-anywhere）或瀏覽器插件「Allow
+                CORS」繞過限制進行功能測試。</li>
+            <li><strong>評分重點 :</strong> 成功透過代理方案獲取原先被攔截的數據，並了解此方案僅限開發使用的原因。</li>
+        </ul>
+
+        <h3>【作業 3-3】硬體端 CORS 許可設定實作</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 硬體系統架構師 (Hardware Architect)。</li>
+            <li><strong>執行方式：</strong> 在 ESP32 的 Web Server 代碼中，手動加入 <code>Access-Control-Allow-Origin</code> 等標頭。實作對
+                <code>OPTIONS</code> (Preflight) 請求的正確響應，確保前端網頁能順利下發 POST 控制指令。</li>
+            <li><strong>評分重點 :</strong> 硬體端能正確處理預檢請求，標頭配置符合安全性與功能需求。</li>
+        </ul>
     </section>
 
-    <section id="instructor-guide" class="hidden">
-        <h2>講師手冊 (Instructor Guide)</h2>
-        <div class="space-y-6">
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">教學重點 (Teaching Points)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2">
-                    <li>解釋 CORS 實際上是瀏覽器的安全保護機制，而非伺服器的錯誤。</li>
-                    <li>討論 <code>Access-Control-Allow-Origin: *</code> 在開發階段與生產階段的利弊。</li>
-                    <li>介紹為什麼 IoT 裝置即使在區網內也需要基礎的身份驗證。</li>
-                </ul>
-            </div>
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>在 GitHub 建立新 Repo（名為 <code>basic-06-cors-template</code>）。</li>
+                <li>上傳包含連線邏輯但「未配置 CORS 標頭」的 ESP32 專案框架，用於模擬跨網域失敗情境。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
 
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">學生常見問題 (Common Issues)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2 text-red-600">
-                    <li>在瀏覽器報 CORS 錯誤時，死命修改 ESP32 的 URL 而非修改 Response Header。</li>
-                    <li>不理解 OPTIONS 請求（Preflight）的意義，導致複雜請求（如自定義 Header）一直失敗。</li>
-                    <li>在不支援 HTTPS 的 ESP32 上嘗試發送機密數據。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
+                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
+            </ol>
 
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="font-bold mb-2 text-sm">評分標準 (Grading)</h3>
-                <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
-                    <li><strong>優 (90-100):</strong> 能正確設定 CORS Allow-Headers 並通過 Preflight 驗證，且對安全性有深刻見解。</li>
-                    <li><strong>可 (70-89):</strong> 基礎功能正常但設定過於寬鬆（如全部使用 *），或對 Preflight 原理理解不足。</li>
-                    <li><strong>待加強 (Below 70):</strong> 無法解決 CORS 攔截問題，導致網頁與硬體通訊中斷。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，獲得個人專屬 Repo。</li>
+                <li>診斷網頁端的 CORS 報錯，並在硬體端實作 <code>OPTIONS</code> 響應與標頭注入邏輯。</li>
+                <li>本地測試通過（報錯消失）後 <strong>Push 代碼</strong> 提交進度。</li>
+            </ol>
 
-            <!-- NEW: Practical Deployment Recommendations -->
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
-                    <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
-.
-├── src/             # 包含 ESPAsyncWebServer CORS 設定代碼的 main.cpp
-├── README.md        # 實驗報告：跨網域連線錯誤截圖與修復後的標頭日誌
-└── .github/         # 自動評核配置</pre>
-                    <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
-                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-                        <li><strong>標頭屬性檢測：</strong> 模擬瀏覽器發送 OPTIONS 請求，驗證回傳的 Header 是否包含
-                            <code>Access-Control-Allow-Origin</code>。</li>
-                        <li><strong>安全性檢核：</strong> 掃描程式中對於來源 Origin 的處理邏輯，獎勵具備動態過濾白名單（而非僅使用 *）的實作。</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- NEW: Detailed operations guide -->
-            <div class="bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
-                <div class="space-y-4 text-sm text-gray-600">
-                    <div>
-                        <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
-                        <p>建立包含基礎網頁通訊但「刻意未設定 CORS」的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
-                        <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以點評學生的網路安全意識設計。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
-                        <p>學生領取作業，獲得個人專屬 Repo，實作硬體端 CORS 許可邏輯並觀察瀏覽器控制台錯誤是否消失後 Push。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
-                        <p>進入 Feedback PR，針對學生的「Preflight 響應效率」與「跨域配置粒度」給予專業建議。</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- NEW: Flipped classroom strategy table -->
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm border-collapse border border-gray-200">
-                        <thead class="bg-gray-50 text-left text-gray-800">
-                            <tr>
-                                <th class="border border-gray-200 p-2">階段</th>
-                                <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
-                                <th class="border border-gray-200 p-2">教師/平台角色</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-gray-600">
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
-                                <td class="border border-gray-200 p-2">觀看「同源政策 (SOP) 與 CORS：網路開發者的夢魘」影片。</td>
-                                <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員理解為什麼攔截發生在「瀏覽器層」。
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
-                                <td class="border border-gray-200 p-2">領取 Classroom 作業，實作硬體端標頭注入並針對 OPTIONS 請求進行手動響應測試。
-                                </td>
-                                <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
-                                <td class="border border-gray-200 p-2">實作基礎 Token 驗證機制並 Push，閱讀教師回覆 PR。</td>
-                                <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>針對學生的「預檢請求 (Preflight) 處理」與「標頭格式正確性」予以回饋。</li>
+            </ol>
         </div>
+
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元聚焦於「網路邊界防禦與跨域資源共用」，引導學生解決 Web 開發中最常見的連線障礙之一。</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── src/
+│   └── main.cpp      # (重點) 需填充 server.sendHeader() 與 OPTIONS 處理
+├── web/              # 測試用的前端網頁
+└── README.md         # 實驗筆記：錯誤截圖、標頭修復前後對比錄影</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>main.cpp (CORS Setup)</strong></p>
+        <pre><code>// 全域標頭設定
+server.onNotFound([](AsyncWebServerRequest *request) {
+  if (request->method() == HTTP_OPTIONS) {
+    auto res = request->beginResponse(204);
+    res->addHeader("Access-Control-Allow-Origin", "*");
+    res->addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+    res->addHeader("Access-Control-Allow-Headers", "Content-Type");
+    request->send(res);
+  } else {
+    request->send(404);
+  }
+});</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>預檢響應驗證：：</strong> 模擬瀏覽器發送 OPTIONS 請求，驗證回傳狀態碼是否為 2xx，且標頭包含必要的 Allow 屬性。</li>
+            <li><strong>通訊恢復檢測：：</strong> 測試前端 Fetch 動作是否能繞過原本的 CORS 阻斷並成功與設備握手。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「同源政策 (SOP) 與 CORS：網路開發者的夢魘」影片。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>Dashboard：</strong>確認學員能區分「連線失敗」與「跨域攔截」的差異。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，對比未加 CORS 標頭前與後的 API 響應結果。
+                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>演示 Preflight 敲門機制，指導
+                        OPTIONS 響應邏輯。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作 Token 基礎認證並 Push，閱讀教師回覆 PR。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>審核學生對「授權白名單」而非「全通配符 (*)」的使用規劃。</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </body>
 
 </html>
+```

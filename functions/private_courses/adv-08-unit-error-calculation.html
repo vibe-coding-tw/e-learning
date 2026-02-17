@@ -33,16 +33,16 @@
                 從像素到控制指令：學習如何量化「視覺目標」與「車體中心」的距離，並將其轉化為精確的轉向補償。
             </p>
 
-            <div class="mt-10 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
-                    class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-red-900/20">
-                    <span class="text-xl group-hover:animate-pulse">📺</span>
-                    <span>觀看教學影片</span>
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/89hJHZKIXvA?autoplay=1')"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
-                    class="group flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-blue-900/20">
-                    <span class="text-xl group-hover:bounce">📄</span>
-                    <span>閱讀課程講義</span>
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vRNZod12cl4ROPz_uh_tVL09nnXbkja5bAOcCWC9DDHPwKRndLbhXxrMfINA3Z7pO_FT-hKmiYkIbWw/pub?embedded=true')"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
                 </button>
             </div>
         </div>
@@ -178,7 +178,7 @@
         <!-- Section 4: Assignments -->
         <section>
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：誤差計算實戰</h2>
-            <p class="text-center text-gray-500 mb-12">掌握影像數據量化，為無人車裝上「有智慧的眼睛」。</p>
+            <p class="text-center text-gray-500 mb-12">採用 <b>Git Workflow</b>：領取 GitHub Classroom 任務，實作控制邏輯並提交 PR。</p>
 
             <div class="grid md:grid-cols-3 gap-8">
                 <!-- Task 2-1 -->
@@ -268,46 +268,93 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="guide-header mb-12 border-b-2 border-indigo-200 pb-6">
+            <h2 class="text-4xl font-black text-indigo-900 mb-2">作業指引 (Assignment Guide)</h2>
+            <p class="text-indigo-600 font-bold uppercase tracking-widest text-sm">進階 8 - 影像誤差計算</p>
+        </div>
 
-        <h3>作業 2-1：「目標追蹤」座標提取器</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 視覺演算法工程師。</li>
-            <li><strong>執行方式：</strong> 在影像 Canvas 上繪製一個十字準星，標示出畫面的幾何中心。當偵測到目標物時，即時算出目標中心點 $(X, Y)$。</li>
-            <li><strong>評分重點：</strong> 代碼中是否正確計算出誤差值 (Error) 以及正規化後的誤差 (Normalized Error: -1.0 ~ 1.0)，並在網頁 UI 上即時更新數值。
-            </li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100 border border-gray-100">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3 font-black">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-indigo-600 text-white rounded-xl text-lg">2-1</span>
+                「目標追蹤」座標提取器
+            </h3>
+            <div class="space-y-4 text-gray-700">
+                <p><strong>角色扮演：</strong> 視覺演算法工程師。</p>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 text-justify">
+                    <p class="font-bold mb-2 text-indigo-900">執行步驟：</p>
+                    <ol class="list-decimal list-inside space-y-1 text-sm text-justify">
+                        <li>在影像 Canvas 上繪製一個十字準星，標示出畫面的幾何中心。</li>
+                        <li>當偵測到目標物時，即時算出目標中心點 $(X, Y)$。</li>
+                        <li>計算正規化後的誤差 (Normalized Error: -1.0 ~ 1.0)。</li>
+                    </ol>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 代碼中是否正確計算出誤差值 (Error) 以及正規化後的誤差，並在網頁 UI 上即時更新數值。</p>
+            </div>
+        </div>
 
-        <h3>作業 2-2：動態誤差補償實驗</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 自動駕駛測試員。</li>
-            <li><strong>執行方式：</strong> 建立一個線性映射函式，將 -1.0 ~ 1.0 的誤差值轉換為馬達的左右修正量。加入一個「Gain」滑桿控製修正的力道。</li>
-            <li><strong>評分重點：</strong> 理解 P 控制中「誤差越大，修正力越強」的線性關係，並展示滑桿對車體轉向靈敏度的即時影響。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-xl text-lg font-black">2-2</span>
+                動態誤差補償實驗
+            </h3>
+            <div class="space-y-4 text-gray-700">
+                <p><strong>角色扮演：</strong> 自動駕駛測試員。</p>
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-justify">
+                    <p class="font-bold mb-2 text-blue-900 text-justify">執行步驟：</p>
+                    <ul class="list-disc list-inside space-y-1 text-sm text-justify">
+                        <li>建立一個線性映射函式。</li>
+                        <li>將 -1.0 ~ 1.0 的誤差值轉換為馬達的左右修正量。</li>
+                        <li>加入一個「Gain」滑桿控制修正的力道。</li>
+                    </ul>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 理解 P 控制中「誤差越大，修正力越強」的線性關係，並展示滑桿對車體轉向靈敏度的即時影響。</p>
+            </div>
+        </div>
 
-        <h3>作業 2-3：多點誤差平均法</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 訊號處理專家。</li>
-            <li><strong>執行方式：</strong> 解決「影像抖動」問題。實作一個移動平均濾波器 (Moving Average Filter)，取最近 5 幀的座標值取平均作為最終誤差輸出。</li>
-            <li><strong>評分重點：</strong> 對比濾波前後，座標點跳動（雜訊）是否明顯減少，且控制指令是否變得更加平滑。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-justify">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3 font-black">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-emerald-600 text-white rounded-xl text-lg">2-3</span>
+                多點誤差平均法
+            </h3>
+            <div class="space-y-4 text-gray-700">
+                <p><strong>角色扮演：</strong> 訊號處理專家。</p>
+                <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                    <p class="font-bold mb-2 text-emerald-900 text-justify">執行步驟：</p>
+                    <ul class="list-disc list-inside space-y-1 text-sm text-justify">
+                        <li>實作一個移動平均濾波器 (Moving Average Filter)。</li>
+                        <li>取最近 5 幀的座標值取平均作為最終誤差輸出。</li>
+                        <li>對比濾波前後的座標跳動。</li>
+                    </ul>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 對比濾波前後，座標點跳動（雜訊）是否明顯減少，且控制指令是否變得更加平滑。</p>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+        <div class="guide-header mb-12 border-b-2 border-emerald-200 pb-6">
+            <h2 class="text-4xl font-black text-emerald-900 mb-2">講師指引 (Instructor Guide)</h2>
+            <p class="text-emerald-600 font-bold uppercase tracking-widest text-sm">GitHub Classroom & Flipped Teaching
+            </p>
+        </div>
+
+        <!-- Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-8 bg-blue-50 border border-blue-100 rounded-3xl shadow-inner text-justify">
+            <h3 class="text-2xl font-bold text-blue-900 mb-6 flex items-center gap-3">
+                <span class="text-3xl font-black">🚀</span> 在 GitHub Classroom 的實戰部署
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                    <h4 class="font-bold text-blue-800 text-sm mb-4 flex items-center gap-2 font-black text-justify">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full font-black"></span>
                         A. 範本倉庫 (Template Repo) 結構
                     </h4>
                     <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+                        class="bg-gray-900 text-gray-100 p-6 rounded-2xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700 text-left text-justify">
 .
 ├── js/
 │   ├── math_lib.js       # 正規化與誤差計算函式
@@ -316,19 +363,20 @@
 │   └── math.test.js      # 測試：驗證公式與邊界處理
 └── README.md              # 數值變化與權衡思考紀錄</pre>
                 </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                <div class="space-y-4 text-justify">
+                    <h4 class="font-bold text-blue-800 text-sm mb-4 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full text-justify"></span>
                         B. 自動評估 (Autograding) 的設計
                     </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">📏</span>
+                    <div
+                        class="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-blue-100 space-y-4 text-justify">
+                        <div class="flex gap-4">
+                            <span class="text-2xl">📏</span>
                             <p class="text-sm text-gray-700"><strong>正規化邏輯檢查：</strong> 模擬解析度，檢查公式通用性，確保正確映射至 [-1, 1] 區間。
                             </p>
                         </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🛡️</span>
+                        <div class="flex gap-4">
+                            <span class="text-2xl">🛡️</span>
                             <p class="text-sm text-gray-700"><strong>邊界溢位測試：</strong> 檢查目標超出畫面時，是否正確處理邊界座標而不崩潰。</p>
                         </div>
                     </div>
@@ -336,73 +384,92 @@
             </div>
         </div>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
+        <!-- Detailed operations guide -->
+        <div class="guide-section mb-10 p-8 bg-white border border-gray-200 rounded-3xl text-justify">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <span class="text-3xl text-justify">🛠️</span> GitHub Classroom 詳細操作指南
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-justify">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full text-justify font-black">STEP
                         1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供基本的十字準星繪圖範本與座標軸規畫圖，設定為 Template repository。
-                    </p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify font-black">準備範本專案</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">提供基本的十字準星繪圖範本與座標軸規畫圖，設定為
+                        Template repository。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full font-black">STEP
                         2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「數據正規化」驗證。區分「影像座標系」與「數學座標系」的轉換。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify font-black">建立
+                        Classroom 作業</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">
+                        設定「數據正規化」驗證。區分「影像座標系」與「數學座標系」的轉換。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full font-black">STEP
                         3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">紀錄 Error 數值。提交濾波器開啟前後的軌跡對比圖。執行 Git Push。</p>
+                    <p
+                        class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify font-black font-black">
+                        學生端作業 (Flipped)</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">紀錄 Error
+                        數值。提交濾波器開啟前後的軌跡對比圖。執行 Git Push。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify font-black">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full font-black">STEP
                         4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對「中心偏置」理解以及「數據質量 vs 反應速度」權衡的思考予以回饋。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify font-black">教師代碼審閱
+                        (Review)</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">針對「中心偏置」理解以及「數據質量 vs
+                        反應速度」權衡的思考予以回饋。</p>
                 </div>
             </div>
         </div>
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
+        <!-- Flipped classroom strategy table -->
+        <div class="guide-section p-8 bg-blue-50/50 border border-blue-100 rounded-3xl text-justify">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <span class="text-3xl text-justify font-black">🔄</span> 翻轉教室的實施策略
             </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div
+                class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg text-justify text-left text-justify">
                 <table class="w-full text-sm text-left">
                     <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
                         <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
+                            <th class="px-6 py-4">階段</th>
+                            <th class="px-6 py-4 text-justify">學生行動 (Git Workflow)</th>
+                            <th class="px-6 py-4 text-justify">教師/平台角色</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                    <tbody class="divide-y divide-gray-100 text-gray-600 text-justify">
                         <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">複習「線性映射」概念：如何將 [A, B] 映射到 [C, D]。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「正規化的重要性」導讀。</td>
+                            <td
+                                class="px-6 py-5 font-black text-slate-800 bg-slate-50/50 w-32 text-center uppercase tracking-tighter">
+                                Pre-class<br><span class="text-[10px] font-normal text-slate-400">課前</span></td>
+                            <td class="px-6 py-5 text-justify">複習「線性映射」概念：如何將 [A, B] 映射到 [C, D]。</td>
+                            <td class="px-6 py-5 text-xs text-justify text-left">檢查 Dashboard 進度，提供「正規化的重要性」導讀。</td>
                         </tr>
                         <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，體驗真實物體座標映射的即時感。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，解答關於「誤差值正負號反轉」的空間觀問題。</td>
+                            <td
+                                class="px-6 py-5 font-black text-blue-800 bg-blue-50/30 w-32 text-center uppercase tracking-tighter">
+                                In-class<br><span class="text-[10px] font-normal text-blue-400 font-black">課中</span>
+                            </td>
+                            <td class="px-6 py-5 font-medium text-slate-900 text-justify text-left text-justify">領取
+                                Classroom 作業，體驗真實物體座標映射的即時感。</td>
+                            <td class="px-6 py-5 text-xs text-blue-700 text-justify text-left text-justify">
+                                即時連線排除阻礙，解答關於「誤差值正負號反轉」的空間觀問題。</td>
                         </tr>
                         <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">測試採樣點數對系統延遲的副作用並 Push，閱讀回覆。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，引導探究在噪點濾除與靈敏度間取得平衡。</td>
+                            <td
+                                class="px-6 py-5 font-black text-slate-800 bg-slate-50/50 w-32 text-center uppercase tracking-tighter text-justify">
+                                Post-class<br><span class="text-[10px] font-normal text-slate-400 font-black">課後</span>
+                            </td>
+                            <td class="px-6 py-5 text-justify">測試採樣點數對系統延遲的副作用並 Push，閱讀回覆。</td>
+                            <td class="px-6 py-5 text-xs text-justify text-left text-justify">核發評量，引導探究在噪點濾除與靈敏度間取得平衡。
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -410,12 +477,6 @@
         </div>
     </section>
 
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/89hJHZKIXvA?autoplay=1",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vRNZod12cl4ROPz_uh_tVL09nnXbkja5bAOcCWC9DDHPwKRndLbhXxrMfINA3Z7pO_FT-hKmiYkIbWw/pub?embedded=true"
-        };
-    </script>
     <script src="/js/course-shared.js"></script>
 </body>
 

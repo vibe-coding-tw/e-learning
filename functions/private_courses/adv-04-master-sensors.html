@@ -51,23 +51,37 @@
         const tabFilter = document.getElementById('tab-filter-algorithms');
 
         // Initial Load
-        loadContent('adv-04-unit-i2c-spi.html');
+        loadFromHash();
+
+        function loadFromHash() {
+            const hash = window.location.hash.substring(1);
+            if (hash === 'json-rest') {
+                switchTab('json-rest');
+            } else if (hash === 'filter-algorithms') {
+                switchTab('filter-algorithms');
+            } else {
+                switchTab('i2c-spi-basics');
+            }
+        }
 
         function switchTab(tab) {
             // Reset all tabs
             [tabBasics, tabJsonRest, tabFilter].forEach(t => {
-                t.classList.remove('active');
+                if (t) t.classList.remove('active');
             });
 
             if (tab === 'i2c-spi-basics') {
                 tabBasics.classList.add('active');
                 loadContent('adv-04-unit-i2c-spi.html');
+                window.location.hash = 'i2c-spi-basics';
             } else if (tab === 'json-rest') {
                 tabJsonRest.classList.add('active');
                 loadContent('adv-04-unit-json-rest.html');
+                window.location.hash = 'json-rest';
             } else if (tab === 'filter-algorithms') {
                 tabFilter.classList.add('active');
                 loadContent('adv-04-unit-filter-algorithms.html');
+                window.location.hash = 'filter-algorithms';
             }
         }
 

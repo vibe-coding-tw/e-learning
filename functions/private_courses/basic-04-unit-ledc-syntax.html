@@ -321,32 +321,31 @@
     </footer>
 
     <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" class="hidden">
+    <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
-        <div class="guide-section">
-            <h3>1. GitHub Classroom 設定</h3>
-            <ul>
-                <li>點擊儀表板「領取作業」按鈕，進入 GitHub Classroom 並獲取 `basic-04-ledc-api`。</li>
-                <li>將個人作業儲存庫 Clone 至本地。</li>
-                <li>檢測 `src/main.cpp` 中對於 LEDC 引腳與頻率的定義。</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>2. 翻轉課堂學習策略</h3>
-            <ul>
-                <li><strong>課前預習</strong>：觀看「ESP32 LEDC 語法與硬體資源分配」教學影片。</li>
-                <li><strong>課中實作</strong>：測試不同解析度 (8-bit vs 13-bit) 對亮度細膩度的影響，並嘗試驅動多路 LED。</li>
-                <li><strong>課後思考</strong>：為什麼 ESP32 把 PWM 控制器稱為 "LEDC"？它與傳統 Arduino `analogWrite()` 有什麼差異？</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>3. 單元實作任務</h3>
-            <ul>
-                <li><strong>作業 4-1 (30%)</strong>：配置 `ledcSetup` 並使用三個不同通道控制 RGB LED。</li>
-                <li><strong>作業 4-2 (40%)</strong>：實作一個包含 `freq` 與 `res` 參數的初始化函式，根據不同情境動態調整。</li>
-                <li><strong>作業 4-3 (30%)</strong>：解決「通道衝突」實驗：觀察若兩個引腳接在同一個 Channel 會發生什麼事？</li>
-            </ul>
-        </div>
+
+        <h3>【作業 3-1】「頻道接力賽」：多路 PWM 輸出</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 硬體資源管理員 (Hardware Resource Manager)。</li>
+            <li><strong>執行方式：：</strong> 同時控制一個 LED 與兩個馬達。將 Channel 0 分配給 LED (5kHz)，Channel 1 & 2 分配給馬達 (15kHz)。觀察並記錄修改
+                CH1 頻率是否會影響 CH2 的行為。</li>
+            <li><strong>評分重點 :</strong> 能正確配置多個 LEDC 通道與定時器，且清楚定時器資源在通道間的共享邏輯。</li>
+        </ul>
+
+        <h3>【作業 3-2】「百分比速度控制器」：API 封裝</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 軟體架構實習生 (Software Architecture Intern)。</li>
+            <li><strong>執行方式：：</strong> 撰寫一個封裝函式 <code>setMotorSpeed(int percent)</code>。輸入 0~100 並自動轉換為對應解析度（例如 10-bit
+                為 1023）的 <code>ledcWrite</code> 數值，讓主程式代碼更易讀。</li>
+            <li><strong>評分重點 :</strong> 成功實作映射 (Mapping) 邏輯，且封裝後的函式在主程式中運作正常，代碼整潔度高。</li>
+        </ul>
+
+        <h3>【作業 3-3】「頻率掃描器」：尋找馬達諧振點</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 音響/震動測試專家 (Acoustic/Vibration Specialist)。</li>
+            <li><strong>執行方式：：</strong> 寫一個迴圈讓馬達頻率從 100Hz 漸增到 40kHz。紀錄在哪個頻率下高頻雜音最小？並觀察頻率過高時馬達轉動力的變化。</li>
+            <li><strong>評分重點 :</strong> 撰寫完整的掃描實驗紀錄，包含頻率、雜音程度與轉動力觀察，並給出建議的最佳運作頻率。</li>
+        </ul>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
@@ -355,44 +354,49 @@
         <div class="classroom-guide">
             <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
             <ol>
-                <li>上傳包含基礎 LED 腳位宏定義但「未調用任何 LEDC 函式」的 Repo 框架，並勾選 <strong>"Template repository"</strong>。</li>
+                <li>在 GitHub 建立新 Repo（名為 <code>basic-04-ledc-template</code>）。</li>
+                <li>上傳包含基礎引腳定義但「未調用任何 LEDC 函式」的 Repo 框架。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
             <ol>
-                <li>建立作業並連結範本。建議開啟 <strong>Feedback Pull Requests</strong> 選項以便對學生的硬體資源分配邏輯與定時器 (Timer) 共享策略進行點評。</li>
+                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
+                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
             <ol>
-                <li>學生領取作業，獲得個人專屬 Repo，實作具備靈活參數配置的 PWM 初始化封裝並控制多路輸出。</li>
-                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+                <li>學生領取作業，獲得個人專屬 Repo。</li>
+                <li>實作具備靈活參數配置的 PWM 初始化封裝並控制多路輸出。</li>
+                <li>本地開發後 <strong>Push 代碼</strong> 提交進度。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
             <ol>
-                <li>打開 Feedback PR，針對學生的「多通道同步管理」與「頻率/解析度邊界值設定」予以具體回饋。</li>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>針對學生的「多通道管理邏輯」與「硬體資源 (Timer) 分配策略」予以具體點評。</li>
             </ol>
         </div>
 
         <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元聚焦於 ESP32 特有的 LEDC 模組配置，引導學生理解底層硬體資源的分配邏輯，建議範本倉庫設置如下：</p>
+        <p>此單元聚焦於 ESP32 特有的 LEDC 模組配置，引導學生理解底層硬體資源的分配邏輯。</p>
 
         <h3>A. 範本倉庫 (Template Repo) 結構</h3>
         <pre><code>.
 ├── platformio.ini   # 包含基礎開發環境配置
-├── src/main.cpp      # (重點) 需實作 ledcSetup、ledcAttachPin 封裝
-└── README.md        # 實驗紀錄：不同解析度下的細膩度觀察報告與配置參數表</code></pre>
+├── src/
+│   └── main.cpp      # (重點) 需實作 ledcSetup、ledcAttachPin 封裝
+└── README.md        # 不同解析度細膩度觀察報告、配置參數映射表與實驗日誌</code></pre>
 
         <h3>B. 參考範例代碼 (Reference Example Code)</h3>
         <p><strong>main.cpp (LEDC 四大要素配置)</strong></p>
         <pre><code>#include &lt;Arduino.h&gt;
 
-// 重點：Timer, Freq, Res, Channel 的關聯
 const int ledPin = 18;
 const int channel = 0;
 const int freq = 2000;
-const int resolution = 13; // 13-bit 解析度 (0-8191)
+const int resolution = 13; // 13-bit (0-8191)
 
 void setup() {
   // 1. 配置頻道參數
@@ -402,15 +406,14 @@ void setup() {
 }
 
 void loop() {
-  // 使用 13-bit 解析度寫入
   ledcWrite(channel, 4096); // 50% Duty Cycle
   delay(1000);
 }</code></pre>
 
         <h3>C. 自動評分 (Autograding) 的設計</h3>
         <ul>
-            <li><strong>參數合法性掃描：</strong> 驗證頻率與解析度是否超限（ESP32 限制：Freq * 2^Res < 80MHz）。</li>
-            <li><strong>結構完整性檢查：</strong> 偵測 <code>ledcAttachPin</code> 的掛載參數，確保通道分配無衝突。</li>
+            <li><strong>參數合法性掃描：：</strong> 驗證頻率與解析度是否超限（ESP32 限制：Freq * 2^Res < 80MHz）。</li>
+            <li><strong>結構完整性檢查：：</strong> 偵測 <code>ledcAttachPin</code> 的掛載參數，確保通道分配無衝突。</li>
         </ul>
 
         <h2>翻轉教室的實施策略</h2>
@@ -422,29 +425,24 @@ void loop() {
                     <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
-            <tbody style="color: #4b5563;">
+            <tbody>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「ESP32 硬體 PWM：Timer 與 Channel 的資源分配邏輯」原理影片。
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「ESP32 硬體 PWM：Timer 與 Channel 資源分配」影片。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員理解定時器與頻道的關係。
                     </td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>Dashboard：</strong>確認學員理解「硬體定時器」與「輸出頻道」的映射關係。</td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實作多路 LED 獨立控制，對比不同 Resolution 下漸亮過程的「階梯感
-                        (Stepping)」。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>疑難排除：</strong>協助解決「頻率設太高導致無法編譯/運行」的參數邊界問題。
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實作多路 LED 獨立控制，對比各解析度的細膩度差別。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>疑難排除：</strong>解決頻率設太高導致無法編譯/運行的邊界問題。
                     </td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">封裝一個簡單的 <code>PWMController</code> 類別並 Push
-                        提交至 PR，提高代碼重用性。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核學生對「面向對象 (OOP)
-                        封裝」與「硬體抽象層」的理解深度。
-                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">封裝 PWM 控制類別並提交至 PR，提高代碼重用性。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>審核學生對「韌體抽象層」封裝的思考。</td>
                 </tr>
             </tbody>
         </table>

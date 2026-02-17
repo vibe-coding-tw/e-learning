@@ -33,13 +33,15 @@
                 探索 AI 如何「看」與「聽」——從卷積神經網路的影像濾鏡，到語音訊號的頻譜圖譜。
             </p>
 
-            <div class="mt-10 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/fp4gN96vO-o')"
                     class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-red-900/20">
                     <span class="text-xl group-hover:animate-pulse">📺</span>
                     <span>觀看教學影片</span>
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vRm4xunZqFGKKXSfujDBMlKSWGMlw144xvkr0k9-RuaRvVkj89UzhneHQxB1viyev5dOStl1VTV6nfx/pub?embedded=true')"
                     class="group flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-blue-900/20">
                     <span class="text-xl group-hover:bounce">📄</span>
                     <span>閱讀課程講義</span>
@@ -178,80 +180,116 @@
 
         <!-- Section 4: Assignments -->
         <section>
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：AI 識別實戰</h2>
-            <p class="text-center text-gray-500 mb-12">從數據標記到指令識別，親手打造你的 AI 感官系統。</p>
+            <section id="assignments" class="mb-20">
+                <div class="text-center mb-12">
+                    <span
+                        class="px-4 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold tracking-widest uppercase">Practical
+                        Lab</span>
+                    <h2 class="text-4xl font-black text-gray-900 mt-4 mb-4 font-[Outfit]">核心實驗室：AI 識別實戰</h2>
+                    <p class="text-gray-600 max-w-2xl mx-auto">從數據標記到指令識別，親手打造你的 AI 感官系統。</p>
+                </div>
 
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Task 1-1 -->
-                <div onclick="openSubmissionModal('adv-09-visual-labeling', '【作業 9-1-1】「AI 訓練師」：視覺數據標記實戰')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-indigo-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">📸</span>
-                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Task 1-1 -->
+                    <div onclick="window.courseShared.openSubmissionModal('adv-09-visual-labeling', '【作業 9-1-1】「AI 訓練師」：視覺數據標記實戰')"
+                        class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-indigo-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-indigo-200/50 cursor-pointer">
+                        <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <span class="text-6xl font-black">01</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
-                            1-1】視覺標記</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>利用無人車攝像頭實時標記不同情境並觀察特徵。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>數據收集：拍攝 50 張「有障礙物」與 50 張「無障礙物」照片</li>
-                                <li>特徵觀察：實作 Sobel 濾鏡，觀察影像邊緣特徵如何被提取</li>
-                                <li>目標：理解高品質數據 (Dataset) 對 AI 準確性的重要性</li>
-                            </ul>
+                        <div class="p-8">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div
+                                    class="w-12 h-12 bg-indigo-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform duration-500">
+                                    📸</div>
+                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git
+                                    Branch: <span class="text-indigo-600">feature/vision-labeling</span></span>
+                            </div>
+                            <h3
+                                class="text-xl font-bold text-gray-900 mb-4 group-hover:text-indigo-600 transition-colors">
+                                【作業 1-1】視覺標記</h3>
+                            <p class="text-gray-600 text-sm leading-relaxed mb-6">利用無人車攝像頭實時標記不同情境並觀察特徵。</p>
+                            <div class="space-y-3 border-t border-slate-50 pt-6">
+                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                    <span
+                                        class="w-5 h-5 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-bold">1</span>
+                                    拍攝 50 張「有/無障礙物」照片
+                                </div>
+                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                    <span
+                                        class="w-5 h-5 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-bold">2</span>
+                                    實作 Sobel 濾鏡觀察特徵提取
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Task 1-2 -->
+                    <div onclick="window.courseShared.openSubmissionModal('adv-09-voice-kws', '【作業 9-1-2】語音指令識別測試')"
+                        class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-cyan-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-cyan-200/50 cursor-pointer">
+                        <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <span class="text-6xl font-black">02</span>
+                        </div>
+                        <div class="p-8">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div
+                                    class="w-12 h-12 bg-cyan-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-cyan-200 group-hover:scale-110 transition-transform duration-500">
+                                    🗣️</div>
+                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git
+                                    Branch: <span class="text-cyan-600">feature/voice-kws</span></span>
+                            </div>
+                            <h3
+                                class="text-xl font-bold text-gray-900 mb-4 group-hover:text-cyan-600 transition-colors">
+                                【作業 1-2】語音識別</h3>
+                            <p class="text-gray-600 text-sm leading-relaxed mb-6">測試 ESP32-S3 上的關鍵字識別 (KWS) 功能。</p>
+                            <div class="space-y-3 border-t border-slate-50 pt-6">
+                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                    <span
+                                        class="w-5 h-5 bg-cyan-50 text-cyan-600 rounded-full flex items-center justify-center font-bold">1</span>
+                                    觀察教室雜訊對 MFCC 的干擾
+                                </div>
+                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                    <span
+                                        class="w-5 h-5 bg-cyan-50 text-cyan-600 rounded-full flex items-center justify-center font-bold">2</span>
+                                    顯示並分析指令置信度分數
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Task 1-3 -->
+                    <div onclick="window.courseShared.openSubmissionModal('adv-09-ai-fsm', '【作業 9-1-3】AI 決策與 FSM 整合')"
+                        class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-amber-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-amber-200/50 cursor-pointer">
+                        <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <span class="text-6xl font-black">03</span>
+                        </div>
+                        <div class="p-8">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div
+                                    class="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-amber-200 group-hover:scale-110 transition-transform duration-500">
+                                    🤖</div>
+                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git
+                                    Branch: <span class="text-amber-600">feature/ai-fsm</span></span>
+                            </div>
+                            <h3
+                                class="text-xl font-bold text-gray-900 mb-4 group-hover:text-amber-600 transition-colors">
+                                【作業 1-3】決策整合</h3>
+                            <p class="text-gray-600 text-sm leading-relaxed mb-6">將 AI 識別結果作為事件，觸發狀態機轉移。</p>
+                            <div class="space-y-3 border-t border-slate-50 pt-6">
+                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                    <span
+                                        class="w-5 h-5 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center font-bold">1</span>
+                                    識別圖卡時觸發 EMERGENCY_STOP
+                                </div>
+                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                    <span
+                                        class="w-5 h-5 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center font-bold">2</span>
+                                    計算並優化 AI 辨識反應延遲
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Task 1-2 -->
-                <div onclick="openSubmissionModal('adv-09-voice-kws', '【作業 9-1-2】語音指令識別測試')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-cyan-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🗣️</span>
-                            <span class="bg-cyan-50 text-cyan-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-cyan-600 transition">【作業
-                            1-2】語音識別</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>測試 ESP32-S3 上的關鍵字識別 (KWS) 功能。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>環境測試：觀察教室雜訊對 MFCC 特徵提取的干擾</li>
-                                <li>置信度分析：顯示 AI 對指令的「信心分數」，觀察距離與語調影響</li>
-                                <li>目標：理解 AI 判斷並非 0 或 1，而是機率分佈</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Task 1-3 -->
-                <div onclick="openSubmissionModal('adv-09-ai-fsm', '【作業 9-1-3】AI 決策與 FSM 整合')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-amber-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🤖</span>
-                            <span class="bg-amber-50 text-amber-700 text-xs px-3 py-1 rounded-full font-bold">45
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-amber-600 transition">【作業
-                            1-3】決策整合</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>將 AI 識別結果作為事件，觸發狀態機轉移。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>邏輯閉環：識別「紅色圖卡」時觸發 EMERGENCY_STOP</li>
-                                <li>延遲優化：計算從看到物體到車子做出反應的完整延遲</li>
-                                <li>目標：實現「感知 -> 認知 -> 執行」的完整 AI 架構</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+            </section>
 
     </main>
 
@@ -411,13 +449,13 @@
         </div>
     </section>
 
+    <script src="/js/course-shared.js"></script>
     <script>
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/fp4gN96vO-o?autoplay=1",
             doc: "https://docs.google.com/document/d/e/2PACX-1vRm4xunZqFGKKXSfujDBMlKSWGMlw144xvkr0k9-RuaRvVkj89UzhneHQxB1viyev5dOStl1VTV6nfx/pub?embedded=true"
         };
     </script>
-    <script src="/js/course-shared.js"></script>
 </body>
 
 </html>

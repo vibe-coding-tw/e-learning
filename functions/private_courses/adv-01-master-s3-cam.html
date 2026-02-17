@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
 <body id="page-advanced" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
@@ -50,23 +51,37 @@
         const tabJpeg = document.getElementById('tab-jpeg-quality');
 
         // Initial Load
-        loadContent('adv-01-unit-s3-interfaces.html');
+        loadFromHash();
+
+        function loadFromHash() {
+            const hash = window.location.hash.substring(1);
+            if (hash === 'mjpeg-stream') {
+                switchTab('mjpeg-stream');
+            } else if (hash === 'jpeg-quality') {
+                switchTab('jpeg-quality');
+            } else {
+                switchTab('s3-interfaces');
+            }
+        }
 
         function switchTab(tab) {
             // Reset all tabs
             [tabInterfaces, tabMjpeg, tabJpeg].forEach(t => {
-                t.classList.remove('active');
+                if (t) t.classList.remove('active');
             });
 
             if (tab === 's3-interfaces') {
                 tabInterfaces.classList.add('active');
                 loadContent('adv-01-unit-s3-interfaces.html');
+                window.location.hash = 's3-interfaces';
             } else if (tab === 'mjpeg-stream') {
                 tabMjpeg.classList.add('active');
                 loadContent('adv-01-unit-mjpeg-stream.html');
+                window.location.hash = 'mjpeg-stream';
             } else if (tab === 'jpeg-quality') {
                 tabJpeg.classList.add('active');
                 loadContent('adv-01-unit-jpeg-quality.html');
+                window.location.hash = 'jpeg-quality';
             }
         }
 

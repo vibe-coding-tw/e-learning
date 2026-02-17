@@ -290,160 +290,122 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
-    <section id="assignment-guide" class="hidden">
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
-        <div class="space-y-6">
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h3 class="font-bold text-blue-800">1. GitHub Classroom 設定</h3>
-                <p class="text-sm">請將對應的 Repository (例如：<code>esp32-wifi-modes-lab</code>) 設定至課程儀表板，練習切換不同的 WiFi 連線模式。
-                </p>
-            </div>
 
-            <div class="bg-indigo-50 p-4 rounded-lg">
-                <h3 class="font-bold text-indigo-800">2. 翻轉課堂策略</h3>
-                <ul class="list-disc list-inside text-sm">
-                    <li>課前預習：觀看 8 分鐘 ESP32 AP vs STA 模式教學。</li>
-                    <li>課中實作：先實作 AP 模式讓手機連線，再實作 STA 模式讓 ESP32 連上教室 WiFi。</li>
-                </ul>
-            </div>
+        <h3>【作業 1-1】我的領地：AP 模式與強制門戶</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 區域網路管理員 (Local Network Administrator)。</li>
+            <li><strong>執行方式：</strong> 實作自定義 SSID (MyRobot_01) 與網段 (192.168.4.1)。測試連線穩定性，觀察多台手機連入時是否會互相干擾 Web
+                控制介面。並思考如何讓手機連上後自動彈出控制網頁。</li>
+            <li><strong>評分重點 :</strong> 成功建立穩定 AP，手機可正常加入並透過瀏覽器開啟指定 IP。</li>
+        </ul>
 
-            <div class="bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold mb-2">3. 單元任務 (Unit Tasks)</h3>
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-100 text-left">
-                        <tr>
-                            <th class="p-2">任務說明</th>
-                            <th class="p-2">建議時間</th>
-                            <th class="p-2">配分</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 1-1】AP 模式下架設專屬 WiFi 熱點</td>
-                            <td class="p-2">30 min</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 1-2】STA 模式自動重連邏輯實作</td>
-                            <td class="p-2">45 min</td>
-                            <td class="p-2">40 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 1-3】掃描環境中可用的 WiFi 訊號</td>
-                            <td class="p-2">30 min</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <h3>【作業 1-2】智慧尋路：STA 模式與斷線重連</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 穩定性測試工程師 (Stability Test Engineer)。</li>
+            <li><strong>執行方式：</strong> 撰寫程式碼掃描現場 Wi-Fi 並加入。實作 Wi-Fi 事件監聽 (Event Handler)，模擬路由器斷電場景，測試車子是否能在電力恢復後 30
+                秒內「自動重連」。</li>
+            <li><strong>評分重點 :</strong> 重連邏輯健全（非阻塞式），具備逾時處理與狀態日誌輸出。</li>
+        </ul>
+
+        <h3>【作業 1-3】終極備援：自動切換模式</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 強韌系統架構師 (Resilient System Architect)。</li>
+            <li><strong>執行方式：</strong> 實作 Fallback 邏輯：啟動後先嘗試連接預設 STA (5秒)，若失敗則自動轉為 AP 模式。利用內建 LED 燈號區分模式（如：STA 模式長亮，AP
+                模式緩慢閃爍）。</li>
+            <li><strong>評分重點 :</strong> 模式切換流暢，無系統死機現象，且具備清楚的視覺反饋。</li>
+        </ul>
     </section>
 
-    <section id="instructor-guide" class="hidden">
-        <h2>講師手冊 (Instructor Guide)</h2>
-        <div class="space-y-6">
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">教學重點 (Teaching Points)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2">
-                    <li>區分 AP (基地台) 與 STA (工作站) 的物理意義。</li>
-                    <li>解釋 WiFi 事件（Event System）：為什麼用事件監聽比在 loop 裡面輪詢連線狀態更好。</li>
-                    <li>討論 Provisioning (配網)：如何利用 AP 模式設定 STA 模式所需要的 SSID/Password。</li>
-                </ul>
-            </div>
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>在 GitHub 建立新 Repo（名為 <code>basic-07-wifi-modes-template</code>）。</li>
+                <li>上傳包含 `WiFi.h` 引用但「未實作模式切換邏輯」的 C++ 專案框架。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
 
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">學生常見問題 (Common Issues)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2 text-red-600">
-                    <li>SSID 或密碼輸入錯誤，導致一直在 <code>WIFI_REASON_AUTH_FAIL</code> 狀態。</li>
-                    <li>忘記呼叫 <code>WiFi.mode()</code> 導致模式不如預期。</li>
-                    <li>在 STA 模式下沒連上網就進行 HTTP 請求，導致系統崩潰。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
+                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
+            </ol>
 
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="font-bold mb-2 text-sm">評分標準 (Grading)</h3>
-                <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
-                    <li><strong>優 (90-100):</strong> 能穩定在不同模式間切換，並具備良好的重連與錯誤偵測邏輯。</li>
-                    <li><strong>可 (70-89):</strong> 基本連線功能正常，但重連邏輯不夠健全（如：路由器重啟後無法自動連回）。</li>
-                    <li><strong>待加強 (Below 70):</strong> 無法成功建立連線，或不理解 AP/STA 的根本差異。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，獲得個人專屬 Repo。</li>
+                <li>實作 AP 高強度發射功率設定、STA 事件監聽重連與 Fallback 自動備援機制。</li>
+                <li>於不同網路環境（教室 WiFi vs 手機熱點）驗證通過後 <strong>Push 代碼</strong> 提交進度。</li>
+            </ol>
 
-            <!-- NEW: Practical Deployment Recommendations -->
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
-                    <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
-.
-├── src/             # 包含 WiFi 模式切換與重連邏輯的 main.cpp
-├── README.md        # 測試報告：不同環境下的 WiFi 掃描清單與連線秒數紀錄
-└── .github/         # 自動評分配置</pre>
-                    <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
-                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-                        <li><strong>模式切換驗證：</strong> 透過韌體日誌檢查是否正確呼叫 <code>WiFi.mode(WIFI_AP)</code> 與
-                            <code>WiFi.mode(WIFI_STA)</code>。</li>
-                        <li><strong>網路資訊檢核：</strong> 驗證學生是否能從 Serial 獲取正確的 IP 位址與訊號強度 (RSSI)。</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- NEW: Detailed operations guide -->
-            <div class="bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
-                <div class="space-y-4 text-sm text-gray-600">
-                    <div>
-                        <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
-                        <p>建立包含基礎 WiFi 掃描框架的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
-                        <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以點評學生的連線穩定性邏輯。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
-                        <p>學生領取作業，獲得個人專屬 Repo，實作 STA 模式自動重連並 Push 觀察其在模擬網路環境下的恢復能力。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
-                        <p>進入 Feedback PR，針對學生的「預設配網模式 (Provisioning)」邏輯是否易用給予回饋。</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- NEW: Flipped classroom strategy table -->
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm border-collapse border border-gray-200">
-                        <thead class="bg-gray-50 text-left text-gray-800">
-                            <tr>
-                                <th class="border border-gray-200 p-2">階段</th>
-                                <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
-                                <th class="border border-gray-200 p-2">教師/平台角色</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-gray-600">
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
-                                <td class="border border-gray-200 p-2">研究手機熱點與家用路由器的 AP/STA 切換邏輯。</td>
-                                <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員理解「網路角色」的差異。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
-                                <td class="border border-gray-200 p-2">領取 Classroom 作業，實作 STA 模式連線並嘗試同時開啟 AP 模式。</td>
-                                <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
-                                <td class="border border-gray-200 p-2">優化斷線重連機制（Exponential Backoff）並 Push。</td>
-                                <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>針對學生的「重連指數策略 (Backoff)」與「事件處理結構」予以回饋。</li>
+            </ol>
         </div>
+
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元聚焦於「網路層級的生存能力」，引導學生理解如何讓設備在動態變化的 WiFi 環境中始終保持可受控狀態。</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── src/
+│   └── main.cpp      # (重點) 需填充 WiFiEvent 回呼函式與 Fallback 核心
+├── include/
+│   └── secrets.h     # (練習) 管理 SSID 與 Password 的建議做法
+└── README.md         # 測試日誌：斷電重連秒數與 RSSI 強度分佈</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>main.cpp (Event-based Reconnect)</strong></p>
+        <pre><code>WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info){
+  Serial.print("WiFi Lost! Reason: ");
+  Serial.println(info.wifi_sta_disconnected.reason);
+  WiFi.begin(ssid, password);
+}, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>模式宣告檢測：：</strong> 檢查程式碼中是否包含 <code>WIFI_AP_STA</code> 同時開啟或切換的 API 調用。</li>
+            <li><strong>狀態日誌匹配：：</strong> 驗證學生提交的 README 中是否能正確羅列出環境中至少 3 個 WiFi 訊號的 RSSI。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">研究手機熱點與家用路由器的 AP/STA 切換邏輯。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>Dashboard：</strong>確認學員能區分「自建路徑」與「加入現有路徑」的場景差異。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，對比單純 begin() 與加入 Event Handler
+                        後的穩定性差異。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>演示 DHCP 租約與 Static IP
+                        設定對網頁控制端查找設備的影響。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">優化斷線重連機制（加入最大重試次數）並 Push，閱讀教師回覆 PR。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核學生對「網路強韌性
+                        (Resilience)」的防禦性編程規劃。</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </body>
 

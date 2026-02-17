@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
 <body id="page-advanced" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
@@ -63,21 +64,34 @@
         };
 
         // Initial Load
-        loadContent(files['data-flow']);
+        loadFromHash();
+
+        function loadFromHash() {
+            const hash = window.location.hash.substring(1);
+            if (files[hash]) {
+                switchTab(hash);
+            } else {
+                switchTab('data-flow');
+            }
+        }
 
         function switchTab(tabId) {
             // Reset all tabs
             Object.values(tabs).forEach(tab => {
-                tab.classList.remove('active');
+                if (tab) tab.classList.remove('active');
             });
 
             // Set active tab
-            tabs[tabId].classList.add('active');
+            if (tabs[tabId]) {
+                tabs[tabId].classList.add('active');
+            }
 
             loadContent(files[tabId]);
+            window.location.hash = tabId;
         }
 
         function loadContent(url) {
+            if (!url) return;
             iframe.style.opacity = '0';
             setTimeout(() => {
                 const separator = url.includes('?') ? '&' : '?';

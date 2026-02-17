@@ -33,16 +33,16 @@
                 認識輕量化模型如何在嵌入式設備（如手機或 ESP32-S3）上實施辨識，理解「精準度」與「速度」的權衡之道。
             </p>
 
-            <div class="mt-10 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
-                    class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-red-900/20">
-                    <span class="text-xl group-hover:animate-pulse">📺</span>
-                    <span>觀看教學影片</span>
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/w9c1ukAfO3o?autoplay=1')"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
-                    class="group flex items-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-emerald-900/20">
-                    <span class="text-xl group-hover:bounce">📄</span>
-                    <span>閱讀課程講義</span>
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vTFdR574Wxubu6QjSV-ZumHnF18bS-ZoVIYYdVLe1OV-m6IDEhBHPdrSTRsKd8AX_c4u7-XnZa_5XY9/pub?embedded=true')"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
                 </button>
             </div>
         </div>
@@ -169,7 +169,8 @@
         <!-- Section 4: Assignments -->
         <section>
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：深度學習與決策邏輯</h2>
-            <p class="text-center text-gray-500 mb-12">從模型診斷到自動導航決策，掌握 AI 視覺的核心應用。</p>
+            <p class="text-center text-gray-500 mb-12">採用 <b>Git Workflow</b>：領取 GitHub Classroom 任務，實作 AI 識別邏輯並提交 PR。
+            </p>
 
             <div class="grid md:grid-cols-3 gap-8">
                 <!-- Task 4-1 -->
@@ -259,47 +260,96 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="guide-header mb-12 border-b-2 border-indigo-200 pb-6">
+            <h2 class="text-4xl font-black text-indigo-900 mb-2">作業指引 (Assignment Guide)</h2>
+            <p class="text-indigo-600 font-bold uppercase tracking-widest text-sm">進階 8 - AI 模型應用</p>
+        </div>
 
-        <h3>作業 4-1：「模型效能診斷」：MobileNet 分類測試</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> AI 模型評測員。</li>
-            <li><strong>執行方式：</strong> 利用 TensorFlow.js 加載 MobileNet 模型。拿取教室內常見的 5 種物品（如：手機、筆記本、水瓶等）進行辨識，記錄每個物品的置信度
-                (Confidence Score)。</li>
-            <li><strong>評分重點：</strong> 能否寫出觀察結論，解釋為什麼某些背景下模型會產生誤判，以及「硬體加速」對辨識速度的影響。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-indigo-600 text-white rounded-xl text-lg">4-1</span>
+                「模型效能診斷」：MobileNet 分類測試
+            </h3>
+            <div class="space-y-4 text-gray-700">
+                <p><strong>角色扮演：</strong> AI 模型評測員。</p>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 text-justify">
+                    <p class="font-bold mb-2 text-indigo-900">執行步驟：</p>
+                    <ol class="list-decimal list-inside space-y-1 text-sm text-justify">
+                        <li>利用 TensorFlow.js 加載 MobileNet 模型。</li>
+                        <li>拿取教室內常見的 5 種物品進行辨識。</li>
+                        <li>記錄並分析每個物品的置信度 (Confidence Score)。</li>
+                    </ol>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 能否寫出觀察結論，解釋為什麼某些背景下模型會產生誤判，以及「硬體加速」對辨識速度的影響。</p>
+            </div>
+        </div>
 
-        <h3>作業 4-2：SSD 物體偵測與「區域警戒 (ROI)」過濾</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 安全監控工程師。</li>
-            <li><strong>執行方式：</strong> 實作 SSD 偵測模組。在影像畫面上手動劃定一個「紅色警戒區」。當偵測到「人 (Person)」進入該區域時，才觸發網頁警報聲。</li>
-            <li><strong>評分重點：</strong> 數據清洗能力，即如何從 SSD 回傳的多個 Bounding Boxes 中取出特定類別（Label）並判斷其座標是否在警戒區內。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3 font-black">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-xl text-lg">4-2</span>
+                SSD 物體偵測與「區域警戒 (ROI)」過濾
+            </h3>
+            <div class="space-y-4 text-gray-700">
+                <p><strong>角色扮演：</strong> 安全監控工程師。</p>
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-justify">
+                    <p class="font-bold mb-2 text-blue-900">執行步驟：</p>
+                    <ul class="list-disc list-inside space-y-1 text-sm text-justify">
+                        <li>實作 SSD 偵測模組。</li>
+                        <li>在影像畫面上手動劃定一個「紅色警戒區」。</li>
+                        <li>當偵測到「人 (Person)」進入該區域時，觸發網頁警報聲。</li>
+                    </ul>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 數據清洗能力，即如何從 SSD 回傳的多個 Bounding Boxes
+                    中取出特定類別（Label）並判斷其座標是否在警戒區內。</p>
+            </div>
+        </div>
 
-        <h3>作業 4-3：AI 無人車自動避障決策</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 自動駕駛演算法工程師。</li>
-            <li><strong>執行方式：</strong> 將 SSD 的輸出座標轉換為無人車的轉向誤差。若偵測到前方物體（如交通錐）寬度佔據畫面 50% 以上，強制執行「緊急停止」。</li>
-            <li><strong>評分重點：</strong> 「感知到決策」的邏輯完整性。即如何利用 Bounding Box 的數據來量化目標的「距離」與「偏移」，並給出合理的馬達指令。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-justify">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3 font-black">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-emerald-600 text-white rounded-xl text-lg">4-3</span>
+                AI 無人車自動避障決策
+            </h3>
+            <div class="space-y-4 text-gray-700">
+                <p><strong>角色扮演：</strong> 自動駕駛演算法工程師。</p>
+                <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100 text-justify">
+                    <p class="font-bold mb-2 text-emerald-900">執行步驟：</p>
+                    <ul class="list-disc list-inside space-y-1 text-sm text-justify">
+                        <li>將 SSD 的輸出座標轉換為無人車的轉向誤差。</li>
+                        <li>實作「行人」避讓優先級邏輯。</li>
+                        <li>偵測到大型障礙物時執行「緊急停止」。</li>
+                    </ul>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 「感知到決策」的邏輯完整性。即如何利用 Bounding Box
+                    的數據來量化目標的「距離」與「偏移」，並給出合理的馬達指令。</p>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
-    <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+        <div class="guide-header mb-12 border-b-2 border-emerald-200 pb-6">
+            <h2 class="text-4xl font-black text-emerald-900 mb-2">講師指引 (Instructor Guide)</h2>
+            <p class="text-emerald-600 font-bold uppercase tracking-widest text-sm text-justify">GitHub Classroom &
+                Flipped Teaching</p>
+        </div>
+
+        <!-- Practical Deployment Recommendations -->
+        <div
+            class="guide-section mb-10 p-8 bg-blue-50 border border-blue-100 rounded-3xl shadow-inner text-justify text-left">
+            <h3 class="text-2xl font-bold text-blue-900 mb-6 flex items-center gap-3">
+                <span class="text-3xl font-black">🚀</span> 在 GitHub Classroom 的實戰部署
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
                 <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                    <h4 class="font-bold text-blue-800 text-sm mb-4 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full text-justify text-left font-black"></span>
                         A. 範本倉庫 (Template Repo) 結構
                     </h4>
                     <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+                        class="bg-gray-900 text-gray-100 p-6 rounded-2xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700 text-justify text-left">
 .
 ├── js/
 │   ├── model_loader.js  # 模型載入與預熱
@@ -309,91 +359,115 @@
 └── README.md              # 信心門檻調校與誤判分析紀錄</pre>
                 </div>
                 <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                    <h4 class="font-bold text-blue-800 text-sm mb-4 flex items-center gap-2 font-black text-justify">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full font-black"></span>
                         B. 自動評估 (Autograding) 的設計
                     </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">⏱️</span>
-                            <p class="text-sm text-gray-700"><strong>推理速度監測：</strong> 檢查執行頻率，若低於 1 FPS 則提示檢查硬體加速。</p>
+                    <div class="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-blue-100 space-y-4">
+                        <div class="flex gap-4">
+                            <span class="text-2xl">⏱️</span>
+                            <p class="text-sm text-gray-700 text-justify"><strong>推理速度監測：</strong> 檢查執行頻率，若低於 1 FPS
+                                則提示檢查硬體加速。</p>
                         </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🧠</span>
-                            <p class="text-sm text-gray-700"><strong>決策邏輯測試：</strong> 提供模擬數據，檢查能否正確給出導航指令。</p>
+                        <div class="flex gap-4 text-justify">
+                            <span class="text-2xl">🧠</span>
+                            <p class="text-sm text-gray-700 text-justify font-bold"><strong>決策邏輯測試：</strong>
+                                提供模擬數據，檢查能否正確給出導航指令。</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
+        <!-- Detailed operations guide -->
+        <div class="guide-section mb-10 p-8 bg-white border border-gray-200 rounded-3xl text-justify text-left">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <span class="text-3xl font-black">🛠️</span> GitHub Classroom 詳細操作指南
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-justify text-left">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify text-left">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full font-black text-justify text-left">STEP
                         1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供已引入 TensorFlow.js 與 MobileNet-SSD
-                        權重載入邏輯的基礎樣板。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify text-left font-black">
+                        準備範本專案</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify text-left">提供已引入
+                        TensorFlow.js 與 MobileNet-SSD 權重載入邏輯的基礎樣板。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div
+                    class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify text-left font-black">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full font-black">STEP
                         2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「邏輯判定」評分標準。指導如何開啟 WebGL 確保執行效能。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify font-black">建立
+                        Classroom 作業</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify font-black">
+                        設定「邏輯判定」評分標準。指導如何開啟 WebGL 確保執行效能。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify font-black">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full text-justify font-black text-left">STEP
                         3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">進行模型對抗測試（如測試香蕉誤判）。紀錄誤判原因並 Push 至 Repo。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify font-black text-left">
+                        學生端作業 (Flipped)</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify font-black text-left">
+                        進行模型對抗測試（如測試香蕉誤判）。紀錄誤判原因並 Push 至 Repo。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div
+                    class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify font-black text-left">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full text-justify font-black">STEP
                         4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對「機率」應用，以及信心門檻設計合理性予以回饋。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify font-black text-left">
+                        教師代碼審閱 (Review)</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify font-black text-left">
+                        針對「機率」應用，以及信心門檻設計合理性予以回饋。</p>
                 </div>
             </div>
         </div>
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
+        <!-- Flipped classroom strategy table -->
+        <div class="guide-section p-8 bg-blue-50/50 border border-blue-100 rounded-3xl text-justify text-left">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <span class="text-3xl font-black text-justify text-left">🔄</span> 翻轉教室的實施策略
             </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg text-justify text-left">
                 <table class="w-full text-sm text-left">
                     <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
                         <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
+                            <th class="px-6 py-4">階段</th>
+                            <th class="px-6 py-4 text-justify text-left">學生行動 (Git Workflow)</th>
+                            <th class="px-6 py-4 text-justify text-left">教師/平台角色</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
+                    <tbody class="divide-y divide-gray-100 text-gray-600 text-justify text-left">
                         <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">觀看影片，理解「影像分類」與「物件偵測」的本質差異。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「神經網路如何看世界」導讀。</td>
+                            <td
+                                class="px-6 py-5 font-black text-slate-800 bg-slate-50/50 w-32 text-center uppercase tracking-tighter">
+                                Pre-class<br><span class="text-[10px] font-normal text-slate-400">課前</span></td>
+                            <td class="px-6 py-5">觀看影片，理解「影像分類」與「物件偵測」的本質差異。</td>
+                            <td class="px-6 py-5 text-xs text-justify text-left">檢查 Dashboard 進度，提供「神經網路如何看世界」導讀。</td>
                         </tr>
                         <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，實測信心門檻對系統穩定性的影響。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時排除阻礙，解答關於「偵測框框頻繁閃爍」的濾波原理。</td>
+                            <td
+                                class="px-6 py-5 font-black text-blue-800 bg-blue-50/30 w-32 text-center uppercase tracking-tighter font-black">
+                                In-class<br><span class="text-[10px] font-normal text-blue-400 font-black">課中</span>
+                            </td>
+                            <td
+                                class="px-6 py-5 font-medium text-slate-900 text-justify text-left text-justify text-left">
+                                領取 Classroom 作業，實測信心門檻對系統穩定性的影響。</td>
+                            <td class="px-6 py-5 text-xs text-blue-700 text-justify text-left text-justify text-left">
+                                即時排除阻礙，解答關於「偵測框框頻繁閃爍」的濾波原理。</td>
                         </tr>
                         <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">完成「特定物件過濾」導航邏輯並 Push，閱讀教師回覆 PR。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，評估平衡精度與延遲的綜合決策能力。</td>
+                            <td
+                                class="px-6 py-5 font-black text-slate-800 bg-slate-50/50 w-32 text-center uppercase tracking-tighter text-justify text-left">
+                                Post-class<br><span
+                                    class="text-[10px] font-normal text-slate-400 font-black text-justify text-left">課後</span>
+                            </td>
+                            <td class="px-6 py-5 text-justify text-left">完成「特定物件過濾」導航邏輯並 Push，閱讀教師回覆 PR。</td>
+                            <td class="px-6 py-5 text-xs text-justify text-left text-justify text-left">
+                                核發評量，評估平衡精度與延遲的綜合決策能力。</td>
                         </tr>
                     </tbody>
                 </table>
@@ -401,12 +475,6 @@
         </div>
     </section>
 
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/w9c1ukAfO3o?autoplay=1",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vTFdR574Wxubu6QjSV-ZumHnF18bS-ZoVIYYdVLe1OV-m6IDEhBHPdrSTRsKd8AX_c4u7-XnZa_5XY9/pub?embedded=true"
-        };
-    </script>
     <script src="/js/course-shared.js"></script>
 </body>
 

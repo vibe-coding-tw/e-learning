@@ -51,11 +51,11 @@
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                <button onclick="window.courseShared.enterMediaMode('video', window.RESOURCES.youtube)"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                <button onclick="window.courseShared.enterMediaMode('doc', window.RESOURCES.doc)"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -196,81 +196,91 @@
             </div>
         </section>
 
-        <!-- Assignments Section -->
-        <section>
-            <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center">
-                <span class="mr-3">📝</span> 實作任務 (Classroom Challenges)
-            </h2>
-
-            <!-- Assignment 1-1 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-md cursor-pointer"
-                onclick="openSubmissionModal('adv-14-crime-scene', 'Task 1-1: 命案現場 - 找出 Bug')">
-                <div class="p-6 border-b border-gray-100 bg-gray-50">
-                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
-                        <span class="bg-red-500 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 1-1</span>
-                        「命案現場」：找出埋好的 Bug (60 min)
-                    </h3>
-                </div>
-                <div class="p-6">
-                    <div class="mb-4">
-                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
-                        <p class="text-gray-700">教師提供一段看似正確但無法運作的無人車控制代碼，你需要找出隱藏的 3 個 Bug。</p>
+        <!-- Assignment Highlights -->
+        <section class="module-section">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                        <div>
+                            <h2
+                                class="text-3xl font-bold text-white mb-2 underline decoration-red-500 underline-offset-8">
+                                實作任務：尋找真相</h2>
+                            <p class="text-slate-400">在代碼迷霧中鎖定目標，打造具備自我診斷能力的系統。</p>
+                        </div>
                     </div>
-                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
-                        <li><strong>邏輯型：</strong>變數名稱拼錯 (如 <code>error</code> 寫成 <code>eror</code>)。</li>
-                        <li><strong>類型型：</strong>字串與數字相加 (JSON 讀取的 "50" 沒轉 Number 就運算)。</li>
-                        <li><strong>非同步型：</strong>在藍牙尚未連線完成就發送指令。</li>
-                    </ul>
-                    <div class="text-sm text-red-600 font-semibold">
-                        🚫 限制：不得直接閱讀原始碼，必須先透過 console.log 或 斷點 觀察變數變化。撰寫「除錯日誌」記錄你的假設與實驗。
+
+                    <div class="grid md:grid-cols-2 gap-8 mb-12">
+                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center text-2xl">
+                                    📡</div>
+                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
+                            </div>
+                            <p class="mb-4 text-slate-400">完成任務後，請將數據與結果推送到你的專屬倉庫。</p>
+                            <ul class="space-y-3 text-slate-300">
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">1</span>
+                                    <span>接受 GitHub Classroom 邀請並 Clone 倉庫</span>
+                                </li>
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">2</span>
+                                    <span>完成代碼後執行 <code
+                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code></span>
+                                </li>
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">3</span>
+                                    <span>在 PR 中查看自動化評分與教師回饋</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="grid gap-4">
+                            <!-- Task 1-1 -->
+                            <div onclick="window.courseShared.openSubmissionModal('adv-14-crime-scene', '【作業 1-1】「命案現場」：找出埋好的 Bug')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-red-600 transition">作業
+                                        1-1</h3>
+                                    <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">「命案現場」：找出埋好的 Bug</h4>
+                                <p class="text-sm text-gray-500">透過觀測與斷點找出埋藏的邏輯與非同步 Bug，撰寫除錯日誌。</p>
+                            </div>
+
+                            <!-- Task 1-2 -->
+                            <div onclick="window.courseShared.openSubmissionModal('adv-14-black-box', '【作業 1-2】「通訊黑盒」：網路封包抓包與分析')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition">作業
+                                        1-2</h3>
+                                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">「通訊黑盒」：網路封包抓包與分析</h4>
+                                <p class="text-sm text-gray-500">使用 Network 面板抓包比對，定位問題在前端、網路還是 ESP32。</p>
+                            </div>
+
+                            <!-- Task 1-3 -->
+                            <div onclick="window.courseShared.openSubmissionModal('adv-14-defensive', '【作業 1-3】防禦性編程')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-green-600 transition">作業
+                                        1-3</h3>
+                                    <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded font-bold">45
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">防禦性編程</h4>
+                                <p class="text-sm text-gray-500">實作輸入驗證、逾時保護機制與錯誤回饋，打造穩定的控制代碼。</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Assignment 1-2 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-md cursor-pointer"
-                onclick="openSubmissionModal('adv-14-black-box', 'Task 1-2: 通訊黑盒')">
-                <div class="p-6 border-b border-gray-100 bg-gray-50">
-                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
-                        <span class="bg-blue-500 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 1-2</span>
-                        「通訊黑盒」：網路封包抓包與分析 (60 min)
-                    </h3>
-                </div>
-                <div class="p-6">
-                    <div class="mb-4">
-                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
-                        <p class="text-gray-700">當網頁無法控制車子時，判斷問題是在「網頁端」、「網路傳輸」還是「ESP32 端」。掌握跨裝置除錯的「隔離技術」。</p>
-                    </div>
-                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
-                        <li><strong>Network 面板：</strong>檢查 HTTP 請求狀態 (200 OK vs 404/500)。</li>
-                        <li><strong>模擬弱網：</strong>人為增加 500ms 延遲，觀察控制邏輯是否崩潰。</li>
-                        <li><strong>封包比對：</strong>檢查發出的 JSON 格式是否與 ESP32 規格一致。</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Assignment 1-3 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md cursor-pointer"
-                onclick="openSubmissionModal('adv-14-defensive', 'Task 1-3: 防禦性編程')">
-                <div class="p-6 border-b border-gray-100 bg-gray-50">
-                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
-                        <span class="bg-green-500 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 1-3</span>
-                        「防禦性編程」：打造不壞的代碼 (45 min)
-                    </h3>
-                </div>
-                <div class="p-6">
-                    <div class="mb-4">
-                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
-                        <p class="text-gray-700">重構你的代碼，增加「容錯」與「自我診斷」能力。</p>
-                    </div>
-                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
-                        <li><strong>輸入驗證：</strong>處理數據前加入 <code>if (isNaN(value))</code> 判斷。</li>
-                        <li><strong>逾時機制：</strong>若藍牙指令 1 秒內沒回應，自動執行 <code>stop()</code> 以策安全。</li>
-                        <li><strong>錯誤回饋：</strong>建立「錯誤訊息視窗 / Toast」，發生錯誤時顯示具體原因，而非網頁空白。</li>
-                    </ul>
-                </div>
-            </div>
-
         </section>
 
         <!-- Footer -->
@@ -355,7 +365,8 @@
                         <div class="flex gap-3">
                             <span class="text-blue-500">🔍</span>
                             <p class="text-sm text-gray-700"><strong>靜態代碼掃描：</strong> 檢查 <code>src/</code> 目錄，確認是否正確使用
-                                <code>try-catch</code> 與 <code>constrain</code> 函數。</p>
+                                <code>try-catch</code> 與 <code>constrain</code> 函數。
+                            </p>
                         </div>
                     </div>
                 </div>

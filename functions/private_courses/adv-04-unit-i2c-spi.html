@@ -21,28 +21,16 @@
         </div>
         <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
 
-        <div class="container mx-auto px-4 relative z-10 text-center">
-            <div
-                class="badge-header inline-flex items-center gap-2 px-4 py-1 rounded-full bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 backdrop-blur-sm mb-6 text-xs font-semibold tracking-wide uppercase font-[Outfit]">
-                進階 4 - 單元 1
-            </div>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
-                通訊協議解密<br>I2C、SPI 與硬體實務
-            </h1>
-            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
-                掌握硬體對話的本質：從定址機制、時鐘極限到數據封裝的完整旅程。
-            </p>
-
-            <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
-                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
-                    <span>📺</span> 觀看教學影片
-                </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
-                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
-                    <span>📄</span> 閱讀課程講義
-                </button>
-            </div>
+        <div class="mt-8 flex flex-wrap justify-center gap-4">
+            <button onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/GrROdDW4Ffo')"
+                class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                <span>📺</span> 觀看教學影片
+            </button>
+            <button
+                onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vT1z2o5ffSzwXtepyy7ivHz31yb1TeUDEeicvJB5Ad_hrhvkDRGziTRcgiWKMgXMoD8CJIS2vYlMzKT/pub?embedded=true')"
+                class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                <span>📄</span> 閱讀課程講義
+            </button>
         </div>
     </header>
 
@@ -135,77 +123,81 @@
             </div>
         </section>
 
-        <!-- Assignments Section -->
-        <section>
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">硬體實戰任務 (Labs)</h2>
-            <p class="text-center text-gray-500 mb-12">掌握硬體通訊的底層邏輯與數據轉換。</p>
-
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Task 1-1 -->
-                <div onclick="openSubmissionModal('adv-04-i2c-scanner', '【作業 1-1】I2C 設備大掃描')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-blue-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🔍</span>
-                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
-                            1-1】I2C 設備大掃描</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務目標：</strong>在 ESP32 上掃描連接的所有 I2C 設備，找回硬體定址。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>實作 I2C 通訊協議初始化</li>
-                                <li>找回設備地址 (e.g., 0x3C, 0x68)</li>
-                                <li>同時驅動 OLED 與加速度計</li>
-                            </ul>
+        <!-- Assignment Highlights -->
+        <section class="module-section">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                        <div>
+                            <h2 class="text-3xl font-bold text-white mb-2">硬體實戰任務 (Labs)</h2>
+                            <p class="text-slate-400">掌握硬體通訊的底層邏輯與數據轉換。</p>
                         </div>
                     </div>
-                </div>
 
-                <!-- Task 1-2 -->
-                <div onclick="openSubmissionModal('adv-04-spi-performance', '【作業 1-2】SPI 刷新率挑戰')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-indigo-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">⚡</span>
-                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
-                            1-2】SPI 刷新率挑戰</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務目標：</strong>測試 SPI 高頻極限，理解訊號完整性。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>調整 SPI 頻率 (1MHz - 40MHz)</li>
-                                <li>記錄影像雜訊出現的臨界點</li>
-                                <li>分析高頻通訊下的波形失真</li>
+                    <div class="grid md:grid-cols-2 gap-8 mb-12">
+                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
+                            <div class="flex items-center gap-4 mb-6">
+                                <span class="text-2xl">📡</span>
+                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
+                            </div>
+                            <p class="mb-4 text-slate-400">在任務中，GitHub 是你的「基地台」。請確保每完成一個里程碑，就將數據回傳。</p>
+                            <ul class="space-y-2 text-slate-300">
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 1.</span>
+                                    <span>接受 GitHub Classroom 邀請，複製 (Clone) 專屬任務倉庫。</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 2.</span>
+                                    <span>完成代碼撰寫後，執行 <code
+                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code>
+                                        將進度上傳。</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 3.</span>
+                                    <span>自動化助理會即時在 PR (Pull Request) 中回饋評分結果。</span>
+                                </li>
                             </ul>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Task 1-3 -->
-                <div onclick="openSubmissionModal('adv-04-json-translator', '【作業 1-3】協議翻譯官')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-purple-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">📦</span>
-                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">45
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
-                            1-3】協議翻譯官</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務目標：</strong>將硬體 Raw Data 轉換為現代 Web 協議格式。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>使用 ArduinoJson 封裝數據</li>
-                                <li>建立 I2C 數據與 JSON 結構的對映</li>
-                                <li>為網頁端提供異步通訊接口</li>
-                            </ul>
+                        <div class="grid gap-4">
+                            <!-- Task 1-1 -->
+                            <div onclick="openSubmissionModal('adv-04-i2c-scanner', '【作業 1-1】I2C 設備大掃描')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition">作業
+                                        1-1</h3>
+                                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">I2C 設備大掃描</h4>
+                                <p class="text-sm text-gray-500">在 ESP32 上掃描連接的所有 I2C 設備，找回硬體定址。</p>
+                            </div>
+
+                            <!-- Task 1-2 -->
+                            <div onclick="openSubmissionModal('adv-04-spi-performance', '【作業 1-2】SPI 刷新率挑戰')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-indigo-600 transition">
+                                        作業 1-2</h3>
+                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">SPI 刷新率挑戰</h4>
+                                <p class="text-sm text-gray-500">測試 SPI 高頻極限，理解訊號完整性。</p>
+                            </div>
+
+                            <!-- Task 1-3 -->
+                            <div onclick="openSubmissionModal('adv-04-json-translator', '【作業 1-3】協議翻譯官')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-purple-600 transition">
+                                        作業 1-3</h3>
+                                    <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold">45
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">協議翻譯官</h4>
+                                <p class="text-sm text-gray-500">將硬體 Raw Data 轉換為現代 Web 協議格式。</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -371,12 +363,6 @@
         </div>
     </section>
 
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/GrROdDW4Ffo",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vT1z2o5ffSzwXtepyy7ivHz31yb1TeUDEeicvJB5Ad_hrhvkDRGziTRcgiWKMgXMoD8CJIS2vYlMzKT/pub?embedded=true"
-        };
-    </script>
     <script src="/js/course-shared.js"></script>
 </body>
 

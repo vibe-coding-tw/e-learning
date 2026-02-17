@@ -315,159 +315,123 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
-    <section id="assignment-guide" class="hidden">
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
-        <div class="space-y-6">
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h3 class="font-bold text-blue-800">1. GitHub Classroom 設定</h3>
-                <p class="text-sm">請將對應的 Repository (例如：<code>esp32-fsm-logic-lab</code>) 設定至課程儀表板，練習使用狀態機結構優化複雜的控制邏輯。
-                </p>
-            </div>
 
-            <div class="bg-indigo-50 p-4 rounded-lg">
-                <h3 class="font-bold text-indigo-800">2. 翻轉課堂策略</h3>
-                <ul class="list-disc list-inside text-sm">
-                    <li>課前預習：觀看 10 分鐘關於有限狀態機 (FSM) 在自動販賣機與交通號誌中的應用案例。</li>
-                    <li>課中實作：先繪製邏輯狀態圖，再根據圖表實作 <code>switch...case</code> 程式架構，確保各狀態間轉換流暢且無死角。</li>
-                </ul>
-            </div>
+        <h3>【作業 1-1】實作「基礎控制狀態機」 (三模切換)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 韌體架構工程師 (Firmware Architect)。</li>
+            <li><strong>執行方式：</strong> 建立三個基礎狀態：<code>IDLE</code> (待機)、<code>REMOTE</code> (手控)、<code>AUTO</code>
+                (自律)。透過網頁按鈕切換狀態，並結合板載 LED 顯示對應顏色（如綠、藍、紅）。</li>
+            <li><strong>評分重點 :</strong> 成功實作 <code>enum</code> 與 <code>switch...case</code> 結構，狀態切換流暢，且 LED 反饋即時。</li>
+        </ul>
 
-            <div class="bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold mb-2">3. 單元任務 (Unit Tasks)</h3>
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-100 text-left">
-                        <tr>
-                            <th class="p-2">任務說明</th>
-                            <th class="p-2">建議時間</th>
-                            <th class="p-2">配分</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 1-1】實作「基礎控制狀態機」 (三模切換)</td>
-                            <td class="p-2">60 min</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 1-2】實作「避障邏輯狀態機」 (含計時轉向)</td>
-                            <td class="p-2">60 min</td>
-                            <td class="p-2">40 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 1-3】新增「異常救援模式」與最高優先權切換</td>
-                            <td class="p-2">45 min</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <h3>【作業 1-2】實作「避障邏輯狀態機」 (含計時轉向)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 自動駕駛演算法工程師 (Autonomous Driving Engineer)。</li>
+            <li><strong>執行方式：</strong> 細分避障行為為 <code>SEARCH</code> (前行搜尋) -> <code>DETECTED</code> (偵測障礙) ->
+                <code>TURN</code> (轉向) 三個子狀態。利用 <code>millis()</code> 設定轉向 500ms 後自動切回搜尋狀態。</li>
+            <li><strong>評分重點 :</strong> 成功利用狀態機取代傳統 if-else 嵌套，邏輯清晰且能準確處理計時觸發的轉移。</li>
+        </ul>
+
+        <h3>【作業 1-3】異常處理：最高優先權「救援模式」</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 安全系統工程師 (Safety Systems Engineer)。</li>
+            <li><strong>執行方式：</strong> 新增 <code>EMERGENCY</code> 狀態。實作最高優先權切換機制：當按下物理緊急鈕或藍牙斷線時，「強行轉移」到此狀態鎖死馬達。需設計長按重置回
+                <code>IDLE</code> 的解鎖邏輯。</li>
+            <li><strong>評分重點 :</strong> 安全保護機制具備最高優先權，且重置邏輯嚴謹，無誤觸風險。</li>
+        </ul>
     </section>
 
-    <section id="instructor-guide" class="hidden">
-        <h2>講師手冊 (Instructor Guide)</h2>
-        <div class="space-y-6">
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">教學重點 (Teaching Points)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2">
-                    <li>FSM 的四要素：狀態、事件、轉移、動作。</li>
-                    <li>為什麼不建議用 if-else：展示當狀態超過 3 個時，if-else 嵌套會如何讓程式碼變得難以維護。</li>
-                    <li>enum 的強處：解釋使用具名常數如何增加程式的可讀性與除錯效率。</li>
-                </ul>
-            </div>
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>在 GitHub 建立新 Repo（名為 <code>basic-10-fsm-template</code>）。</li>
+                <li>上傳包含 `enum State` 定義但 `switch` 區塊留空的專案骨架。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
 
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">學生常見問題 (Common Issues)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2 text-red-600">
-                    <li>轉移條件 (Event) 沒寫好，導致狀態「卡死」或在兩個狀態間瘋狂抖動。</li>
-                    <li>忘記 <code>break</code>：導致程式執行完一個 case 之後直接溜到下一個 case (Fall-through)。</li>
-                    <li>不理解如何結合 <code>millis()</code> 進行超時轉移。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
+                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
+            </ol>
 
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="font-bold mb-2 text-sm">評分標準 (Grading)</h3>
-                <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
-                    <li><strong>優 (90-100):</strong> 狀態圖與代碼邏輯高度契合，能處理邊界情況（如緊急停止），結構優雅。</li>
-                    <li><strong>可 (70-89):</strong> 狀態切換正常，但對於事件處理不夠嚴謹，或代碼中存在魔術數字。</li>
-                    <li><strong>待加強 (Below 70):</strong> 邏輯混亂，存在無法脫離的死循環或未處理的異常狀態。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，獲得個人專屬 Repo。</li>
+                <li>繪製狀態轉移圖 (State Diagram)，將紙本邏輯實作為 <code>switch...case</code> 語句。</li>
+                <li>完成三模切換與避障邏輯後 <strong>Push 代碼</strong> 提交 PR。</li>
+            </ol>
 
-            <!-- NEW: Practical Deployment Recommendations -->
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
-                    <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
-.
-├── src/             # 包含 FSM 框架的 main.cpp
-├── README.md        # 狀態轉換圖 (Mermaid) 與實作筆記
-└── .github/         # 自動評分配置</pre>
-                    <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
-                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-                        <li><strong>關鍵字檢查：</strong> 掃描是否定義了 `enum State` 以及 `switch(currentState)`。</li>
-                        <li><strong>邏輯驗證：</strong> 透過單元測試模擬按鈕事件，驗證狀態是否正確轉換。</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- NEW: Detailed operations guide -->
-            <div class="bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
-                <div class="space-y-4 text-sm text-gray-600">
-                    <div>
-                        <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
-                        <p>建立包含基礎狀態切換邏輯的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
-                        <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以利代碼點評。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
-                        <p>學生點擊作業連結，獲得個人專屬 Repo，Clone 到本地開發並 Push 回傳觀察自動評分結果。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
-                        <p>進入 Feedback PR，針對學生的狀態機設計優雅度（如是否有冗餘狀態）予以回饋。</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- NEW: Flipped classroom strategy table -->
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm border-collapse border border-gray-200">
-                        <thead class="bg-gray-50 text-left text-gray-800">
-                            <tr>
-                                <th class="border border-gray-200 p-2">階段</th>
-                                <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
-                                <th class="border border-gray-200 p-2">教師/平台角色</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-gray-600">
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
-                                <td class="border border-gray-200 p-2">觀看 FSM 概念影片，繪製本單元的邏輯轉換草圖。</td>
-                                <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認 2FA 狀態。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
-                                <td class="border border-gray-200 p-2">領取 Classroom 作業，實作狀態機並進行實機除錯。</td>
-                                <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
-                                <td class="border border-gray-200 p-2">完成進階挑戰（如異常處理）並 Push，閱讀教師回覆 PR。</td>
-                                <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>重點審查學生是否漏掉 <code>break</code> 語句 (Fall-through bug) 以及轉移條件的嚴謹度。</li>
+            </ol>
         </div>
+
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元聚焦於「從功能導向思維轉向狀態導向思維」，引導學生透過狀態圖規劃程式流程，提升複雜系統的可維護性。</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── src/
+│   └── main.cpp      # (重點) 需實作 FSM loop 與 Event 偵測
+├── docs/             # 存放學生繪製的狀態圖 (JPG/SVG)
+└── README.md         # 描述避障邏輯的優先順序說明</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>main.cpp (FSM Skeleton)</strong></p>
+        <pre><code>enum State { IDLE, AUTO };
+State mode = IDLE;
+void loop() {
+  switch(mode) {
+    case IDLE: if(btn) mode = AUTO; break;
+    case AUTO: avoidObstacles(); break;
+  }
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>關鍵字掃描：：</strong> 檢查是否包含 <code>enum</code> 定義與 <code>switch</code> 語法。</li>
+            <li><strong>分支覆蓋率：：</strong> 透過測試腳本模擬不同輸入，驗證每個狀態是否都能被正確觸發與退出。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「用狀態機思考：交通號誌與販賣機」影片。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>Dashboard：</strong>確認學員能辨識環境中的「狀態」與「事件」。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，先畫圖再寫 Code，實機測試避障切換手感。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>邏輯診斷：</strong>協助修正狀態「震盪」或「死結」的問題。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作具備 Fail-safe (失效安全) 機制的救援狀態並 Push，閱讀教師回覆 PR。
+                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>核發最終課程評量，肯定學生對系統穩定度的考量。</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </body>
 

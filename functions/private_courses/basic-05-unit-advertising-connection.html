@@ -294,135 +294,133 @@
     </footer>
 
     <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" class="hidden">
+    <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
-        <div class="guide-section">
-            <h3>1. GitHub Classroom 設定</h3>
-            <ul>
-                <li>點擊儀表板「領取作業」按鈕，進入 GitHub Classroom 並獲取 `basic-05-ble-adv`。</li>
-                <li>將個人作業儲存庫 Clone 至本地。</li>
-                <li>檢測 `src/main.cpp` 中對於藍牙伺服器名稱的定義。</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>2. 翻轉課堂學習策略</h3>
-            <ul>
-                <li><strong>課前預習</strong>：觀看「BLE 廣播機制與連線流程」教學影片。</li>
-                <li><strong>課中實作</strong>：修改廣播名稱（加上座號，如 Car_07），並使用 nRF Connect App 掃描確認資訊。</li>
-                <li><strong>課後思考</strong>：為什麼 BLE 在連線成功後會停止廣播？如果我想同時被多台手機連線，該如何設計？</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>3. 單元實作任務</h3>
-            <ul>
-                <li><strong>作業 5-1 (30%)</strong>：自定義廣播封包，將設備名稱修改為指定格式並成功被手機搜尋。</li>
-                <li><strong>作業 5-2 (40%)</strong>：實作 `BLEServerCallbacks`，在 Serial Monitor 輸出連線與斷線的即時訊息。</li>
-                <li><strong>作業 5-3 (30%)</strong>：實作「斷線重連」機制：當手機主動斷開時，ESP32 必須自動重啟廣播。</li>
-            </ul>
-        </div>
+
+        <h3>【作業 2-1】「改名大師」：自定義廣播封包</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 品牌設備工程師 (Brand Device Engineer)。</li>
+            <li><strong>執行方式：</strong> 修改設備名稱（包含個人座號，如 Car_07）。使用手機 nRF Connect App 掃描並確認名稱是否正確顯示，進階挑戰：嘗試將 MAC
+                地址最後三碼加入名稱中。</li>
+            <li><strong>評分重點 :</strong> 成功修改廣播名稱且格式正確，能在手機端被唯一辨識。</li>
+        </ul>
+
+        <h3>【作業 2-2】「連線守門員」：連線回呼 (Callback)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 通訊系統開發員 (Communication System Developer)。</li>
+            <li><strong>執行方式：</strong> 實作 <code>BLEServerCallbacks</code>。當手機連線時亮起綠燈並在 Serial 印出連線成功訊息；斷線時則亮起紅燈，並務必自動呼叫
+                <code>startAdvertising()</code> 重新啟動廣播。</li>
+            <li><strong>評分重點 :</strong> 回呼函式運作正常，且斷線後能自動回復廣播狀態，確保下次能再次被搜尋連線。</li>
+        </ul>
+
+        <h3>【作業 2-3】「距離與強度的秘密」：RSSI 測距</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 場域感知工程師 (Field Awareness Engineer)。</li>
+            <li><strong>執行方式：</strong> 保持手機與 ESP32 的不同距離（30cm, 1m, 3m），記錄 RSSI 強度的變化。實作簡單邏輯：若 RSSI > -50dBm (極近距離) 則讓板載
+                LED 閃爍提示。</li>
+            <li><strong>評分重點 :</strong> 撰寫完整的 RSSI 記錄表，並能描述訊號強度與物理距離的非線性關係。</li>
+        </ul>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" class="hidden">
-        <h2>講師手冊 (Instructor Guide)</h2>
-        <div class="guide-section">
-            <h3>1. 教學重點 (Teaching Points)</h3>
-            <ul>
-                <li>解釋廣播 (Advertising) 與掃描 (Scanning) 的非同步特性。</li>
-                <li>介紹 BLE 三大廣播頻道 (37, 38, 39) 與 Wi-Fi 訊號的頻譜避讓原理。</li>
-                <li>討論何謂 Central (中心設備) 與 Peripheral (周邊設備) 的角色定義。</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>2. 常見問題 (Common Issues)</h3>
-            <ul>
-                <li><strong>搜尋不到設備</strong>：檢查藍牙核心是否初始化，或是廣播功率 (TX Power) 設定過低。</li>
-                <li><strong>名稱亂碼</strong>：提醒學生名稱長度限制（廣播封包總量 31 Bytes），過長會被截斷或造成解析錯誤。</li>
-                <li><strong>連上後立刻斷開</strong>：可能是 Connection Interval 設定超出了手機端的容忍範圍，建議維持預設值。</li>
-            </ul>
-        </div>
-        <div class="guide-section bg-gray-50 p-4 rounded-lg">
-            <h3 class="font-bold mb-2 text-sm text-gray-900">3. 評分標準 (Grading Criteria)</h3>
-            <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
-                <li><strong>基礎分</strong>：能成功自定義名稱並讓手機 App 建立連線。</li>
-                <li><strong>進階分</strong>：能解析廣播封包內容（如 MAC 位址、RSSI 強度）及其與距離的關係。</li>
-            </ul>
+    <section id="instructor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>在 GitHub 建立新 Repo（名為 <code>basic-05-ble-adv-template</code>）。</li>
+                <li>上傳包含藍牙核心初始化但「未實作重連」回呼邏輯的專案框架。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
+                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，獲得個人專屬 Repo。</li>
+                <li>實作自定義廣播名稱與自動斷線重連機制。</li>
+                <li>本地開發後 <strong>Push 代碼</strong> 提交進度。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>針對學生的「廣播間隔設定」與「事件管理 (Callbacks) 邏輯」予以具體點評。</li>
+            </ol>
         </div>
 
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mt-6">
-            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
-                <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
-.
-├── src/             # 包含 BLE Advertising 生命週期管理的 main.cpp
-├── README.md        # 測試報告：手機 App 掃描結果截圖與 RSSI 訊號強度紀錄
-└── .github/         # 自動評核配置</pre>
-                <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
-                <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-                    <li><strong>核心配置檢查：</strong> 偵測程式中是否呼叫了 <code>BLEDevice::init()</code> 與
-                        <code>BLEDevice::startAdvertising()</code>。</li>
-                    <li><strong>邏輯驗證：</strong> 模擬斷線事件，驗證 <code>onDisconnect</code> 回呼中是否能正確重啟廣播。</li>
-                </ul>
-            </div>
-        </div>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元聚焦於 BLE 生命週期的起始階段，引導學生掌握設備的「存在宣告」與「連線維護」。</p>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mt-6 bg-white p-4 border border-gray-200 rounded-lg">
-            <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
-            <div class="space-y-4 text-sm text-gray-600">
-                <div>
-                    <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
-                    <p>建立包含基礎藍牙初始化代碼但「未實作重連」邏輯的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
-                    <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以便點評學生的狀態機與事件管理設計。</p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
-                    <p>學生領取作業，獲得個人專屬 Repo，實作廣播與自動重連邏輯並透過手機 App 進行驗證後 Push。</p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
-                    <p>進入 Feedback PR，針對學生的「廣播間隔設定」與「省電模式考量」予以回饋。</p>
-                </div>
-            </div>
-        </div>
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── platformio.ini   # 包含基礎開發環境配置
+├── src/
+│   └── main.cpp      # (重點) 需實作 BLEServerCallbacks 的 0nConnect/onDisconnect
+└── README.md        # 測試報告：手機端掃描名稱截圖、RSSI 與距離映射表</code></pre>
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section mt-6">
-            <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm border-collapse border border-gray-200">
-                    <thead class="bg-gray-50 text-left text-gray-800">
-                        <tr>
-                            <th class="border border-gray-200 p-2">階段</th>
-                            <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
-                            <th class="border border-gray-200 p-2">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-600">
-                        <tr>
-                            <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
-                            <td class="border border-gray-200 p-2">研究手機掃描藍牙裝置時，為什麼有些慢、有些快？（廣播間隔）。</td>
-                            <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員安裝好 nRF Connect。</td>
-                        </tr>
-                        <tr>
-                            <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
-                            <td class="border border-gray-200 p-2">領取 Classroom 作業，實作廣播回呼邏輯並在不同環境下測量 RSSI。</td>
-                            <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
-                        </tr>
-                        <tr>
-                            <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
-                            <td class="border border-gray-200 p-2">優化廣播功率以平衡距離與能耗並 Push，閱讀教師回覆 PR。</td>
-                            <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>main.cpp (BLE 重連回呼)</strong></p>
+        <pre><code>#include &lt;BLEDevice.h&gt;
+#include &lt;BLEServer.h&gt;
+
+class MyServerCallbacks: public BLEServerCallbacks {
+    void onConnect(BLEServer* pServer) {
+      Serial.println("Device connected!");
+    };
+    void onDisconnect(BLEServer* pServer) {
+      Serial.println("Device disconnected!");
+      BLEDevice::startAdvertising(); // 自動恢復廣播
+    }
+};
+
+void setup() {
+  BLEDevice::init("ESP32_CAR_01");
+  BLEServer *pServer = BLEDevice::createServer();
+  pServer->setCallbacks(new MyServerCallbacks());
+  BLEDevice::startAdvertising();
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>核心配置掃描：：</strong> 檢查 <code>BLEDevice::init()</code> 的調用參數是否符合命名規範。</li>
+            <li><strong>流程邏輯驗證：：</strong> 透過模擬執行確認斷線回呼中是否存在 <code>startAdvertising</code>。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「BLE 廣播原理：如何讓手機看見你的 ESP32」影片。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員已在手機安裝好調試工具
+                        (nRF Connect)。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實作改名與重連測試，並測量不同距離下的 RSSI 強度變化。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>解釋 Wi-Fi 干擾對 RSSI 的影響。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作「靠近自動解鎖」功能並提交至 PR，閱讀教師回覆。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>審核學生對「訊號不穩定性」的應對邏輯。</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 
     <script>

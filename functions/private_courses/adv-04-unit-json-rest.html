@@ -21,28 +21,16 @@
         </div>
         <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
 
-        <div class="container mx-auto px-4 relative z-10 text-center">
-            <div
-                class="badge-header inline-flex items-center gap-2 px-4 py-1 rounded-full bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 backdrop-blur-sm mb-6 text-xs font-semibold tracking-wide uppercase font-[Outfit]">
-                進階 4 - 單元 3
-            </div>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
-                JSON 數據打包<br>與 RESTful API 回傳
-            </h1>
-            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed mb-10">
-                建立標準化、語義化的通訊語言，讓硬體與網頁流暢溝通協助。
-            </p>
-
-            <div class="flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
-                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition transform hover:scale-105 active:scale-95">
-                    <span>📺</span> 觀看教學影片
-                </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
-                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition transform hover:scale-105 active:scale-95">
-                    <span>📄</span> 閱讀課程講義
-                </button>
-            </div>
+        <div class="mt-8 flex flex-wrap justify-center gap-4">
+            <button onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/UjrNwN-Wm_U')"
+                class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                <span>📺</span> 觀看教學影片
+            </button>
+            <button
+                onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vQjpHHno3kKJ9yS5nc9TxIHwDLWOs5FZhX2Swz4HQUYM_wGp5qC8IZJgCWYjWN-6MsBgqO8Y49qpgk6/pub?embedded=true')"
+                class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                <span>📄</span> 閱讀課程講義
+            </button>
         </div>
     </header>
 
@@ -160,77 +148,81 @@
             </div>
         </section>
 
-        <!-- Assignments Section -->
-        <section>
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：JSON 與 RESTful API 實戰</h2>
-            <p class="text-center text-gray-500 mb-12">掌握硬體通訊的標準化協定，建立雲端對話能力。</p>
-
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Task 3-1 -->
-                <div onclick="openSubmissionModal('adv-04-3-1', '【作業 3-1】標準化封包產生器')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-emerald-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">📦</span>
-                            <span class="bg-emerald-50 text-emerald-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-emerald-600 transition">【作業
-                            3-1】標準化封包產生器</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務目標：</strong>將感測器數據「打包並回傳」的接口實作。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>使用 ArduinoJson 序列化數據</li>
-                                <li>建立 /api/telemetry 的 GET 接口</li>
-                                <li>驗證 JSON 結構的層次化與可讀性</li>
-                            </ul>
+        <!-- Assignment Highlights -->
+        <section class="module-section">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                        <div>
+                            <h2 class="text-3xl font-bold text-white mb-2">核心實驗室：JSON 與 RESTful API 實戰</h2>
+                            <p class="text-slate-400">掌握硬體通訊的標準化協定，建立雲端對話能力。</p>
                         </div>
                     </div>
-                </div>
 
-                <!-- Task 3-2 -->
-                <div onclick="openSubmissionModal('adv-04-3-2', '【作業 3-2】指令接收器')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-blue-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🗣️</span>
-                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
-                            3-2】指令接收器 (POST)</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務目標：</strong>實作接收網頁控制指令的 REST 接口。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>監聽 /api/move 的 POST 請求</li>
-                                <li>解析 JSON Payload 並建立防錯機制</li>
-                                <li>對比 GET 與 POST 在語義上的差異</li>
+                    <div class="grid md:grid-cols-2 gap-8 mb-12">
+                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
+                            <div class="flex items-center gap-4 mb-6">
+                                <span class="text-2xl">📡</span>
+                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
+                            </div>
+                            <p class="mb-4 text-slate-400">在任務中，GitHub 是你的「基地台」。請確保每完成一個里程碑，就將數據回傳。</p>
+                            <ul class="space-y-2 text-slate-300">
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 1.</span>
+                                    <span>接受 GitHub Classroom 邀請，複製 (Clone) 專屬任務倉庫。</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 2.</span>
+                                    <span>完成代碼撰寫後，執行 <code
+                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code>
+                                        將進度上傳。</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 3.</span>
+                                    <span>自動化助理會即時在 PR (Pull Request) 中回饋評分結果。</span>
+                                </li>
                             </ul>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Task 3-3 -->
-                <div onclick="openSubmissionModal('adv-04-3-3', '【作業 3-3】API 效能分析')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-amber-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🚀</span>
-                            <span class="bg-amber-50 text-amber-700 text-xs px-3 py-1 rounded-full font-bold">45
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-amber-600 transition">【作業
-                            3-3】API 效能與壓力測試</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務目標：</strong>分析封包大小對傳輸延遲的影響。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>對比「冗餘」與「精簡」封包體積</li>
-                                <li>測試高頻請求下的系統穩定度</li>
-                                <li>理解嵌入式系統的通訊資源限制</li>
-                            </ul>
+                        <div class="grid gap-4">
+                            <!-- Task 3-1 -->
+                            <div onclick="openSubmissionModal('adv-04-3-1', '【作業 3-1】標準化封包產生器')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-emerald-600 transition">
+                                        作業 3-1</h3>
+                                    <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">標準化封包產生器</h4>
+                                <p class="text-sm text-gray-500">將感測器數據「打包並回傳」的接口實作。</p>
+                            </div>
+
+                            <!-- Task 3-2 -->
+                            <div onclick="openSubmissionModal('adv-04-3-2', '【作業 3-2】指令接收器')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition">作業
+                                        3-2</h3>
+                                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">指令接收器 (POST)</h4>
+                                <p class="text-sm text-gray-500">實作接收網頁控制指令的 REST 接口。</p>
+                            </div>
+
+                            <!-- Task 3-3 -->
+                            <div onclick="openSubmissionModal('adv-04-3-3', '【作業 3-3】API 效能分析')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-amber-600 transition">作業
+                                        3-3</h3>
+                                    <span class="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded font-bold">45
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">API 效能與壓力測試</h4>
+                                <p class="text-sm text-gray-500">分析封包大小對傳輸延遲的影響。</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -253,24 +245,22 @@
         <h3>作業 3-1：標準化封包產生器</h3>
         <ul>
             <li><strong>角色扮演：</strong> 後端 API 開發者。</li>
-            <li><strong>執行方式：</strong> 整合多種感測器數據（如 $X, Y$ 質心座標、電量、運行狀態），設計一個嚴謹的巢狀 JSON 結構。實作 `/api/telemetry` GET
-                接口，模擬網頁端請求時回傳當前所有狀態的 JSON 封包。</li>
-            <li><strong>評分重點：</strong> JSON 結構是否符合邏輯且具備良好的縮排與欄位命名。</li>
+            <li><strong>執行方式：</strong> 整合感測器數據設計巢狀 JSON 結構，實作 /api/telemetry GET 接口。</li>
+            <li><strong>評分重點：</strong> JSON 結構邏輯性與欄位命名的語義化。</li>
         </ul>
 
         <h3>作業 3-2：指令接收器 (POST)</h3>
         <ul>
             <li><strong>角色扮演：</strong> 系統整合工程師。</li>
-            <li><strong>執行方式：</strong> 在 ESP32 上實作 `/api/move` 的 POST 接口，接收來自網頁端的 JSON 指令（如 `{"action": "turn", "angle":
-                45}`）。需解析封包並根據指令內容控制硬體動作。</li>
-            <li><strong>評分重點：</strong> 代碼中是否包含對 Payload 的合法性檢查（如缺少 Key 時的回報機制）。</li>
+            <li><strong>執行方式：</strong> 實作 /api/move POST 接口，接收並解析 JSON 指令以控制硬體。</li>
+            <li><strong>評分重點：</strong> 代碼中是否包含 Payload 合法性檢查機制。</li>
         </ul>
 
         <h3>作業 3-3：API 效能與壓力測試</h3>
         <ul>
             <li><strong>角色扮演：</strong> 雲端效能優化工程師。</li>
-            <li><strong>執行方式：</strong> 對比「冗餘版」與「精簡版」JSON 封包的大小，並使用迴圈進行連續高頻 (10Hz) 請求，記錄 ESP32 的回應延遲 (RTT) 與記憶體溢位風險。</li>
-            <li><strong>評分重點：</strong> 實驗報告是否能指出 JSON 序列化過程中 CPU 與 Bandwidth 的瓶頸。</li>
+            <li><strong>執行方式：</strong> 對比冗餘與精簡封包大小，進行高頻請求測試並記錄延遲。</li>
+            <li><strong>評分重點：</strong> 實驗報告是否能指出序列化過程中的瓶頸。</li>
         </ul>
     </section>
 
@@ -306,12 +296,14 @@
                         <div class="flex gap-3">
                             <span class="text-blue-500">🚫</span>
                             <p class="text-sm text-gray-700"><strong>REST 語義校驗：</strong> 模擬傳送錯誤方法，檢查是否回報
-                                <code>405 Method Not Allowed</code>。</p>
+                                <code>405 Method Not Allowed</code>。
+                            </p>
                         </div>
                         <div class="flex gap-3">
                             <span class="text-blue-500">🚑</span>
                             <p class="text-sm text-gray-700"><strong>Payload 解析測試：</strong> 傳送毀損 JSON，檢查是否能處理
-                                <code>DeserializationError</code> 而非崩潰。</p>
+                                <code>DeserializationError</code> 而非崩潰。
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -394,12 +386,6 @@
         </div>
     </section>
 
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/UjrNwN-Wm_U",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vQjpHHno3kKJ9yS5nc9TxIHwDLWOs5FZhX2Swz4HQUYM_wGp5qC8IZJgCWYjWN-6MsBgqO8Y49qpgk6/pub?embedded=true"
-        };
-    </script>
     <script src="/js/course-shared.js"></script>
 </body>
 

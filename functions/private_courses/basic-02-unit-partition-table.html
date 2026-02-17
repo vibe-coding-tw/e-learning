@@ -313,32 +313,31 @@
     </footer>
 
     <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" class="hidden">
+    <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
-        <div class="guide-section">
-            <h3>1. GitHub Classroom 設定</h3>
-            <ul>
-                <li>點擊儀表板「領取作業」按鈕，進入 GitHub Classroom 並獲取 `basic-02-partitions`。</li>
-                <li>將個人作業儲存庫 Clone 至本地。</li>
-                <li>注意專案根目錄下的 `partitions.csv` 檔案，這是本次核心。</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>2. 翻轉課堂學習策略</h3>
-            <ul>
-                <li><strong>課前預習</strong>：觀看「ESP32 Flash 分區表解析」影片，認識 NVS 與 SPIFFS。</li>
-                <li><strong>課中實作</strong>：修改分區大小並重新燒錄，觀察 Flash 剩餘空間的變化。</li>
-                <li><strong>課後思考</strong>：為什麼我們不把所有空間都給 APP 區？檔案系統 (SPIFFS) 的存在解決了什麼問題？</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>3. 單元實作任務</h3>
-            <ul>
-                <li><strong>作業 2-1 (40%)</strong>：自定義一個分區表，新增一個名為 `my_data` 的自選分區。</li>
-                <li><strong>作業 2-2 (30%)</strong>：實作 NVS (Non-volatile Storage) 讀寫，紀錄設備的開機次數。</li>
-                <li><strong>作業 2-3 (30%)</strong>：使用 SPIFFS 儲存一個簡單的檔案，並在程式啟動時讀取內容印出。</li>
-            </ul>
-        </div>
+
+        <h3>作業 1-1：「擴容手術」自定義 partitions.csv</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 韌體架構師 (Firmware Architect)。</li>
+            <li><strong>執行方式：</strong> 重新規劃 Flash 空間。將預設的 <code>factory</code> 分區擴大至 2MB，並配合縮減 <code>spiffs</code>
+                分區。建立一個名為 <code>my_data</code> 的自選分區（size: 0x1000）。</li>
+            <li><strong>評分重點 :</strong> <code>partitions.csv</code> 語法正確且 Offset 地址無重疊。</li>
+        </ul>
+
+        <h3>作業 1-2：「數據黑盒子」NVS 參數持久化</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 嵌入式開發工程師 (Embedded Developer)。</li>
+            <li><strong>執行方式：</strong> 使用 <code>Preferences</code> 庫實作開機計數器與 PID 參數儲存。驗證即使在完全斷電重啟後，數據仍能正確讀回。</li>
+            <li><strong>評分重點 :</strong> 掌握 Key-Value 存取邏輯與 <code>preferences.begin()</code> 的正確使用。</li>
+        </ul>
+
+        <h3>作業 1-3：「網頁伺服器載入」LittleFS 檔案部署</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 全端 IoT 開發者 (Fullstack IoT Developer)。</li>
+            <li><strong>執行方式：</strong> 將遙控器前端檔案（HTML/CSS）存入 LittleFS 分區。修改 ESP32 程式實作「動靜態分離」，從 Flash 讀取檔案內容並透過 WebServer
+                回傳。</li>
+            <li><strong>評分重點 :</strong> 成功掛載 LittleFS 並透過瀏覽器存取到存儲於 Flash 的靜態網頁。</li>
+        </ul>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
@@ -347,35 +346,40 @@
         <div class="classroom-guide">
             <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
             <ol>
-                <li>上傳包含基礎檔案讀寫框架但「分區表 configuration 損毀或不對齊」的 Repo 框架，並勾選 <strong>"Template repository"</strong>。</li>
+                <li>在 GitHub 建立新 Repo（名為 <code>basic-02-partition-template</code>）。</li>
+                <li>上傳包含基礎檔案讀寫框架但「分區表 configuration 損毀或不對齊」的 Repo 框架。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
             <ol>
-                <li>建立作業並連結範本。建議開啟 <strong>Feedback Pull Requests</strong> 選項以便點評學員對 Flash 空間規劃與磨損均衡 (Wear Leveling)
-                    的理解。</li>
+                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
+                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
             <ol>
-                <li>學生領取作業，獲得個人專屬 Repo，修正分區衝突、實作 SPIFFS/Preferences 存取邏輯並成功持久化資料。</li>
-                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+                <li>學生領取作業，獲得個人專屬 Repo。</li>
+                <li>修正分區衝突，實作 SPIFFS/Preferences 存取邏輯並成功持久化資料。</li>
+                <li>本地開發後 <strong>Push 代碼</strong> 提交進度。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
             <ol>
-                <li>打開 Feedback PR，針對學生的「分區地址計算精確度」與「異常狀態下 (如 NVS 損毀) 的初始復原思維」予以具體回饋。</li>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>針對學生的「分區地址計算精確度」與「NVS 異常狀態處理」予以具體點評。</li>
             </ol>
         </div>
 
         <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元引導學生深入 Flash 映射層級，掌握嵌入式系統中非揮發性記憶體的管理技巧，建議範本倉庫設置如下：</p>
+        <p>此單元引導學生深入 Flash 映射層級，掌握嵌入式系統中非揮發性記憶體的管理技巧。</p>
 
         <h3>A. 範本倉庫 (Template Repo) 結構</h3>
         <pre><code>.
 ├── platformio.ini   # (重點) 需加入 board_build.partitions = partitions.csv
 ├── partitions.csv   # 自定義 Flash 分區表設定
-├── src/main.cpp      # 包含 Preferences (NVS) 與 SPIFFS 讀寫邏輯
+├── src/
+│   └── main.cpp      # 包含 Preferences (NVS) 與 SPIFFS 讀寫邏輯
 └── README.md        # 分區空間配置計算表、燒錄日誌與檔案讀取截圖</code></pre>
 
         <h3>B. 參考範例代碼 (Reference Example Code)</h3>
@@ -389,9 +393,8 @@ storage,  data, spiffs,  ,        2M,</code></pre>
 
         <h3>C. 自動評分 (Autograding) 的設計</h3>
         <ul>
-            <li><strong>語法校驗：</strong> 解析 <code>partitions.csv</code>，驗證 Offset 地址是否重疊 (Overlap) 且 Size 是否符合 4KB 對齊要求。
-            </li>
-            <li><strong>邏輯健壯性：</strong> 搜尋 <code>main.cpp</code> 中是否包含 <code>nvs_flash_erase()</code> 應急處理邏輯。</li>
+            <li><strong>語法校驗：：</strong> 解析 <code>partitions.csv</code>，驗證 Offset 地址是否重疊且 Size 是否符合 4KB 對齊要求。</li>
+            <li><strong>邏輯健壯性：：</strong> 搜尋 <code>main.cpp</code> 中是否包含 <code>Preferences</code> 的正確初始化邏輯。</li>
         </ul>
 
         <h2>翻轉教室的實施策略</h2>
@@ -403,7 +406,7 @@ storage,  data, spiffs,  ,        2M,</code></pre>
                     <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
-            <tbody style="color: #4b5563;">
+            <tbody>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「ESP32 記憶體管理：為什麼要自定義分區表？」教學影片。</td>
@@ -412,19 +415,16 @@ storage,  data, spiffs,  ,        2M,</code></pre>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實作持久化儲存 (2-3)，對比 Preferences 與 SPIFFS
-                        在存取「配置數值」與「大檔案」時的效能差。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>解釋 Wear Leveling (磨損均衡)
-                        機制，為什麼 Flash 不能無限次重複擦寫。
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實作持久化儲存，對比 Preferences 與 SPIFFS 的效能差異。
                     </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>解釋 Wear Leveling (磨損均衡)
+                        機制與擦寫壽命。</td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作具備 JSON 參數解析功能的 SPIFFS 讀取腳本並 Push 最終 PR。
-                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作具備 JSON 參數解析功能的 SPIFFS 讀取腳本並提交最終 PR。</td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>審核學生對「分區對齊規則」與「檔案系統可靠性」的工程化實操細節。
-                    </td>
+                            PR：</strong>審核學員對分區對齊規則與檔案系統可靠性的掌握細節。</td>
                 </tr>
             </tbody>
         </table>

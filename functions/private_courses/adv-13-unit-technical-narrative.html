@@ -51,11 +51,11 @@
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                <button onclick="window.courseShared.enterMediaMode('video', window.RESOURCES.youtube)"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                <button onclick="window.courseShared.enterMediaMode('doc', window.RESOURCES.doc)"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -226,84 +226,102 @@
             </div>
         </section>
 
-        <!-- Assignments Section -->
-        <section>
-            <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center">
-                <span class="mr-3">📝</span> 實作任務 (Classroom Challenges)
-            </h2>
-
-            <!-- Assignment 1 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-md cursor-pointer"
-                onclick="openSubmissionModal('adv-13-architecture', 'Task 3-1: 架構圖設計')">
-                <div class="p-6 border-b border-gray-100 bg-gray-50">
-                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
-                        <span class="bg-violet-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 3-1</span>
-                        「一眼就懂」的架構圖設計 (60 min)
-                    </h3>
-                </div>
-                <div class="p-6">
-                    <div class="mb-4">
-                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
-                        <p class="text-gray-700">利用圖形工具，將你無人車的「數據流」畫出來。目標是製作一張不需要解釋，別人就能看懂系統運作邏輯的資訊圖表。</p>
+        <!-- Assignment Highlights -->
+        <section class="module-section">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                        <div>
+                            <h2
+                                class="text-3xl font-bold text-white mb-2 underline decoration-pink-500 underline-offset-8">
+                                實作任務：說一個動人的技術故事</h2>
+                            <p class="text-slate-400">打造你的專屬作品集，讓冷冰冰的代碼散發溫度。</p>
+                        </div>
                     </div>
-                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
-                        <li><strong>分層呈現：</strong>清楚區分 UI 層 (Web/App)、通訊層 (BLE/WiFi) 與硬體執行層 (ESP32/Motor)。</li>
-                        <li><strong>視覺指引：</strong>用箭頭標示數據（如 Joystick $(x,y)$）包含數學轉換公式，最終變成馬達 PWM 的過程。</li>
-                    </ul>
-                </div>
-            </div>
 
-            <!-- Assignment 2 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-md cursor-pointer"
-                onclick="openSubmissionModal('adv-13-dashboard', 'Task 3-2: 動態數據儀表板')">
-                <div class="p-6 border-b border-gray-100 bg-gray-50">
-                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
-                        <span class="bg-violet-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 3-2</span>
-                        動態數據儀表板 (60 min)
-                    </h3>
-                </div>
-                <div class="p-6">
-                    <div class="mb-4">
-                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
-                        <p class="text-gray-700">在你的控制網頁上加入實時的「性能監控器」。目標是在演示時，除了看車子在跑，還能看到背後的「數據心跳」。</p>
+                    <div class="grid md:grid-cols-2 gap-8 mb-12">
+                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-pink-500/20 flex items-center justify-center text-2xl">
+                                    📡</div>
+                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
+                            </div>
+                            <p class="mb-4 text-slate-400">完成任務後，請將數據與結果推送到你的專屬倉庫。</p>
+                            <ul class="space-y-3 text-slate-300">
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-pink-500 text-white text-xs flex items-center justify-center font-bold">1</span>
+                                    <span>接受 GitHub Classroom 邀請並 Clone 倉庫</span>
+                                </li>
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-pink-500 text-white text-xs flex items-center justify-center font-bold">2</span>
+                                    <span>完成代碼後執行 <code
+                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code></span>
+                                </li>
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-pink-500 text-white text-xs flex items-center justify-center font-bold">3</span>
+                                    <span>在 PR 中查看自動化評分與教師回饋</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="grid gap-4">
+                            <!-- Task 3-1 -->
+                            <div onclick="window.courseShared.openSubmissionModal('adv-13-architecture', '【作業 3-1】「一眼就懂」的架構圖設計')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-violet-600 transition">
+                                        作業 3-1</h3>
+                                    <span class="bg-violet-100 text-violet-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">「一眼就懂」的架構圖設計</h4>
+                                <p class="text-sm text-gray-500">繪製系統數據流與分層結構，展示無人車運作邏輯。</p>
+                            </div>
+
+                            <!-- Task 3-2 -->
+                            <div onclick="window.courseShared.openSubmissionModal('adv-13-dashboard', '【作業 3-2】動態數據儀表板')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-pink-600 transition">作業
+                                        3-2</h3>
+                                    <span class="bg-pink-100 text-pink-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">動態數據儀表板</h4>
+                                <p class="text-sm text-gray-500">實作即時波形與數值儀表，視覺化呈現無人車性能指標。</p>
+                            </div>
+
+                            <!-- Task 3-3 -->
+                            <div onclick="window.courseShared.openSubmissionModal('adv-13-pitch', '【作業 3-3】30 秒電梯簡報')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-indigo-600 transition">
+                                        作業 3-3</h3>
+                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">45
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">30 秒電梯簡報</h4>
+                                <p class="text-sm text-gray-500">錄製具備專業質感的技術成果短片，結合實機演示與特寫。</p>
+                            </div>
+                        </div>
                     </div>
-                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
-                        <li><strong>波形繪製：</strong>利用 Canvas 或 Chart.js 繪製馬達輸出 (PWM) 或 PID 誤差的即時波形。</li>
-                        <li><strong>數值儀表：</strong>實作圓形進度條或數字面板，顯示當前的 CPU 負載 (Loop Time) 或電池電壓。</li>
-                    </ul>
                 </div>
             </div>
+        </section>
 
-            <!-- Assignment 3 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md cursor-pointer"
-                onclick="openSubmissionModal('adv-13-pitch', 'Task 3-3: 電梯簡報')">
-                <div class="p-6 border-b border-gray-100 bg-gray-50">
-                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
-                        <span class="bg-violet-600 text-white text-xs px-2 py-1 rounded uppercase mr-3">Task 3-3</span>
-                        30 秒電梯簡報 (Elevator Pitch) (45 min)
-                    </h3>
-                </div>
-                <div class="p-6">
-                    <div class="mb-4">
-                        <strong class="block text-sm text-gray-500 uppercase tracking-wide mb-2">任務說明 (Mission)</strong>
-                        <p class="text-gray-700">錄製一段現場展示影片，具備專業質感的技術成果短片。</p>
-                    </div>
-                    <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6 bg-gray-50 p-4 rounded-lg">
-                        <li><strong>實機演示：</strong>邊操作邊說明。例如：「現在切換到自律模式，你可以看到畫面上搖桿變暗了...」。</li>
-                        <li><strong>性能特寫：</strong>特寫展示技術細節，如「死區 (Deadzone)」消除後的微動反應，或「指數曲線 (Expo)」帶來的平滑起步效果。</li>
-                    </ul>
-                </div>
+        <div class="mt-8 bg-indigo-50 border border-indigo-100 p-6 rounded-xl flex items-start">
+            <span class="text-2xl mr-4">🚀</span>
+            <div>
+                <h4 class="font-bold text-indigo-900 mb-2">Next Level: 放入你的 Portfolio</h4>
+                <p class="text-sm text-indigo-700">
+                    完成這些挑戰後，你將擁有一份完整的專案作品集素材。將架構圖、截圖和演示影片整理到你的 GitHub README 或個人網站，這將是你成為頂尖開發者的重要資產。
+                </p>
             </div>
-
-            <div class="mt-8 bg-indigo-50 border border-indigo-100 p-6 rounded-xl flex items-start">
-                <span class="text-2xl mr-4">🚀</span>
-                <div>
-                    <h4 class="font-bold text-indigo-900 mb-2">Next Level: 放入你的 Portfolio</h4>
-                    <p class="text-sm text-indigo-700">
-                        完成這些挑戰後，你將擁有一份完整的專案作品集素材。將架構圖、截圖和演示影片整理到你的 GitHub README 或個人網站，這將是你成為頂尖開發者的重要資產。
-                    </p>
-                </div>
-            </div>
+        </div>
 
         </section>
 
@@ -465,6 +483,13 @@
             </div>
         </div>
     </section>
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/placeholder", // Needs actual link
+            doc: "https://docs.google.com/document/d/e/2PACX-1vT7O_vUu8uV6-3Vn27S1jUw8D4G9s65l4V6Y8S9G7p7W0dC-G9Y8N_P9Y8N_P9Y8N_P9Y8/pub?embedded=true" // Placeholder
+        };
+    </script>
+    <script src="/js/course-shared.js"></script>
 </body>
 
 </html>

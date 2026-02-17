@@ -22,23 +22,14 @@
         <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
 
         <div class="container mx-auto px-4 relative z-10 text-center">
-            <div
-                class="badge-header inline-flex items-center gap-2 px-4 py-1 rounded-full bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 backdrop-blur-sm mb-6 text-xs font-semibold tracking-wide uppercase font-[Outfit]">
-                進階 3 - 單元 1
-            </div>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
-                BLE Notify 機制深論<br>從「拉」到「推」
-            </h1>
-            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
-                觀念翻轉：擺脫低效的定時輪詢，建立零延遲、極省電的事件驅動通訊架構。
-            </p>
-
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/cVU9x52dYuQ')"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vSP-hTB-P9jwpKPYzw-SrQXD7nJ9__rvVOXtccSwcRHmLD3ySL9Fnkk2_84bw3HPrJI8Pb1P68UwU5W/pub?embedded=true')"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -158,77 +149,81 @@ characteristic.startNotifications().then(_ => {
             </div>
         </section>
 
-        <!-- Assignments Section -->
-        <section>
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：Notify 機制優化實戰</h2>
-            <p class="text-center text-gray-500 mb-12">掌握從實體感測器到網頁 UI 的完整「推送」鏈條。</p>
-
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Task 1-1 -->
-                <div onclick="openSubmissionModal('adv-03-heartbeat-notify', '【作業 1-1】實作「心跳偵測」Notify 系統')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-indigo-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">💓</span>
-                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
-                            1-1】心跳偵測系統</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務目標：</strong>讓 ESP32 每隔 100ms 主動推送模擬傳感器數據。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>設定 `PROPERTY_NOTIFY` 屬性</li>
-                                <li>JS 端實作 `startNotifications()`</li>
-                                <li>視覺化 FPS，觀察比 Read 模式更流暢的表現</li>
-                            </ul>
+        <!-- Assignment Highlights -->
+        <section class="module-section">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                        <div>
+                            <h2 class="text-3xl font-bold text-white mb-2">核心實驗室：Notify 機制優化實戰</h2>
+                            <p class="text-slate-400">掌握從實體感測器到網頁 UI 的完整「推送」鏈條。</p>
                         </div>
                     </div>
-                </div>
 
-                <!-- Task 1-2 -->
-                <div onclick="openSubmissionModal('adv-03-smart-trigger', '【作業 1-2】「變動觸發」優化實驗')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-purple-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🧠</span>
-                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
-                            1-2】變動觸發優化</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務目標：</strong>設計聰明的推送策略，只在有意義時推送。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>修改 ESP32 程式：座標位移 > 5 像素才發送</li>
-                                <li>對比「固定頻率」與「變動觸發」的封包總量</li>
-                                <li>學習如何透過協議設計節省硬體資源</li>
+                    <div class="grid md:grid-cols-2 gap-8 mb-12">
+                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
+                            <div class="flex items-center gap-4 mb-6">
+                                <span class="text-2xl">📡</span>
+                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
+                            </div>
+                            <p class="mb-4 text-slate-400">在任務中，GitHub 是你的「基地台」。請確保每完成一個里程碑，就將數據回傳。</p>
+                            <ul class="space-y-2 text-slate-300">
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 1.</span>
+                                    <span>接受 GitHub Classroom 邀請，複製 (Clone) 專屬任務倉庫。</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 2.</span>
+                                    <span>完成代碼撰寫後，執行 <code
+                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code>
+                                        將進度上傳。</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-500 font-bold">Step 3.</span>
+                                    <span>自動化助理會即時在 PR (Pull Request) 中回饋評分結果。</span>
+                                </li>
                             </ul>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Task 1-3 -->
-                <div onclick="openSubmissionModal('adv-03-big-data-chunking', '【作業 1-3】大數據分段與流控')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-pink-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">📦</span>
-                            <span class="bg-pink-50 text-pink-700 text-xs px-3 py-1 rounded-full font-bold">45
-                                min</span>
-                        </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-pink-600 transition">【作業
-                            1-3】大數據分段重組</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務目標：</strong>處理超過 MTU 限制（如 50 Bytes）的 JSON 長字串。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>ESP32 端：將 JSON 切成多個封包連續 Notify</li>
-                                <li>JS 端：實作 Buffer 緩衝區重新拼接封包</li>
-                                <li>解決傳輸複雜影像特徵數據時的物理限制</li>
-                            </ul>
+                        <div class="grid gap-4">
+                            <!-- Task 1-1 -->
+                            <div onclick="openSubmissionModal('adv-03-heartbeat-notify', '【作業 1-1】實作「心跳偵測」Notify 系統')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-indigo-600 transition">
+                                        作業 1-1</h3>
+                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">心跳偵測系統</h4>
+                                <p class="text-sm text-gray-500">實作 ESP32 主動推送模擬感測器數據到網頁端。</p>
+                            </div>
+
+                            <!-- Task 1-2 -->
+                            <div onclick="openSubmissionModal('adv-03-smart-trigger', '【作業 1-2】「變動觸發」優化實驗')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-purple-600 transition">
+                                        作業 1-2</h3>
+                                    <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">變動觸發優化</h4>
+                                <p class="text-sm text-gray-500">設計聰明的推送策略，僅在數值位移超過閾值時發送。</p>
+                            </div>
+
+                            <!-- Task 1-3 -->
+                            <div onclick="openSubmissionModal('adv-03-big-data-chunking', '【作業 1-3】大數據分段與流控')"
+                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-pink-600 transition">作業
+                                        1-3</h3>
+                                    <span class="bg-pink-100 text-pink-700 text-xs px-2 py-1 rounded font-bold">45
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">大數據分段重組</h4>
+                                <p class="text-sm text-gray-500">處理超過 MTU 限制的 JSON 長字串切片與重組。</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -256,22 +251,21 @@ characteristic.startNotifications().then(_ => {
         <h3>作業 1-1：心跳偵測系統</h3>
         <ul>
             <li><strong>角色扮演：</strong> IoT 系統工程師。</li>
-            <li><strong>執行方式：</strong> 在 ESP32 端實作一個計時器，每隔 100ms 呼叫一次 `notify()` 發送模擬的感測器數據（如心跳值或座標），網頁端則使用
-                `characteristicvaluechanged` 事件即時更新 UI。</li>
-            <li><strong>評分重點：</strong> 能否成功開啟 Notify 訂閱，並在網頁端不重整的情況下看到數據跳動。</li>
+            <li><strong>執行方式：</strong> 在 ESP32 端實作定時推送模擬感測器數據，網頁端使用事件監聽即時更新 UI。</li>
+            <li><strong>評分重點：</strong> 能否成功開啟 Notify 訂閱，並在網頁端看到動態數據。</li>
         </ul>
 
         <h3>作業 1-2：變動觸發優化</h3>
         <ul>
             <li><strong>角色扮演：</strong> 韌體優化工程師。</li>
-            <li><strong>執行方式：</strong> 修改推送策略：只有當數值變化超過特定閾值 (Threshold，例如座標位移 > 5 像素) 時才發送 Notify。</li>
-            <li><strong>評分重點：</strong> 提交一份分析報告，說明此策略對「降低無線電佔空比」與「節省電力」的貢獻。</li>
+            <li><strong>執行方式：</strong> 修改推送策略：只有當數值變化超過特定閾值時才發送 Notify。</li>
+            <li><strong>評分重點：</strong> 分析此策略對降低功耗與頻寬佔用的貢獻。</li>
         </ul>
 
         <h3>作業 1-3：大數據分段重組</h3>
         <ul>
             <li><strong>角色扮演：</strong> 通訊協議開發者。</li>
-            <li><strong>執行方式：</strong> 嘗試發送一段超過 20 Bytes 的 JSON 字串，實作 ESP32 端的數據切片 (Chunking) 與網頁端的緩衝區重組邏輯。</li>
+            <li><strong>執行方式：</strong> 嘗試發送長 JSON 字串，實作碎形化發送與緩衝區重組邏輯。</li>
             <li><strong>評分重點：</strong> 字串拼接是否正確，且能成功被 `JSON.parse()` 解析。</li>
         </ul>
     </section>
@@ -282,124 +276,80 @@ characteristic.startNotifications().then(_ => {
         <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
             <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
                 <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        A. 範本倉庫 (Template Repo) 結構
-                    </h4>
-                    <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
-.
+                <!-- Instructor Guide (Hidden) -->
+                <section id="instructor-guide" style="display: none;">
+                    <h2>GitHub Classroom 詳細操作指南</h2>
+                    <div class="classroom-guide">
+                        <p><strong>第一步：準備範本專案</strong></p>
+                        <ol>
+                            <li>提供已定義好 UUID 的基礎代碼。</li>
+                            <li>設定為 Template repository。</li>
+                        </ol>
+
+                        <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+                        <ol>
+                            <li>設定「自動化事件觸發測試」，區分 Read 與 Notify 差異。</li>
+                        </ol>
+
+                        <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+                        <ol>
+                            <li>領取作業，觀察 Notify 低延遲效應。</li>
+                            <li>完成閾值優化並 Push。</li>
+                        </ol>
+
+                        <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+                        <ol>
+                            <li>針對「非阻塞 (Non-blocking)」編程思想的理解予以回饋。</li>
+                        </ol>
+                    </div>
+
+                    <h2>在 GitHub Classroom 的實戰部署建議</h2>
+                    <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+                    <pre><code>.
 ├── src/             # UUID 基礎代碼
 ├── docs/            # 延遲測試報告模板
-└── README.md        # 紀錄：Notify 頻率與流量控制</pre>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        B. 自動評估 (Autograding) 的設計
-                    </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">👂</span>
-                            <p class="text-sm text-gray-700"><strong>事件監聽：</strong> 自動檢查代碼中是否存在
-                                <code>oncharacteristicvaluechanged</code> 監聽器。</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🔀</span>
-                            <p class="text-sm text-gray-700"><strong>數據流驗證：</strong> 模擬高頻 Notify，檢查代碼是否在不阻塞的情況下完成數據處理。
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+└── README.md        # 紀錄：Notify 頻率與流量控制</code></pre>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供已定義好 Service 與 Characteristic UUID 的基礎代碼，設定為
-                        Template repository。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「自動化事件觸發測試」。區分 <code>readValue()</code> 與
-                        Notify 的異同。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，獲得個人專屬 Repo，觀察 Notify 低延遲體感。完成閾值優化並 Push。
-                    </p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對學生對「非阻塞 (Non-blocking)」編程思想的理解予以回饋。</p>
-                </div>
-            </div>
-        </div>
+                    <h3>B. 自動評估 (Autograding) 的設計</h3>
+                    <ul>
+                        <li><strong>事件監聽：</strong> 自動檢查代碼中是否存在 <code>oncharacteristicvaluechanged</code> 監聽器。</li>
+                        <li><strong>數據流驗證：</strong> 模擬高頻 Notify，檢查代碼是否在不阻塞的情況下完成數據處理。</li>
+                    </ul>
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
-            </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
-                        <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">理解 BLE CCCD (描述符) 在訂閱機制中的作用。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，引導觀看「如何追蹤 Web Bluetooth 事件」除錯手冊。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，進行高頻 Notify 壓力測試，觀察封包堆積。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，討論 Android 手機 Notify 頻率限制背景。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">完成分段重組邏輯並 Push，閱讀教師回覆 PR。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，檢核學生代碼中「逾時重置」邏輯是否完備。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
+                    <h2>翻轉教室的實施策略</h2>
+                    <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+                        <thead>
+                            <tr style="background-color: #f8fafc;">
+                                <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                                <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git
+                                    Workflow)</th>
+                                <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;">理解 BLE CCCD 在訂閱機制中的作用。</td>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                                    <strong>Dashboard：</strong>檢查進度，引導觀看除錯手冊。</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;">進行高頻 Notify 壓力測試，觀察封包堆積.</td>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>實體協助：</strong>討論手機端的
+                                    Notify 頻率限制。</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;">完成分段重組邏輯並 Push.</td>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>PR
+                                        Review：</strong>檢核「逾時重置」邏輯是否完備。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
 
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/cVU9x52dYuQ",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vSP-hTB-P9jwpKPYzw-SrQXD7nJ9__rvVOXtccSwcRHmLD3ySL9Fnkk2_84bw3HPrJI8Pb1P68UwU5W/pub?embedded=true"
-        };
-    </script>
-    <script src="/js/course-shared.js"></script>
+                <script src="/js/course-shared.js"></script>
 </body>
 
 </html>

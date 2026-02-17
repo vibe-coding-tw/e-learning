@@ -33,16 +33,16 @@
                 將感測器數據轉化為動態圖表：掌握 Canvas 渲染原理與 Sliding Window 數據緩衝技術。
             </p>
 
-            <div class="mt-10 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
-                    class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-red-900/20">
-                    <span class="text-xl group-hover:animate-pulse">📺</span>
-                    <span>觀看教學影片</span>
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/VeOwKnWLCN8?autoplay=1')"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
-                    class="group flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-blue-900/20">
-                    <span class="text-xl group-hover:bounce">📄</span>
-                    <span>閱讀課程講義</span>
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vQbhALfnxDYjHlpWoJ2uqgEVA6vh-USrIWShsry4C9nigfsWQuX4kAW4SyNMDqE5s7JG0f5_OKlALeA/pub?embedded=true')"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
                 </button>
             </div>
         </div>
@@ -168,8 +168,8 @@
 
         <!-- Section 4: Assignments -->
         <section>
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">高手挑戰：即時遙測視覺化</h2>
-            <p class="text-center text-gray-500 mb-12">處理連續不斷流入的非同步數據流，打造專業動態監測系統。</p>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：即時遙測視覺化</h2>
+            <p class="text-center text-gray-500 mb-12">採用 <b>Git Workflow</b>：領取 GitHub Classroom 任務，實作過濾算法並提交 PR。</p>
 
             <div class="grid md:grid-cols-3 gap-8">
                 <!-- Task 2-1 -->
@@ -257,48 +257,107 @@
         </div>
     </footer>
 
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
+                <span>進階課程 7 - 單元 2</span>
+                <span class="hidden md:inline">|</span>
+                <span>Chart.js 與 Canvas 即時繪圖原理</span>
+            </div>
+        </div>
+    </footer>
+
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="guide-header mb-12 border-b-2 border-indigo-200 pb-6">
+            <h2 class="text-4xl font-black text-indigo-900 mb-2">作業指引 (Assignment Guide)</h2>
+            <p class="text-indigo-600 font-bold uppercase tracking-widest text-sm">進階 7 - 即時繪圖原理</p>
+        </div>
 
-        <h3>作業 2-1：滑動視窗 (Sliding Window) 實作</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 嵌入式開發者。</li>
-            <li><strong>執行方式：</strong> 建立一個固定長度為 50 的 JS 陣列。每當從 BLE 接收到馬達 PWM 資料時，使用 `push()` 塞入新值並檢查長度。若超過 50，則使用
-                `shift()` 剔除舊值。</li>
-            <li><strong>評分重點：</strong> 資料緩衝區是否能穩定維持在固定長度，避免瀏覽器因數據無限制增長而崩潰。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-indigo-600 text-white rounded-xl text-lg">2-1</span>
+                滑動視窗 (Sliding Window) 實作
+            </h3>
+            <div class="space-y-4 text-gray-700">
+                <p><strong>角色扮演：</strong> 嵌入式開發者。</p>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 text-justify">
+                    <p class="font-bold mb-2 text-indigo-900">執行步驟：</p>
+                    <ol class="list-decimal list-inside space-y-1 text-sm">
+                        <li>建立一個固定長度為 50 的 JS 陣列。</li>
+                        <li>每當從 BLE 接收到馬達 PWM 資料時，使用 <code>push()</code> 塞入新值並檢查長度。</li>
+                        <li>若超過 50，則使用 <code>shift()</code> 剔除舊值。</li>
+                    </ol>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 資料緩衝區是否能穩定維持在固定長度，避免瀏覽器因數據無限制增長而崩潰。</p>
+            </div>
+        </div>
 
-        <h3>作業 2-2：多軸同步監控儀 (Multi-axis Chart)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 控制工程師。</li>
-            <li><strong>執行方式：</strong> 在同一個 Chart.js 畫布上配置兩個 `datasets`（目標速度 vs. 實際速度）。</li>
-            <li><strong>評分重點：</strong> 能否關閉 Chart.js 的預設動畫 (Animation: false) 以換取極致更新效能，並觀察 PID 控制過程中的誤差收斂圖形。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-xl text-lg">2-2</span>
+                多軸同步監控儀 (Multi-axis Chart)
+            </h3>
+            <div class="space-y-4 text-gray-700 text-justify">
+                <p><strong>角色扮演：</strong> 控制工程師。</p>
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-justify">
+                    <p class="font-bold mb-2 text-blue-900">執行步驟：</p>
+                    <ul class="list-disc list-inside space-y-1 text-sm text-justify">
+                        <li>在同一個 Chart.js 畫布上配置兩個 <code>datasets</code> (目標速度 vs. 實際速度)。</li>
+                        <li>關閉 Chart.js 的預設動畫 (Animation: false) 以換取極致更新效能。</li>
+                        <li>觀察 PID 控制過程中的誤差收斂圖形。</li>
+                    </ul>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 能否關閉動畫以換取效能，並觀察 PID 控制過程中的誤差收斂圖形。</p>
+            </div>
+        </div>
 
-        <h3>作業 2-3：Canvas 原生繪圖挑戰</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 高性能運算專家。</li>
-            <li><strong>執行方式：</strong> 棄用 Chart.js，改用原生 Canvas API（`context.lineTo`）繪製一組每 10ms 更新一次的高頻波形圖。</li>
-            <li><strong>評分重點：</strong> 對於像素座標計算的理解（例如將資料值 0-255 映射到畫布高度 0-300），以及繪圖頻率與螢幕刷新率的匹配。</li>
-        </ul>
+        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <span
+                    class="flex items-center justify-center w-10 h-10 bg-emerald-600 text-white rounded-xl text-lg">2-3</span>
+                Canvas 原生繪圖挑戰
+            </h3>
+            <div class="space-y-4 text-gray-700">
+                <p><strong>角色扮演：</strong> 高性能運算專家。</p>
+                <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                    <p class="font-bold mb-2 text-emerald-900">執行步驟：</p>
+                    <ul class="list-disc list-inside space-y-1 text-sm">
+                        <li>棄用 Chart.js，改用原生 Canvas API (<code>context.lineTo</code>) 繪製一組每 10ms 更新一次的高頻波形圖。</li>
+                        <li>對於像素座標計算的理解（例如將資料值 0-255 映射到畫布高度 0-300）。</li>
+                        <li>理解繪圖頻率與螢幕刷新率的匹配。</li>
+                    </ul>
+                </div>
+                <p class="text-sm"><strong>評分重點：</strong> 對於像素座標計算的理解，以及繪圖頻率與螢幕刷新率的匹配。</p>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
+        <div class="guide-header mb-12 border-b-2 border-emerald-200 pb-6">
+            <h2 class="text-4xl font-black text-emerald-900 mb-2">講師指引 (Instructor Guide)</h2>
+            <p class="text-emerald-600 font-bold uppercase tracking-widest text-sm">GitHub Classroom & Flipped Teaching
+            </p>
+        </div>
+
+        <!-- Practical Deployment Recommendations -->
+        <div class="guide-section mb-10 p-8 bg-blue-50 border border-blue-100 rounded-3xl shadow-inner text-justify">
+            <h3 class="text-2xl font-bold text-blue-900 mb-6 flex items-center gap-3">
+                <span class="text-3xl">🚀</span> 在 GitHub Classroom 的實戰部署
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                    <h4 class="font-bold text-blue-800 text-sm mb-4 flex items-center gap-2">
                         <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
                         A. 範本倉庫 (Template Repo) 結構
                     </h4>
                     <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+                        class="bg-gray-900 text-gray-100 p-6 rounded-2xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700 text-justify">
 .
 ├── js/
 │   ├── chart_config.js  # Chart.js 初始化與配置
@@ -308,18 +367,18 @@
 └── README.md              # 頻率測試與曲線分析紀錄</pre>
                 </div>
                 <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
+                    <h4 class="font-bold text-blue-800 text-sm mb-4 flex items-center gap-2">
                         <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
                         B. 自動評估 (Autograding) 的設計
                     </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🧠</span>
+                    <div class="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-blue-100 space-y-4">
+                        <div class="flex gap-4">
+                            <span class="text-2xl">🧠</span>
                             <p class="text-sm text-gray-700"><strong>內存洩漏測試：</strong> 模擬高速數據，檢查資料陣列長度是否嚴格保持在 Window 大小內。
                             </p>
                         </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🖥️</span>
+                        <div class="flex gap-4">
+                            <span class="text-2xl">🖥️</span>
                             <p class="text-sm text-gray-700"><strong>渲染 FPS 檢查：</strong> 檢測渲染頻率，評估繪圖邏輯對硬體資源的佔用情況。</p>
                         </div>
                     </div>
@@ -327,74 +386,85 @@
             </div>
         </div>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
+        <!-- Detailed operations guide -->
+        <div class="guide-section mb-10 p-8 bg-white border border-gray-200 rounded-3xl">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <span class="text-3xl">🛠️</span> GitHub Classroom 詳細操作指南
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
                         1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供已引入 Chart.js CDN 的基礎框架與數據模擬腳本，設定為 Template
-                        repository。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">準備範本專案</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">提供已引入 Chart.js CDN
+                        的基礎框架與數據模擬腳本，設定為 Template repository。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
                         2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「數據同步穩定性」驗證。討論資料量過大時導致圖表「視覺跳動」的方案。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">建立 Classroom 作業</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">
+                        設定「數據同步穩定性」驗證。討論資料量過大時導致圖表「視覺跳動」的方案。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
                         3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業利用隨機數模擬壓力測試。提交包含正常運行畫面的 GIF 至 PR。執行 Git
-                        Push。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">學生端作業 (Flipped)</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">領取作業利用隨機數模擬壓力測試。提交包含正常運行畫面の
+                        GIF 至 PR。</p>
                 </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
                     <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
+                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
                         4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對處理「資料斷點」的視覺呈現方式以及大數據量視覺化的優化策略回饋。</p>
+                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">教師代碼審閱 (Review)</p>
+                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">
+                        針對處理「資料斷點」的視覺呈現方式以及大數據量視覺化的優化策略回饋。</p>
                 </div>
             </div>
         </div>
 
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
+        <!-- Flipped classroom strategy table -->
+        <div class="guide-section p-8 bg-blue-50/50 border border-blue-100 rounded-3xl">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <span class="text-3xl">🔄</span> 翻轉教室的實施策略
             </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg">
                 <table class="w-full text-sm text-left">
                     <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
                         <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
+                            <th class="px-6 py-4">階段</th>
+                            <th class="px-6 py-4">學生行動 (Git Workflow)</th>
+                            <th class="px-6 py-4">教師/平台角色</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 text-gray-600">
                         <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">觀看關於「股票 K 線圖即時刷新原理」的短片並完成預習。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供 Rendering Loop 與數據驅動 UI 分析。</td>
+                            <td
+                                class="px-6 py-5 font-black text-slate-800 bg-slate-50/50 w-32 text-center uppercase tracking-tighter">
+                                Pre-class<br><span class="text-[10px] font-normal text-slate-400">課前</span></td>
+                            <td class="px-6 py-5 text-justify">觀看關於「股票 K 線圖即時刷新原理」的短片並完成預習。</td>
+                            <td class="px-6 py-5 text-xs text-justify">檢查 Dashboard 進度，提供 Rendering Loop 與數據驅動 UI 分析。
+                            </td>
                         </tr>
                         <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，調校座標軸縮放比例，找出觀察 PID 響應最佳視野。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，解答 Y 軸寬度導致圖表劇烈晃動的配置問題。</td>
+                            <td
+                                class="px-6 py-5 font-black text-blue-800 bg-blue-50/30 w-32 text-center uppercase tracking-tighter">
+                                In-class<br><span class="text-[10px] font-normal text-blue-400">課中</span></td>
+                            <td class="px-6 py-5 font-medium text-slate-900 text-justify">領取 Classroom 作業，調校座標軸縮放比例，找出觀察
+                                PID 響應最佳視野。</td>
+                            <td class="px-6 py-5 text-xs text-blue-700 text-justify">即時連線排除阻礙，解答 Y 軸寬度導致圖表劇烈晃動的配置問題。
+                            </td>
                         </tr>
                         <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">對比 Canvas 原生繪圖與庫的效能差異並 Push，閱讀教師回覆 PR。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，引導學員思考針對低功耗設備的圖表刷新頻率控制。</td>
+                            <td
+                                class="px-6 py-5 font-black text-slate-800 bg-slate-50/50 w-32 text-center uppercase tracking-tighter">
+                                Post-class<br><span class="text-[10px] font-normal text-slate-400">課後</span></td>
+                            <td class="px-6 py-5 text-justify">對比 Canvas 原生繪圖與庫的效能差異並 Push，閱讀教師回覆 PR。</td>
+                            <td class="px-6 py-5 text-xs text-justify">核發評量，引導學員思考針對低功耗設備的圖表刷新頻率控制。</td>
                         </tr>
                     </tbody>
                 </table>
@@ -402,12 +472,6 @@
         </div>
     </section>
 
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/VeOwKnWLCN8?autoplay=1",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vQbhALfnxDYjHlpWoJ2uqgEVA6vh-USrIWShsry4C9nigfsWQuX4kAW4SyNMDqE5s7JG0f5_OKlALeA/pub?embedded=true"
-        };
-    </script>
     <script src="/js/course-shared.js"></script>
 </body>
 

@@ -55,7 +55,20 @@
         const tabLookAhead = document.getElementById('tab-look-ahead');
 
         // Initial Load
-        loadContent('adv-06-unit-threshold-filter.html');
+        loadFromHash();
+
+        function loadFromHash() {
+            const hash = window.location.hash.substring(1);
+            if (hash === 'centroid-algorithm') {
+                switchTab('centroid-algorithm');
+            } else if (hash === 'hsv-math') {
+                switchTab('hsv-math');
+            } else if (hash === 'look-ahead') {
+                switchTab('look-ahead');
+            } else {
+                switchTab('threshold-filter');
+            }
+        }
 
         function switchTab(tab) {
             // Reset all tabs
@@ -66,15 +79,19 @@
             if (tab === 'threshold-filter') {
                 tabThreshold.classList.add('active');
                 loadContent('adv-06-unit-threshold-filter.html');
+                window.location.hash = 'threshold-filter';
             } else if (tab === 'centroid-algorithm') {
                 if (tabCentroid) tabCentroid.classList.add('active');
                 loadContent('adv-06-unit-centroid-algorithm.html');
+                window.location.hash = 'centroid-algorithm';
             } else if (tab === 'hsv-math') {
                 if (tabHSV) tabHSV.classList.add('active');
                 loadContent('adv-06-unit-hsv-math.html');
+                window.location.hash = 'hsv-math';
             } else if (tab === 'look-ahead') {
                 if (tabLookAhead) tabLookAhead.classList.add('active');
                 loadContent('adv-06-unit-look-ahead.html');
+                window.location.hash = 'look-ahead';
             }
         }
 

@@ -260,159 +260,119 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
-    <section id="assignment-guide" class="hidden">
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
-        <div class="space-y-6">
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h3 class="font-bold text-blue-800">1. GitHub Classroom 設定</h3>
-                <p class="text-sm">請將對應的 Repository (例如：<code>esp32-unicycle-kinematics-lab</code>)
-                    設定至課程儀表板，練習將抽象的運動速度與轉向比率轉化為馬達的真實轉速。</p>
-            </div>
 
-            <div class="bg-indigo-50 p-4 rounded-lg">
-                <h3 class="font-bold text-indigo-800">2. 翻轉課堂策略</h3>
-                <ul class="list-disc list-inside text-sm">
-                    <li>課前預習：觀看 10 分鐘關於差速驅動 (Differential Drive) 與 Unicycle Model 的幾何推導影片。</li>
-                    <li>課中實作：實作兩輪轉速的混控演算法 ($v$ 與 $\omega$ 的分量加減)，並實地觀察車子轉彎後的軌跡是否符合預期。</li>
-                </ul>
-            </div>
+        <h3>【作業 2-1】基礎差速混合器實作</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 軟體運動學工程師 (Software Kinematics Engineer)。</li>
+            <li><strong>執行方式：</strong> 編寫 <code>mix(v, w)</code> 函式。在教室進行原地旋轉測試與方向校正。觀察 \(v=0\)
+                時車子是否能精準原地打轉，並排除接線反向導致的誤型。</li>
+            <li><strong>評分重點 :</strong> 公式實作正確，左右馬達分量與 \(v, \omega\) 同步，操作感符合幾何直覺。</li>
+        </ul>
 
-            <div class="bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold mb-2">3. 單元任務 (Unit Tasks)</h3>
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-100 text-left">
-                        <tr>
-                            <th class="p-2">任務說明</th>
-                            <th class="p-2">建議時間</th>
-                            <th class="p-2">配分</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 3-1】實作差速混控公式 (Differential Mixing)</td>
-                            <td class="p-2">45 min</td>
-                            <td class="p-2">40 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 3-2】旋轉中心 (Center of Rotation) 實驗</td>
-                            <td class="p-2">30 min</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 3-3】極限速度歸一化 (Normalization of Limit)</td>
-                            <td class="p-2">45 min</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <h3>【作業 2-2】飽和度處理與比例縮放</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 控制系統優化專家 (Control System Optimization Expert)。</li>
+            <li><strong>執行方式：</strong> 實作等比例限幅演算法。當混控後的馬達數值超過 255 時，進行比例壓縮而非直接裁切。測試在全速前進時是否仍能保有良好的轉向能力。</li>
+            <li><strong>評分重點 :</strong> 演算法能有效防止全速前進時其中一輪飽和導致的控制失效，車體動態保持平衡。</li>
+        </ul>
+
+        <h3>【作業 2-3】轉向敏感度調教</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 賽道調校教練 (Track Tuning Coach)。</li>
+            <li><strong>執行方式：</strong> 加入 <code>Sensitivity (K)</code> 參數動態縮放 $\omega$。透過實驗找出最適合目前賽道寬度的 K 值，優化在 S
+                彎道中的循跡性能。</li>
+            <li><strong>評分重點 :</strong> 參數設計合理，能顯著改善在特定地形下的操控手感。</li>
+        </ul>
     </section>
 
-    <section id="instructor-guide" class="hidden">
-        <h2>講師手冊 (Instructor Guide)</h2>
-        <div class="space-y-6">
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">教學重點 (Teaching Points)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2">
-                    <li>從幾何學切入：解釋 Linear Velocity ($v$) 影響前進，Angular Velocity ($\omega$) 影響轉彎的方向性。</li>
-                    <li>輪距 (Track Width) 的影響：解釋為什麼同樣的 $\omega$ 在不同寬度的車體上會產生不同的轉向手感。</li>
-                    <li>控制層級架構：強調 Unicycle Model 位於「策略層」與「馬達驅動層」之間。</li>
-                </ul>
-            </div>
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>在 GitHub 建立新 Repo（名為 <code>basic-08-kinematics-template</code>）。</li>
+                <li>上傳包含 PWM 基本驅動但「未實作 mix() 邏輯」的專案框架。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
 
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">學生常見問題 (Common Issues)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2 text-red-600">
-                    <li>計算結果超出 PWM 範圍：當 $v=1.0, \omega=1.0$ 時，其中一輪會變 2.0（需進行縮放處理）。</li>
-                    <li>左右輪方向相反：混控公式中的加減號與硬體接線不匹配。</li>
-                    <li>不理解原地旋轉 (Spin Turn) 的實現條件 ($v=0, \omega \neq 0$)。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
+                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
+            </ol>
 
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="font-bold mb-2 text-sm">評分標準 (Grading)</h3>
-                <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
-                    <li><strong>優 (90-100):</strong> 指令與馬達響應完全一致，且能優雅地處理速度溢出的縮放問題閉。</li>
-                    <li><strong>可 (70-89):</strong> 基礎運動正常，但對於極限值的處理不完全，導致在大轉彎時出現頓挫。</li>
-                    <li><strong>待加強 (Below 70):</strong> 公式錯誤導致車子運動方向混亂（如：指令右轉卻左轉）。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，獲得個人專屬 Repo。</li>
+                <li>實作「Unicycle Model」轉換公式，並在桌面或模擬器上驗證原地旋轉邏輯。</li>
+                <li>完成混控限幅調校後 <strong>Push 代碼</strong> 提交進度。</li>
+            </ol>
 
-            <!-- NEW: Practical Deployment Recommendations -->
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
-                    <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
-.
-├── src/             # 包含 Unicycle Mixing 算式的 main.cpp
-├── README.md        # 測試報告：原地旋轉與極速前進的馬達數值日誌
-└── .github/         # 自動評核配置</pre>
-                    <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
-                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-                        <li><strong>混控邏輯驗證：</strong> 給予 $v=0, \omega=1$，驗證馬達輸出是否為一正一負（原地旋轉）。</li>
-                        <li><strong>歸一化檢核：</strong> 給予 $v=1, \omega=1$，驗證馬達輸出是否能縮放回 $\pm 100\%$ 以內。</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- NEW: Detailed operations guide -->
-            <div class="bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
-                <div class="space-y-4 text-sm text-gray-600">
-                    <div>
-                        <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
-                        <p>建立包含基礎 PWM 驅動但未實作「混控邏輯」的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
-                        <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以便對其運動學模型的實作進行點評。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
-                        <p>學生領取作業，獲得個人專屬 Repo，實作差速混控公式並在模擬環境試跑後 Push。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
-                        <p>進入 Feedback PR，針對學生的「速度分配」邏輯（防止電機過度飽和）予以回饋。</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- NEW: Flipped classroom strategy table -->
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm border-collapse border border-gray-200">
-                        <thead class="bg-gray-50 text-left text-gray-800">
-                            <tr>
-                                <th class="border border-gray-200 p-2">階段</th>
-                                <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
-                                <th class="border border-gray-200 p-2">教師/平台角色</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-gray-600">
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
-                                <td class="border border-gray-200 p-2">觀看「差速驅動機器人之運動學基礎 (Unicycle Model)」影片。</td>
-                                <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員對「角速度」的概念。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
-                                <td class="border border-gray-200 p-2">領取 Classroom 作業，實作混控算式並實機除錯（注意電機極性）。</td>
-                                <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
-                                <td class="border border-gray-200 p-2">優化極限速度下的縮放策略並 Push，閱讀教師回覆 PR。</td>
-                                <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>針對學生的「左右平衡係數」設計與「溢位壓縮演算法」合理性予以回饋。</li>
+            </ol>
         </div>
+
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元聚焦於「從虛擬到實體」，引導學生理解如何將抽象的幾何向量轉化為決定機器人行為的真實物理量。</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── src/
+│   └── main.cpp      # (重點) 需實作 v, w 到 L, R 的混控
+├── data/             # 指令與實際轉速的對應測試 log
+└── README.md         # 軌跡分析：車子在特定 K 值下的轉向角度紀錄</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>main.cpp (Kinematics Mixing)</strong></p>
+        <pre><code>float left = v - w;
+float right = v + w;
+float scale = max(1.0f, max(abs(left), abs(right)));
+left /= scale; right /= scale; // Normalization</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>極限行為檢測：：</strong> 設定 \(v=1, \omega=1\)，驗證學生的演算法是否會導致其中一輪停擺或單純裁切 (Clipping)。</li>
+            <li><strong>原地旋轉驗證：：</strong> 給予 \(v=0, \omega \neq 0\)，檢查左右馬達 PWM 是否嚴格符合「一正一負且相等的絕對值」。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「Unicycle Model：現代機器人的基礎運動學」影片。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員對「角速度」的概念有初步認知。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，對比有無「飽和限幅」演算法在全速大彎時的操作感官差異。
+                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>演示「原地旋轉」與「差速迴轉」中心點的幾何差異。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作具備動態敏感度係數調校能力的驅動庫並 Push，閱讀教師回覆 PR。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核學生對「運動平衡度
+                        (Dynamic Balance)」與「代碼結構清晰度」的掌握。</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </body>
 

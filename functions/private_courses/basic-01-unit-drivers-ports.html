@@ -304,32 +304,32 @@
     <!-- Media Overlay injected by course-shared.js -->
 
     <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" class="hidden">
+    <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
-        <div class="guide-section">
-            <h3>1. GitHub Classroom 設定</h3>
-            <ul>
-                <li>點擊儀表板「領取作業」按鈕，進入 GitHub Classroom。</li>
-                <li>複製個人作業儲存庫 (basic-01-drivers-ports-YourID) 到本地電腦。</li>
-                <li>使用 VS Code 開啟資料夾，確認 `platformio.ini` 配置正確。</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>2. 翻轉課堂學習策略</h3>
-            <ul>
-                <li><strong>課前預習</strong>：觀看「USB 轉串口原理」教學影片。</li>
-                <li><strong>課中實作</strong>：完成 COM 埠辨識與 Baud Rate 測試實驗。</li>
-                <li><strong>課後思考</strong>：為什麼不同的電腦可能會辨識出不同的 COM 編號？</li>
-            </ul>
-        </div>
-        <div class="guide-section">
-            <h3>3. 單元實作任務</h3>
-            <ul>
-                <li><strong>作業 1-1 (30%)</strong>：成功辨識 ESP32 所在的 COM 埠並截圖。</li>
-                <li><strong>作業 1-2 (40%)</strong>：建立 Serial 連線並成功印出 "Driver Link OK"。</li>
-                <li><strong>作業 1-3 (30%)</strong>：撰寫實驗報告，分析 Baud Rate 設錯時出現亂碼的原因。</li>
-            </ul>
-        </div>
+
+        <h3>作業 1-1：驅動與硬體偵錯</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 部署工程師 (Deployment Engineer)。</li>
+            <li><strong>執行方式：</strong> 學生在 <code>README.md</code> 中貼上裝置管理員（或 Mac 的 <code>ls /dev/tty.*</code>）成功辨識出
+                ESP32 COM 埠的截圖，並標註晶片型號。</li>
+            <li><strong>評分重點：</strong> 確認學生能正確安裝驅動程式並手動排除「消失的裝置」障礙。</li>
+        </ul>
+
+        <h3>作業 1-2：Baud Rate 匹配實驗</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 通訊協定測試員 (Protocol Tester)。</li>
+            <li><strong>執行方式：</strong> 故意在 <code>platformio.ini</code> 設置錯誤的
+                <code>monitor_speed</code>，觀察亂碼現象後修復，並於報告中記錄不同速率下的表現。</li>
+            <li><strong>評分重點：</strong> 代碼中 <code>Serial.begin()</code> 參數與 <code>platformio.ini</code> 的一致性。</li>
+        </ul>
+
+        <h3>作業 1-3：Loopback 自我對話測試</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 硬體診斷工程師 (Hardware Diagnostic Engineer)。</li>
+            <li><strong>執行方式：</strong> 短路 TX/RX 引腳進行環回測試，驗證橋接晶片收發功能，並在 <code>README.md</code> 紀錄測試成功的 Serial Monitor 輸出。
+            </li>
+            <li><strong>評分重點：</strong> 理解序列通訊的全雙工 (Full-Duplex) 物理特性與排障邏輯。</li>
+        </ul>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
@@ -338,34 +338,40 @@
         <div class="classroom-guide">
             <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
             <ol>
-                <li>上傳包含基礎 Serial 框架（但可故意將 <code>monitor_speed</code> 設錯）的專案框架，並勾選 <strong>"Template
-                        repository"</strong>。</li>
+                <li>在 GitHub 建立新 Repo（名為 <code>basic-01-drivers-template</code>）。</li>
+                <li>上傳包含基礎 Serial 框架（但可故意將 <code>monitor_speed</code> 設錯）的專案結構。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
             <ol>
-                <li>建立作業並連結範本。建議開啟 <strong>Feedback Pull Requests</strong> 選項以便對其硬體通訊協議與驅動排除的理解進行點評。</li>
+                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
+                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
+                <li><strong>重點設定：</strong> 建議開啟自動評分功能，檢測 <code>platformio.ini</code> 的配置。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
             <ol>
-                <li>學生領取作業，排除驅動程式與虛擬 COM 埠障礙，實機成功印出 Driver 狀態與 Hello World。</li>
-                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+                <li>學生領取專屬 Repo，排除驅動程式與虛擬 COM 埠障礙。</li>
+                <li>實機成功印出 Driver 狀態與 Hello World。</li>
+                <li>本地開發後 <strong>Push 代碼</strong> 提交進度。</li>
             </ol>
 
             <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
             <ol>
-                <li>打開 Feedback PR，針對學生的「硬體除錯思維 (Hardware Debugging Mindset)」與「Baud Rate 匹配邏輯」給予具體回饋。</li>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>針對學生的「硬體除錯思維 (Hardware Debugging Mindset)」與「Baud Rate 匹配邏輯」給予具體回饋。</li>
             </ol>
         </div>
 
         <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元聚焦於硬體通訊基礎設施，引導學生理解 USB-to-UART 橋接角色與驅動層級通訊，建議範本倉庫設置如下：</p>
+        <p>此單元聚焦於硬體通訊基礎設施，引導學生理解 USB-to-UART 橋接角色與驅動層級通訊。</p>
 
         <h3>A. 範本倉庫 (Template Repo) 結構</h3>
         <pre><code>.
 ├── platformio.ini   # (重點) 需包含不同的 monitor_speed 設定供學生調優
-├── src/main.cpp      # 包含 Serial 初期化與 Baud Rate 測試邏輯
+├── src/
+│   └── main.cpp      # 包含 Serial 初期化與 Baud Rate 測試邏輯
 └── README.md        # 紀錄 COM 埠辨識截圖與故障排除日誌</code></pre>
 
         <h3>B. 參考範例代碼 (Reference Example Code)</h3>
@@ -392,7 +398,7 @@ void loop() {
         <ul>
             <li><strong>配置檢核：</strong> 使用 Actions 偵測 <code>platformio.ini</code> 中是否正確配置了
                 <code>monitor_speed = 115200</code>。</li>
-            <li><strong>語法掃描：</strong> 檢查 <code>main.cpp</code> 是否包含 <code>Serial.begin()</code> 且參數正確。</li>
+            <li><strong>語法掃描：</strong> 檢查 <code>main.cpp</code> 是否包含 <code>Serial.begin()</code> 且參數為 115200。</li>
         </ul>
 
         <h2>翻轉教室的實施策略</h2>
@@ -404,7 +410,7 @@ void loop() {
                     <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
                 </tr>
             </thead>
-            <tbody style="color: #4b5563;">
+            <tbody>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;">研讀「驅動程式與虛擬 COM 埠」原理，並下載安裝 CP210x/CH340 驅動。
@@ -416,16 +422,14 @@ void loop() {
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實機演練不同速率下的數據失真現象，完成 Hello World 並更新代碼。
                     </td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>即時診斷：</strong>協助處理「抓不到 COM
-                        埠」等硬體接口故障，解釋引腳 DTR/RTS 的自動燒錄角色。
-                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>即時診斷：</strong>協助處理「抓不到 COM 埠」等硬體故障，解釋
+                        DTR/RTS 的角色。</td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作具備自動埠偵測邏輯的 README 報告並提交最終 PR。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">完成 Loopback 測試與 README 報告，並提交最終 PR。</td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>審核學生對硬體通訊層級的排障思維與文件記錄嚴謹度。
-                    </td>
+                            PR：</strong>審核學生對硬體通訊層級的排障思維與文件記錄。</td>
                 </tr>
             </tbody>
         </table>

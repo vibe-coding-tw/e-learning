@@ -34,13 +34,17 @@
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
-                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
-                    <span>📺</span> 觀看教學影片
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/CLiN8r_NwuY')"
+                    class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-red-900/20">
+                    <span class="text-xl group-hover:animate-pulse">📺</span>
+                    <span>觀看教學影片</span>
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
-                    class="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
-                    <span>📄</span> 閱讀課程講義
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vTw8aOvc-paBdQ9PNzBQ1Eer9ipXxHyLKj7oHWEe5rd_tHqxuCtJWzUp_-suvSl1oYysV5d11n9wxpz/pub?embedded=true')"
+                    class="group flex items-center gap-3 bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-purple-900/20">
+                    <span class="text-xl group-hover:bounce">📄</span>
+                    <span>閱讀課程講義</span>
                 </button>
             </div>
         </div>
@@ -190,76 +194,108 @@
         </section>
 
         <!-- Section 4: Assignments -->
-        <section>
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：API 工廠</h2>
-            <p class="text-center text-gray-500 mb-12">從公式推導到健壯的程式碼封裝。</p>
+        <section id="assignments" class="mb-20">
+            <div class="text-center mb-12">
+                <span
+                    class="px-4 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-bold tracking-widest uppercase">Practical
+                    Lab</span>
+                <h2 class="text-4xl font-black text-gray-900 mt-4 mb-4 font-[Outfit]">核心實驗室：API 工廠</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">從公式推導到健壯的程式碼封裝。</p>
+            </div>
 
             <div class="grid md:grid-cols-3 gap-8">
                 <!-- Task 2-1 -->
-                <div onclick="openSubmissionModal('adv-10-api-encapsulation', '【作業 2-1】封裝你的運動大腦')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-purple-500 h-2"></div>
+                <div onclick="window.courseShared.openSubmissionModal('adv-10-api-encapsulation', '【作業 2-1】封裝你的運動大腦')"
+                    class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-purple-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-purple-200/50 cursor-pointer">
+                    <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <span class="text-6xl font-black">01</span>
+                    </div>
                     <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🧠</span>
-                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div
+                                class="w-12 h-12 bg-purple-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-purple-200 group-hover:scale-110 transition-transform duration-500">
+                                🧠</div>
+                            <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git Branch:
+                                <span class="text-purple-600">feature/api-base</span></span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
-                            2-1】封裝運動大腦</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>將 ICC 公式封裝進 C++ 類別或函式集。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>定義結構：KinematicsResult</li>
-                                <li>實作核心：calculateIK(R, V)</li>
-                                <li>邊界檢查：處理 R=0 與 R=Inf 的特殊情況</li>
-                            </ul>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 group-hover:text-purple-600 transition-colors">
+                            【作業 2-1】封裝運動大腦</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed mb-6">將 ICC 公式封裝進 C++ 類別或函式集。</p>
+                        <div class="space-y-3 border-t border-slate-50 pt-6">
+                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                <span
+                                    class="w-5 h-5 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center font-bold">1</span>
+                                定義結構：KinematicsResult
+                            </div>
+                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                <span
+                                    class="w-5 h-5 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center font-bold">2</span>
+                                處理 R=0 與 R=Inf 的特殊情況
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Task 2-2 -->
-                <div onclick="openSubmissionModal('adv-10-api-figure8', '【作業 2-2】API 調用挑戰：畫出 8 字形')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-indigo-500 h-2"></div>
+                <div onclick="window.courseShared.openSubmissionModal('adv-10-api-figure8', '【作業 2-2】API 調用挑戰：畫出 8 字形')"
+                    class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-indigo-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-indigo-200/50 cursor-pointer">
+                    <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <span class="text-6xl font-black">02</span>
+                    </div>
                     <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">♾️</span>
-                            <span class="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div
+                                class="w-12 h-12 bg-indigo-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform duration-500">
+                                ♾️</div>
+                            <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git Branch:
+                                <span class="text-indigo-600">feature/api-figure8</span></span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-indigo-600 transition">【作業
-                            2-2】畫出 8 字形</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>使用你定義的 API 讓車子跑出 8 字形。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>嚴禁直接操作 PWM，僅能呼叫 API</li>
-                                <li>組合 driveArc() 指令</li>
-                                <li>觀察回歸原點的偏差並檢討參數</li>
-                            </ul>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 group-hover:text-indigo-600 transition-colors">
+                            【作業 2-2】畫出 8 字形</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed mb-6">使用你定義的 API 讓車子跑出 8 字形。</p>
+                        <div class="space-y-3 border-t border-slate-50 pt-6">
+                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                <span
+                                    class="w-5 h-5 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-bold">1</span>
+                                嚴禁直接操作 PWM，僅能呼叫 API
+                            </div>
+                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                <span
+                                    class="w-5 h-5 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-bold">2</span>
+                                組合 driveArc() 指令
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Task 2-3 -->
-                <div onclick="openSubmissionModal('adv-10-api-angle', '【作業 2-3】擴充 API：目標角度控制')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-cyan-500 h-2"></div>
+                <div onclick="window.courseShared.openSubmissionModal('adv-10-api-angle', '【作業 2-3】擴充 API：目標角度控制')"
+                    class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-cyan-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-cyan-200/50 cursor-pointer">
+                    <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <span class="text-6xl font-black">03</span>
+                    </div>
                     <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">📐</span>
-                            <span class="bg-cyan-50 text-cyan-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div
+                                class="w-12 h-12 bg-cyan-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-cyan-200 group-hover:scale-110 transition-transform duration-500">
+                                📐</div>
+                            <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git Branch:
+                                <span class="text-cyan-600">feature/api-angle</span></span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-cyan-600 transition">【作業
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 group-hover:text-cyan-600 transition-colors">【作業
                             2-3】目標角度控制</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>升級 API 以支持「轉向特定角度後停止」。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>實作 turnAngle(degree, speed)</li>
-                                <li>嘗試非阻塞設計 (Non-blocking)</li>
-                                <li>整合測試：走出正三角形路徑</li>
-                            </ul>
+                        <p class="text-gray-600 text-sm leading-relaxed mb-6">升級 API 以支持「轉向特定角度後停止」。</p>
+                        <div class="space-y-3 border-t border-slate-50 pt-6">
+                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                <span
+                                    class="w-5 h-5 bg-cyan-50 text-cyan-600 rounded-full flex items-center justify-center font-bold">1</span>
+                                實作 turnAngle(degree, speed)
+                            </div>
+                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
+                                <span
+                                    class="w-5 h-5 bg-cyan-50 text-cyan-600 rounded-full flex items-center justify-center font-bold">2</span>
+                                嘗試非阻塞設計 (Non-blocking)
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -424,13 +460,13 @@
         </div>
     </section>
 
+    <script src="/js/course-shared.js"></script>
     <script>
         window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/CLiN8r_NwuY",
+            youtube: "https://www.youtube.com/embed/CLiN8r_NwuY?autoplay=1",
             doc: "https://docs.google.com/document/d/e/2PACX-1vTw8aOvc-paBdQ9PNzBQ1Eer9ipXxHyLKj7oHWEe5rd_tHqxuCtJWzUp_-suvSl1oYysV5d11n9wxpz/pub?embedded=true"
         };
     </script>
-    <script src="/js/course-shared.js"></script>
 </body>
 
 </html>

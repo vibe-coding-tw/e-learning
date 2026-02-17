@@ -279,159 +279,116 @@
         };
     </script>
     <script src="/js/course-shared.js"></script>
-    <section id="assignment-guide" class="hidden">
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
         <h2>作業指引 (Assignment Guide)</h2>
-        <div class="space-y-6">
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h3 class="font-bold text-blue-800">1. GitHub Classroom 設定</h3>
-                <p class="text-sm">請將對應的 Repository (例如：<code>esp32-response-curves-lab</code>)
-                    設定至課程儀表板，練習優化控制系統的靈敏度與穩定度。</p>
-            </div>
 
-            <div class="bg-indigo-50 p-4 rounded-lg">
-                <h3 class="font-bold text-indigo-800">2. 翻轉課堂策略</h3>
-                <ul class="list-disc list-inside text-sm">
-                    <li>課前預習：觀看 8 分鐘關於線性 (Linear) 與指數 (Exponential) 響應曲線的對比動畫。</li>
-                    <li>課中實作：實作不同的曲線計算函式，並對比在手動控制時的操作體感。</li>
-                </ul>
-            </div>
+        <h3>【作業 3-1】實作指數響應曲線 (Exponential Curve)</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 操縱工程師 (Control Engineer)。</li>
+            <li><strong>執行方式：</strong> 實作混合公式：<code>Output = (1 - k)·x + k·x³</code>。讓學生透過調整比例參數 k
+                (0~1)，觀察曲線從線性過渡到三次方指數的過程。</li>
+            <li><strong>評分重點 :</strong> 成功實作非線性轉換，且能正確處理輸入的正負號（x³ 需保留輸入極性）。</li>
+        </ul>
 
-            <div class="bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold mb-2">3. 單元任務 (Unit Tasks)</h3>
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-100 text-left">
-                        <tr>
-                            <th class="p-2">任務說明</th>
-                            <th class="p-2">建議時間</th>
-                            <th class="p-2">配分</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 2-1】實作指數響應曲線 (Exponential Curve)</td>
-                            <td class="p-2">45 min</td>
-                            <td class="p-2">40 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 2-2】動態調整靈敏度係數 (Sensitivity Scaling)</td>
-                            <td class="p-2">30 min</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 2-3】實作「慢速模式」與「高速模式」切換</td>
-                            <td class="p-2">45 min</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <h3>【作業 3-2】「窄路繞錐」對比測試</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 專業試車員 (Test Driver)。</li>
+            <li><strong>執行方式：</strong> 設置極窄 S 彎道。分別使用「線性」與「指數」模式進行繞錐測試。記錄碰撞次數與完成時間。</li>
+            <li><strong>評分重點 :</strong> 能透過實測數據說明「軟中心 (Soft Center)」如何協助進行微幅方向修正。</li>
+        </ul>
+
+        <h3>【作業 3-3】動態模式切換 UI</h3>
+        <ul>
+            <li><strong>角色扮演：</strong> 車載 UI 設計師 (Automotive UI Designer)。</li>
+            <li><strong>執行方式：</strong> 在網頁控制介面上增加切換按鈕，實現「精準操縱 (Expo)」與「直覺反應 (Linear)」模式的即時熱切換。</li>
+            <li><strong>評分重點 :</strong> UI 互動流暢，模式切換無延遲，且具備清晰的目前狀態顯示。</li>
+        </ul>
     </section>
 
-    <section id="instructor-guide" class="hidden">
-        <h2>講師手冊 (Instructor Guide)</h2>
-        <div class="space-y-6">
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">教學重點 (Teaching Points)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2">
-                    <li>人體工程學與控制：解釋為什麼人類手指在微小控制時需要更平緩的曲線（而非線性）。</li>
-                    <li>冪函數 (Power Functions) 的應用：$y = x^n$ 在控制率中的實際效果。</li>
-                    <li>解析度與平滑度：討論曲線計算對馬達 PWM 輸出解析度的影響。</li>
-                </ul>
-            </div>
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>在 GitHub 建立新 Repo（名為 <code>basic-08-curves-template</code>）。</li>
+                <li>上傳基礎通訊框架，但在控制邏輯中預留 <code>applyCurve(float x)</code> 虛擬函式。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
 
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">學生常見問題 (Common Issues)</h3>
-                <ul class="list-disc list-inside text-sm space-y-2 text-red-600">
-                    <li>計算過程中遺失正負號：直接對輸入值取平方會導致負向控制變成正向。</li>
-                    <li>係數設定過大，導致車子在小範圍操作時反應過於遲鈍或突然暴衝。</li>
-                    <li>浮點數運算的效能疑慮（解釋 ESP32 FPU 的處理能力）。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
+                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
+            </ol>
 
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="font-bold mb-2 text-sm">評分標準 (Grading)</h3>
-                <ul class="list-disc list-inside text-xs space-y-1 text-gray-600">
-                    <li><strong>優 (90-100):</strong> 指數曲線實作精確，能處理正負號，且切換靈敏度時過渡平滑。</li>
-                    <li><strong>可 (70-89):</strong> 曲線功能正常，但代碼邏輯較為混亂，或未考慮極致的微操體驗。</li>
-                    <li><strong>待加強 (Below 70):</strong> 無法正確計算非線性響應，或導致數值溢出。</li>
-                </ul>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，獲得個人專屬 Repo。</li>
+                <li>實作線性、二次方、三次方等響應公式，並觀察數據分佈圖。</li>
+                <li>針對「低連線延遲」情境與「窄路穿梭」場景分別調校最佳係數後 <strong>Push 代碼</strong>。</li>
+            </ol>
 
-            <!-- NEW: Practical Deployment Recommendations -->
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">在 GitHub Classroom 的實戰部署建議</h3>
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <h4 class="font-bold text-blue-800 text-sm mb-2">A. 範本倉庫 (Template Repo) 結構</h4>
-                    <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
-.
-├── src/             # 包含 Exponential Curve 計算函式的 main.cpp
-├── README.md        # 不同冪次 (n=1, 2, 3) 的 Response 曲線對比圖
-└── .github/         # 自動評分配置</pre>
-                    <h4 class="font-bold text-blue-800 text-sm mt-4 mb-2">B. 自動評估 (Autograding) 的設計</h4>
-                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
-                        <li><strong>非線性驗證：</strong> 輸入 0.5 (中位)，檢查輸出是否符合指數曲線特性（例如 $0.5^2 = 0.25$）。</li>
-                        <li><strong>符號保存檢核：</strong> 驗證輸入為負值時，輸出是否正確保留負號而非變成正值。</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- NEW: Detailed operations guide -->
-            <div class="bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold text-gray-900 mb-3">GitHub Classroom 詳細操作指南</h3>
-                <div class="space-y-4 text-sm text-gray-600">
-                    <div>
-                        <p class="font-bold text-slate-800">第一步：準備範本倉庫 (Template Repo)</p>
-                        <p>建立包含基礎線性控制代碼的 Repo，於 GitHub 設定中勾選 "Template repository"。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第二步：建立 Classroom 作業</p>
-                        <p>建立 Individual Assignment，連結範本並啟用 "Feedback pull requests" 以便點評學生的冪函數實作。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第三步：學生端操作 (Flipped Workflow)</p>
-                        <p>學生領取作業，獲得個人專屬 Repo，實作各式響應曲線並透過實機測試比較操控手感後 Push。</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">第四步：教師回饋 (Review)</p>
-                        <p>進入 Feedback PR，針對學生的「靈敏度係數」設計合理性予以回饋。</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- NEW: Flipped classroom strategy table -->
-            <div>
-                <h3 class="font-bold text-gray-900 border-b pb-2 mb-3">翻轉教室的實施策略</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm border-collapse border border-gray-200">
-                        <thead class="bg-gray-50 text-left text-gray-800">
-                            <tr>
-                                <th class="border border-gray-200 p-2">階段</th>
-                                <th class="border border-gray-200 p-2">學生行動 (Git Workflow)</th>
-                                <th class="border border-gray-200 p-2">教師/平台角色</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-gray-600">
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課前 (預習)</td>
-                                <td class="border border-gray-200 p-2">研究電玩遊戲控制器（如 Xbox）的 Deadzone 與靈敏度設定。</td>
-                                <td class="border border-gray-200 p-2 text-xs">檢查 Dashboard 預習進度，確認學員理解「非線性」的物理動機。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課中 (實作)</td>
-                                <td class="border border-gray-200 p-2">領取 Classroom 作業，實作並切換不同模式（慢速/高速）觀察曲線差異。</td>
-                                <td class="border border-gray-200 p-2 text-xs">即時連線排除阻礙，檢視 PR 反饋。</td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-200 p-2 font-bold">課後 (精進)</td>
-                                <td class="border border-gray-200 p-2">封裝常用的響應曲線函式庫並 Push，閱讀教師回覆 PR。</td>
-                                <td class="border border-gray-200 p-2 text-xs">核發最終課程評量與評分。</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>針對學生的「係數動態調整感 (Responsiveness)」與「運算溢位處理」予以點評。</li>
+            </ol>
         </div>
+
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元聚焦於「算法改良物理限制」，引導學生理解如何透過數學手段讓普通的平價感知設備展現出產品級的操控精度。</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── src/
+│   └── main.cpp      # (重點) 需填充混合曲線公式 (1-k)x + kx^n
+├── tests/            # 單元測試：驗證中心死區後的曲線連續性
+└── README.md         # 實驗數據：繞錐測試的用時分佈統計</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>main.cpp (Mixed Response)</strong></p>
+        <pre><code>float k = 0.5; // 指數比例
+float input = getJoystickX();
+float output = (1 - k) * input + k * pow(input, 3);</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>數學模型檢核：：</strong> 使用特定輸入（如 0.2, 0.8），檢查輸出是否精確落在學生宣稱的曲線模型數值之上。</li>
+            <li><strong>極性一致性檢測：：</strong> 驗證學生在進行次方運算時，是否正確保留了負數輸入的回傳極性。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">研究電玩遊戲控制器（如 Xbox）的 Deadzone 與靈敏度設定。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>Dashboard：</strong>確認學員理解「非線性」的物理動機與數學意義。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，實作並切換不同模式（精準/暴衝）觀察物理反應。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>演示冪函數 (Power Function)
+                        如何決定中心區域的操控寬容度。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">封裝常用的響應曲線函式庫並 Push，閱讀教師回覆 PR。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核學生對「平衡性
+                        (Balance)」與「極限數值處理」的掌握。</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </body>
 
