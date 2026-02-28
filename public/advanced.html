@@ -172,7 +172,7 @@
         const functions = getFunctions(app, 'asia-east1');
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
         const CART_URL = 'cart.html';
-        const AUTH_URL = 'auth.html';
+        const AUTH_URL = '/auth.html?v=' + new Date().getTime(); // Prevent cache
 
         function addToCart(productId, productName, productPrice, isPhysical) {
             let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
@@ -235,6 +235,12 @@
             updateCardAction(cardElement, 'LOADING');
             const courseId = cardElement.dataset.courseId;
             const classroomUrl = cardElement.dataset.classroomUrl;
+
+            // [NEW] Super Mode override
+            if (localStorage.getItem('adminSuperMode') === 'true') {
+                updateCardAction(cardElement, 'AUTHORIZED');
+                return;
+            }
 
             try {
                 // ★★★ 傳送 pageId 而非 courseId (對齊後端) ★★★

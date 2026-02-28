@@ -556,11 +556,6 @@ function initFirebaseFeatures() {
                 return;
             }
 
-            // [NEW] Disable Page View Logging
-            if (action === 'PAGE_VIEW') {
-                return; 
-            }
-            
             // Get Page ID from URL
             const pathParts = window.location.pathname.split('/');
             const courseId = pathParts[pathParts.length - 1] || 'unknown-page';
@@ -582,23 +577,6 @@ function initFirebaseFeatures() {
             const { action, duration, metadata } = e.detail;
             log(action, duration, metadata);
         });
-
-        // 2. Page View Tracking
-        let pageStartTime = Date.now();
-        const endPageSession = () => {
-             const duration = (Date.now() - pageStartTime) / 1000;
-             if (duration > 5) { // Only log if > 5 seconds
-                 log('PAGE_VIEW', Math.round(duration), { title: document.title });
-             }
-             pageStartTime = Date.now();
-        };
-
-        window.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') {
-                endPageSession();
-            }
-        });
-        window.addEventListener('pagehide', endPageSession);
 
         // --- Assignment Logic ---
 

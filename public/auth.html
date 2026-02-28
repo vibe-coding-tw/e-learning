@@ -99,7 +99,12 @@
                     return;
                 }
 
-                const result = await checkAuthFunction({ pageId: courseId, fileName: fileName });
+                const isSuperMode = localStorage.getItem('adminSuperMode') === 'true';
+                const result = await checkAuthFunction({
+                    pageId: courseId,
+                    fileName: fileName,
+                    superMode: isSuperMode
+                });
 
                 if (result.data && result.data.authorized) {
                     // 驗證成功！

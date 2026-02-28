@@ -16,26 +16,39 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        try {
-            // Fetch User Role
-            const userDocRef = doc(db, "users", user.uid);
-            const userDoc = await getDoc(userDocRef);
+// [REFACTORED v11.3.11] Enhanced Initializer for Incognito/Guest Visibility
+function initMasterNav() {
+    console.log("[MasterNav] Initializing v11.3.11...");
 
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-                const role = userData.role;
-
-                if (role === 'admin' || role === 'teacher' || role === 'student') {
-                    injectDashboardFAB();
-                }
-            }
-        } catch (e) {
-            console.error("Failed to fetch user role:", e);
+    // 1. Immediate FAB Injection (No auth required)
+    try {
+        if (document.body) {
+            injectDashboardFAB();
+            console.log("[MasterNav] FAB Injected.");
+        } else {
+            console.warn("[MasterNav] Body not ready, deferring FAB.");
+            document.addEventListener('DOMContentLoaded', injectDashboardFAB);
         }
+    } catch (e) {
+        console.error("[MasterNav] FAB Injection failed:", e);
     }
-});
+
+    // 2. Auth Listener (For background roles)
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            console.log("[MasterNav] Auth detected:", user.email);
+        } else {
+            console.log("[MasterNav] Guest session detected.");
+        }
+    });
+}
+
+// Start immediately if possible, or wait for body
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMasterNav);
+} else {
+    initMasterNav();
+}
 
 // [NEW] Modal Injection
 function injectDashboardModal() {

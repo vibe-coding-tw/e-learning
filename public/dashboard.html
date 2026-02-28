@@ -39,11 +39,22 @@
             <p class="text-gray-500">正在讀取數據...</p>
         </div>
 
-        <!-- Access Denied -->
+        <!-- Access Denied / Guest View -->
         <div id="access-denied" class="hidden text-center py-20">
-            <h2 class="text-2xl font-bold text-red-600 mb-4">⛔ 權限不足</h2>
-            <p class="text-gray-600">只有老師或管理員可以訪問此頁面。</p>
-            <div class="mt-8 p-4 bg-gray-100 rounded-lg inline-block text-left max-w-md">
+            <h2 id="denied-title" class="text-2xl font-bold text-red-600 mb-4">⛔ 權限不足</h2>
+            <p id="denied-msg" class="text-gray-600">只有老師或管理員可以訪問此頁面。</p>
+
+            <!-- Guest View (Login Prompt) -->
+            <div id="guest-view" class="hidden mt-8">
+                <p class="text-gray-500 mb-6">您尚未登入。請登入以查看您的學習數據或管理課程。</p>
+                <button onclick="window.location.href='/auth.html'"
+                    class="bg-blue-600 text-white px-8 py-3 rounded-full font-bold hover:bg-blue-700 shadow-lg transition transform hover:scale-105">
+                    🚀 立即登入 (Login)
+                </button>
+            </div>
+
+            <!-- Admin Setup (Only for logged in users without roles) -->
+            <div id="admin-setup-note" class="hidden mt-8 p-4 bg-gray-100 rounded-lg inline-block text-left max-w-md">
                 <p class="text-xs text-gray-500 mb-1">首次設定管理員？請複製下方 UID 並至 Firebase Console -> Firestore -> users 新增文件：
                 </p>
                 <code id="user-uid-display"
@@ -52,8 +63,7 @@
                 <p class="text-xs text-gray-400 mt-2">設定欄位: role: "admin", email: "..."</p>
             </div>
             <br>
-            <a href="index.html"
-                class="mt-6 inline-block bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700">回首頁</a>
+            <a href="index.html" class="mt-6 inline-block text-gray-500 hover:text-gray-700 underline text-sm">回首頁</a>
         </div>
 
         <!-- Dashboard Content -->
@@ -222,11 +232,11 @@
         </div>
 
         <footer class="text-center py-4 text-gray-400 text-[10px]">
-            Vibe Coding &copy; 2026 | v11.3.38
+            Vibe Coding &copy; 2026 | v11.3.124
         </footer>
 
         <!-- Scripts -->
-        <script type="module" src="js/dashboard.js?v=11.3.38"></script>
+        <script type="module" src="js/dashboard.js?v=11.3.124"></script>
 </body>
 
 </html>

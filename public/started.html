@@ -166,7 +166,7 @@
         const functions = getFunctions(app, 'asia-east1');
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
         const CART_URL = 'cart.html';
-        const AUTH_URL = 'auth.html?v=' + new Date().getTime(); // Prevent cache
+        const AUTH_URL = '/auth.html?v=' + new Date().getTime(); // Prevent cache
 
         function addToCart(productId, productName, productPrice, isPhysical) {
             let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
@@ -239,6 +239,12 @@
             const isFreeCourse = parseInt(cardElement.dataset.coursePrice, 10) === 0;
 
             if (isFreeCourse && user) {
+                updateCardAction(cardElement, 'AUTHORIZED');
+                return;
+            }
+
+            // [NEW] Super Mode override
+            if (localStorage.getItem('adminSuperMode') === 'true') {
                 updateCardAction(cardElement, 'AUTHORIZED');
                 return;
             }

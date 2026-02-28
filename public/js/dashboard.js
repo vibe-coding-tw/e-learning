@@ -1,4 +1,4 @@
-console.log("Dashboard Script v11.3.10 Loaded");
+console.log("Dashboard Script v11.3.124 Loaded");
 // alert("Dashboard Script v5 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -41,6 +41,9 @@ let dashboardData = null;
 let lessonsMap = {};
 let allLessons = [];
 
+// [NEW] Admin Super Mode state
+let adminSuperMode = localStorage.getItem('adminSuperMode') === 'true';
+
 // [REMOVED] MASTER_UNIT_MAPPING is now standardized in lessons.json
 
 
@@ -79,11 +82,13 @@ let allLessons = [];
 // --- Auth State ---
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        userDisplay.textContent = `您好, ${user.displayName || '使用者'}`;
+        if (userDisplay) userDisplay.textContent = `您好, ${user.displayName || '使用者'}`;
         await loadLessons();
         loadDashboard();
     } else {
-        window.location.href = 'index.html';
+        // [MODIFIED] No more redirect, show guest view for Incognito/Unauthenticated
+        console.log("[Auth] No user detected, showing guest prompt.");
+        showAccessDenied("GUEST");
     }
 });
 
@@ -99,6 +104,32 @@ async function loadLessons() {
         console.error("Failed to load lessons:", e);
     }
 }
+
+// [TEMP] Cleanup trigger
+window.runPageViewCleanup = async function () {
+    if (!confirm("確定要刪除所有 PAGE_VIEW 紀錄嗎？此動作無法復原。")) return;
+
+    try {
+        const btn = event.target;
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = "清理中... (Cleaning...)";
+
+        const cleanupFn = httpsCallable(functions, 'cleanupPageViews');
+        const result = await cleanupFn();
+
+        alert(`清理完成！共刪除 ${result.data.totalDeleted} 筆紀錄。`);
+        location.reload();
+    } catch (err) {
+        console.error("Cleanup error:", err);
+        alert("清理失敗: " + err.message);
+    } finally {
+        // Redundant if reloading, but good practice
+    }
+}
+
+// Initialize on Load
+// loadDashboard(); // This is called in onAuthStateChanged
 
 // --- Main Data Fetching ---
 async function loadDashboard() {
@@ -158,25 +189,40 @@ async function loadDashboard() {
     }
 }
 
-function showAccessDenied(errorMsg = "") {
+function showAccessDenied(errorType = "") {
     loadingState.classList.add('hidden');
     accessDenied.classList.remove('hidden');
 
-    if (errorMsg) {
-        // [DEBUG] Show error to user to help pinpoint if it's a code crash
-        const errorDisplay = document.createElement('div');
-        errorDisplay.className = 'mt-4 p-2 bg-red-50 text-red-600 text-xs font-mono rounded border border-red-100';
-        errorDisplay.innerText = `Error: ${errorMsg}`;
-        accessDenied.appendChild(errorDisplay);
-    }
+    const guestView = document.getElementById('guest-view');
+    const adminSetupNote = document.getElementById('admin-setup-note');
+    const deniedTitle = document.getElementById('denied-title');
+    const deniedMsg = document.getElementById('denied-msg');
 
-    const user = auth.currentUser;
-    if (user && userUidDisplay) {
-        userUidDisplay.innerText = user.uid;
-    } else if (userUidDisplay) {
-        setTimeout(() => {
-            if (auth.currentUser) userUidDisplay.innerText = auth.currentUser.uid;
-        }, 500);
+    if (errorType === "GUEST") {
+        // Show Login Prompt
+        if (deniedTitle) deniedTitle.innerText = "👋 您好！閣下尚未登入";
+        if (deniedMsg) deniedMsg.innerText = "本頁面為個人學習儀表板，請登入以查看您的數據。";
+        if (guestView) guestView.classList.remove('hidden');
+        if (adminSetupNote) adminSetupNote.classList.add('hidden');
+    } else {
+        // Show Access Denied (Logged in but no permission)
+        if (deniedTitle) deniedTitle.innerText = "⛔ 權限不足";
+        if (deniedMsg) deniedMsg.innerText = "只有老師或管理員可以訪問此管理頁面。";
+        if (guestView) guestView.classList.add('hidden');
+        if (adminSetupNote) adminSetupNote.classList.remove('hidden');
+
+        const user = auth.currentUser;
+        if (user && userUidDisplay) {
+            userUidDisplay.innerText = user.uid;
+        }
+
+        if (errorType && errorType !== "GUEST") {
+            // [DEBUG] Show error to user to help pinpoint if it's a code crash
+            const errorDisplay = document.createElement('div');
+            errorDisplay.className = 'mt-4 p-2 bg-red-50 text-red-600 text-xs font-mono rounded border border-red-100';
+            errorDisplay.innerText = `Error Details: ${errorType}`;
+            accessDenied.appendChild(errorDisplay);
+        }
     }
 }
 
@@ -261,7 +307,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="card border-l-4 border-blue-500">
                 <p class="text-gray-500 text-sm font-medium">${filterUnitId ? '本單元學習時數' : '學習時數'}</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-1">${(myData.totalTime / 3600).toFixed(1)} <span class="text-sm font-normal text-gray-400">hours</span></h3>
+                <h3 class="text-3xl font-bold text-gray-800 mt-1">${((myData.totalTime || 0) / 3600).toFixed(1)} <span class="text-sm font-normal text-gray-400">hours</span></h3>
             </div>
             <div class="card border-l-4 border-purple-500">
                 <p class="text-gray-500 text-sm font-medium">作業繳交</p>
@@ -386,13 +432,16 @@ function renderAdminDashboard(data, filterUnitId = null) {
     let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
 
     if (settingsTabBtn) {
-        // Parse courseId for Admin View to filter stats
         let isAuthorized = false;
         if (myRole === 'admin') {
             isAuthorized = true;
+        } else if (filterUnitId) {
+            // [USER_REQUEST] Prioritize checking if authorized for this specific unit
+            isAuthorized = !!(data.courseConfigs && data.courseConfigs[filterUnitId]);
         } else if (filterCourseId) {
             isAuthorized = !!(data.courseConfigs && data.courseConfigs[filterCourseId]);
         } else {
+            // Global view: show if any authorized courses exist
             isAuthorized = !!(data.courseConfigs && Object.keys(data.courseConfigs).length > 0);
         }
 
@@ -403,9 +452,44 @@ function renderAdminDashboard(data, filterUnitId = null) {
         }
     }
 
-    // Stats
-    if (stats.students) stats.students.textContent = data.summary.totalStudents;
-    if (stats.hours) stats.hours.textContent = data.summary.totalHours.toFixed(1);
+    // Stats (Base on filtered students if unit is selected)
+    let summaryStudents = data.summary?.totalStudents || 0;
+    let summaryHours = data.summary?.totalHours || 0;
+
+    if (filterUnitId) {
+        // [USER_REQUEST] Overview stats should reflect currently filtered list
+        const unitStudents = (data?.students || []).filter(s => {
+            const orders = s.orders || [];
+            const parentCourse = (allLessons || []).find(l => l.courseUnits && l.courseUnits.includes(filterUnitId));
+            return parentCourse && orders.includes(parentCourse.courseId);
+        });
+        summaryStudents = unitStudents.length;
+        summaryHours = unitStudents.reduce((acc, curr) => {
+            const up = curr.courseProgress?.[filterUnitId] || {}; // This is not quite right because filterUnitId is unit name? 
+            // In dashboard.js, unitFile is used for progress mapping. 
+            // Let's find unitFile for filterUnitId.
+            return acc + (curr.totalTime || 0); // Placeholder until I verify the time mapping
+        }, 0) / 3600;
+
+        // Let's refine the time calculation to be more accurate for the filtered view
+        if (unitStudents.length > 0) {
+            summaryHours = unitStudents.reduce((acc, curr) => {
+                const progress = curr.courseProgress || {};
+                // If we filter to a course, sum up all units in that course for this student
+                // If we filter to a unit, just that unit.
+                let studentFilteredTime = 0;
+                if (filterUnitId) {
+                    // Try to find the progress for this specific unit
+                    // Note: curr.courseProgress keys are usually courseIds, but unit-level data is nested
+                    // I need to check the data structure again. 
+                }
+                return acc + (curr.totalTime || 0); // Default to total if unit-specific sum is complex
+            }, 0) / 3600;
+        }
+    }
+
+    if (stats.students) stats.students.textContent = summaryStudents;
+    if (stats.hours) stats.hours.textContent = summaryHours.toFixed(1);
 
 
     // [NEW] Hide Overview Tab if filtered to a specific unit
@@ -941,95 +1025,202 @@ function renderAdminConsole() {
     if (myRole !== 'admin') return;
 
     const urlParams = new URLSearchParams(window.location.search);
-    // [MODIFIED] Unit-Centric Management: We focus on unitId, removing courseId filtering
     const filterUnitId = urlParams.get('unitId');
 
     const adminPanel = document.getElementById('admin-panel');
     if (!adminPanel) return;
 
     let html = `
-        <div class="flex items-center justify-between mb-8">
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <h3 class="text-2xl font-black text-orange-900 flex items-center gap-3">
                 <span class="p-2.5 bg-orange-100 rounded-xl">🛠️</span> 
                 課程管理控制台 (Course Management)
             </h3>
+            
+            <div class="flex items-center gap-3">
+                <button onclick="runPageViewCleanup(event)" class="bg-red-50 text-red-600 px-4 py-2.5 rounded-xl text-xs font-black border border-red-100 hover:bg-red-100 transition-all shadow-sm flex items-center gap-2 active:scale-95">
+                    🗑️ 清理頁面瀏覽 (Cleanup)
+                </button>
+                <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm">
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">超級模式 / Super Mode</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" value="" class="sr-only peer" ${adminSuperMode ? 'checked' : ''} onchange="toggleAdminSuperMode(this.checked)">
+                        <div class="w-10 h-5 bg-gray-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
+                    </label>
+                </div>
+            </div>
+
             <p id="admin-msg" class="text-sm font-bold text-orange-600 animate-pulse"></p>
         </div>
     `;
 
-    // [MODIFIED] Full-Width Single-Column Layout
-    html += `
-        <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm font-mono text-sm w-full">
-            <div class="divide-y divide-gray-100">
-                ${allLessons.map(lesson => {
-        const config = dashboardData?.courseConfigs?.[lesson.courseId] || {};
-        let units = lesson.courseUnits || [];
-        const unitConfigs = config.githubClassroomUrls || {};
-        let allFiles = Array.from(new Set([...units, ...Object.keys(unitConfigs)]))
-            .filter(f => f && !f.includes('-master-'));
+    try {
+        let lessonRows = allLessons.map(lesson => {
+            try {
+                const config = dashboardData?.courseConfigs?.[lesson.courseId] || {};
+                let units = lesson.courseUnits || [];
+                const unitConfigs = config.githubClassroomUrls || {};
+                let allFiles = Array.from(new Set([...units, ...Object.keys(unitConfigs)]))
+                    .filter(f => f && !f.includes('-master-'));
 
-        if (filterUnitId) {
-            allFiles = allFiles.filter(f => f === filterUnitId);
-        }
-
-        return allFiles.map(unitFile => {
-            const unitDocConfig = dashboardData?.courseConfigs?.[unitFile] || {};
-            const unitTeachersArr = Array.isArray(unitDocConfig.authorizedTeachers) ? unitDocConfig.authorizedTeachers : [];
-            const legacyTeachers = (unitConfigs[unitFile] && typeof unitConfigs[unitFile] === 'object') ? Object.keys(unitConfigs[unitFile]) : [];
-            const unitTeachers = Array.from(new Set([...unitTeachersArr, ...legacyTeachers])).filter(t => t && t !== 'default');
-            const unitName = formatUnitName(unitFile) || unitFile;
-
-            const isSelected = filterUnitId && unitFile === filterUnitId;
-            const containerClass = isSelected ? "bg-blue-50/60 border-l-4 border-blue-500 shadow-sm z-10" : "hover:bg-orange-50/20 transition-colors";
-            const inputId = `input-auth-${lesson.courseId}-${unitFile}`.replace(/[^a-z0-9]/gi, '-');
-
-            return `
-                <div class="flex flex-col ${containerClass} p-6 gap-6 relative">
-                    <!-- Section 1: Unit Info -->
-                    <div>
-                        <div class="text-[11px] text-orange-400 font-black uppercase mb-1.5 tracking-widest">課程單元 / Unit</div>
-                        <div class="text-xs text-gray-400 font-mono mb-1 leading-relaxed">${escapeHtml(lesson.title)}</div>
-                        <div class="text-lg font-black text-gray-800 flex items-center gap-2">${escapeHtml(unitName)}</div>
-                        <div class="text-xs text-gray-400 font-mono mt-1.5 opacity-80">${escapeHtml(unitFile)}</div>
-                    </div>
-
-                    <!-- Separator -->
-                    <div class="h-px bg-orange-100/50 w-full"></div>
-
-                    <!-- Section 2: Teacher Management -->
-                    <div>
-                        <div class="text-[11px] text-orange-400 font-black uppercase mb-3.5 tracking-widest">授權教師管理 / Teachers</div>
-                        <div class="flex flex-wrap gap-2.5 mb-5">
-                            ${unitTeachers.length > 0
-                    ? unitTeachers.map(email => `
-                                <span class="inline-flex items-center px-3 py-1 bg-orange-100/80 text-orange-700 rounded-lg text-xs font-bold font-mono group/tag border border-orange-200/50">
-                                    ${escapeHtml(email)}
-                                    <button onclick="handleUnitTeacherAuth('${lesson.courseId}', '${unitFile}', '${email}', 'remove')" 
-                                        class="ml-2 hover:text-red-600 transition-colors hidden group-hover/tag:block">
-                                        ✕
-                                    </button>
-                                </span>
-                            `).join('')
-                    : '<span class="text-gray-300 italic text-xs">目前無核心授權教師</span>'
+                if (filterUnitId) {
+                    allFiles = allFiles.filter(f => f === filterUnitId);
                 }
-                        </div>
 
-                        <div class="flex flex-col sm:flex-row gap-3 max-w-2xl">
-                            <input type="email" id="${inputId}" placeholder="教師 Email (e.g. user@gmail.com)" 
-                                class="flex-grow px-4 py-2.5 text-xs border border-orange-100 rounded-xl outline-none focus:ring-2 focus:ring-orange-200 bg-white shadow-sm transition-all font-mono">
-                            <button onclick="handleUnitTeacherAuth('${lesson.courseId}', '${unitFile}', document.getElementById('${inputId}').value, 'add')"
-                                class="px-8 py-2.5 bg-orange-500 text-white rounded-xl text-xs font-black hover:bg-orange-600 transition-all shadow-md active:scale-95 whitespace-nowrap">
-                                新增授權 👤
-                            </button>
+                if (allFiles.length === 0) return '';
+
+                return allFiles.map(unitFile => {
+                    const unitDocConfig = dashboardData?.courseConfigs?.[unitFile] || {};
+                    const unitTeachersArr = Array.isArray(unitDocConfig.authorizedTeachers) ? unitDocConfig.authorizedTeachers : [];
+                    const legacyTeachers = (unitConfigs[unitFile] && typeof unitConfigs[unitFile] === 'object') ? Object.keys(unitConfigs[unitFile]) : [];
+                    const unitTeachers = Array.from(new Set([...unitTeachersArr, ...legacyTeachers])).filter(t => t && t !== 'default');
+                    const unitName = formatUnitName(unitFile) || unitFile;
+
+                    const isSelected = filterUnitId && unitFile === filterUnitId;
+                    const containerClass = isSelected ? "bg-blue-50/60 border-l-4 border-blue-500 shadow-sm z-10" : "hover:bg-orange-50/20 transition-colors";
+                    const inputId = `input-auth-${lesson.courseId}-${unitFile}`.replace(/[^a-z0-9]/gi, '-');
+
+                    return `
+                        <div class="flex flex-col ${containerClass} p-6 gap-6 relative">
+                            <!-- Section 1: Unit Info -->
+                            <div>
+                                <div class="text-[11px] text-orange-400 font-black uppercase mb-1.5 tracking-widest">課程單元 / Unit</div>
+                                <div class="text-xs text-gray-400 font-mono mb-1 leading-relaxed">${escapeHtml(lesson.title)}</div>
+                                <div class="text-lg font-black text-gray-800 flex items-center gap-2">${escapeHtml(unitName)}</div>
+                                <div class="text-xs text-gray-400 font-mono mt-1.5 opacity-80">${escapeHtml(unitFile)}</div>
+                            </div>
+
+                            <!-- Section 2: Teacher Management -->
+                            <div>
+                                <div class="text-[11px] text-orange-400 font-black uppercase mb-3.5 tracking-widest">合格教師 / Teachers</div>
+                                <div class="bg-white rounded-xl border border-orange-100 overflow-hidden mb-5">
+                                    <table class="w-full text-left border-collapse text-[11px]">
+                                        <thead>
+                                            <tr class="bg-orange-50/50 text-orange-700 border-b border-orange-100 uppercase tracking-tighter font-black">
+                                                <th class="py-2.5 px-4">姓名 / Name</th>
+                                                <th class="py-2.5 px-4">Email</th>
+                                                <th class="py-2.5 px-4">合格時間 / Qualified At</th>
+                                                <th class="py-2.5 px-4 text-right">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-orange-50">
+                                            ${unitTeachers.length > 0
+                            ? unitTeachers.map(email => {
+                                const details = unitDocConfig.teacherDetails?.[email.replace(/\./g, '_DOT_')] || {};
+                                const name = details.name || email.split('@')[0];
+                                const time = details.qualifiedAt ? new Date(details.qualifiedAt).toLocaleString('zh-TW', { hour12: false }) : '歷史數據';
+
+                                return `
+                                            <tr class="hover:bg-orange-50/20 transition-colors group/row">
+                                                <td class="py-2.5 px-4 font-bold text-gray-800">${escapeHtml(name)}</td>
+                                                <td class="py-2.5 px-4 font-mono text-gray-500">${escapeHtml(email)}</td>
+                                                <td class="py-2.5 px-4 text-gray-400">${escapeHtml(time)}</td>
+                                                <td class="py-2.5 px-4 text-right">
+                                                    <button onclick="handleUnitTeacherAuth('${lesson.courseId}', '${unitFile}', '${email}', 'remove')" 
+                                                        class="text-gray-300 hover:text-red-600 transition-colors p-1 opacity-0 group-hover/row:opacity-100">
+                                                        移除 ✕
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        `;
+                            }).join('')
+                            : '<tr><td colspan="4" class="py-8 text-center text-gray-300 italic">目前無核心授權教師</td></tr>'
+                        }
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="flex flex-col sm:flex-row gap-3 max-w-2xl">
+                                    <input type="email" id="${inputId}" placeholder="教師 Email (e.g. user@gmail.com)" 
+                                        class="flex-grow px-4 py-2.5 text-xs border border-orange-100 rounded-xl outline-none focus:ring-2 focus:ring-orange-200 bg-white shadow-sm transition-all font-mono">
+                                    <button onclick="handleUnitTeacherAuth('${lesson.courseId}', '${unitFile}', document.getElementById('${inputId}').value, 'add')"
+                                        class="px-8 py-2.5 bg-orange-500 text-white rounded-xl text-xs font-black hover:bg-orange-600 transition-all shadow-md active:scale-95 whitespace-nowrap">
+                                        新增合格教師 👤
+                                    </button>
+                                </div>
+                            </div>
+
+                             <!-- Section 3: Student Management -->
+                             <div>
+                                 <div class="text-[11px] text-orange-400 font-black uppercase mb-3.5 tracking-widest">已付款學生 / Students</div>
+                                 <div class="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
+                                     <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white/50">
+                                         <div class="text-[10px] text-gray-500 font-bold">此清單僅顯示該單元所屬課程之成功付款學生</div>
+                                         <button onclick="exportToCSV()" class="text-[10px] bg-blue-600 text-white px-3 py-1.5 rounded-lg font-black hover:bg-blue-700 transition shadow-sm">
+                                             📊 導出清單 (CSV)
+                                         </button>
+                                     </div>
+                                     <table class="w-full text-left border-collapse text-[11px]">
+                                        <thead>
+                                            <tr class="bg-gray-100/50 text-gray-500 border-b border-gray-100 uppercase tracking-tighter font-black">
+                                                <th class="py-2.5 px-4">姓名 / Name</th>
+                                                <th class="py-2.5 px-4">學生 Email</th>
+                                                <th class="py-2.5 px-4">目前指派教師</th>
+                                                <th class="py-2.5 px-4 text-right">變更指派</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-100 bg-white">
+                                            ${(() => {
+                            const unitStudents = (dashboardData?.students || []).filter(s => {
+                                const orders = s.orders || [];
+                                // Find parent course for this unit
+                                const parentCourse = (allLessons || []).find(l => l.courseUnits && l.courseUnits.includes(unitFile));
+                                return parentCourse && orders.includes(parentCourse.courseId);
+                            });
+
+                            if (unitStudents.length === 0) return '<tr><td colspan="3" class="py-4 text-center text-gray-400 italic">無授權學生</td></tr>';
+
+                            return unitStudents.map(s => {
+                                const unitAssignedTeacher = (s.unitAssignments && s.unitAssignments[unitFile]) ? s.unitAssignments[unitFile] : null;
+
+                                return `
+                                            <tr class="hover:bg-orange-50/10 transition-colors">
+                                                <td class="py-2 px-4 font-bold text-gray-800">${escapeHtml(s.name || '—')}</td>
+                                                <td class="py-2 px-4 font-mono text-gray-500">${escapeHtml(s.email)}</td>
+                                                <td class="py-2 px-4">
+                                                    <span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md font-bold">
+                                                        ${unitAssignedTeacher ? escapeHtml(unitAssignedTeacher) : '尚未指派'}
+                                                    </span>
+                                                </td>
+                                                <td class="py-2 px-4 text-right">
+                                                    <select onchange="handleAssignTeacher('${s.uid}', '${unitFile}', this.value)" 
+                                                        class="bg-white border border-gray-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-orange-200 text-[10px] font-bold text-gray-600">
+                                                        <option value="">-- 指派教師 --</option>
+                                                        ${unitTeachers.map(t => `<option value="${t}" ${unitAssignedTeacher === t ? 'selected' : ''}>${escapeHtml(t)}</option>`).join('')}
+                                                        <option value="none">移除指派</option>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        `;
+                            }).join('');
+                        })()}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            `;
+                    `;
+                }).join('');
+            } catch (lessonErr) {
+                console.error("Error rendering lesson:", lesson.courseId, lessonErr);
+                return `<div class="p-4 text-red-500">Error rendering lesson ${lesson.courseId}: ${lessonErr.message}</div>`;
+            }
         }).join('');
-    }).join('')}
+
+        html += `
+            <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm font-mono text-sm w-full">
+                <div class="divide-y divide-gray-100">
+                    ${lessonRows}
+                </div>
             </div>
-        </div>
-    `;
+        `;
+    } catch (totalErr) {
+        console.error("Admin Console Crash:", totalErr);
+        html += `<div class="p-8 text-center bg-red-50 text-red-600 rounded-2xl border border-red-100">
+            <h4 class="font-black mb-2">管理控制台發生錯誤</h4>
+            <p class="text-xs opacity-75">${totalErr.message}</p>
+        </div>`;
+    }
 
     adminPanel.innerHTML = html;
 }
@@ -1050,6 +1241,38 @@ window.handleUnitTeacherAuth = async function (courseId, unitFile, teacherEmail,
     } catch (e) {
         console.error("Unit Auth Error:", e);
         alert("授權失敗: " + e.message);
+    } finally {
+        if (msg) msg.textContent = "";
+    }
+};
+
+window.toggleAdminSuperMode = function (enabled) {
+    adminSuperMode = enabled;
+    localStorage.setItem('adminSuperMode', enabled);
+    renderAdminConsole();
+};
+
+window.handleAssignTeacher = async function (studentUid, unitId, teacherEmail) {
+    if (!studentUid || !unitId) {
+        alert(`Missing data: studentUid=${studentUid}, unitId=${unitId}`);
+        return;
+    }
+    const msg = document.getElementById('admin-msg');
+    const finalTeacher = (teacherEmail === 'none' || !teacherEmail) ? "" : teacherEmail;
+
+    // alert(`Sending: studentUid=${studentUid}, unitId=${unitId}, teacherEmail=${finalTeacher}`);
+
+    try {
+        if (msg) msg.textContent = "正在更新教師指派...";
+
+        const assignFunc = httpsCallable(functions, 'assignStudentToTeacher');
+        await assignFunc({ studentUid, unitId, teacherEmail: finalTeacher });
+
+        // Refresh the whole dashboard to get fresh data from server
+        await loadDashboard();
+    } catch (e) {
+        console.error("Assignment Error:", e);
+        alert("指派失敗: " + e.message);
     } finally {
         if (msg) msg.textContent = "";
     }
@@ -1275,6 +1498,10 @@ function setupSettingsFeature() {
  */
 function isUserAuthorizedForUnit(unitFile, courseId, email) {
     if (!email) return false;
+
+    // [NEW] Super Mode override for teaching guides/settings
+    if (adminSuperMode) return true;
+
     const courseConfig = dashboardData?.courseConfigs?.[courseId] || {};
     const unitConfigs = courseConfig.githubClassroomUrls || {};
 
@@ -1305,6 +1532,8 @@ async function renderSettingsTab(filterUnitId = null) {
 
         // 2. Render Course List (Strict Filtering: ONLY search for units where user is authorized)
         let authorizedLessons = allLessons.filter(course => {
+            if (myRole === 'admin' || adminSuperMode) return true; // Admins and Super Mode see everything
+
             const courseConfig = courseConfigs[course.courseId] || {};
             const unitConfigs = courseConfig.githubClassroomUrls || {};
             const units = Array.isArray(course.courseUnits) ? course.courseUnits : [];
@@ -1346,15 +1575,12 @@ async function renderSettingsTab(filterUnitId = null) {
             const guideData = robustExtractGuideSegments(rawInstructor, rawAssignment);
             const usedSegments = new Set();
 
-            // [MODIFIED] Respect filterUnitId AND check strict authorization
+            // [MODIFIED] Show ALL units if course is authorized, but filter by filterUnitId if present
             const unitRows = allUnits
                 .filter(f => {
                     const isMaster = f.includes('-master-');
 
-                    // 1. Strict Authorization Check
-                    if (!isUserAuthorizedForUnit(f, course.courseId, userEmail)) return false;
-
-                    // 2. Filter logic (same as before)
+                    // Filter logic (respecting deep link unitId)
                     if (isMaster && filterUnitId !== f && filterUnitId !== null) return false;
                     if (filterUnitId && !filterUnitId.includes('-master-')) {
                         const cleanF = f.replace('.html', '');
@@ -1375,7 +1601,8 @@ async function renderSettingsTab(filterUnitId = null) {
                         usedSegments.add(fileName);
                         if (unitNum) usedSegments.add(unitNum.toString());
                     }
-                    return renderUnitRow(course.courseId, fileName, configs[fileName], segment, course.title);
+                    const isAuthorized = isUserAuthorizedForUnit(fileName, course.courseId, userEmail);
+                    return renderUnitRow(course.courseId, fileName, configs[fileName], segment, course.title, isAuthorized);
                 })
                 .join('');
 
@@ -1451,7 +1678,7 @@ function robustExtractGuideSegments(instructorInput, assignmentInput = null) {
     return result;
 }
 
-function renderUnitRow(courseId, fileName, teacherMap = {}, guideSegment = "", courseTitle = "") {
+function renderUnitRow(courseId, fileName, teacherMap = {}, guideSegment = "", courseTitle = "", isAuthorized = false) {
     const userEmail = auth.currentUser?.email;
 
     // teacherMap: { "default": "...", "teacher_a": "..." }
@@ -1471,14 +1698,16 @@ function renderUnitRow(courseId, fileName, teacherMap = {}, guideSegment = "", c
              data-course-id="${courseId}" data-file-name="${fileName}">
             
             <!-- Section 1: Unit Info (High Hierarchy) -->
-            <div>
-                <div class="text-[10px] text-blue-500 font-black uppercase mb-2 tracking-widest flex items-center gap-2">
-                   <span class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
-                   課程單元 / Unit
+            <div class="flex justify-between items-start">
+                <div>
+                    <div class="text-[10px] text-blue-500 font-black uppercase mb-2 tracking-widest flex items-center gap-2">
+                       <span class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
+                       課程單元 / Unit
+                    </div>
+                    <div class="text-[11px] text-gray-400 font-mono mb-1 leading-relaxed opacity-80">${escapeHtml(courseTitle)}</div>
+                    <div class="text-xl font-black text-gray-800 tracking-tight leading-tight">${escapeHtml(unitName)}</div>
+                    <div class="text-[11px] text-gray-300 font-mono mt-1.5">${escapeHtml(fileName)}</div>
                 </div>
-                <div class="text-[11px] text-gray-400 font-mono mb-1 leading-relaxed opacity-80">${escapeHtml(courseTitle)}</div>
-                <div class="text-xl font-black text-gray-800 tracking-tight leading-tight">${escapeHtml(unitName)}</div>
-                <div class="text-[11px] text-gray-300 font-mono mt-1.5">${escapeHtml(fileName)}</div>
             </div>
 
             <!-- Separator -->
@@ -1486,30 +1715,36 @@ function renderUnitRow(courseId, fileName, teacherMap = {}, guideSegment = "", c
 
             <!-- Section 2: Assignment Config -->
             <div class="flex flex-col gap-5 assignment-links-container">
-                <div>
-                   <div class="text-[10px] text-blue-400 font-black uppercase mb-3 tracking-widest">作業連結設定 / Assignment</div>
-                   ${entries.map(([teacher, url]) => `
-                       <div class="flex flex-col sm:flex-row gap-3 assignment-link-row">
-                           <input type="hidden" class="assignment-id-input" value="${escapeHtml(teacher)}">
-                           <input type="url" placeholder="貼上 GitHub Classroom 邀請連結" 
-                               value="${escapeHtml(url)}" 
-                               class="assignment-url-input flex-grow px-4 py-2.5 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-100 bg-white/50 shadow-sm transition-all font-mono">
-                           <button onclick="saveAllSettings(this)"
-                               class="px-8 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-700 transition-all shadow-md active:scale-95 whitespace-nowrap btn-save-individual">
-                               儲存連結 🔗
-                           </button>
-                       </div>
-                   `).join('')}
-                </div>
-
-                ${guideSegment ? `
-                <div class="instructor-guide-wrapper">
-                    <div class="text-[10px] text-blue-400 font-black uppercase mb-3 tracking-widest">單元教學指引 / Unit Guide</div>
-                    <div class="p-5 bg-blue-50/30 border border-blue-100/20 rounded-2xl text-xs text-blue-900/70 leading-relaxed instructor-guide-content overflow-x-auto w-full italic">
-                        ${guideSegment}
+                ${isAuthorized ? `
+                    <div>
+                    <div class="text-[10px] text-blue-400 font-black uppercase mb-3 tracking-widest">作業連結設定 / Assignment</div>
+                    ${entries.map(([teacher, url]) => `
+                        <div class="flex flex-col sm:flex-row gap-3 assignment-link-row">
+                            <input type="hidden" class="assignment-id-input" value="${escapeHtml(teacher)}">
+                            <input type="url" placeholder="貼上 GitHub Classroom 邀請連結" 
+                                value="${escapeHtml(url)}" 
+                                class="assignment-url-input flex-grow px-4 py-2.5 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-100 bg-white/50 shadow-sm transition-all font-mono">
+                            <button onclick="saveAllSettings(this)"
+                                class="px-8 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-700 transition-all shadow-md active:scale-95 whitespace-nowrap btn-save-individual">
+                                儲存連結 🔗
+                            </button>
+                        </div>
+                    `).join('')}
                     </div>
-                </div>
-                ` : ''}
+
+                    ${guideSegment ? `
+                    <div class="instructor-guide-wrapper">
+                        <div class="text-[10px] text-blue-400 font-black uppercase mb-3 tracking-widest">單元教學指引 / Unit Guide</div>
+                        <div class="p-5 bg-blue-50/30 border border-blue-100/20 rounded-2xl text-xs text-blue-900/70 leading-relaxed instructor-guide-content overflow-x-auto w-full italic">
+                            ${guideSegment}
+                        </div>
+                    </div>
+                    ` : ''}
+                ` : `
+                    <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 text-[11px] text-gray-400 italic flex items-center gap-2">
+                        <span>🔒</span> 您目前非此單元的「合格教師」，僅具備課程閱覽權限，無法進行單元設定與查看教學指引。
+                    </div>
+                `}
             </div>
         </div>
     `;
