@@ -34,7 +34,7 @@ async function sendWelcomeEmail(email, displayName, expiryDateStr) {
 
                 <p>您可以立即開始您的學習之旅：</p>
                 <p>
-                    <a href="https://vibe-coding.tw/courses" style="background-color: #4A90E2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">開始學習</a>
+                    <a href="https://vibe-coding.tw/index.html" style="background-color: #4A90E2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">開始學習</a>
                 </p>
                 <p>如果您有任何問題，隨時回覆這封郵件。</p>
                 <br>
@@ -74,7 +74,7 @@ async function sendPaymentSuccessEmail(email, orderId, amount, itemsDesc) {
                 </div>
                 <p>您現在可以隨時登入平台存取您的課程內容。</p>
                 <p>
-                    <a href="https://vibe-coding.tw/dashboard" style="background-color: #2ECC71; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">前往儀表板</a>
+                    <a href="https://vibe-coding.tw/dashboard.html" style="background-color: #2ECC71; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">前往儀表板</a>
                 </p>
                 <br>
                 <p>謝謝！<br>Vibe Coding 團隊</p>
@@ -108,7 +108,7 @@ async function sendTrialExpiringEmail(email, displayName, daysLeft) {
                 <p>提醒您，您的 Vibe Coding 入門試用資格即將在 <strong>${daysLeft} 天</strong>後到期。</p>
                 <p>希望您在這些課程中收穫滿滿！如果您希望繼續存取這些內容或解鎖更多進階課程，請考慮升級您的帳戶。</p>
                 <p>
-                    <a href="https://vibe-coding.tw/courses" style="background-color: #E67E22; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">查看課程方案</a>
+                    <a href="https://vibe-coding.tw/index.html" style="background-color: #E67E22; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">查看課程方案</a>
                 </p>
                 <br>
                 <p>Vibe Coding 團隊</p>
@@ -143,7 +143,7 @@ async function sendCourseExpiringEmail(email, displayName, courseName, daysLeft)
                 <p>提醒您，您的課程 <strong>${courseName}</strong> 的使用期限即將在 <strong>${daysLeft} 天</strong>後到期。</p>
                 <p>把握最後的時間複習課程內容！如果您希望繼續存取，請考慮購買續約或查看最新優惠。</p>
                 <p>
-                    <a href="https://vibe-coding.tw/dashboard" style="background-color: #E74C3C; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">登入儀表板</a>
+                    <a href="https://vibe-coding.tw/dashboard.html" style="background-color: #E74C3C; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">登入儀表板</a>
                 </p>
                 <br>
                 <p>Happy Coding!<br>Vibe Coding 團隊</p>
@@ -231,7 +231,7 @@ async function sendAssignmentNotification(teacherEmail, studentName, assignmentT
 
                 <p>請前往儀表板進行批閱：</p>
                 <p>
-                    <a href="${assignmentUrl || 'https://vibe-coding.tw/dashboard'}" style="background-color: #4A90E2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">前往批改</a>
+                    <a href="${assignmentUrl || 'https://vibe-coding.tw/dashboard.html'}" style="background-color: #4A90E2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">前往批改</a>
                 </p>
                 <br>
                 <p>Vibe Coding System</p>
@@ -278,7 +278,7 @@ async function sendGradingNotification(email, studentName, assignmentTitle, grad
 
                 <p>您可以前往儀表板查看詳細的作業紀錄：</p>
                 <p>
-                    <a href="https://vibe-coding.tw/dashboard" style="background-color: #2ECC71; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">查看作業詳情</a>
+                    <a href="https://vibe-coding.tw/dashboard.html" style="background-color: #2ECC71; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">查看作業詳情</a>
                 </p>
                 <br>
                 <p>持續前進！<br>Vibe Coding 團隊</p>
@@ -312,7 +312,7 @@ async function sendStudentLinkedToTeacherEmail(email, studentName, unitId, teach
                 </div>
                 <p>在學習過程中若有任何疑問，或完成作業後需要批改，老師都會全程協助您。鼓勵您主動與老師保持聯繫，祝您學習愉快！</p>
                 <p>
-                    <a href="https://vibe-coding.tw/dashboard" style="background-color: #4A90E2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">前往儀表板</a>
+                    <a href="https://vibe-coding.tw/dashboard.html" style="background-color: #4A90E2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">前往儀表板</a>
                 </p>
                 <br>
                 <p>Vibe Coding 團隊</p>
@@ -344,7 +344,7 @@ async function sendTeacherLinkedToStudentEmail(email, studentName, unitId) {
                     <p style="margin: 5px 0 0 0; font-size: 14px;">請隨時關注這位學生的學習進度與作業繳交狀況，並透過積極的正向回饋建立良好的教學互動關係。</p>
                 </div>
                 <p>
-                    <a href="https://vibe-coding.tw/dashboard" style="background-color: #4A90E2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">開啟教師後台</a>
+                    <a href="https://vibe-coding.tw/dashboard.html" style="background-color: #4A90E2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">開啟教師後台</a>
                 </p>
                 <br>
                 <p>Vibe Coding 教務系統</p>
@@ -381,7 +381,7 @@ async function sendAdminAssignmentReminder(adminEmail, pendingList) {
                 </ul>
                 <p>請撥冗前往儀表板完成指派，以確保學生的學習權益與教學互動品質。</p>
                 <p>
-                    <a href="https://vibe-coding.tw/dashboard" style="background-color: #E74C3C; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">前往後台處理</a>
+                    <a href="https://vibe-coding.tw/dashboard.html" style="background-color: #E74C3C; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">前往後台處理</a>
                 </p>
                 <br>
                 <p>Vibe Coding 自動化管家</p>
