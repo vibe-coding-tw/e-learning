@@ -98,6 +98,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
                             <div
                                 class="dropdown-menu absolute hidden group-hover:block bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
                                 <a href="${resolve('prepare.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">課前準備</a>
+                                <a href="${resolve('free-classroom.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700 font-bold text-indigo-600">GitHub Classroom 實務 (免費)</a>
                                 <a href="${resolve('started.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">入門課程</a>
                                 <a href="${resolve('basic.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">基礎實作</a>
                                 <a href="${resolve('advanced.html')}"
@@ -178,6 +179,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
                     <div class="pl-2 border-l-2 border-gray-200 ml-2">
                         <p class="text-xs text-gray-400 mb-1 uppercase">課程連結</p>
                         <a href="${resolve('prepare.html')}" class="block py-1 hover:text-cyan-600">課前準備</a>
+                        <a href="${resolve('free-classroom.html')}" class="block py-1 text-indigo-600 font-bold">GitHub Classroom 實務 (免費)</a>
                         <a href="${resolve('started.html')}" class="block py-1 hover:text-cyan-600">入門課程</a>
                         <a href="${resolve('basic.html')}" class="block py-1 hover:text-cyan-600">基礎實作</a>
                         <a href="${resolve('advanced.html')}" class="block py-1 hover:text-cyan-600">進階應用</a>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Classroom & Vibe Coding 實務 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .vibe-gradient-text {
+            background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+
+<body class="flex flex-col min-h-screen bg-slate-50">
+
+    <div id="nav-placeholder"></div>
+    <script src="js/nav-component.js?v=5"></script>
+    <script>
+        renderNav('.');
+    </script>
+
+    <!-- Hero Section -->
+    <header class="relative py-20 overflow-hidden bg-white">
+        <div class="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
+            <div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_-20%,#4f46e5,transparent)]"></div>
+        </div>
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <div class="inline-block px-4 py-1.5 mb-6 text-sm font-bold tracking-widest text-indigo-600 uppercase bg-indigo-50 rounded-full border border-indigo-100">
+                🚀 免費預備課程
+            </div>
+            <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6 tracking-tight">
+                GitHub Classroom <span class="text-indigo-600">x</span> <br class="hidden md:block">
+                <span class="vibe-gradient-text">Vibe Coding 實務</span>
+            </h1>
+            <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed mb-10">
+                從「影印機」概念理解雲端教室，掌握 AI 時代的開發工作流。<br class="hidden md:block">
+                這不是一堂教你背語法的課，而是教你如何成為一名卓越的「技術導演」。
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="#student-guide" class="px-8 py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-indigo-200 transition-all hover:scale-105">
+                    我是學生：輕鬆交作業
+                </a>
+                <a href="#tutor-guide" class="px-8 py-4 bg-white text-slate-700 border border-slate-200 font-bold rounded-xl shadow-sm hover:bg-slate-50 transition-all">
+                    我是導師：自動化管理
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Analogy Section -->
+    <section class="py-16 bg-slate-50">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto glass-card p-8 md:p-12 rounded-3xl shadow-xl border border-white">
+                <div class="flex flex-col md:flex-row gap-10 items-center">
+                    <div class="w-full md:w-1/3 flex justify-center text-8xl">
+                        🖨️
+                    </div>
+                    <div class="w-full md:w-2/3">
+                        <h2 class="text-2xl md:text-3xl font-bold text-slate-800 mb-4">什麼是 GitHub Classroom？</h2>
+                        <p class="text-slate-600 leading-relaxed mb-6">
+                            想像老師在準備一份實作作業。在傳統方式下，老師需要一張張影印講義發給全班。
+                            在 <span class="font-bold text-indigo-600">GitHub Classroom</span> 中，老師製作一個「作業模板（Template）」，
+                            然後讓系統自動為每個學生「影印」一份私人的儲存庫。
+                        </p>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-3 text-slate-700">
+                                <span class="text-green-500 font-bold">✓</span>
+                                每個學生都有獨立的練習空間
+                            </li>
+                            <li class="flex items-start gap-3 text-slate-700">
+                                <span class="text-green-500 font-bold">✓</span>
+                                老師能即時看到全班的進度
+                            </li>
+                            <li class="flex items-start gap-3 text-slate-700">
+                                <span class="text-green-500 font-bold">✓</span>
+                                支援自動評分機制
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Student Guide -->
+    <section id="student-guide" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-extrabold text-slate-800 mb-4">學生端：5 步驟輕鬆交作業</h2>
+                <div class="h-1.5 w-20 bg-indigo-500 mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid md:grid-cols-5 gap-8 max-w-6xl mx-auto">
+                <!-- Step 1 -->
+                <div class="text-center group">
+                    <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">1</div>
+                    <h3 class="font-bold text-slate-800 mb-3">接受邀請</h3>
+                    <p class="text-sm text-slate-500">點擊老師提供的 Classroom 連結並登入 GitHub。</p>
+                </div>
+                <!-- Step 2 -->
+                <div class="text-center group">
+                    <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">2</div>
+                    <h3 class="font-bold text-slate-800 mb-3">複製儲存庫</h3>
+                    <p class="text-sm text-slate-500">使用 <code>git clone</code> 將作業下載到電腦中。</p>
+                </div>
+                <!-- Step 3 -->
+                <div class="text-center group">
+                    <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">3</div>
+                    <h3 class="font-bold text-slate-800 mb-3">開始實作</h3>
+                    <p class="text-sm text-slate-500">在 VS Code 或 Codespaces 中撰寫程式碼。</p>
+                </div>
+                <!-- Step 4 -->
+                <div class="text-center group">
+                    <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">4</div>
+                    <h3 class="font-bold text-slate-800 mb-3">提交推送到雲端</h3>
+                    <p class="text-sm text-slate-500">使用 <code>git push</code> 將成果上傳完成繳交。</p>
+                </div>
+                <!-- Step 5 -->
+                <div class="text-center group">
+                    <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">5</div>
+                    <h3 class="font-bold text-slate-800 mb-3">確認評分結果</h3>
+                    <p class="text-sm text-slate-500">查看 ✅ 指標，確認自動化測試是否通過。</p>
+                </div>
+            </div>
+
+            <div class="mt-16 max-w-3xl mx-auto p-6 bg-amber-50 rounded-2xl border border-amber-100 italic text-slate-700 text-center">
+                💡 <span class="font-bold">小撇步：</span> 隨時 Push，不用等最後一刻！紀錄開發歷程也是學習的一部分。
+            </div>
+        </div>
+    </section>
+
+    <!-- Autograding Explained -->
+    <section class="py-20 bg-slate-900 text-white">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row gap-16 items-center">
+                <div class="w-full md:w-1/2">
+                    <h2 class="text-3xl font-bold mb-6">自動評分 (Autograding) <br><span class="text-cyan-400">即時回饋與驗證</span></h2>
+                    <p class="text-slate-400 leading-relaxed mb-8">
+                        當你 Push 程式碼時，系統會自動啟動虛擬環境執行測試。這能幫助你立刻知道程式邏輯是否正確。
+                    </p>
+                    <div class="space-y-6">
+                        <div class="flex gap-4">
+                            <div class="w-12 h-12 flex-shrink-0 bg-green-500 rounded-full flex items-center justify-center text-2xl">✅</div>
+                            <div>
+                                <h4 class="font-bold text-white">通過測試</h4>
+                                <p class="text-sm text-slate-400">恭喜！你的程式符合預期輸出或通過單元測試。</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-12 h-12 flex-shrink-0 bg-red-500 rounded-full flex items-center justify-center text-2xl">❌</div>
+                            <div>
+                                <h4 class="font-bold text-white">測試未通過</h4>
+                                <p class="text-sm text-slate-400">別灰心，點擊紅叉查看報錯訊息，修正後再次 Push 即可。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-full md:w-1/2 p-6 glass-card bg-white/5 rounded-3xl border border-white/10">
+                    <pre class="text-xs md:text-sm font-mono text-cyan-300 overflow-x-auto">
+<span class="text-slate-500"># autograding.yml 範例</span>
+name: GitHub Classroom Autograding
+on: [push]
+jobs:
+  build:
+    name: Autograding
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Python Tests
+        run: python3 test_hw1.py
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Vibe Coding Section -->
+    <section class="py-16 bg-white overflow-hidden">
+        <div class="container mx-auto px-4">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-6">進入 Vibe Coding 時代</h2>
+                <p class="text-lg text-slate-600">
+                    這是一個從「打字員」轉向「技術導演」的時代。
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="p-8 rounded-3xl bg-indigo-50 border border-indigo-100">
+                    <div class="text-4xl mb-4">🎬</div>
+                    <h3 class="text-xl font-bold mb-4">開發者即導演</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        不再需要背誦繁瑣的語法，重點在於如何運用 Prompt Engineering 引導 AI 生成精準的元件。
+                    </p>
+                </div>
+                <div class="p-8 rounded-3xl bg-cyan-50 border border-cyan-100">
+                    <div class="text-4xl mb-4">🤖</div>
+                    <h3 class="text-xl font-bold mb-4">AI 代理人協作</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        學會使用 Copilot Agent 或 Cursor 進行「對話式開發」，讓 AI 幫你搞定瑣碎的地基工程。
+                    </p>
+                </div>
+                <div class="p-8 rounded-3xl bg-purple-50 border border-purple-100">
+                    <div class="text-4xl mb-4">⚖️</div>
+                    <h3 class="text-xl font-bold mb-4">審美與評論</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        未來的核心競爭力在於「驗證」與「優化」，判斷 AI 給的解法是否符合最佳實踐與資安標準。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tutor Section -->
+    <section id="tutor-guide" class="py-20 bg-slate-50">
+        <div class="container mx-auto px-4">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-slate-800">老師與導師端 (Tutor Guide)</h2>
+                    <p class="text-slate-500 mt-4">如何利用 Classroom 大幅提升教學效率？</p>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-10">
+                    <div class="space-y-6">
+                        <div class="flex gap-4 p-4 bg-white rounded-2xl shadow-sm">
+                            <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">1</div>
+                            <div>
+                                <h4 class="font-bold text-slate-800">建立組織 (Organization)</h4>
+                                <p class="text-sm text-slate-500">為你的課程建立一個「虛擬教室」，統一管理所有學生儲存庫。</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 p-4 bg-white rounded-2xl shadow-sm">
+                            <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">2</div>
+                            <div>
+                                <h4 class="font-bold text-slate-800">準備範本 (Template)</h4>
+                                <p class="text-sm text-slate-500">寫好基礎架構、留空位，並在 README.md 寫下評分標準。</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 p-4 bg-white rounded-2xl shadow-sm">
+                            <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">3</div>
+                            <div>
+                                <h4 class="font-bold text-slate-800">發布邀請</h4>
+                                <p class="text-sm text-slate-500">生成專屬連結，學生點擊後自動影印一份作業、自動開工。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-indigo-900 rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl">
+                        <div class="absolute -right-20 -top-20 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl"></div>
+                        <h4 class="text-xl font-bold mb-6">💡 給老師的小建議</h4>
+                        <div class="space-y-4">
+                            <p class="text-indigo-200 text-sm">
+                                <b>善用 Pull Requests 進行批改：</b><br>
+                                勾選 "Enable feedback PRs"，你就能直接在學生的程式碼行數留評語，互動感極佳！
+                            </p>
+                            <div class="h-px bg-indigo-800"></div>
+                            <p class="text-indigo-200 text-sm">
+                                <b>運用隱藏測資：</b><br>
+                                防止學生針對測試案例「硬寫」輸出。增加 Linting 檢查，確保代碼風格統一。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="py-20 bg-gradient-to-br from-indigo-900 to-slate-900 text-white text-center">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-5xl font-extrabold mb-8 italic">準備好開啟你的 Vibe Coding 旅程了嗎？</h2>
+            <p class="text-xl text-indigo-200 mb-10 max-w-2xl mx-auto">
+                現在就領取你的第一份免費實作作業，體驗自動化開發的魅力。
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-6">
+                <a href="started.html" class="px-10 py-5 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-black rounded-full shadow-xl transition-all hover:scale-110">
+                    立即開始免費體驗課程
+                </a>
+                <a href="prepare.html" class="px-10 py-5 bg-transparent border-2 border-white/30 hover:border-white text-white font-bold rounded-full transition-all">
+                    返回課前準備
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-slate-900 py-12 border-t border-white/5">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. | info@vibe-coding.tw</p>
+            <div class="flex justify-center gap-6 text-slate-400 text-sm">
+                <a href="faq.html" class="hover:text-white">常見問題</a>
+                <a href="about.html" class="hover:text-white">關於我們</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+
+</html>
