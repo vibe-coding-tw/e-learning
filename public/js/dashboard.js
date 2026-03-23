@@ -1517,7 +1517,7 @@ function isUserAuthorizedForUnit(unitFile, courseId, email) {
 }
 
 async function renderSettingsTab(filterUnitId = null) {
-    const assignmentContainer = document.getElementById('assignment-container');
+    const assignmentContainer = document.getElementById('assignment-setting');
     const guideContainer = document.getElementById('guide-container');
     if (!assignmentContainer || !guideContainer) return;
 
@@ -1593,7 +1593,7 @@ async function renderSettingsTab(filterUnitId = null) {
                 const unitIdx = realUnitsOnly.indexOf(fileName);
                 const unitNum = unitIdx !== -1 ? unitIdx + 1 : null;
                 const instructorSegment = guideData.segments[fileName] || (unitNum ? guideData.segments[unitNum] : "") || "";
-                
+
                 if (!instructorSegment) return "";
                 const isAuthorized = isUserAuthorizedForUnit(fileName, course.courseId, userEmail);
                 return renderGuideRow(course.courseId, fileName, instructorSegment, course.title, isAuthorized);
