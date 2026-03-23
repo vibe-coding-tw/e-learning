@@ -1016,8 +1016,6 @@ function renderAdminConsole() {
             </h3>
             
             <div class="flex items-center gap-3">
-                    🗑️ 清理頁面瀏覽 (Cleanup)
-                </button>
                 <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm">
                     <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">超級模式 / Super Mode</span>
                     <label class="relative inline-flex items-center cursor-pointer">
