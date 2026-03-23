@@ -82,9 +82,13 @@
                 return;
             }
 
-            // 2. 如果是免費課程，原本直接跳轉，改為同樣經過後端驗證以取得 Token
-            // if (parseInt(price) === 0) { ... }
-
+            // 2. 如果是免費課程 (price = 0)，直接跳轉以提供最佳體驗，不需經過後端驗證購買紀錄
+            if (parseInt(price) === 0) {
+                console.log("Free course detected, bypassing backend auth check.");
+                window.location.replace(decodeURIComponent(targetUrl));
+                return;
+            }
+            
             // 3. 付費課程：呼叫後端二次驗證
             try {
                 let fileName = "";
