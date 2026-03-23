@@ -1,4 +1,4 @@
-console.log("Dashboard Script v11.3.134 Loaded");
+console.log("Dashboard Script v11.3.135 Loaded");
 // alert("Dashboard Script v5 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -1492,12 +1492,19 @@ function isUserAuthorizedForUnit(fileName, courseId, email) {
 }
 
 async function renderSettingsTab(filterUnitId = null) {
+    console.log("[Settings] renderSettingsTab invoked with filter:", filterUnitId);
+    
     const assignmentContainer = document.getElementById('assignment-setting');
     const guideContainer = document.getElementById('guide-container');
-    if (!assignmentContainer || !guideContainer) return;
+    if (!assignmentContainer || !guideContainer) {
+        console.error("[Settings] Critical: Containers NOT found in DOM.");
+        return;
+    }
 
     try {
         const userEmail = auth.currentUser?.email;
+        console.log("[Settings] Current User:", userEmail);
+        
         if (!userEmail) {
             const msg = `<div class="text-center py-20 text-gray-400">請先登入以查看設定。</div>`;
             assignmentContainer.innerHTML = msg;
@@ -1505,25 +1512,33 @@ async function renderSettingsTab(filterUnitId = null) {
             return;
         }
 
-        // Use pre-loaded data instead of extra call
-        const courseConfigs = dashboardData?.courseConfigs || {};
+        // [MODIFIED] Wait for data if it's somehow missing but being called
+        if (!dashboardData && (myRole === 'admin' || myRole === 'teacher')) {
+            console.warn("[Settings] dashboardData missing, possibly still loading...");
+            return; // Exit and wait for loadDashboard to call us again
+        }
 
-        // 1. Render Course List (Strict Filtering: ONLY search for units where user is authorized)
-        let authorizedLessons = allLessons.filter(course => {
-            if (myRole === 'admin' || adminSuperMode) return true; // Admins and Super Mode see everything
+        const courseConfigs = dashboardData?.courseConfigs || {};
+        const lessonsToProcess = Array.isArray(allLessons) ? allLessons : [];
+        console.log("[Settings] Processing", lessonsToProcess.length, "lessons.");
+
+        // 1. Render Course List
+        let authorizedLessons = lessonsToProcess.filter(course => {
+            if (myRole === 'admin' || adminSuperMode) return true;
 
             const courseConfig = courseConfigs[course.courseId] || {};
             const unitConfigs = courseConfig.githubClassroomUrls || {};
             const units = Array.isArray(course.courseUnits) ? course.courseUnits : [];
 
-            // Combine unit sources (excluding master files)
             const allFiles = Array.from(new Set([...units, ...Object.keys(unitConfigs)]))
                 .filter(f => f && !f.includes('-master-'));
 
             return allFiles.some(f => isUserAuthorizedForUnit(f, course.courseId, userEmail));
         });
 
-        // [NEW] If filtered to a specific course, only show that course in settings
+        console.log("[Settings] Authorized lessons count:", authorizedLessons.length);
+
+        // [NEW] If filtered to a specific course
         const urlParams = new URLSearchParams(window.location.search);
         const filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
         if (filterCourseId) {
@@ -1531,6 +1546,7 @@ async function renderSettingsTab(filterUnitId = null) {
         }
 
         if (authorizedLessons.length === 0) {
+            console.warn("[Settings] No authorized lessons found for user.");
             const msg = `<div class="text-center py-20 text-gray-400">目前尚無獲准管理的課程（需為單元合格教師）。</div>`;
             assignmentContainer.innerHTML = msg;
             guideContainer.innerHTML = msg;
@@ -1541,10 +1557,10 @@ async function renderSettingsTab(filterUnitId = null) {
         let totalGuideHTML = "";
 
         authorizedLessons.forEach(course => {
+            console.log("[Settings] Rendering Course:", course.courseId);
             const configs = courseConfigs[course.courseId]?.githubClassroomUrls || {};
             const units = Array.isArray(course.courseUnits) ? [...course.courseUnits] : [];
 
-            // Extract guide segments
             const rawInstructor = courseConfigs[course.courseId]?.instructorGuide;
             const rawAssignment = courseConfigs[course.courseId]?.assignmentGuide;
             const guideData = robustExtractGuideSegments(rawInstructor, rawAssignment);
@@ -1557,6 +1573,8 @@ async function renderSettingsTab(filterUnitId = null) {
                 }
                 return true;
             });
+
+            console.log("[Settings] Filtered units mapping:", filteredUnits);
 
             const assignmentRows = filteredUnits.map(fileName => {
                 const isAuthorized = isUserAuthorizedForUnit(fileName, course.courseId, userEmail);
@@ -1582,19 +1600,21 @@ async function renderSettingsTab(filterUnitId = null) {
             }
 
             if (guideRows) {
-                totalGuideHTML += `
-                    <div class="w-full space-y-6">
-                        ${guideRows}
-                    </div>`;
+                totalGuideHTML += `<div class="w-full space-y-6">${guideRows}</div>`;
             }
         });
+
+        console.log("[Settings] Final check items. Any HTML?", !!totalAssignmentHTML);
 
         assignmentContainer.innerHTML = totalAssignmentHTML || `<div class="text-center py-20 text-gray-400">尚無作業連結設定需求。</div>`;
         guideContainer.innerHTML = totalGuideHTML || `<div class="text-center py-20 text-gray-400">尚無相關教學指引。</div>`;
 
     } catch (e) {
-        console.error("Failed to render settings:", e);
-        assignmentContainer.innerHTML = `<div class="text-red-500 p-4">載入失敗: ${e.message}</div>`;
+        console.error("[Settings] Critical Render Failure:", e);
+        assignmentContainer.innerHTML = `<div class="text-red-500 p-8 rounded-2xl bg-red-50 border border-red-100">
+            <h4 class="font-black text-sm mb-2">載入設定時發生錯誤 (Render Failure)</h4>
+            <p class="text-[10px] opacity-75">${e.message}</p>
+        </div>`;
     }
 }
 
