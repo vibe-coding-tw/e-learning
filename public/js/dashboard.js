@@ -1,4 +1,4 @@
-console.log("Dashboard Script v11.3.124 Loaded");
+console.log("Dashboard Script v11.3.132 Loaded");
 // alert("Dashboard Script v5 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -1506,11 +1506,11 @@ function isUserAuthorizedForUnit(unitFile, courseId, email) {
     const unitConfigs = courseConfig.githubClassroomUrls || {};
 
     // 1. Check unit-specific document for authorizedTeachers array
-    const unitDocConfig = dashboardData?.courseConfigs?.[unitFile] || {};
+    const unitDocConfig = dashboardData?.courseConfigs?.[fileName] || {};
     const unitTeachersArr = Array.isArray(unitDocConfig.authorizedTeachers) ? unitDocConfig.authorizedTeachers : [];
 
     // 2. Legacy/Fallback: Teachers specifically authorized for THIS unit in course-level doc
-    const legacyTeachers = (unitConfigs[unitFile] && typeof unitConfigs[unitFile] === 'object') ? Object.keys(unitConfigs[unitFile]) : [];
+    const legacyTeachers = (unitConfigs[fileName] && typeof unitConfigs[fileName] === 'object') ? Object.keys(unitConfigs[fileName]) : [];
 
     const allAuthorized = new Set([...unitTeachersArr, ...legacyTeachers]);
     return allAuthorized.has(email);
