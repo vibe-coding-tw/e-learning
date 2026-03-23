@@ -314,7 +314,8 @@ class MyCallbacks: public BLECharacteristicCallbacks {
         <ul>
             <li><strong>角色扮演：</strong> 低功耗系統設計師 (Low Power System Designer)。</li>
             <li><strong>執行方式：</strong> 實作「有意義才通知」邏輯：只有當感測器數值變動超過 5%-10% 時，ESP32 才觸發
-                <code>notify()</code>。觀察並記錄在靜止與劇烈變動情況下的通訊封包密度差異。</li>
+                <code>notify()</code>。觀察並記錄在靜止與劇烈變動情況下的通訊封包密度差異。
+            </li>
             <li><strong>評分重點 :</strong> 代碼邏輯正確且能顯著減少不必要的數據推播，展現對省電設計的理解。</li>
         </ul>
     </section>
@@ -350,7 +351,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
             </ol>
         </div>
 
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <h2>在 GitHub Classroom 的實戰部署</h2>
         <p>此單元聚焦於 BLE 的數據通訊模型，引導學生設計「高效、省電且可靠」的雙向通訊協議。</p>
 
         <h3>A. 範本倉庫 (Template Repo) 結構</h3>
@@ -381,7 +382,8 @@ void loop() {
         <h3>C. 自動評分 (Autograding) 的設計</h3>
         <ul>
             <li><strong>屬性標記檢核：：</strong> 透過測試代碼自動讀取特徵值屬性，驗證是否正確包含 <code>PROPERTY_WRITE</code> 或
-                <code>PROPERTY_NOTIFY</code>。</li>
+                <code>PROPERTY_NOTIFY</code>。
+            </li>
             <li><strong>邏輯流程驗證：：</strong> 模擬數值小幅變動，驗證是否正確「不觸發」推送，以節省能耗。</li>
         </ul>
 
@@ -399,7 +401,8 @@ void loop() {
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;">研究手機連接智慧燈泡時，控制亮度與讀取剩餘壽命分別使用什麼屬性？</td>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>Dashboard：</strong>確認學員理解「主動詢問」與「被動接收」的本質差異。</td>
+                        <strong>Dashboard：</strong>確認學員理解「主動詢問」與「被動接收」的本質差異。
+                    </td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
