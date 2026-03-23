@@ -1,4 +1,4 @@
-console.log("Dashboard Script v11.3.132 Loaded");
+console.log("Dashboard Script v11.3.133 Loaded");
 // alert("Dashboard Script v5 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -1496,7 +1496,7 @@ function setupSettingsFeature() {
  * Checks if a user is explicitly authorized as a teacher for a specific unit.
  * Logic matches renderAdminConsole: unit-level authorizedTeachers OR legacy classroom URL keys.
  */
-function isUserAuthorizedForUnit(unitFile, courseId, email) {
+function isUserAuthorizedForUnit(fileName, courseId, email) {
     if (!email) return false;
 
     // [NEW] Super Mode override for teaching guides/settings
