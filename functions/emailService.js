@@ -17,7 +17,7 @@ const transporter = nodemailer.createTransport({
  */
 async function sendWelcomeEmail(email, displayName, expiryDateStr) {
     const mailOptions = {
-        from: `"Vibe Coding" <${process.env.MAIL_USER}>`,
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
         subject: '歡迎加入 Vibe Coding！',
         html: `
@@ -60,7 +60,7 @@ async function sendWelcomeEmail(email, displayName, expiryDateStr) {
  */
 async function sendPaymentSuccessEmail(email, orderId, amount, itemsDesc) {
     const mailOptions = {
-        from: `"Vibe Coding" <${process.env.MAIL_USER}>`,
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
         subject: 'Vibe Coding 訂單確認',
         html: `
@@ -98,7 +98,7 @@ async function sendPaymentSuccessEmail(email, orderId, amount, itemsDesc) {
  */
 async function sendTrialExpiringEmail(email, displayName, daysLeft) {
     const mailOptions = {
-        from: `"Vibe Coding" <${process.env.MAIL_USER}>`,
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
         subject: `您的試用期即將在 ${daysLeft} 天後結束`,
         html: `
@@ -133,7 +133,7 @@ async function sendTrialExpiringEmail(email, displayName, daysLeft) {
  */
 async function sendCourseExpiringEmail(email, displayName, courseName, daysLeft) {
     const mailOptions = {
-        from: `"Vibe Coding" <${process.env.MAIL_USER}>`,
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
         subject: `[提醒] 您的課程 "${courseName}" 即將在 ${daysLeft} 天後到期`,
         html: `
@@ -169,7 +169,7 @@ async function sendTeacherAuthorizationEmail(email, unitName, unitId) {
     const dashboardUrl = cleanUnitId ? `https://vibe-coding.tw/dashboard.html?unitId=${cleanUnitId}` : `https://vibe-coding.tw/dashboard.html`;
 
     const mailOptions = {
-        from: `"Vibe Coding" <${process.env.MAIL_USER}>`,
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
         subject: `Vibe Coding 課程單元授權通知: ${unitName}`,
         text: `恭喜您成為 Vibe Coding 授權教師！\n\n您已獲得課程單元 "${unitName}" 的管理權限。\n\n請前往教師儀表板開始管理：\n${dashboardUrl}\n\nHappy Teaching!\nVibe Coding Team`,
@@ -211,7 +211,7 @@ async function sendTeacherAuthorizationEmail(email, unitName, unitId) {
  */
 async function sendAssignmentNotification(teacherEmail, studentName, assignmentTitle, assignmentUrl) {
     const mailOptions = {
-        from: `"Vibe Coding" <${process.env.MAIL_USER}>`,
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: teacherEmail,
         subject: `[作業繳交] ${studentName} 繳交了 "${assignmentTitle}"`,
         html: `
@@ -257,7 +257,7 @@ async function sendAssignmentNotification(teacherEmail, studentName, assignmentT
  */
 async function sendGradingNotification(email, studentName, assignmentTitle, grade, feedback) {
     const mailOptions = {
-        from: `"Vibe Coding" <${process.env.MAIL_USER}>`,
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
         subject: `[作業評改] 老師已評回您的作業 "${assignmentTitle}"`,
         html: `
@@ -299,7 +299,7 @@ async function sendGradingNotification(email, studentName, assignmentTitle, grad
  */
 async function sendStudentLinkedToTeacherEmail(email, studentName, unitId, teacherEmail) {
     const mailOptions = {
-        from: `"Vibe Coding" <${process.env.MAIL_USER}>`,
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
         subject: `[課程通知] 您的單元 "${unitId}" 已指派指導老師`,
         html: `
@@ -331,7 +331,7 @@ async function sendStudentLinkedToTeacherEmail(email, studentName, unitId, teach
  */
 async function sendTeacherLinkedToStudentEmail(email, studentName, unitId) {
     const mailOptions = {
-        from: `"Vibe Coding" <${process.env.MAIL_USER}>`,
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
         subject: `[教學任務] 新學生 ${studentName} 已指派給您 (${unitId})`,
         html: `
@@ -369,7 +369,7 @@ async function sendAdminAssignmentReminder(adminEmail, pendingList) {
     `).join('');
 
     const mailOptions = {
-        from: `"Vibe Coding System" <${process.env.MAIL_USER}>`,
+        from: '"Vibe Coding System" <info@vibe-coding.tw>',
         to: adminEmail,
         subject: `[每日提醒] 尚有 ${pendingList.length} 位學生等待指派老師`,
         html: `

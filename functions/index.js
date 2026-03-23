@@ -132,7 +132,7 @@ exports.initiatePayment = onRequest(async (req, res) => {
             items: cartDetails || {},
             logistics: logistics || null,
             promoCode: promoCode || null,
-            referralMentor: referralMentor || null,
+            referralMentor: referralMentor || 'info@vibe-coding.tw',
             orderNumber: orderNumber
         });
 
