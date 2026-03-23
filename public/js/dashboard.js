@@ -1,4 +1,4 @@
-console.log("Dashboard Script v11.3.133 Loaded");
+console.log("Dashboard Script v11.3.134 Loaded");
 // alert("Dashboard Script v5 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -105,28 +105,6 @@ async function loadLessons() {
     }
 }
 
-// [TEMP] Cleanup trigger
-window.runPageViewCleanup = async function () {
-    if (!confirm("確定要刪除所有 PAGE_VIEW 紀錄嗎？此動作無法復原。")) return;
-
-    try {
-        const btn = event.target;
-        const originalText = btn.innerText;
-        btn.disabled = true;
-        btn.innerText = "清理中... (Cleaning...)";
-
-        const cleanupFn = httpsCallable(functions, 'cleanupPageViews');
-        const result = await cleanupFn();
-
-        alert(`清理完成！共刪除 ${result.data.totalDeleted} 筆紀錄。`);
-        location.reload();
-    } catch (err) {
-        console.error("Cleanup error:", err);
-        alert("清理失敗: " + err.message);
-    } finally {
-        // Redundant if reloading, but good practice
-    }
-}
 
 // Initialize on Load
 // loadDashboard(); // This is called in onAuthStateChanged
@@ -1038,7 +1016,6 @@ function renderAdminConsole() {
             </h3>
             
             <div class="flex items-center gap-3">
-                <button onclick="runPageViewCleanup(event)" class="bg-red-50 text-red-600 px-4 py-2.5 rounded-xl text-xs font-black border border-red-100 hover:bg-red-100 transition-all shadow-sm flex items-center gap-2 active:scale-95">
                     🗑️ 清理頁面瀏覽 (Cleanup)
                 </button>
                 <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm">
