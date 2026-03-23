@@ -237,136 +237,44 @@
     <script src="/js/course-shared.js"></script>
 
     <!-- Dashboard Guides (Hidden) -->
-    <!-- Dashboard Guides (Hidden) -->
     <section id="assignment-guide" class="hidden">
-        <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
-            <span class="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-lg">
-                <i class="fa-solid fa-scroll"></i>
-            </span>
-            單元任務：Agent 實務演練 (Unit Quests)
-        </h2>
-
-        <div class="space-y-8">
-            <!-- Mission 1 -->
-            <div class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm hover:shadow-md transition-all">
-                <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
-                    <div>
-                        <div class="text-[10px] text-indigo-500 font-bold uppercase tracking-widest mb-1">Mission 1</div>
-                        <h3 class="text-xl font-black text-slate-800">The First Loop (VS Code Agent 實務)</h3>
-                    </div>
-                    <div class="flex gap-2">
-                        <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-bold">角色：AI 編排師</span>
-                        <span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold">難度：⭐️⭐️</span>
-                    </div>
-                </div>
-                <div class="grid md:grid-cols-2 gap-8">
-                    <div>
-                        <h4 class="text-xs font-black text-slate-400 uppercase tracking-tighter mb-3">任務目標 / Goal</h4>
-                        <p class="text-sm text-slate-600 leading-relaxed">
-                            學生需在實驗專案中啟動 Copilot **Agent Mode**，針對專案中刻意留下的邏輯錯誤或架構缺陷進行修正。重點在於觀察 Agent 如何提出 **Plan**，以及在測試失敗時如何進行自動補償 (Self-healing)。
-                        </p>
-                    </div>
-                    <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                        <h4 class="text-xs font-black text-slate-400 uppercase tracking-tighter mb-3">繳交物件 / Deliverables</h4>
-                        <ul class="text-xs text-slate-500 space-y-2">
-                            <li class="flex items-start gap-2">
-                                <i class="fa-solid fa-camera mt-0.5 text-indigo-400"></i>
-                                <span>Agent 提出的執行計畫 (Plan) 截圖</span>
-                            </li>
-                            <li class="flex items-start gap-2">
-                                <i class="fa-solid fa-code mt-0.5 text-indigo-400"></i>
-                                <span>修正後的 PR (Pull Request) 連結</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="space-y-6">
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h3 class="font-bold text-blue-800">1. GitHub Classroom 設定</h3>
+                <p class="text-sm">請將 <code>ai-agent-mode-lab</code> 連結至課程儀表板。學生需透過此分發倉庫實作 VS Code Agent 模式的進階指令調教。</p>
             </div>
-
-            <!-- Mission 2 -->
-            <div class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm hover:shadow-md transition-all">
-                <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
-                    <div>
-                        <div class="text-[10px] text-emerald-500 font-bold uppercase tracking-widest mb-1">Mission 2</div>
-                        <h3 class="text-xl font-black text-slate-800">Protocol Master (指令調教與 MCP)</h3>
-                    </div>
-                    <div class="flex gap-2">
-                        <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-bold">角色：系統架構師</span>
-                        <span class="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-xs font-bold">難度：⭐️⭐️⭐️</span>
-                    </div>
-                </div>
-                <div class="grid md:grid-cols-2 gap-8">
-                    <div>
-                        <h4 class="text-xs font-black text-slate-400 uppercase tracking-tighter mb-3">任務目標 / Goal</h4>
-                        <p class="text-sm text-slate-600 leading-relaxed">
-                            在專案根目錄撰寫 `AGENTS.md`，定義該專案的程式風格與架構原則。接著嘗試連接一個 **MCP Server** (如 filesystem 或 web-search)，展示 Agent 如何跨出 IDE 存取外部資訊。
-                        </p>
-                    </div>
-                    <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                        <h4 class="text-xs font-black text-slate-400 uppercase tracking-tighter mb-3">繳交物件 / Deliverables</h4>
-                        <ul class="text-xs text-slate-500 space-y-2">
-                            <li class="flex items-start gap-2">
-                                <i class="fa-solid fa-file-code mt-0.5 text-emerald-400"></i>
-                                <span>`AGENTS.md` 內容文本</span>
-                            </li>
-                            <li class="flex items-start gap-2">
-                                <i class="fa-solid fa-plug mt-0.5 text-emerald-400"></i>
-                                <span>MCP 工具呼叫成功的 Console 截圖</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+            <div class="bg-indigo-50 p-4 rounded-lg">
+                <h3 class="font-bold text-indigo-800">2. 翻轉課堂策略</h3>
+                <ul class="list-disc list-inside text-sm">
+                    <li>課前預習：安裝 VS Code Insider 與 Copilot 擴充功能，並確認 Agent 模式權限已開啟。</li>
+                    <li>課中實作：透過真實專案需求，練習手動介入 Agent 的 Plan (計畫) 並引導正確的修復方向。</li>
+                </ul>
             </div>
-
-            <!-- Deployment Guidance -->
-            <div class="bg-slate-900 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-8 opacity-10">
-                    <i class="fa-brands fa-github text-6xl"></i>
-                </div>
-                <h3 class="text-lg font-black mb-6 flex items-center gap-2">
-                    <i class="fa-solid fa-rocket text-indigo-400"></i>
-                    在 GitHub Classroom 的實務部署
-                </h3>
-                <div class="grid md:grid-cols-2 gap-8 text-sm">
-                    <div class="space-y-4">
-                        <div class="flex gap-3">
-                            <div class="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs ring-1 ring-indigo-500/30">1</div>
-                            <p class="text-slate-300"><strong>接受挑戰</strong>：點擊 Classroom 連結並 clone `ai-agent-mode-lab` 倉庫到本地。</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <div class="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs ring-1 ring-indigo-500/30">2</div>
-                            <p class="text-slate-300"><strong>環境檢查</strong>：確認 VS Code 已開啟 Copilot Chat 並切換至 `Agent` 選單模式。</p>
-                        </div>
-                    </div>
-                    <div class="space-y-4">
-                        <div class="flex gap-3">
-                            <div class="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs ring-1 ring-indigo-500/30">3</div>
-                            <p class="text-slate-300"><strong>實作與推送</strong>：完成任務後透過 Git push 修改。PR 的內容需包含 Mission 要求的計畫說明。</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tutor Benchmarks -->
-            <div class="border-t border-slate-100 pt-8 mt-4">
-                <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-                    教師點評標準 (Tutor Benchmarks)
-                </h3>
-                <div class="grid md:grid-cols-2 gap-4">
-                    <div class="flex gap-3 items-start p-4 bg-slate-50 rounded-2xl">
-                        <i class="fa-solid fa-circle-check text-emerald-500 mt-1"></i>
-                        <div>
-                            <div class="font-bold text-slate-800 text-sm">Agent 控制精準度</div>
-                            <div class="text-xs text-slate-500">學生是否能有效透過對話（Human-in-the-loop）引導 Agent 修正錯誤，而非盲目接受所有建議。</div>
-                        </div>
-                    </div>
-                    <div class="flex gap-3 items-start p-4 bg-slate-50 rounded-2xl">
-                        <i class="fa-solid fa-circle-check text-emerald-500 mt-1"></i>
-                        <div>
-                            <div class="font-bold text-slate-800 text-sm">協作與文檔化</div>
-                            <div class="text-xs text-slate-500">`AGENTS.md` 是否具備清晰的架構指引，並能顯著影響 Agent 的程式碼產出風格。</div>
-                        </div>
-                    </div>
-                </div>
+            <div class="bg-white p-4 border border-gray-200 rounded-lg">
+                <h3 class="font-bold mb-2 text-sm text-slate-400 font-mono">3. 單元任務 (Unit Tasks)</h3>
+                <table class="w-full text-xs">
+                    <thead class="bg-gray-100 text-left">
+                        <tr>
+                            <th class="p-2">任務說明</th>
+                            <th class="p-2">配分</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="p-2">【作業 1-1】成功啟動 Agent 並完成一段 Bug 修復</td>
+                            <td class="p-2">30 pts</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">【作業 1-2】撰寫 AGENTS.md 並完成特定的重構風格</td>
+                            <td class="p-2">35 pts</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">【作業 1-3】展示 MCP Server 呼叫與外部資源擷取結果</td>
+                            <td class="p-2">35 pts</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </section>
