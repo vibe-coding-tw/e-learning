@@ -379,47 +379,54 @@
 
     // --- Lab Logic ---
     function triggerMagic() {
-    const mockup = document.getElementById('mock-browser');
-    const urlBar = document.getElementById('url-bar');
-    const githubState = document.getElementById('github-state');
-    const vscodeState = document.getElementById('vscode-state');
-    const contentArea = document.getElementById('browser-content');
-
-    // 1. Sparkle Effect
-    createSparkles();
-
-    // 2. Transform UI
-    mockup.classList.add('vscode-mode');
-    mockup.classList.remove('bg-white');
-    mockup.style.borderColor = '#333';
-
-    // 3. Change URL
-    urlBar.innerHTML = 'https://github<span class="text-green-400 font-bold">.dev</span>/vibe-coding/esp32-project';
-    urlBar.classList.replace('bg-white', 'bg-[#1e1e1e]');
-    urlBar.classList.replace('text-gray-600', 'text-gray-300');
-
-    // 4. Switch Content
-    githubState.style.display = 'none';
-    vscodeState.classList.remove('hidden');
+        const mockup = document.getElementById('mock-browser');
+        const urlBar = document.getElementById('url-bar');
+        const githubState = document.getElementById('github-state');
+        const vscodeState = document.getElementById('vscode-state');
+        const contentArea = document.getElementById('browser-content');
+        
+        // 1. Sparkle Effect
+        createSparkles();
+        
+        // 2. Transform UI
+        mockup.classList.add('vscode-mode');
+        mockup.classList.remove('bg-white');
+        mockup.style.borderColor = '#333';
+        
+        // 3. Change URL
+        urlBar.innerHTML = 'https://github<span class="text-green-400 font-bold">.dev</span>/vibe-coding/esp32-project';
+        urlBar.classList.replace('bg-white', 'bg-[#1e1e1e]');
+        urlBar.classList.replace('text-gray-600', 'text-gray-300');
+        
+        // 4. Switch Content
+        githubState.style.display = 'none';
+        vscodeState.classList.remove('hidden');
     }
 
     function createSparkles() {
-    const btn = document.querySelector('.key-hint');
-    const rect = btn.getBoundingClientRect();
-
-    for (let i = 0; i < 8; i++) { const sparkle=document.createElement('div'); sparkle.innerHTML='✨' ;
-        sparkle.style.position='fixed' ; sparkle.style.left=(rect.left + rect.width / 2) + 'px' ;
-        sparkle.style.top=(rect.top + rect.height / 2) + 'px' ; sparkle.style.fontSize='20px' ;
-        sparkle.style.pointerEvents='none' ; sparkle.style.zIndex='9999' ; // Random destination const tx=(Math.random()
-        - 0.5) * 100; const ty=(Math.random() - 0.5) * 100 - 50; sparkle.animate([ {
-        transform: 'translate(0,0) scale(0)' , opacity: 1 }, { transform: `translate(${tx}px, ${ty}px) scale(1.5)`,
-        opacity: 0 } ], { duration: 800, easing: 'ease-out' }).onfinish=()=> sparkle.remove();
-
-        document.body.appendChild(sparkle);
+        const btn = document.querySelector('.key-hint');
+        const rect = btn.getBoundingClientRect();
+        for (let i = 0; i < 8; i++) {
+            const sparkle = document.createElement('div');
+            sparkle.innerHTML = '✨';
+            sparkle.style.position = 'fixed';
+            sparkle.style.left = (rect.left + rect.width / 2) + 'px';
+            sparkle.style.top = (rect.top + rect.height / 2) + 'px';
+            sparkle.style.fontSize = '20px';
+            sparkle.style.pointerEvents = 'none';
+            sparkle.style.zIndex = '9999';
+            // Random destination
+            const tx = (Math.random() - 0.5) * 100;
+            const ty = (Math.random() - 0.5) * 100 - 50;
+            sparkle.animate([
+                { transform: 'translate(0,0) scale(0)', opacity: 1 },
+                { transform: `translate(${tx}px, ${ty}px) scale(1.5)`, opacity: 0 }
+            ], { duration: 800, easing: 'ease-out' }).onfinish = () => sparkle.remove();
+            document.body.appendChild(sparkle);
         }
-        }
+    }
 
-        // Trigger Animations on Scroll - Moved to course-shared.js
+    // Trigger Animations on Scroll - Moved to course-shared.js
         </script>
 
         <!-- Assignment Guide (Hidden) -->
