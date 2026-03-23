@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 代理人與 Vibe Coding 實戰指南 - Vibe Coding</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body id="page-started" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+
+    <!-- Navigation (Shared) -->
+    <div id="nav-placeholder"></div>
+    <script src="/js/nav-component.js"></script>
+    <script>
+        renderNav('/');
+    </script>
+
+    <!-- Tab Navigation Bar -->
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('mode')" id="tab-mode" class="unit-tab-btn active">
+                    <span>🤖</span>Agent 模式
+                </button>
+                <button onclick="switchTab('web')" id="tab-web" class="unit-tab-btn">
+                    <span>🌐</span>網頁版代理人
+                </button>
+                <button onclick="switchTab('vibe')" id="tab-vibe" class="unit-tab-btn">
+                    <span>🔥</span>Vibe Coding 實戰
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Area (Iframe) -->
+    <div class="flex-grow w-full relative bg-gray-100">
+        <iframe id="content-frame" src="" class="w-full h-full border-0 absolute inset-0"></iframe>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('content-frame');
+        const tabMode = document.getElementById('tab-mode');
+        const tabWeb = document.getElementById('tab-web');
+        const tabVibe = document.getElementById('tab-vibe');
+
+        // Initial Load
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialTab = urlParams.get('tab');
+
+        if (initialTab === 'web') {
+            switchTab('web');
+        } else if (initialTab === 'vibe') {
+            switchTab('vibe');
+        } else {
+            switchTab('mode');
+        }
+
+        function switchTab(tab) {
+            // Helper to reset all tabs
+            [tabMode, tabWeb, tabVibe].forEach(t => {
+                if (t) t.classList.remove('active');
+            });
+
+            if (tab === 'mode') {
+                tabMode.classList.add('active');
+                loadContent('00-unit-agent-mode.html');
+            } else if (tab === 'web') {
+                tabWeb.classList.add('active');
+                loadContent('00-unit-web-agents.html');
+            } else if (tab === 'vibe') {
+                tabVibe.classList.add('active');
+                loadContent('00-unit-vibe-coding.html');
+            }
+        }
+
+        function loadContent(url) {
+            // Pass current query parameters to children (e.g., ?token=xyz)
+            const separator = url.includes('?') ? '&' : '?';
+            const query = window.location.search.substring(1);
+
+            iframe.src = query ? `${url}${separator}${query}` : url;
+        }
+    </script>
+    <script type="module" src="/js/master-nav.js"></script>
+</body>
+
+</html>

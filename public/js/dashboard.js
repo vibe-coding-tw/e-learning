@@ -1517,20 +1517,23 @@ function isUserAuthorizedForUnit(unitFile, courseId, email) {
 }
 
 async function renderSettingsTab(filterUnitId = null) {
-    const container = document.getElementById('settings-container');
-    if (!container) return;
+    const assignmentContainer = document.getElementById('assignment-container');
+    const guideContainer = document.getElementById('guide-container');
+    if (!assignmentContainer || !guideContainer) return;
 
     try {
         const userEmail = auth.currentUser?.email;
         if (!userEmail) {
-            container.innerHTML = `<div class="text-center py-20 text-gray-400">請先登入以查看設定。</div>`;
+            const msg = `<div class="text-center py-20 text-gray-400">請先登入以查看設定。</div>`;
+            assignmentContainer.innerHTML = msg;
+            guideContainer.innerHTML = msg;
             return;
         }
 
         // Use pre-loaded data instead of extra call
-        courseConfigs = dashboardData?.courseConfigs || {};
+        const courseConfigs = dashboardData?.courseConfigs || {};
 
-        // 2. Render Course List (Strict Filtering: ONLY search for units where user is authorized)
+        // 1. Render Course List (Strict Filtering: ONLY search for units where user is authorized)
         let authorizedLessons = allLessons.filter(course => {
             if (myRole === 'admin' || adminSuperMode) return true; // Admins and Super Mode see everything
 
@@ -1553,93 +1556,127 @@ async function renderSettingsTab(filterUnitId = null) {
         }
 
         if (authorizedLessons.length === 0) {
-            container.innerHTML = `<div class="text-center py-20 text-gray-400" > 目前尚無獲准管理的課程（需為單元合格教師）。</div> `;
+            const msg = `<div class="text-center py-20 text-gray-400">目前尚無獲准管理的課程（需為單元合格教師）。</div>`;
+            assignmentContainer.innerHTML = msg;
+            guideContainer.innerHTML = msg;
             return;
         }
 
-        container.innerHTML = authorizedLessons.map(course => {
+        let totalAssignmentHTML = "";
+        let totalGuideHTML = "";
+
+        authorizedLessons.forEach(course => {
             const configs = courseConfigs[course.courseId]?.githubClassroomUrls || {};
-
-            const masterFile = (course.classroomUrl && typeof course.classroomUrl === 'string') ? course.classroomUrl.split('/').pop() : null;
             const units = Array.isArray(course.courseUnits) ? [...course.courseUnits] : [];
-            const isMasterFileSelected = filterUnitId && filterUnitId.includes('-master-');
-            if (isMasterFileSelected && masterFile) units.unshift(masterFile);
 
-            // Get any extra units from configs that might not be in mapping
-            const configUnits = Object.keys(configs);
-            const allUnits = Array.from(new Set([...units, ...configUnits]));
-
-            // [NEW] Extract guide segments
+            // Extract guide segments
             const rawInstructor = courseConfigs[course.courseId]?.instructorGuide;
             const rawAssignment = courseConfigs[course.courseId]?.assignmentGuide;
             const guideData = robustExtractGuideSegments(rawInstructor, rawAssignment);
-            const usedSegments = new Set();
 
-            // [MODIFIED] Show ALL units if course is authorized, but filter by filterUnitId if present
-            const unitRows = allUnits
-                .filter(f => {
-                    const isMaster = f.includes('-master-');
-
-                    // Filter logic (respecting deep link unitId)
-                    if (isMaster && filterUnitId !== f && filterUnitId !== null) return false;
-                    if (filterUnitId && !filterUnitId.includes('-master-')) {
-                        const cleanF = f.replace('.html', '');
-                        const cleanFilter = filterUnitId.replace('.html', '');
-                        return cleanF === cleanFilter;
-                    }
-                    return true;
-                })
-                .map((fileName) => {
-                    const isMaster = fileName.includes('-master-');
-                    const realUnitsOnly = allUnits.filter(u => !u.includes('-master-'));
-                    const unitIdx = realUnitsOnly.indexOf(fileName);
-                    const unitNum = unitIdx !== -1 ? unitIdx + 1 : null;
-
-                    const segment = guideData.segments[fileName] || (unitNum ? guideData.segments[unitNum] : "") || "";
-
-                    if (segment) {
-                        usedSegments.add(fileName);
-                        if (unitNum) usedSegments.add(unitNum.toString());
-                    }
-                    const isAuthorized = isUserAuthorizedForUnit(fileName, course.courseId, userEmail);
-                    return renderUnitRow(course.courseId, fileName, configs[fileName], segment, course.title, isAuthorized);
-                })
-                .join('');
-
-            // If no units are rendered for this course, don't show the course card at all (safety check)
-            if (!unitRows) return "";
-
-            // Collect unused segments for footer
-            let extraFooter = "";
-            Object.entries(guideData.segments).forEach(([key, content]) => {
-                if (!usedSegments.has(key)) {
-                    // [FIX] If filtering to a specific unit, don't show segments from OTHER units in the footer
-                    if (filterUnitId) {
-                        const isOtherFileUnit = key.includes('.html') && !key.includes(filterUnitId);
-                        const isOtherNumUnit = !isNaN(key) && !formatUnitName(filterUnitId).includes(key);
-
-                        if (isOtherFileUnit || isOtherNumUnit) {
-                            return; // Skip guides from other units
-                        }
-                    }
-                    extraFooter += (extraFooter ? "<hr>" : "") + content;
+            const filteredUnits = units.filter(f => {
+                const isMaster = f.includes('-master-');
+                if (isMaster && filterUnitId !== f && filterUnitId !== null) return false;
+                if (filterUnitId && !filterUnitId.includes('-master-')) {
+                    return f.replace('.html', '') === filterUnitId.replace('.html', '');
                 }
+                return true;
             });
 
-            return `
-                <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm font-mono text-sm mb-12 w-full">
-                    <div class="divide-y divide-gray-100">
-                        ${unitRows}
-                    </div>
-                </div>
-            `;
-        }).join('');
+            const assignmentRows = filteredUnits.map(fileName => {
+                const isAuthorized = isUserAuthorizedForUnit(fileName, course.courseId, userEmail);
+                return renderAssignmentConfigRow(course.courseId, fileName, configs[fileName], course.title, isAuthorized);
+            }).filter(h => !!h).join('');
+
+            const guideRows = filteredUnits.map(fileName => {
+                const realUnitsOnly = units.filter(u => !u.includes('-master-'));
+                const unitIdx = realUnitsOnly.indexOf(fileName);
+                const unitNum = unitIdx !== -1 ? unitIdx + 1 : null;
+                const instructorSegment = guideData.segments[fileName] || (unitNum ? guideData.segments[unitNum] : "") || "";
+                
+                if (!instructorSegment) return "";
+                const isAuthorized = isUserAuthorizedForUnit(fileName, course.courseId, userEmail);
+                return renderGuideRow(course.courseId, fileName, instructorSegment, course.title, isAuthorized);
+            }).filter(h => !!h).join('');
+
+            if (assignmentRows) {
+                totalAssignmentHTML += `
+                    <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm font-mono text-sm mb-6 w-full">
+                        <div class="divide-y divide-gray-100">${assignmentRows}</div>
+                    </div>`;
+            }
+
+            if (guideRows) {
+                totalGuideHTML += `
+                    <div class="w-full space-y-6">
+                        ${guideRows}
+                    </div>`;
+            }
+        });
+
+        assignmentContainer.innerHTML = totalAssignmentHTML || `<div class="text-center py-20 text-gray-400">尚無作業連結設定需求。</div>`;
+        guideContainer.innerHTML = totalGuideHTML || `<div class="text-center py-20 text-gray-400">尚無相關教學指引。</div>`;
 
     } catch (e) {
         console.error("Failed to render settings:", e);
-        alert("Error mapping settings: " + e.message + "\nStack: " + e.stack);
-        container.innerHTML = `<div class="text-red-500 p-4" > 載入失敗: ${e.message}</div> `;
+        assignmentContainer.innerHTML = `<div class="text-red-500 p-4">載入失敗: ${e.message}</div>`;
     }
+}
+
+function renderAssignmentConfigRow(courseId, fileName, teacherMap = {}, courseTitle = "", isAuthorized) {
+    const userEmail = auth.currentUser?.email;
+    let entries = Object.entries(teacherMap || {}).filter(([teacher]) => teacher === userEmail);
+    if (entries.length === 0 && userEmail) entries.push([userEmail, '']);
+
+    const unitName = formatUnitName(fileName);
+
+    return `
+        <div class="p-6 unit-config-card" data-course-id="${courseId}" data-file-name="${fileName}">
+            <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                <div class="flex-grow">
+                    <div class="text-[10px] text-blue-500 font-bold uppercase mb-1 tracking-widest flex items-center gap-2">
+                       <span class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
+                       單元資訊 / Unit ${fileName}
+                    </div>
+                    <div class="text-xl font-black text-gray-800 tracking-tight leading-loose">${escapeHtml(unitName)}</div>
+                </div>
+                <div class="flex-grow max-w-2xl">
+                    ${isAuthorized ? `
+                        <div class="text-[10px] text-blue-400 font-black uppercase mb-2 tracking-widest">作業連結 / Link</div>
+                        ${entries.map(([teacher, url]) => `
+                            <div class="flex gap-2 assignment-link-row">
+                                <input type="hidden" class="assignment-id-input" value="${escapeHtml(teacher)}">
+                                <input type="url" placeholder="GitHub Classroom 連結" value="${escapeHtml(url)}" 
+                                    class="assignment-url-input flex-grow px-4 py-2 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-50/50 bg-gray-50/30 transition-all font-mono">
+                                <button onclick="saveAllSettings(this)"
+                                    class="px-6 py-2 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-700 transition-all shadow-md active:scale-95 btn-save-individual">
+                                    儲存 🔗
+                                </button>
+                            </div>
+                        `).join('')}
+                    ` : '<div class="text-xs text-gray-300 italic">🔒 無權限管理此單元連結</div>'}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderGuideRow(courseId, fileName, instructorSegment, courseTitle, isAuthorized) {
+    return `
+        <div class="unit-guide-row bg-white rounded-3xl border border-gray-100 p-10 shadow-sm transition-all hover:shadow-md">
+            ${isAuthorized ? `
+                <div class="instructor-guide-content text-gray-800 leading-relaxed">
+                    ${instructorSegment}
+                </div>
+            ` : `
+                <div class="text-[10px] text-blue-500 font-bold uppercase mb-2 tracking-widest flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                    ${escapeHtml(courseTitle)} / ${escapeHtml(fileName)}
+                </div>
+                <div class="text-sm text-gray-400 italic">🔒 僅限該單元之「合格教師」閱讀完整教學指引。</div>
+            `}
+        </div>
+    `;
 }
 
 // Helper to split instructor guide into parts
@@ -1678,77 +1715,7 @@ function robustExtractGuideSegments(instructorInput, assignmentInput = null) {
     return result;
 }
 
-function renderUnitRow(courseId, fileName, teacherMap = {}, guideSegment = "", courseTitle = "", isAuthorized = false) {
-    const userEmail = auth.currentUser?.email;
 
-    // teacherMap: { "default": "...", "teacher_a": "..." }
-    let entries = Object.entries(teacherMap);
-
-    // [STRICT] Only show current user's entry in settings (teacher view)
-    entries = entries.filter(([teacher]) => teacher === userEmail);
-
-    if (entries.length === 0 && userEmail) {
-        entries.push([userEmail, '']);
-    }
-
-    const unitName = formatUnitName(fileName);
-
-    return `
-        <div class="flex flex-col hover:bg-blue-50/10 transition-colors p-6 gap-6 relative unit-config-card border-b border-gray-100 last:border-0"
-             data-course-id="${courseId}" data-file-name="${fileName}">
-            
-            <!-- Section 1: Unit Info (High Hierarchy) -->
-            <div class="flex justify-between items-start">
-                <div>
-                    <div class="text-[10px] text-blue-500 font-black uppercase mb-2 tracking-widest flex items-center gap-2">
-                       <span class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
-                       課程單元 / Unit
-                    </div>
-                    <div class="text-[11px] text-gray-400 font-mono mb-1 leading-relaxed opacity-80">${escapeHtml(courseTitle)}</div>
-                    <div class="text-xl font-black text-gray-800 tracking-tight leading-tight">${escapeHtml(unitName)}</div>
-                    <div class="text-[11px] text-gray-300 font-mono mt-1.5">${escapeHtml(fileName)}</div>
-                </div>
-            </div>
-
-            <!-- Separator -->
-            <div class="h-px bg-gray-100/60 w-full"></div>
-
-            <!-- Section 2: Assignment Config -->
-            <div class="flex flex-col gap-5 assignment-links-container">
-                ${isAuthorized ? `
-                    <div>
-                    <div class="text-[10px] text-blue-400 font-black uppercase mb-3 tracking-widest">作業連結設定 / Assignment</div>
-                    ${entries.map(([teacher, url]) => `
-                        <div class="flex flex-col sm:flex-row gap-3 assignment-link-row">
-                            <input type="hidden" class="assignment-id-input" value="${escapeHtml(teacher)}">
-                            <input type="url" placeholder="貼上 GitHub Classroom 邀請連結" 
-                                value="${escapeHtml(url)}" 
-                                class="assignment-url-input flex-grow px-4 py-2.5 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-100 bg-white/50 shadow-sm transition-all font-mono">
-                            <button onclick="saveAllSettings(this)"
-                                class="px-8 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-700 transition-all shadow-md active:scale-95 whitespace-nowrap btn-save-individual">
-                                儲存連結 🔗
-                            </button>
-                        </div>
-                    `).join('')}
-                    </div>
-
-                    ${guideSegment ? `
-                    <div class="instructor-guide-wrapper">
-                        <div class="text-[10px] text-blue-400 font-black uppercase mb-3 tracking-widest">單元教學指引 / Unit Guide</div>
-                        <div class="p-5 bg-blue-50/30 border border-blue-100/20 rounded-2xl text-xs text-blue-900/70 leading-relaxed instructor-guide-content overflow-x-auto w-full italic">
-                            ${guideSegment}
-                        </div>
-                    </div>
-                    ` : ''}
-                ` : `
-                    <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 text-[11px] text-gray-400 italic flex items-center gap-2">
-                        <span>🔒</span> 您目前非此單元的「合格教師」，僅具備課程閱覽權限，無法進行單元設定與查看教學指引。
-                    </div>
-                `}
-            </div>
-        </div>
-    `;
-}
 
 window.saveAllSettings = async function (clickedBtn = null) {
     const btns = clickedBtn ? [clickedBtn] : document.querySelectorAll('.btn-save-individual');
