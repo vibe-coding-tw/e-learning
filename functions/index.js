@@ -103,7 +103,7 @@ exports.initiatePayment = onRequest(async (req, res) => {
         console.log("收到 initiatePayment 請求 (.env mode)");
 
         const requestData = req.body.data || req.body || {};
-        const { amount, returnUrl, cartDetails, logistics } = requestData;
+        const { amount, returnUrl, cartDetails, logistics, promoCode, referralMentor } = requestData;
 
         // 簡易 Token 驗證
         let uid = "GUEST";
@@ -122,12 +122,26 @@ exports.initiatePayment = onRequest(async (req, res) => {
         const orderNumber = `VIBE${Date.now()}`;
         const tradeDate = getCurrentTime();
 
+        // 建立訂單內容記錄 (Firestore)
+        // [NEW] Store referral info
+        await admin.firestore().collection("orders").doc(orderNumber).set({
+            uid: uid,
+            amount: finalAmount,
+            status: "PENDING",
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            items: cartDetails || {},
+            logistics: logistics || null,
+            promoCode: promoCode || null,
+            referralMentor: referralMentor || null,
+            orderNumber: orderNumber
+        });
+
         // ServerUrl (Webhook)
         const serverUrl = `https://${REGION}-${PROJECT_ID}.cloudfunctions.net/paymentNotify`;
         // ClientUrl (前端)
         const clientUrl = returnUrl || "https://vibe-coding.tw";
 
-        console.log(`建立訂單: ${orderNumber}`);
+        console.log(`建立訂單: ${orderNumber} (Promo: ${promoCode || 'None'})`);
 
         let itemNameStr = 'Vibe Coding 線上課程';
         if (cartDetails && Object.keys(cartDetails).length > 0) {
@@ -1025,8 +1039,33 @@ exports.getDashboardData = onCall(async (request) => {
             summary: {},
             students: [],
             assignments: [],
-            courseConfigs: courseConfigs
+            courseConfigs: courseConfigs,
+            myPromoCode: null,
+            earnings: []
         };
+
+        // [NEW] Fetch Profit Sharing Data for Mentors
+        if (isManagementView) {
+            try {
+                const promoSnap = await db.collection('promo_codes').where('mentorEmail', '==', email).get();
+                if (!promoSnap.empty) {
+                    result.myPromoCode = promoSnap.docs[0].id;
+                }
+
+                const ledgerSnap = await db.collection('profit_ledger')
+                    .where('mentorEmail', '==', email)
+                    .orderBy('month', 'desc')
+                    .limit(100)
+                    .get();
+                
+                result.earnings = ledgerSnap.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+            } catch (err) {
+                console.error("Error fetching profit data for dashboard:", err);
+            }
+        }
 
         // 1. Fetch Users (Filtering based on access level)
         let usersMap = {};
@@ -1587,7 +1626,7 @@ exports.checkCourseExpiration = onSchedule({
 });
 
 // ==========================================
-// 9.6 管理員指派提醒 (remindAdminPendingAssignments)
+// 8.6 管理員指派提醒 (remindAdminPendingAssignments)
 // ==========================================
 // Run every day at 9:00 AM Asia/Taipei
 exports.remindAdminPendingAssignments = onSchedule({
@@ -1667,8 +1706,6 @@ exports.mapReply = onRequest((req, res) => {
         console.log("Map Reply Received:", CVSStoreID, CVSStoreName);
 
         // Redirect user back to cart with store info
-        // Note: In production, consider using a frontend route that handles this cleaner, 
-        // but query params work for a simple implementation.
         const baseUrl = "https://vibe-coding.tw/cart.html";
         const params = new URLSearchParams({
             storeId: CVSStoreID || '',
@@ -1682,5 +1719,116 @@ exports.mapReply = onRequest((req, res) => {
     } catch (error) {
         console.error("Map Reply Error:", error);
         res.status(500).send("Error processing map reply");
+    }
+});
+
+// ==========================================
+// 11. 利潤分享架構 (Profit Sharing)
+// ==========================================
+
+// 11.1 驗證優惠代碼 (verifyPromoCode)
+exports.verifyPromoCode = onCall(async (request) => {
+    const { data } = request;
+    const { promoCode } = data;
+    if (!promoCode) throw new HttpsError('invalid-argument', '缺少代碼');
+
+    try {
+        const db = admin.firestore();
+        const promoDoc = await db.collection('promo_codes').doc(promoCode.toUpperCase()).get();
+        if (!promoDoc.exists) {
+            return { success: false, message: '無效的代碼' };
+        }
+
+        const promoData = promoDoc.data();
+        if (promoData.isActive === false) {
+            return { success: false, message: '此代碼已停用' };
+        }
+
+        return { 
+            success: true, 
+            mentor: promoData.mentorEmail,
+            mentorName: promoData.mentorName || promoData.mentorEmail
+        };
+    } catch (e) {
+        throw new HttpsError('internal', e.message);
+    }
+});
+
+// 11.2 每月計算分潤 (Scheduled Job - 1st of each month)
+exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
+    const db = admin.firestore();
+    const now = new Date();
+    // Calculate for the previous month
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+    console.log(`Starting profit sharing calculation for: ${lastMonth.toISOString()} to ${endOfLastMonth.toISOString()}`);
+
+    try {
+        // 1. Find all successful orders in the last month that have referral info
+        const ordersSnapshot = await db.collection('orders')
+            .where('status', '==', 'SUCCESS')
+            .where('paidAt', '>=', admin.firestore.Timestamp.fromDate(lastMonth))
+            .where('paidAt', '<=', admin.firestore.Timestamp.fromDate(endOfLastMonth))
+            .get();
+
+        if (ordersSnapshot.empty) {
+            console.log("No successful orders found for sharing this month.");
+            return;
+        }
+
+        const auditTrail = [];
+
+        for (const orderDoc of ordersSnapshot.docs) {
+            const order = orderDoc.data();
+            if (!order.referralMentor) continue;
+
+            const amount = order.amount;
+            const orderId = orderDoc.id;
+            const studentUid = order.uid;
+
+            // Recursive Chain Calculation
+            let currentMentorEmail = order.referralMentor;
+            let currentShare = amount * 0.2; // First level: 20%
+            let level = 1;
+
+            while (currentMentorEmail && currentShare >= 0.01) {
+                // Record Share
+                const ledgerRef = db.collection('profit_ledger').doc();
+                const shareRecord = {
+                    mentorEmail: currentMentorEmail,
+                    studentUid: studentUid,
+                    orderId: orderId,
+                    orderAmount: amount,
+                    shareAmount: Math.round(currentShare * 100) / 100, // Round to 2 decimals
+                    level: level,
+                    calculatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                    period: `${lastMonth.getFullYear()}-${(lastMonth.getMonth() + 1).toString().padStart(2, '0')}`
+                };
+                await ledgerRef.set(shareRecord);
+                auditTrail.push(shareRecord);
+
+                // Stop if we hit the root admin
+                if (currentMentorEmail === "info@vibe-coding.tw") break;
+
+                // Move up the chain
+                const mentorUserSnapshot = await db.collection('users').where('email', '==', currentMentorEmail).limit(1).get();
+                if (!mentorUserSnapshot.empty) {
+                    const mentorData = mentorUserSnapshot.docs[0].data();
+                    currentMentorEmail = mentorData.mentorEmail || "info@vibe-coding.tw"; // Fallback to admin
+                    currentShare = currentShare * 0.2; // Next level: 20% of previous share
+                    level++;
+                } else {
+                    // Mentor not found in users collection, fallback to admin
+                    currentMentorEmail = "info@vibe-coding.tw";
+                    currentShare = currentShare * 0.2;
+                    level++;
+                }
+            }
+        }
+
+        console.log(`Profit sharing completed. Recorded ${auditTrail.length} share entries.`);
+    } catch (error) {
+        console.error("Error in calculateMonthlySharing:", error);
     }
 });

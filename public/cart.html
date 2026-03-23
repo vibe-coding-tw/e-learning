@@ -82,6 +82,21 @@
                     </div>
                 </div>
 
+                <!-- [NEW] Promotion Code Section -->
+                <div class="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">🎟️ 優惠代碼 (或指導老師代碼)</h3>
+                    <div class="flex gap-2">
+                        <input type="text" id="promo-code"
+                            class="flex-1 border-gray-300 rounded-md shadow-sm p-2 uppercase"
+                            placeholder="請輸入代碼">
+                        <button id="verify-promo-btn"
+                            class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition">
+                            驗證
+                        </button>
+                    </div>
+                    <p id="promo-status" class="mt-2 text-sm hidden"></p>
+                </div>
+
                 <button id="checkout-btn"
                     class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white text-lg py-3 rounded-lg disabled:opacity-50"
                     disabled>
@@ -304,6 +319,46 @@
         };
 
         // ===============================================
+        // B-2. 優惠券 / 推薦代碼邏輯 (新增)
+        // ===============================================
+        const promoInput = document.getElementById('promo-code');
+        const verifyPromoBtn = document.getElementById('verify-promo-btn');
+        const promoStatus = document.getElementById('promo-status');
+        let verifiedMentor = null;
+
+        verifyPromoBtn.addEventListener('click', async () => {
+            const code = promoInput.value.trim().toUpperCase();
+            if (!code) return;
+
+            verifyPromoBtn.disabled = true;
+            verifyPromoBtn.textContent = '驗證中...';
+            promoStatus.classList.add('hidden');
+
+            try {
+                const verifyPromoCode = httpsCallable(functions, 'verifyPromoCode');
+                const result = await verifyPromoCode({ promoCode: code });
+                
+                if (result.data && result.data.success) {
+                    verifiedMentor = result.data.mentor;
+                    promoStatus.textContent = `✅ 已套用：${result.data.mentorName || verifiedMentor} 的推薦`;
+                    promoStatus.className = 'mt-2 text-sm text-green-600 font-bold';
+                    promoInput.readOnly = true;
+                    verifyPromoBtn.classList.add('hidden');
+                } else {
+                    throw new Error(result.data.message || '無效的代碼');
+                }
+            } catch (err) {
+                promoStatus.textContent = `❌ ${err.message}`;
+                promoStatus.className = 'mt-2 text-sm text-red-600';
+                verifiedMentor = null;
+            } finally {
+                promoStatus.classList.remove('hidden');
+                verifyPromoBtn.disabled = false;
+                verifyPromoBtn.textContent = '驗證代碼';
+            }
+        });
+
+        // ===============================================
         // B. 身份驗證邏輯
         // ===============================================
 
@@ -398,7 +453,9 @@
                     amount: total,
                     userId: user.uid,
                     cartDetails: cartItems,
-                    logistics: logisticsInfo, // [NEW] Pass logistics info
+                    logistics: logisticsInfo,
+                    promoCode: promoInput.value.trim().toUpperCase(), // [NEW] Pass promo code
+                    referralMentor: verifiedMentor, // [NEW] Pass verified mentor email
                     // 設定交易完成後的返回網址
                     returnUrl: window.location.origin + '/payment-return.html'
                 });

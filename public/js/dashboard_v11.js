@@ -992,6 +992,9 @@ window.switchTab = function (tabName) {
     if (tabName === 'admin') {
         renderAdminConsole();
     }
+    if (tabName === 'earnings') {
+        renderEarningsTab(dashboardData);
+    }
 };
 
 // --- Admin Features ---
@@ -1785,3 +1788,37 @@ document.addEventListener('keydown', (e) => {
         }
     }
 });
+// --- Earnings ---
+function renderEarningsTab(data) {
+    const totalEarningsEl = document.getElementById('stat-total-earnings');
+    const promoCodeEl = document.getElementById('display-promo-code');
+    const tableBody = document.getElementById('earnings-table-body');
+
+    if (!totalEarningsEl || !promoCodeEl || !tableBody) return;
+
+    // 1. Display Promo Code
+    promoCodeEl.innerText = data.myPromoCode || '尚無代碼';
+
+    // 2. Display Earnings Ledger
+    const earnings = data.earnings || [];
+    let total = 0;
+
+    if (earnings.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-gray-400">尚無分潤紀錄</td></tr>';
+    } else {
+        tableBody.innerHTML = earnings.map(d => {
+            total += d.shareAmount;
+            return `
+                <tr class="hover:bg-gray-50 transition border-b border-gray-100">
+                    <td class="py-3 px-2 font-medium">${d.month}</td>
+                    <td class="py-3 px-2 text-gray-500 font-mono text-[10px]">${d.studentUid || '-'}</td>
+                    <td class="py-3 px-2 text-right">NT$ ${d.orderAmount.toLocaleString()}</td>
+                    <td class="py-3 px-2 text-right font-bold text-emerald-600">NT$ ${d.shareAmount.toLocaleString()}</td>
+                    <td class="py-3 px-2 text-right text-gray-400 text-xs">${d.level === 0 ? '直接' : '第二層'}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    totalEarningsEl.innerText = total.toLocaleString();
+}
