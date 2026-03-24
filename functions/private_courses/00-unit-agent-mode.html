@@ -12,96 +12,116 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
-<body class="bg-gray-50 text-gray-800 leading-relaxed font-[Inter]">
-
-    <!-- Hero Section -->
-    <header class="relative bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 text-white pt-20 pb-32 overflow-hidden">
-        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay"></div>
-        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-20"></div>
+<body class="bg-gray-50 text-gray-800 leading-rela    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-indigo-900 to-blue-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
 
         <div class="container mx-auto px-4 relative z-10 text-center">
-            <div class="inline-block px-4 py-1.5 mb-6 bg-white/10 backdrop-blur-md rounded-full text-xs font-bold tracking-wider uppercase border border-white/20">
+            <div
+                class="inline-block px-4 py-1.5 mb-6 bg-white/10 backdrop-blur-md rounded-full text-xs font-bold tracking-wider uppercase border border-white/20">
                 <i class="fa-solid fa-robot mr-2 text-indigo-400"></i> The Agentic Era
             </div>
-            <h1 class="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight font-[Outfit]">
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
                 AI 代理人與 Vibe Coding 實戰
             </h1>
-            <p class="text-lg md:text-xl text-indigo-100 max-w-2xl mx-auto font-light leading-relaxed">
-                它不再只是程式碼補齊工具，而是能自主規劃、執行、測試並修正錯誤的 <span class="text-white font-bold underline decoration-indigo-500">AI Agent</span>。
+            <p class="text-xl md:text-2xl text-indigo-100 max-w-2xl mx-auto font-light leading-relaxed">
+                它不再只是程式碼補齊工具，而是能自主規劃、執行、測試並修正錯誤的 <span
+                    class="text-white font-bold underline decoration-indigo-500 font-[Outfit]">AI Agent</span>。
             </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', '#')"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', '#')"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
         </div>
     </header>
 
-    <main class="container mx-auto px-4 py-12 max-w-4xl">
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20 max-w-5xl">
 
         <!-- 1. Agent Mode Section -->
-        <section class="mb-16">
-            <div class="flex items-center gap-4 mb-8">
-                <div class="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-2xl shadow-lg">
-                    <i class="fa-solid fa-bolt-lightning"></i>
+        <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
+            <div class="p-1 bg-gradient-to-r from-indigo-500 to-blue-500"></div>
+            <div class="p-8 md:p-12">
+                <div class="flex items-center gap-4 mb-8">
+                    <div
+                        class="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-2xl shadow-lg">
+                        <i class="fa-solid fa-bolt-lightning"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold text-slate-800 tracking-tight font-[Outfit]">使用 Copilot Agent Mode
+                        (自主代理模式)</h2>
                 </div>
-                <h2 class="text-3xl font-bold text-slate-800 tracking-tight font-[Outfit]">使用 Copilot Agent Mode (自主代理模式)</h2>
-            </div>
 
-            <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 mb-8">
-                <div class="p-8">
-                    <p class="text-lg text-slate-600 mb-6 leading-relaxed">
-                        這是最直接的結合方式。在 VS Code 中，你可以將 Copilot 切換到 <strong>Agent Mode</strong>。它是一個「自主程式設計師」，可以跨多個檔案進行修改、執行終端機命令、讀取編譯錯誤並自動修復。
-                    </p>
+                <p class="text-lg text-slate-600 mb-8 leading-relaxed">
+                    這是最直接的結合方式。在 VS Code 中，你可以將 Copilot 切換到 <strong>Agent Mode</strong>。它是一個「自主程式設計師」，可以跨多個檔案進行修改、執行終端機命令、讀取編譯錯誤並自動修復。
+                </p>
 
-                    <div class="grid md:grid-cols-2 gap-6">
-                        <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                            <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                <i class="fa-solid fa-list-check text-indigo-500"></i> 操作流程
-                            </h3>
-                            <ol class="space-y-4 text-sm text-slate-600">
-                                <li class="flex gap-3">
-                                    <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex-shrink-0 flex items-center justify-center font-bold">1</span>
-                                    <span><strong>進入 Chat 視窗：</strong> 打開 Copilot Chat (Ctrl+Alt+I)。</span>
-                                </li>
-                                <li class="flex gap-3">
-                                    <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex-shrink-0 flex items-center justify-center font-bold">2</span>
-                                    <span><strong>切換模式：</strong> 在 Chat 頂部的下拉選單中選擇 <strong>"Agent"</strong> 模式。</span>
-                                </li>
-                                <li class="flex gap-3">
-                                    <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex-shrink-0 flex items-center justify-center font-bold">3</span>
-                                    <span><strong>下達任務：</strong> 輸入高階指令。例如：「幫我把這個專案的 API 從 REST 改成 GraphQL」。</span>
-                                </li>
-                            </ol>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                        <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-indigo-500"></i> 操作流程
+                        </h3>
+                        <ol class="space-y-4 text-sm text-slate-600">
+                            <li class="flex gap-3">
+                                <span
+                                    class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex-shrink-0 flex items-center justify-center font-bold">1</span>
+                                <span><strong>進入 Chat 視窗：</strong> 打開 Copilot Chat (Ctrl+Alt+I)。</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span
+                                    class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex-shrink-0 flex items-center justify-center font-bold">2</span>
+                                <span><strong>切換模式：</strong> 在 Chat 頂部的下拉選單中選擇 <strong>"Agent"</strong> 模式。</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span
+                                    class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex-shrink-0 flex items-center justify-center font-bold">3</span>
+                                <span><strong>下達任務：</strong> 輸入高階指令。例如：「幫我把這個專案的 API 從 REST 改成 GraphQL」。</span>
+                            </li>
+                        </ol>
+                    </div>
+                    <div class="bg-indigo-600 text-white p-8 rounded-2xl shadow-lg shadow-indigo-200 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-10">
+                            <i class="fa-solid fa-circle-nodes text-6xl"></i>
                         </div>
-                        <div class="bg-indigo-600 text-white p-6 rounded-2xl shadow-lg shadow-indigo-200">
-                            <h3 class="font-bold mb-4 flex items-center gap-2">
-                                <i class="fa-solid fa-circle-nodes"></i> 自主迴圈 (Agentic Loop)
-                            </h3>
-                            <p class="text-sm text-blue-50 leading-relaxed">
-                                Agent 會先列出計畫 (Plan)，獲得你同意後開始修改檔案、跑測試、看到錯誤後自動修正，直到任務完成。這就是所謂的「自主回饋機制」。
-                            </p>
-                            <div class="mt-6 flex justify-center">
-                                <i class="fa-solid fa-rotate-right text-4xl animate-spin-slow opacity-20"></i>
-                            </div>
+                        <h3 class="font-bold mb-4 flex items-center gap-2 relative z-10">
+                            <i class="fa-solid fa-circle-nodes"></i> 自主迴圈 (Agentic Loop)
+                        </h3>
+                        <p class="text-sm text-blue-50 leading-relaxed relative z-10">
+                            Agent 會先列出計畫 (Plan)，獲得你同意後開始修改檔案、跑測試、看到錯誤後自動修正，直到任務完成。這就是所謂的「自主回饋機制」。
+                        </p>
+                        <div class="mt-8 flex justify-center relative z-10">
+                            <i class="fa-solid fa-rotate-right text-5xl animate-spin-slow opacity-30"></i>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
 
         <!-- 2. MCP Section -->
-        <section class="mb-16 bg-slate-800 rounded-3xl p-8 md:p-12 text-white shadow-2xl relative overflow-hidden">
+        <div class="glass-card bg-slate-900 rounded-2xl shadow-xl overflow-hidden mb-8 text-white relative">
             <div class="absolute top-0 right-0 p-12 opacity-10">
                 <i class="fa-solid fa-plug-circle-bolt text-9xl"></i>
             </div>
-            
-            <div class="relative z-10">
+            <div class="p-8 md:p-12 relative z-10">
                 <div class="flex items-center gap-4 mb-6 text-indigo-400">
                     <i class="fa-solid fa-network-wired text-3xl"></i>
                     <h2 class="text-3xl font-bold tracking-tight text-white font-[Outfit]">結合 MCP (Model Context Protocol)</h2>
                 </div>
-                <p class="text-lg text-slate-300 mb-8 max-w-2xl font-light">
+                <p class="text-lg text-slate-300 mb-8 max-w-2xl font-light leading-relaxed">
                     你可以透過 MCP 協議，讓 GitHub 的 AI Agent 擁有「手和腳」，去存取外部工具或私有數據。
                 </p>
 
                 <div class="grid md:grid-cols-2 gap-8">
-                    <div>
+                    <div class="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
                         <h3 class="text-indigo-400 font-bold mb-4 uppercase tracking-wider text-sm">應用場景</h3>
                         <ul class="space-y-3">
                             <li class="flex items-center gap-3">
@@ -120,112 +140,117 @@
                     </div>
                     <div>
                         <h3 class="text-indigo-400 font-bold mb-4 uppercase tracking-wider text-sm">設定方式</h3>
-                        <div class="bg-black/30 p-4 rounded-xl font-mono text-xs border border-white/10 space-y-2">
-                            <p>// 在 VS Code 設定中開啟</p>
+                        <div class="bg-black/50 p-6 rounded-xl font-mono text-sm border border-white/10 space-y-2">
+                            <p class="text-slate-500">// 在 VS Code 設定中開啟</p>
                             <p class="text-emerald-400">"chat.mcp.enabled": true</p>
-                            <p class="mt-2">// 連接 MCP 伺服器，賦予 API 呼叫能力</p>
+                            <p class="mt-4 text-slate-500">// 連接 MCP 伺服器，賦予 API 呼叫能力</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
 
         <!-- 3. AGENTS.md Section -->
-        <section class="mb-16">
-            <div class="flex items-center gap-4 mb-8">
-                <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-2xl shadow-lg">
-                    <i class="fa-solid fa-gear"></i>
+        <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
+             <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-400"></div>
+            <div class="p-8 md:p-12">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-2xl shadow-lg">
+                        <i class="fa-solid fa-gear"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold text-slate-800 tracking-tight font-[Outfit]">自定義 Agent 指令 (AGENTS.md)</h2>
                 </div>
-                <h2 class="text-3xl font-bold text-slate-800 tracking-tight font-[Outfit]">自定義 Agent 指令 (AGENTS.md)</h2>
-            </div>
 
-            <div class="bg-white rounded-3xl shadow-xl p-8 border border-slate-100">
-                <p class="text-lg text-slate-600 mb-8 font-light">
+                <p class="text-lg text-slate-600 mb-8 font-light leading-relaxed">
                     如果你希望 Agent 在你的 Workspace 中遵循特定的架構或風格，你可以「調教」它。在專案根目錄建立一個 <code>AGENTS.md</code>。
                 </p>
 
-                <div class="bg-slate-50 rounded-2xl p-6 border-l-4 border-emerald-500">
-                    <h4 class="font-bold text-slate-800 mb-4">範例指示 (Instruction Example)</h4>
-                    <ul class="text-sm text-slate-600 space-y-3 font-mono">
+                <div class="bg-slate-50 rounded-2xl p-8 border-l-4 border-emerald-500">
+                    <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-emerald-500"></i> 範例指示 (Instruction Example)
+                    </h4>
+                    <ul class="text-base text-slate-600 space-y-3 font-mono">
                         <li class="flex gap-2"><span>-</span> <span>所有 API 必須使用 TypeScript 定義介面</span></li>
                         <li class="flex gap-2"><span>-</span> <span>所有組件必須使用 Tailwind CSS 進行樣式設定</span></li>
                         <li class="flex gap-2"><span>-</span> <span>測試必須使用 Jest 且覆蓋率需大於 80%</span></li>
                     </ul>
                 </div>
             </div>
-        </section>
+        </div>
 
         <!-- Comparison Table -->
-        <section class="mb-16">
-            <h2 class="text-3xl font-bold text-slate-800 mb-8 text-center">傳統 AI vs. AI Agent</h2>
-            <div class="overflow-hidden rounded-3xl border border-slate-200 shadow-2xl">
-                <table class="w-full text-left bg-white">
-                    <thead class="bg-slate-50 border-b border-slate-200">
-                        <tr>
-                            <th class="px-6 py-4 font-bold text-slate-800">特性</th>
-                            <th class="px-6 py-4 font-bold text-slate-800">傳統 Copilot</th>
-                            <th class="px-6 py-4 font-bold text-indigo-600">Copilot Agent Mode</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 text-sm">
-                        <tr>
-                            <td class="px-6 py-4 font-medium text-slate-800">範圍</td>
-                            <td class="px-6 py-4 text-slate-500">單一檔案、當前游標</td>
-                            <td class="px-6 py-4 font-bold text-slate-800">整個 Workspace</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-medium text-slate-800">執行</td>
-                            <td class="px-6 py-4 text-slate-500">只會寫程式碼</td>
-                            <td class="px-6 py-4 font-bold text-slate-800">能執行指令、跑測試</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-medium text-slate-800">修正</td>
-                            <td class="px-6 py-4 text-slate-500">等你發現錯誤</td>
-                            <td class="px-6 py-4 font-bold text-slate-800">看見報錯後自動修復</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-medium text-slate-800">主動性</td>
-                            <td class="px-6 py-4 text-slate-500">被動補全</td>
-                            <td class="px-6 py-4 font-bold text-slate-800">主動規劃方案</td>
-                        </tr>
-                    </tbody>
-                </table>
+        <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden mb-16">
+            <div class="p-8 md:p-12">
+                <h2 class="text-3xl font-bold text-slate-800 mb-8 text-center font-[Outfit]">傳統 AI vs. AI Agent</h2>
+                <div class="overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
+                    <table class="w-full text-left bg-white">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 font-bold text-slate-800">特性</th>
+                                <th class="px-6 py-4 font-bold text-slate-800">傳統 Copilot</th>
+                                <th class="px-6 py-4 font-bold text-indigo-600">Copilot Agent Mode</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-sm">
+                            <tr>
+                                <td class="px-6 py-4 font-medium text-slate-800">範圍</td>
+                                <td class="px-6 py-4 text-slate-500">單一檔案、當前游標</td>
+                                <td class="px-6 py-4 font-bold text-slate-800">整個 Workspace</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 font-medium text-slate-800">執行</td>
+                                <td class="px-6 py-4 text-slate-500">只會寫程式碼</td>
+                                <td class="px-6 py-4 font-bold text-slate-800">能執行指令、跑測試</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 font-medium text-slate-800">修正</td>
+                                <td class="px-6 py-4 text-slate-500">等你發現錯誤</td>
+                                <td class="px-6 py-4 font-bold text-slate-800">看見報錯後自動修復</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 font-medium text-slate-800">主動性</td>
+                                <td class="px-6 py-4 text-slate-500">被動補全</td>
+                                <td class="px-6 py-4 font-bold text-slate-800">主動規劃方案</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </section>
+        </div>
 
         <!-- Assignments Section -->
         <section class="mb-16">
-            <h2 class="text-3xl font-bold text-slate-800 text-center mb-12">🛠️ 課後練習與挑戰</h2>
-            <div class="grid md:grid-cols-3 gap-6">
+            <h2 class="text-3xl font-bold text-slate-800 text-center mb-12 font-[Outfit]">🛠️ 課後練習與挑戰</h2>
+            <div class="grid md:grid-cols-3 gap-8">
                 <!-- HW 1-1 -->
                 <div onclick="openSubmissionModal('ai-agent-task-1-1', '作業 1-1: VS Code Agent 實戰')"
-                    class="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 cursor-pointer relative group hover:shadow-2xl transition-all duration-300">
+                    class="bg-white rounded-2xl shadow-md border border-slate-100 p-8 cursor-pointer relative group hover:shadow-2xl transition-all duration-300 flex flex-col h-full">
                     <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center text-xl font-bold mb-6">1-1</div>
-                    <h3 class="font-bold text-lg mb-3">VS Code Agent 實戰</h3>
-                    <p class="text-sm text-slate-500 mb-6 leading-relaxed">啟動 Agent 模式修正一個已知 Bug，並截圖 Plan 與修正過程。</p>
-                    <div class="absolute inset-0 bg-indigo-600/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-3xl">
+                    <h3 class="font-bold text-xl mb-3 text-slate-800">VS Code Agent 實戰</h3>
+                    <p class="text-sm text-slate-500 mb-6 leading-relaxed flex-grow">啟動 Agent 模式修正一個已知 Bug，並截圖 Plan 與修正過程。</p>
+                    <div class="absolute inset-0 bg-indigo-600/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
                         <span class="bg-white text-indigo-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">📤 點擊繳交作業</span>
                     </div>
                 </div>
 
                 <!-- HW 1-2 -->
                 <div onclick="openSubmissionModal('ai-agent-task-1-2', '作業 1-2: 自定義指令調教')"
-                    class="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 cursor-pointer relative group hover:shadow-2xl transition-all duration-300">
+                    class="bg-white rounded-2xl shadow-md border border-slate-100 p-8 cursor-pointer relative group hover:shadow-2xl transition-all duration-300 flex flex-col h-full">
                     <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-xl font-bold mb-6">1-2</div>
-                    <h3 class="font-bold text-lg mb-3">自定義指令調教</h3>
-                    <p class="text-sm text-slate-500 mb-6 leading-relaxed">撰寫 <code>AGENTS.md</code> 並要求 Agent 遵循特定風格重構一段代碼。</p>
-                    <div class="absolute inset-0 bg-emerald-600/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-3xl">
+                    <h3 class="font-bold text-xl mb-3 text-slate-800">自定義指令調教</h3>
+                    <p class="text-sm text-slate-500 mb-6 leading-relaxed flex-grow">撰寫 <code>AGENTS.md</code> 並要求 Agent 遵循特定風格重構一段代碼。</p>
+                    <div class="absolute inset-0 bg-emerald-600/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
                         <span class="bg-white text-emerald-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">📤 點擊繳交作業</span>
                     </div>
                 </div>
 
                 <!-- HW 1-3 -->
                 <div onclick="openSubmissionModal('ai-agent-task-1-3', '作業 1-3: MCP 外部工具整合')"
-                    class="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 cursor-pointer relative group hover:shadow-2xl transition-all duration-300">
+                    class="bg-white rounded-2xl shadow-md border border-slate-100 p-8 cursor-pointer relative group hover:shadow-2xl transition-all duration-300 flex flex-col h-full">
                     <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center text-xl font-bold mb-6">1-3</div>
-                    <h3 class="font-bold text-lg mb-3">MCP 外部工具整合</h3>
-                    <p class="text-sm text-slate-500 mb-6 leading-relaxed">成功連接一個 MCP Server 並展示 Agent 呼叫外部工具的結果。</p>
-                    <div class="absolute inset-0 bg-amber-600/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-3xl">
+                    <h3 class="font-bold text-xl mb-3 text-slate-800">MCP 外部工具整合</h3>
+                    <p class="text-sm text-slate-500 mb-6 leading-relaxed flex-grow">成功連接一個 MCP Server 並展示 Agent 呼叫外部工具的結果。</p>
+                    <div class="absolute inset-0 bg-amber-600/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
                         <span class="bg-white text-amber-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">📤 點擊繳交作業</span>
                     </div>
                 </div>
@@ -289,10 +314,6 @@
             <p>著重檢查學生的 <code>AGENTS.md</code> 邏輯是否清晰，以及是否學會了「小步快跑」的 Agent 溝通技巧。</p>
         </div>
     </section>
-        <div class="container mx-auto px-4 text-center">
-            <p class="text-slate-500 font-medium">下一步建議：檢查 VS Code 更新，並嘗試啟動 Agent 模式！</p>
-        </div>
-    </footer>
 
     <style>
         @keyframes spin-slow {

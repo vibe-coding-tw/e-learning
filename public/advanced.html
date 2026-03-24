@@ -218,7 +218,13 @@
                 btn.textContent = '✅ 進入課程內容';
                 // ★ 這裡保持紅色主題 (bg-red-600)
                 btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-red-600 hover:bg-red-700 text-white font-medium transition`;
-                btn.onclick = () => { window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`; };
+                btn.onclick = () => { 
+                    if (!classroomUrl) {
+                        alert("⚠️ 課程連結尚未備妥，請聯繫客服。");
+                        return;
+                    }
+                    window.location.href = `${AUTH_URL}&url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`; 
+                };
             } else if (status === 'NOT_LOGGED_IN' || status === 'UNAUTHORIZED' || status === 'ERROR') {
                 btn.textContent = `🛒 加入購物車`;
                 btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;

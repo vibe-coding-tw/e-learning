@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web BLE 全端開發大師班 - Vibe Coding</title>
+    <title>Web App 全端開發入門 - Vibe Coding</title>
     <link rel="stylesheet" href="/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
@@ -25,37 +25,40 @@
     <div class="unit-tabs-wrapper">
         <div class="unit-tabs-container">
             <div class="unit-tabs-flex" id="course-tabs-container">
-                <button onclick="switchTab('security')" id="tab-security" class="unit-tab-btn active">
-                    <span>1️⃣</span> 安全機制 (Security)
+                <button onclick="switchTab('html5')" id="tab-html5" class="unit-tab-btn active">
+                    <span>1️⃣</span> HTML5 基礎
                 </button>
-                <button onclick="switchTab('async')" id="tab-async" class="unit-tab-btn">
-                    <span>2️⃣</span> 非同步編程 (Async)
+                <button onclick="switchTab('flexbox')" id="tab-flexbox" class="unit-tab-btn">
+                    <span>2️⃣</span> Flexbox 排版
                 </button>
-                <button onclick="switchTab('data')" id="tab-data" class="unit-tab-btn">
-                    <span>3️⃣</span> 數據解析 (Typed Arrays)
+                <button onclick="switchTab('uiux')" id="tab-uiux" class="unit-tab-btn">
+                    <span>3️⃣</span> UI/UX 設計規範
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Content Area (Iframe) -->
-    <div class="flex-grow w-full relative">
-        <iframe id="content-frame" src="" class="w-full h-full border-0 absolute inset-0 bg-gray-50 option-opacity"
-            onload="resizeIframe(this)"></iframe>
+    <div class="flex-grow w-full relative flex flex-col">
+
+        <div class="flex-grow relative">
+            <iframe id="content-frame" src=""
+                class="w-full h-full border-0 absolute inset-0 bg-gray-50 option-opacity"></iframe>
+        </div>
     </div>
 
     <script>
         const iframe = document.getElementById('content-frame');
-        const tabSecurity = document.getElementById('tab-security');
-        const tabAsync = document.getElementById('tab-async');
-        const tabData = document.getElementById('tab-data');
+        const tabHtml5 = document.getElementById('tab-html5');
+        const tabFlexbox = document.getElementById('tab-flexbox');
+        const tabUiux = document.getElementById('tab-uiux');
 
         // Initial Load
-        loadContent('03-unit-ble-security.html');
+        loadContent('01-unit-html5-basics.html');
 
         function switchTab(tab) {
             // Helper to reset all tabs
-            [tabSecurity, tabAsync, tabData].forEach(t => {
+            [tabHtml5, tabFlexbox, tabUiux].forEach(t => {
                 t.classList.remove('active');
             });
 
@@ -63,15 +66,15 @@
             let currentTabBtn;
             let url;
 
-            if (tab === 'security') {
-                currentTabBtn = tabSecurity;
-                url = '03-unit-ble-security.html';
-            } else if (tab === 'async') {
-                currentTabBtn = tabAsync;
-                url = '03-unit-ble-async.html';
-            } else if (tab === 'data') {
-                currentTabBtn = tabData;
-                url = '03-unit-typed-arrays.html';
+            if (tab === 'html5') {
+                currentTabBtn = tabHtml5;
+                url = '01-unit-html5-basics.html';
+            } else if (tab === 'flexbox') {
+                currentTabBtn = tabFlexbox;
+                url = '01-unit-flexbox-layout.html';
+            } else if (tab === 'uiux') {
+                currentTabBtn = tabUiux;
+                url = '01-unit-ui-ux-standards.html';
             }
 
             if (currentTabBtn) {
@@ -97,9 +100,14 @@
             }, 300);
         }
 
+        // Auto-sizing logic for Iframe is tricky if cross-origin, but here it is same-origin.
+        // However, we want the iframe to just fill the viewport minus the header.
+        // CSS `absolute inset-0` on `flex-grow` container handles this if parent is flex-col h-screen.
     </script>
 
     <script type="module" src="/js/master-nav.js?v=12"></script>
+
+
 </body>
 
 </html>

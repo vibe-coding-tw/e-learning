@@ -318,43 +318,57 @@ const LESSONS_URL = "https://e-learning-942f7.web.app/lessons.json";
 
 async function getLessons() {
     const now = Date.now();
+    // Cache for 5 minutes
+    if (cachedLessons && (now - lastFetchTime < 300000)) {
+        return cachedLessons;
+    }
+
     // 優先嘗試讀取本地檔案
     try {
-        // [FIXED v11.3.7] Check both relative to root and current dir
         const localPaths = [
-            path.join(__dirname, "lessons.json"),            // Production/Bundled
-            path.join(__dirname, "../public/lessons.json")   // Local Emulator
+            path.join(process.cwd(), "lessons.json"),            // Production Root (functions/)
+            path.join(__dirname, "lessons.json"),                // Relative to index.js
+            path.join(__dirname, "../public/lessons.json")      // Local Emulator
         ];
 
         for (const lp of localPaths) {
             if (fs.existsSync(lp)) {
-                const data = fs.readFileSync(lp, "utf8");
-                console.log(`Loaded lessons.json from local file: ${lp}`);
-                return JSON.parse(data);
+                try {
+                    const data = fs.readFileSync(lp, "utf8");
+                    const parsed = JSON.parse(data);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        console.log(`Successfully loaded ${parsed.length} lessons from: ${lp}`);
+                        cachedLessons = parsed;
+                        lastFetchTime = now;
+                        return parsed;
+                    }
+                } catch (parseErr) {
+                    console.error(`Parse error for ${lp}:`, parseErr.message);
+                }
             }
         }
     } catch (e) {
-        console.warn("Local lessons.json read failed, falling back to URL:", e.message);
+        console.warn("Local lessons.json search failed:", e.message);
     }
 
-    // Cache for 5 minutes (300,000 ms)
-    if (cachedLessons && (now - lastFetchTime < 300000)) {
-        return cachedLessons;
-    }
+    // 次之嘗試透過網路讀取 (作為最終保險)
     try {
-        console.log("Fetching lessons.json from public URL...");
-        const response = await fetch(LESSONS_URL);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        console.log("Fetching lessons.json from URL:", LESSONS_URL);
+        const response = await fetch(LESSONS_URL + "?t=" + now);
+        if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data) && data.length > 0) {
+                console.log(`Successfully fetched ${data.length} lessons.`);
+                cachedLessons = data;
+                lastFetchTime = now;
+                return data;
+            }
         }
-        cachedLessons = await response.json();
-        lastFetchTime = now;
-        return cachedLessons;
-    } catch (error) {
-        console.error("Failed to fetch lessons.json:", error);
-        // If fetch fails, return cached data if available, otherwise empty array
-        return cachedLessons || [];
+    } catch (e) {
+        console.error("Network fetch failed:", e.message);
     }
+
+    return cachedLessons || [];
 }
 
 exports.checkPaymentAuthorization = onRequest(async (req, res) => {
@@ -638,7 +652,22 @@ exports.serveCourse = onRequest(async (req, res) => {
         }
 
         // 3. Serve File
-        const filePath = path.join(__dirname, 'private_courses', fileName);
+        let filePath = path.join(__dirname, 'private_courses', fileName);
+
+        // [NEW v11.3.9] Legacy Name Fallback (01- to 00-)
+        if (!fs.existsSync(filePath)) {
+            let altFileName = null;
+            if (fileName.startsWith('01-')) altFileName = fileName.replace('01-', '00-');
+            else if (fileName.startsWith('basic-01-')) altFileName = fileName.replace('basic-01-', 'basic-00-');
+
+            if (altFileName) {
+                const altPath = path.join(__dirname, 'private_courses', altFileName);
+                if (fs.existsSync(altPath)) {
+                    console.log(`[serveCourse] Legacy Fallback: ${fileName} -> ${altFileName}`);
+                    filePath = altPath;
+                }
+            }
+        }
 
         // Path Traversal Prevention
         if (!filePath.startsWith(path.join(__dirname, 'private_courses'))) {

@@ -130,7 +130,7 @@ async function loadDashboard() {
         const urlParams = new URLSearchParams(window.location.search);
         const filterUnitId = urlParams.get('unitId');
 
-        if (myRole === 'admin' || myRole === 'teacher' || isAuthorizedTeacher) {
+        if (myRole === 'admin' || myRole === 'teacher' || isAuthorizedTeacher || adminSuperMode) {
             // Admin/Teacher View (Management)
             setupAdminFeatures();
             setupGradingFunctions();
@@ -397,7 +397,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
     // Unhide Manage Link and Admin Tab (Admin Only)
     const adminTabBtn = document.getElementById('tab-btn-admin');
     if (adminTabBtn) {
-        if (myRole === 'admin') {
+        if (myRole === 'admin' || adminSuperMode) {
             adminTabBtn.classList.remove('hidden');
         } else {
             adminTabBtn.classList.add('hidden');
@@ -411,7 +411,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
     if (settingsTabBtn) {
         let isAuthorized = false;
-        if (myRole === 'admin') {
+        if (myRole === 'admin' || adminSuperMode) {
             isAuthorized = true;
         } else if (filterUnitId) {
             // [USER_REQUEST] Prioritize checking if authorized for this specific unit
@@ -1362,9 +1362,9 @@ function formatUnitName(fileName) {
     if (!fileName) return "Unknown";
     let name = fileName.replace('.html', '');
 
-    // Explicit handle for master files
+    // Explicit handle for master files - Keep them for display in settings
     if (name.includes('-master-')) {
-        return ""; // Return empty to indicate this shouldn't be displayed as a unit name
+        // Fallback title for masters
     }
 
     // Try to strip prefixes like "00-unit-", "basic-01-unit-"
@@ -1477,8 +1477,8 @@ function setupSettingsFeature() {
 function isUserAuthorizedForUnit(fileName, courseId, email) {
     if (!email) return false;
 
-    // [NEW] Super Mode override for teaching guides/settings
-    if (adminSuperMode) return true;
+    // [NEW] Super Mode or Admin account override for teaching guides/settings
+    if (myRole === 'admin' || adminSuperMode) return true;
 
     const courseConfig = dashboardData?.courseConfigs?.[courseId] || {};
     const unitConfigs = courseConfig.githubClassroomUrls || {};
@@ -1563,6 +1563,12 @@ async function renderSettingsTab(filterUnitId = null) {
             console.log("[Settings] Rendering Course:", course.courseId);
             const configs = courseConfigs[course.courseId]?.githubClassroomUrls || {};
             const units = Array.isArray(course.courseUnits) ? [...course.courseUnits] : [];
+            
+            // [NEW] Ensure master page is also available for settings
+            const masterFile = (course.classroomUrl || "").split('/').pop().split('?')[0];
+            if (masterFile && !units.includes(masterFile)) {
+                units.unshift(masterFile);
+            }
 
             const rawInstructor = courseConfigs[course.courseId]?.instructorGuide;
             const rawAssignment = courseConfigs[course.courseId]?.assignmentGuide;

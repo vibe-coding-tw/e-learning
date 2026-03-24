@@ -38,7 +38,7 @@
             <!-- Card 0: Environment Setup (FREE) -->
             <div class="info-card course-card group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col border border-slate-100"
                 data-course-id="72uyaadl" data-course-name="開發環境安裝與設定" data-course-price="0"
-                data-classroom-url="/courses/01-master-getting-started.html">
+                data-classroom-url="/courses/00-master-getting-started.html">
 
                 <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-400 to-cyan-500"></div>
 
@@ -324,7 +324,7 @@
                         class="relative rounded-xl overflow-hidden shadow-sm bg-slate-50 border border-slate-200 group-hover:border-indigo-200 transition-colors h-48">
                         <img src="https://www.kidstoylover.com/cdn/shop/files/1_adc99452-bd07-49f0-95a1-a5d7990ed0f5.jpg?v=1715839568&width=1445"
                             class="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500"
-                            style="clip-path: inset(0 0 15% 0); object-position: center bottom;" alt="進階款 ESP32-S3">
+                            style="object-position: center 25%;" alt="進階款 ESP32-S3">
                     </div>
                     <p class="text-center text-xs text-slate-400 mt-2 font-mono">Model: ESP32-S3</p>
                 </div>
@@ -749,6 +749,10 @@
                 btn.textContent = '✅ 進入課程內容';
                 btn.className = `${baseBtnClass} bg-cyan-600 hover:bg-cyan-700 text-white`;
                 btn.onclick = () => {
+                    if (!classroomUrl) {
+                        alert("⚠️ 課程連結尚未備妥，請稍後再試或聯繫客服。");
+                        return;
+                    }
                     window.location.href = `${AUTH_URL}?url=${encodeURIComponent(classroomUrl)}&id=${courseId}&price=${coursePrice}`;
                 };
             } else if (status === 'UNAUTHORIZED' || status === 'ERROR') {

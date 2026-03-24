@@ -44,7 +44,7 @@ function injectMediaOverlay() {
     const overlayHTML = `
     <div id="media-overlay" class="fixed inset-0 bg-black hidden flex flex-col overflow-hidden" style="z-index: 1000000 !important;">
         <!-- Doc Container (Responsive Padding) -->
-        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-gray-100 flex justify-center p-0 md:p-4">
+        <div id="doc-wrapper" class="hidden flex-grow w-full relative overflow-auto bg-gray-100 flex justify-center p-0">
             <iframe id="doc-frame" class="border-0 bg-white shadow-2xl origin-top"
                 style="width: 100%; min-height: 100%; transition: transform 0.2s ease;" src="">
             </iframe>
@@ -375,13 +375,19 @@ function autoFitZoom() {
     // [FIXED v11.3.12] Only disable manual scaling IF using /mobilebasic
     // Standard docs with /mobilebasic support native reflow, making manual scaling counter-productive.
     // Published docs (/pub) do NOT reflow and MUST still use manual scaling.
+    // Native Reflow Doc Logic
     if (iframe.src.includes('docs.google.com') && iframe.src.includes('mobilebasic')) {
-        console.log("[Media] Native Reflow Doc detected, disabling manual scaling.");
-        iframe.style.width = '100%';
-        iframe.style.height = '100%';
-        iframe.style.transform = 'none';
-        iframe.style.marginBottom = '0';
-        return;
+        if (isMobile) {
+            console.log("[Media] Native Reflow Doc detected (Mobile), disabling manual scaling.");
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.transform = 'none';
+            iframe.style.marginBottom = '0';
+            return;
+        } else {
+            console.log("[Media] Native Reflow Doc detected (Desktop), applying expansion zoom...");
+            // Force it to proceed to the scaling logic below with a customized base width
+        }
     }
 
     // Standard Scaling Logic (for Desktop or non-Google-Doc mobile)
@@ -403,7 +409,10 @@ function autoFitZoom() {
         if (scale < 0.8) scale = 0.8;
     } else {
         // Desktop: Allow full expansion ("Page Width")
-        // Keeping this untouched to satisfy user requirement
+        // For mobilebasic on desktop, use a smaller base width to force larger zoom
+        const activeBaseWidth = (iframe.src.includes('mobilebasic')) ? 680 : 820;
+        scale = availableWidth / activeBaseWidth;
+
         if (scale < 0.5) scale = 0.5;
         // No upper limit to ensure it fills the screen width
     }

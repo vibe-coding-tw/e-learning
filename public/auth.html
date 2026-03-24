@@ -76,20 +76,41 @@
             const courseId = urlParams.get('id');   // 課程 ID
             const price = urlParams.get('price');   // 價格 (判斷是否為免費課)
 
+            console.log("[Auth] Verifying params:", { targetUrl, courseId, price });
+            
+            // [MODIFIED] Legacy/Cache Fallback: If URLSearchParams fails (e.g. because of multiple ?)
             if (!targetUrl || !courseId) {
-                alert("錯誤：找不到課程連結或是參數遺失 (Missing URL or ID)");
-                showError("參數錯誤：找不到課程連結。");
-                return;
+                console.warn("[Auth] Standard parsing failed, trying manual fallback...");
+                const fullSearch = window.location.search + window.location.hash;
+                const matchUrl = fullSearch.match(/[?&]url=([^&]*)/);
+                const matchId = fullSearch.match(/[?&]id=([^&]*)/);
+                const matchPrice = fullSearch.match(/[?&]price=([^&]*)/);
+                
+                const fallbackUrl = matchUrl ? decodeURIComponent(matchUrl[1]) : null;
+                const fallbackId = matchId ? matchId[1] : null;
+                const fallbackPrice = matchPrice ? matchPrice[1] : null;
+                
+                console.log("[Auth] Fallback results:", { fallbackUrl, fallbackId, fallbackPrice });
+                
+                if (fallbackUrl && fallbackId) {
+                    // Use fallbacks
+                    proceedWithVerification(fallbackUrl, fallbackId, fallbackPrice, user);
+                    return;
+                }
             }
 
-            // 2. 如果是免費課程 (price = 0)，直接跳轉以提供最佳體驗，不需經過後端驗證購買紀錄
-            if (parseInt(price) === 0) {
-                console.log("Free course detected, bypassing backend auth check.");
-                window.location.replace(decodeURIComponent(targetUrl));
+            if (!targetUrl || !courseId || targetUrl === 'undefined') {
+                console.warn("[Auth] Missing URL or ID, redirecting to index.html");
+                window.location.replace("index.html");
                 return;
             }
-            
-            // 3. 付費課程：呼叫後端二次驗證
+            // If we have them, proceed with the main flow
+            proceedWithVerification(targetUrl, courseId, price, user);
+        }
+
+        // Refactored flow to allow fallbacks
+        async function proceedWithVerification(targetUrl, courseId, price, user) {
+            // 2. 付費與免費課程皆需透過後端取得 Token，以通過 serveCourse 的安全檢查
             try {
                 let fileName = "";
                 if (targetUrl) {
@@ -134,16 +155,23 @@
 
         // 監聽登入狀態
         onAuthStateChanged(auth, (user) => {
+            console.log("[Auth] State changed. User:", user ? user.email : "null");
             if (user) {
                 verifyAndRedirect(user);
             } else {
-                // 如果沒登入，保留一點時間讓 Firebase 嘗試自動登入，若真的沒登入則導回登入頁或顯示錯誤
+                console.log("[Auth] No user detected. Waiting for 3s before redirect...");
+                // 如果沒登入，保留一點時間讓 Firebase 嘗試自動登入
                 setTimeout(() => {
                     if (!auth.currentUser) {
-                        alert("請先登入會員");
+                        console.warn("[Auth] Still no user after 3s. Redirecting to index.html");
+                        // Only alert if we really have no user and no params? 
+                        // Actually, if they was sent here, they SHOULD be logged in.
+                        alert("請先登入會員 (Login Required)");
                         window.location.href = "index.html";
+                    } else {
+                        console.log("[Auth] User detected after delay. Resuming...");
                     }
-                }, 1000);
+                }, 3000);
             }
         });
     </script>
