@@ -696,6 +696,7 @@ exports.serveCourse = onRequest(async (req, res) => {
             return res.status(404).send("File not found.");
         }
 
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
         res.sendFile(filePath);
 
     } catch (e) {
