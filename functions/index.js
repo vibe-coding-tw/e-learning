@@ -336,8 +336,8 @@ async function getLessons() {
         }
 
         // 1. Fetch from Firestore 'metadata_lessons'
-        console.log("Fetching lessons from Firestore 'metadata_lessons'...");
-        const lessonsSnap = await db.collection('metadata_lessons').get();
+        console.log("Fetching lessons from Firestore 'metadata_lessons' (sorted by orderWeight)...");
+        const lessonsSnap = await db.collection('metadata_lessons').orderBy("orderWeight", "asc").get();
         console.log(`Firestore snapshot size: ${lessonsSnap.size}`);
 
         if (!lessonsSnap.empty) {
