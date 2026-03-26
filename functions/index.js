@@ -1016,6 +1016,9 @@ exports.getDashboardData = onCall(async (request) => {
                         }
                     }
                     courseConfigs[mappedId] = cfg;
+                    if (mappedId !== docId) {
+                        courseConfigs[docId] = cfg;
+                    }
                 }
             } catch (err) {
                 console.error(`Error processing config for course ${doc.id}:`, err);
