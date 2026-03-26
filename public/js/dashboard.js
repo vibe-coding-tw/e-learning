@@ -421,40 +421,46 @@ function renderAdminDashboard(data, filterUnitId = null) {
     loadingState.classList.add('hidden');
     dashboardContent.classList.remove('hidden');
 
-    // Unhide Manage Link and Admin Tab (Admin Only)
+    // Tab Buttons
     const adminTabBtn = document.getElementById('tab-btn-admin');
+    const settingsTabBtn = document.getElementById('tab-btn-settings');
+    const earningsTabBtn = document.getElementById('tab-btn-earnings');
+
+    // 1. Admin Tab (Always Admin-only, toggle on SuperMode if preferred, or just leave as is)
     if (adminTabBtn) {
-        if (myRole === 'admin' || adminSuperMode) {
-            adminTabBtn.classList.remove('hidden');
+        if (myRole === 'admin') {
+            adminTabBtn.classList.toggle('hidden', !adminSuperMode); // Admins only see this in SuperMode
         } else {
             adminTabBtn.classList.add('hidden');
         }
     }
 
-    // Settings Tab (Admin OR Teacher with authorized courses)
-    const settingsTabBtn = document.getElementById('tab-btn-settings');
+    // 2. Settings & Earnings Tabs (Role-based & Authorization-based)
     const urlParams = new URLSearchParams(window.location.search);
     let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
 
-    if (settingsTabBtn) {
-        let isAuthorized = false;
-        if (myRole === 'admin' || adminSuperMode) {
-            isAuthorized = true;
-        } else if (filterUnitId) {
-            // [USER_REQUEST] Prioritize checking if authorized for this specific unit
-            isAuthorized = !!(data.courseConfigs && data.courseConfigs[filterUnitId]);
+    let isAuthorizedForManagement = false;
+    
+    if (myRole === 'admin') {
+        // Admin: Only see these if SuperMode is ON
+        isAuthorizedForManagement = adminSuperMode;
+    } else if (myRole === 'teacher') {
+        // Teacher: Show if authorized for the current view
+        if (filterUnitId) {
+            isAuthorizedForManagement = !!(data.courseConfigs && data.courseConfigs[filterUnitId]);
         } else if (filterCourseId) {
-            isAuthorized = !!(data.courseConfigs && data.courseConfigs[filterCourseId]);
+            isAuthorizedForManagement = !!(data.courseConfigs && data.courseConfigs[filterCourseId]);
         } else {
             // Global view: show if any authorized courses exist
-            isAuthorized = !!(data.courseConfigs && Object.keys(data.courseConfigs).length > 0);
+            isAuthorizedForManagement = !!(data.courseConfigs && Object.keys(data.courseConfigs).length > 0);
         }
+    }
 
-        if (isAuthorized) {
-            settingsTabBtn.classList.remove('hidden');
-        } else {
-            settingsTabBtn.classList.add('hidden');
-        }
+    if (settingsTabBtn) {
+        settingsTabBtn.classList.toggle('hidden', !isAuthorizedForManagement);
+    }
+    if (earningsTabBtn) {
+        earningsTabBtn.classList.toggle('hidden', !isAuthorizedForManagement);
     }
 
     // Stats (Base on filtered students if unit is selected)
