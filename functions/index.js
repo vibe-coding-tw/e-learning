@@ -655,11 +655,6 @@ exports.serveCourse = onRequest(async (req, res) => {
             console.error(`Access Denied Debug: Scope=${scopePart}, File=${fileName}, Debug=${debugInfo}`);
             
             // [MODIFIED v11.3.14] Fallback: If scopePart is a fileName and lesson contains it, allow.
-            // This handles cases where the link in dashboard uses fileName as pageId.
-            const manualFallback = lessons && lessons.find(l => 
-                (l.classroomUrl && l.classroomUrl.endsWith(scopePart)) ||
-                (l.courseUnits && l.courseUnits.includes(scopePart))
-            );
             if (manualFallback) {
                 const isMasterMatch = (manualFallback.classroomUrl && manualFallback.classroomUrl.endsWith(fileName));
                 const isUnitMatch = (manualFallback.courseUnits && manualFallback.courseUnits.includes(fileName));
@@ -671,7 +666,7 @@ exports.serveCourse = onRequest(async (req, res) => {
         }
 
         if (!isAuthorizedScope) {
-            return res.status(403).send(`Access Denied: Token valid for ${scopePart}, but requested ${fileName}. (Debug: ${debugInfo})`);
+            return res.status(403).send(`Access Denied: Token valid for ${scopePart}, but requested ${fileName}.`);
         }
 
         // 3. Serve File
@@ -1906,47 +1901,6 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
     } catch (error) {
         console.error("Error in calculateMonthlySharing:", error);
     }
-});
-
-exports.debugGetDashboard = onCall(async (request) => {
-    const lessons = await getLessons();
-    const cid = "72uyaadl";
-    const course = lessons.find(l => l.courseId === cid);
-    const privateCoursesDir = path.join(__dirname, 'private_courses');
-    const allFiles = fs.existsSync(privateCoursesDir) ? fs.readdirSync(privateCoursesDir) : [];
-    
-    let result = { cid, courseFound: !!course, files: [] };
-    
-    if (course) {
-        const masterFile = (course.classroomUrl || "").split('/').pop().split('?')[0];
-        const units = Array.isArray(course.courseUnits) ? course.courseUnits : [];
-        const relatedFiles = [masterFile, ...units].filter(f => f && allFiles.includes(f));
-        result.relatedFiles = relatedFiles;
-        result.allFilesCount = allFiles.length;
-        
-        let aggregatedGuides = {};
-        for (const file of relatedFiles) {
-            const filePath = path.join(privateCoursesDir, file);
-            if (!fs.existsSync(filePath)) continue;
-            const html = fs.readFileSync(filePath, 'utf8');
-            const guideMatch = html.match(/<section id="instructor-guide"[^>]*>([\s\S]*?)<\/section>/);
-            const assignMatch = html.match(/<section id="assignment-guide"[^>]*>([\s\S]*?)<\/section>/);
-            
-            result.files.push({ 
-                file, 
-                guideFound: !!guideMatch, 
-                assignFound: !!assignMatch,
-                guideLength: guideMatch ? guideMatch[1].length : 0
-            });
-
-            if (guideMatch && guideMatch[1]) {
-                if (!aggregatedGuides.instructor) aggregatedGuides.instructor = {};
-                aggregatedGuides.instructor[file] = guideMatch[1].trim();
-            }
-        }
-        result.aggregatedGuides = aggregatedGuides;
-    }
-    return result;
 });
 
 exports.triggerSeedFirestore = onRequest(async (req, res) => {
