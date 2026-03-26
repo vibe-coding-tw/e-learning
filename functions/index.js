@@ -1139,14 +1139,12 @@ exports.getDashboardData = onCall(async (request) => {
 
                 const ledgerSnap = await db.collection('profit_ledger')
                     .where('mentorEmail', '==', email)
-                    .orderBy('month', 'desc')
-                    .limit(100)
+                    .limit(500)
                     .get();
                 
-                result.earnings = ledgerSnap.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
+                result.earnings = ledgerSnap.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .sort((a, b) => (b.month || "").localeCompare(a.month || ""));
             } catch (err) {
                 console.error("Error fetching profit data for dashboard:", err);
             }
@@ -1173,7 +1171,7 @@ exports.getDashboardData = onCall(async (request) => {
         if (targetDgUids.length === 0) return result;
 
         // 2. Fetch Activity Logs
-        let logsQuery = db.collection('activity_logs').orderBy('timestamp', 'desc').limit(2000);
+        let logsQuery = db.collection('activity_logs').limit(5000);
 
         // If it's a student-only view, restrict by UID immediately
         if (!isManagementView) {
