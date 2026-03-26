@@ -977,7 +977,18 @@ exports.getDashboardData = onCall(async (request) => {
     const email = auth.token.email;
     const requesterRole = await getRole(uid);
     const db = admin.firestore();
-    const lessons = await getLessons(); // [FIXED] Moved up to avoid ReferenceError
+    const lessons = await getLessons(); 
+    
+    // [MIGRATION HELP] Mapping of legacy IDs to new metadata IDs
+    const legacyMap = {
+        '01': 'ydb63bg',
+        '02': 'a45cwlak',
+        '03': 'a7smdfeq',
+        '04': 'hkdq5j3m',
+        '05': 'io5rxgxl',
+        '04-unit-wifi-setup.html': '03-unit-wifi-setup.html',
+        '04-unit-motor-ramping.html': '03-unit-motor-ramping.html'
+    };
 
     try {
         // 0. Fetch Course Authorization Data
@@ -992,14 +1003,17 @@ exports.getDashboardData = onCall(async (request) => {
                     const docId = doc.id;
                     // Check if docId is a unit filename (e.g. .html) or a course UUID
                     if (docId.includes('.html')) {
+                        let searchId = legacyMap[docId] || docId;
+
                         // Find parent course for this unit
-                        const parentCourse = lessons.find(l => l.courseUnits && l.courseUnits.includes(docId));
+                        const parentCourse = lessons.find(l => l.courseUnits && l.courseUnits.includes(searchId));
                         if (parentCourse && !authorizedCourseIds.includes(parentCourse.courseId)) {
                             authorizedCourseIds.push(parentCourse.courseId);
                         }
                     } else {
-                        if (!authorizedCourseIds.includes(docId)) {
-                            authorizedCourseIds.push(docId);
+                        const mappedId = legacyMap[docId] || docId;
+                        if (!authorizedCourseIds.includes(mappedId)) {
+                            authorizedCourseIds.push(mappedId);
                         }
                     }
                     courseConfigs[docId] = cfg;
@@ -1174,7 +1188,8 @@ exports.getDashboardData = onCall(async (request) => {
             if (log.action === 'PAGE_VIEW') return;
 
             const sid = log.uid;
-            const cid = log.courseId || 'unknown';
+            let cid = log.courseId || 'unknown';
+            if (legacyMap[cid]) cid = legacyMap[cid];
 
             // Authorization Filter for each log:
             // - It's my own log
@@ -1256,7 +1271,8 @@ exports.getDashboardData = onCall(async (request) => {
                     // Map order items to course progress placeholder if missing
                     // This ensures the student appears under the specific course/unit management listing
                     if (studentStats[sid] && order.items) {
-                        Object.keys(order.items).forEach(cid => {
+                        Object.keys(order.items).forEach(originalCid => {
+                            const cid = legacyMap[originalCid] || originalCid;
                             if (!studentStats[sid].orders.includes(cid)) {
                                 studentStats[sid].orders.push(cid);
                             }
@@ -1285,15 +1301,17 @@ exports.getDashboardData = onCall(async (request) => {
         assignSnapshot.forEach(doc => {
             const data = doc.data();
             const targetUid = data.userId || data.uid;
-            const cid = data.courseId;
+            const originalCid = data.courseId || 'unknown';
+            const mappedCid = legacyMap[originalCid] || originalCid;
 
             // Authorization Filter for each assignment
-            const isAuthorizedForAssign = (targetUid === uid) || (requesterRole === 'admin' || requesterRole === 'teacher') || authorizedCourseIds.includes(cid);
+            const isAuthorizedForAssign = (targetUid === uid) || (requesterRole === 'admin' || requesterRole === 'teacher') || authorizedCourseIds.includes(mappedCid);
 
             if (isAuthorizedForAssign && (requesterRole === 'admin' || usersMap[targetUid])) {
                 result.assignments.push({
                     id: doc.id,
                     ...data,
+                    courseId: mappedCid, // Uniform ID
                     studentEmail: usersMap[targetUid]?.email || data.userEmail || 'Unknown'
                 });
             }
