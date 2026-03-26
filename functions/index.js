@@ -18,7 +18,10 @@ const {
     sendStudentLinkedToTeacherEmail, sendTeacherLinkedToStudentEmail, sendAdminAssignmentReminder
 } = require('./emailService');
 
-admin.initializeApp();
+admin.initializeApp({
+    projectId: "e-learning-942f7"
+});
+const db = admin.firestore();
 
 // ==========================================
 // Firebase Functions V2 全域設定
@@ -123,7 +126,7 @@ exports.initiatePayment = onRequest(async (req, res) => {
         const tradeDate = getCurrentTime();
 
         // 建立訂單內容記錄 (Firestore)
-        // [NEW] Store referral info
+        // [NEW] Store referral info, always defaulting to info@vibe-coding.tw if missing
         await admin.firestore().collection("orders").doc(orderNumber).set({
             uid: uid,
             amount: finalAmount,
@@ -131,8 +134,8 @@ exports.initiatePayment = onRequest(async (req, res) => {
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             items: cartDetails || {},
             logistics: logistics || null,
-            promoCode: promoCode || null,
-            referralMentor: referralMentor || 'info@vibe-coding.tw',
+            promoCode: (promoCode && promoCode.trim()) ? promoCode.trim().toUpperCase() : null,
+            referralMentor: (referralMentor && referralMentor.trim()) ? referralMentor.trim() : 'info@vibe-coding.tw',
             orderNumber: orderNumber
         });
 
@@ -309,67 +312,68 @@ exports.paymentNotify = onRequest(async (req, res) => {
 });
 
 // ==========================================
-// 3. 檢查權限 (checkPaymentAuthorization)
+// 3. 權限與課程資訊 (Lessons & Auth)
 // ==========================================
+
 // Cache for lessons data
 let cachedLessons = null;
 let lastFetchTime = 0;
-const LESSONS_URL = "https://e-learning-942f7.web.app/lessons.json";
 
 async function getLessons() {
     const now = Date.now();
-    // Cache for 5 minutes
+    // Cache for 5 minutes (DISABLED FOR DEBUG)
+    /*
     if (cachedLessons && (now - lastFetchTime < 300000)) {
         return cachedLessons;
     }
+    */
+    console.log("[getLessons] Cache disabled, fetching fresh data...");
 
-    // 優先嘗試讀取本地檔案
     try {
-        const localPaths = [
-            path.join(process.cwd(), "lessons.json"),            // Production Root (functions/)
-            path.join(__dirname, "lessons.json"),                // Relative to index.js
-            path.join(__dirname, "../public/lessons.json")      // Local Emulator
-        ];
-
-        for (const lp of localPaths) {
-            if (fs.existsSync(lp)) {
-                try {
-                    const data = fs.readFileSync(lp, "utf8");
-                    const parsed = JSON.parse(data);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        console.log(`Successfully loaded ${parsed.length} lessons from: ${lp}`);
-                        cachedLessons = parsed;
-                        lastFetchTime = now;
-                        return parsed;
-                    }
-                } catch (parseErr) {
-                    console.error(`Parse error for ${lp}:`, parseErr.message);
-                }
-            }
+        if (typeof db === 'undefined') {
+            console.error("Critical: Global 'db' is undefined inside getLessons!");
+            return [];
         }
-    } catch (e) {
-        console.warn("Local lessons.json search failed:", e.message);
-    }
 
-    // 次之嘗試透過網路讀取 (作為最終保險)
-    try {
-        console.log("Fetching lessons.json from URL:", LESSONS_URL);
-        const response = await fetch(LESSONS_URL + "?t=" + now);
-        if (response.ok) {
-            const data = await response.json();
-            if (Array.isArray(data) && data.length > 0) {
-                console.log(`Successfully fetched ${data.length} lessons.`);
-                cachedLessons = data;
-                lastFetchTime = now;
-                return data;
-            }
+        // 1. Fetch from Firestore 'metadata_lessons'
+        console.log("Fetching lessons from Firestore 'metadata_lessons'...");
+        const lessonsSnap = await db.collection('metadata_lessons').get();
+        console.log(`Firestore snapshot size: ${lessonsSnap.size}`);
+
+        if (!lessonsSnap.empty) {
+            cachedLessons = lessonsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Sort manually while we still have orderWeight
+            cachedLessons.sort((a,b) => (a.orderWeight || 0) - (b.orderWeight || 0));
+
+            // Clean up internal fields AFTER sort
+            cachedLessons = cachedLessons.map(d => {
+                delete d.updatedAt;
+                delete d.orderWeight;
+                return d;
+            });
+            
+            lastFetchTime = Date.now();
+            console.log(`[getLessons] Successfully loaded ${cachedLessons.length} lessons.`);
+            return cachedLessons;
+        } else {
+            console.warn("[getLessons] Firestore 'metadata_lessons' collection is EMPTY!");
         }
-    } catch (e) {
-        console.error("Network fetch failed:", e.message);
+    } catch (err) {
+        console.error("[getLessons] Critical error:", err);
     }
 
     return cachedLessons || [];
 }
+
+// [NEW] API to expose lessons to frontend
+exports.getLessonsMetadata = onCall(async (request) => {
+    console.log("[getLessonsMetadata] Starting onCall request...");
+    const lessons = await getLessons();
+    console.log(`[getLessonsMetadata] Returning ${lessons.length} lessons to caller.`);
+    return { lessons: lessons };
+});
+
 
 exports.checkPaymentAuthorization = onRequest(async (req, res) => {
     res.set('Access-Control-Allow-Origin', '*');
@@ -612,14 +616,15 @@ exports.serveCourse = onRequest(async (req, res) => {
             return res.status(403).send("Access Denied: Token expired.");
         }
 
-        // C. Validate File Scope Dynamic Logic [REFACTORED v11.3.8]
+        // C. Validate File Scope Dynamic Logic [REFACTORED v11.3.14]
         let isAuthorizedScope = (scopePart === fileName);
         let debugInfo = "None";
+        let lessons = [];
 
         if (!isAuthorizedScope) {
             try {
-                // Use the centralized getLessons helper [FIXED v11.3.6]
-                const lessons = await getLessons();
+                // Use the centralized getLessons helper [FIXED v11.3.14]
+                lessons = await getLessons();
 
                 // Find the course by pageId/courseId or scopePart
                 const course = lessons.find(l =>
@@ -648,6 +653,24 @@ exports.serveCourse = onRequest(async (req, res) => {
 
         if (!isAuthorizedScope) {
             console.error(`Access Denied Debug: Scope=${scopePart}, File=${fileName}, Debug=${debugInfo}`);
+            
+            // [MODIFIED v11.3.14] Fallback: If scopePart is a fileName and lesson contains it, allow.
+            // This handles cases where the link in dashboard uses fileName as pageId.
+            const manualFallback = lessons && lessons.find(l => 
+                (l.classroomUrl && l.classroomUrl.endsWith(scopePart)) ||
+                (l.courseUnits && l.courseUnits.includes(scopePart))
+            );
+            if (manualFallback) {
+                const isMasterMatch = (manualFallback.classroomUrl && manualFallback.classroomUrl.endsWith(fileName));
+                const isUnitMatch = (manualFallback.courseUnits && manualFallback.courseUnits.includes(fileName));
+                if (isMasterMatch || isUnitMatch) {
+                    isAuthorizedScope = true;
+                    console.log(`[serveCourse] ${fileName} authorized via manual fallback for scope ${scopePart}`);
+                }
+            }
+        }
+
+        if (!isAuthorizedScope) {
             return res.status(403).send(`Access Denied: Token valid for ${scopePart}, but requested ${fileName}. (Debug: ${debugInfo})`);
         }
 
@@ -656,9 +679,9 @@ exports.serveCourse = onRequest(async (req, res) => {
 
         // [NEW v11.3.9] Legacy Name Fallback (01- to 00-)
         if (!fs.existsSync(filePath)) {
-            let altFileName = null;
-            if (fileName.startsWith('01-')) altFileName = fileName.replace('01-', '00-');
-            else if (fileName.startsWith('basic-01-')) altFileName = fileName.replace('basic-01-', 'basic-00-');
+            // General fallback: if a file isn't found, try to see if it's a legacy naming issue
+            if (fileName.startsWith('start-')) altFileName = fileName.replace('start-', '');
+            else if (fileName.match(/^0[1-5]-/)) altFileName = 'start-' + fileName;
 
             if (altFileName) {
                 const altPath = path.join(__dirname, 'private_courses', altFileName);
@@ -994,6 +1017,9 @@ exports.getDashboardData = onCall(async (request) => {
         // [NEW] Extract Instructor Guides for all authorized courses dynamically
         // Refactored to aggregate from all related unit files by prefix
         const privateCoursesDir = path.join(__dirname, 'private_courses');
+        console.log(`[getDashboardData] privateCoursesDir: ${privateCoursesDir}`);
+        const allFiles = fs.existsSync(privateCoursesDir) ? fs.readdirSync(privateCoursesDir) : [];
+        console.log(`[getDashboardData] Total files found: ${allFiles.length}. First 5: ${JSON.stringify(allFiles.slice(0, 5))}`);
 
         // [MODIFIED] If admin or global teacher, ensure ALL courses from lessons.json are considered for guide aggregation
         if (requesterRole === 'admin' || requesterRole === 'teacher') {
@@ -1004,28 +1030,31 @@ exports.getDashboardData = onCall(async (request) => {
             });
         }
 
-        const allFiles = fs.existsSync(privateCoursesDir) ? fs.readdirSync(privateCoursesDir) : [];
 
         for (const cid of authorizedCourseIds) {
             const course = lessons.find(l => l.courseId === cid);
             if (course && course.classroomUrl) {
                 try {
-                    const masterFile = course.classroomUrl.split('/').pop();
-                    const prefix = masterFile.split('-master-')[0];
+                    const masterFile = (course.classroomUrl || "").split('/').pop().split('?')[0];
+                    const units = Array.isArray(course.courseUnits) ? course.courseUnits : [];
+                    
+                    // [FIX] Explicitly match only files associated with THIS course to avoid category collisions (e.g. 00- series)
+                    const relatedFiles = [masterFile, ...units].filter(f => f && allFiles.includes(f));
+                    let aggregatedGuides = {};
 
-                    if (prefix) {
-                        const relatedFiles = allFiles.filter(f => f.startsWith(prefix) && f.endsWith('.html'));
-                        let aggregatedGuides = {};
-
-                        // Sort files to maintain some order (master first, then units)
+                    if (relatedFiles.length > 0) {
+                        // console.log(`[getDashboardData] Extracting logs for ${cid}. Files: ${relatedFiles.join(', ')}`);
                         relatedFiles.sort((a, b) => {
-                            if (a.includes('-master-')) return -1;
-                            if (b.includes('-master-')) return 1;
+                            if (a === masterFile) return -1;
+                            if (b === masterFile) return 1;
                             return a.localeCompare(b);
                         });
 
+                        console.log(`[getDashboardData] cid: ${cid}, relatedFiles: ${relatedFiles.join(', ')}`);
                         for (const file of relatedFiles) {
                             const filePath = path.join(privateCoursesDir, file);
+                            if (!fs.existsSync(filePath)) continue;
+
                             const html = fs.readFileSync(filePath, 'utf8');
 
                             const guideMatch = html.match(/<section id="instructor-guide"[^>]*>([\s\S]*?)<\/section>/);
@@ -1036,21 +1065,37 @@ exports.getDashboardData = onCall(async (request) => {
                                 if (guideContent) {
                                     if (!aggregatedGuides.instructor) aggregatedGuides.instructor = {};
                                     aggregatedGuides.instructor[file] = guideContent;
+                                    console.log(`[getDashboardData] ✅ Found Instructor Guide for ${file} in ${cid}`);
+                                } else {
+                                    console.log(`[getDashboardData] ⚠️ Instructor Guide for ${file} in ${cid} is EMPTY`);
                                 }
+                            } else {
+                                console.log(`[getDashboardData] ❌ No Instructor Guide match for ${file} in ${cid}`);
                             }
+
                             if (assignMatch && assignMatch[1]) {
                                 const assignContent = assignMatch[1].trim();
                                 if (assignContent) {
                                     if (!aggregatedGuides.assignment) aggregatedGuides.assignment = {};
                                     aggregatedGuides.assignment[file] = assignContent;
+                                    console.log(`[getDashboardData] ✅ Found Assignment Guide for ${file} in ${cid}`);
+                                } else {
+                                    console.log(`[getDashboardData] ⚠️ Assignment Guide for ${file} in ${cid} is EMPTY`);
                                 }
+                            } else {
+                                console.log(`[getDashboardData] ❌ No Assignment Guide match for ${file} in ${cid}`);
                             }
                         }
 
                         if (Object.keys(aggregatedGuides).length > 0) {
                             if (!courseConfigs[cid]) courseConfigs[cid] = {};
-                            courseConfigs[cid].instructorGuide = aggregatedGuides.instructor || {};
-                            courseConfigs[cid].assignmentGuide = aggregatedGuides.assignment || {};
+                            // [MERGE] Use Object.assign to preserve existing properties from Firestore
+                            if (aggregatedGuides.instructor) {
+                                courseConfigs[cid].instructorGuide = Object.assign({}, courseConfigs[cid].instructorGuide || {}, aggregatedGuides.instructor);
+                            }
+                            if (aggregatedGuides.assignment) {
+                                courseConfigs[cid].assignmentGuide = Object.assign({}, courseConfigs[cid].assignmentGuide || {}, aggregatedGuides.assignment);
+                            }
                         }
                     }
                 } catch (e) {
@@ -1810,14 +1855,15 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
 
         for (const orderDoc of ordersSnapshot.docs) {
             const order = orderDoc.data();
-            if (!order.referralMentor) continue;
+            // [MOD] Default to admin if no mentor is provided
+            const initialMentor = (order.referralMentor && order.referralMentor.trim()) ? order.referralMentor.trim() : "info@vibe-coding.tw";
 
             const amount = order.amount;
             const orderId = orderDoc.id;
             const studentUid = order.uid;
 
             // Recursive Chain Calculation
-            let currentMentorEmail = order.referralMentor;
+            let currentMentorEmail = initialMentor;
             let currentShare = amount * 0.2; // First level: 20%
             let level = 1;
 
@@ -1861,3 +1907,72 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
         console.error("Error in calculateMonthlySharing:", error);
     }
 });
+
+exports.debugGetDashboard = onCall(async (request) => {
+    const lessons = await getLessons();
+    const cid = "72uyaadl";
+    const course = lessons.find(l => l.courseId === cid);
+    const privateCoursesDir = path.join(__dirname, 'private_courses');
+    const allFiles = fs.existsSync(privateCoursesDir) ? fs.readdirSync(privateCoursesDir) : [];
+    
+    let result = { cid, courseFound: !!course, files: [] };
+    
+    if (course) {
+        const masterFile = (course.classroomUrl || "").split('/').pop().split('?')[0];
+        const units = Array.isArray(course.courseUnits) ? course.courseUnits : [];
+        const relatedFiles = [masterFile, ...units].filter(f => f && allFiles.includes(f));
+        result.relatedFiles = relatedFiles;
+        result.allFilesCount = allFiles.length;
+        
+        let aggregatedGuides = {};
+        for (const file of relatedFiles) {
+            const filePath = path.join(privateCoursesDir, file);
+            if (!fs.existsSync(filePath)) continue;
+            const html = fs.readFileSync(filePath, 'utf8');
+            const guideMatch = html.match(/<section id="instructor-guide"[^>]*>([\s\S]*?)<\/section>/);
+            const assignMatch = html.match(/<section id="assignment-guide"[^>]*>([\s\S]*?)<\/section>/);
+            
+            result.files.push({ 
+                file, 
+                guideFound: !!guideMatch, 
+                assignFound: !!assignMatch,
+                guideLength: guideMatch ? guideMatch[1].length : 0
+            });
+
+            if (guideMatch && guideMatch[1]) {
+                if (!aggregatedGuides.instructor) aggregatedGuides.instructor = {};
+                aggregatedGuides.instructor[file] = guideMatch[1].trim();
+            }
+        }
+        result.aggregatedGuides = aggregatedGuides;
+    }
+    return result;
+});
+
+exports.triggerSeedFirestore = onRequest(async (req, res) => {
+    try {
+        console.log("[Seed] Starting Firestore seeding from reconstructed_lessons.json...");
+        const lessons = require('./reconstructed_lessons.json');
+        
+        // 1. Clear existing documents
+        console.log("[Seed] Clearing existing metadata_lessons collection...");
+        const snapshot = await db.collection('metadata_lessons').get();
+        const deleteBatch = db.batch();
+        snapshot.docs.forEach(doc => {
+            deleteBatch.delete(doc.ref);
+        });
+        await deleteBatch.commit();
+        console.log(`[Seed] Deleted ${snapshot.size} stale documents.`);
+
+        const results = [];
+        for (const lesson of lessons) {
+            await db.collection('metadata_lessons').doc(lesson.courseId).set(lesson);
+            results.push(lesson.courseId);
+        }
+        res.status(200).send({ success: true, count: lessons.length, seeded: results });
+    } catch (err) {
+        console.error("[Seed] Failed:", err);
+        res.status(500).send({ success: false, error: err.message });
+    }
+});
+

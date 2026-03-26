@@ -94,10 +94,17 @@ onAuthStateChanged(auth, async (user) => {
 
 async function loadLessons() {
     try {
-        const res = await fetch('lessons.json');
-        const lessons = await res.json();
-        allLessons = lessons;
-        lessons.forEach(l => {
+        // [MOD] Use centralized Firestore-backed fetch from course-shared.js
+        if (typeof vibeFetchLessons === 'function') {
+            allLessons = await vibeFetchLessons();
+        } else {
+            // Fallback for standalone dev
+            const res = await fetch('lessons.json');
+            allLessons = await res.json();
+        }
+        
+        console.log(`[Dashboard] Loaded ${allLessons.length} lessons from metadata source.`);
+        allLessons.forEach(l => {
             lessonsMap[l.courseId] = l.title;
         });
     } catch (e) {
@@ -692,6 +699,8 @@ function resolveAssignmentGuide(data, filterCourseId, filterUnitId) {
             guideData.assignmentGuides[cleanUnitId] ||
             guideData.assignmentGuides[cleanUnitId + '.html'] || "";
 
+        console.log(`[Debug] Guide resolution for ${filterUnitId}: ${assignmentGuide ? 'Found by FileName/CleanID' : 'Not Found by ID'}`);
+
         if (!assignmentGuide.trim()) {
             const lesson = allLessons.find(l => l.courseId === filterCourseId);
             const units = lesson?.courseUnits || [];
@@ -699,10 +708,11 @@ function resolveAssignmentGuide(data, filterCourseId, filterUnitId) {
             // Search using clean names
             const unitIdx = units.findIndex(u => u.replace('.html', '') === cleanUnitId);
             if (unitIdx !== -1) {
-                assignmentGuide = (guideData.assignmentGuides[unitIdx + 1] || "").trim();
+                const unitNum = unitIdx + 1;
+                assignmentGuide = (guideData.assignmentGuides[unitNum] || "").trim();
+                console.log(`[Debug] Fallback guide for index ${unitNum}: ${assignmentGuide ? 'Found' : 'Not Found'}`);
             }
         }
-        console.log(`[Debug] Guide resolution for ${filterUnitId}: ${assignmentGuide ? 'Found' : 'Not Found'}`);
         return assignmentGuide;
     } catch (err) {
         console.error("[Debug] Error resolving assignment guide:", err);
@@ -1713,8 +1723,24 @@ function robustExtractGuideSegments(instructorInput, assignmentInput = null) {
             if (typeof content !== 'string') return;
             result.assignmentGuides[fileName] = content;
             result.assignmentGuides[fileName.replace('.html', '')] = content;
+
+            // Optional: Map numeric keys if the fileName follows a numeric pattern
+            const numMatch = fileName.match(/^(?:basic-|adv-)?(\d+)-unit-/);
+            if (numMatch) {
+                const num = parseInt(numMatch[1]);
+                result.assignmentGuides[num] = content;
+            }
         });
     }
+
+    // 3. Process Segment ID maps (Optional mapping for index fallbacks)
+    Object.entries(result.segments).forEach(([fileName, content]) => {
+        const numMatch = fileName.match(/^(?:basic-|adv-)?(\d+)-unit-/);
+        if (numMatch) {
+            const num = parseInt(numMatch[1]);
+            result.segments[num] = content;
+        }
+    });
 
     return result;
 }

@@ -13,7 +13,7 @@
 <body id="page-basic" class="flex flex-col min-h-screen">
     <div id="nav-placeholder"></div>
     <script src="js/nav-component.js?v=3"></script>
-    <script src="js/course-shared.js?v=3"></script> <!-- Added Shared Logic -->
+    <script src="js/course-shared-v4.js"></script> <!-- Added Shared Logic -->
     <script>
         renderNav('.', { showAuth: true });
     </script>
@@ -60,8 +60,7 @@
         });
 
         // 讀取 JSON 資料
-        fetch('./lessons.json?t=' + new Date().getTime())
-            .then(response => response.json())
+        vibeFetchLessons()
             .then(data => {
                 renderLessons(data, 'basic');
             })
@@ -170,6 +169,12 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const functions = getFunctions(app, 'asia-east1');
+
+        // Expose to window for course-shared.js vibeFetchLessons
+        window.vibeApp = app;
+        window.getFunctions = getFunctions;
+        window.httpsCallable = httpsCallable;
+
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
         const CART_URL = 'cart.html';
         const AUTH_URL = '/auth.html?v=' + new Date().getTime(); // Prevent cache

@@ -16,7 +16,7 @@ This document outlines the core principles and standards for the Vibe Coding pla
 
 ## 2. Course Architecture
 - **Navigation Hierarchy**: Use `js/nav-component.js` for global navigation.
-- **Unit Structure**: Every unit file (`01-unit-*.html`) must include:
+- **Unit Structure**: Every unit file (`01-unit-` to `04-unit-*.html`) must include:
     - **Hero Section**: With a high-impact background and clear title.
     - **Interactive Lab**: Visual simulations (OAuth, BLE, etc.) to explain complex concepts.
     - **Practical Mission**: Actionable "角色扮演" (Role-playing) tasks with clear scoring benchmarks.

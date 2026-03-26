@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網頁版代理人 - AI 代理人專題 | Vibe Coding</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50 text-gray-800 leading-relaxed font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-950 via-blue-950 to-slate-950 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="header-overlay absolute inset-0 bg-gradient-to-r from-indigo-900/90 to-blue-800/90 mix-blend-multiply">
+        </div>
+        <!-- Decorative background elements -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 opacity-20">
+            <div
+                class="absolute top-10 left-10 w-64 h-64 bg-indigo-500 rounded-full mix-blend-overlay filter blur-3xl animate-pulse">
+            </div>
+            <div class="absolute bottom-10 right-10 w-80 h-80 bg-blue-500 rounded-full mix-blend-overlay filter blur-3xl animate-pulse"
+                style="animation-delay: 2s"></div>
+        </div>
+
+        <div class="container mx-auto px-4 relative z-10 pt-10 pb-10 text-center text-white">
+            <div
+                class="badge-header inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/20 text-blue-200 border border-blue-400/30 backdrop-blur-sm mb-8 text-sm font-semibold tracking-wide uppercase">
+                <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                Browser-Native Agent
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight font-[Outfit]">
+                網頁版代理人環境
+            </h1>
+            <p class="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed mb-10">
+                你不一定需要安裝桌機版 VS Code，GitHub 的 AI Agent 能力已經全面覆蓋 <span class="text-white font-bold underline decoration-blue-500 font-[Outfit]">Web 端</span>。
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', '#')"
+                    class="resource-btn bg-red-600 hover:bg-red-500 text-white px-8 py-4 rounded-full flex items-center gap-3 shadow-lg shadow-red-500/30 font-bold transition-all">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', '#')"
+                    class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-8 py-4 rounded-full flex items-center gap-3 backdrop-blur-sm font-bold transition-all">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20 max-w-5xl">
+
+        <!-- 1. Copilot Workspace -->
+        <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
+            <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+            <div class="p-8 md:p-12">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-2xl shadow-xl">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-bold text-slate-800 tracking-tight font-[Outfit]">GitHub Copilot Workspace</h2>
+                        <p class="text-slate-500 text-sm mt-1">原生 Web 代理環境：以「任務」為中心的平台</p>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6 mb-10">
+                    <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-blue-400 transition-colors">
+                        <i class="fa-solid fa-map text-2xl text-blue-500 mb-4"></i>
+                        <h3 class="font-bold mb-2 font-[Outfit]">規劃 (Plan)</h3>
+                        <p class="text-sm text-slate-500">代理人會讀取整個倉庫，針對你的需求寫出一份實施計畫。</p>
+                    </div>
+                    <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-indigo-400 transition-colors">
+                        <i class="fa-solid fa-code-branch text-2xl text-blue-500 mb-4"></i>
+                        <h3 class="font-bold mb-2 font-[Outfit]">執行 (Implement)</h3>
+                        <p class="text-sm text-slate-500">確認計畫後，它會自動在雲端環境中修改多個檔案。</p>
+                    </div>
+                    <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-cyan-400 transition-colors">
+                        <i class="fa-solid fa-vial-circle-check text-2xl text-blue-500 mb-4"></i>
+                        <h3 class="font-bold mb-2 font-[Outfit]">驗證 (Verify)</h3>
+                        <p class="text-sm text-slate-500">自動執行測試，如果失敗，代理人會自行修復錯誤。</p>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col md:flex-row items-center gap-8 bg-blue-600 rounded-2xl p-8 text-white shadow-lg shadow-blue-200">
+                    <div class="flex-grow">
+                        <h4 class="text-xl font-bold mb-2 font-[Outfit]">核心工作流：From Issue to PR</h4>
+                        <p class="text-sm text-blue-100">一旦任務完成並通過驗證，Agent 會直接幫你開啟 Pull Request。它是目前自動化程度最高的 Web 編程環境。</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <a href="https://copilot-workspace.github.next.com/" target="_blank" class="px-6 py-3 bg-white text-blue-600 rounded-full font-bold shadow-lg hover:scale-110 transition inline-block">立即前往 <i class="fa-solid fa-arrow-up-right-from-square ml-2"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Web Chat + Codespaces -->
+        <div class="grid md:grid-cols-2 gap-8 mb-8">
+            <!-- Web Chat -->
+            <div class="glass-card bg-white rounded-2xl p-8 shadow-xl border border-slate-100 flex flex-col">
+                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-xl mb-6 shadow-sm">
+                    <i class="fa-solid fa-comments"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-4 font-[Outfit]">GitHub.com Copilot Chat</h3>
+                <p class="text-sm text-slate-600 mb-6 flex-grow leading-relaxed">
+                    直接在倉庫網頁使用對話。最新功能支援 <strong>Tool Calls</strong>，這意味著 Agent 可以調用工具來搜尋程式碼、分析檔案結構。
+                </p>
+                <div class="pt-4 border-t border-slate-50">
+                    <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full inline-block">按下 Ctrl+B 啟動</span>
+                </div>
+            </div>
+
+            <!-- Codespaces -->
+            <div class="glass-card bg-white rounded-2xl p-8 shadow-xl border border-slate-100 flex flex-col">
+                <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center text-xl mb-6 shadow-sm">
+                    <i class="fa-solid fa-terminal"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-4 font-[Outfit]">github.dev / Codespaces</h3>
+                <p class="text-sm text-slate-600 mb-6 flex-grow leading-relaxed">
+                    這是運行在雲端的「完整開發環境」。你可以在 <strong>Terminal</strong> 中安裝套件、執行程式碼，並使用完整的 <strong>Agent Mode</strong>。
+                </p>
+                <div class="pt-4 border-t border-slate-50">
+                    <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full inline-block">在倉庫頁按 "." (句點) 進入</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Actions Section -->
+        <div class="glass-card bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden mb-8">
+            <div class="p-1 bg-gradient-to-r from-orange-500 to-amber-400"></div>
+            <div class="p-8 md:p-12">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 bg-orange-600 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg">
+                        <i class="fa-solid fa-gears"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-800 font-[Outfit]">GitHub Agentic Workflows (自動化)</h2>
+                </div>
+                <p class="text-slate-600 mb-8 font-light leading-relaxed">
+                    讓 AI Agent 變成一個自動運行的後台機器人。例如：直接指派 Issue 給 <code>@copilot</code>，它會自動開分支、寫程式碼並提交 PR。
+                </p>
+                
+                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-inner">
+                    <div class="flex items-center gap-3 text-xs text-slate-500 mb-4 font-mono">
+                        <i class="fa-solid fa-file-code"></i> .github/workflows/agent.yml
+                    </div>
+                    <code class="text-xs text-blue-300 block whitespace-pre overflow-x-auto leading-relaxed">
+# 範例：當 Issue 標記為 'ai-fix' 時啟動 Agent
+on:
+  issues:
+    types: [labeled]
+jobs:
+  agentic-fix:
+    if: github.event.label.name == 'ai-fix'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Copilot Agent
+        run: copilot-agent --issue ${{ github.event.issue.number }}
+                    </code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Comparison -->
+        <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden mb-16">
+            <div class="p-8 md:p-12">
+                <h2 class="text-3xl font-bold text-slate-800 mb-8 text-center font-[Outfit]">Web vs. Desktop 功能對照</h2>
+                <div class="overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
+                    <table class="w-full text-left bg-white">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 font-bold text-slate-800 text-sm">功能</th>
+                                <th class="px-6 py-4 font-bold text-slate-700 text-sm">GitHub.com (Web Chat)</th>
+                                <th class="px-6 py-4 font-bold text-blue-600 text-sm">Copilot Workspace</th>
+                                <th class="px-6 py-4 font-bold text-indigo-600 text-sm">VS Code (Desktop)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs">
+                            <tr>
+                                <td class="px-6 py-4 font-bold text-slate-800">跨檔案編輯</td>
+                                <td class="px-6 py-4 text-slate-500">僅限建議</td>
+                                <td class="px-6 py-4 font-bold text-blue-600">自動規劃與執行</td>
+                                <td class="px-6 py-4 font-bold text-indigo-600">Agent Mode 自助修改</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 font-bold text-slate-800">執行指令 (Terminal)</td>
+                                <td class="px-6 py-4 text-slate-500">不支援</td>
+                                <td class="px-6 py-4 font-bold text-blue-600">雲端執行與驗證</td>
+                                <td class="px-6 py-4 font-bold text-indigo-600">本地終端機執行</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assignments Section -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold text-slate-800 text-center mb-12 font-[Outfit]">🛠️ 課後練習與挑戰</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- HW 2-1 -->
+                <div onclick="openSubmissionModal('ai-agent-task-2-1', '作業 2-1: Copilot Workspace 任務')"
+                    class="bg-white rounded-2xl shadow-md border border-slate-100 p-8 cursor-pointer relative group hover:shadow-2xl transition-all duration-300 flex flex-col h-full">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-xl font-bold mb-6">2-1</div>
+                    <h3 class="font-bold text-xl mb-3 text-slate-800">Copilot Workspace 任務</h3>
+                    <p class="text-sm text-slate-500 mb-6 leading-relaxed flex-grow">在 Workspace 平台描述一個 Functional Requirement，並讓它自動產生 PR。</p>
+                    <div class="absolute inset-0 bg-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
+                        <span class="bg-white text-blue-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">📤 點擊繳交作業</span>
+                    </div>
+                </div>
+
+                <!-- HW 2-2 -->
+                <div onclick="openSubmissionModal('ai-agent-task-2-2', '作業 2-2: 自動化 Agent Workflow')"
+                    class="bg-white rounded-2xl shadow-md border border-slate-100 p-8 cursor-pointer relative group hover:shadow-2xl transition-all duration-300 flex flex-col h-full">
+                    <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center text-xl font-bold mb-6">2-2</div>
+                    <h3 class="font-bold text-xl mb-3 text-slate-800">自動化 Agent Workflow</h3>
+                    <p class="text-sm text-slate-500 mb-6 leading-relaxed flex-grow">設定一個 GitHub Action，當下標籤時自動啟動 Copilot 進行代碼檢查。</p>
+                    <div class="absolute inset-0 bg-orange-600/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
+                        <span class="bg-white text-orange-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">📤 點擊繳交作業</span>
+                    </div>
+                </div>
+
+                <!-- HW 2-3 -->
+                <div onclick="openSubmissionModal('ai-agent-task-2-3', '作業 2-3: 雲端 IDE 免安裝開發')"
+                    class="bg-white rounded-2xl shadow-md border border-slate-100 p-8 cursor-pointer relative group hover:shadow-2xl transition-all duration-300 flex flex-col h-full">
+                    <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center text-xl font-bold mb-6">2-3</div>
+                    <h3 class="font-bold text-xl mb-3 text-slate-800">雲端 IDE 免安裝開發</h3>
+                    <p class="text-sm text-slate-500 mb-6 leading-relaxed flex-grow">在 `github.dev` 中使用網頁版對話功能完成一個跨檔案的代碼重構。</p>
+                    <div class="absolute inset-0 bg-indigo-600/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
+                        <span class="bg-white text-indigo-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">📤 點擊繳交作業</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Logic Script -->
+    <script src="/js/course-shared.js"></script>
+
+    <!-- Dashboard Guides (Hidden) -->
+    <section id="assignment-guide" class="hidden">
+        <h2>作業指引 (Assignment Guide)</h2>
+        <div class="space-y-6">
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h3 class="font-bold text-blue-800">1. GitHub Classroom 設定</h3>
+                <p class="text-sm">請將 <code>web-agent-workspace-lab</code> 連結至課程儀表板。學生需透過此分發倉庫實作 GitHub Copilot Workspace 的 Plan 描述與 PR 產生流程。</p>
+            </div>
+            <div class="bg-indigo-50 p-4 rounded-lg">
+                <h3 class="font-bold text-indigo-800">2. 翻轉課堂策略</h3>
+                <ul class="list-disc list-inside text-sm">
+                    <li>課前預習：確保 GitHub 帳號具備 Copilot 權限，並能在瀏覽器直接開啟 Workspace 頁面。</li>
+                    <li>課中實作：引導學生針對同一個 Issue，嘗試不同的自然語言描述，觀察 Agent 產生的程式碼差異。</li>
+                </ul>
+            </div>
+            <div class="bg-white p-4 border border-gray-200 rounded-lg">
+                <h3 class="font-bold mb-2 text-sm text-slate-400 font-mono">3. 單元任務 (Unit Tasks)</h3>
+                <table class="w-full text-xs">
+                    <thead class="bg-gray-100 text-left">
+                        <tr>
+                            <th class="p-2">任務說明</th>
+                            <th class="p-2">配分</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="p-2">【作業 2-1】透過 Workspace 成功產生一個包含 3 個以上檔案修改的 PR</td>
+                            <td class="p-2">40 pts</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">【作業 2-2】配置 GitHub Actions 並成功觸發 Agent 掃描紀錄</td>
+                            <td class="p-2">30 pts</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">【作業 2-3】在 github.dev 中完成一段完整的代碼重構與 Commit</td>
+                            <td class="p-2">30 pts</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="instructor-guide" class="hidden">
+        <h2>GitHub Classroom 教學引導方針</h2>
+        <div class="classroom-guide text-sm space-y-4">
+            <p><strong>平台設定：</strong></p>
+            <p>Workspace 目前仍屬 Beta 功能，若學生無法進入，請引導其檢查 GitHub Next 的註冊狀態。</p>
+            <p><strong>教學重點：</strong></p>
+            <p>強調「由高階描述 (Intent) 驅動代碼 (Implementation)」的思維轉換。</p>
+        </div>
+    </section>
+    <footer class="bg-slate-50 py-12 border-t border-slate-200">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-400 font-medium font-[Outfit]">只要有瀏覽器，你就是雲端上的最強開發者！</p>
+            <p class="text-slate-300 text-xs mt-4">&copy; 2025 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>
