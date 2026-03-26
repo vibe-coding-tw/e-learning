@@ -1001,22 +1001,20 @@ exports.getDashboardData = onCall(async (request) => {
                 const isAuthorized = requesterRole === 'admin' || (Array.isArray(cfg.authorizedTeachers) && cfg.authorizedTeachers.includes(email));
                 if (isAuthorized) {
                     const docId = doc.id;
-                    // Check if docId is a unit filename (e.g. .html) or a course UUID
-                    if (docId.includes('.html')) {
-                        let searchId = legacyMap[docId] || docId;
+                    const mappedId = legacyMap[docId] || docId;
 
+                    if (docId.includes('.html')) {
                         // Find parent course for this unit
-                        const parentCourse = lessons.find(l => l.courseUnits && l.courseUnits.includes(searchId));
+                        const parentCourse = lessons.find(l => l.courseUnits && l.courseUnits.includes(mappedId));
                         if (parentCourse && !authorizedCourseIds.includes(parentCourse.courseId)) {
                             authorizedCourseIds.push(parentCourse.courseId);
                         }
                     } else {
-                        const mappedId = legacyMap[docId] || docId;
                         if (!authorizedCourseIds.includes(mappedId)) {
                             authorizedCourseIds.push(mappedId);
                         }
                     }
-                    courseConfigs[docId] = cfg;
+                    courseConfigs[mappedId] = cfg;
                 }
             } catch (err) {
                 console.error(`Error processing config for course ${doc.id}:`, err);
