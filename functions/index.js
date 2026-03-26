@@ -89,6 +89,41 @@ function getCurrentTime() {
     return `${date.getFullYear()}/${('0' + (date.getMonth() + 1)).slice(-2)}/${('0' + date.getDate()).slice(-2)} ${('0' + date.getHours()).slice(-2)}:${('0' + date.getMinutes()).slice(-2)}:${('0' + date.getSeconds()).slice(-2)}`;
 }
 
+function extractHiddenSectionContent(html, sectionId) {
+    if (!html || !sectionId) return "";
+
+    const openTagRegex = new RegExp(`<section\\b[^>]*\\bid=["']${sectionId}["'][^>]*>`, 'i');
+    const openMatch = openTagRegex.exec(html);
+    if (!openMatch) return "";
+
+    const sectionStart = openMatch.index;
+    let cursor = sectionStart;
+    let depth = 0;
+    const sectionTagRegex = /<\/?section\b[^>]*>/gi;
+    let match;
+
+    while ((match = sectionTagRegex.exec(html.slice(cursor))) !== null) {
+        const tag = match[0];
+        const absoluteIndex = cursor + match.index;
+        const isClosingTag = /^<\//.test(tag);
+
+        if (!isClosingTag) {
+            depth += 1;
+            if (depth === 1) {
+                cursor = absoluteIndex + tag.length;
+            }
+        } else {
+            depth -= 1;
+            if (depth === 0) {
+                return html.slice(cursor, absoluteIndex).trim();
+            }
+            if (depth < 0) break;
+        }
+    }
+
+    return "";
+}
+
 // ==========================================
 // 1. 建立訂單 (initiatePayment)
 // ==========================================
@@ -1068,11 +1103,10 @@ exports.getDashboardData = onCall(async (request) => {
 
                             const html = fs.readFileSync(filePath, 'utf8');
 
-                            const guideMatch = html.match(/<section id="instructor-guide"[^>]*>([\s\S]*?)<\/section>/);
-                            const assignMatch = html.match(/<section id="assignment-guide"[^>]*>([\s\S]*?)<\/section>/);
+                            const guideContent = extractHiddenSectionContent(html, 'instructor-guide');
+                            const assignContent = extractHiddenSectionContent(html, 'assignment-guide');
 
-                            if (guideMatch && guideMatch[1]) {
-                                const guideContent = guideMatch[1].trim();
+                            if (guideContent) {
                                 if (guideContent) {
                                     if (!aggregatedGuides.instructor) aggregatedGuides.instructor = {};
                                     aggregatedGuides.instructor[file] = guideContent;
@@ -1084,8 +1118,7 @@ exports.getDashboardData = onCall(async (request) => {
                                 console.log(`[getDashboardData] ❌ No Instructor Guide match for ${file} in ${cid}`);
                             }
 
-                            if (assignMatch && assignMatch[1]) {
-                                const assignContent = assignMatch[1].trim();
+                            if (assignContent) {
                                 if (assignContent) {
                                     if (!aggregatedGuides.assignment) aggregatedGuides.assignment = {};
                                     aggregatedGuides.assignment[file] = assignContent;
@@ -1842,6 +1875,73 @@ exports.verifyPromoCode = onCall(async (request) => {
     }
 });
 
+// 11.1.5 生成個人推薦代碼 (generatePromoCode)
+exports.generatePromoCode = onCall(async (request) => {
+    const { auth, data } = request;
+    if (!auth) throw new HttpsError('unauthenticated', '請先登入');
+
+    const db = admin.firestore();
+    const uid = auth.uid;
+    const email = auth.token.email;
+
+    try {
+        // 1. Verify Role (Must be admin or teacher)
+        const userDoc = await db.collection('users').doc(uid).get();
+        if (!userDoc.exists) throw new HttpsError('not-found', '用戶資料不存在');
+        const role = userDoc.data()?.role;
+        if (role !== 'admin' && role !== 'teacher') {
+            throw new HttpsError('permission-denied', '只有老師可以生成推廣代碼');
+        }
+
+        // 2. Check if already has a code
+        const existingSnap = await db.collection('promo_codes').where('mentorEmail', '==', email).get();
+        if (!existingSnap.empty) {
+            return { success: true, promoCode: existingSnap.docs[0].id, message: '您已有現成的代碼' };
+        }
+
+        // 3. Generate a Unique Code
+        // Formula: TEACHER_{Random4}
+        const generateId = () => {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Avoid ambiguous chars
+            let result = '';
+            for (let i = 0; i < 6; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        };
+
+        let newCode;
+        let isUnique = false;
+        let attempts = 0;
+
+        while (!isUnique && attempts < 5) {
+            newCode = `VIBE-${generateId()}`;
+            const checkDoc = await db.collection('promo_codes').doc(newCode).get();
+            if (!checkDoc.exists) isUnique = true;
+            attempts++;
+        }
+
+        if (!isUnique) throw new HttpsError('internal', '無法生成唯一代碼，請稍後再試');
+
+        // 4. Save to Firestore
+        await db.collection('promo_codes').doc(newCode).set({
+            mentorEmail: email,
+            mentorName: userDoc.data().displayName || email,
+            isActive: true,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            source: 'dashboard_generated'
+        });
+
+        console.log(`[Promo] Generated code ${newCode} for ${email}`);
+
+        return { success: true, promoCode: newCode };
+
+    } catch (e) {
+        console.error("[Promo] Error:", e);
+        throw new HttpsError('internal', e.message);
+    }
+});
+
 // 11.2 每月計算分潤 (Scheduled Job - 1st of each month)
 exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
     const db = admin.firestore();
@@ -1948,4 +2048,3 @@ exports.triggerSeedFirestore = onRequest(async (req, res) => {
         res.status(500).send({ success: false, error: err.message });
     }
 });
-

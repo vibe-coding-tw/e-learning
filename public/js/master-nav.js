@@ -98,16 +98,16 @@ window.openDashboardModal = function (courseParam) {
         try {
             // Use absolute URL resolution to ensure correct parsing
             const absoluteSrc = new URL(iframe.src, window.location.href).href;
-            finalUnitId = absoluteSrc.split('/').pop().split('?')[0];
+            finalUnitId = absoluteSrc.split('/').pop().split('?')[0].split('#')[0];
             console.log("[MasterNav] Detected unit from iframe:", finalUnitId);
         } catch (e) {
             console.error("[MasterNav] Iframe URL parsing failed:", e);
-            finalUnitId = iframe.src.split('/').pop().split('?')[0];
+            finalUnitId = iframe.src.split('/').pop().split('?')[0].split('#')[0];
         }
     }
 
     if (!finalUnitId) {
-        finalUnitId = window.location.pathname.split('/').pop();
+        finalUnitId = window.location.pathname.split('/').pop().split('#')[0];
         console.log("[MasterNav] Fallback to pathname unitId:", finalUnitId);
     }
 

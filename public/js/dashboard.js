@@ -244,6 +244,11 @@ function resolveCourseIdFromUrlParam(paramId) {
     return paramId;
 }
 
+function normalizeUnitId(unitId) {
+    if (!unitId || typeof unitId !== 'string') return '';
+    return unitId.split('#')[0].split('?')[0].trim();
+}
+
 // --- Rendering ---
 function renderStudentDashboard(data, filterUnitId = null) {
     loadingState.classList.add('hidden');
@@ -412,6 +417,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
 }
 
 function renderAdminDashboard(data, filterUnitId = null) {
+    filterUnitId = normalizeUnitId(filterUnitId);
     loadingState.classList.add('hidden');
     dashboardContent.classList.remove('hidden');
 
@@ -700,6 +706,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
 // Helper: Resolve assignment guide for a unit
 function resolveAssignmentGuide(data, filterCourseId, filterUnitId) {
     if (!filterCourseId || !filterUnitId) return "";
+    filterUnitId = normalizeUnitId(filterUnitId);
 
     try {
         const rawInstructor = (data.courseConfigs && data.courseConfigs[filterCourseId]) ? data.courseConfigs[filterCourseId].instructorGuide : null;
@@ -963,13 +970,13 @@ window.switchTab = function (tabName) {
     // [NEW] Trigger specific tab data loading
     if (tabName === 'settings') {
         const urlParams = new URLSearchParams(window.location.search);
-        const filterUnitId = urlParams.get('unitId');
+        const filterUnitId = normalizeUnitId(urlParams.get('unitId'));
         console.log("[Dashboard] Rendering Settings for unitId:", filterUnitId);
         renderSettingsTab(filterUnitId);
     }
     if (tabName === 'assignments') {
         const urlParams = new URLSearchParams(window.location.search);
-        const filterUnitId = urlParams.get('unitId');
+        const filterUnitId = normalizeUnitId(urlParams.get('unitId'));
         let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
 
         let displayAssignments = dashboardData.assignments;
@@ -1519,6 +1526,7 @@ function isUserAuthorizedForUnit(fileName, courseId, email) {
 }
 
 async function renderSettingsTab(filterUnitId = null) {
+    filterUnitId = normalizeUnitId(filterUnitId);
     console.log("[Settings] renderSettingsTab invoked with filter:", filterUnitId);
     
     const assignmentContainer = document.getElementById('assignment-setting');
@@ -1602,7 +1610,7 @@ async function renderSettingsTab(filterUnitId = null) {
                 const isMaster = f.includes('-master-');
                 if (isMaster && filterUnitId !== f && filterUnitId !== null) return false;
                 if (filterUnitId && !filterUnitId.includes('-master-')) {
-                    return f.replace('.html', '') === filterUnitId.replace('.html', '');
+                    return f.replace('.html', '') === normalizeUnitId(filterUnitId).replace('.html', '');
                 }
                 return true;
             });
@@ -1843,7 +1851,16 @@ function renderEarningsTab(data) {
     if (!totalEarningsEl || !promoCodeEl || !tableBody) return;
 
     // 1. Display Promo Code
-    promoCodeEl.innerText = data.myPromoCode || '尚無代碼';
+    if (!data.myPromoCode) {
+        promoCodeEl.innerHTML = `
+            <span class="text-gray-400 text-lg block mb-2">尚無代碼</span>
+            <button onclick="handleGeneratePromoCode()" id="btn-generate-promo" class="text-sm bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg shadow-sm transition">
+                🚀 立即生成推薦代碼
+            </button>
+        `;
+    } else {
+        promoCodeEl.innerText = data.myPromoCode;
+    }
 
     // 2. Display Earnings Ledger
     const earnings = data.earnings || [];
@@ -1867,4 +1884,35 @@ function renderEarningsTab(data) {
     }
 
     totalEarningsEl.innerText = total.toLocaleString();
+}
+
+// --- Promo Code Generation ---
+async function handleGeneratePromoCode() {
+    const btn = document.getElementById('btn-generate-promo');
+    const displayEl = document.getElementById('display-promo-code');
+    if (!btn || !confirm('確定要生成您的專屬推薦代碼嗎？生成後即可分享給學生以追蹤分潤。')) return;
+
+    try {
+        btn.disabled = true;
+        btn.innerText = '正在生成...';
+        
+        const generatePromoCode = httpsCallable(functions, 'generatePromoCode');
+        const result = await generatePromoCode();
+        
+        if (result.data.success) {
+            displayEl.innerHTML = `<span class="text-emerald-600 animate-pulse">${result.data.promoCode}</span>`;
+            alert(`生成成功！您的推薦代碼是：${result.data.promoCode}\n頁面即將重新載入以更新數據。`);
+            // Refresh dashboard data to update everything
+            window.location.reload();
+        } else {
+            alert('生成失敗：' + (result.data.message || '未知錯誤'));
+            btn.disabled = false;
+            btn.innerText = '🚀 立即生成推薦代碼';
+        }
+    } catch (err) {
+        console.error("[Promo] Generation error:", err);
+        alert('生成代碼時發生錯誤：' + err.message);
+        btn.disabled = false;
+        btn.innerText = '🚀 立即生成推薦代碼';
+    }
 }
