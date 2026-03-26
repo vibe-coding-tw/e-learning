@@ -41,12 +41,12 @@
                     class="text-white font-bold underline decoration-indigo-500 font-[Outfit]">AI Agent</span>。
             </p>
 
-            <div class="flex flex-wrap justify-center gap-4 mb-16">
-                <button onclick="enterMediaMode('video')"
+            <div class="flex flex-wrap justify-center gap-4 mb-8">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
                     class="resource-btn bg-red-600 hover:bg-red-500 text-white px-8 py-4 rounded-full flex items-center gap-3 shadow-lg shadow-red-500/30 font-bold transition-all">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="enterMediaMode('doc')"
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
                     class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-8 py-4 rounded-full flex items-center gap-3 backdrop-blur-sm font-bold transition-all">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -54,7 +54,7 @@
         </div>
     </header>
 
-    <main class="container mx-auto px-4 mt-8 relative z-20 pb-20 max-w-5xl">
+    <main class="container mx-auto px-6 py-12 max-w-5xl">
 
         <!-- 1. Agent Mode Section -->
         <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
@@ -267,8 +267,14 @@
 
     </main>
 
-    <!-- Logic Script -->
-    <script src="/js/course-shared.js"></script>
+    <!-- Resources & Script -->
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/XLAFCheIzaU?autoplay=1",
+            doc: "https://docs.google.com/document/d/1EQD6vX-E8z1T3j_o7L9L1_v_Uv0_O_D_X_P_S_K_Y/edit"
+        };
+    </script>
+    <script src="/js/course-shared-v4.js"></script>
 
     <!-- Dashboard Guides (Hidden) -->
     <section id="assignment-guide" class="hidden">
