@@ -128,6 +128,20 @@ async function loadDashboard() {
 
         dashboardData = data;
 
+        // [FIX] Ensure allLessons is populated. If loadLessons() failed, use the lessons
+        // embedded in the dashboard response (if backend provides them) or re-fetch now.
+        if (!allLessons || allLessons.length === 0) {
+            if (data.lessons && data.lessons.length > 0) {
+                allLessons = data.lessons;
+                allLessons.forEach(l => { lessonsMap[l.courseId] = l.title; });
+                console.log(`[Dashboard] Populated allLessons from data.lessons: ${allLessons.length}`);
+            } else if (typeof vibeFetchLessons === 'function') {
+                allLessons = await vibeFetchLessons();
+                allLessons.forEach(l => { lessonsMap[l.courseId] = l.title; });
+                console.log(`[Dashboard] Re-fetched allLessons: ${allLessons.length}`);
+            }
+        }
+
         myRole = data.role;
         console.log("Role:", myRole);
 

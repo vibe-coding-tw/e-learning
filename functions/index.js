@@ -1325,6 +1325,7 @@ exports.getDashboardData = onCall(async (request) => {
             totalHours: paidStudentStats.reduce((acc, curr) => acc + curr.totalTime, 0) / 3600
         };
 
+        result.lessons = lessons; // [NEW] Backend fallback for frontend loadLessons() failures
         return result;
 
     } catch (error) {
