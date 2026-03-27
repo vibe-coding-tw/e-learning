@@ -1009,6 +1009,72 @@ exports.authorizeTeacherForCourse = onCall(async (request) => {
     }
 });
 
+// 7.4 一次性遷移：將主課程的老師搬移到單元級別 (Migration)
+exports.migrateTeachers = onCall(async (request) => {
+    const { auth } = request;
+    if (!auth) throw new HttpsError('unauthenticated', '請先登入');
+    const requesterRole = await getRole(auth.uid);
+    if (requesterRole !== 'admin') throw new HttpsError('permission-denied', '僅限管理員');
+
+    const db = admin.firestore();
+    const lessons = await getLessons(); 
+    let totalMigrated = 0;
+
+    for (const master of lessons) {
+        const masterId = master.courseId;
+        const masterDoc = await db.collection('course_configs').doc(masterId).get();
+        if (!masterDoc.exists) continue;
+
+        const githubUrls = masterDoc.data().githubClassroomUrls || {};
+        for (const unitFile in githubUrls) {
+            const teachersMap = githubUrls[unitFile];
+            if (typeof teachersMap !== 'object' || teachersMap === null) continue;
+
+            const emails = Object.keys(teachersMap).filter(e => e.includes('@'));
+            for (const email of emails) {
+                const sanitizedEmail = email.replace(/\./g, '_DOT_');
+                const unitRef = db.collection('course_configs').doc(unitFile);
+                
+                // 1. Update Unit-level Document
+                await unitRef.set({
+                    authorizedTeachers: admin.firestore.FieldValue.arrayUnion(email),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                // 2. Metadata fetch
+                let teacherName = email.split('@')[0];
+                try {
+                    const userRecord = await admin.auth().getUserByEmail(email);
+                    const userDoc = await db.collection('users').doc(userRecord.uid).get();
+                    if (userDoc.exists && userDoc.data().name) {
+                        teacherName = userDoc.data().name;
+                    }
+                    if (!userDoc.exists || (userDoc.data().role !== 'admin' && userDoc.data().role !== 'teacher')) {
+                        await db.collection('users').doc(userRecord.uid).set({
+                            role: 'teacher',
+                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true });
+                    }
+                } catch (e) {}
+
+                // 3. Add Details
+                await unitRef.set({
+                    teacherDetails: {
+                        [sanitizedEmail]: {
+                            email: email,
+                            name: teacherName,
+                            qualifiedAt: new Date().toISOString()
+                        }
+                    }
+                }, { merge: true });
+
+                totalMigrated++;
+            }
+        }
+    }
+    return { success: true, count: totalMigrated };
+});
+
 // ==========================================
 // 8. 獲取儀表板數據 (getDashboardData)
 // ==========================================
