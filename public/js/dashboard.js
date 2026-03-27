@@ -1105,6 +1105,7 @@ function renderAdminConsole() {
     `;
 
     try {
+        const renderedUnits = new Set(); // [NEW] Track rendered units to prevent duplicates
         let lessonRows = allLessons.map(lesson => {
             try {
                 const config = dashboardData?.courseConfigs?.[lesson.courseId] || {};
@@ -1120,7 +1121,13 @@ function renderAdminConsole() {
                 if (allFiles.length === 0) return '';
 
                 return allFiles.map(unitFile => {
-                    const unitDocConfig = dashboardData?.courseConfigs?.[unitFile] || {};
+                    if (renderedUnits.has(unitFile)) return ''; // [NEW] Skip duplicates
+                    renderedUnits.add(unitFile);
+
+                    // [FIX] Use unitToDocId map to find the correct Firestore document
+                    const targetDocId = dashboardData?.unitToDocId?.[unitFile] || lesson.courseId;
+                    const unitDocConfig = dashboardData?.courseConfigs?.[targetDocId] || {};
+                    
                     const unitTeachersArr = Array.isArray(unitDocConfig.authorizedTeachers) ? unitDocConfig.authorizedTeachers : [];
                     const legacyTeachers = (unitConfigs[unitFile] && typeof unitConfigs[unitFile] === 'object') ? Object.keys(unitConfigs[unitFile]) : [];
                     const unitTeachers = Array.from(new Set([...unitTeachersArr, ...legacyTeachers])).filter(t => t && t !== 'default');

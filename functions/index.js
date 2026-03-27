@@ -1112,6 +1112,7 @@ exports.getDashboardData = onCall(async (request) => {
         // 0. Fetch Course Authorization Data
         const authorizedCourseIds = [];
         const courseConfigs = {};
+        const unitToDocId = {}; // [NEW] Map unit filename -> Firestore docId
         const configsSnapshot = await db.collection('course_configs').get();
         configsSnapshot.forEach(doc => {
             const docId = doc.id; // [FIX 11.3.18] Define docId early for scope availability
@@ -1149,6 +1150,12 @@ exports.getDashboardData = onCall(async (request) => {
                         githubClassroomUrls: cfg.githubClassroomUrls || {},
                         updatedAt: admin.firestore.FieldValue.serverTimestamp()
                     }).catch(e => console.error("[AutoPrune] Persistence failed:", e));
+                }
+
+                if (cfg.githubClassroomUrls) {
+                    Object.keys(cfg.githubClassroomUrls).forEach(unitId => {
+                        unitToDocId[unitId] = docId;
+                    });
                 }
 
                 if (isAuthorized) {
@@ -1273,6 +1280,7 @@ exports.getDashboardData = onCall(async (request) => {
             students: [],
             assignments: [],
             courseConfigs: courseConfigs,
+            unitToDocId: unitToDocId, // [NEW] Pass the mapping to frontend
             myPromoCode: null,
             earnings: []
         };
