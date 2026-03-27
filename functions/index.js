@@ -1000,77 +1000,7 @@ exports.authorizeTeacherForCourse = onCall(async (request) => {
     }
 });
 
-// 7.4 一次性遷移：將主課程的老師搬移到單元級別 (Migration)
-// [TEMPORARY] Converted to onRequest for one-time execution by agent
-exports.execMigration = onRequest(async (req, res) => {
-    // Secret check for safety
-    if (req.query.secret !== 'vibe_migrate_2026') return res.status(403).send("Forbidden");
-
-    const db = admin.firestore();
-    const lessons = await getLessons(); 
-    let totalMigrated = 0;
-
-    for (const master of lessons) {
-        const masterId = master.courseId;
-        const masterDoc = await db.collection('course_configs').doc(masterId).get();
-        if (!masterDoc.exists) continue;
-
-        const githubUrls = masterDoc.data().githubClassroomUrls || {};
-        for (const unitFile in githubUrls) {
-            const teachersMap = githubUrls[unitFile];
-            if (typeof teachersMap !== 'object' || teachersMap === null) continue;
-
-            const emails = Object.keys(teachersMap).filter(e => e.includes('@'));
-            for (const email of emails) {
-                const sanitizedEmail = email.replace(/\./g, '_DOT_');
-                const unitRef = db.collection('course_configs').doc(unitFile);
-                
-                // 1. Update Unit-level Document
-                await unitRef.set({
-                    authorizedTeachers: admin.firestore.FieldValue.arrayUnion(email),
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-
-                // 2. Metadata fetch (Name only)
-                let teacherName = email.split('@')[0];
-                try {
-                    const userRecord = await admin.auth().getUserByEmail(email);
-                    const userDoc = await db.collection('users').doc(userRecord.uid).get();
-                    if (userDoc.exists && userDoc.data().name) {
-                        teacherName = userDoc.data().name;
-                    }
-                } catch (e) {}
-
-                // 3. Add Details
-                await unitRef.set({
-                    teacherDetails: {
-                        [sanitizedEmail]: {
-                            email: email,
-                            name: teacherName,
-                            qualifiedAt: new Date().toISOString()
-                        }
-                    }
-                }, { merge: true });
-
-                totalMigrated++;
-            }
-        }
-    }
-
-    // 4. [NEW] Cleanup: Revert any 'teacher' roles back to 'student'
-    console.log("🧹 Cleaning up global 'teacher' roles...");
-    const teacherUsers = await db.collection('users').where('role', '==', 'teacher').get();
-    let cleanupCount = 0;
-    for (const userDoc of teacherUsers.docs) {
-        await userDoc.ref.update({
-            role: 'student',
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        });
-        cleanupCount++;
-    }
-
-    res.json({ success: true, count: totalMigrated, cleanedUp: cleanupCount });
-});
+// 7.4 一次性遷移：此功能已於 2026-03-27 執行完畢並移除。
 
 // ==========================================
 // 8. 獲取儀表板數據 (getDashboardData)

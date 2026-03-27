@@ -1060,9 +1060,6 @@ function renderAdminConsole() {
             </h3>
             
             <div class="flex items-center gap-3">
-                <button onclick="runTeacherMigration()" class="bg-red-50 text-red-600 px-4 py-2.5 rounded-xl border border-red-100 text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition-colors shadow-sm">
-                    🚀 遷移舊版教師資料 / Migrate Legacy
-                </button>
                 <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm">
                     <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">超級模式 / Super Mode</span>
                     <label class="relative inline-flex items-center cursor-pointer">
@@ -1269,22 +1266,6 @@ window.handleUnitTeacherAuth = async function (courseId, unitFile, teacherEmail,
         alert("授權失敗: " + e.message);
     } finally {
         if (msg) msg.textContent = "";
-    }
-};
-
-// [TEMPORARY] One-time Migration Trigger
-window.runTeacherMigration = async function() {
-    if (!confirm("確定要執行教師資料遷移嗎？這將會更新所有單位的授權資料。")) return;
-    try {
-        console.log("🚀 Starting migration...");
-        const migrateFunc = httpsCallable(functions, 'migrateTeachers');
-        const result = await migrateFunc();
-        console.log("✅ Migration Result:", result.data);
-        alert(`遷移完成！共更新 ${result.data.count} 筆權限資料。`);
-        loadDashboard();
-    } catch (e) {
-        console.error("Migration Error:", e);
-        alert("遷移失敗: " + e.message);
     }
 };
 
