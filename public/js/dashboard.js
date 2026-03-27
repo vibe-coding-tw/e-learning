@@ -249,6 +249,18 @@ function normalizeUnitId(unitId) {
     return unitId.split('#')[0].split('?')[0].trim();
 }
 
+function hasQualifiedTeacherAccessForUnit(fileName, courseId, email) {
+    if (!email || !fileName || !courseId) return false;
+
+    const courseConfig = dashboardData?.courseConfigs?.[courseId] || {};
+    const unitConfigs = courseConfig.githubClassroomUrls || {};
+    const unitDocConfig = dashboardData?.courseConfigs?.[fileName] || {};
+    const unitTeachersArr = Array.isArray(unitDocConfig.authorizedTeachers) ? unitDocConfig.authorizedTeachers : [];
+    const legacyTeachers = (unitConfigs[fileName] && typeof unitConfigs[fileName] === 'object') ? Object.keys(unitConfigs[fileName]) : [];
+
+    return new Set([...unitTeachersArr, ...legacyTeachers]).has(email);
+}
+
 // --- Rendering ---
 function renderStudentDashboard(data, filterUnitId = null) {
     loadingState.classList.add('hidden');
@@ -438,33 +450,21 @@ function renderAdminDashboard(data, filterUnitId = null) {
     // 2. Settings & Earnings Tabs (Role-based & Authorization-based)
     const urlParams = new URLSearchParams(window.location.search);
     let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
-
-    // Check if the current user (Teacher or Admin) is specifically authorized for this content
-    let isTeacherAuthorizedForThisView = false;
-    if (filterUnitId) {
-        isTeacherAuthorizedForThisView = !!(data.courseConfigs && data.courseConfigs[filterUnitId]);
-    } else if (filterCourseId) {
-        isTeacherAuthorizedForThisView = !!(data.courseConfigs && data.courseConfigs[filterCourseId]);
-    } else {
-        // Global view: show if any authorized courses exist for this teacher/admin
-        isTeacherAuthorizedForThisView = !!(data.courseConfigs && Object.keys(data.courseConfigs).length > 0);
+    const currentUserEmail = auth.currentUser?.email || '';
+    if (!filterCourseId && filterUnitId) {
+        const parentLesson = allLessons.find(l => Array.isArray(l.courseUnits) && l.courseUnits.includes(filterUnitId));
+        filterCourseId = parentLesson?.courseId || null;
     }
-
-    // Final visibility decision
-    let showManagementTabs = false;
-    if (isTeacherAuthorizedForThisView) {
-        // If they are the assigned teacher, always show
-        showManagementTabs = true;
-    } else if (myRole === 'admin' && adminSuperMode) {
-        // If they are admin AND SuperMode is ON, show (to manage others' courses)
-        showManagementTabs = true;
-    }
+    const showQualifiedTeacherTabs =
+        !!filterUnitId &&
+        !filterUnitId.includes('-master-') &&
+        hasQualifiedTeacherAccessForUnit(filterUnitId, filterCourseId, currentUserEmail);
 
     if (settingsTabBtn) {
-        settingsTabBtn.classList.toggle('hidden', !showManagementTabs);
+        settingsTabBtn.classList.toggle('hidden', !showQualifiedTeacherTabs);
     }
     if (earningsTabBtn) {
-        earningsTabBtn.classList.toggle('hidden', !showManagementTabs);
+        earningsTabBtn.classList.toggle('hidden', !showQualifiedTeacherTabs);
     }
 
     // Stats (Base on filtered students if unit is selected)
@@ -1135,7 +1135,7 @@ function renderAdminConsole() {
                                                 <td class="py-2.5 px-4 font-mono text-gray-500">${escapeHtml(email)}</td>
                                                 <td class="py-2.5 px-4 text-gray-400">${escapeHtml(time)}</td>
                                                 <td class="py-2.5 px-4 text-right">
-                                                    <button onclick="handleUnitTeacherAuth('${lesson.courseId}', '${unitFile}', '${email}', 'remove')" 
+                                                    <button onclick="handleUnitTeacherAuth('${lesson.courseId}', '${unitFile}', '${email}', 'remove', '${lesson.courseId}')" 
                                                         class="text-gray-300 hover:text-red-600 transition-colors p-1 opacity-0 group-hover/row:opacity-100">
                                                         移除 ✕
                                                     </button>
@@ -1152,7 +1152,7 @@ function renderAdminConsole() {
                                 <div class="flex flex-col sm:flex-row gap-3 max-w-2xl">
                                     <input type="email" id="${inputId}" placeholder="教師 Email (e.g. user@gmail.com)" 
                                         class="flex-grow px-4 py-2.5 text-xs border border-orange-100 rounded-xl outline-none focus:ring-2 focus:ring-orange-200 bg-white shadow-sm transition-all font-mono">
-                                    <button onclick="handleUnitTeacherAuth('${lesson.courseId}', '${unitFile}', document.getElementById('${inputId}').value, 'add')"
+                                    <button onclick="handleUnitTeacherAuth('${lesson.courseId}', '${unitFile}', document.getElementById('${inputId}').value, 'add', '${lesson.courseId}')"
                                         class="px-8 py-2.5 bg-orange-500 text-white rounded-xl text-xs font-black hover:bg-orange-600 transition-all shadow-md active:scale-95 whitespace-nowrap">
                                         新增合格教師 👤
                                     </button>
@@ -1244,17 +1244,21 @@ function renderAdminConsole() {
     adminPanel.innerHTML = html;
 }
 
-window.handleUnitTeacherAuth = async function (courseId, unitFile, teacherEmail, action) {
+window.handleUnitTeacherAuth = async function (courseId, unitFile, teacherEmail, action, parentCourseId = null) {
     if (!teacherEmail) return alert("請輸入 Email");
     const msg = document.getElementById('admin-msg');
 
     try {
         if (msg) msg.textContent = action === 'add' ? "正在新增單元授權..." : "正在移除單元授權...";
 
-        // [MODIFIED] Use the unit filename as the courseId for the auth function
-        // This targets course_configs/{unitFileName}
+        // [MODIFIED] Use both unitFile (as specific courseId) and parentCourseId (for legacy cleanup)
         const authFunc = httpsCallable(functions, 'authorizeTeacherForCourse');
-        await authFunc({ courseId: unitFile, teacherEmail, action });
+        await authFunc({ 
+            courseId: unitFile, 
+            teacherEmail, 
+            action,
+            parentCourseId: parentCourseId || courseId // Use courseId as fallback if specifically passed
+        });
 
         loadDashboard(); // Refresh UI
     } catch (e) {
