@@ -36,6 +36,7 @@ const assignmentTableBody = document.getElementById('assignment-table-body');
 
 
 let myRole = null;
+let myUid = null;
 let charts = {};
 let dashboardData = null;
 let lessonsMap = {};
@@ -82,6 +83,7 @@ let adminSuperMode = localStorage.getItem('adminSuperMode') === 'true';
 // --- Auth State ---
 onAuthStateChanged(auth, async (user) => {
     if (user) {
+        myUid = user.uid;
         if (userDisplay) userDisplay.textContent = `您好, ${user.displayName || '使用者'}`;
         await loadLessons();
         loadDashboard();
@@ -459,6 +461,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
         filterCourseId = parentLesson?.courseId || null;
     }
     const showQualifiedTeacherTabs =
+        !adminSuperMode &&
         !!filterUnitId &&
         !filterUnitId.includes('-master-') &&
         hasQualifiedTeacherAccessForUnit(filterUnitId, filterCourseId, currentUserEmail);
@@ -823,7 +826,12 @@ window.toggleRow = function (uid) {
     }
 };
 
-window.handleAssignmentClick = function (courseId, unitId) {
+window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null) {
+    if (submissionUrl) {
+        window.open(submissionUrl, '_blank');
+        return;
+    }
+
     const cfg = (dashboardData && dashboardData.courseConfigs) ? dashboardData.courseConfigs[courseId] : null;
     const inviteLink = cfg && cfg.githubClassroomUrls ? cfg.githubClassroomUrls[unitId] : null;
 
@@ -896,8 +904,13 @@ function renderAssignments(assignments, guideContent = "") {
                     `;
                 }
 
+                // Hide Action column for non-teachers/admins
+                const thAction = document.getElementById('assignment-th-action');
+                if (thAction) thAction.classList.toggle('hidden', !canGrade);
+
                 return `
-                <tr class="lg:hover:bg-blue-50/50 transition border-b border-gray-100 cursor-pointer group text-xs md:text-sm" onclick="handleAssignmentClick('${a.courseId}', '${a.unitId}')">
+                <tr class="lg:hover:bg-blue-50/50 transition border-b border-gray-100 cursor-pointer group text-xs md:text-sm" 
+                    onclick="handleAssignmentClick('${a.courseId}', '${a.unitId}', ${isStudent && a.submissionUrl ? `'${a.submissionUrl}'` : 'null'})">
                     <td class="py-2 px-1 sm:py-3 sm:px-2 text-gray-800">
                         <div class="font-medium group-hover:text-blue-600 transition-colors truncate max-w-[100px] md:max-w-none">${escapeHtml(a.studentEmail || a.userEmail)}</div>
                     </td>
@@ -908,7 +921,7 @@ function renderAssignments(assignments, guideContent = "") {
                     <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-500">${submittedDate}</td>
                     <td class="py-2 px-1 sm:py-3 sm:px-2">${badge}</td>
                     <td class="py-2 px-1 sm:py-3 sm:px-2 font-bold text-gray-700">${a.grade !== null && a.grade !== undefined ? a.grade : '-'}</td>
-                    <td class="py-2 px-1 sm:py-3 sm:px-2 text-right">
+                    <td class="py-2 px-1 sm:py-3 sm:px-2 text-right ${!canGrade ? 'hidden' : ''}">
                         ${actionButton}
                     </td>
                 </tr>
