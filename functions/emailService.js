@@ -141,7 +141,7 @@ async function sendCourseExpiringEmail(email, displayName, courseName, daysLeft)
                 <h2 style="color: #E74C3C;">課程使用期限提醒</h2>
                 <p>Hi ${displayName || '開發者'},</p>
                 <p>提醒您，您的課程 <strong>${courseName}</strong> 的使用期限即將在 <strong>${daysLeft} 天</strong>後到期。</p>
-                <p>把握最後的時間複習課程內容！如果您希望繼續存取，請考慮購買續約或查看最新優惠。</p>
+                <p>把握最後的時間複習課程內容！如果您希望繼續存取這些內容或解鎖更多進階課程，請考慮購買續約或查看最新優惠。</p>
                 <p>
                     <a href="https://vibe-coding.tw/dashboard.html" style="background-color: #E74C3C; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">登入儀表板</a>
                 </p>
@@ -162,33 +162,42 @@ async function sendCourseExpiringEmail(email, displayName, courseName, daysLeft)
 /**
  * Send an email to a newly authorized teacher.
  * @param {string} email - Teacher's email address
- * @param {string} courseId - The course they are authorized for
+ * @param {string} unitName - Name of the unit
+ * @param {string} unitId - The course unit ID
+ * @param {string} promoCode - The unique 6-digit promo code for this unit
  */
-async function sendTeacherAuthorizationEmail(email, unitName, unitId) {
+async function sendTeacherAuthorizationEmail(email, unitName, unitId, promoCode) {
     const cleanUnitId = unitId ? unitId.replace('.html', '') : '';
-    const dashboardUrl = cleanUnitId ? `https://vibe-coding.tw/dashboard.html?unitId=${cleanUnitId}` : `https://vibe-coding.tw/dashboard.html`;
+    const dashboardUrl = cleanUnitId ? `https://vibe-coding-tw/dashboard.html?unitId=${cleanUnitId}` : `https://vibe-coding-tw/dashboard.html`;
 
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
         subject: `Vibe Coding 課程單元授權通知: ${unitName}`,
-        text: `恭喜您成為 Vibe Coding 授權教師！\n\n您已獲得課程單元 "${unitName}" 的管理權限。\n\n請前往教師儀表板開始管理：\n${dashboardUrl}\n\nHappy Teaching!\nVibe Coding Team`,
+        text: `恭喜您成為 Vibe Coding 授權教師！\n\n您已獲得課程單元 "${unitName}" 的管理權限。\n\n您的專屬推薦代碼為：${promoCode}\n(學生使用此代碼購買本單元時，系統將自動計算您的分潤)\n\n請前往教師儀表板開始管理：\n${dashboardUrl}\n\nHappy Teaching!\nVibe Coding Team`,
         html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6;">
                 <h2 style="color: #4A90E2;">恭喜您成為 Vibe Coding 授權教師！</h2>
                 <p>Hi,</p>
-                <p>您已獲得課程單元 <strong>${unitName}</strong> 的授權。現在可以存取教師資源與管理功能。</p>
+                <p>您已獲得課程單元 <strong>${unitName}</strong> 的管理授權。現在可以存取教師資源與管理功能。</p>
                 
-                <div style="background: #f4f4f4; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <div style="background: #f0f7ff; padding: 20px; border-radius: 10px; margin: 25px 0; border: 1px solid #d0e7ff;">
+                    <p style="margin: 0; color: #4A90E2; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">您的專屬推薦代碼</p>
+                    <p style="margin: 10px 0; font-size: 32px; font-weight: 900; color: #333; font-family: monospace;">${promoCode}</p>
+                    <p style="margin: 0; font-size: 13px; color: #666;">（學生在結帳時輸入此代碼，即可連結至您的分潤帳戶）</p>
+                </div>
+
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
                     <p style="margin: 0;"><strong>下一步：</strong></p>
                     <ul style="margin: 10px 0;">
                         <li>登入教師儀表板獲取 GitHub Classroom 連結</li>
-                        <li>確認範本倉庫內容</li>
+                        <li>分享您的推薦代碼給學生</li>
+                        <li>在「分潤」分頁追蹤您的推廣成效</li>
                     </ul>
                 </div>
 
-                <p><a href="${dashboardUrl}" style="display: inline-block; background: #4A90E2; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">前往教師儀表板</a></p>
-                <p>若無法點擊連結，請複製此網址：<br>${dashboardUrl}</p>
+                <p><a href="${dashboardUrl}" style="display: inline-block; background: #4A90E2; color: #fff; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(74, 144, 226, 0.2);">前往教師儀表板</a></p>
+                <p style="font-size: 12px; color: #999; margin-top: 30px;">若無法點擊連結，請複製此網址：<br>${dashboardUrl}</p>
                 <p>Happy Teaching!<br>Vibe Coding Team</p>
             </div>
         `

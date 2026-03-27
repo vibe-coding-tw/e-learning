@@ -1903,16 +1903,27 @@ function renderEarningsTab(data) {
 
     if (!totalEarningsEl || !promoCodeEl || !tableBody) return;
 
-    // 1. Display Promo Code
-    if (!data.myPromoCode) {
+    // 1. Display Promo Code (Unit-Specific)
+    const urlParams = new URLSearchParams(window.location.search);
+    const filterUnitId = urlParams.get('unitId');
+
+    if (!filterUnitId) {
         promoCodeEl.innerHTML = `
-            <span class="text-gray-400 text-lg block mb-2">尚無代碼</span>
-            <button onclick="handleGeneratePromoCode()" id="btn-generate-promo" class="text-sm bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg shadow-sm transition">
-                🚀 立即生成推薦代碼
-            </button>
+            <span class="text-gray-400 text-sm block mb-1">請先從上方切換單元</span>
+            <span class="text-[10px] text-gray-300">每一單元皆有專屬推薦碼</span>
+        `;
+    } else if (!data.myPromoCode) {
+        promoCodeEl.innerHTML = `
+            <span class="text-orange-400 text-sm block font-bold">尚未配置推薦碼</span>
+            <span class="text-[10px] text-gray-400">請聯繫管理員獲取該單元授權</span>
         `;
     } else {
-        promoCodeEl.innerText = data.myPromoCode;
+        promoCodeEl.innerHTML = `
+            <div class="flex flex-col items-center">
+                <span class="text-2xl font-black text-blue-600 tracking-widest font-mono">${data.myPromoCode}</span>
+                <span class="text-[10px] text-gray-400 mt-1 uppercase tracking-tighter">此單元專屬推薦碼 / Unit Code</span>
+            </div>
+        `;
     }
 
     // 2. Display Earnings Ledger
@@ -1939,33 +1950,8 @@ function renderEarningsTab(data) {
     totalEarningsEl.innerText = total.toLocaleString();
 }
 
-// --- Promo Code Generation ---
+// --- Promo Code Generation (LEGACY - NOW AUTOMATED) ---
 window.handleGeneratePromoCode = async function () {
-    const btn = document.getElementById('btn-generate-promo');
-    const displayEl = document.getElementById('display-promo-code');
-    if (!btn || !confirm('確定要生成您的專屬推薦代碼嗎？生成後即可分享給學生以追蹤分潤。')) return;
-
-    try {
-        btn.disabled = true;
-        btn.innerText = '正在生成...';
-        
-        const generatePromoCode = httpsCallable(functions, 'generatePromoCode');
-        const result = await generatePromoCode();
-        
-        if (result.data.success) {
-            displayEl.innerHTML = `<span class="text-emerald-600 animate-pulse">${result.data.promoCode}</span>`;
-            alert(`生成成功！您的推薦代碼是：${result.data.promoCode}\n頁面即將重新載入以更新數據。`);
-            // Refresh dashboard data to update everything
-            window.location.reload();
-        } else {
-            alert('生成失敗：' + (result.data.message || '未知錯誤'));
-            btn.disabled = false;
-            btn.innerText = '🚀 立即生成推薦代碼';
-        }
-    } catch (err) {
-        console.error("[Promo] Generation error:", err);
-        alert('生成代碼時發生錯誤：' + err.message);
-        btn.disabled = false;
-        btn.innerText = '🚀 立即生成推薦代碼';
-    }
+    alert("現在推薦碼會在授權時自動生成並透過 Email 通知教師。如需查詢，請在上方選單切換至對應單元後查看「分潤」分頁。");
+};
 }

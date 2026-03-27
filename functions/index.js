@@ -1016,6 +1016,21 @@ exports.authorizeTeacherForCourse = onCall(async (request) => {
                 });
             }
 
+            // [NEW] Unit-Specific Promo Code & Email Notification
+            try {
+                const promoCode = await internalGetOrCreatePromoCode(db, teacherEmail, courseId, teacherName);
+                
+                // Fetch Unit Name for Email
+                const lessons = await getLessons();
+                const unitMetadata = lessons.find(l => l.courseId === courseId || (l.courseUnits && l.courseUnits.includes(courseId)));
+                const unitName = unitMetadata ? (unitMetadata.title || unitMetadata.courseName || courseId) : courseId;
+
+                await sendTeacherAuthorizationEmail(teacherEmail, unitName, courseId, promoCode);
+                console.log(`[Auth] Promo code ${promoCode} generated and email sent to ${teacherEmail} for ${courseId}`);
+            } catch (authExtraErr) {
+                console.error("[Auth] Failed to generate promo code or send email:", authExtraErr);
+            }
+
             // [MODIFIED] Do NOT set role: 'teacher' in users collection.
             // Authorization is strictly handled at the course_configs unit level.
 
@@ -1259,12 +1274,20 @@ exports.getDashboardData = onCall(async (request) => {
             earnings: []
         };
 
-        // [NEW] Fetch Profit Sharing Data for Mentors
+        // [NEW] Fetch Profit Sharing Data for Mentors (Unit-Specific Promo Codes)
         if (isManagementView) {
             try {
-                const promoSnap = await db.collection('promo_codes').where('mentorEmail', '==', email).get();
+                // If a unitId is provided from the frontend, fetch the SPECIFIC code for that unit
+                const filterUnitId = data.unitId;
+                let promoQuery = db.collection('promo_codes').where('mentorEmail', '==', email);
+                
+                if (filterUnitId) {
+                    promoQuery = promoQuery.where('courseId', '==', filterUnitId);
+                }
+
+                const promoSnap = await promoQuery.limit(filterUnitId ? 1 : 10).get();
                 if (!promoSnap.empty) {
-                    result.myPromoCode = promoSnap.docs[0].id;
+                    result.myPromoCode = promoSnap.docs[0].id; // Return the first matching one
                 }
 
                 const ledgerSnap = await db.collection('profit_ledger')
@@ -2011,6 +2034,66 @@ exports.verifyPromoCode = onCall(async (request) => {
 });
 
 // 11.1.5 生成個人推薦代碼 (generatePromoCode)
+/**
+ * Internal helper to get or create a unique 6-digit alphanumeric promo code for a mentor/unit.
+ * @param {admin.firestore.Firestore} db - Firestore instance
+ * @param {string} email - Mentor Email
+ * @param {string} courseId - Course Unit ID (e.g., 01-unit-vscode.html)
+ * @param {string} mentorName - Mentor Display Name
+ * @returns {Promise<string>} - The unique promo code
+ */
+async function internalGetOrCreatePromoCode(db, email, courseId, mentorName) {
+    if (!email || !courseId) throw new Error("Missing email or courseId for promo code generation");
+
+    // 1. Check for existing code for this mentor-unit pair
+    const existingSnap = await db.collection('promo_codes')
+        .where('mentorEmail', '==', email)
+        .where('courseId', '==', courseId)
+        .limit(1)
+        .get();
+
+    if (!existingSnap.empty) {
+        console.log(`[Promo] Found existing code ${existingSnap.docs[0].id} for ${email} / ${courseId}`);
+        return existingSnap.docs[0].id;
+    }
+
+    // 2. Generate a Unique 6-character Alphanumeric Code
+    const generateId = () => {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Avoid ambiguous chars
+        let result = '';
+        for (let i = 0; i < 6; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    };
+
+    let newCode;
+    let isUnique = false;
+    let attempts = 0;
+
+    while (!isUnique && attempts < 10) {
+        newCode = generateId();
+        const checkDoc = await db.collection('promo_codes').doc(newCode).get();
+        if (!checkDoc.exists) isUnique = true;
+        attempts++;
+    }
+
+    if (!isUnique) throw new Error('無法生成唯一代碼，請稍後再試');
+
+    // 3. Save to Firestore
+    await db.collection('promo_codes').doc(newCode).set({
+        mentorEmail: email,
+        mentorName: mentorName || email,
+        courseId: courseId,
+        isActive: true,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        source: 'automated_auth'
+    });
+
+    console.log(`[Promo] Generated NEW code ${newCode} for ${email} / ${courseId}`);
+    return newCode;
+}
+
 exports.generatePromoCode = onCall(async (request) => {
     const { auth, data } = request;
     if (!auth) throw new HttpsError('unauthenticated', '請先登入');
@@ -2018,60 +2101,21 @@ exports.generatePromoCode = onCall(async (request) => {
     const db = admin.firestore();
     const uid = auth.uid;
     const email = auth.token.email;
+    const { courseId } = data;
+
+    if (!courseId) throw new HttpsError('invalid-argument', '缺少課程單元 ID (courseId)');
 
     try {
-        // 1. Verify Role (Must be admin or teacher)
         const role = await getRole(uid);
         if (role !== 'admin' && role !== 'teacher') {
             throw new HttpsError('permission-denied', '只有老師可以生成推廣代碼');
         }
 
-        // Fetch user data for displayName, but handle case where it doesn't exist (self-healing)
         const userDoc = await db.collection('users').doc(uid).get();
-        const userData = userDoc.exists ? userDoc.data() : { displayName: email };
+        const mentorName = userDoc.exists ? (userDoc.data().name || userDoc.data().displayName) : email;
 
-        // 2. Check if already has a code
-        const existingSnap = await db.collection('promo_codes').where('mentorEmail', '==', email).get();
-        if (!existingSnap.empty) {
-            return { success: true, promoCode: existingSnap.docs[0].id, message: '您已有現成的代碼' };
-        }
-
-        // 3. Generate a Unique Code
-        // Formula: VIBE-{Random6}
-        const generateId = () => {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Avoid ambiguous chars
-            let result = '';
-            for (let i = 0; i < 6; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
-        };
-
-        let newCode;
-        let isUnique = false;
-        let attempts = 0;
-
-        while (!isUnique && attempts < 5) {
-            newCode = `VIBE-${generateId()}`;
-            const checkDoc = await db.collection('promo_codes').doc(newCode).get();
-            if (!checkDoc.exists) isUnique = true;
-            attempts++;
-        }
-
-        if (!isUnique) throw new HttpsError('internal', '無法生成唯一代碼，請稍後再試');
-
-        // 4. Save to Firestore
-        await db.collection('promo_codes').doc(newCode).set({
-            mentorEmail: email,
-            mentorName: userData.displayName || email,
-            isActive: true,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            source: 'dashboard_generated'
-        });
-
-        console.log(`[Promo] Generated code ${newCode} for ${email}`);
-
-        return { success: true, promoCode: newCode };
+        const promoCode = await internalGetOrCreatePromoCode(db, email, courseId, mentorName);
+        return { success: true, promoCode };
 
     } catch (e) {
         console.error("[Promo] Error:", e);
