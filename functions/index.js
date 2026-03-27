@@ -973,17 +973,8 @@ exports.authorizeTeacherForCourse = onCall(async (request) => {
                 }, { merge: true });
             }
 
-            // Upgrade role
-            try {
-                const userRecord = await admin.auth().getUserByEmail(teacherEmail);
-                const currentRole = await getRole(userRecord.uid);
-                if (currentRole !== 'admin' && currentRole !== 'teacher') {
-                    await db.collection('users').doc(userRecord.uid).set({
-                        role: 'teacher',
-                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                    }, { merge: true });
-                }
-            } catch (roleErr) { /* ignore */ }
+            // [MODIFIED] Do NOT set role: 'teacher' in users collection.
+            // Authorization is strictly handled at the course_configs unit level.
 
         } else if (action === 'remove') {
             const sanitizedEmail = teacherEmail.replace(/\./g, '_DOT_');
@@ -1041,19 +1032,13 @@ exports.migrateTeachers = onCall(async (request) => {
                     updatedAt: admin.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
 
-                // 2. Metadata fetch
+                // 2. Metadata fetch (Name only)
                 let teacherName = email.split('@')[0];
                 try {
                     const userRecord = await admin.auth().getUserByEmail(email);
                     const userDoc = await db.collection('users').doc(userRecord.uid).get();
                     if (userDoc.exists && userDoc.data().name) {
                         teacherName = userDoc.data().name;
-                    }
-                    if (!userDoc.exists || (userDoc.data().role !== 'admin' && userDoc.data().role !== 'teacher')) {
-                        await db.collection('users').doc(userRecord.uid).set({
-                            role: 'teacher',
-                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                        }, { merge: true });
                     }
                 } catch (e) {}
 
@@ -1072,7 +1057,20 @@ exports.migrateTeachers = onCall(async (request) => {
             }
         }
     }
-    return { success: true, count: totalMigrated };
+
+    // 4. [NEW] Cleanup: Revert any 'teacher' roles back to 'student'
+    console.log("🧹 Cleaning up global 'teacher' roles...");
+    const teacherUsers = await db.collection('users').where('role', '==', 'teacher').get();
+    let cleanupCount = 0;
+    for (const userDoc of teacherUsers.docs) {
+        await userDoc.ref.update({
+            role: 'student',
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        cleanupCount++;
+    }
+
+    return { success: true, count: totalMigrated, cleanedUp: cleanupCount };
 });
 
 // ==========================================
