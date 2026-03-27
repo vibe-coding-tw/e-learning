@@ -252,9 +252,6 @@ function normalizeUnitId(unitId) {
 }
 
 function hasQualifiedTeacherAccessForUnit(fileName, courseId, email) {
-    // [MODIFIED v11.3.16] Admin bypass (no SuperMode required)
-    if (myRole === 'admin') return true;
-
     if (!email || !fileName || !courseId) return false;
     
     const courseConfig = dashboardData?.courseConfigs?.[courseId] || {};
@@ -461,7 +458,6 @@ function renderAdminDashboard(data, filterUnitId = null) {
         filterCourseId = parentLesson?.courseId || null;
     }
     const showQualifiedTeacherTabs =
-        !adminSuperMode &&
         !!filterUnitId &&
         !filterUnitId.includes('-master-') &&
         hasQualifiedTeacherAccessForUnit(filterUnitId, filterCourseId, currentUserEmail);
