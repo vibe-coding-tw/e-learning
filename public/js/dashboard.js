@@ -250,8 +250,8 @@ function normalizeUnitId(unitId) {
 }
 
 function hasQualifiedTeacherAccessForUnit(fileName, courseId, email) {
-    // [NEW] Admin SuperMode grants mandatory access to all unit administrative tabs
-    if (adminSuperMode && myRole === 'admin') return true;
+    // [MODIFIED v11.3.16] Admin bypass (no SuperMode required)
+    if (myRole === 'admin') return true;
 
     if (!email || !fileName || !courseId) return false;
     
@@ -859,20 +859,42 @@ function renderAssignments(assignments, guideContent = "") {
                 const statusColors = {
                     'submitted': 'bg-yellow-100 text-yellow-800',
                     'graded': 'bg-green-100 text-green-800',
+                    'started': 'bg-blue-100 text-blue-800',
                     'new': 'bg-gray-100 text-gray-800'
                 };
                 const statusLabel = {
                     'submitted': '待評分',
                     'graded': '已評分',
+                    'started': '進行中',
                     'new': '新作業'
                 };
-                const badge = `<span class="${statusColors[currentStatus] || 'bg-gray-100'} px-2 py-0.5 rounded text-xs font-bold">${statusLabel[currentStatus] || currentStatus}</span>`;
+                const badge = `<span class="${statusColors[currentStatus] || 'bg-gray-100'} px-2 py-0.5 rounded text-[10px] font-bold">${statusLabel[currentStatus] || currentStatus}</span>`;
 
                 // Clean up Unit ID for display
                 let displayUnit = a.unitId || '';
                 displayUnit = displayUnit.replace('.html', '').replace(/-/g, ' ');
                 const unitMatch = displayUnit.match(/unit\s+(.+)/i);
                 if (unitMatch) displayUnit = unitMatch[1]; // Try to extract meaningful part
+
+                const canGrade = (myRole === 'admin' || myRole === 'teacher');
+                const isStudent = (myRole === 'student' && a.userId === myUid);
+
+                let actionButton = '';
+                if (canGrade) {
+                    actionButton = `
+                        <button onclick="event.stopPropagation(); openGradingModal('${a.id}')" 
+                            class="bg-blue-100 hover:bg-blue-600 hover:text-white text-blue-700 px-2 py-0.5 sm:px-3 sm:py-1 rounded text-[10px] sm:text-xs font-bold transition">
+                            ${currentStatus === 'graded' ? '查看/修改' : '評分'}
+                        </button>
+                    `;
+                } else if (isStudent && a.submissionUrl) {
+                    actionButton = `
+                        <a href="${a.submissionUrl}" target="_blank" onclick="event.stopPropagation()"
+                            class="bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-700 px-2 py-0.5 sm:px-3 sm:py-1 rounded text-[10px] sm:text-xs font-bold transition inline-block">
+                            ${currentStatus === 'started' ? '🚀 點此繼續' : '查看 Repo'}
+                        </a>
+                    `;
+                }
 
                 return `
                 <tr class="lg:hover:bg-blue-50/50 transition border-b border-gray-100 cursor-pointer group text-xs md:text-sm" onclick="handleAssignmentClick('${a.courseId}', '${a.unitId}')">
@@ -887,10 +909,7 @@ function renderAssignments(assignments, guideContent = "") {
                     <td class="py-2 px-1 sm:py-3 sm:px-2">${badge}</td>
                     <td class="py-2 px-1 sm:py-3 sm:px-2 font-bold text-gray-700">${a.grade !== null && a.grade !== undefined ? a.grade : '-'}</td>
                     <td class="py-2 px-1 sm:py-3 sm:px-2 text-right">
-                        <button onclick="event.stopPropagation(); openGradingModal('${a.id}')" 
-                            class="bg-blue-100 hover:bg-blue-600 hover:text-white text-blue-700 px-2 py-0.5 sm:px-3 sm:py-1 rounded text-[10px] sm:text-xs font-bold transition">
-                            評分
-                        </button>
+                        ${actionButton}
                     </td>
                 </tr>
             `}).join('');
@@ -1130,7 +1149,8 @@ function renderAdminConsole() {
                             ? unitTeachers.map(email => {
                                 const details = unitDocConfig.teacherDetails?.[email.replace(/\./g, '_DOT_')] || {};
                                 const name = details.name || email.split('@')[0];
-                                const time = details.qualifiedAt ? new Date(details.qualifiedAt).toLocaleString('zh-TW', { hour12: false }) : '歷史數據';
+                                 const time = details.qualifiedAt ? new Date(details.qualifiedAt).toLocaleString('zh-TW', { hour12: false }) : null;
+                                 if (!time) return ''; // Filter out historical data
 
                                 return `
                                             <tr class="hover:bg-orange-50/20 transition-colors group/row">
@@ -1911,7 +1931,7 @@ function renderEarningsTab(data) {
 }
 
 // --- Promo Code Generation ---
-async function handleGeneratePromoCode() {
+window.handleGeneratePromoCode = async function () {
     const btn = document.getElementById('btn-generate-promo');
     const displayEl = document.getElementById('display-promo-code');
     if (!btn || !confirm('確定要生成您的專屬推薦代碼嗎？生成後即可分享給學生以追蹤分潤。')) return;

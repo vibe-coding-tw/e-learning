@@ -128,6 +128,13 @@ function injectMediaOverlay() {
 window.enterMediaMode = enterMediaMode;
 window.closeModal = closeModal;
 
+// [COMPATIBILITY] Restore window.courseShared for older/advanced unit files
+window.courseShared = {
+    enterMediaMode,
+    closeModal,
+    autoFitZoom
+};
+
 /**
  * Opens the Media Overlay
  */
@@ -657,7 +664,7 @@ function initFirebaseFeatures() {
              }
              
              try {
-                 const result = await submitAssignmentFn(data);
+                 const result = await httpsCallable(functions, 'submitAssignment')(data);
                  return result.data;
              } catch (error) {
                  console.error("Submission Error:", error);
@@ -665,10 +672,6 @@ function initFirebaseFeatures() {
                  throw error;
              }
         };
-
-        window.firebaseSubmitAssignment = async (data) => {
-             // ...
-        }
 
         // [NEW] Helper to get dynamic configs
         window.firebaseGetCourseConfigs = async (courseId) => {
@@ -802,6 +805,21 @@ window.openSubmissionModal = async function (assignmentId, title) {
     const isShiftPressed = window.event && window.event.shiftKey;
     if (classroomUrl && !isShiftPressed) {
         console.log(`[CourseShared] Direct navigation to: ${classroomUrl}`);
+        
+        // [NEW] Automated Assignment Tracking
+        if (typeof window.firebaseSubmitAssignment === 'function') {
+            const courseId = await findCourseIdByUnit(fileName);
+            window.firebaseSubmitAssignment({
+                courseId: courseId,
+                unitId: fileName,
+                assignmentId: assignmentId,
+                title: title,
+                url: classroomUrl,
+                status: 'started',
+                assignmentType: 'classroom'
+            }).catch(e => console.error("[CourseShared] Auto-tracking failed:", e));
+        }
+
         window.open(classroomUrl, '_blank');
         return;
     }
@@ -857,10 +875,9 @@ window.submitAssignmentAction = async function () {
     }
 
     // Get Course ID / Unit ID from URL
-    // Assumption: URL is like /courses/02-unit-ui-ux-standards.html
     const pathParts = window.location.pathname.split('/');
     const fileName = pathParts[pathParts.length - 1]; // 02-unit-ui-ux-standards.html
-    const courseId = fileName.split('-')[0] + "-master"; // Rough guess, or just use FileName
+    const courseId = await findCourseIdByUnit(fileName);
     const unitId = fileName;
 
     btn.disabled = true;
@@ -894,4 +911,36 @@ window.submitAssignmentAction = async function () {
         btn.innerHTML = originalText;
     }
 };
+
+/**
+ * Robustly find parent courseId for a given unit fileName
+ */
+async function findCourseIdByUnit(fileName) {
+    console.log(`[CourseShared] Resolving CourseId for: ${fileName}`);
+    try {
+        if (!globalLessonsData || globalLessonsData.length === 0) {
+            console.log("[CourseShared] globalLessonsData empty, fetching...");
+            globalLessonsData = await vibeFetchLessons();
+        }
+        
+        if (globalLessonsData && Array.isArray(globalLessonsData)) {
+            const course = globalLessonsData.find(c => c.courseUnits && c.courseUnits.includes(fileName));
+            if (course) {
+                console.log(`[CourseShared] Resolved ${fileName} -> ${course.courseId}`);
+                return course.courseId;
+            } else {
+                console.warn(`[CourseShared] No matching course found for unit ${fileName} in Firestore metadata.`);
+            }
+        } else {
+            console.error("[CourseShared] globalLessonsData is not an array:", globalLessonsData);
+        }
+    } catch (e) {
+        console.error("[CourseShared] Error in findCourseIdByUnit:", e);
+    }
+    
+    // Fallback logic
+    const fallbackId = fileName.startsWith('04-') ? 'ai-agents-vibe' : (fileName.split('-')[0] + "-master");
+    console.log(`[CourseShared] Fallback resolution for ${fileName} -> ${fallbackId}`);
+    return fallbackId;
+}
 

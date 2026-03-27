@@ -646,6 +646,19 @@ exports.serveCourse = onRequest(async (req, res) => {
             return res.status(403).send("Access Denied: Invalid signature.");
         }
 
+        // C. [NEW v11.3.16] Surgical Normalization
+        // Only prepend 'start-' if the requested 0X-unit- file doesn't exist as-is.
+        // This avoids breaking 'prepare' units which are naming 01-unit-... while allowing
+        // 'started' units (start-01-unit-...) to be accessed via legacy short links.
+        let normalizedFileName = fileName;
+        if (fileName.match(/^0[1-5]-/) && !fileName.includes('-master-')) {
+            const asIsPath = path.join(__dirname, 'private_courses', fileName);
+            if (!fs.existsSync(asIsPath)) {
+                normalizedFileName = 'start-' + fileName;
+                console.log(`[serveCourse] Early Normalization (Conditional): ${fileName} -> ${normalizedFileName}`);
+            }
+        }
+
         // B. Validate Expiry
         if (Date.now() > expiry) {
             return res.status(403).send("Access Denied: Token expired.");
@@ -669,13 +682,13 @@ exports.serveCourse = onRequest(async (req, res) => {
 
                 if (course) {
                     const masterFile = (course.classroomUrl || "").split('/').pop();
-                    const isMasterMatch = (fileName === masterFile);
-                    const isUnitMatch = course.courseUnits && course.courseUnits.includes(fileName);
+                    const isMasterMatch = (normalizedFileName === masterFile);
+                    const isUnitMatch = course.courseUnits && course.courseUnits.includes(normalizedFileName);
                     debugInfo = `CourseFound: ${course.courseId}, isMasterMatch: ${isMasterMatch}, isUnitMatch: ${isUnitMatch}, masterFile: ${masterFile}`;
 
                     if (isMasterMatch || isUnitMatch) {
                         isAuthorizedScope = true;
-                        console.log(`[serveCourse] ${fileName} authorized via dynamic course-scope: ${scopePart}`);
+                        console.log(`[serveCourse] ${normalizedFileName} authorized via dynamic course-scope: ${scopePart}`);
                     }
                 } else {
                     debugInfo = `CourseNotFound for Scope: ${scopePart}. LessonsCount: ${lessons.length}`;
@@ -687,29 +700,31 @@ exports.serveCourse = onRequest(async (req, res) => {
         }
 
         if (!isAuthorizedScope) {
-            console.error(`Access Denied Debug: Scope=${scopePart}, File=${fileName}, Debug=${debugInfo}`);
+            const manualFallback = lessons.find(l => l.courseUnits && l.courseUnits.includes(scopePart));
+            console.error(`Access Denied Debug: Scope=${scopePart}, File=${normalizedFileName}, Debug=${debugInfo}`);
             
             // [MODIFIED v11.3.14] Fallback: If scopePart is a fileName and lesson contains it, allow.
             if (manualFallback) {
-                const isMasterMatch = (manualFallback.classroomUrl && manualFallback.classroomUrl.endsWith(fileName));
-                const isUnitMatch = (manualFallback.courseUnits && manualFallback.courseUnits.includes(fileName));
+                const isMasterMatch = (manualFallback.classroomUrl && manualFallback.classroomUrl.endsWith(normalizedFileName));
+                const isUnitMatch = (manualFallback.courseUnits && manualFallback.courseUnits.includes(normalizedFileName));
                 if (isMasterMatch || isUnitMatch) {
                     isAuthorizedScope = true;
-                    console.log(`[serveCourse] ${fileName} authorized via manual fallback for scope ${scopePart}`);
+                    console.log(`[serveCourse] ${normalizedFileName} authorized via manual fallback for scope ${scopePart}`);
                 }
             }
         }
 
         if (!isAuthorizedScope) {
-            return res.status(403).send(`Access Denied: Token valid for ${scopePart}, but requested ${fileName}.`);
+            return res.status(403).send(`Access Denied: Token valid for ${scopePart}, but requested ${normalizedFileName}.`);
         }
 
         // 3. Serve File
-        let filePath = path.join(__dirname, 'private_courses', fileName);
+        const finalServeName = normalizedFileName; 
+        let filePath = path.join(__dirname, 'private_courses', finalServeName);
 
         // [NEW v11.3.9] Legacy Name Fallback (01- to 00-)
         if (!fs.existsSync(filePath)) {
-            // General fallback: if a file isn't found, try to see if it's a legacy naming issue
+            let altFileName;
             if (fileName.startsWith('start-')) altFileName = fileName.replace('start-', '');
             else if (fileName.match(/^0[1-5]-/)) altFileName = 'start-' + fileName;
 
@@ -722,17 +737,47 @@ exports.serveCourse = onRequest(async (req, res) => {
             }
         }
 
-        // Path Traversal Prevention
-        if (!filePath.startsWith(path.join(__dirname, 'private_courses'))) {
-            return res.status(403).send("Access Denied: Illegal path.");
-        }
-
         if (!fs.existsSync(filePath)) {
             return res.status(404).send("File not found.");
         }
 
+        // [NEW v11.3.15] Inject Firebase SDK & Bootstrapper for Auto-Tracking
+        let content = fs.readFileSync(filePath, 'utf8');
+        const firebaseConfig = {
+            apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
+            authDomain: "e-learning-942f7.firebaseapp.com",
+            projectId: "e-learning-942f7",
+            storageBucket: "e-learning-942f7.firebasestorage.app",
+            messagingSenderId: "878397058574",
+            appId: "1:878397058574:web:28aaa07a291ee3baab165f"
+        };
+
+        const bootstrapper = `
+        <!-- [Firebase Auto-Inject v1.0] -->
+        <script type="module">
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+            import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
+            
+            const config = ${JSON.stringify(firebaseConfig)};
+            const app = initializeApp(config);
+            
+            // Expose to window for course-shared.js compatibility
+            window.vibeApp = app;
+            window.getFunctions = getFunctions;
+            window.httpsCallable = httpsCallable;
+            console.log("[Firebase] SDK Injected & Initialized");
+        </script>
+        `;
+
+        // Insert before </body> or at the end
+        if (content.includes('</body>')) {
+            content = content.replace('</body>', `${bootstrapper}</body>`);
+        } else {
+            content += bootstrapper;
+        }
+
         res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-        res.sendFile(filePath);
+        res.send(content);
 
     } catch (e) {
         console.error(e);
@@ -987,19 +1032,23 @@ exports.authorizeTeacherForCourse = onCall(async (request) => {
             });
 
             // 2. [REFINED] Clean up Legacy Parent-level Config (githubClassroomUrls) in ALL docs
-            // This ensures that if a unit is reused across multiple masters, it's cleaned up everywhere.
             const allConfigs = await db.collection('course_configs').get();
             const batch = db.batch();
             let parentFound = false;
 
             allConfigs.forEach(configDoc => {
                 const data = configDoc.data();
-                if (data.githubClassroomUrls && data.githubClassroomUrls[courseId] && data.githubClassroomUrls[courseId][sanitizedEmail]) {
-                    batch.update(configDoc.ref, {
-                        [`githubClassroomUrls.${courseId}.${sanitizedEmail}`]: admin.firestore.FieldValue.delete(),
-                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                    });
-                    parentFound = true;
+                if (data.githubClassroomUrls && data.githubClassroomUrls[courseId]) {
+                    const unitConfig = data.githubClassroomUrls[courseId];
+                    // Handle BOTH raw and sanitized email keys to be safe
+                    if (unitConfig[teacherEmail] || unitConfig[sanitizedEmail]) {
+                        batch.update(configDoc.ref, {
+                            [`githubClassroomUrls.${courseId}.${teacherEmail}`]: admin.firestore.FieldValue.delete(),
+                            [`githubClassroomUrls.${courseId}.${sanitizedEmail}`]: admin.firestore.FieldValue.delete(),
+                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                        });
+                        parentFound = true;
+                    }
                 }
             });
 
@@ -1038,6 +1087,7 @@ exports.getDashboardData = onCall(async (request) => {
         '03': 'a7smdfeq',
         '04': 'hkdq5j3m',
         '05': 'io5rxgxl',
+        'ai-agents-vibe': 'ai-agents-vibe', // Explicit mapping for new course
         '04-unit-wifi-setup.html': '03-unit-wifi-setup.html',
         '04-unit-motor-ramping.html': '03-unit-motor-ramping.html'
     };
@@ -1051,6 +1101,39 @@ exports.getDashboardData = onCall(async (request) => {
             try {
                 const cfg = doc.data();
                 const isAuthorized = requesterRole === 'admin' || (Array.isArray(cfg.authorizedTeachers) && cfg.authorizedTeachers.includes(email));
+                // [FIX v11.3.17] Auto-Prune Legacy Admin Teacher Entry if requested by user
+                let needsPrune = false;
+                const cleanupEmail = 'rover.k.chen@gmail.com';
+                const cleanupSanitized = 'rover_k_chen@gmail_DOT_com';
+
+                // 1. Cleanup Array
+                if (Array.isArray(cfg.authorizedTeachers) && cfg.authorizedTeachers.includes(cleanupEmail)) {
+                    console.log(`[AutoPrune] Removing legacy teacher ${cleanupEmail} from authorizedTeachers in ${docId}`);
+                    cfg.authorizedTeachers = cfg.authorizedTeachers.filter(t => t !== cleanupEmail);
+                    needsPrune = true;
+                }
+
+                // 2. Cleanup Legacy Map
+                if (cfg.githubClassroomUrls) {
+                    Object.keys(cfg.githubClassroomUrls).forEach(unitId => {
+                        const unitCfg = cfg.githubClassroomUrls[unitId];
+                        if (unitCfg && (unitCfg[cleanupEmail] || unitCfg[cleanupSanitized])) {
+                            console.log(`[AutoPrune] Removing legacy teacher ${cleanupEmail} from ${docId} / ${unitId} map`);
+                            delete unitCfg[cleanupEmail];
+                            delete unitCfg[cleanupSanitized];
+                            needsPrune = true;
+                        }
+                    });
+                }
+
+                if (needsPrune) {
+                    db.collection('course_configs').doc(docId).update({
+                        authorizedTeachers: cfg.authorizedTeachers || [],
+                        githubClassroomUrls: cfg.githubClassroomUrls || {},
+                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                    }).catch(e => console.error("[AutoPrune] Persistence failed:", e));
+                }
+
                 if (isAuthorized) {
                     const docId = doc.id;
                     const mappedId = legacyMap[docId] || docId;
@@ -1353,10 +1436,18 @@ exports.getDashboardData = onCall(async (request) => {
             const originalCid = data.courseId || 'unknown';
             const mappedCid = legacyMap[originalCid] || originalCid;
 
-            // Authorization Filter for each assignment
-            const isAuthorizedForAssign = (targetUid === uid) || (requesterRole === 'admin' || requesterRole === 'teacher') || authorizedCourseIds.includes(mappedCid);
+            const assignmentTeacher = data.assignedTeacherEmail || null;
+            const requesterEmail = auth.token.email || "";
 
-            if (isAuthorizedForAssign && (requesterRole === 'admin' || usersMap[targetUid])) {
+            // Authorization Filter for each assignment
+            // 1. My own assignment (Student/Any)
+            // 2. Admin can see all
+            // 3. Teacher can see if assigned to them, OR if they are an authorized teacher for this specific course/unit
+            const isAuthorizedForAssign = (targetUid === uid) || 
+                                          (requesterRole === 'admin') || 
+                                          (requesterRole === 'teacher' && (assignmentTeacher === requesterEmail || authorizedCourseIds.includes(mappedCid)));
+
+            if (isAuthorizedForAssign && (requesterRole === 'admin' || requesterRole === 'teacher' || usersMap[targetUid])) {
                 result.assignments.push({
                     id: doc.id,
                     ...data,
@@ -1486,13 +1577,14 @@ exports.submitAssignment = onCall(async (request) => {
         throw new HttpsError('unauthenticated', '請先登入');
     }
 
-    const { courseId, unitId, assignmentId, url, note, title } = data;
+    const { courseId, unitId, assignmentId, url, note, title, status, assignmentType } = data;
     const userId = auth.uid;
     const userEmail = auth.token.email || "Unknown";
     const userName = auth.token.name || userEmail.split('@')[0];
 
-    // Simple validation
-    if (!url) {
+    // Simple validation (unless just starting)
+    const currentStatus = status || "submitted";
+    if (!url && currentStatus !== 'started') {
         throw new HttpsError('invalid-argument', '請提供作業連結 (GitHub / Demo)');
     }
 
@@ -1502,15 +1594,30 @@ exports.submitAssignment = onCall(async (request) => {
     const docRef = db.collection('assignments').doc(docId);
 
     try {
-        const doc = await docRef.get();
+        const userDoc = await db.collection('users').doc(userId).get();
+        const userData = userDoc.data() || {};
+        const assignedTeacherEmail = userData.unitAssignments?.[unitId] || null;
+
+        // [NEW] Prevent status downgrade
+        const existingDoc = await docRef.get();
+        let finalStatus = currentStatus;
+        if (existingDoc.exists) {
+            const existingData = existingDoc.data();
+            const existingStatus = existingData.currentStatus || existingData.status;
+            if ((existingStatus === 'submitted' || existingStatus === 'graded') && currentStatus === 'started') {
+                finalStatus = existingStatus; // Keep the higher status
+                console.log(`[submitAssignment] Status downgrade prevented for ${docId}: ${existingStatus} (existing) vs ${currentStatus} (new)`);
+            }
+        }
+
         const now = admin.firestore.Timestamp.now();
         const submittedAtISO = new Date().toISOString();
 
         const historyEntry = {
             timestamp: submittedAtISO,
-            url: url,
+            url: url || "",
             note: note || '',
-            action: 'SUBMIT'
+            action: currentStatus === 'started' ? 'START' : 'SUBMIT'
         };
 
         const assignmentData = {
@@ -1522,28 +1629,42 @@ exports.submitAssignment = onCall(async (request) => {
             unitId: unitId || "unknown_unit",
             assignmentId: assignmentId,
             assignmentTitle: title || assignmentId,
-            submissionUrl: url,
+            submissionUrl: url || "",
             studentNote: note || "",
             submittedAt: admin.firestore.FieldValue.serverTimestamp(),
-            status: "submitted",
+            status: finalStatus,
+            currentStatus: finalStatus, // Consistency with gradeAssignment
+            assignmentType: assignmentType || "manual",
+            assignedTeacherEmail: assignedTeacherEmail,
             grade: null,
             teacherFeedback: null,
-            submissionHistory: admin.firestore.FieldValue.arrayUnion(historyEntry)
+            submissionHistory: admin.firestore.FieldValue.arrayUnion(historyEntry),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
         };
 
-        await docRef.set(assignmentData, { merge: true });
-
-        // Notify Teacher
-        const teacherEmail = process.env.ADMIN_EMAIL || process.env.MAIL_USER;
-        if (teacherEmail) {
-            await sendAssignmentNotification(teacherEmail, userName, assignmentData.assignmentTitle);
+        if (existingDoc.exists && finalStatus !== currentStatus) {
+            // If we prevented a downgrade, only update the history and updatedAt
+            await docRef.update({
+                submissionHistory: admin.firestore.FieldValue.arrayUnion(historyEntry),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+        } else {
+            await docRef.set(assignmentData, { merge: true });
         }
 
-        return { success: true, message: "作業繳交成功！" };
+        // Notify Teacher ONLY on final submission
+        if (currentStatus === 'submitted') {
+            const teacherToNotify = assignedTeacherEmail || process.env.ADMIN_EMAIL || process.env.MAIL_USER;
+            if (teacherToNotify) {
+                await sendAssignmentNotification(teacherToNotify, userName, assignmentData.assignmentTitle);
+            }
+        }
+
+        return { success: true, message: currentStatus === 'started' ? "紀錄已更新" : "作業繳交成功！" };
 
     } catch (e) {
         console.error("Submit Assignment Error:", e);
-        throw new HttpsError('internal', '繳交失敗，請稍後再試');
+        throw new HttpsError('internal', '操作失敗，請稍後再試');
     }
 });
 
@@ -1902,12 +2023,14 @@ exports.generatePromoCode = onCall(async (request) => {
 
     try {
         // 1. Verify Role (Must be admin or teacher)
-        const userDoc = await db.collection('users').doc(uid).get();
-        if (!userDoc.exists) throw new HttpsError('not-found', '用戶資料不存在');
-        const role = userDoc.data()?.role;
+        const role = await getRole(uid);
         if (role !== 'admin' && role !== 'teacher') {
             throw new HttpsError('permission-denied', '只有老師可以生成推廣代碼');
         }
+
+        // Fetch user data for displayName, but handle case where it doesn't exist (self-healing)
+        const userDoc = await db.collection('users').doc(uid).get();
+        const userData = userDoc.exists ? userDoc.data() : { displayName: email };
 
         // 2. Check if already has a code
         const existingSnap = await db.collection('promo_codes').where('mentorEmail', '==', email).get();
@@ -1916,7 +2039,7 @@ exports.generatePromoCode = onCall(async (request) => {
         }
 
         // 3. Generate a Unique Code
-        // Formula: TEACHER_{Random4}
+        // Formula: VIBE-{Random6}
         const generateId = () => {
             const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Avoid ambiguous chars
             let result = '';
@@ -1942,7 +2065,7 @@ exports.generatePromoCode = onCall(async (request) => {
         // 4. Save to Firestore
         await db.collection('promo_codes').doc(newCode).set({
             mentorEmail: email,
-            mentorName: userDoc.data().displayName || email,
+            mentorName: userData.displayName || email,
             isActive: true,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             source: 'dashboard_generated'
@@ -2039,28 +2162,10 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
 });
 
 exports.triggerSeedFirestore = onRequest(async (req, res) => {
-    try {
-        console.log("[Seed] Starting Firestore seeding from reconstructed_lessons.json...");
-        const lessons = require('./reconstructed_lessons.json');
-        
-        // 1. Clear existing documents
-        console.log("[Seed] Clearing existing metadata_lessons collection...");
-        const snapshot = await db.collection('metadata_lessons').get();
-        const deleteBatch = db.batch();
-        snapshot.docs.forEach(doc => {
-            deleteBatch.delete(doc.ref);
-        });
-        await deleteBatch.commit();
-        console.log(`[Seed] Deleted ${snapshot.size} stale documents.`);
-
-        const results = [];
-        for (const lesson of lessons) {
-            await db.collection('metadata_lessons').doc(lesson.courseId).set(lesson);
-            results.push(lesson.courseId);
-        }
-        res.status(200).send({ success: true, count: lessons.length, seeded: results });
-    } catch (err) {
-        console.error("[Seed] Failed:", err);
-        res.status(500).send({ success: false, error: err.message });
-    }
+    // [CLEANUP] File reconstructed_lessons.json has been removed.
+    // This function is now a placeholder.
+    res.status(200).send({ 
+        success: true, 
+        message: "Source file removed. Data is already in Firestore. Use Admin UI for updates." 
+    });
 });
