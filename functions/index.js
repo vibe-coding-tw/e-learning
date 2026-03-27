@@ -1278,7 +1278,7 @@ exports.getDashboardData = onCall(async (request) => {
         if (isManagementView) {
             try {
                 // If a unitId is provided from the frontend, fetch the SPECIFIC code for that unit
-                const filterUnitId = data.unitId;
+                const filterUnitId = data ? data.unitId : null;
                 let promoQuery = db.collection('promo_codes').where('mentorEmail', '==', email);
                 
                 if (filterUnitId) {
