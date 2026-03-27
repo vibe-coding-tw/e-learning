@@ -250,8 +250,11 @@ function normalizeUnitId(unitId) {
 }
 
 function hasQualifiedTeacherAccessForUnit(fileName, courseId, email) {
-    if (!email || !fileName || !courseId) return false;
+    // [NEW] Admin SuperMode grants mandatory access to all unit administrative tabs
+    if (adminSuperMode && myRole === 'admin') return true;
 
+    if (!email || !fileName || !courseId) return false;
+    
     const courseConfig = dashboardData?.courseConfigs?.[courseId] || {};
     const unitConfigs = courseConfig.githubClassroomUrls || {};
     const unitDocConfig = dashboardData?.courseConfigs?.[fileName] || {};
@@ -1272,6 +1275,13 @@ window.handleUnitTeacherAuth = async function (courseId, unitFile, teacherEmail,
 window.toggleAdminSuperMode = function (enabled) {
     adminSuperMode = enabled;
     localStorage.setItem('adminSuperMode', enabled);
+    
+    // [MODIFIED] Full Refresh for Admin
+    if (myRole === 'admin') {
+        const params = new URLSearchParams(window.location.search);
+        renderAdminDashboard(dashboardData, params.get('unitId'));
+    }
+    
     renderAdminConsole();
 };
 
