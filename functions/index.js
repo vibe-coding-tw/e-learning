@@ -986,12 +986,25 @@ exports.authorizeTeacherForCourse = onCall(async (request) => {
                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
             });
 
-            // 2. [FIX] Clean up Legacy Parent-level Config (githubClassroomUrls)
-            if (parentDocRef) {
-                await parentDocRef.update({
-                    [`githubClassroomUrls.${courseId}.${sanitizedEmail}`]: admin.firestore.FieldValue.delete(),
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                });
+            // 2. [REFINED] Clean up Legacy Parent-level Config (githubClassroomUrls) in ALL docs
+            // This ensures that if a unit is reused across multiple masters, it's cleaned up everywhere.
+            const allConfigs = await db.collection('course_configs').get();
+            const batch = db.batch();
+            let parentFound = false;
+
+            allConfigs.forEach(configDoc => {
+                const data = configDoc.data();
+                if (data.githubClassroomUrls && data.githubClassroomUrls[courseId] && data.githubClassroomUrls[courseId][sanitizedEmail]) {
+                    batch.update(configDoc.ref, {
+                        [`githubClassroomUrls.${courseId}.${sanitizedEmail}`]: admin.firestore.FieldValue.delete(),
+                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                    });
+                    parentFound = true;
+                }
+            });
+
+            if (parentFound) {
+                await batch.commit();
             }
         }
         return { success: true };
