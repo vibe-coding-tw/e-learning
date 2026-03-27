@@ -1155,6 +1155,10 @@ exports.getDashboardData = onCall(async (request) => {
                 if (cfg.githubClassroomUrls) {
                     Object.keys(cfg.githubClassroomUrls).forEach(unitId => {
                         unitToDocId[unitId] = docId;
+                        // [FIX] Handle start- prefix mismatch between Firestore and Metadata
+                        if (unitId.match(/^0[1-5]-unit-/)) {
+                            unitToDocId['start-' + unitId] = docId;
+                        }
                     });
                 }
 
@@ -1162,8 +1166,12 @@ exports.getDashboardData = onCall(async (request) => {
                     const mappedId = legacyMap[docId] || docId;
 
                     if (docId.includes('.html')) {
+                        // [FIX] Normalize ID to handle start- prefix mismatch
+                        const normalizedId = mappedId.replace('start-', '');
                         // Find parent course for this unit
-                        const parentCourse = lessons.find(l => l.courseUnits && l.courseUnits.includes(mappedId));
+                        const parentCourse = lessons.find(l => 
+                            l.courseUnits && (l.courseUnits.includes(mappedId) || l.courseUnits.some(cu => cu.replace('start-', '') === normalizedId))
+                        );
                         if (parentCourse && !authorizedCourseIds.includes(parentCourse.courseId)) {
                             authorizedCourseIds.push(parentCourse.courseId);
                         }
