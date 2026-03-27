@@ -426,10 +426,10 @@ function renderAdminDashboard(data, filterUnitId = null) {
     const settingsTabBtn = document.getElementById('tab-btn-settings');
     const earningsTabBtn = document.getElementById('tab-btn-earnings');
 
-    // 1. Admin Tab (Always Admin-only, toggle on SuperMode if preferred, or just leave as is)
+    // 1. Admin Tab (Always Admin-only, always visible if myRole is admin)
     if (adminTabBtn) {
         if (myRole === 'admin') {
-            adminTabBtn.classList.toggle('hidden', !adminSuperMode); // Admins only see this in SuperMode
+            adminTabBtn.classList.remove('hidden');
         } else {
             adminTabBtn.classList.add('hidden');
         }
@@ -439,28 +439,32 @@ function renderAdminDashboard(data, filterUnitId = null) {
     const urlParams = new URLSearchParams(window.location.search);
     let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
 
-    let isAuthorizedForManagement = false;
-    
-    if (myRole === 'admin') {
-        // Admin: Only see these if SuperMode is ON
-        isAuthorizedForManagement = adminSuperMode;
-    } else if (myRole === 'teacher') {
-        // Teacher: Show if authorized for the current view
-        if (filterUnitId) {
-            isAuthorizedForManagement = !!(data.courseConfigs && data.courseConfigs[filterUnitId]);
-        } else if (filterCourseId) {
-            isAuthorizedForManagement = !!(data.courseConfigs && data.courseConfigs[filterCourseId]);
-        } else {
-            // Global view: show if any authorized courses exist
-            isAuthorizedForManagement = !!(data.courseConfigs && Object.keys(data.courseConfigs).length > 0);
-        }
+    // Check if the current user (Teacher or Admin) is specifically authorized for this content
+    let isTeacherAuthorizedForThisView = false;
+    if (filterUnitId) {
+        isTeacherAuthorizedForThisView = !!(data.courseConfigs && data.courseConfigs[filterUnitId]);
+    } else if (filterCourseId) {
+        isTeacherAuthorizedForThisView = !!(data.courseConfigs && data.courseConfigs[filterCourseId]);
+    } else {
+        // Global view: show if any authorized courses exist for this teacher/admin
+        isTeacherAuthorizedForThisView = !!(data.courseConfigs && Object.keys(data.courseConfigs).length > 0);
+    }
+
+    // Final visibility decision
+    let showManagementTabs = false;
+    if (isTeacherAuthorizedForThisView) {
+        // If they are the assigned teacher, always show
+        showManagementTabs = true;
+    } else if (myRole === 'admin' && adminSuperMode) {
+        // If they are admin AND SuperMode is ON, show (to manage others' courses)
+        showManagementTabs = true;
     }
 
     if (settingsTabBtn) {
-        settingsTabBtn.classList.toggle('hidden', !isAuthorizedForManagement);
+        settingsTabBtn.classList.toggle('hidden', !showManagementTabs);
     }
     if (earningsTabBtn) {
-        earningsTabBtn.classList.toggle('hidden', !isAuthorizedForManagement);
+        earningsTabBtn.classList.toggle('hidden', !showManagementTabs);
     }
 
     // Stats (Base on filtered students if unit is selected)
