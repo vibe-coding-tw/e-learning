@@ -1081,7 +1081,10 @@ exports.authorizeTeacherForCourse = onCall(async (request) => {
 // 8. 獲取儀表板數據 (getDashboardData)
 // ==========================================
 exports.getDashboardData = onCall(async (request) => {
-    const { data, auth } = request;
+    const data = request.data || {};
+    const auth = request.auth;
+    console.log(`[getDashboardData] Start - UID: ${auth?.uid}, data: ${JSON.stringify(data)}`);
+    
     if (!auth) {
         throw new HttpsError('unauthenticated', 'User must be logged in.');
     }
@@ -1278,7 +1281,7 @@ exports.getDashboardData = onCall(async (request) => {
         if (isManagementView) {
             try {
                 // If a unitId is provided from the frontend, fetch the SPECIFIC code for that unit
-                const filterUnitId = data ? data.unitId : null;
+                const filterUnitId = data.unitId || null;
                 let promoQuery = db.collection('promo_codes').where('mentorEmail', '==', email);
                 
                 if (filterUnitId) {
