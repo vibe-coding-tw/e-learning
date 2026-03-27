@@ -1009,13 +1009,11 @@ exports.authorizeTeacherForCourse = onCall(async (request) => {
                 });
             }
 
-            // [NEW] Also update parent legacy map if provided
+            // [NEW] Also update parent legacy map if provided (use dot-notation to avoid overwrite)
             if (parentDocRef) {
-                await parentDocRef.set({
-                    githubClassroomUrls: {
-                        [courseId]: { [teacherEmail]: "authorized" } // Placeholder or flag
-                    }
-                }, { merge: true });
+                await parentDocRef.update({
+                    [`githubClassroomUrls.${courseId}.${sanitizedEmail}`]: "authorized"
+                });
             }
 
             // [MODIFIED] Do NOT set role: 'teacher' in users collection.
@@ -1098,6 +1096,7 @@ exports.getDashboardData = onCall(async (request) => {
         const courseConfigs = {};
         const configsSnapshot = await db.collection('course_configs').get();
         configsSnapshot.forEach(doc => {
+            const docId = doc.id; // [FIX 11.3.18] Define docId early for scope availability
             try {
                 const cfg = doc.data();
                 const isAuthorized = requesterRole === 'admin' || (Array.isArray(cfg.authorizedTeachers) && cfg.authorizedTeachers.includes(email));
@@ -1135,7 +1134,6 @@ exports.getDashboardData = onCall(async (request) => {
                 }
 
                 if (isAuthorized) {
-                    const docId = doc.id;
                     const mappedId = legacyMap[docId] || docId;
 
                     if (docId.includes('.html')) {
