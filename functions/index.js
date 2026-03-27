@@ -741,8 +741,21 @@ exports.serveCourse = onRequest(async (req, res) => {
 });
 
 const getRole = async (uid) => {
-    const userDoc = await admin.firestore().collection('users').doc(uid).get();
-    return userDoc.exists ? userDoc.data().role : 'student'; // Default to student
+    try {
+        const userDoc = await admin.firestore().collection('users').doc(uid).get();
+        if (userDoc.exists) return userDoc.data().role;
+
+        // [SELF-HEALING] Fallback for bootstrapping or if Firestore doc is missing
+        const userRecord = await admin.auth().getUser(uid);
+        const adminEmail = process.env.ADMIN_EMAIL || 'rover.k.chen@gmail.com';
+        if (userRecord.email && userRecord.email.toLowerCase() === adminEmail.toLowerCase()) {
+            console.log(`[Role] Self-healing: Granting admin to ${userRecord.email}`);
+            return 'admin';
+        }
+    } catch (e) {
+        console.error("[Role] Error in getRole:", e);
+    }
+    return 'student'; // Default to student
 };
 
 // ==========================================
@@ -1012,6 +1025,7 @@ exports.getDashboardData = onCall(async (request) => {
     const uid = auth.uid;
     const email = auth.token.email;
     const requesterRole = await getRole(uid);
+    console.log(`[getDashboardData] Requester UID: ${uid}, Email: ${email}, Role: ${requesterRole}`);
     const db = admin.firestore();
     const lessons = await getLessons(); 
     
