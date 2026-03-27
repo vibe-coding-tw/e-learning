@@ -40,6 +40,10 @@ This document outlines the core principles and standards for the Vibe Coding pla
     - 授權資料應儲存在 `course_configs/{unitFileName}` 文件的 `authorizedTeachers` 欄位中。
     - **身分角色 (User Roles)**：即使被授權為某單元的合格教師，用戶在 `users` 集合中的 `role` 仍維持為 `student`。系統不應將其角色升級為 `teacher`。
     - **權限判讀**：系統應根據單元的 `authorizedTeachers` 清單來判斷是否顯示管理分頁，而非依賴全局角色。
+- **管理員超級模式 (Admin SuperMode)**：
+    - **僅限 Admin**：這是一項專屬於 `admin` 角色的管理功能，對其餘用戶（包括合格教師）完全無效。
+    - **權限覆蓋**：當 `adminSuperMode` 為 `true` 且用戶身分為 `admin` 時，系統應顯示所有課程單元的「設定」與「分潤」分頁，具備最高管理權限。
+    - **UI 同步**：切換 SuperMode 應立即反應在分頁顯示狀態上，無需重新整理頁面。
 - **遺留數據同步 (Legacy Sync)**：
     - 為了相容舊版資料，系統在執行授權異動時，會同步清理 `course_configs/{masterCourseId}` 中的 `githubClassroomUrls` 地圖，確保 UI 上不會出現無法移除的「幽靈教師」。
     - 核心開發應優先使用單元級別的 `authorizedTeachers`。
