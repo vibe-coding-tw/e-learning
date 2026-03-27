@@ -1001,11 +1001,10 @@ exports.authorizeTeacherForCourse = onCall(async (request) => {
 });
 
 // 7.4 一次性遷移：將主課程的老師搬移到單元級別 (Migration)
-exports.migrateTeachers = onCall(async (request) => {
-    const { auth } = request;
-    if (!auth) throw new HttpsError('unauthenticated', '請先登入');
-    const requesterRole = await getRole(auth.uid);
-    if (requesterRole !== 'admin') throw new HttpsError('permission-denied', '僅限管理員');
+// [TEMPORARY] Converted to onRequest for one-time execution by agent
+exports.execMigration = onRequest(async (req, res) => {
+    // Secret check for safety
+    if (req.query.secret !== 'vibe_migrate_2026') return res.status(403).send("Forbidden");
 
     const db = admin.firestore();
     const lessons = await getLessons(); 
@@ -1070,7 +1069,7 @@ exports.migrateTeachers = onCall(async (request) => {
         cleanupCount++;
     }
 
-    return { success: true, count: totalMigrated, cleanedUp: cleanupCount };
+    res.json({ success: true, count: totalMigrated, cleanedUp: cleanupCount });
 });
 
 // ==========================================

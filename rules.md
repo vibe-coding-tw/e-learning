@@ -38,7 +38,8 @@ This document outlines the core principles and standards for the Vibe Coding pla
 ## 5. 授權與角色管理 (Authorization & Roles)
 - **合格教師 (Qualified Teachers)**：權限嚴格與**「課程單元 (Course Units)」**綁定。
     - 授權資料應儲存在 `course_configs/{unitFileName}` 文件的 `authorizedTeachers` 欄位中。
-    - **非主課程綁定**：主課程 (Master Course) ID 僅用於彙整顯示，不作為授權判定的唯一來源。
+    - **身分角色 (User Roles)**：即使被授權為某單元的合格教師，用戶在 `users` 集合中的 `role` 仍維持為 `student`。系統不應將其角色升級為 `teacher`。
+    - **權限判讀**：系統應根據單元的 `authorizedTeachers` 清單來判斷是否顯示管理分頁，而非依賴全局角色。
 - **遺留數據同步 (Legacy Sync)**：
     - 為了相容舊版資料，系統在執行授權異動時，會同步清理 `course_configs/{masterCourseId}` 中的 `githubClassroomUrls` 地圖，確保 UI 上不會出現無法移除的「幽靈教師」。
     - 核心開發應優先使用單元級別的 `authorizedTeachers`。
