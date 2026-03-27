@@ -1954,4 +1954,3 @@ function renderEarningsTab(data) {
 window.handleGeneratePromoCode = async function () {
     alert("現在推薦碼會在授權時自動生成並透過 Email 通知教師。如需查詢，請在上方選單切換至對應單元後查看「分潤」分頁。");
 };
-}
