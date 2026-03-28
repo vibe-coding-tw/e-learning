@@ -61,13 +61,8 @@ async function vibeFetchLessons() {
     // Wait for SDK if it's currently being injected
     const isReady = await waitForVibeFirebase();
     if (!isReady) {
-        console.warn("[CourseShared] Firebase SDK timed out. Falling back to local fetch.");
-        try {
-            const resp = await fetch('/lessons.json');
-            return await resp.json();
-        } catch (f) {
-            return [];
-        }
+        console.warn("[CourseShared] Firebase SDK timed out. Firestore data unavailable.");
+        return [];
     }
 
     try {
@@ -781,22 +776,24 @@ window.openSubmissionModal = async function (assignmentId, title) {
         classroomUrl = resolveClassroomUrl(window.RESOURCES.githubClassroomUrl);
     }
 
-    // C. Fallback to centralized lessons.json
+    // C. Fallback to centralized lessons metadata (Firestore cached)
     if (!classroomUrl) {
         try {
             if (!globalLessonsData) {
-                const resp = await fetch('/lessons.json');
-                globalLessonsData = await resp.json();
+                // If not cached, try fetching now (strictly Firestore)
+                globalLessonsData = await vibeFetchLessons();
             }
             // Search all courses for this filename key
-            for (const course of globalLessonsData) {
-                if (course.githubClassroomUrls && course.githubClassroomUrls[fileName]) {
-                    classroomUrl = resolveClassroomUrl(course.githubClassroomUrls[fileName]);
-                    break;
+            if (globalLessonsData) {
+                for (const course of globalLessonsData) {
+                    if (course.githubClassroomUrls && course.githubClassroomUrls[fileName]) {
+                        classroomUrl = resolveClassroomUrl(course.githubClassroomUrls[fileName]);
+                        break;
+                    }
                 }
             }
         } catch (e) {
-            console.error("[CourseShared] Fallback link fetch failed:", e);
+            console.error("[CourseShared] Firestore link fetch failed:", e);
         }
     }
 

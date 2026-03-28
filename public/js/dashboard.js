@@ -100,9 +100,8 @@ async function loadLessons() {
         if (typeof vibeFetchLessons === 'function') {
             allLessons = await vibeFetchLessons();
         } else {
-            // Fallback for standalone dev
-            const res = await fetch('lessons.json');
-            allLessons = await res.json();
+            console.error("[Dashboard] vibeFetchLessons not found. Firestore data unavailable.");
+            allLessons = [];
         }
         
         console.log(`[Dashboard] Loaded ${allLessons.length} lessons from metadata source.`);
@@ -248,7 +247,59 @@ function resolveCourseIdFromUrlParam(paramId) {
 
 function normalizeUnitId(unitId) {
     if (!unitId || typeof unitId !== 'string') return '';
+    // Keep the canonical filename key; only strip URL noise.
     return unitId.split('#')[0].split('?')[0].trim();
+}
+
+function getEquivalentUnitIds(unitId) {
+    const normalized = normalizeUnitId(unitId);
+    if (!normalized) return [];
+
+    const variants = new Set([normalized]);
+    const withHtml = normalized.endsWith('.html') ? normalized : `${normalized}.html`;
+    const withoutHtml = withHtml.replace(/\.html$/i, '');
+
+    variants.add(withHtml);
+    variants.add(withoutHtml);
+
+    if (/^0[1-5]-unit-/.test(withHtml)) {
+        variants.add(`start-${withHtml}`);
+        variants.add(`start-${withoutHtml}`);
+    }
+
+    if (/^start-0[1-5]-unit-/.test(withHtml)) {
+        const shortWithHtml = withHtml.replace(/^start-/, '');
+        const shortWithoutHtml = withoutHtml.replace(/^start-/, '');
+        variants.add(shortWithHtml);
+        variants.add(shortWithoutHtml);
+    }
+
+    return Array.from(variants);
+}
+
+function unitIdsMatch(a, b) {
+    const left = new Set(getEquivalentUnitIds(a));
+    return getEquivalentUnitIds(b).some(id => left.has(id));
+}
+
+function resolveCanonicalUnitId(unitId) {
+    const candidates = getEquivalentUnitIds(unitId);
+    if (candidates.length === 0) return '';
+
+    for (const candidate of candidates) {
+        if (dashboardData?.unitToDocId?.[candidate]) return candidate;
+        if ((allLessons || []).some(l => Array.isArray(l.courseUnits) && l.courseUnits.includes(candidate))) return candidate;
+    }
+
+    return candidates.find(id => id.endsWith('.html')) || candidates[0];
+}
+
+function findParentCourseIdByUnit(unitId) {
+    const candidates = getEquivalentUnitIds(unitId);
+    const lesson = (allLessons || []).find(l =>
+        Array.isArray(l.courseUnits) && l.courseUnits.some(courseUnit => candidates.includes(courseUnit))
+    );
+    return lesson?.courseId || null;
 }
 
 function hasQualifiedTeacherAccessForUnit(fileName, courseId, email) {
@@ -256,15 +307,22 @@ function hasQualifiedTeacherAccessForUnit(fileName, courseId, email) {
     
     const courseConfig = dashboardData?.courseConfigs?.[courseId] || {};
     const unitConfigs = courseConfig.githubClassroomUrls || {};
-    const unitDocConfig = dashboardData?.courseConfigs?.[fileName] || {};
+    const candidateIds = getEquivalentUnitIds(fileName);
+    const targetDocId = candidateIds
+        .map(id => dashboardData?.unitToDocId?.[id] || id)
+        .find(id => dashboardData?.courseConfigs?.[id]) || fileName;
+    const unitDocConfig = dashboardData?.courseConfigs?.[targetDocId] || {};
     const unitTeachersArr = Array.isArray(unitDocConfig.authorizedTeachers) ? unitDocConfig.authorizedTeachers : [];
-    const legacyTeachers = (unitConfigs[fileName] && typeof unitConfigs[fileName] === 'object') ? Object.keys(unitConfigs[fileName]) : [];
+    const legacyTeachers = candidateIds.flatMap(id =>
+        (unitConfigs[id] && typeof unitConfigs[id] === 'object') ? Object.keys(unitConfigs[id]) : []
+    );
 
     return new Set([...unitTeachersArr, ...legacyTeachers]).has(email);
 }
 
 // --- Rendering ---
 function renderStudentDashboard(data, filterUnitId = null) {
+    filterUnitId = resolveCanonicalUnitId(filterUnitId);
     loadingState.classList.add('hidden');
     dashboardContent.classList.remove('hidden');
 
@@ -286,7 +344,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
     if (filterCourseId) {
         // [NEW] Filter assignments by unit if present
         if (filterUnitId) {
-            displayAssignments = displayAssignments.filter(a => a.unitId === filterUnitId);
+            displayAssignments = displayAssignments.filter(a => unitIdsMatch(a.unitId, filterUnitId));
         } else {
             displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
         }
@@ -431,7 +489,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
 }
 
 function renderAdminDashboard(data, filterUnitId = null) {
-    filterUnitId = normalizeUnitId(filterUnitId);
+    filterUnitId = resolveCanonicalUnitId(filterUnitId);
     loadingState.classList.add('hidden');
     dashboardContent.classList.remove('hidden');
 
@@ -454,8 +512,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
     let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
     const currentUserEmail = auth.currentUser?.email || '';
     if (!filterCourseId && filterUnitId) {
-        const parentLesson = allLessons.find(l => Array.isArray(l.courseUnits) && l.courseUnits.includes(filterUnitId));
-        filterCourseId = parentLesson?.courseId || null;
+        filterCourseId = findParentCourseIdByUnit(filterUnitId);
     }
     const showQualifiedTeacherTabs =
         !!filterUnitId &&
@@ -477,8 +534,8 @@ function renderAdminDashboard(data, filterUnitId = null) {
         // [USER_REQUEST] Overview stats should reflect currently filtered list
         const unitStudents = (data?.students || []).filter(s => {
             const orders = s.orders || [];
-            const parentCourse = (allLessons || []).find(l => l.courseUnits && l.courseUnits.includes(filterUnitId));
-            return parentCourse && orders.includes(parentCourse.courseId);
+            const parentCourseId = findParentCourseIdByUnit(filterUnitId);
+            return parentCourseId && orders.includes(parentCourseId);
         });
         summaryStudents = unitStudents.length;
         summaryHours = unitStudents.reduce((acc, curr) => {
@@ -606,7 +663,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
             // Render Unit Rows (if any)
             if (progress.units) {
                 const sortedUnits = Object.entries(progress.units)
-                    .filter(([unitKey]) => (!filterUnitId || unitKey === filterUnitId) && !unitKey.includes('-master-'))
+                    .filter(([unitKey]) => (!filterUnitId || unitIdsMatch(unitKey, filterUnitId)) && !unitKey.includes('-master-'))
                     .sort();
                 const unitRows = sortedUnits.map(([unitKey, unitStats]) => {
                     // Format Unit Name
@@ -703,7 +760,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
         });
 
         if (filterUnitId) {
-            displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId && a.unitId === filterUnitId);
+            displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId && unitIdsMatch(a.unitId, filterUnitId));
         } else {
             displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
         }
@@ -718,7 +775,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
 // Helper: Resolve assignment guide for a unit
 function resolveAssignmentGuide(data, filterCourseId, filterUnitId) {
     if (!filterCourseId || !filterUnitId) return "";
-    filterUnitId = normalizeUnitId(filterUnitId);
+    filterUnitId = resolveCanonicalUnitId(filterUnitId);
 
     try {
         const rawInstructor = (data.courseConfigs && data.courseConfigs[filterCourseId]) ? data.courseConfigs[filterCourseId].instructorGuide : null;
@@ -726,9 +783,9 @@ function resolveAssignmentGuide(data, filterCourseId, filterUnitId) {
 
         const guideData = robustExtractGuideSegments(rawInstructor, rawAssignment);
 
-        // Flexible resolution: try raw, then with .html, then without .html, then unit number
         const cleanUnitId = filterUnitId.replace('.html', '');
-        let assignmentGuide = guideData.assignmentGuides[filterUnitId] ||
+        const candidateIds = getEquivalentUnitIds(filterUnitId);
+        let assignmentGuide = candidateIds.map(id => guideData.assignmentGuides[id]).find(Boolean) ||
             guideData.assignmentGuides[cleanUnitId] ||
             guideData.assignmentGuides[cleanUnitId + '.html'] || "";
 
@@ -738,8 +795,7 @@ function resolveAssignmentGuide(data, filterCourseId, filterUnitId) {
             const lesson = allLessons.find(l => l.courseId === filterCourseId);
             const units = lesson?.courseUnits || [];
 
-            // Search using clean names
-            const unitIdx = units.findIndex(u => u.replace('.html', '') === cleanUnitId);
+            const unitIdx = units.findIndex(u => unitIdsMatch(u, filterUnitId) || u.replace('.html', '') === cleanUnitId);
             if (unitIdx !== -1) {
                 const unitNum = unitIdx + 1;
                 assignmentGuide = (guideData.assignmentGuides[unitNum] || "").trim();
@@ -1011,19 +1067,19 @@ window.switchTab = function (tabName) {
     // [NEW] Trigger specific tab data loading
     if (tabName === 'settings') {
         const urlParams = new URLSearchParams(window.location.search);
-        const filterUnitId = normalizeUnitId(urlParams.get('unitId'));
+        const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
         console.log("[Dashboard] Rendering Settings for unitId:", filterUnitId);
         renderSettingsTab(filterUnitId);
     }
     if (tabName === 'assignments') {
         const urlParams = new URLSearchParams(window.location.search);
-        const filterUnitId = normalizeUnitId(urlParams.get('unitId'));
+        const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
         let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
 
         let displayAssignments = dashboardData.assignments;
         if (filterCourseId) {
             if (filterUnitId) {
-                displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId && a.unitId === filterUnitId);
+                displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId && unitIdsMatch(a.unitId, filterUnitId));
             } else {
                 displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
             }
@@ -1038,9 +1094,9 @@ window.switchTab = function (tabName) {
 
                 const guideData = robustExtractGuideSegments(rawInstructor, rawAssignment);
 
-                // Flexible resolution: try raw, then with .html, then without .html, then unit number
                 const cleanUnitId = filterUnitId.replace('.html', '');
-                assignmentGuide = (guideData.assignmentGuides[filterUnitId] ||
+                const candidateIds = getEquivalentUnitIds(filterUnitId);
+                assignmentGuide = (candidateIds.map(id => guideData.assignmentGuides[id]).find(Boolean) ||
                     guideData.assignmentGuides[cleanUnitId] ||
                     guideData.assignmentGuides[cleanUnitId + '.html'] || "").trim();
 
@@ -1048,8 +1104,7 @@ window.switchTab = function (tabName) {
                     const lesson = allLessons.find(l => l.courseId === filterCourseId);
                     const units = lesson?.courseUnits || [];
 
-                    // Search using clean names
-                    const unitIdx = units.findIndex(u => u.replace('.html', '') === cleanUnitId);
+                    const unitIdx = units.findIndex(u => unitIdsMatch(u, filterUnitId) || u.replace('.html', '') === cleanUnitId);
                     if (unitIdx !== -1) {
                         assignmentGuide = (guideData.assignmentGuides[unitIdx + 1] || "").trim();
                     }
@@ -1078,7 +1133,7 @@ function renderAdminConsole() {
     if (myRole !== 'admin') return;
 
     const urlParams = new URLSearchParams(window.location.search);
-    const filterUnitId = urlParams.get('unitId');
+    const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
 
     const adminPanel = document.getElementById('admin-panel');
     if (!adminPanel) return;
@@ -1115,17 +1170,21 @@ function renderAdminConsole() {
                     .filter(f => f && !f.includes('-master-'));
 
                 if (filterUnitId) {
-                    allFiles = allFiles.filter(f => f === filterUnitId);
+                    allFiles = allFiles.filter(f => unitIdsMatch(f, filterUnitId));
                 }
 
                 if (allFiles.length === 0) return '';
 
                 return allFiles.map(unitFile => {
-                    if (renderedUnits.has(unitFile)) return ''; // [NEW] Skip duplicates
-                    renderedUnits.add(unitFile);
+                    // [FIX] Use normalized ID for duplicate prevention
+                    const normalizedFile = normalizeUnitId(unitFile);
+                    if (renderedUnits.has(normalizedFile)) return ''; 
+                    renderedUnits.add(normalizedFile);
 
                     // [FIX] Use unitToDocId map to find the correct Firestore document
-                    const targetDocId = dashboardData?.unitToDocId?.[unitFile] || lesson.courseId;
+                    const targetDocId = getEquivalentUnitIds(unitFile)
+                        .map(id => dashboardData?.unitToDocId?.[id] || id)
+                        .find(id => dashboardData?.courseConfigs?.[id]) || lesson.courseId;
                     const unitDocConfig = dashboardData?.courseConfigs?.[targetDocId] || {};
                     
                     const unitTeachersArr = Array.isArray(unitDocConfig.authorizedTeachers) ? unitDocConfig.authorizedTeachers : [];
@@ -1133,7 +1192,7 @@ function renderAdminConsole() {
                     const unitTeachers = Array.from(new Set([...unitTeachersArr, ...legacyTeachers])).filter(t => t && t !== 'default');
                     const unitName = formatUnitName(unitFile) || unitFile;
 
-                    const isSelected = filterUnitId && unitFile === filterUnitId;
+                    const isSelected = filterUnitId && unitIdsMatch(unitFile, filterUnitId);
                     const containerClass = isSelected ? "bg-blue-50/60 border-l-4 border-blue-500 shadow-sm z-10" : "hover:bg-orange-50/20 transition-colors";
                     const inputId = `input-auth-${lesson.courseId}-${unitFile}`.replace(/[^a-z0-9]/gi, '-');
 
@@ -1574,19 +1633,26 @@ function isUserAuthorizedForUnit(fileName, courseId, email) {
     const courseConfig = dashboardData?.courseConfigs?.[courseId] || {};
     const unitConfigs = courseConfig.githubClassroomUrls || {};
 
+    const candidateIds = getEquivalentUnitIds(fileName);
+    const targetDocId = candidateIds
+        .map(id => dashboardData?.unitToDocId?.[id] || id)
+        .find(id => dashboardData?.courseConfigs?.[id]) || fileName;
+
     // 1. Check unit-specific document for authorizedTeachers array
-    const unitDocConfig = dashboardData?.courseConfigs?.[fileName] || {};
+    const unitDocConfig = dashboardData?.courseConfigs?.[targetDocId] || {};
     const unitTeachersArr = Array.isArray(unitDocConfig.authorizedTeachers) ? unitDocConfig.authorizedTeachers : [];
 
     // 2. Legacy/Fallback: Teachers specifically authorized for THIS unit in course-level doc
-    const legacyTeachers = (unitConfigs[fileName] && typeof unitConfigs[fileName] === 'object') ? Object.keys(unitConfigs[fileName]) : [];
+    const legacyTeachers = candidateIds.flatMap(id =>
+        (unitConfigs[id] && typeof unitConfigs[id] === 'object') ? Object.keys(unitConfigs[id]) : []
+    );
 
     const allAuthorized = new Set([...unitTeachersArr, ...legacyTeachers]);
     return allAuthorized.has(email);
 }
 
 async function renderSettingsTab(filterUnitId = null) {
-    filterUnitId = normalizeUnitId(filterUnitId);
+    filterUnitId = resolveCanonicalUnitId(filterUnitId);
     console.log("[Settings] renderSettingsTab invoked with filter:", filterUnitId);
     
     const assignmentContainer = document.getElementById('assignment-setting');
@@ -1668,9 +1734,9 @@ async function renderSettingsTab(filterUnitId = null) {
 
             const filteredUnits = units.filter(f => {
                 const isMaster = f.includes('-master-');
-                if (isMaster && filterUnitId !== f && filterUnitId !== null) return false;
+                if (isMaster && filterUnitId && !unitIdsMatch(f, filterUnitId)) return false;
                 if (filterUnitId && !filterUnitId.includes('-master-')) {
-                    return f.replace('.html', '') === normalizeUnitId(filterUnitId).replace('.html', '');
+                    return unitIdsMatch(f, filterUnitId);
                 }
                 return true;
             });
