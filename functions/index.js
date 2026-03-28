@@ -15,7 +15,8 @@ const path = require("path");
 const {
     sendWelcomeEmail, sendPaymentSuccessEmail, sendTrialExpiringEmail, sendCourseExpiringEmail,
     sendAssignmentNotification, sendTeacherAuthorizationEmail, sendGradingNotification,
-    sendStudentLinkedToTeacherEmail, sendTeacherLinkedToStudentEmail, sendAdminAssignmentReminder
+    sendStudentLinkedToTeacherEmail, sendTeacherLinkedToStudentEmail, sendAdminAssignmentReminder,
+    sendAdminNewApplicationEmail, sendApplicationResultEmail
 } = require('./emailService');
 
 admin.initializeApp({
@@ -1078,6 +1079,139 @@ exports.authorizeTeacherForCourse = onCall(async (request) => {
 // 7.4 一次性遷移：此功能已於 2026-03-27 執行完畢並移除。
 
 // ==========================================
+// 7.1. 申請合格教師 (applyForTeacherRole)
+exports.applyForTeacherRole = onCall(async (request) => {
+    const data = request.data || {};
+    const auth = request.auth;
+    if (!auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
+
+    const { unitId } = data;
+    if (!unitId) throw new HttpsError('invalid-argument', 'Missing unitId');
+
+    const uid = auth.uid;
+    const email = auth.token.email;
+    const db = admin.firestore();
+
+    // Check if user is already authorized
+    const docRef = db.collection('course_configs').doc(unitId);
+    const doc = await docRef.get();
+    if (doc.exists) {
+        const authTeachers = doc.data().authorizedTeachers || [];
+        if (authTeachers.includes(email)) {
+            throw new HttpsError('already-exists', 'You are already a qualified teacher for this unit.');
+        }
+    }
+
+    // Check for existing pending application
+    const appSnapshot = await db.collection('teacher_applications')
+        .where('userId', '==', uid)
+        .where('unitId', '==', unitId)
+        .where('status', '==', 'pending')
+        .get();
+    
+    if (!appSnapshot.empty) {
+        throw new HttpsError('already-exists', 'You have a pending application for this unit.');
+    }
+
+    // Create application
+    const application = {
+        userId: uid,
+        userEmail: email,
+        unitId: unitId,
+        status: 'pending',
+        appliedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    const newAppRef = await db.collection('teacher_applications').add(application);
+
+    // Notify Admin via Email
+    const adminEmail = process.env.ADMIN_EMAIL || 'rover.k.chen@gmail.com';
+    await sendAdminNewApplicationEmail(adminEmail, email, unitId);
+
+    return { success: true, applicationId: newAppRef.id };
+});
+
+// 7.2. 決策合格教師申請 (decideTeacherApplication)
+exports.decideTeacherApplication = onCall(async (request) => {
+    const data = request.data || {};
+    const auth = request.auth;
+    if (!auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
+
+    const requesterRole = await getRole(auth.uid);
+    if (requesterRole !== 'admin') throw new HttpsError('permission-denied', 'Only admins can resolve applications.');
+
+    const { applicationId, status, adminMessage } = data; // status: 'approved' or 'rejected'
+    if (!applicationId || !['approved', 'rejected'].includes(status)) {
+        throw new HttpsError('invalid-argument', 'Invalid parameters');
+    }
+
+    const db = admin.firestore();
+    const appRef = db.collection('teacher_applications').doc(applicationId);
+    const appDoc = await appRef.get();
+
+    if (!appDoc.exists) throw new HttpsError('not-found', 'Application not found');
+    const appData = appDoc.data();
+    if (appData.status !== 'pending') throw new HttpsError('failed-precondition', 'Application already resolved');
+
+    const { userEmail, unitId } = appData;
+
+    // Update application
+    await appRef.update({
+        status: status,
+        adminMessage: adminMessage || "",
+        resolvedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    if (status === 'approved') {
+        // reuse existing logic or call it
+        // For simplicity, we directly implement the authorization here
+        const docRef = db.collection('course_configs').doc(unitId);
+        let teacherName = userEmail.split('@')[0];
+        try {
+            const userRecord = await admin.auth().getUserByEmail(userEmail);
+            const userDoc = await db.collection('users').doc(userRecord.uid).get();
+            if (userDoc.exists && userDoc.data().name) {
+                teacherName = userDoc.data().name;
+            } else if (userRecord.displayName) {
+                teacherName = userRecord.displayName;
+            }
+        } catch (err) {
+            console.log(`[Approve] Metadata skip for ${userEmail}: ${err.message}`);
+        }
+
+        const sanitizedEmail = userEmail.replace(/\./g, '_DOT_');
+        const teacherData = { email: userEmail, name: teacherName, qualifiedAt: new Date().toISOString() };
+
+        const unitDoc = await docRef.get();
+        if (!unitDoc.exists) {
+            await docRef.set({
+                authorizedTeachers: [userEmail],
+                teacherDetails: { [sanitizedEmail]: teacherData },
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+        } else {
+            await docRef.update({
+                authorizedTeachers: admin.firestore.FieldValue.arrayUnion(userEmail),
+                [`teacherDetails.${sanitizedEmail}`]: teacherData,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+        }
+
+        // Generate Promo Code
+        try {
+            const promoCode = await internalGetOrCreatePromoCode(db, userEmail, unitId, teacherName);
+            // send result email (Success) is handled below
+        } catch (authExtraErr) {
+            console.error("[Approve] Failed to generate promo code:", authExtraErr);
+        }
+    }
+
+    // Notify User via Email
+    await sendApplicationResultEmail(userEmail, unitId, status, adminMessage);
+
+    return { success: true };
+});
+
 // 8. 獲取儀表板數據 (getDashboardData)
 // ==========================================
 exports.getDashboardData = onCall(async (request) => {
@@ -1113,6 +1247,38 @@ exports.getDashboardData = onCall(async (request) => {
         const authorizedCourseIds = [];
         const courseConfigs = {};
         const unitToDocId = {}; // [NEW] Map unit filename -> Firestore docId
+        // [NEW] Fetch Teacher Application Status for THIS user
+        const myApplicationsMapping = {};
+        const myAppsSnapshot = await db.collection('teacher_applications')
+            .where('userId', '==', uid)
+            .get();
+        myAppsSnapshot.forEach(doc => {
+            const d = doc.data();
+            myApplicationsMapping[d.unitId] = { status: d.status, appliedAt: d.appliedAt };
+        });
+
+        // [NEW] Fetch Global Teacher Terms (Rights & Obligations)
+        let teacherTerms = "";
+        try {
+            const termsDoc = await db.collection('metadata_settings').doc('teacher_terms').get();
+            teacherTerms = termsDoc.exists ? (termsDoc.data().content || "") : "尚未設定合格教師權利義務細則。";
+        } catch (e) {
+            console.warn("[getDashboardData] Failed to fetch teacher terms:", e);
+        }
+
+        // [NEW] (Admin Only) Fetch all PENDING applications
+        let allPendingApplications = [];
+        if (requesterRole === 'admin') {
+            const pendingSnapshot = await db.collection('teacher_applications')
+                .where('status', '==', 'pending')
+                .orderBy('appliedAt', 'desc')
+                .get();
+            allPendingApplications = pendingSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+        }
+
         const configsSnapshot = await db.collection('course_configs').get();
         configsSnapshot.forEach(doc => {
             const docId = doc.id; // [FIX 11.3.18] Define docId early for scope availability
@@ -1288,9 +1454,13 @@ exports.getDashboardData = onCall(async (request) => {
             students: [],
             assignments: [],
             courseConfigs: courseConfigs,
-            unitToDocId: unitToDocId, // [NEW] Pass the mapping to frontend
+            unitToDocId: unitToDocId, 
             myPromoCode: null,
-            earnings: []
+            earnings: [],
+            // [NEW] Application Workflow support
+            myApplications: myApplicationsMapping,
+            teacherTerms: teacherTerms,
+            pendingApplications: allPendingApplications
         };
 
         // [NEW] Fetch Profit Sharing Data for Mentors (Unit-Specific Promo Codes)

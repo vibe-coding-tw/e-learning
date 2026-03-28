@@ -37,6 +37,7 @@ const assignmentTableBody = document.getElementById('assignment-table-body');
 
 let myRole = null;
 let myUid = null;
+let myEmail = null;
 let charts = {};
 let dashboardData = null;
 let lessonsMap = {};
@@ -84,6 +85,7 @@ let adminSuperMode = localStorage.getItem('adminSuperMode') === 'true';
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         myUid = user.uid;
+        myEmail = user.email;
         if (userDisplay) userDisplay.textContent = `您好, ${user.displayName || '使用者'}`;
         await loadLessons();
         loadDashboard();
@@ -991,11 +993,47 @@ function renderAssignments(assignments, guideContent = "") {
 
     // [NEW] Append Assignment Guide below the table
     if (guideContent) {
+        // [NEW] Resolve Unit Auth Status for Application Button
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
+        const isAuthorized = currentUnitId && dashboardData.courseConfigs && 
+                           dashboardData.courseConfigs[currentUnitId]?.authorizedTeachers?.includes(myEmail);
+        
+        let applicationButtonHtml = "";
+        if (!isAuthorized && currentUnitId) {
+            const appStatus = dashboardData.myApplications?.[currentUnitId]?.status;
+            if (appStatus === 'pending') {
+                applicationButtonHtml = `
+                    <div class="mt-4 flex items-center justify-center gap-2 p-3 bg-orange-50 border border-orange-100 rounded-xl text-orange-700 font-bold text-sm animate-pulse">
+                        <span>⏳ 資格審核中 (Application Pending Review)</span>
+                    </div>
+                `;
+            } else if (appStatus === 'rejected') {
+                applicationButtonHtml = `
+                    <div class="mt-4 flex flex-col items-center gap-2 p-4 bg-red-50 border border-red-100 rounded-xl">
+                        <span class="text-red-700 font-bold text-sm">❌ 申請未通過 (Application Declined)</span>
+                        <button onclick="openTeacherApplicationModal('${currentUnitId}')" class="text-xs text-red-600 underline font-black">重新申請 / Re-apply</button>
+                    </div>
+                `;
+            } else {
+                applicationButtonHtml = `
+                    <div class="mt-6 flex flex-col items-center gap-3">
+                        <button onclick="openTeacherApplicationModal('${currentUnitId}')" 
+                            class="w-full sm:w-auto px-10 py-3.5 bg-orange-500 text-white rounded-2xl font-black text-sm hover:bg-orange-600 transition-all shadow-lg active:scale-95 flex items-center gap-2 justify-center">
+                            🏅 申請成為「合格教師」 (Apply for Teacher Role) 🚀
+                        </button>
+                        <p class="text-[10px] text-gray-400 font-medium italic">獲准後可批改作業並獲得推薦分潤</p>
+                    </div>
+                `;
+            }
+        }
+
         const guideHtml = `
             <div class="mt-8 p-4 md:p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner overflow-x-auto">
                 <div class="instructor-guide-content text-sm md:text-base text-blue-900/90 leading-relaxed prose prose-blue max-w-none">
                     ${guideContent}
                 </div>
+                ${applicationButtonHtml}
             </div>
         `;
         // Find existing or append
@@ -1147,7 +1185,47 @@ function renderAdminConsole() {
     const adminPanel = document.getElementById('admin-panel');
     if (!adminPanel) return;
 
+    // [NEW] Render Pending Applications
+    const pendingApps = dashboardData.pendingApplications || [];
+    let pendingHtml = '';
+    if (pendingApps.length > 0) {
+        pendingHtml = `
+            <div class="mb-10 bg-orange-50 border border-orange-100 rounded-2xl overflow-hidden shadow-sm">
+                <div class="px-6 py-4 border-b border-orange-100 flex items-center justify-between">
+                    <h4 class="text-sm font-black text-orange-900 flex items-center gap-2">
+                        <span class="animate-pulse">🔔</span> 待處理教師申請 (${pendingApps.length})
+                    </h4>
+                </div>
+                <div class="p-6 space-y-4">
+                    ${pendingApps.map(app => `
+                        <div class="flex flex-col sm:flex-row items-center justify-between bg-white p-4 rounded-xl border border-orange-100 gap-4 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center gap-4">
+                                <div class="p-2 bg-orange-100 rounded-lg text-lg">🎓</div>
+                                <div>
+                                    <div class="text-sm font-black text-gray-800">${escapeHtml(app.userEmail)}</div>
+                                    <div class="text-[10px] font-mono text-gray-400 mt-0.5">${escapeHtml(app.unitId)}</div>
+                                    <div class="text-[10px] text-gray-400 mt-0.5">${new Date(app.appliedAt?._seconds * 1000).toLocaleString()}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 w-full sm:w-auto">
+                                <button onclick="handleDecideApplication('${app.id}', 'rejected')"
+                                    class="flex-grow sm:flex-none px-6 py-2 border border-gray-200 text-gray-500 rounded-lg text-xs font-bold hover:bg-red-50 hover:text-red-700 hover:border-red-100 transition-all">
+                                    拒絕 Reject
+                                </button>
+                                <button onclick="handleDecideApplication('${app.id}', 'approved')"
+                                    class="flex-grow sm:flex-none px-8 py-2 bg-orange-500 text-white rounded-lg text-xs font-black hover:bg-orange-600 shadow-sm transition-all active:scale-95">
+                                    批准 Approve ✅
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
     let html = `
+        ${pendingHtml}
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <h3 class="text-2xl font-black text-orange-900 flex items-center gap-3">
                 <span class="p-2.5 bg-orange-100 rounded-xl">🛠️</span> 
@@ -1242,13 +1320,13 @@ function renderAdminConsole() {
                                         </thead>
                                         <tbody class="divide-y divide-orange-50">
                                             ${unitTeachers.length > 0
-                            ? unitTeachers.map(email => {
-                                const details = unitDocConfig.teacherDetails?.[email.replace(/\./g, '_DOT_')] || {};
-                                const name = details.name || email.split('@')[0];
-                                 const time = details.qualifiedAt ? new Date(details.qualifiedAt).toLocaleString('zh-TW', { hour12: false }) : null;
-                                 if (!time) return ''; // Filter out historical data
+                                ? unitTeachers.map(email => {
+                                    const details = unitDocConfig.teacherDetails?.[email.replace(/\./g, '_DOT_')] || {};
+                                    const name = details.name || email.split('@')[0];
+                                    const time = details.qualifiedAt ? new Date(details.qualifiedAt).toLocaleString('zh-TW', { hour12: false }) : null;
+                                    if (!time) return ''; // Filter out historical data
 
-                                return `
+                                    return `
                                             <tr class="hover:bg-orange-50/20 transition-colors group/row">
                                                 <td class="py-2.5 px-4 font-bold text-gray-800">${escapeHtml(name)}</td>
                                                 <td class="py-2.5 px-4 font-mono text-gray-500">${escapeHtml(email)}</td>
@@ -1261,20 +1339,16 @@ function renderAdminConsole() {
                                                 </td>
                                             </tr>
                                         `;
-                            }).join('')
-                            : '<tr><td colspan="4" class="py-8 text-center text-gray-300 italic">目前無核心授權教師</td></tr>'
-                        }
+                                }).join('')
+                                : '<tr><td colspan="4" class="py-8 text-center text-gray-300 italic">目前無核心授權教師</td></tr>'
+                            }
                                         </tbody>
                                     </table>
                                 </div>
 
-                                <div class="flex flex-col sm:flex-row gap-3 max-w-2xl">
-                                    <input type="email" id="${inputId}" placeholder="教師 Email (e.g. user@gmail.com)" 
-                                        class="flex-grow px-4 py-2.5 text-xs border border-orange-100 rounded-xl outline-none focus:ring-2 focus:ring-orange-200 bg-white shadow-sm transition-all font-mono">
-                                    <button onclick="handleUnitTeacherAuth('${lesson.courseId}', '${unitFile}', document.getElementById('${inputId}').value, 'add', '${lesson.courseId}')"
-                                        class="px-8 py-2.5 bg-orange-500 text-white rounded-xl text-xs font-black hover:bg-orange-600 transition-all shadow-md active:scale-95 whitespace-nowrap">
-                                        新增合格教師 👤
-                                    </button>
+                                <!-- [REMOVED] New manual teacher addition UI -->
+                                <div class="p-3 bg-gray-50 border border-gray-100 rounded-xl text-[10px] text-gray-400 italic">
+                                    💡 註：系統現已改用「申請與審核」機制。教師需從此單元儀表板提交申請，管理員方可於控制台頂部進行審核。
                                 </div>
                             </div>
 
@@ -2051,7 +2125,84 @@ function renderEarningsTab(data) {
     totalEarningsEl.innerText = total.toLocaleString();
 }
 
-// --- Promo Code Generation (LEGACY - NOW AUTOMATED) ---
-window.handleGeneratePromoCode = async function () {
-    alert("現在推薦碼會在授權時自動生成並透過 Email 通知教師。如需查詢，請在上方選單切換至對應單元後查看「分潤」分頁。");
+// --- Teacher Application Workflow ---
+
+window.openTeacherApplicationModal = function (unitId) {
+    const modal = document.getElementById('teacher-application-modal');
+    const termsContainer = document.getElementById('teacher-terms-content');
+    const submitBtn = document.getElementById('btn-submit-application');
+    
+    if (!modal || !termsContainer || !submitBtn) return;
+
+    // 1. Load Terms from dashboardData
+    termsContainer.innerHTML = dashboardData.teacherTerms || "尚未設定合格教師權利義務細則。";
+    
+    // 2. Set action
+    submitBtn.onclick = () => handleTeacherApplication(unitId);
+    
+    // 3. Show
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+};
+
+window.closeTeacherApplicationModal = function () {
+    const modal = document.getElementById('teacher-application-modal');
+    if (modal) {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+};
+
+window.handleTeacherApplication = async function (unitId) {
+    const btn = document.getElementById('btn-submit-application');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "提交中...";
+    }
+
+    try {
+        const applyFunc = httpsCallable(functions, 'applyForTeacherRole');
+        const result = await applyFunc({ unitId });
+        
+        if (result.data.success) {
+            alert("申請已成功提交！管理員評核後將會透過 Email 通知您。");
+            closeTeacherApplicationModal();
+            loadDashboard(); // Refresh to show pending status
+        }
+    } catch (e) {
+        console.error("Application failed:", e);
+        alert("申請失敗: " + e.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = "同意並提交申請 🚀";
+        }
+    }
+};
+
+window.handleDecideApplication = async function (applicationId, status) {
+    let confirmMsg = status === 'approved' ? "確定要批准此申請嗎？" : "確定要拒絕此申請嗎？";
+    if (!confirm(confirmMsg)) return;
+
+    let adminMessage = "";
+    if (status === 'rejected') {
+        adminMessage = prompt("請輸入拒絕原因 (User 將會收到此訊息):") || "條件尚不完全相符，歡迎精進後再次嘗試。";
+    }
+
+    const msg = document.getElementById('admin-msg');
+    if (msg) msg.textContent = "正在處理申請...";
+
+    try {
+        const decideFunc = httpsCallable(functions, 'decideTeacherApplication');
+        await decideFunc({ applicationId, status, adminMessage });
+        
+        loadDashboard(); // Refresh
+    } catch (e) {
+        console.error("Decision failed:", e);
+        alert("處理失敗: " + e.message);
+    } finally {
+        if (msg) msg.textContent = "";
+    }
 };

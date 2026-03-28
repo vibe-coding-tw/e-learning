@@ -262,6 +262,45 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Teacher Application Modal -->
+        <div id="teacher-application-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4" style="z-index: 10000001 !important;">
+            <div class="bg-white rounded-2xl w-full max-w-2xl shadow-2xl animate-fade-in flex flex-col max-h-[90vh] relative overflow-hidden">
+                <!-- Header -->
+                <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-orange-50/30">
+                    <h3 class="text-xl font-black text-orange-900 flex items-center gap-3">
+                        <span class="p-2 bg-orange-100 rounded-lg">🎓</span> 
+                        申請成為「合格教師」
+                    </h3>
+                    <button onclick="closeTeacherApplicationModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold transition">✕</button>
+                </div>
+                
+                <!-- Content (Terms) -->
+                <div class="p-8 overflow-y-auto flex-grow prose prose-orange max-w-none">
+                    <div id="teacher-terms-content" class="text-gray-700 leading-relaxed space-y-4">
+                        <!-- Loaded from Firestore -->
+                        <div class="animate-pulse flex space-y-4 flex-col">
+                            <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                            <div class="h-4 bg-gray-200 rounded"></div>
+                            <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer (Actions) -->
+                <div class="p-6 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <p class="text-[10px] text-gray-400 font-medium italic">點擊提交即代表您已閱讀並同意上述權利義務細則</p>
+                    <div class="flex gap-3 w-full sm:w-auto">
+                        <button onclick="closeTeacherApplicationModal()" class="flex-grow sm:flex-none px-6 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition">
+                            取消
+                        </button>
+                        <button id="btn-submit-application" class="flex-grow sm:flex-none px-10 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-black hover:bg-orange-600 transition shadow-md active:scale-95">
+                            同意並提交申請 🚀
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <footer class="text-center py-4 text-gray-400 text-[10px]">

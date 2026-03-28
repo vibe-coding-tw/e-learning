@@ -368,6 +368,78 @@ async function sendTeacherLinkedToStudentEmail(email, studentName, unitId) {
 }
 
 /**
+ * Send an email to the admin when a new teacher application is submitted.
+ */
+async function sendAdminNewApplicationEmail(adminEmail, userEmail, unitId) {
+    const mailOptions = {
+        from: '"Vibe Coding System" <info@vibe-coding.tw>',
+        to: adminEmail,
+        subject: `[新申請] 合格教師資格申請: ${userEmail}`,
+        html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                <h2 style="color: #E67E22;">收到新的合格教師申請</h2>
+                <p>管理員您好，</p>
+                <p>使用者 <strong>${userEmail}</strong> 提交了針對單元 <strong>${unitId}</strong> 的合格教師資格申請。</p>
+                <p>請前往 Admin Console 進行審核與授權。</p>
+                <p>
+                    <a href="https://vibe-coding.tw/dashboard.html?tab=admin" style="background-color: #E67E22; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">開啟管理控制台</a>
+                </p>
+                <br>
+                <p>Vibe Coding 自動化管家</p>
+            </div>
+        `
+    };
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Error sending admin application notification:', error);
+    }
+}
+
+/**
+ * Send an email to the user when their teacher application has been resolved.
+ */
+async function sendApplicationResultEmail(email, unitId, status, message = "") {
+    const isApproved = status === 'approved';
+    const subject = isApproved ? `[申請通過] 恭喜您成為 "${unitId}" 的合格教師` : `[申請結果] 您的 "${unitId}" 合格教師申請未通過`;
+    const titleColor = isApproved ? '#2ECC71' : '#E74C3C';
+    const resultText = isApproved ? '恭喜！您的申請已獲批准。' : '很遺憾，您的申請目前未獲批准。';
+
+    const mailOptions = {
+        from: '"Vibe Coding" <info@vibe-coding.tw>',
+        to: email,
+        subject: subject,
+        html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; line-height: 1.6;">
+                <h2 style="color: ${titleColor};">${resultText}</h2>
+                <p>關於您對單元 <strong>${unitId}</strong> 的合格教師進階權限申請，管理員已完成審查。</p>
+                
+                <div style="background-color: #f9f9f9; border-radius: 8px; padding: 15px; margin: 20px 0; border: 1px solid #eee;">
+                    <p><strong>狀態：</strong> ${isApproved ? '已通過 (Approved)' : '未通過 (Rejected)'}</p>
+                    ${message ? `<p><strong>管理員回覆：</strong><br>${message}</p>` : ''}
+                </div>
+
+                ${isApproved ? `
+                <p>您現在已經具備該單元的管理權限。建議您立即登入儀表板查看相關功能：</p>
+                <p>
+                    <a href="https://vibe-coding.tw/dashboard.html" style="background-color: #2ECC71; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">前往儀表板</a>
+                </p>
+                ` : `
+                <p>若有任何疑問，歡迎回覆此郵件與我們聯繫。您可以持續精進實作技能，並於日後再次提交申請。</p>
+                `}
+                <br>
+                <p>祝 順心！<br>Vibe Coding 團隊</p>
+            </div>
+        `
+    };
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Error sending application result email:', error);
+    }
+}
+
+/**
  * Send a summary email to the admin about pending student assignments.
  */
 async function sendAdminAssignmentReminder(adminEmail, pendingList) {
@@ -414,5 +486,7 @@ module.exports = {
     sendGradingNotification,
     sendStudentLinkedToTeacherEmail,
     sendTeacherLinkedToStudentEmail,
-    sendAdminAssignmentReminder
+    sendAdminAssignmentReminder,
+    sendAdminNewApplicationEmail,
+    sendApplicationResultEmail
 };
