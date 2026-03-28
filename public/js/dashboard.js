@@ -302,6 +302,14 @@ function findParentCourseIdByUnit(unitId) {
     return lesson?.courseId || null;
 }
 
+function getPreferredUnitId(unitId, courseUnits = [], extraKeys = []) {
+    const candidates = getEquivalentUnitIds(unitId);
+    return courseUnits.find(unit => candidates.includes(unit)) ||
+        extraKeys.find(key => candidates.includes(key)) ||
+        candidates.find(id => id.endsWith('.html')) ||
+        unitId;
+}
+
 function hasQualifiedTeacherAccessForUnit(fileName, courseId, email) {
     if (!email || !fileName || !courseId) return false;
     
@@ -1134,6 +1142,7 @@ function renderAdminConsole() {
 
     const urlParams = new URLSearchParams(window.location.search);
     const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
+    const filterCourseId = filterUnitId ? findParentCourseIdByUnit(filterUnitId) : resolveCourseIdFromUrlParam(urlParams.get('courseId'));
 
     const adminPanel = document.getElementById('admin-panel');
     if (!adminPanel) return;
@@ -1163,21 +1172,33 @@ function renderAdminConsole() {
         const renderedUnits = new Set(); // [NEW] Track rendered units to prevent duplicates
         let lessonRows = allLessons.map(lesson => {
             try {
+                if (filterCourseId && lesson.courseId !== filterCourseId) return '';
+
                 const config = dashboardData?.courseConfigs?.[lesson.courseId] || {};
                 let units = lesson.courseUnits || [];
                 const unitConfigs = config.githubClassroomUrls || {};
-                let allFiles = Array.from(new Set([...units, ...Object.keys(unitConfigs)]))
+                const rawFiles = Array.from(new Set([...units, ...Object.keys(unitConfigs)]))
                     .filter(f => f && !f.includes('-master-'));
+                const canonicalUnitMap = new Map();
+
+                rawFiles.forEach(fileName => {
+                    const preferredId = getPreferredUnitId(fileName, units, Object.keys(unitConfigs));
+                    if (!canonicalUnitMap.has(preferredId)) {
+                        canonicalUnitMap.set(preferredId, preferredId);
+                    }
+                });
+
+                let allFiles = Array.from(canonicalUnitMap.values());
 
                 if (filterUnitId) {
-                    allFiles = allFiles.filter(f => unitIdsMatch(f, filterUnitId));
+                    const preferredUnit = getPreferredUnitId(filterUnitId, units, Object.keys(unitConfigs));
+                    allFiles = preferredUnit ? [preferredUnit] : [];
                 }
 
                 if (allFiles.length === 0) return '';
 
                 return allFiles.map(unitFile => {
-                    // [FIX] Use normalized ID for duplicate prevention
-                    const normalizedFile = normalizeUnitId(unitFile);
+                    const normalizedFile = getPreferredUnitId(unitFile, units, Object.keys(unitConfigs));
                     if (renderedUnits.has(normalizedFile)) return ''; 
                     renderedUnits.add(normalizedFile);
 
@@ -1701,7 +1722,7 @@ async function renderSettingsTab(filterUnitId = null) {
 
         // [NEW] If filtered to a specific course
         const urlParams = new URLSearchParams(window.location.search);
-        const filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
+        const filterCourseId = filterUnitId ? findParentCourseIdByUnit(filterUnitId) : resolveCourseIdFromUrlParam(urlParams.get('courseId'));
         if (filterCourseId) {
             authorizedLessons = authorizedLessons.filter(l => l.courseId === filterCourseId);
         }
@@ -1741,14 +1762,21 @@ async function renderSettingsTab(filterUnitId = null) {
                 return true;
             });
 
-            console.log("[Settings] Filtered units mapping:", filteredUnits);
+            const finalUnits = filterUnitId
+                ? (() => {
+                    const preferredUnit = getPreferredUnitId(filterUnitId, units, Object.keys(configs));
+                    return preferredUnit ? [preferredUnit] : [];
+                })()
+                : filteredUnits;
 
-            const assignmentRows = filteredUnits.map(fileName => {
+            console.log("[Settings] Filtered units mapping:", finalUnits);
+
+            const assignmentRows = finalUnits.map(fileName => {
                 const isAuthorized = isUserAuthorizedForUnit(fileName, course.courseId, userEmail);
                 return renderAssignmentConfigRow(course.courseId, fileName, configs[fileName], course.title, isAuthorized);
             }).filter(h => !!h).join('');
 
-            const guideRows = filteredUnits.map(fileName => {
+            const guideRows = finalUnits.map(fileName => {
                 const realUnitsOnly = units.filter(u => !u.includes('-master-'));
                 const unitIdx = realUnitsOnly.indexOf(fileName);
                 const unitNum = unitIdx !== -1 ? unitIdx + 1 : null;
