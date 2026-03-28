@@ -2157,9 +2157,13 @@ window.closeTeacherApplicationModal = function () {
 
 window.handleTeacherApplication = async function (unitId) {
     const btn = document.getElementById('btn-submit-application');
+    const statusMsg = document.createElement('div');
+    statusMsg.className = "text-center text-orange-600 font-bold my-4 animate-fade-in";
+    statusMsg.textContent = "🚀 申請已成功提交！正在同步數據...";
+
     if (btn) {
         btn.disabled = true;
-        btn.textContent = "提交中...";
+        btn.textContent = "提交成功！";
     }
 
     try {
@@ -2167,14 +2171,18 @@ window.handleTeacherApplication = async function (unitId) {
         const result = await applyFunc({ unitId });
         
         if (result.data.success) {
-            alert("申請已成功提交！管理員評核後將會透過 Email 通知您。");
-            closeTeacherApplicationModal();
-            loadDashboard(); // Refresh to show pending status
+            // Replace modal content with success message briefly
+            const container = document.getElementById('teacher-terms-content');
+            if (container) container.innerHTML = `<div class="py-10 text-center">${statusMsg.outerHTML}</div>`;
+            
+            setTimeout(() => {
+                closeTeacherApplicationModal();
+                loadDashboard();
+            }, 1500);
         }
     } catch (e) {
         console.error("Application failed:", e);
-        alert("申請失敗: " + e.message);
-    } finally {
+        alert("申請失敗: " + e.message); // Keep error alert for visibility
         if (btn) {
             btn.disabled = false;
             btn.textContent = "同意並提交申請 🚀";
@@ -2183,22 +2191,31 @@ window.handleTeacherApplication = async function (unitId) {
 };
 
 window.handleDecideApplication = async function (applicationId, status) {
-    let confirmMsg = status === 'approved' ? "確定要批准此申請嗎？" : "確定要拒絕此申請嗎？";
-    if (!confirm(confirmMsg)) return;
-
+    // [MODIFIED] No more confirm dialog as per user request
     let adminMessage = "";
     if (status === 'rejected') {
         adminMessage = prompt("請輸入拒絕原因 (User 將會收到此訊息):") || "條件尚不完全相符，歡迎精進後再次嘗試。";
     }
 
     const msg = document.getElementById('admin-msg');
-    if (msg) msg.textContent = "正在處理申請...";
+    if (msg) msg.textContent = "正在同步授權權限...";
+
+    // Locally hide the item for instant feedback
+    const appCards = document.querySelectorAll('#admin-panel .bg-white.p-4.rounded-xl');
+    appCards.forEach(card => {
+        if (card.outerHTML.includes(applicationId)) {
+            card.style.opacity = '0.5';
+            card.style.pointerEvents = 'none';
+        }
+    });
 
     try {
         const decideFunc = httpsCallable(functions, 'decideTeacherApplication');
-        await decideFunc({ applicationId, status, adminMessage });
+        const result = await decideFunc({ applicationId, status, adminMessage });
         
-        loadDashboard(); // Refresh
+        if (result.data.success) {
+            loadDashboard(); // Full refresh to update all lists
+        }
     } catch (e) {
         console.error("Decision failed:", e);
         alert("處理失敗: " + e.message);

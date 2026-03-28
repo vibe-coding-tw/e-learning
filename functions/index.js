@@ -1271,12 +1271,19 @@ exports.getDashboardData = onCall(async (request) => {
         if (requesterRole === 'admin') {
             const pendingSnapshot = await db.collection('teacher_applications')
                 .where('status', '==', 'pending')
-                .orderBy('appliedAt', 'desc')
                 .get();
+            
             allPendingApplications = pendingSnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
+
+            // Sort in-memory to avoid index requirement for now
+            allPendingApplications.sort((a, b) => {
+                const timeA = a.appliedAt?.toMillis ? a.appliedAt.toMillis() : 0;
+                const timeB = b.appliedAt?.toMillis ? b.appliedAt.toMillis() : 0;
+                return timeB - timeA;
+            });
         }
 
         const configsSnapshot = await db.collection('course_configs').get();
