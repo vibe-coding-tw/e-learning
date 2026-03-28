@@ -402,6 +402,32 @@ async function getLessons() {
     return cachedLessons || [];
 }
 
+function resolveCanonicalUnitId(unitId, lessons = []) {
+    if (!unitId) return unitId;
+
+    for (const lesson of lessons) {
+        const courseUnits = Array.isArray(lesson.courseUnits) ? lesson.courseUnits : [];
+        if (courseUnits.includes(unitId)) return unitId;
+
+        const matchedUnit = courseUnits.find(courseUnit => {
+            const shortUnit = courseUnit.replace(/^start-/, '');
+            return shortUnit === unitId;
+        });
+
+        if (matchedUnit) return matchedUnit;
+    }
+
+    return unitId;
+}
+
+function findParentCourseIdByUnit(unitId, lessons = []) {
+    if (!unitId) return null;
+
+    const canonicalUnitId = resolveCanonicalUnitId(unitId, lessons);
+    const lesson = lessons.find(l => Array.isArray(l.courseUnits) && l.courseUnits.includes(canonicalUnitId));
+    return lesson?.courseId || null;
+}
+
 // [NEW] API to expose lessons to frontend
 exports.getLessonsMetadata = onCall(async (request) => {
     console.log("[getLessonsMetadata] Starting onCall request...");
@@ -918,14 +944,16 @@ exports.saveCourseConfigs = onCall(async (request) => {
         if (role === 'admin') {
             const currentTeachers = existingConfigs.authorizedTeachers || [];
             if (!currentTeachers.includes(email)) {
-                const sanitizedEmail = email.replace(/\./g, '_DOT_');
                 const teacherData = {
                     email: email,
                     name: 'Admin', // Default name for auto-auth
                     qualifiedAt: new Date().toISOString()
                 };
                 configs.authorizedTeachers = admin.firestore.FieldValue.arrayUnion(email);
-                configs[`teacherDetails.${sanitizedEmail}`] = teacherData;
+                configs.teacherDetails = {
+                    ...(existingConfigs.teacherDetails || {}),
+                    [email]: teacherData
+                };
             }
         }
 
@@ -992,29 +1020,41 @@ exports.authorizeTeacherForCourse = onCall(async (request) => {
                 console.log(`[Role] Metadata skip: ${err.message}`);
             }
 
-            const sanitizedEmail = teacherEmail.replace(/\./g, '_DOT_');
             const teacherData = { email: teacherEmail, name: teacherName, qualifiedAt: new Date().toISOString() };
 
             const doc = await docRef.get();
+            const existingUnitConfig = doc.exists ? doc.data() : {};
+            const nextTeacherDetails = {
+                ...(existingUnitConfig.teacherDetails || {}),
+                [teacherEmail]: teacherData
+            };
             if (!doc.exists) {
                 await docRef.set({
                     authorizedTeachers: [teacherEmail],
-                    teacherDetails: { [sanitizedEmail]: teacherData },
+                    teacherDetails: nextTeacherDetails,
                     updatedAt: admin.firestore.FieldValue.serverTimestamp()
                 });
             } else {
                 await docRef.update({
                     authorizedTeachers: admin.firestore.FieldValue.arrayUnion(teacherEmail),
-                    [`teacherDetails.${sanitizedEmail}`]: teacherData,
+                    teacherDetails: nextTeacherDetails,
                     updatedAt: admin.firestore.FieldValue.serverTimestamp()
                 });
             }
 
             // [NEW] Also update parent legacy map if provided (use dot-notation to avoid overwrite)
             if (parentDocRef) {
-                await parentDocRef.update({
-                    [`githubClassroomUrls.${courseId}.${sanitizedEmail}`]: "authorized"
-                });
+                const parentDoc = await parentDocRef.get();
+                const parentData = parentDoc.exists ? parentDoc.data() : {};
+                const githubClassroomUrls = { ...(parentData.githubClassroomUrls || {}) };
+                githubClassroomUrls[courseId] = {
+                    ...(githubClassroomUrls[courseId] || {}),
+                    [teacherEmail]: "authorized"
+                };
+                await parentDocRef.set({
+                    githubClassroomUrls,
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
             }
 
             // [NEW] Unit-Specific Promo Code & Email Notification
@@ -1036,12 +1076,15 @@ exports.authorizeTeacherForCourse = onCall(async (request) => {
             // Authorization is strictly handled at the course_configs unit level.
 
         } else if (action === 'remove') {
-            const sanitizedEmail = teacherEmail.replace(/\./g, '_DOT_');
-            
+            const doc = await docRef.get();
+            const existingUnitConfig = doc.exists ? doc.data() : {};
+            const nextTeacherDetails = { ...(existingUnitConfig.teacherDetails || {}) };
+            delete nextTeacherDetails[teacherEmail];
+
             // 1. Clean up Unit-level Config
             await docRef.update({
                 authorizedTeachers: admin.firestore.FieldValue.arrayRemove(teacherEmail),
-                [`teacherDetails.${sanitizedEmail}`]: admin.firestore.FieldValue.delete(),
+                teacherDetails: nextTeacherDetails,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
             });
 
@@ -1053,12 +1096,13 @@ exports.authorizeTeacherForCourse = onCall(async (request) => {
             allConfigs.forEach(configDoc => {
                 const data = configDoc.data();
                 if (data.githubClassroomUrls && data.githubClassroomUrls[courseId]) {
-                    const unitConfig = data.githubClassroomUrls[courseId];
-                    // Handle BOTH raw and sanitized email keys to be safe
-                    if (unitConfig[teacherEmail] || unitConfig[sanitizedEmail]) {
+                    const nextGithubClassroomUrls = { ...(data.githubClassroomUrls || {}) };
+                    const unitConfig = { ...(nextGithubClassroomUrls[courseId] || {}) };
+                    if (unitConfig[teacherEmail]) {
+                        delete unitConfig[teacherEmail];
+                        nextGithubClassroomUrls[courseId] = unitConfig;
                         batch.update(configDoc.ref, {
-                            [`githubClassroomUrls.${courseId}.${teacherEmail}`]: admin.firestore.FieldValue.delete(),
-                            [`githubClassroomUrls.${courseId}.${sanitizedEmail}`]: admin.firestore.FieldValue.delete(),
+                            githubClassroomUrls: nextGithubClassroomUrls,
                             updatedAt: admin.firestore.FieldValue.serverTimestamp()
                         });
                         parentFound = true;
@@ -1091,9 +1135,11 @@ exports.applyForTeacherRole = onCall(async (request) => {
     const uid = auth.uid;
     const email = auth.token.email;
     const db = admin.firestore();
+    const lessons = await getLessons();
+    const canonicalUnitId = resolveCanonicalUnitId(unitId, lessons);
 
     // Check if user is already authorized
-    const docRef = db.collection('course_configs').doc(unitId);
+    const docRef = db.collection('course_configs').doc(canonicalUnitId);
     const doc = await docRef.get();
     if (doc.exists) {
         const authTeachers = doc.data().authorizedTeachers || [];
@@ -1105,7 +1151,7 @@ exports.applyForTeacherRole = onCall(async (request) => {
     // Check for existing pending application
     const appSnapshot = await db.collection('teacher_applications')
         .where('userId', '==', uid)
-        .where('unitId', '==', unitId)
+        .where('unitId', '==', canonicalUnitId)
         .where('status', '==', 'pending')
         .get();
     
@@ -1117,7 +1163,7 @@ exports.applyForTeacherRole = onCall(async (request) => {
     const application = {
         userId: uid,
         userEmail: email,
-        unitId: unitId,
+        unitId: canonicalUnitId,
         status: 'pending',
         appliedAt: admin.firestore.FieldValue.serverTimestamp()
     };
@@ -1126,7 +1172,7 @@ exports.applyForTeacherRole = onCall(async (request) => {
 
     // Notify Admin via Email
     const adminEmail = process.env.ADMIN_EMAIL || 'rover.k.chen@gmail.com';
-    await sendAdminNewApplicationEmail(adminEmail, email, unitId);
+    await sendAdminNewApplicationEmail(adminEmail, email, canonicalUnitId);
 
     return { success: true, applicationId: newAppRef.id };
 });
@@ -1153,7 +1199,10 @@ exports.decideTeacherApplication = onCall(async (request) => {
     const appData = appDoc.data();
     if (appData.status !== 'pending') throw new HttpsError('failed-precondition', 'Application already resolved');
 
+    const lessons = await getLessons();
     const { userEmail, unitId } = appData;
+    const canonicalUnitId = resolveCanonicalUnitId(unitId, lessons);
+    const parentCourseId = findParentCourseIdByUnit(canonicalUnitId, lessons);
 
     // Update application
     await appRef.update({
@@ -1162,10 +1211,10 @@ exports.decideTeacherApplication = onCall(async (request) => {
         resolvedAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
-    if (status === 'approved') {
+        if (status === 'approved') {
         // reuse existing logic or call it
         // For simplicity, we directly implement the authorization here
-        const docRef = db.collection('course_configs').doc(unitId);
+        const docRef = db.collection('course_configs').doc(canonicalUnitId);
         let teacherName = userEmail.split('@')[0];
         try {
             const userRecord = await admin.auth().getUserByEmail(userEmail);
@@ -1179,27 +1228,46 @@ exports.decideTeacherApplication = onCall(async (request) => {
             console.log(`[Approve] Metadata skip for ${userEmail}: ${err.message}`);
         }
 
-        const sanitizedEmail = userEmail.replace(/\./g, '_DOT_');
         const teacherData = { email: userEmail, name: teacherName, qualifiedAt: new Date().toISOString() };
 
         const unitDoc = await docRef.get();
+        const existingUnitConfig = unitDoc.exists ? unitDoc.data() : {};
+        const nextTeacherDetails = {
+            ...(existingUnitConfig.teacherDetails || {}),
+            [userEmail]: teacherData
+        };
         if (!unitDoc.exists) {
             await docRef.set({
                 authorizedTeachers: [userEmail],
-                teacherDetails: { [sanitizedEmail]: teacherData },
+                teacherDetails: nextTeacherDetails,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
             });
         } else {
             await docRef.update({
                 authorizedTeachers: admin.firestore.FieldValue.arrayUnion(userEmail),
-                [`teacherDetails.${sanitizedEmail}`]: teacherData,
+                teacherDetails: nextTeacherDetails,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
             });
         }
 
+        if (parentCourseId) {
+            const parentDocRef = db.collection('course_configs').doc(parentCourseId);
+            const parentDoc = await parentDocRef.get();
+            const parentData = parentDoc.exists ? parentDoc.data() : {};
+            const githubClassroomUrls = { ...(parentData.githubClassroomUrls || {}) };
+            githubClassroomUrls[canonicalUnitId] = {
+                ...(githubClassroomUrls[canonicalUnitId] || {}),
+                [userEmail]: "authorized"
+            };
+            await parentDocRef.set({
+                githubClassroomUrls,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
+
         // Generate Promo Code
         try {
-            const promoCode = await internalGetOrCreatePromoCode(db, userEmail, unitId, teacherName);
+            const promoCode = await internalGetOrCreatePromoCode(db, userEmail, canonicalUnitId, teacherName);
             // send result email (Success) is handled below
         } catch (authExtraErr) {
             console.error("[Approve] Failed to generate promo code:", authExtraErr);
@@ -1207,7 +1275,7 @@ exports.decideTeacherApplication = onCall(async (request) => {
     }
 
     // Notify User via Email
-    await sendApplicationResultEmail(userEmail, unitId, status, adminMessage);
+    await sendApplicationResultEmail(userEmail, canonicalUnitId, status, adminMessage);
 
     return { success: true };
 });
@@ -1292,47 +1360,32 @@ exports.getDashboardData = onCall(async (request) => {
             try {
                 const cfg = doc.data();
                 const isAuthorized = requesterRole === 'admin' || (Array.isArray(cfg.authorizedTeachers) && cfg.authorizedTeachers.includes(email));
-                // [FIX v11.3.17] Auto-Prune Legacy Admin Teacher Entry if requested by user
-                let needsPrune = false;
-                const cleanupEmail = 'rover.k.chen@gmail.com';
-                const cleanupSanitized = 'rover_k_chen@gmail_DOT_com';
 
-                // 1. Cleanup Array
-                if (Array.isArray(cfg.authorizedTeachers) && cfg.authorizedTeachers.includes(cleanupEmail)) {
-                    console.log(`[AutoPrune] Removing legacy teacher ${cleanupEmail} from authorizedTeachers in ${docId}`);
-                    cfg.authorizedTeachers = cfg.authorizedTeachers.filter(t => t !== cleanupEmail);
-                    needsPrune = true;
-                }
-
-                // 2. Cleanup Legacy Map
                 if (cfg.githubClassroomUrls) {
                     Object.keys(cfg.githubClassroomUrls).forEach(unitId => {
-                        const unitCfg = cfg.githubClassroomUrls[unitId];
-                        if (unitCfg && (unitCfg[cleanupEmail] || unitCfg[cleanupSanitized])) {
-                            console.log(`[AutoPrune] Removing legacy teacher ${cleanupEmail} from ${docId} / ${unitId} map`);
-                            delete unitCfg[cleanupEmail];
-                            delete unitCfg[cleanupSanitized];
-                            needsPrune = true;
+                        const existingDocId = unitToDocId[unitId];
+                        if (!existingDocId || !existingDocId.includes('.html')) {
+                            unitToDocId[unitId] = docId;
                         }
-                    });
-                }
-
-                if (needsPrune) {
-                    db.collection('course_configs').doc(docId).update({
-                        authorizedTeachers: cfg.authorizedTeachers || [],
-                        githubClassroomUrls: cfg.githubClassroomUrls || {},
-                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                    }).catch(e => console.error("[AutoPrune] Persistence failed:", e));
-                }
-
-                if (cfg.githubClassroomUrls) {
-                    Object.keys(cfg.githubClassroomUrls).forEach(unitId => {
-                        unitToDocId[unitId] = docId;
                         // [FIX] Handle start- prefix mismatch between Firestore and Metadata
                         if (unitId.match(/^0[1-5]-unit-/)) {
-                            unitToDocId['start-' + unitId] = docId;
+                            const startKey = 'start-' + unitId;
+                            const existingStartDocId = unitToDocId[startKey];
+                            if (!existingStartDocId || !existingStartDocId.includes('.html')) {
+                                unitToDocId[startKey] = docId;
+                            }
                         }
                     });
+                }
+
+                if (docId.includes('.html')) {
+                    unitToDocId[docId] = docId;
+                    if (docId.match(/^0[1-5]-unit-/)) {
+                        unitToDocId['start-' + docId] = docId;
+                    }
+                    if (docId.match(/^start-0[1-5]-unit-/)) {
+                        unitToDocId[docId.replace(/^start-/, '')] = docId;
+                    }
                 }
 
                 if (isAuthorized) {

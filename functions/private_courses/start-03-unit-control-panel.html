@@ -351,20 +351,87 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2>UI 佈局：HTML 按鈕與 CSS 控制面板</h2>
 
-        <h3>作業 1-1：Grid 佈局 3x3 網格</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> UI/UX 設計師。</li>
-            <li><strong>執行方式：</strong> 使用 CSS Grid 實現 3x3 佈局（十字鍵與傳感器數值顯示區域）。</li>
-            <li><strong>評分重點：</strong> <code>grid-template-areas</code> 的正確應用，以及在不同螢幕尺寸下的響應式表現。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：Grid 佈局 3x3 網格</h3>
+            <div class="quest-meta">
+                <span>角色扮演：UI/UX 設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
 
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>定義結構</strong>：在 HTML 中建立包含 5 個按鈕與 1 個中心停止鍵的 <code>div</code> 容器，並分配唯一的 ID。</li>
+                    <li><strong>網格規劃</strong>：使用 <code>grid-template-areas</code> 定義 3x3 的視覺矩陣，確保方向鍵位置正確。</li>
+                    <li><strong>響應式優化</strong>：運用 <code>@media</code> 查詢或 <code>fr</code> 單位，確保在手機與平板上熱區不變形。</li>
+                    <li><strong>版本同步</strong>：完成佈局後，執行 <code>git add</code> 與 <code>commit</code> 紀錄 UI 結構。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>佈局精準度</strong>：是否正確使用 <code>grid-template-areas</code> 實現十字排版？</li>
+                    <li>[ ] <strong>自適應能力</strong>：在窄螢幕下，按鈕是否能保持正方形或合理的觸控比例？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：觸控區域與 Fitts's Law 優化</h3>
+            <div class="quest-meta">
+                <span>角色扮演：互動體驗專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>熱區擴大</strong>：透過 <code>padding</code> 增加按鈕的點擊感應區，確保單個按鈕觸控面積大於 44x44px。</li>
+                    <li><strong>視覺反饋</strong>：實作 <code>:active</code> 偽類，加入 <code>transform: scale(0.95)</code> 提供物理按壓感。</li>
+                    <li><strong>狀態切換</strong>：實作 <code>.disabled</code> 樣式，模擬連線中斷時按鈕變灰且不可點擊的效果。</li>
+                    <li><strong>代碼提交</strong>：提交優化後的 CSS 樣式表。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>互動感知</strong>：按下按鈕時是否有明顯的縮小或變色反饋？</li>
+                    <li>[ ] <strong>無障礙熱區</strong>：按鈕與按鈕之間的間距是否足夠，避免誤觸？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：FPV 沈浸式介面疊加</h3>
+            <div class="quest-meta">
+                <span>角色扮演：前端介面工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>層級管理</strong>：使用 <code>position: absolute</code> 與 <code>z-index</code> 將控制層疊加在底層背景（模擬視訊畫面）之上。</li>
+                    <li><strong>毛玻璃特效</strong>：應用 <code>backdrop-filter: blur()</code> 讓控制板具備現代感的半透明視覺效果。</li>
+                    <li><strong>向量圖示整合</strong>：將所有按鈕文字改為 SVG 圖示，確保在任何解析度下皆清晰銳利。</li>
+                    <li><strong>最終發布</strong>：完成專案整合並 Push 回 GitHub 進行 Review。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>層級正確性</strong>：控制介面是否能成功蓋在背景之上而不遮擋核心資訊？</li>
+                    <li>[ ] <strong>視覺一致性</strong>：SVG 圖示的大小與對齊是否完美統一？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
+        <h2>UI 佈局與 CSS 控制面板 教學引導指南</h2>
         <div class="classroom-guide">
             <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
             <ol>

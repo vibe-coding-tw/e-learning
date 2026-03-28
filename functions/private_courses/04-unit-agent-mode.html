@@ -271,72 +271,95 @@
     </script>
     <script src="/js/course-shared-v4.js"></script>
 
-    <!-- Dashboard Guides (Hidden) -->
-    <section id="assignment-guide" class="hidden">
-        <h2>作業指引 (Assignment Guide)</h2>
-        <div class="space-y-6">
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h3 class="font-bold text-blue-800">1. GitHub Classroom 設定</h3>
-                <p class="text-sm">請將 <code>ai-agent-mode-lab</code> 連結至課程儀表板。學生需透過此分發倉庫實作 VS Code Agent 模式的進階指令調教。</p>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-2xl font-bold mb-4 font-[Outfit]">Agent 時代與模式 - AI 代理人專題</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：跨檔案手術 - 全自動代碼重構</h3>
+            <div class="quest-meta">
+                <span>角色扮演：資深系統架構師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
             </div>
-            <div class="bg-indigo-50 p-4 rounded-lg">
-                <h3 class="font-bold text-indigo-800">2. 翻轉課堂策略</h3>
-                <ul class="list-disc list-inside text-sm">
-                    <li>課前預習：安裝 VS Code Insider 與 Copilot 擴充功能，並確認 Agent 模式權限已開啟。</li>
-                    <li>課中實作：透過真實專案需求，練習手動介入 Agent 的 Plan (計畫) 並引導正確的修復方向。</li>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>啟動模式</strong>：在 VS Code 中開啟 Copilot Chat 並切換至 <strong>Agent Mode</strong>。</li>
+                    <li><strong>下達指令</strong>：要求 Agent 將一個現有的功能（例如：User Login）從原本的分散邏輯重構為單一 Service 模式。</li>
+                    <li><strong>監控執行</strong>：觀察 Agent 如何自動讀取相關檔案、產生計畫並執行修改。</li>
+                    <li><strong>自動校正</strong>：如果編譯失敗，讓 Agent 讀取 Terminal 報錯並自行修正。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>計畫完整性</strong>：Agent 提出的 Plan 是否涵蓋了所有受影響的檔案？</li>
+                    <li>[ ] <strong>邏輯一致性</strong>：重構後的代碼是否維持原有功能並符合架構規範？</li>
                 </ul>
             </div>
-            <div class="bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold mb-2 text-sm text-slate-400 font-mono">3. 單元任務 (Unit Tasks)</h3>
-                <table class="w-full text-xs">
-                    <thead class="bg-gray-100 text-left">
-                        <tr>
-                            <th class="p-2">任務說明</th>
-                            <th class="p-2">配分</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 1-1】成功啟動 Agent 並完成一段 Bug 修復</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 1-2】撰寫 AGENTS.md 並完成特定的重構風格</td>
-                            <td class="p-2">35 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 1-3】展示 MCP Server 呼叫與外部資源擷取結果</td>
-                            <td class="p-2">35 pts</td>
-                        </tr>
-                    </tbody>
-                </table>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：協作 DNA - AGENTS.md 指令調教</h3>
+            <div class="quest-meta">
+                <span>角色扮演：技術負責人 (Tech Lead)</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：30 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立規則</strong>：在專案根目錄建立一個 <code>AGENTS.md</code>。</li>
+                    <li><strong>定義規範</strong>：在裡面明確寫下至少 3 條 Agent 必須遵循的規範（例如：所有變數名使用 camelCase、API 必須包含 JavaDoc）。</li>
+                    <li><strong>測試執行</strong>：讓 Agent 產生一段新代碼，觀察它是否嚴格遵守你設定的規則。</li>
+                    <li><strong>提交紀錄</strong>：將 <code>AGENTS.md</code> 與實作成果一併提交至 GitHub。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>約束有效性</strong>：Agent 是否能正確讀取並落實 <code>AGENTS.md</code> 中的指令？</li>
+                    <li>[ ] <strong>規範嚴謹度</strong>：設定的規範是否能有效提昇專案的維護品質？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：打破邊界 - MCP 外部工具整合</h3>
+            <div class="quest-meta">
+                <span>角色扮演：DevOps 工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：40 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>協議開啟</strong>：在 VS Code 設定中啟用 <code>chat.mcp.enabled</code>。</li>
+                    <li><strong>連接 Server</strong>：串接一個外部 MCP Server（例如：Google Search 或 GitHub Issue Tracker）。</li>
+                    <li><strong>執行指令</strong>：透過 @copilot 要求它搜尋外部資訊或自動讀取遠端 Issue 狀態。</li>
+                    <li><strong>結果驗證</strong>：確保 Agent 能成功獲取其訓練資料庫以外的即時外部數據。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>工具運用能力</strong>：是否能讓 Agent 透過 MCP 獲取正確的上下文 (Context)？</li>
+                    <li>[ ] <strong>解決方案品質</strong>：整合外部資料後的開發建議是否更具實踐性？</li>
+                </ul>
             </div>
         </div>
     </section>
 
-    <section id="instructor-guide" class="hidden">
-        <h2>GitHub Classroom 教學引導方針</h2>
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2 class="text-2xl font-bold mb-4 font-[Outfit]">Agent 模式操作指南</h2>
         <div class="classroom-guide text-sm space-y-4">
-            <p><strong>第一步：匯入 Template</strong></p>
-            <p>請將 <code>ai-agent-mode-lab</code> 設定為作業範本，並在 <code>.vscode/settings.json</code> 中預設開啟 Agent 模式參數。</p>
-            <p><strong>第二步：評分重點 (PR Review)</strong></p>
-            <p>著重檢查學生的 <code>AGENTS.md</code> 邏輯是否清晰，以及是否學會了「小步快跑」的 Agent 溝通技巧。</p>
+            <p><strong>教學重點：</strong></p>
+            <p>本單元的核心在於「掌控力」。教師應引導學生理解 Agent 不是黑盒子，而是可以透過 <code>AGENTS.md</code> 和 <code>MCP</code> 進行深度調優的協作夥伴。評分時應著重於學生如何「引導」Agent，而非程式碼本身。</p>
         </div>
     </section>
 
-    <footer class="bg-white py-12 border-t border-gray-100">
-        <div class="container mx-auto px-4 text-center">
-            <p class="text-gray-400 text-sm">&copy; 2025 Vibe Coding. All rights reserved.</p>
-        </div>
-    </footer>
-
-    <!-- Resources & Script -->
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/XLAFCheIzaU?autoplay=1",
-            doc: "https://docs.google.com/document/d/1EQD6vX-E8z1T3j_o7L9L1_v_Uv0_O_D_X_P_S_K_Y/edit"
-        };
-    </script>
     <script src="/js/course-shared-v4.js"></script>
 
 </body>

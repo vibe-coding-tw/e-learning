@@ -455,159 +455,97 @@
             alert('裝置已斷線');
         }
     </script>
-    <section id="assignment-guide" class="hidden">
-        <h2>作業指引 (Assignment Guide)</h2>
-        <div class="space-y-6">
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h3 class="font-bold text-blue-800">1. GitHub Classroom 設定</h3>
-                <p class="text-sm">請將對應的 Repository (例如：<code>esp32-motor-ramping-lab</code>) 設定至課程儀表板，練習透過 BLE
-                    動態調校馬達的加速曲線與靜摩擦克服參數。</p>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>馬達 Ramping 組態設定</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：軟體保險絲 - UI 安全限流與驗證</h3>
+            <div class="quest-meta">
+                <span>角色扮演：嵌入式系統測試員</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：30 min</span>
             </div>
 
-            <div class="bg-indigo-50 p-4 rounded-lg">
-                <h3 class="font-bold text-indigo-800">2. 翻轉課堂策略</h3>
-                <ul class="list-disc list-inside text-sm">
-                    <li>課前預習：觀看 5 分鐘關於馬達「軟啟動」與「軟停止」對機械零件保護作用的動態演示。</li>
-                    <li>課中實作：實作二進位結構體映射 (Binary Struct Mapping)，並調整 Accel Step 以尋找馬達在不同負載下的最佳線性響應。</li>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立防呆</strong>：在網頁前端 Input 加入 <code>min/max</code> 屬性限制（例如：PWM 不可超過 255）。</li>
+                    <li><strong>實作警告</strong>：使用 JavaScript 實作：當輸入無效數值時，輸入框變紅並禁止按下「傳送」按鈕。</li>
+                    <li><strong>邊界測試</strong>：測試輸入極端值（如 -1 或 999），確保系統能正確攔截。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>安全性</strong>：是否能有效防止使用者因誤輸入而導致馬達燒毀？</li>
+                    <li>[ ] <strong>使用者排錯</strong>：前端是否有提供直觀的錯誤提示？</li>
                 </ul>
             </div>
+        </div>
 
-            <div class="bg-white p-4 border border-gray-200 rounded-lg">
-                <h3 class="font-bold mb-2">3. 單元任務 (Unit Tasks)</h3>
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-100 text-left">
-                        <tr>
-                            <th class="p-2">任務說明</th>
-                            <th class="p-2">建議時間</th>
-                            <th class="p-2">配分</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 2-1】實作 C++ 結構體 (Struct) 與 BLE 的二進位映射</td>
-                            <td class="p-2">60 min</td>
-                            <td class="p-2">40 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 2-2】調校 `Start Kick` 數值以克服靜摩擦力</td>
-                            <td class="p-2">30 min</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="p-2">【作業 2-3】測試不同 `Accel Step` 下的起步流暢度</td>
-                            <td class="p-2">45 min</td>
-                            <td class="p-2">30 pts</td>
-                        </tr>
-                    </tbody>
-                </table>
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：二進位橋樑 - 資料結構映射 (DataView)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：韌體驅動開發者</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>定義結構</strong>：在 JavaScript 中根據 C++ <code>struct</code> 的定義建立 <code>ArrayBuffer</code> 與 <code>DataView</code>。</li>
+                    <li><strong>封裝位元組</strong>：確保使用 <strong>Little-Endian</strong> 格式正確寫入 28 Bytes 的二進位數值。</li>
+                    <li><strong>逆向驗證</strong>：實作從裝置讀取 (Read) 二進位資料並正確解析回網頁 Input 的邏輯。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>對齊正確性</strong>：Offset (偏移量) 是否與 C++ 的 28 Bytes 結構體完全一致？</li>
+                    <li>[ ] <strong>通訊效率</strong>：是否能成功透過二進位通訊完成雙向資料同步？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：失聯保護 - 心跳包與故障安全 (Fail-Safe)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：硬體安全專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：40 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>設定超時</strong>：調整 <code>controlTimeoutMs</code> 並測試藍牙斷線後，馬達是否能在指定時間內自動停車。</li>
+                    <li><strong>EEPROM 回復</strong>：測試裝置斷電重啟後，設定的 Ramping 參數是否能從 NVS (Flash) 中正確載入。</li>
+                    <li><strong>穩定性測試</strong>：在馬達運作期間連續傳送不同參數，觀察裝置是否發生 Crash 或數值位移。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>故障排除能力</strong>：當連線中斷時，系統是否展現出預期的安全性行為？</li>
+                    <li>[ ] <strong>數據持久性</strong>：是否能正確驗證 NVS 的讀寫邏輯？</li>
+                </ul>
             </div>
         </div>
     </section>
 
-    <section id="instructor-guide" class="hidden">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>提供完整的 BLE 框架但空出 <code>loop()</code> 中的漸進演算邏輯，勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>建立作業並連結範本。鼓勵學生使用 <strong>PlatformIO</strong> 進行編譯，並利用本單元網頁介面動態調參。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，實作線性插值或簡單的 <code>currentPWM += step</code> 邏輯。</li>
-                <li>本地開發後 <strong>Push 代碼</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR，重點檢查學生是否處理了「浮點數運算」在嵌入式端的效能開銷與整數溢出問題。</li>
-            </ol>
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2>馬達控制教學引導指南</h2>
+        <div class="classroom-guide text-sm space-y-4">
+            <p><strong>教學重點：</strong></p>
+            <p>本單元結合了「物理安全」與「二進位協議」。教師應強調為什麼使用 Binary 而非 JSON（效能、記憶體），並引導學生處理 C/C++ 結構體對齊 (Memory Alignment) 帶來的位移挑戰。</p>
         </div>
-
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元引導學生理解馬達 Ramping (漸進加速) 的物理意義，並實作二進位結構體 (Binary Struct) 的通訊協議，建議範本倉庫設置如下：</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── src/main.cpp      # (重點) 包含馬達控制結構體與 Ramping 狀態機
-├── include/config.h  # 固定參數配置
-└── README.md        # 實驗紀錄：探討不同 Accel Step 下的加速響應</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>main.cpp (二進位結構體定義與接收)</strong></p>
-        <pre><code>// 1. 強制 1-byte 對齊，確保與 JS DataView 一致
-#pragma pack(push, 1)
-struct MotorConfig_t {
-  uint32_t controlTimeoutMs;
-  int32_t  pwmEffectiveLimitT;
-  int32_t  rampAccelStepT;
-  // ... 其他欄位 (共 28 Bytes)
-};
-#pragma pack(pop)
-
-// 2. BLE 回呼函數中直接映射
-void onWrite(BLECharacteristic* pChar) {
-  std::string value = pChar->getValue();
-  if (value.length() == sizeof(MotorConfig_t)) {
-    MotorConfig_t incoming;
-    memcpy(&incoming, value.data(), sizeof(MotorConfig_t));
-    // 套用設定到全域變數...
-  }
-}</code></pre>
-
-        <p><strong>Motor Control Logic (Ramping 狀態機)</strong></p>
-        <pre><code>void applyRamping() {
-  if (targetPWM > currentPWM) {
-    currentPWM = min(targetPWM, currentPWM + rampAccelStepT);
-  } else if (targetPWM < currentPWM) {
-    currentPWM = max(targetPWM, currentPWM - rampAccelStepT);
-  }
-  ledcWrite(CHANNEL, currentPWM);
-}</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>結構檢查：</strong> 檢查 <code>main.cpp</code> 是否包含 <code>#pragma pack(1)</code> 或正確的偏移量計算。</li>
-            <li><strong>飽和邏輯：</strong> 驗證代碼中是否包含了正確的 <code>constrain(pwm, 0, limit)</code> 飽和處理。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody style="color: #4b5563;">
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">研讀「軟啟動」與「瞬間大電流對鋰電池壓降」的關聯。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學生已體驗過馬達起步的劇烈震動。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作二進位結構體映射 (2-1)，並透過網頁介面尋找最佳 Ramping Step。
-                    </td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>助教角色：</strong>協助解決 Memory Alignment
-                        導致的數值解析位移。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">將不同馬達型號的參數封裝成 Profile 並 Commit 至 GitHub。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>核發最終評量與演算法優化建議。
-                    </td>
-                </tr>
-            </tbody>
-        </table>
     </section>
+
+    <script src="/js/course-shared-v4.js"></script>
+
+</body>
+
+</html>
 </body>
 
 </html>

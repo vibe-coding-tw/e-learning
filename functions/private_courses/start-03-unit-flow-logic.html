@@ -366,20 +366,87 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2>指令流邏輯：單次觸發與重複發送</h2>
 
-        <h3>作業 3-3：安全機制 (Dead Man's Switch)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 安全工程師。</li>
-            <li><strong>執行方式：</strong> 實作當前端偵測到斷線或手指離開按鈕時，自動停止發送指令的邏輯。</li>
-            <li><strong>評分重點：</strong> <code>clearInterval</code> 的正確調用，以及在異常斷開時的反應速度。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：指令連發與頻率調校 (Interval Tuning)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：系統性能工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
 
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立定時器</strong>：使用 <code>setInterval</code> 實作持續發送指令的邏輯，測試從 10ms 到 500ms 的不同頻率。</li>
+                    <li><strong>效能觀測</strong>：觀察 ESP32 序列埠是否出現指令堆積 (Backlog) 或掉包現象。</li>
+                    <li><strong>參數優化</strong>：找出反應靈敏且不造成網路阻塞的「甜蜜點」頻率（建議為 50ms）。</li>
+                    <li><strong>實驗提交</strong>：將頻率調校後的 <code>logic.js</code> 提交至 GitHub。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>定時器運用</strong>：是否能正確使用 <code>setInterval</code> 與 <code>clearInterval</code> 控制流程？</li>
+                    <li>[ ] <strong>頻率合理性</strong>：設定的間隔是否平衡了「操控即時性」與「硬體處理能力」？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：多按鍵狀態機衝突解決</h3>
+            <div class="quest-meta">
+                <span>角色扮演：控制演算法工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>狀態追蹤</strong>：建立一個 <code>keysActive</code> 物件，紀錄當前所有按鍵的按壓狀態 (true/false)。</li>
+                    <li><strong>邏輯解碼</strong>：實作一個解碼函式，將多個按鍵組合（如「前」+「左」）轉換為單一控制指令。</li>
+                    <li><strong>邊界測試</strong>：測試快速交替按下不同按鍵時，系統是否會產生逻辑崩饋或按鍵黏滯。</li>
+                    <li><strong>版本更新</strong>：提交支援多鍵並發的邏輯代碼。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>邏輯一致性</strong>：同時按下多個按鍵時，輸出的指令是否符合預期的混合運動邏輯？</li>
+                    <li>[ ] <strong>防呆機制</strong>：是否處理了「按住 A 鍵時按下 B 鍵」的平滑過渡？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：失控防護與死人開關 (Dead Man's Switch)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：安全防護專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>事件劫持</strong>：監聽 <code>blur</code> 事件（視窗失去焦點）與 <code>contextmenu</code> 事件。</li>
+                    <li><strong>強制停機</strong>：實作一旦觸發安全事件，立即清除所有定時器並發送 <code>STOP</code> 指令的邏輯。</li>
+                    <li><strong>極端測試</strong>：模擬瀏覽器當機或網路瞬間中斷，驗證系統能在 500ms 內進入安全模式。</li>
+                    <li><strong>正式提交</strong>：提交包含安全機制的核心控制邏輯。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>安全性驗證</strong>：當手指滑出按鈕區域或視窗切換時，車子是否能立即停止？</li>
+                    <li>[ ] <strong>資源回收</strong>：是否在停機時正確釋放了所有系統資源（Timer），避免內存溢位？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
+        <h2>指令流邏輯與安全機制 教學引導指南</h2>
         <div class="classroom-guide">
             <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
             <ol>

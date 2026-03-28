@@ -519,20 +519,87 @@ return JSON.stringify(complexData);</textarea>
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2>數據格式化：從物件到 JSON</h2>
 
-        <h3>作業 2-2：封包瘦身 (Optimization)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 韌體工程師。</li>
-            <li><strong>執行方式：</strong> 將 JSON 物件中的 Key 缩寫化（例如 <code>velocity</code> 改為 <code>v</code>），並重新計算字節長度。</li>
-            <li><strong>評分重點：</strong> 封包長度是否縮短至 20 bytes 以內，並保持邏輯清晰。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：基礎封裝與序列化 (Serializing Objects)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：物聯網開發者</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：40 min</span>
+            </div>
 
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>物件構建</strong>：在 JavaScript 中定義包含 <code>direction</code>, <code>speed</code> 與 <code>timestamp</code> 的指令物件。</li>
+                    <li><strong>標準化轉換</strong>：使用 <code>JSON.stringify()</code> 將物件轉換為字串，並輸出至 Console 驗證格式是否為標準雙引號。</li>
+                    <li><strong>異常處理</strong>：測試當物件包含 <code>undefined</code> 或 <code>function</code> 時，序列化後的結果會如何變化。</li>
+                    <li><strong>初步提交</strong>：將基礎序列化函式提交至 GitHub。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>語法正確性</strong>：輸出的字串是否符合標準 JSON 規範（雙引號、大括號成對）？</li>
+                    <li>[ ] <strong>時間戳記</strong>：物件是否包含動態產生的 <code>Date.now()</code> 確保封包唯一性？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：封包瘦身與通訊頻寬優化</h3>
+            <div class="quest-meta">
+                <span>角色扮演：韌體通訊工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：40 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>Key Name 縮寫</strong>：將 <code>command</code> 簡化為 <code>c</code>, <code>velocity</code> 簡化為 <code>v</code>，以節省字元空間。</li>
+                    <li><strong>長度對照</strong>：計算簡化前後的字節數 (Bytes)，確保封包長度縮減 50% 以上。</li>
+                    <li><strong>精簡驗證</strong>：確保在縮寫後，接收端 (ESP32) 仍能透過約定的 Key 取得正確數值。</li>
+                    <li><strong>技術提交</strong>：提交優化後的短碼協議設計。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>瘦身成效</strong>：最終 JSON 字串長度是否成功壓低在 20 bytes 以內？</li>
+                    <li>[ ] <strong>邏輯定義</strong>：README 中是否清晰說明了縮寫與原始含義的映射關係？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：狀態機巢狀資料結構</h3>
+            <div class="quest-meta">
+                <span>角色扮演：嵌入式系統架構師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>層級設計</strong>：構建一個巢狀物件，分離「搖桿座標 (joy)」與「按鈕狀態 (btn)」。</li>
+                    <li><strong>結構對齊</strong>：確保資料層級不超過三層，平衡資料清晰度與解析難度。</li>
+                    <li><strong>自動化測試</strong>：撰寫簡單的測試案例，模擬不同操作組合下的資料正確性。</li>
+                    <li><strong>正式提交</strong>：將完整的資料協議方案 Push 至 GitHub。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>結構合理性</strong>：巢狀結構是否邏輯分明，易於在 C++ 端（ArduinoJson）進行解析？</li>
+                    <li>[ ] <strong>擴展性預留</strong>：在不破壞現有結構的前提下，是否能輕易加入新的感測器數據欄位？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
+        <h2>數據格式化與 JSON 協議 教學引導指南</h2>
         <div class="classroom-guide">
             <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
             <ol>

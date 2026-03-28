@@ -148,13 +148,20 @@ async function loadDashboard() {
         myRole = data.role;
         console.log("Role:", myRole);
 
-        // [MODIFIED] Access Control: Global Admin/Teacher OR Course-Specific Teacher
-        const isAuthorizedTeacher = data.courseConfigs && Object.keys(data.courseConfigs).length > 0;
+        const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
+        const hasUnitContext = !!filterUnitId;
+        const isAdmin = myRole === 'admin';
+        const isQualifiedTeacher = hasQualifiedTeacherAccessForUnit(filterUnitId, filterCourseId, myEmail);
+        const isPaidStudent = myRole === 'student' && hasUnitContext
+            ? await hasPaidStudentAccessForUnit(filterCourseId, filterUnitId)
+            : false;
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const filterUnitId = urlParams.get('unitId');
+        if (!hasUnitContext && !isAdmin) {
+            showAccessDenied("ADMIN_ONLY_NO_UNIT");
+            return;
+        }
 
-        if (myRole === 'admin' || myRole === 'teacher' || isAuthorizedTeacher || adminSuperMode) {
+        if (isAdmin || isQualifiedTeacher) {
             // Admin/Teacher View (Management)
             setupAdminFeatures();
             setupGradingFunctions();
@@ -178,8 +185,8 @@ async function loadDashboard() {
                     }
                 }
             }
-        } else if (myRole === 'student') {
-            // Student View (Personal Stats)
+        } else if (isPaidStudent) {
+            // Paid student unit view
             renderStudentDashboard(data, filterUnitId);
         } else {
             showAccessDenied();
@@ -206,10 +213,15 @@ function showAccessDenied(errorType = "") {
         if (deniedMsg) deniedMsg.innerText = "本頁面為個人學習儀表板，請登入以查看您的數據。";
         if (guestView) guestView.classList.remove('hidden');
         if (adminSetupNote) adminSetupNote.classList.add('hidden');
+    } else if (errorType === "ADMIN_ONLY_NO_UNIT") {
+        if (deniedTitle) deniedTitle.innerText = "⛔ 僅限管理員";
+        if (deniedMsg) deniedMsg.innerText = "未指定課程單元時，只有管理員可以存取 Dashboard。";
+        if (guestView) guestView.classList.add('hidden');
+        if (adminSetupNote) adminSetupNote.classList.add('hidden');
     } else {
         // Show Access Denied (Logged in but no permission)
         if (deniedTitle) deniedTitle.innerText = "⛔ 權限不足";
-        if (deniedMsg) deniedMsg.innerText = "只有老師或管理員可以訪問此管理頁面。";
+        if (deniedMsg) deniedMsg.innerText = "只有管理員、該單元合格教師，或該單元已付款學生可以存取此頁面。";
         if (guestView) guestView.classList.add('hidden');
         if (adminSetupNote) adminSetupNote.classList.remove('hidden');
 
@@ -312,6 +324,22 @@ function getPreferredUnitId(unitId, courseUnits = [], extraKeys = []) {
         unitId;
 }
 
+function normalizeTeacherIdentifier(value) {
+    if (!value || typeof value !== 'string') return '';
+    return value.replace(/_DOT_/g, '.').trim();
+}
+
+function getCurrentDashboardContext() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
+    let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
+    if (!filterCourseId && filterUnitId) {
+        filterCourseId = findParentCourseIdByUnit(filterUnitId);
+    }
+
+    return { filterUnitId, filterCourseId };
+}
+
 function hasQualifiedTeacherAccessForUnit(fileName, courseId, email) {
     if (!email || !fileName || !courseId) return false;
     
@@ -325,9 +353,44 @@ function hasQualifiedTeacherAccessForUnit(fileName, courseId, email) {
     const unitTeachersArr = Array.isArray(unitDocConfig.authorizedTeachers) ? unitDocConfig.authorizedTeachers : [];
     const legacyTeachers = candidateIds.flatMap(id =>
         (unitConfigs[id] && typeof unitConfigs[id] === 'object') ? Object.keys(unitConfigs[id]) : []
-    );
+    ).map(normalizeTeacherIdentifier).filter(Boolean);
 
     return new Set([...unitTeachersArr, ...legacyTeachers]).has(email);
+}
+
+async function hasPaidStudentAccessForUnit(courseId, unitId) {
+    if (!courseId || !unitId || !auth.currentUser) return false;
+
+    try {
+        const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
+        const response = await checkAuthFunction({
+            pageId: courseId,
+            fileName: unitId
+        });
+        return !!(response?.data?.authorized || response?.data?.result?.authorized);
+    } catch (error) {
+        console.error('[Dashboard] Failed to verify paid student access:', error);
+        return false;
+    }
+}
+
+function configureStudentTabsForUnitAccess() {
+    const overviewTabBtn = document.getElementById('tab-btn-overview');
+    const assignmentsTabBtn = document.getElementById('tab-btn-assignments');
+    const settingsTabBtn = document.getElementById('tab-btn-settings');
+    const earningsTabBtn = document.getElementById('tab-btn-earnings');
+    const adminTabBtn = document.getElementById('tab-btn-admin');
+
+    if (overviewTabBtn) overviewTabBtn.classList.add('hidden');
+    if (assignmentsTabBtn) assignmentsTabBtn.classList.remove('hidden');
+    if (settingsTabBtn) settingsTabBtn.classList.add('hidden');
+    if (earningsTabBtn) earningsTabBtn.classList.add('hidden');
+    if (adminTabBtn) adminTabBtn.classList.add('hidden');
+}
+
+function filterAssignmentsForCurrentView(assignments = []) {
+    if (myRole !== 'student') return assignments;
+    return assignments.filter(a => (a.userId || a.uid) === myUid);
 }
 
 // --- Rendering ---
@@ -335,6 +398,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
     filterUnitId = resolveCanonicalUnitId(filterUnitId);
     loadingState.classList.add('hidden');
     dashboardContent.classList.remove('hidden');
+    configureStudentTabsForUnitAccess();
 
     // 1. Personal Stats (Find my own data from students array or separate object)
     // For students, getDashboardData returns 'students' array containing ONLY the requesting student
@@ -347,7 +411,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
     // Parse courseId from URL and resolve to UUID
     let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
 
-    let displayAssignments = data.assignments;
+    let displayAssignments = filterAssignmentsForCurrentView(data.assignments);
     let displayCourseProgress = myData.courseProgress || {};
 
     // Filter if courseId is present
@@ -748,7 +812,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
     // [NEW] Use filterUnitId for chart and assignment filtering if courseId is present
     let chartData = data.students;
-    let displayAssignments = data.assignments;
+    let displayAssignments = filterAssignmentsForCurrentView(data.assignments);
 
     if (filterCourseId) {
         chartData = data.students.map(s => {
@@ -780,6 +844,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
     renderChart(chartData);
     renderAssignments(displayAssignments, guideContent);
+    switchTab('assignments');
 }
 
 // Helper: Resolve assignment guide for a unit
@@ -909,9 +974,15 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
 };
 
 function renderAssignments(assignments, guideContent = "") {
+    const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
+    const canManageAssignments = myRole === 'admin' ||
+        hasQualifiedTeacherAccessForUnit(filterUnitId, filterCourseId, myEmail);
+    const thAction = document.getElementById('assignment-th-action');
+    if (thAction) thAction.classList.toggle('hidden', !canManageAssignments);
+
     if (assignmentTableBody) {
         if (!assignments || assignments.length === 0) {
-            assignmentTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">尚無作業繳交紀錄</td></tr>`;
+            assignmentTableBody.innerHTML = `<tr><td colspan="${canManageAssignments ? 6 : 5}" class="text-center py-8 text-gray-500">尚無作業繳交紀錄</td></tr>`;
         } else {
             assignmentTableBody.innerHTML = assignments.map(a => {
                 // Safe date handling
@@ -946,7 +1017,7 @@ function renderAssignments(assignments, guideContent = "") {
                 const unitMatch = displayUnit.match(/unit\s+(.+)/i);
                 if (unitMatch) displayUnit = unitMatch[1]; // Try to extract meaningful part
 
-                const canGrade = (myRole === 'admin' || myRole === 'teacher');
+                const canGrade = canManageAssignments;
                 const isStudent = (myRole === 'student' && a.userId === myUid);
 
                 let actionButton = '';
@@ -965,11 +1036,6 @@ function renderAssignments(assignments, guideContent = "") {
                         </a>
                     `;
                 }
-
-                // Hide Action column for non-teachers/admins
-                const thAction = document.getElementById('assignment-th-action');
-                if (thAction) thAction.classList.toggle('hidden', !canGrade);
-
                 return `
                 <tr class="lg:hover:bg-blue-50/50 transition border-b border-gray-100 cursor-pointer group text-xs md:text-sm" 
                     onclick="handleAssignmentClick('${a.courseId}', '${a.unitId}', ${isStudent && a.submissionUrl ? `'${a.submissionUrl}'` : 'null'})">
@@ -983,7 +1049,7 @@ function renderAssignments(assignments, guideContent = "") {
                     <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-500">${submittedDate}</td>
                     <td class="py-2 px-1 sm:py-3 sm:px-2">${badge}</td>
                     <td class="py-2 px-1 sm:py-3 sm:px-2 font-bold text-gray-700">${a.grade !== null && a.grade !== undefined ? a.grade : '-'}</td>
-                    <td class="py-2 px-1 sm:py-3 sm:px-2 text-right ${!canGrade ? 'hidden' : ''}">
+                    <td class="py-2 px-1 sm:py-3 sm:px-2 text-right ${!canManageAssignments ? 'hidden' : ''}">
                         ${actionButton}
                     </td>
                 </tr>
@@ -1122,7 +1188,7 @@ window.switchTab = function (tabName) {
         const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
         let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
 
-        let displayAssignments = dashboardData.assignments;
+        let displayAssignments = filterAssignmentsForCurrentView(dashboardData.assignments);
         if (filterCourseId) {
             if (filterUnitId) {
                 displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId && unitIdsMatch(a.unitId, filterUnitId));
@@ -1287,8 +1353,14 @@ function renderAdminConsole() {
                     const unitDocConfig = dashboardData?.courseConfigs?.[targetDocId] || {};
                     
                     const unitTeachersArr = Array.isArray(unitDocConfig.authorizedTeachers) ? unitDocConfig.authorizedTeachers : [];
-                    const legacyTeachers = (unitConfigs[unitFile] && typeof unitConfigs[unitFile] === 'object') ? Object.keys(unitConfigs[unitFile]) : [];
-                    const unitTeachers = Array.from(new Set([...unitTeachersArr, ...legacyTeachers])).filter(t => t && t !== 'default');
+                    const legacyTeachers = ((unitConfigs[unitFile] && typeof unitConfigs[unitFile] === 'object') ? Object.keys(unitConfigs[unitFile]) : [])
+                        .map(normalizeTeacherIdentifier)
+                        .filter(Boolean);
+                    const teacherDetailsEmails = Object.values(unitDocConfig.teacherDetails || {})
+                        .map(entry => entry?.email)
+                        .filter(Boolean);
+                    const unitTeachers = Array.from(new Set([...unitTeachersArr, ...legacyTeachers, ...teacherDetailsEmails]))
+                        .filter(t => t && t !== 'default');
                     const unitName = formatUnitName(unitFile) || unitFile;
 
                     const isSelected = filterUnitId && unitIdsMatch(unitFile, filterUnitId);
@@ -1321,19 +1393,21 @@ function renderAdminConsole() {
                                         <tbody class="divide-y divide-orange-50">
                                             ${unitTeachers.length > 0
                                 ? unitTeachers.map(email => {
-                                    const details = unitDocConfig.teacherDetails?.[email.replace(/\./g, '_DOT_')] || {};
-                                    const name = details.name || email.split('@')[0];
-                                    const time = details.qualifiedAt ? new Date(details.qualifiedAt).toLocaleString('zh-TW', { hour12: false }) : null;
-                                    if (!time) return ''; // Filter out historical data
+                                    const details = unitDocConfig.teacherDetails?.[email] || {};
+                                    const displayEmail = email.includes('@') ? email : (details.email || email);
+                                    const name = details.name || displayEmail.split('@')[0];
+                                    const time = details.qualifiedAt
+                                        ? new Date(details.qualifiedAt).toLocaleString('zh-TW', { hour12: false })
+                                        : '—';
 
                                     return `
                                             <tr class="hover:bg-orange-50/20 transition-colors group/row">
                                                 <td class="py-2.5 px-4 font-bold text-gray-800">${escapeHtml(name)}</td>
-                                                <td class="py-2.5 px-4 font-mono text-gray-500">${escapeHtml(email)}</td>
+                                                <td class="py-2.5 px-4 font-mono text-gray-500">${escapeHtml(displayEmail)}</td>
                                                 <td class="py-2.5 px-4 text-gray-400">${escapeHtml(time)}</td>
                                                 <td class="py-2.5 px-4 text-right">
-                                                    <button onclick="handleUnitTeacherAuth('${lesson.courseId}', '${unitFile}', '${email}', 'remove', '${lesson.courseId}')" 
-                                                        class="text-gray-300 hover:text-red-600 transition-colors p-1 opacity-0 group-hover/row:opacity-100">
+                                                    <button onclick="handleUnitTeacherAuth('${lesson.courseId}', '${unitFile}', '${displayEmail}', 'remove', '${lesson.courseId}')" 
+                                                        class="text-red-500 hover:text-red-700 transition-colors p-1 font-bold">
                                                         移除 ✕
                                                     </button>
                                                 </td>
@@ -1740,7 +1814,7 @@ function isUserAuthorizedForUnit(fileName, courseId, email) {
     // 2. Legacy/Fallback: Teachers specifically authorized for THIS unit in course-level doc
     const legacyTeachers = candidateIds.flatMap(id =>
         (unitConfigs[id] && typeof unitConfigs[id] === 'object') ? Object.keys(unitConfigs[id]) : []
-    );
+    ).map(normalizeTeacherIdentifier).filter(Boolean);
 
     const allAuthorized = new Set([...unitTeachersArr, ...legacyTeachers]);
     return allAuthorized.has(email);
