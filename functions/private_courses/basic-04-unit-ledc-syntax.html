@@ -30,7 +30,7 @@
                 馴服 ESP32：<br><span class="text-emerald-400">深入解析 LEDC 周邊</span>
             </h1>
             <p class="text-xl md:text-2xl text-emerald-100 max-w-2xl mx-auto font-light leading-relaxed">
-                掌握硬體 PWM 資源，實現精確的速度控制與平滑的視覺效果。
+                掌控硬體 PWM 底層資源分配，實現精確的速度控制與如絲般順滑的視覺效果。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
@@ -51,63 +51,56 @@
 
         <!-- Module 1: LEDC Trilogy -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
+                <div class="p-8 md:p-14">
+                    <div class="flex flex-col md:flex-row gap-16">
                         <div class="flex-1">
                             <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <span class="text-4xl">🎼</span> 1. 數位轉類比的橋樑：LEDC 三部曲 (20 min)
+                                <span class="text-4xl text-emerald-500">🎼</span> 1. 硬體 PWM 三部曲
                             </h2>
-                            <div class="space-y-6 text-gray-600 text-lg">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
-                                        <h4 class="font-bold text-emerald-800 mb-2">⏱️ 定時器 (Timer)</h4>
-                                        <p class="text-sm">決定 PWM 的「心跳」，定義頻率與解析度的上限。</p>
-                                    </div>
-                                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                        <h4 class="font-bold text-blue-800 mb-2">📡 頻率 (Frequency)</h4>
-                                        <p class="text-sm">每秒切換幾次？馬達通常建議使用 1kHz ~ 20kHz。</p>
-                                    </div>
-                                    <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                                        <h4 class="font-bold text-purple-800 mb-2">🧩 解析度 (Resolution)</h4>
-                                        <p class="text-sm">精細度。8-bit 為 0~255；10-bit 為 0~1023。</p>
-                                    </div>
-                                    <div class="bg-amber-50 p-4 rounded-xl border border-amber-100">
-                                        <h4 class="font-bold text-amber-800 mb-2">🔢 頻道 (Channel)</h4>
-                                        <p class="text-sm">ESP32 有 16 個獨立頻道 (0~15)，可綁定不同腳位。</p>
-                                    </div>
+                            <p class="text-gray-500 mb-10 text-lg font-light leading-relaxed">
+                                在 ESP32 中，PWM 不再是簡單的 analogWrite，而是具備層級架構的精密模組。
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div class="bg-emerald-50 p-6 rounded-2xl border-l-[6px] border-emerald-500 hover:shadow-md transition">
+                                    <h4 class="font-bold text-emerald-800 mb-2">⏱️ 定時器 (Timer)</h4>
+                                    <p class="text-xs text-slate-600 leading-relaxed">決定 PWM 的「心跳頻率」。所有共用定時器的頻道，其頻率與解析度必須保持一致。</p>
                                 </div>
-                                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                    <p class="text-slate-700 font-medium">
-                                        <span class="text-emerald-600 font-bold">🔗 綁定 (Attachment)：</span>
-                                        將設定好的「頻道」指向具體的「GPIO 腳位」。
-                                    </p>
+                                <div class="bg-blue-50 p-6 rounded-2xl border-l-[6px] border-blue-500 hover:shadow-md transition">
+                                    <h4 class="font-bold text-blue-800 mb-2">🔢 頻道 (Channel)</h4>
+                                    <p class="text-xs text-slate-600 leading-relaxed">ESP32 擁有 16 個獨立頻道 (0-15)，每個頻道可獨立設定其「占空比」來控制輸出強度。</p>
+                                </div>
+                                <div class="bg-purple-50 p-6 rounded-2xl border-l-[6px] border-purple-500 hover:shadow-md transition">
+                                    <h4 class="font-bold text-purple-800 mb-2">🧩 解析度 (Resolution)</h4>
+                                    <p class="text-xs text-slate-600 leading-relaxed">定義控制的精細程度。8-bit 對應 256 階；13-bit 對應 8192 階。</p>
+                                </div>
+                                <div class="bg-amber-50 p-6 rounded-2xl border-l-[6px] border-amber-500 hover:shadow-md transition">
+                                    <h4 class="font-bold text-amber-800 mb-2">🔗 腳位綁定 (Attach)</h4>
+                                    <p class="text-xs text-slate-600 leading-relaxed">最具彈性的特點：任何頻道都可以靈活地映射到幾乎具何一個物理 GPIO 腳位上。</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="md:w-1/3">
-                            <div class="sticky top-24">
-                                <div class="bg-slate-900 rounded-2xl p-6 shadow-2xl border border-slate-700">
-                                    <h4 class="text-emerald-400 font-bold mb-4 flex items-center gap-2">
-                                        <span>💡</span> 硬體架構觀念
-                                    </h4>
-                                    <ul class="space-y-4 text-sm text-slate-300">
-                                        <li class="flex items-start gap-3">
-                                            <span class="text-emerald-500 mt-1">●</span>
-                                            <span>多個頻道可以共用同一個定時器。</span>
-                                        </li>
-                                        <li class="flex items-start gap-3">
-                                            <span class="text-emerald-500 mt-1">●</span>
-                                            <span>共用定時器的頻道，其頻率與解析度必須相同。</span>
-                                        </li>
-                                        <li class="flex items-start gap-3">
-                                            <span class="text-emerald-500 mt-1">●</span>
-                                            <span>占空比 (Duty) 則是每個頻道可以獨立設定的。</span>
-                                        </li>
-                                    </ul>
-                                </div>
+                        <div class="md:w-80">
+                            <div class="bg-slate-900 p-8 rounded-3xl shadow-2xl border border-slate-700 text-slate-300 relative overflow-hidden group">
+                                <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-emerald-500/10 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                                <h4 class="text-emerald-400 font-bold mb-6 flex items-center gap-2 uppercase tracking-widest text-xs">
+                                    <span>💡</span> Resource Tip
+                                </h4>
+                                <ul class="space-y-5 text-[11px] font-light">
+                                    <li class="flex items-start gap-3">
+                                        <span class="text-emerald-500 font-bold">●</span>
+                                        <span>定時器資源是稀缺的，優先將同頻率設備放在一起。</span>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <span class="text-emerald-500 font-bold">●</span>
+                                        <span>共用 Timer 下，不同頻道仍可獨立控制 Duty 值。</span>
+                                    </li>
+                                    <li class="pt-4 border-t border-slate-700/50 text-emerald-400 italic">
+                                        精確管理資源是開發高效能系統的第一步。
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -117,57 +110,55 @@
 
         <!-- Module 2: API Flow -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
-                <div class="p-8 md:p-12">
+                <div class="p-8 md:p-14">
                     <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">⚙️</span> 2. 關鍵語法與 API 流程 (20 min)
+                        <span class="text-4xl text-blue-500">⚙️</span> 2. 關鍵語法與核心 API
                     </h2>
 
-                    <div class="grid lg:grid-cols-2 gap-12">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
                         <div class="space-y-6">
                             <div class="space-y-4">
-                                <div
-                                    class="bg-slate-50 p-5 rounded-2xl border border-slate-200 hover:border-blue-300 transition-colors">
-                                    <code
-                                        class="text-blue-700 font-bold text-lg leading-relaxed">ledcSetup(channel, freq, res);</code>
-                                    <p class="text-sm text-gray-600 mt-2 italic">設定頻道的參數：哪個頻道、多快、多精細？</p>
+                                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 group hover:border-blue-400 transition">
+                                    <code class="text-blue-700 font-bold text-sm">ledcSetup(ch, freq, res);</code>
+                                    <p class="text-xs text-slate-500 mt-2 font-light">初始化設定：指定那個頻道、跳動頻率、以及多少位元的解析度。</p>
                                 </div>
-                                <div
-                                    class="bg-slate-50 p-5 rounded-2xl border border-slate-200 hover:border-blue-300 transition-colors">
-                                    <code
-                                        class="text-blue-700 font-bold text-lg leading-relaxed">ledcAttachPin(pin, channel);</code>
-                                    <p class="text-sm text-gray-600 mt-2 italic">把物理腳位接上頻道：哪個 GPIO 要傳出訊號？</p>
+                                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 group hover:border-blue-400 transition">
+                                    <code class="text-blue-700 font-bold text-sm">ledcAttachPin(gpio, ch);</code>
+                                    <p class="text-xs text-slate-500 mt-2 font-light">腳位映射：將實體接腳導通至對應的邏輯頻道。</p>
                                 </div>
-                                <div
-                                    class="bg-slate-50 p-5 rounded-2xl border border-slate-200 hover:border-blue-300 transition-colors">
-                                    <code
-                                        class="text-blue-700 font-bold text-lg leading-relaxed">ledcWrite(channel, duty);</code>
-                                    <p class="text-sm text-gray-600 mt-2 italic">輸出占空比：讓它轉多快或亮多亮？</p>
+                                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 group hover:border-blue-400 transition">
+                                    <code class="text-blue-700 font-bold text-sm">ledcWrite(ch, val);</code>
+                                    <p class="text-xs text-slate-500 mt-2 font-light">輸出能量：更新該頻道的占空比。數值上限取決於 Resolution。</p>
                                 </div>
                             </div>
-
-                            <div class="bg-amber-900/5 p-6 rounded-2xl border border-amber-500/20">
-                                <h4 class="text-amber-800 font-bold mb-3 flex items-center gap-2">
-                                    <span>🔍</span> 學習任務
-                                </h4>
-                                <p class="text-gray-700 leading-relaxed text-sm">
-                                    查閱資料，如果我有兩個馬達需要不同的頻率（例如一個控制泵，一個控制移動馬達），我該如何分配 Timer 與 Channel？
+                            <div class="bg-blue-900 text-white p-8 rounded-3xl shadow-lg relative overflow-hidden group border border-white/10">
+                                <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-x-12 -translate-y-12"></div>
+                                <h4 class="text-blue-400 font-bold mb-4 text-xs uppercase tracking-widest">思考題</h4>
+                                <p class="text-sm font-light leading-relaxed mb-4">
+                                    如果我需要用馬達播放「簡單的音階」，改變 Freq 還是 Duty？為什麼？
                                 </p>
                             </div>
                         </div>
 
-                        <div class="bg-slate-900 rounded-2xl p-6 shadow-2xl relative">
-                            <div class="absolute top-4 right-4 text-slate-500 text-xs font-mono">CODE SNIPPET</div>
-                            <pre class="text-sm md:text-base leading-relaxed overflow-x-auto text-blue-300 font-mono">
-<span class="text-gray-500">// 初始化設定</span>
-<span class="text-emerald-400">ledcSetup</span>(0, 5000, 8);  <span class="text-gray-500">// CH:0, 5kHz, 8-bit</span>
-<span class="text-emerald-400">ledcAttachPin</span>(2, 0);    <span class="text-gray-500">// GPIO 2 -> CH:0</span>
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl relative border border-slate-700">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="w-3 h-3 bg-red-400 rounded-full"></span>
+                                <span class="w-3 h-3 bg-amber-400 rounded-full"></span>
+                                <span class="w-3 h-3 bg-emerald-400 rounded-full"></span>
+                                <span class="ml-auto text-[10px] text-slate-500 font-mono tracking-widest">C++ FRAMEWORK</span>
+                            </div>
+                            <pre class="text-xs md:text-sm leading-relaxed overflow-x-auto text-blue-300 font-mono">
+<span class="text-slate-500">// 步驟：設定 -> 綁定 -> 驅動</span>
+<span class="text-blue-500">void</span> <span class="text-emerald-400">setup</span>() {
+  <span class="text-emerald-400">ledcSetup</span>(0, 5000, 8);  <span class="text-slate-500">// 5kHz, 8bit</span>
+  <span class="text-emerald-400">ledcAttachPin</span>(14, 0);   <span class="text-slate-500">// GPIO14 -> CH0</span>
+}
 
-<span class="text-gray-500">// 循環控制</span>
-<span class="text-blue-400">for</span>(<span class="text-blue-400">int</span> i=0; i&lt;255; i++) {
-  <span class="text-emerald-400">ledcWrite</span>(0, i);      <span class="text-gray-500">// 漸亮</span>
-  <span class="text-blue-400">delay</span>(10);
+<span class="text-blue-500">void</span> <span class="text-emerald-400">loop</span>() {
+  <span class="text-emerald-400">ledcWrite</span>(0, 128);      <span class="text-slate-500">// Output 50% Power</span>
+  <span class="text-blue-500">delay</span>(1000);
 }</pre>
                         </div>
                     </div>
@@ -175,46 +166,41 @@
             </div>
         </section>
 
-        <!-- Module 3: Why LEDC? -->
+        <!-- Module 3: Architectural Benefits -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="p-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12 items-center">
-                        <div class="flex-1 space-y-6">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                <span class="text-4xl">❓</span> 3. 為什麼不直接用 analogWrite？ (15 min)
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-8">
+                            <h2 class="text-3xl font-bold mb-4 flex items-center gap-3 text-emerald-400">
+                                <span class="p-2 bg-emerald-500/20 rounded-lg text-emerald-400 text-2xl">⚡</span> 3. 為什麼不直接用 analogWrite？
                             </h2>
-                            <div class="space-y-4 text-gray-600 text-lg">
-                                <p>
-                                    <span class="font-bold text-purple-600">精確控制：</span>
-                                    LEDC 允許你在程式執行中動態修改頻率，這對音效產生（如蜂鳴器）或伺服馬達（Servo）極其重要。
+                            <div class="space-y-6">
+                                <p class="text-slate-400 font-light leading-relaxed">
+                                    LEDC 提供的是「硬體層級」的精確資源控制。你可以在程式運行中，零延遲地修改頻率（動態變頻）或更改映射，這對於動態調節馬達效率或生成複雜音效是必備的能力。
                                 </p>
-                                <p>
-                                    <span class="font-bold text-purple-600">資源優化：</span>
-                                    你可以決定哪些腳位共用同一組時脈源，在複雜的低功耗或高性能任務中具有更高的靈活性。
-                                </p>
-                                <div class="bg-purple-50 p-6 rounded-2xl border border-purple-100">
-                                    <h4 class="font-bold text-purple-800 mb-3">預習任務：</h4>
-                                    <p class="text-sm text-purple-700 leading-relaxed">
-                                        思考 8-bit (256 階) 與 12-bit (4096 階) 解析度在控制馬達極低速轉動時，哪一個能提供更細微的控制？為什麼？
-                                    </p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div class="p-6 bg-white/5 rounded-2xl border border-white/10 group hover:border-emerald-500/50 transition">
+                                        <h4 class="text-emerald-400 font-bold mb-2 text-sm uppercase">動態變頻</h4>
+                                        <p class="text-[11px] text-slate-500 font-light">即時調整載波頻率，優化馬達在不同轉速下的發熱與噪音。</p>
+                                    </div>
+                                    <div class="p-6 bg-white/5 rounded-2xl border border-white/10 group hover:border-emerald-500/50 transition">
+                                        <h4 class="text-emerald-400 font-bold mb-2 text-sm uppercase">位元對比</h4>
+                                        <p class="text-[11px] text-slate-500 font-light">12-bit 下 4096 階的精微控制，讓你的無人車能緩步穩健起步，不暴衝。</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="md:w-1/3">
-                            <div
-                                class="bg-slate-100 rounded-3xl p-8 text-center border-4 border-dashed border-gray-200">
-                                <div class="text-6xl mb-4">🚀</div>
-                                <h4 class="font-bold text-gray-800 mb-2">線上任務</h4>
-                                <p class="text-sm text-gray-500 mb-6">
-                                    撰寫一段簡單的 for 迴圈代碼，預習如何實作馬達的「呼吸燈式」緩啟動。
+                        <div class="md:w-80">
+                           <div class="bg-emerald-500/10 p-10 rounded-3xl border border-emerald-500/20 text-center relative overflow-hidden group">
+                                <div class="absolute -left-8 -top-8 w-32 h-32 bg-emerald-500/10 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                                <h4 class="text-emerald-400 font-bold mb-6 text-sm uppercase tracking-widest">API Mastery</h4>
+                                <p class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic">
+                                    「寫出能跑的程式不難，寫出能高效管理硬體資源的程式，才叫專業工程師。」
                                 </p>
-                                <div class="bg-white px-4 py-2 rounded-lg shadow-sm font-mono text-xs text-blue-600">
-                                    for(int val = start; ... )
-                                </div>
-                            </div>
+                                <div class="inline-block px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold text-[10px] cursor-pointer hover:bg-emerald-500 transition shadow-lg">閱讀硬體暫存器文件</div>
+                           </div>
                         </div>
                     </div>
                 </div>
@@ -224,83 +210,57 @@
         <!-- Homework Section -->
         <section class="module-section">
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：硬體資源大師</h2>
-            <p class="text-center text-gray-500 mb-12">深入掌握硬體資源分配，建構穩定的運動控制系統。</p>
+            <p class="text-center text-gray-500 mb-12">深入掌握硬體資源分配，建構穩定的運動控制系統基石。</p>
 
             <div class="grid md:grid-cols-3 gap-6">
-                <!-- Task 3-1 -->
-                <div onclick="openSubmissionModal('basic-04-ledc-1', '【作業 3-1】「頻道接力賽」：多路 PWM 輸出')"
+                <!-- Task 4-1 -->
+                <div onclick="openSubmissionModal('basic-04-ledc-1', '【作業 4-1】頻道接力賽：多路 PWM 資源管理 (Resource Audit)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-emerald-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🚦</span>
-                            <span
-                                class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-emerald-500 group-hover:scale-110 transition-transform">🚦</span>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業
-                            3-1】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「頻道接力賽」：多路 PWM 輸出</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
-                            同時控制 LED 與兩個馬達。Channel 0 給 LED (5kHz)，Channel 1 & 2 給馬達 (15kHz)。觀察修改 CH1 頻率是否影響 CH2？
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業 4-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「LEDC 資源映射實驗」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            配置不同頻率給 LED 與馬達。實測並記錄修改同 Timer 下的頻道參數是否會產生連動干擾，建立資源隔離觀念。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-emerald-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳配置截圖</span>
                     </div>
                 </div>
 
-                <!-- Task 3-2 -->
-                <div onclick="openSubmissionModal('basic-04-ledc-2', '【作業 3-2】「解析度適配器」：自定義 API')"
+                <!-- Task 4-2 -->
+                <div onclick="openSubmissionModal('basic-04-ledc-2', '【作業 4-2】百分比適配器：自定義動力 API (Custom API Builder)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-blue-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🔌</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-blue-500 group-hover:rotate-12 transition-transform">🔌</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 3-2】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「解析度適配器」：自定義 API</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
-                            封裝 `setMotorSpeed(int percent)`，輸入 0~100 並自動轉換為對應解析度（如 10-bit 的 1023）的 ledcWrite 數值。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 4-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「抽象速度控制介面」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            撰寫 setMotorSpeed(int %) 函式，整合 Resolution 映射與輸入邊界保護，將底層位元計算封裝成直覺的人機介面。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-blue-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳封裝好的函式</span>
                     </div>
                 </div>
 
-                <!-- Task 3-3 -->
-                <div onclick="openSubmissionModal('basic-04-ledc-3', '【作業 3-3】「頻率掃描器」：尋找馬達和諧點')"
+                <!-- Task 4-3 -->
+                <div onclick="openSubmissionModal('basic-04-ledc-3', '【作業 4-3】諧振頻率掃描：尋找馬達甜蜜點 (Resonance Seek)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-indigo-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🔊</span>
-                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-indigo-500 group-hover:translate-x-1 transition-transform">🔊</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 3-3】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「頻率掃描器」：尋找馬達和諧點</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
-                            讓頻率從 100Hz 增加到 40kHz。紀錄在哪個頻率下高頻雜音最小？在什麼情況下馬達會轉不動或過熱？
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 4-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「雜音與效率平衡掃描」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            從 100Hz 掃描到 40kHz。紀錄各頻段馬達產生的吱吱聲與發熱度，為你的無人車選定最合適且低噪音的工作頻率。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-indigo-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳掃描紀錄</span>
                     </div>
                 </div>
             </div>
@@ -313,140 +273,12 @@
         <div class="container mx-auto px-4 text-center">
             <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
-                <span>單元課程 基礎 4</span>
+                <span>課程單元 基礎 4 - 核心控制器語法</span>
                 <span class="hidden md:inline">|</span>
                 <span>講師：Antigravity Assistant</span>
             </div>
         </div>
     </footer>
-
-    <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
-
-        <h3>【作業 3-1】「頻道接力賽」：多路 PWM 輸出</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 硬體資源管理員 (Hardware Resource Manager)。</li>
-            <li><strong>執行方式：：</strong> 同時控制一個 LED 與兩個馬達。將 Channel 0 分配給 LED (5kHz)，Channel 1 & 2 分配給馬達 (15kHz)。觀察並記錄修改
-                CH1 頻率是否會影響 CH2 的行為。</li>
-            <li><strong>評分重點 :</strong> 能正確配置多個 LEDC 通道與定時器，且清楚定時器資源在通道間的共享邏輯。</li>
-        </ul>
-
-        <h3>【作業 3-2】「百分比速度控制器」：API 封裝</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 軟體架構實習生 (Software Architecture Intern)。</li>
-            <li><strong>執行方式：：</strong> 撰寫一個封裝函式 <code>setMotorSpeed(int percent)</code>。輸入 0~100 並自動轉換為對應解析度（例如 10-bit
-                為 1023）的 <code>ledcWrite</code> 數值，讓主程式代碼更易讀。</li>
-            <li><strong>評分重點 :</strong> 成功實作映射 (Mapping) 邏輯，且封裝後的函式在主程式中運作正常，代碼整潔度高。</li>
-        </ul>
-
-        <h3>【作業 3-3】「頻率掃描器」：尋找馬達諧振點</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 音響/震動測試專家 (Acoustic/Vibration Specialist)。</li>
-            <li><strong>執行方式：：</strong> 寫一個迴圈讓馬達頻率從 100Hz 漸增到 40kHz。紀錄在哪個頻率下高頻雜音最小？並觀察頻率過高時馬達轉動力的變化。</li>
-            <li><strong>評分重點 :</strong> 撰寫完整的掃描實驗紀錄，包含頻率、雜音程度與轉動力觀察，並給出建議的最佳運作頻率。</li>
-        </ul>
-    </section>
-
-    <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>在 GitHub 建立新 Repo（名為 <code>basic-04-ledc-template</code>）。</li>
-                <li>上傳包含基礎引腳定義但「未調用任何 LEDC 函式」的 Repo 框架。</li>
-                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
-                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，獲得個人專屬 Repo。</li>
-                <li>實作具備靈活參數配置的 PWM 初始化封裝並控制多路輸出。</li>
-                <li>本地開發後 <strong>Push 代碼</strong> 提交進度。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
-                <li>針對學生的「多通道管理邏輯」與「硬體資源 (Timer) 分配策略」予以具體點評。</li>
-            </ol>
-        </div>
-
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元聚焦於 ESP32 特有的 LEDC 模組配置，引導學生理解底層硬體資源的分配邏輯。</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── platformio.ini   # 包含基礎開發環境配置
-├── src/
-│   └── main.cpp      # (重點) 需實作 ledcSetup、ledcAttachPin 封裝
-└── README.md        # 不同解析度細膩度觀察報告、配置參數映射表與實驗日誌</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>main.cpp (LEDC 四大要素配置)</strong></p>
-        <pre><code>#include &lt;Arduino.h&gt;
-
-const int ledPin = 18;
-const int channel = 0;
-const int freq = 2000;
-const int resolution = 13; // 13-bit (0-8191)
-
-void setup() {
-  // 1. 配置頻道參數
-  ledcSetup(channel, freq, resolution);
-  // 2. 將頻道連結至實體 GPIO
-  ledcAttachPin(ledPin, channel);
-}
-
-void loop() {
-  ledcWrite(channel, 4096); // 50% Duty Cycle
-  delay(1000);
-}</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>參數合法性掃描：：</strong> 驗證頻率與解析度是否超限（ESP32 限制：Freq * 2^Res < 80MHz）。</li>
-            <li><strong>結構完整性檢查：：</strong> 偵測 <code>ledcAttachPin</code> 的掛載參數，確保通道分配無衝突。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「ESP32 硬體 PWM：Timer 與 Channel 資源分配」影片。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員理解定時器與頻道的關係。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實作多路 LED 獨立控制，對比各解析度的細膩度差別。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>疑難排除：</strong>解決頻率設太高導致無法編譯/運行的邊界問題。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">封裝 PWM 控制類別並提交至 PR，提高代碼重用性。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>審核學生對「韌體抽象層」封裝的思考。</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
 
     <script>
         // Define Resources
@@ -456,6 +288,137 @@ void loop() {
         };
     </script>
     <script src="/js/course-shared-v4.js"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">LEDC 核心語法與資源管理實驗室</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：「頻道接力賽」：多路 PWM 資源管理 (Resource Audit)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：硬體資源管理員</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>靜態資源配置</strong>：分配 Channel 0 給 LED (5kHz)，Channel 1 & 2 給馬達驅動 (15kHz)。</li>
+                    <li><strong>串擾連動測試</strong>：嘗試在實時運行中修改 CH1 的頻率，觀察同 Timer 下的 CH2 是否受到牽連。</li>
+                    <li><strong>日誌彙整</strong>：在 README 中整理一份「LEDC 資源映射表」，列出 Timer、Channel 與 GPIO 的對應關係。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>硬體架構理解</strong>：是否清楚 Timer 與 Channel 在 ESP32 內的資源共享邏輯？</li>
+                    <li>[ ] <strong>配置獨立性</strong>：三路輸出是否能穩定維持各別設定的頻率，且無配置衝突？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：「百分比適配器」：自定義動力 API (API Builder)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：軟體架構實習生</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>API 抽象實作</strong>：撰寫 <code>setMotorSpeed(int percent)</code> 函式。</li>
+                    <li><strong>動態位元映射</strong>：程式需能根據設置的 Resolution 自動將 0-100% 映射至對應的 Duty 數值。</li>
+                    <li><strong>魯棒性驗證</strong>：實作輸入值限制 (Constraint)，確保即使輸入極端錯誤數值 (如 -50 或 200)，系統也不會崩潰或產生溢位。</li>
+                    <li><strong>最終提交</strong>：將此具備保護殼的動力基礎模組 Push。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>映射正確度</strong>：0-100% 的百分比控制是否能線性且精確地驅動馬達？</li>
+                    <li>[ ] <strong>封裝品質</strong>：API 是否成功將複雜的硬體位元設定與腳位細節隱藏起來？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：「諧振頻率掃描」：尋找馬達甜蜜點 (Resonance Seek)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：音訊與雜訊分析專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>自動掃描開發</strong>：利用 <code>ledcSetup</code> 的動態更新特性，編寫循環讓頻率從 100Hz 掃描至 40kHz。</li>
+                    <li><strong>感官日誌紀錄</strong>：標註馬達產生吱吱聲（高頻噪訊）的頻段，以及運行最平靜的「甜蜜點」頻率。</li>
+                    <li><strong>優化建議撰寫</strong>：在 README 中基於實驗所得，針對使用硬體給出最佳的 Freq/Res 配置建議。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>實驗數據嚴謹性</strong>：掃描結果是否包含頻率、噪訊感官、動力穩定度的詳細對照？</li>
+                    <li>[ ] <strong>工程直覺</strong>：能否解釋頻率過高可能導致的開關損耗與馬達扭力衰減？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：透過 LEDC 帶領學生進入「硬體資源管理」的領域，而非僅是調用既有 API。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-emerald-600">重點 1：定時器與通道的樹狀關係</strong> - 建立學員對 MCU 硬體周邊資源有限性的認知。</li>
+                <li><strong class="text-emerald-600">重點 2：動態調變的彈性</strong> - 強調 LEDC 能在 Runtime 修改頻率的強大，這是實現變頻控制與音效合成的關鍵。</li>
+                <li><strong class="text-emerald-600">重點 3：軟體定義硬體</strong> - 藉由百分比適配器作業，練習將「使用者直覺 (0-100%)」與「硬體規格 (10-bit)」分離的封裝技巧。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-emerald-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/main.cpp      # (必修) 提供基本架構，要求學員手動實現 ledc 分配邏輯
+└── README.md         # 資源報告：記錄定時器分配方案與頻率掃描心得
+            </pre>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看「ESP32 的 PWM 為什麼這麼複雜？揭秘 LEDC 控制器」影片。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 確認學員是否能區分「邏輯頻道」與「實體腳位」的概念差異。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，挑戰在實體板子上找出「最低雜音」的運轉頻率。</td>
+                        <td class="p-4 border-b"><strong>技術協助:</strong> 指導如何計算 PWM 分辨率與時鐘頻率的硬體公式。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">將動力接口封裝並發起 PR，說明如何處理各解析度下的「非線性補償」策略。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 點評 API 抽象層的優雅程度與資源管理配置的合理性。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 </body>
 
 </html>

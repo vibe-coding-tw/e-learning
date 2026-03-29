@@ -4,31 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adv 14: 系統性能指標 (KPI) 定義 - Vibe Coding</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <title>系統性能指標 (KPI) 定義 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
-    <style>
-        .gradient-text {
-            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-
-        .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        }
-    </style>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
-<body class="bg-gray-50 text-gray-800 font-sans">
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
 
     <!-- Hero Section -->
     <header
@@ -41,21 +26,20 @@
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
                 class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
-                進階 14 - 單元 2
+                進階 14 - 效能評鑑
             </span>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
-                系統性能指標 <span class="text-cyan-400">(KPI) 定義</span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">系統性能指標<br><span class="text-cyan-400">(KPI) 定義</span>
             </h1>
-            <p class="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto font-light leading-relaxed">
-                沒有指標就沒有真相。學習如何量化、監控並優化無人車系統的真實表現。
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                沒有指標就沒有真相。學習量化、監控並優化無人駕駛系統的真實表現。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="window.courseShared.enterMediaMode('video', window.RESOURCES.youtube)"
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="window.courseShared.enterMediaMode('doc', window.RESOURCES.doc)"
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -64,372 +48,332 @@
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
-        <!-- Use Cases / Intro -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 card-hover">
-                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
-                        </path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold mb-3 text-gray-900">為什麼需要指標？</h3>
-                <p class="text-gray-600 leading-relaxed">
-                    <strong>量化優化：</strong>當你修改了 $K_p$ 值或縮小了影像解析度，效能提升了 $5\%$ 還是 $50\%$？工程師如果不相信直覺，只相信數據。<br>
-                    <strong>SLA (服務水準協議)：</strong>在專業領域中，系統必須承諾最低標準（例如：控制延遲必須小於 $100ms$）。
-                </p>
-            </div>
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 card-hover">
-                <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 mb-6">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z">
-                        </path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold mb-3 text-gray-900">核心概念</h3>
-                <ul class="space-y-2 text-gray-600">
-                    <li class="flex items-center"><span class="mr-2 text-pink-500">✓</span>KPI 三大維度：時間、準確性、可靠性</li>
-                    <li class="flex items-center"><span class="mr-2 text-pink-500">✓</span>權衡 (Trade-off)：FPS 與 Latency
-                        的拉鋸</li>
-                    <li class="flex items-center"><span class="mr-2 text-pink-500">✓</span>數據驅動 (Data-driven) 的開發流程</li>
-                </ul>
-            </div>
-        </div>
+        <!-- Module 1: The Three Dimensions of KPI -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-blue-500">🎯</span> 1. 關鍵性能指標 (KPI) 三大維度
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                工程師不相信直覺，只相信數據。要評估一個控制系統，必須從時間、準確性與可靠性三個面向進行量化。
+                            </p>
+                            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+                                <h4 class="font-bold text-blue-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed">System Benchmarking Dimensions</h4>
+                                <ul class="text-[9px] text-slate-500 space-y-2 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1"></span> <div><strong>時間性 (Temporal)</strong>：延遲 (Latency) 是最重要的指標。多過 100ms 的動作回饋即視為不可接受。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1"></span> <div><strong>準確性 (Accuracy)</strong>：平均誤差與抖動係數 (Jitter)。反映系統行駛的平穩度。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1"></span> <div><strong>可靠性 (Reliability)</strong>：任務完成率與斷線復歸效率。</div></li>
+                                </ul>
+                            </div>
+                        </div>
 
-        <!-- Section 1: KPI Dimensions -->
-        <section class="mb-16">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                <span
-                    class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">1</span>
-                關鍵性能指標 (KPI) 三大維度
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Temporal -->
-                <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                    <h4 class="font-bold text-gray-800 mb-2 flex items-center">
-                        <span class="text-xl mr-2">⏱️</span>時間性 (Temporal)
-                    </h4>
-                    <ul class="text-sm text-gray-600 space-y-2 mt-3">
-                        <li><strong>延遲 (Latency)：</strong>從攝影機拍到畫面，經過處理，到馬達真正轉動的總時間。</li>
-                        <li><strong>幀率 (FPS)：</strong>每秒能夠處理並作出決策的影像數量。</li>
-                    </ul>
-                </div>
-                <!-- Accuracy -->
-                <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                    <h4 class="font-bold text-gray-800 mb-2 flex items-center">
-                        <span class="text-xl mr-2">🎯</span>準確性 (Accuracy)
-                    </h4>
-                    <ul class="text-sm text-gray-600 space-y-2 mt-3">
-                        <li><strong>平均誤差 (Mean Error)：</strong>質心偏離影像中心線的平均像素值。</li>
-                        <li><strong>震盪指數 (Jitter)：</strong>控制輸出訊號的波動頻率與振幅，反映行駛的平穩度。</li>
-                    </ul>
-                </div>
-                <!-- Reliability -->
-                <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                    <h4 class="font-bold text-gray-800 mb-2 flex items-center">
-                        <span class="text-xl mr-2">🛡️</span>可靠性 (Reliability)
-                    </h4>
-                    <ul class="text-sm text-gray-600 space-y-2 mt-3">
-                        <li><strong>任務完成率：</strong>成功跑完一圈 S 彎道且未出界的次數比例。</li>
-                        <li><strong>斷線復歸時間：</strong>BLE 意外斷線後，系統重新連線並恢復控制所需的時間。</li>
-                    </ul>
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors"></div>
+                           <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10">Real-time Performance Scoring</h4>
+                           <div class="relative z-10 space-y-4">
+                               <div class="text-[10px] font-mono p-2 bg-emerald-900/20 border border-emerald-500/30 rounded text-emerald-300">LATENCY: 42ms (EXCELLENT)</div>
+                               <div class="text-[10px] font-mono p-2 bg-blue-900/20 border border-blue-500/30 rounded text-blue-300 uppercase tracking-widest">SLA COMPLIANCE: 99.8%</div>
+                           </div>
+                           <p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest">QUANTIFIED ANALYSIS ACTIVE</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 2: Trade-offs -->
-        <section class="mb-16">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                <span
-                    class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">2</span>
-                權衡與組合指標
-            </h2>
-            <div class="prose prose-blue max-w-none text-gray-600">
-                <p>
-                    在資源有限的嵌入式系統中，我們往往無法兼得所有優點。
-                </p>
-                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 my-4">
-                    <p class="font-bold text-yellow-800">思考題：哪一個對「避障」更有利？</p>
-                    <ul class="list-disc list-inside mt-2 text-yellow-700">
-                        <li>方案 A：高 FPS (60Hz) 但 高延遲 (500ms) —— 看得快但反應慢</li>
-                        <li>方案 B：低 FPS (10Hz) 但 低延遲 (50ms) —— 看得慢但反應快</li>
-                    </ul>
+        <!-- Module 2: Trade-offs & SLA -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-cyan-500">⚖️</span> 2. 指標權衡與服務水準協議 (SLA)
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                在資源有限的環境下，追求高 FPS 與低延遲往往是矛盾的。我們必須定義「複合指標 (Score)」來衡量系統在特定任務下的綜合表現。
+                            </p>
+                            <div class="bg-cyan-50 p-8 rounded-3xl border border-cyan-100 text-center">
+                                <h4 class="text-cyan-900 font-bold mb-4 text-xs uppercase tracking-widest">Optimization Trade-off</h4>
+                                <div class="text-xl font-mono text-cyan-600">
+                                   \[Score = (FPS \times 0.4) + (\frac{1000}{Latency} \times 0.6)\]
+                                </div>
+                                <p class="text-[10px] text-slate-400 mt-4 italic font-light">權衡看得快 (FPS) 與反應快 (Latency)</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-cyan-500/5"></div>
+                           <h4 class="text-cyan-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10">Edge Environment Stress</h4>
+                           <div class="w-full space-y-4 px-10 relative z-10">
+                               <div class="flex justify-between text-[8px] text-slate-400"><span>1m (Normal)</span> <span>< 30ms</span></div>
+                               <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden"><div class="bg-emerald-500 h-full w-[10%]"></div></div>
+                               <div class="flex justify-between text-[8px] text-slate-400"><span>10m (Obstacle)</span> <span>~ 180ms</span></div>
+                               <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden"><div class="bg-red-500 h-full w-[65%] animate-pulse"></div></div>
+                           </div>
+                           <p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest uppercase">Boundary Condition Mapping</p>
+                        </div>
+                    </div>
                 </div>
-                <p>
-                    對於高速移動的無人車，<strong>低延遲</strong>通常比高 FPS 更為關鍵。為了綜合評估，我們會定義「複合指標 (Score)」，例如：
-                    <br>
-                    <code
-                        class="bg-gray-100 px-2 py-1 rounded text-red-600 font-mono">Performance Score = (FPS * 0.4) + (1000/Latency * 0.6)</code>
-                </p>
-                <p class="mt-4">
-                    <strong>官方性能規格書範例：</strong><br>
-                    在 $320 \times 240$ 解析度下，穩定維持 $20 FPS$ 且延遲 $< 80ms$。這就是你的系統必須達成的 SLA。 </p>
             </div>
         </section>
 
-        <!-- Assignment Highlights -->
+        <!-- Module 3: Data-Driven Optimization -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-cyan-400">
+                        <span class="p-2 bg-cyan-500/20 rounded-lg text-cyan-400 text-2xl">📈</span> 3. 數據驅動開發 (Data-driven Dev)
+                    </h2>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                優化不是憑感覺。學會「量化優化效益」：計算優化前後指標的提升比率 (%)，並證明在邊際情況下的穩定性提升。
+                            </p>
+                            <div class="bg-cyan-500/10 p-8 rounded-3xl border border-cyan-500/20 shadow-inner">
+                                <h4 class="font-bold text-cyan-400 mb-4 text-xs uppercase tracking-widest text-center">Benchmarking Protocol</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1"></span><div><strong class="text-white">基準建立 (Baseline)</strong>：在未優化前進行三次完整的壓力測試。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1"></span><div><strong class="text-white">單一變因控制</strong>：一次只改動一個參數（如：JSON 鍵名縮減），確保因果關係明確。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1"></span><div><strong class="text-white">收斂性驗證</strong>：確保優化後的指標在長時間運行下依然保持穩定收斂。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="lg:w-80 bg-cyan-600/10 p-10 rounded-3xl border border-cyan-500/20 text-center relative overflow-hidden group">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-cyan-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-cyan-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center">Efficiency Delta</h4>
+                           <div class="text-5xl font-bold text-white mb-2">+45%</div>
+                           <div class="text-[10px] text-cyan-400 uppercase tracking-widest">Throughput Gain</div>
+                           <p class="text-[11px] text-slate-500 mt-8 leading-relaxed font-light italic">
+                               "這不是運氣，這是精確計算後的工程成果。"
+                           </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
         <section class="module-section">
-            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-                        <div>
-                            <h2
-                                class="text-3xl font-bold text-white mb-2 underline decoration-blue-500 underline-offset-8">
-                                實作任務：數據說話</h2>
-                            <p class="text-slate-400">定義、測量並優化系統指標，讓你的優化成果「有據可查」。</p>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：數據說話</h2>
+            <p class="text-center text-gray-500 mb-12">量化優化效益，產出你的專業性能規格書。這是一份具備工程說服力的技術背書。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 14-1 -->
+                <div onclick="openSubmissionModal('adv-14-kpi-dashboard', '【作業 14-1】「數位儀表板」實作 (Digital KPI Dashboard)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform">📊</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 14-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「實時性能監測器」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            在前端 UI 實作 RTT (Round Trip Time) 與 FPS 計算。根據平均延遲數據，動態切換紅、黃、綠三色狀態燈，實現視覺化性能回饋。
+                        </p>
                     </div>
+                </div>
 
-                    <div class="grid md:grid-cols-2 gap-8 mb-12">
-                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
-                            <div class="flex items-center gap-4 mb-6">
-                                <div
-                                    class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-2xl">
-                                    📡</div>
-                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
-                            </div>
-                            <p class="mb-4 text-slate-400">完成任務後，請將數據與結果推送到你的專屬倉庫。</p>
-                            <ul class="space-y-3 text-slate-300">
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">1</span>
-                                    <span>接受 GitHub Classroom 邀請並 Clone 倉庫</span>
-                                </li>
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">2</span>
-                                    <span>完成代碼後執行 <code
-                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code></span>
-                                </li>
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">3</span>
-                                    <span>在 PR 中查看自動化評分與教師回饋</span>
-                                </li>
-                            </ul>
+                <!-- Task 14-2 -->
+                <div onclick="openSubmissionModal('adv-14-kpi-stress', '【作業 14-2】「性能規格書」：壓力極限測試 (System Benchmarking)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-indigo-500 group-hover:rotate-12 transition-transform">📋</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 14-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「官方測試報告」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            執行各場景下的壓力測試：測量「近距 vs 遠距」下的響應差異。找出系統失效的臨界點，產出具備工程背書力的性能規格書。
+                        </p>
+                    </div>
+                </div>
 
-                        <div class="grid gap-4">
-                            <!-- Task 2-1 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-14-kpi-dashboard', '【作業 2-1】「數位儀表板」實作')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition">作業
-                                        2-1</h3>
-                                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">「數位儀表板」實作</h4>
-                                <p class="text-sm text-gray-500">實作即時性能監控面板，根據延遲自動切換紅黃綠狀態燈號。</p>
-                            </div>
-
-                            <!-- Task 2-2 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-14-kpi-stress', '【作業 2-2】「壓力極限測試」實驗')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-indigo-600 transition">
-                                        作業 2-2</h3>
-                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">「壓力極限測試」實驗</h4>
-                                <p class="text-sm text-gray-500">執行各項變因測試並產出性能規格書，找出系統最大負載邊界。</p>
-                            </div>
-
-                            <!-- Task 2-3 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-14-kpi-optimize', '【作業 2-3】「KPI 優化賽」')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-cyan-600 transition">作業
-                                        2-3</h3>
-                                    <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold">45
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">「KPI 優化賽」</h4>
-                                <p class="text-sm text-gray-500">針對延遲或精準度進行數據驅動開發，實測並量化優化效益。</p>
-                            </div>
+                <!-- Task 14-3 -->
+                <div onclick="openSubmissionModal('adv-14-kpi-optimize', '【作業 14-3】「數據驅動優化戰」 (Data-driven Optimization Contest)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-cyan-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-cyan-500 group-hover:translate-x-1 transition-transform">⚡</span>
+                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition">【作業 14-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「效能提升挑戰」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            選擇一項優化動作（如縮減 JSON 封包），計算優化前後 KPI 的提升比率 (%)。證明你的技術決策如何實質性地壓低系統延遲。
+                        </p>
                     </div>
                 </div>
             </div>
         </section>
-
-        </section>
-
-        <!-- Footer -->
-        <footer class="mt-16 border-t border-gray-200 pt-8 flex justify-between text-gray-500">
-            <a href="/courses/adv-14-unit-debugging-art.html" class="hover:text-blue-600 flex items-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-                Previous: Unit 1 軟體除錯
-            </a>
-            <a href="/courses/adv-14-master-debugging-art.html" class="hover:text-blue-600 flex items-center">
-                Back to Menu
-                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
-                </svg>
-            </a>
-        </footer>
 
     </main>
 
-    <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
-
-        <h3>作業 2-1：「數位儀表板」實作</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 資料可視化工程師。</li>
-            <li><strong>執行方式：</strong> 在網頁前端利用 <code>performance.now()</code> 計算控制循環的耗時，並計算最近 10 幀的平均延遲。</li>
-            <li><strong>評分重點：</strong> UI 能否根據平均延遲自動切換燈號（<50ms 綠燈、>150ms 紅燈），並正確顯示 FPS。</li>
-        </ul>
-
-        <h3>作業 2-2：「壓力極限測試」實驗</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 基準測試 (Benchmarking) 專家。</li>
-            <li><strong>執行方式：</strong> 逐步提升影像解析度或降低 BLE 傳輸間隔，直到車子出現明顯控制落後，紀錄此時的 KPI。</li>
-            <li><strong>評分重點：</strong> 提交一份「官方性能規格書」，註明在不同環境變因下，系統能維持穩定運行的「最大負載邊界」。</li>
-        </ul>
-
-        <h3>作業 2-3：「KPI 優化賽」</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 優化工程師。</li>
-            <li><strong>執行方式：</strong> 針對某一項 KPI（如：縮短延遲）進行代碼優化（如：優化 JSON 資料結構），並進行優化前後的對比。</li>
-            <li><strong>評分重點：</strong> 優化率 (%) 的計算是否合理，且優化後的控制穩定性是否有實質提升。</li>
-        </ul>
-    </section>
-
-    <!-- Instructor Guide (Hidden) -->
-    <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        A. 範本倉庫 (Template Repo) 結構
-                    </h4>
-                    <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
-.
-├── src/
-│   └── telemetry.cpp       # 遙測區：已實作基礎數據發送
-├── public/
-│   └── charts.js           # 圖表區：可視化 (Canvas/Chart.js)
-├── platformio.ini          # 環境設定
-└── docs/
-    └── kpi_spec.md         # 性能規格書與數據對比</pre>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        B. 評估 (Evaluation) 標準
-                    </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">📏</span>
-                            <p class="text-sm text-gray-700"><strong>指標準確性：</strong> 檢查 FPS 與 Latency 數學模型是否正確，排除 RTT
-                                網路干擾因素。</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">📈</span>
-                            <p class="text-sm text-gray-700"><strong>優化效益量化：</strong> 確認包含清晰實驗對照數據，驗證優化策略是否確實提升系統 KPI。
-                            </p>
-                        </div>
-                    </div>
-                </div>
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 進階 14 - 性能指標</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
             </div>
         </div>
-
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">上傳遙測機制框架與規格書模板。預定義 CSV 規範。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">公佈優化排行榜規則。引導分享發現的性能瓶頸。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，執行面板製作與壓力測試。提交包含數據對比的 PR。執行 Git Push。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">審核規格書的工程說服力，點評優化策略（如簡化 JSON 結構）的可行性。</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
-            </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
-                        <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">觀看影片，思考嵌入式環境中「採樣率與反應延遲」之間的權衡關係。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「量化開發」導讀。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，執行「性能極限挑戰賽」，找出各場景下的穩定控制閾值。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，分享數據平滑技巧。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">完成性能規格書並 Push，閱讀回覆 PR 以最佳化數據解讀精確度。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，引導理解 KPI 的核心價值。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
+    </footer>
 
     <script>
+        // Define Resources
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/VKYpQdzm6o8",
             doc: "https://docs.google.com/document/d/e/2PACX-1vQ-fpZyJMU8W2Ow8hGF0n8VdSMjhlWWy87jbCZgsP99oDiHaD23wuefhv-qNNVPBz2sp5UdHaVTyYGF/pub?embedded=true"
         };
     </script>
     <script src="/js/course-shared-v4.js"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">KPI 實驗室：性能量化與極限測試</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：「數位儀表板」實作 (Digital KPI Dashboard)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：數據視覺化工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>核心遙測計算</strong>：在前端 Javascript 代碼中記錄 Ping 發送與 Pong 回傳的時間差，計算 RTT 並轉化為延遲 (ms)。</li>
+                    <li><strong>視覺狀態反饋</strong>：實作三色燈號邏輯。當平均延遲持續超過 150ms 時，介面背景自動切換為紅色模式提醒操作者。</li>
+                    <li><strong>FPS 指標顯示</strong>：實作一個滑動窗口演算法，每秒計算一次接收到的數據量，顯示為「數據更新率 (Hz)」。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>監測時效度</strong>：顯示的指標是否與實際操作反映一致？（當遮住天線時，延遲燈號應有即時變化）。</li>
+                    <li>[ ] <strong>代碼邏輯性</strong>：延遲計算是否排除了重複發送或過期封包的干擾？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：「性能規格書」：壓力極限測試 (System Benchmarking)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：基準測試專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>壓力實驗設計</strong>：分別在「近場正常控制」與「惡意干擾環境」下各進行 5 分鐘的性能取樣。</li>
+                    <li><strong>失效邊界判定</strong>：找出控制開始產生「顯著落後感」的 KPI 指標範圍（例如：封包丟失 > 15% 時）。</li>
+                    <li><strong>規格書撰寫</strong>：在 README 中正式彙編性能規格：包含最大控制距離（推估）、最優控制頻率其當下耗電狀況。</li>
+                    <li><strong>數據 Push</strong>：將實驗日誌與規格書報告推送至 GitHub Classroom。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>工程客觀性</strong>：報告中是否包含樣本數與測試變因的詳細紀錄，而非僅有單一結果？</li>
+                    <li>[ ] <strong>建議可行性</strong>：基於數據得出的「控制安全範圍建議」是否具備指導實際駕駛的價值？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：「數據驅動優化戰」 (Data-driven Optimization Contest)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：性能優化大師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>優化方案實作</strong>：針對一個特定瓶頸（如：JSON 解析慢）實作「精簡字串協議」。</li>
+                    <li><strong>對比測量</strong>：在相同物理條件下對比優化前後的 RTT。計算效能提升百分比 \(\Delta \% = \frac{T_{old} - T_{new}}{T_{old}} \times 100\)。</li>
+                    <li><strong>分析總結</strong>：在 PR 中詳細說明：此優化是否對 PID 穩定性產生了正面貢獻。</li>
+                    <li><strong>提交 PR</strong>：發起變更請求，展現數據驅動改進的具體成果。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>優化成效顯著性</strong>：報告中的優化數據是否能在測試中被複現？提升是否超過 10% 的測量誤差？</li>
+                    <li>[ ] <strong>工程權衡思考</strong>：是否能分析此優化是否增加了代碼複雜度或對其他資源（如快閃記憶體）造成了額外負擔？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：將「軟體開發」引導向「性能工程」。讓學員學會為自己的系統承諾性能指標。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-blue-600">重點 1：數據驅動 (Data-Driven)</strong> - 引導學員排除「感覺比較快」這種模糊描述，強制要求使用 Latency、FPS 與 Packet Loss 等標準術語。</li>
+                <li><strong class="text-blue-600">重點 2：資源權衡 (Trade-off)</strong> - 討論方案 A vs 方案 B 時，建立「魚與熊掌」的思考框架：追求速度是否犧牲了穩定度？</li>
+                <li><strong class="text-blue-600">重點 3：SLA 的重要性</strong> - 讓學員體悟到工業產品必須具備「基準規格」。規格書就是你對使用者的技術承諾。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-blue-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/telemetry_host.js # 遙測前端模組骨架
+├── docs/Performance.md   # 性能報告模板：包含環境、數據對比與結論
+└── tests/Benchmarking/   # 測試腳本或測量工具
+            </pre>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看「性能指標定義與測量」影片。預習 <code>performance.now()</code> 的精確度優勢。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員能否正確分析為何控制循環中 200ms 的延遲會導致避障失效。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，執行性能極限測試，繪製屬於自己的「控制反應分佈圖」。</td>
+                        <td class="p-4 border-b"><strong>性能評測官:</strong> 協助學員解讀異常數據峰值 (Spikes)，指導如何建立穩定的基準測試環境。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">將性能規格書與數據分析結果推送至 GitHub Classroom。閱讀同學的規格書進行橫向比對。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 點評數據分析的邏輯深度，表彰優化成效顯著且論證嚴密的「性能白皮書」。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 </body>
 
 </html>

@@ -27,10 +27,10 @@
                 基礎 7 - 網路通訊架構
             </span>
             <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
-                ESP32 Web Server 入門：<br><span class="text-blue-400">從「阻塞」到「非同步」的進化</span>
+                ESP32 Web Server：<br><span class="text-blue-400">從「阻塞」到「非同步」的進化</span>
             </h1>
             <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
-                擺脫 loop() 的束縛，實作基於事件驅動的高性能網頁伺服器。
+                擺脫 loop() 的束縛，實作基於事件驅動的高性能網頁控制伺服器。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
@@ -51,136 +51,123 @@
 
         <!-- Module 1: Sync vs Async -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
-                        <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <span class="text-4xl">🛡️</span> 1. 認識 ESP32 的網頁守門員 (20 min)
-                            </h2>
-                            <div class="space-y-6 text-gray-600 text-lg">
-                                <p><strong>核心概念：</strong>區分傳統的阻塞式與現代的非同步處理方式。</p>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 shadow-sm">
-                                        <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
-                                            <span>🐌</span> 舊式 WebServer.h (Sync)
-                                        </h4>
-                                        <ul class="text-sm space-y-2">
-                                            <li>• 必須在 <code>loop()</code> 呼叫 <code>handleClient()</code>。</li>
-                                            <li>• 如果 loop 忙碌（如影像處理），網頁會沒反應。</li>
-                                            <li>• 就像一個只能一次點餐一位的櫃檯。</li>
-                                        </ul>
-                                    </div>
-                                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 shadow-sm">
-                                        <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">
-                                            <span>⚡</span> 新式 ESPAsyncWebServer (Async)
-                                        </h4>
-                                        <ul class="text-sm space-y-2">
-                                            <li>• 基於<strong>事件驅動</strong>，背後自動處理請求。</li>
-                                            <li>• 不佔用 <code>loop()</code> 時間，最適合即時控制。</li>
-                                            <li>• 就像百貨公司美食街，點完餐領取號碼牌（Callback）。</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
-                                    <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
-                                        <span>🧐</span> 學習任務
-                                    </h4>
-                                    <p class="text-base text-amber-900">
-                                        觀看動畫短片，思考：為什麼在控制「高速移動」的無人車時，非同步處理比傳統處理更安全？
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Module 2: Routing & Handlers -->
-        <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="p-1 bg-gradient-to-r from-indigo-500 to-blue-600"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12 items-center">
-                        <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <span class="text-4xl">🗺️</span> 2. 路由 (Routing) 與 處理器 (Handlers) (20 min)
-                            </h2>
-                            <div class="space-y-6 text-gray-600 text-lg">
-                                <p><strong>核心概念：</strong>將特定的 URL 路徑應對到 C++ 的執行內容。</p>
-                                <div
-                                    class="bg-slate-900 p-6 rounded-2xl text-white font-mono text-sm leading-relaxed overflow-x-auto">
-                                    <div class="text-gray-500 mb-2">// 匿名函式 (Lambda) 語法範例</div>
-                                    <span class="text-blue-400">server</span>.<span
-                                        class="text-yellow-400">on</span>(<span
-                                        class="text-emerald-400">"/led/on"</span>, <span
-                                        class="text-purple-400">HTTP_GET</span>, [](<span
-                                        class="text-orange-400">AsyncWebServerRequest</span> *request) {<br>
-                                    &nbsp;&nbsp;<span class="text-yellow-400">digitalWrite</span>(LED_PIN, <span
-                                        class="text-purple-400">HIGH</span>);<br>
-                                    &nbsp;&nbsp;request-><span class="text-yellow-400">send</span>(200, <span
-                                        class="text-emerald-400">"text/plain"</span>, <span
-                                        class="text-emerald-400">"LED is ON"</span>);<br>
-                                    });
-                                </div>
-                                <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 shadow-sm">
-                                    <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2 text-base">
-                                        <span>💡</span> 關鍵技術：Lambda 語法
-                                    </h4>
-                                    <p class="text-sm">
-                                        <code>[] (AsyncWebServerRequest *request) { ... }</code> 是 C++11
-                                        的匿名函式。它讓我們在宣告路由的當下，就定義好處理邏輯，讓程式碼更簡潔。
-                                    </p>
-                                </div>
-                                <div class="bg-slate-900 p-6 rounded-2xl text-white">
-                                    <h4 class="text-blue-400 font-bold mb-3 flex items-center gap-2">
-                                        <span>⚙️</span> 學習任務
-                                    </h4>
-                                    <p class="text-gray-300 text-base leading-relaxed">
-                                        查閱函式庫文件，理解 <code>request->send()</code> 除了傳送純文字，還可以傳送哪些類期的數據？（例如：HTML、JSON 或
-                                        SPIFFS 檔案）
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Module 3: Static Resources -->
-        <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="p-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
-                <div class="p-8 md:p-12">
+                <div class="p-8 md:p-14">
                     <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">🎨</span> 3. 靜態資源管理 (15 min)
+                        <span class="text-4xl text-blue-500">🛡️</span> 1. 認識非同步：網頁守門員
                     </h2>
-                    <div class="space-y-6 text-gray-600 text-lg">
-                        <p><strong>關鍵問題：</strong>將整個 HTML 寫在 C++ 字串裡有什麼缺點？（維護困難、縮排亂掉）。</p>
-                        <div class="bg-indigo-50 p-8 rounded-2xl border border-indigo-100">
-                            <h4 class="font-bold text-indigo-900 mb-4 flex items-center gap-2">
-                                <span>🖌️</span> 解決方案：R"rawliteral(...)"
-                            </h4>
-                            <p class="mb-4">使用 C++ 的原始字串字面量，可以保留 HTML 的換行與雙引號，不需要每次都加反斜線轉義。</p>
-                            <div class="bg-slate-800 p-4 rounded-xl text-indigo-200 font-mono text-sm">
-                                const char index_html[] PROGMEM = R"rawliteral(<br>
-                                &lt;!DOCTYPE html&gt;<br>
-                                &lt;html&gt;<br>
-                                &nbsp;&nbsp;&lt;h1&gt;My Controller&lt;/h1&gt;<br>
-                                &lt;/html&gt;<br>
-                                )rawliteral";
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                在控制高速移動的無人車時，通訊的「即時性」至關重要。傳統同步方式會與主程式互相搶奪 CPU，而非同步則能各司其職。
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 shadow-sm">
+                                    <h4 class="font-bold text-slate-800 mb-2 flex items-center gap-2 text-xs uppercase">
+                                        <span>🐌</span> 同步 (Sync)
+                                    </h4>
+                                    <p class="text-[10px] text-slate-500 font-light leading-relaxed">
+                                        必須在 loop() 呼叫 handleClient()。若 loop 忙碌（如算力不足），網頁通訊即會斷供或延遲。
+                                    </p>
+                                </div>
+                                <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 shadow-sm">
+                                    <h4 class="font-bold text-blue-800 mb-2 flex items-center gap-2 text-xs uppercase">
+                                        <span>⚡</span> 非同步 (Async)
+                                    </h4>
+                                    <p class="text-[10px] text-slate-500 font-light leading-relaxed">
+                                        基於<strong>事件驅動</strong>，背後自動處理網頁請求。不佔用 loop() 行程，最適合賽車即時採樣控制。
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                        <div class="bg-slate-800 p-8 rounded-2xl text-white">
-                            <h4 class="text-purple-400 font-bold mb-3 flex items-center gap-2 text-lg">
-                                <span>🚀</span> 線上實作任務
-                            </h4>
-                            <p class="text-gray-300 leading-relaxed text-lg mb-6">
-                                在 CodePen 或線上 HTML 編輯器中撰寫一段簡單的控制頁面原型（包含兩個按鈕：前進、後退）。完成後，思考如何將這段內容嵌入 ESP32。
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white">
+                            <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest">Async Logic Analogy</h4>
+                            <div class="space-y-6">
+                                <div class="flex items-center gap-4">
+                                    <span class="w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse"></span>
+                                    <p class="text-[11px] text-slate-300">如同百貨公司美食街，點完餐領取號碼牌 (Callback)，不需在櫃檯死等。</p>
+                                </div>
+                                <p class="text-[11px] text-slate-500 font-light leading-relaxed italic">
+                                    "這讓 ESP32 能夠一邊以 50Hz 頻率控制馬達，一邊同時響應前端畫面的資料請求。"
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Routing & Lambda -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-indigo-500 to-blue-600"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-indigo-500">🗺️</span> 2. 路由 (Routing) 與 Lambda 魔法
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                利用 C++11 的 <strong>Lambda (匿名函式)</strong> 語法，我們可以在宣告路徑的當下直接定義處理邏輯，讓代碼結構大幅簡化。
                             </p>
+                            <div class="bg-indigo-50 p-8 rounded-3xl border border-indigo-100 shadow-sm">
+                                <h4 class="font-bold text-indigo-900 mb-4 text-xs uppercase tracking-widest italic italic">Request Handling</h4>
+                                <ul class="space-y-3 text-[11px] text-slate-600 font-light">
+                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span><strong class="text-indigo-900">路徑對應</strong>：將 /api/control 對準特定的功能區。</li>
+                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span><strong class="text-indigo-900">非阻塞回應</strong>：使用 request->send() 立即釋放連線。</li>
+                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span><strong class="text-indigo-900">參數捕獲</strong>：從網址 query 提取即時控制數值。</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="w-3 h-3 bg-red-400 rounded-full"></span>
+                                <span class="w-3 h-3 bg-amber-400 rounded-full"></span>
+                                <span class="w-3 h-3 bg-emerald-400 rounded-full"></span>
+                                <span class="ml-auto text-[10px] text-slate-500 font-mono tracking-widest">LAMBDA SYNTAX</span>
+                            </div>
+                            <pre class="text-xs md:text-sm leading-relaxed overflow-x-auto text-blue-300 font-mono">
+<span class="text-blue-500">server</span>.<span class="text-emerald-400">on</span>(<span class="text-amber-200">"/on"</span>, <span class="text-purple-400">HTTP_GET</span>, [](<span class="text-blue-400">AsyncWebServerRequest</span> *req){
+  <span class="text-yellow-400">digitalWrite</span>(LED, <span class="text-purple-400">HIGH</span>);
+  req-><span class="text-blue-400">send</span>(200, <span class="text-amber-200">"text/plain"</span>, <span class="text-amber-200">"LED is ON"</span>);
+});</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Template Engine -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-purple-400">
+                        <span class="p-2 bg-purple-500/20 rounded-lg text-purple-400 text-2xl">🎨</span> 3. 範本引擎：動態靜態資源分離
+                    </h2>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                將整個 HTML 寫在 C++ 字串裡會導致維護災難。利用 <code>Processor</code> 佔位符機制，我們可以實現內容與數據的優雅分離。
+                            </p>
+                            <div class="bg-purple-500/10 p-8 rounded-3xl border border-purple-500/20 shadow-inner">
+                                <h4 class="font-bold text-purple-400 mb-4 text-xs uppercase tracking-widest">Server-side Rendering</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1"></span><div><strong class="text-white">R"rawliteral"</strong>：使用原始字串規則，在 C++ 中保留 HTML 縮排與雙引號，不再需要轉義符。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1"></span><div><strong class="text-white">%PLACEHOLDER%</strong>：於 HTML 埋設標點。ESP32 會在發送前將其替換為即時動態數據。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1"></span><div><strong class="text-white">Processor 回呼</strong>：集中管理數據替換邏輯，使程式碼結構一目瞭然。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="lg:w-80 bg-purple-600/10 p-10 rounded-3xl border border-purple-500/20 text-center relative overflow-hidden group">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-purple-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-purple-400 font-bold mb-4 text-[10px] uppercase tracking-widest">Template Power</h4>
+                           <p class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic">
+                               "讓你的 C++ 代碼專注於邏輯，讓網頁字串專注於呈現。"
+                           </p>
+                           <div class="inline-block px-8 py-3 bg-purple-500 text-white rounded-xl font-bold text-[10px] shadow-lg">View Processor Handler</div>
                         </div>
                     </div>
                 </div>
@@ -190,62 +177,56 @@
         <!-- Homework Section -->
         <section class="module-section">
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：打造動態網頁服務</h2>
-            <p class="text-center text-gray-500 mb-12">從基本頁面到參數控制，掌握硬體與 Web 的即時互動。</p>
+            <p class="text-center text-gray-500 mb-12">從基本的非同步頁面顯示到具備邏輯防錯的參數式控制接口實作。</p>
 
             <div class="grid md:grid-cols-3 gap-6">
-                <!-- Task 3-1 -->
-                <div onclick="openSubmissionModal('basic-07-webserver-1', '【作業 3-1】我的第一個非同步首頁')"
+                <!-- Task 7-1 -->
+                <div onclick="openSubmissionModal('basic-07-webserver-1', '【作業 7-1】非同步首頁：第一個 Web 介面 (Async Landing Page)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-blue-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">📡</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform">📡</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 3-1】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「非同步首頁」</h4>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 7-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「非同步基礎架設」</h4>
                         <p class="text-sm text-gray-600 leading-relaxed">
-                            實作根路徑 <code>/</code>：回傳一段美化過的 HTML，內容包含車子名稱與目前剩餘記憶體空間 (<code>ESP.getFreeHeap()</code>)。
+                            實作根路徑路由。回傳含有一組美化 HTML 的頁面，並動態顯示目前設備的運行時間與 Free Heap 記憶體快照。
                         </p>
                     </div>
                 </div>
 
-                <!-- Task 3-2 -->
-                <div onclick="openSubmissionModal('basic-07-webserver-2', '【作業 3-2】遠端燈光控制器：參數提取')"
+                <!-- Task 7-2 -->
+                <div onclick="openSubmissionModal('basic-07-webserver-2', '【作業 7-2】互動控制器：URL 參數解析 (Interactive Control)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-indigo-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">💡</span>
-                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-indigo-500 group-hover:rotate-12 transition-transform">💡</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 3-2】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「參數提取」</h4>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 7-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「參數化命令接口」</h4>
                         <p class="text-sm text-gray-600 leading-relaxed">
-                            建立 <code>/set_led?value=128</code> 路徑。解析參數並控制 LED 亮度。若數值超出 0-255，回傳 400 錯誤。
+                            建立 query 路徑。解析 value 參數並實作亮度控制邏輯與邊界防錯（若數值異常則回傳 HTTP 400 提示）。
                         </p>
                     </div>
                 </div>
 
-                <!-- Task 3-3 -->
-                <div onclick="openSubmissionModal('basic-07-webserver-3', '【作業 3-3】動態數據佔位符 (Processor)')"
+                <!-- Task 7-3 -->
+                <div onclick="openSubmissionModal('basic-07-webserver-3', '【作業 7-3】動態佔位符：範本引擎 (Template Engine)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-purple-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">♻️</span>
-                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">45
-                                min</span>
+                            <span class="text-4xl text-purple-500 group-hover:translate-x-1 transition-transform">♻️</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 3-3】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「動態佔位符」</h4>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 7-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「伺服器端渲染實務」</h4>
                         <p class="text-sm text-gray-600 leading-relaxed">
-                            使用 <code>%STATUS%</code> 佔位符，並實作 <code>processor</code> 函式，將網頁上的狀態文字即時替換為目前的硬體運作狀態。
+                            實作 Processor 佔位符替換機制。將網頁上的 %STATUS% 字樣動態替換為底層感測器回傳的真實運作數值。
                         </p>
                     </div>
                 </div>
@@ -259,7 +240,7 @@
         <div class="container mx-auto px-4 text-center">
             <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
-                <span>單元課程 基礎 7</span>
+                <span>課程單元 基礎 7 - 網路通訊架構</span>
                 <span class="hidden md:inline">|</span>
                 <span>講師：Antigravity Assistant</span>
             </div>
@@ -276,117 +257,136 @@
     <script src="/js/course-shared-v4.js"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">非同步網頁與指令服務實驗室</h2>
 
-        <h3>【作業 3-1】我的第一個非同步首頁</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 嵌入式網頁工程師 (Embedded Web Engineer)。</li>
-            <li><strong>執行方式：</strong> 實作根路徑 <code>/</code>：回傳一段美化過的 HTML，內容包含車子名稱與目前剩餘記憶體空間
-                (<code>ESP.getFreeHeap()</code>)。</li>
-            <li><strong>評分重點 :</strong> 成功架設非同步伺服器，頁面能正確顯示動態記憶體數值。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：「非同步首頁」：第一個 Web 介面 (Async Landing Page)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：嵌入式網頁工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
 
-        <h3>【作業 3-2】遠端燈光控制器：參數提取</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> IoT 互動開發者 (IoT Interaction Developer)。</li>
-            <li><strong>執行方式：</strong> 建立 <code>/set_led?value=128</code> 路徑。解析參數並控制 LED 亮度。若數值超出 0-255，回傳 400 錯誤。</li>
-            <li><strong>評分重點 :</strong> 能正確解析 Query Parameter 並處理極端值 (Out of range)。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>路徑配置實作</strong>：在 <code>ESPAsyncWebServer</code> 中宣告根路徑 <code>/</code>，回傳一段基本的 HTML 框架。</li>
+                    <li><strong>動態狀態提取</strong>：在響應中整合 <code>ESP.getFreeHeap()</code>，將目前記憶體快照動態顯示在頁面上。</li>
+                    <li><strong>通聯驗證</strong>：開啟瀏覽器並存取設備 IP，確認頁面能順利載入且數值會隨重新整理而變動。</li>
+                </ol>
+            </div>
 
-        <h3>【作業 3-3】動態數據佔位符 (Processor)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 全端硬體工程師 (Full-stack Hardware Engineer)。</li>
-            <li><strong>執行方式：</strong> 使用 <code>%STATUS%</code> 佔位符，並實作 <code>processor</code>
-                函式，將網頁上的狀態文字即時替換為目前的硬體運作狀態。</li>
-            <li><strong>評分重點 :</strong> 掌握範本引擎 (Template Engine) 的基本原理，能成功動態替換網頁內容。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>架設穩定度</strong>：非同步伺服器是否能穩定響應，且不干擾背景 loop() 的高速運作？</li>
+                    <li>[ ] <strong>渲染動態性</strong>：首頁顯示的 Free Heap 是否真實反映硬體記憶體配置狀況？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：「互動控制器」：URL 參數解析 (Interactive Control)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：IoT 互動開發者</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>命令模式定義</strong>：建立 <code>/set_led?value=128</code> 路由並設定為 GET 方法處理。</li>
+                    <li><strong>參數解析實作</strong>：利用 <code>request->getParam("value")</code> 獲取欄位並將字串轉換為有效的 byte 值。</li>
+                    <li><strong>連通控制</strong>：將解析值傳入馬達或 LED 驅動函式。若 <code>value</code> 逸出合理範圍，回傳 400 Bad Request。</li>
+                    <li><strong>反饋機制</strong>：在 Serial Monitor 輸出處理成功的紀錄，並回傳純文字訊息給網頁端確認執行結果。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>解析健壯度</strong>：能否應對缺失參數或非數字字元的極端傳入，而不導致 CPU Panic 重啟？</li>
+                    <li>[ ] <strong>狀態碼規範性</strong>：遇數值非法請求時，是否能正確反饋對應的 HTTP 報錯碼？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：「動態佔位符」：範本引擎 (Template Engine)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：全端硬體工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>範本節點佈置</strong>：在 <code>R"rawliteral"</code> 封裝的 HTML 中埋設 <code>%STATUS%</code> 等專屬佔位符。</li>
+                    <li><strong>Processor 回呼編寫</strong>：實作處理函式，當檢索到特定符號時，從全域變數中讀取最新硬體狀態進行回填。</li>
+                    <li><strong>流程掛載</strong>：在 <code>request->send</code> 指令中傳入 Processor 指標，啟動自動化字串替換。</li>
+                    <li><strong>成果 Push</strong>：提交具備範本替換能力的 <code>main.cpp</code> 與測試影片，說明此機制如何優化開發維護性。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>範本實作完整性</strong>：網頁載入後，所有自定義佔位符是否均被替換為真實、具備意義的動態數值？</li>
+                    <li>[ ] <strong>解耦設計感</strong>：UI 字串與硬體數值的映射邏輯是否清晰且易於後續擴展新功能？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>在 GitHub 建立新 Repo（名為 <code>basic-07-async-ws-template</code>）。</li>
-                <li>上傳包含 `ESPAsyncWebServer` 基礎宣告但「未實作處理邏輯 (Callback)」的專案框架。</li>
-                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
-                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，獲得個人專屬 Repo。</li>
-                <li>實作不同的路由處理器、Query Parameter 解析，並在本地測試網頁回應。</li>
-                <li>完成全數路由實作後 <strong>Push 代碼</strong> 提交進度。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
-                <li>針對學生的「路由命名規範」與「Processor 佔位符邏輯」予以點評。</li>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：掌握基於事件驅動的非同步網頁服務架構。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-indigo-600">第一步：Lambda 與事件的概念</strong> - 這是 C++ 物聯網開發的高牆，務必引導學員理解 Lambda 捕捉變數的原理。</li>
+                <li><strong class="text-indigo-600">第二步：參數解析是雙向道</strong> - 理解 <code>getParam</code> 是網頁指令進入硬體世界的入口，必須做好輸入過濾。</li>
+                <li><strong class="text-indigo-600">第三步：SSR (伺服器端渲染)</strong> - 利用簡單的 Processor 機制，讓學員體驗動態網頁的基本雛形。</li>
             </ol>
         </div>
 
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元聚焦於「非同步網路通訊架構」，引導學生理解如何讓 ESP32 在處理網頁請求的同時，不中斷核心控制邏輯。</p>
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/main.cpp      # (必修) 需補全伺服器路由處理邏輯與 Processor 映射
+├── include/html.h    # 存放使用 R"rawliteral" 封裝的靜態 HTML 字串
+└── README.md         # 專案文檔：參數測試結果、動態替換頁面截圖
+            </pre>
+        </div>
 
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── src/
-│   └── main.cpp      # (重點) 需填充 server.on() 的具體實現
-├── static/           # HTML 靜態資源 (可選擇嵌入 C++ 字串或 SPIFFS)
-└── README.md         # 測試報告：瀏覽器預演結果截圖</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>main.cpp (Async Handler)</strong></p>
-        <pre><code>server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-  request->send(200, "text/html", index_html, processor);
-});</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>路由可用性測試：：</strong> 使用 curl 指令發送 GET 請求到對應 IP/路徑，驗證狀態碼是否為 200。</li>
-            <li><strong>動態替換驗證：：</strong> 檢查回傳的 HTML 中是否成功將佔位符替換為具體的系統數值。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「Async vs Sync：為什麼你的 ESP32 常當機？」影片。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>Dashboard：</strong>確認學員能區分「事件驅動」與「輪詢」的差異。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，對比在 loop() 中加 delay(1000)
-                        對兩種伺服器類型的反應影響。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>演示 Lambda 語法的捕捉變數與傳參邏輯。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作並優化首頁的 Processor 動態替換邏輯並 Push，閱讀教師回覆 PR。
-                    </td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>審核學生對「非同步邊界」與「資源競爭」的初步理解。</td>
-                </tr>
-            </tbody>
-        </table>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看 AsyncWebServer vs 傳統 WebServer.h 的效能對決影片。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 檢查學員對 Lambda 匿名函式基本語法的熟悉程度。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，挑戰實作具備參數防錯與動態範本替換的控制首頁。</td>
+                        <td class="p-4 border-b"><strong>重點點評:</strong> 指導如何使用瀏覽器 URL 位址列進行簡單的 API 手動調試。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">將「系統運行時間」改為 %UPTIME% 並透過 Processor 定期更新，Push 到 PR。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 評價學員對「資源分離」與「路由命名直覺性」的實作表現。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 </body>
 

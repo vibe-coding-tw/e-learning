@@ -8,19 +8,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
-    <!-- Link to parent directory css -->
     <link rel="stylesheet" href="/style.css">
     <style>
         .chip-gradient {
             background: linear-gradient(135deg, #334155 0%, #0f172a 100%);
-        }
-
-        .pin-badge {
-            font-family: 'Outfit', monospace;
-            font-size: 0.75rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
         }
     </style>
 </head>
@@ -37,23 +28,22 @@
 
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
-                class="inline-block py-1 px-3 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-sm font-semibold mb-6 tracking-wide">Learning
-                Unit 1</span>
+                class="inline-block py-1 px-3 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 1 - 核心架構
+            </span>
             <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
                 ESP32 架構與開發板導覽
             </h1>
             <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
-                深入了解你的數位大腦：雙核、Wi-Fi、藍牙與豐富外設。<br>
-                <span class="text-base text-gray-300 mt-2 block">這不僅僅是一塊電路板，這是你通往物聯網世界的鑰匙。</span>
+                深入了解你的數位大腦：雙核、Wi-Fi、藍牙與豐富外設。這不僅僅是一塊電路板，這是你通往物聯網世界的鑰匙。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/b_isV-_3lzY')"
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button
-                    onclick="enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vQAh9YPeDVsigVoluIyHmoaGrpWmE5gMBr8MKJbL9q0hQwTC7IA3ZrIMNmH77XZS_6VosvHJczzqDBx/pub?embedded=true')"
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
                     class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -61,51 +51,44 @@
         </div>
     </header>
 
-    <!-- Content Container -->
+    <!-- Main Content -->
     <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
         <!-- Module 1: Why ESP32? -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
                 <div class="p-8 md:p-12">
                     <h2 class="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
                         <span class="text-4xl">⚡</span> 為什麼選擇 ESP32？ (15 min)
                     </h2>
-                    <p class="text-gray-500 mb-8 text-lg">相較於傳統 Arduino Uno，ESP32 是一個質的飛躍。</p>
+                    <p class="text-gray-500 mb-8 text-lg">相較於傳統 Micro-controllers，ESP32 是一個質的飛躍。</p>
 
-                    <div class="grid md:grid-cols-3 gap-6">
+                    <div class="grid md:grid-cols-3 gap-8">
                         <!-- Dual Core -->
-                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 hover:shadow-md transition">
-                            <div
-                                class="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-2xl mb-4">
-                                🧠</div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 transition hover:shadow-lg">
+                            <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-2xl mb-4 shadow-sm">🧠</div>
                             <h3 class="text-lg font-bold text-gray-800 mb-2">雙核心 (Dual-Core)</h3>
                             <p class="text-sm text-gray-600 leading-relaxed">
-                                擁有高達 <strong>240MHz</strong> 的運算速度。兩個核心分工合作：一個處理繁重的無線通訊，另一個專注執行你的程式邏輯。
+                                高達 <strong>240MHz</strong> 的運算速度。雙核架構允許一個核心處理連網通訊，另一個核心專注執行控制邏輯，效率加倍。
                             </p>
                         </div>
 
                         <!-- Wireless -->
-                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 hover:shadow-md transition">
-                            <div
-                                class="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center text-2xl mb-4">
-                                📡</div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 transition hover:shadow-lg">
+                            <div class="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center text-2xl mb-4 shadow-sm">📡</div>
                             <h3 class="text-lg font-bold text-gray-800 mb-2">無線連線能力</h3>
                             <p class="text-sm text-gray-600 leading-relaxed">
-                                內建 <strong>Wi-Fi</strong> 與 <strong>雙模藍牙</strong> (經典藍牙 + BLE)。這是它成為 IoT
-                                神器的關鍵，讓你的裝置能直接連上雲端。
+                                內建 <strong>Wi-Fi</strong> 與 <strong>雙模藍牙</strong> (BLE + BT)。這是它成為物聯網神器與 Vibe Coding 平台核心的關鍵。
                             </p>
                         </div>
 
                         <!-- Peripherals -->
-                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 hover:shadow-md transition">
-                            <div
-                                class="w-12 h-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center text-2xl mb-4">
-                                🔌</div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 transition hover:shadow-lg">
+                            <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center text-2xl mb-4 shadow-sm">🔌</div>
                             <h3 class="text-lg font-bold text-gray-800 mb-2">豐富的外設</h3>
                             <p class="text-sm text-gray-600 leading-relaxed">
-                                內建觸控感應、霍爾傳感器、硬體加密加速器，以及多種低功耗模式，適合電池供電的應用場景。
+                                內建觸控感應、霍爾傳感器、ADC/DAC 以及多組序列接口。這讓它能輕鬆驅動馬達、讀取感測器。
                             </p>
                         </div>
                     </div>
@@ -114,91 +97,60 @@
         </section>
 
         <!-- Module 2: Board Anatomy -->
-        <section class="module-section mb-16" style="animation-delay: 0.2s;">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
                 <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
                         <span class="text-4xl">🔬</span> 開發板外觀大解剖 (20 min)
                     </h2>
 
-                    <div class="flex flex-col lg:flex-row gap-10 items-center">
-                        <!-- Concept Diagram Overlay -->
-                        <div
-                            class="relative w-full lg:w-1/2 aspect-video bg-gray-100 rounded-xl overflow-hidden border border-gray-200 flex items-center justify-center group">
-                            <!-- Placeholder for physical board image if available, using CSS art for now -->
-                            <div class="w-64 h-40 bg-gray-800 rounded-lg shadow-2xl relative border border-gray-600">
-                                <!-- Metal Shield -->
-                                <div
-                                    class="absolute top-4 left-4 w-32 h-24 bg-gradient-to-br from-gray-300 to-gray-400 rounded border border-gray-500 flex items-center justify-center text-xs text-gray-600 font-bold tracking-widest">
-                                    ESP-WROOM-32</div>
-                                <!-- USB Port -->
-                                <div class="absolute bottom-[-4px] left-10 w-12 h-6 bg-gray-400 rounded-b"></div>
-                                <!-- Pins -->
-                                <div class="absolute top-2 right-2 flex flex-col gap-1">
-                                    <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                                    <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                                    <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                                </div>
-                                <!-- Buttons -->
-                                <div
-                                    class="absolute bottom-4 right-12 w-3 h-3 bg-black border border-gray-500 rounded-full flex items-center justify-center">
-                                    <div class="w-1 h-1 bg-gray-600 rounded-full"></div>
-                                </div>
-                                <div
-                                    class="absolute bottom-4 right-4 w-3 h-3 bg-black border border-gray-500 rounded-full flex items-center justify-center">
-                                    <div class="w-1 h-1 bg-gray-600 rounded-full"></div>
-                                </div>
-                            </div>
-
-                            <!-- Interactive Hotspots (Concept) -->
-                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <span
-                                    class="bg-black/70 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">互動式硬體圖解
-                                    (Coming Soon)</span>
-                            </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                        <div class="bg-slate-900 rounded-2xl p-12 flex justify-center items-center shadow-2xl relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-50"></div>
+                           <!-- Hardware Representation -->
+                           <div class="w-64 h-44 bg-gray-800 rounded-xl border-2 border-gray-600 relative shadow-[0_0_50px_rgba(0,0,0,0.5)] transform transition group-hover:scale-105 duration-500">
+                               <div class="absolute top-4 left-4 w-36 h-28 bg-gradient-to-br from-zinc-400 to-zinc-500 rounded border border-zinc-600/50 flex items-center justify-center overflow-hidden">
+                                   <div class="text-[10px] text-zinc-700 font-bold tracking-tight text-center leading-tight">ESP-WROOM-32<br>CE FCC</div>
+                                   <div class="absolute bottom-1 right-1 w-4 h-4 bg-zinc-600/20 rounded-full blur-sm"></div>
+                               </div>
+                               <div class="absolute bottom-px left-12 w-14 h-5 bg-zinc-700 rounded-t-sm border-t border-zinc-600"></div>
+                               <div class="absolute right-3 top-3 bottom-3 flex flex-col justify-around">
+                                   <div class="w-1.5 h-1.5 bg-yellow-500/80 rounded-full shadow-[0_0_5px_rgba(234,179,8,0.5)]"></div>
+                                   <div class="w-1.5 h-1.5 bg-yellow-500/80 rounded-full"></div>
+                                   <div class="w-1.5 h-1.5 bg-yellow-500/80 rounded-full"></div>
+                                   <div class="w-1.5 h-1.5 bg-yellow-500/80 rounded-full"></div>
+                               </div>
+                           </div>
                         </div>
 
-                        <div class="flex-1 space-y-6">
-                            <div class="flex gap-4">
-                                <div
-                                    class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-600">
-                                    1</div>
+                        <div class="space-y-6">
+                            <div class="flex gap-5 group">
+                                <div class="w-10 h-10 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center font-bold shadow-sm group-hover:bg-cyan-600 group-hover:text-white transition-colors duration-300">1</div>
                                 <div>
-                                    <h4 class="font-bold text-gray-800">ESP-WROOM-32 模組</h4>
-                                    <p class="text-sm text-gray-600">那塊金屬屏蔽罩下藏著真正的 CPU 與閃存 (Flash)，保護晶片不受外界訊號干擾。</p>
+                                    <h4 class="font-bold text-gray-800 text-lg">ESP-WROOM-32 模組</h4>
+                                    <p class="text-sm text-gray-500 leading-relaxed">金屬屏蔽罩下藏著 CPU、SRAM 與 Flash，負責保護精密晶片不受電磁干擾。</p>
                                 </div>
                             </div>
-                            <div class="flex gap-4">
-                                <div
-                                    class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-600">
-                                    2</div>
+                            <div class="flex gap-5 group">
+                                <div class="w-10 h-10 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center font-bold shadow-sm group-hover:bg-cyan-600 group-hover:text-white transition-colors duration-300">2</div>
                                 <div>
-                                    <h4 class="font-bold text-gray-800">USB 轉串口晶片 (CP2102/CH340)</h4>
-                                    <p class="text-sm text-gray-600">電腦與 ESP32 溝通的翻譯官。如果燒錄失敗，通常是需要安裝這個晶片的驅動程式。</p>
+                                    <h4 class="font-bold text-gray-800 text-lg">CP2102/CH340 橋接晶片</h4>
+                                    <p class="text-sm text-gray-500 leading-relaxed">數位翻譯官，負責將 USB 訊號轉換為 UART 序列訊號與電腦通訊。</p>
                                 </div>
                             </div>
-                            <div class="flex gap-4">
-                                <div
-                                    class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-600">
-                                    3</div>
+                            <div class="flex gap-5 group">
+                                <div class="w-10 h-10 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center font-bold shadow-sm group-hover:bg-cyan-600 group-hover:text-white transition-colors duration-300">3</div>
                                 <div>
-                                    <h4 class="font-bold text-gray-800">電壓調節器 (LDO)</h4>
-                                    <p class="text-sm text-gray-600">ESP32 工作電壓是 <span
-                                            class="text-red-500 font-bold">3.3V</span>。LDO 負責將 USB 的 5V 降壓。千萬別把 5V 接到
-                                        3.3V 腳位，會燒毀晶片！</p>
+                                    <h4 class="font-bold text-gray-800 text-lg">LDO 電壓調節器</h4>
+                                    <p class="text-sm text-gray-500 leading-relaxed">將 USB 的 5V 穩定降至 <span class="text-red-500 font-bold italic">3.3V</span>。請注意，過高的電壓會直接燒毀核心。</p>
                                 </div>
                             </div>
-                            <div class="flex gap-4">
-                                <div
-                                    class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-600">
-                                    4</div>
+                            <div class="flex gap-5 group">
+                                <div class="w-10 h-10 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center font-bold shadow-sm group-hover:bg-cyan-600 group-hover:text-white transition-colors duration-300">4</div>
                                 <div>
-                                    <h4 class="font-bold text-gray-800">EN 與 BOOT 按鈕</h4>
-                                    <p class="text-sm text-gray-600">
-                                        <strong>EN (Reset)</strong>: 重啟開發板。<br>
-                                        <strong>BOOT</strong>: 按住不放再按 EN，可以強制進入「燒錄模式」。
-                                    </p>
+                                    <h4 class="font-bold text-gray-800 text-lg">EN 與 BOOT 系統按鈕</h4>
+                                    <p class="text-sm text-gray-500 leading-relaxed">EN 為重啟鈕；BOOT 為模式鈕。按住 BOOT 再上傳代碼是解決燒錄失敗的常見技巧。</p>
                                 </div>
                             </div>
                         </div>
@@ -207,126 +159,104 @@
             </div>
         </section>
 
-        <!-- Module 3: Software Environment -->
-        <section class="module-section mb-16" style="animation-delay: 0.4s;">
-            <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-xl overflow-hidden text-white">
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row justify-between items-start gap-8">
-                        <div>
-                            <h2 class="text-3xl font-bold mb-4">💻 軟體環境預熱 (25 min)</h2>
-                            <p class="text-gray-300 mb-6 max-w-2xl">
-                                為了讓電腦聽懂 ESP32 的語言，我們需要準備好開發環境與驅動程式。
+        <!-- Module 3: Environment -->
+        <section class="module-section mb-16">
+            <div class="bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <div class="flex flex-col lg:flex-row justify-between gap-12">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+                                <span class="p-2 bg-indigo-500/20 rounded-lg text-indigo-400">💻</span> 軟體環境預熱 (25 min)
+                            </h2>
+                            <p class="text-slate-400 mb-8 text-lg font-light leading-relaxed">
+                                在開始編碼前，我們必須確保電腦能夠識別這個「外星裝置」。
                             </p>
-
-                            <div class="space-y-4">
-                                <div class="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
-                                    <h3 class="font-bold text-green-400 mb-2">1. 安裝 IDE</h3>
-                                    <p class="text-sm text-gray-300">推薦使用 <strong>VS Code +
-                                            PlatformIO</strong>，這是專業開發者的首選。但 Arduino IDE 也是不錯的入門選擇。</p>
+                            <div class="space-y-6">
+                                <div class="group p-6 bg-slate-800/50 rounded-2xl border border-slate-700 hover:border-indigo-500/50 transition duration-300">
+                                    <h3 class="font-bold text-indigo-400 mb-2 flex items-center gap-2"><span>1.</span> 安裝專業 IDE</h3>
+                                    <p class="text-sm text-slate-300 leading-relaxed">強烈推薦 <strong>VS Code + PlatformIO</strong>。它提供自動補全、函式跳轉與更強大的專案管理能力。</p>
                                 </div>
-                                <div class="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
-                                    <h3 class="font-bold text-yellow-400 mb-2">2. 安裝驅動程式</h3>
-                                    <p class="text-sm text-gray-300">
-                                        確認電腦能識別 COM Port。
-                                        <br>
-                                        <span class="text-xs text-gray-400 mt-1 block">🔍 搜尋關鍵字: "CP2102 Driver" 或
-                                            "CH340 Driver" (依板子型號而定)</span>
-                                    </p>
+                                <div class="group p-6 bg-slate-800/50 rounded-2xl border border-slate-700 hover:border-indigo-500/50 transition duration-300">
+                                    <h3 class="font-bold text-emerald-400 mb-2 flex items-center gap-2"><span>2.</span> 識別通訊埠 (COM Port)</h3>
+                                    <p class="text-sm text-slate-300 leading-relaxed">確保安裝了 CP210x 或 CH340 驅動程式。沒有它，你的電腦就只是在對著一塊磚頭說話。</p>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="bg-gray-700 p-6 rounded-xl border border-gray-600 max-w-sm w-full">
-                            <h3 class="font-bold mb-4 flex items-center gap-2">⚠️ 新手注意事項</h3>
-                            <ul class="space-y-3 text-sm text-gray-300">
-                                <li class="flex items-start gap-2">
-                                    <span class="text-red-400">⚡</span>
-                                    <span><strong>Micro USB 線材：</strong> 很多線只能充電不能傳輸資料。如果不亮燈或電腦沒反應，請先換一條線！</span>
+                        <div class="lg:w-80 bg-slate-800 p-8 rounded-3xl border border-slate-700 shadow-inner">
+                            <h3 class="font-bold mb-6 text-red-400 flex items-center gap-2 uppercase tracking-widest text-sm">新手防狼手冊</h3>
+                            <ul class="space-y-6">
+                                <li class="flex items-start gap-4">
+                                    <div class="w-1.5 h-1.5 bg-red-400 rounded-full mt-2 shrink-0"></div>
+                                    <p class="text-sm text-slate-300"><strong>拒絕純充電線：</strong> 必須使用具備「數據傳輸」能力的線材。</p>
                                 </li>
-                                <li class="flex items-start gap-2">
-                                    <span class="text-red-400">🔌</span>
-                                    <span><strong>正確插拔：</strong> 拿住接頭而不是拉扯線身，保護脆弱的 USB 接口。</span>
+                                <li class="flex items-start gap-4">
+                                    <div class="w-1.5 h-1.5 bg-red-400 rounded-full mt-2 shrink-0"></div>
+                                    <p class="text-sm text-slate-300"><strong>物理保護：</strong> 插拔時請捏住接頭，避免拉斷脆弱的 USB 焊點。</p>
                                 </li>
                             </ul>
+                            <div class="mt-8 pt-8 border-t border-slate-700 text-xs text-slate-500 italic">
+                                💡 Tip: 如果不亮燈，請先檢查電源指示燈 LED。
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Module 4: Homework -->
-        <section class="module-section" style="animation-delay: 0.6s;">
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-10 font-[Outfit]">實作挑戰：開始對話</h2>
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心挑戰：對話的第一步</h2>
+            <p class="text-center text-gray-500 mb-12">驗證你的開發環境，並與晶片建立初步連結。</p>
 
             <div class="grid md:grid-cols-3 gap-6">
                 <!-- Task 1-1 -->
-                <div onclick="openSubmissionModal('esp32-arch-task-1', '作業 1-1: 硬體連通性與燒錄測試')"
-                    class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-green-500 h-1.5"></div>
-                    <div class="p-6 flex-grow">
+                <div onclick="openSubmissionModal('basic-01-arch-1', '【作業 1-1】硬體連通性與燒錄測試')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-green-500 h-2"></div>
+                    <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
                             <span class="text-4xl">💡</span>
-                            <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded font-bold">45 min</span>
+                            <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-green-600 transition">作業 1-1
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">硬體連通性與燒錄測試</h4>
-                        <p class="text-sm text-gray-600 mb-4">
-                            成功上傳第一個「Blink」程式。更進一步，讓 LED 閃爍出「SOS」摩斯密碼 (三短、三長、三短)。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-green-600 transition">【作業 1-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「摩斯密碼閃爍」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            成功安裝環境並燒錄 Blink 程式。進階挑戰：修改 delay 邏輯讓 LED 閃出「SOS」摩斯密碼訊號。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-green-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳作業</span>
                     </div>
                 </div>
 
                 <!-- Task 1-2 -->
-                <div onclick="openSubmissionModal('esp32-arch-task-2', '作業 1-2: 串口通訊的偵探遊戲')"
-                    class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-blue-500 h-1.5"></div>
-                    <div class="p-6 flex-grow">
+                <div onclick="openSubmissionModal('basic-01-arch-2', '【作業 1-2】串口通訊的偵探遊戲')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
                             <span class="text-4xl">🕵️</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">60 min</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">作業 1-2
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">串口通訊 (Serial) 偵探</h4>
-                        <p class="text-sm text-gray-600 mb-4">
-                            透過 Serial Monitor 讀取晶片身分證 (MAC Address, Chip Model)。嘗試不同 Baud Rate 觀察亂碼現象。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 1-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「晶片身分證偵查」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            撰寫 API 查詢代碼，從 Serial Monitor 提取晶片 Cores、Flash 與 MAC Address，建立對資源邊界的認知。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-blue-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳作業</span>
                     </div>
                 </div>
 
                 <!-- Task 1-3 -->
-                <div onclick="openSubmissionModal('esp32-arch-task-3', '作業 1-3: 電源與發熱量監測')"
-                    class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-red-500 h-1.5"></div>
-                    <div class="p-6 flex-grow">
+                <div onclick="openSubmissionModal('basic-01-arch-3', '【作業 1-3】電源與發熱量監測')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-red-500 h-2"></div>
+                    <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
                             <span class="text-4xl">🌡️</span>
-                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold">45 min</span>
+                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition">作業 1-3</h3>
-                        <h4 class="font-medium text-gray-500 mb-4">電源與發熱量監測</h4>
-                        <p class="text-sm text-gray-600 mb-4">
-                            觀察開機時 Bootloader 訊息。執行高強度運算(如 WiFi 掃描)並觸摸金屬蓋感受溫度變化，建立物理感知。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition">【作業 1-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「啟動日誌診斷」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            分析開機第一秒的 Bootloader 日誌。執行高強度運算並監測晶片物理溫升，理解軟硬體之間的能量關聯。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-red-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳作業</span>
                     </div>
                 </div>
             </div>
@@ -335,191 +265,16 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 py-8 border-t border-gray-700 mt-10">
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
         <div class="container mx-auto px-4 text-center">
-            <div class="border-t border-gray-700 pt-6">
-                <p class="text-gray-500 text-sm mb-2">&copy; 2025 Vibe Coding. All rights reserved.</p>
-                <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6 text-sm text-gray-400">
-                    <span>課程教材 - 內部使用</span>
-                </div>
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>課程單元 基礎 1 - 1</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
             </div>
         </div>
     </footer>
-
-    <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none;">
-        <h2>ESP32 架構與開發板</h2>
-
-        <div class="assignment-quest">
-            <h3 class="quest-title">作業 1-1：硬體連通性與燒錄測試</h3>
-            <div class="quest-meta">
-                <span>角色扮演：韌體工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>核心功能</strong>：成功上傳第一個「Blink」控制程式。</li>
-                    <li><strong>進階挑戰</strong>：修改延遲參數，讓 LED 閃爍出「SOS」摩斯密碼 (三短、三長、三短)。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>引腳辨識</strong>：是否能正確識別板載 LED 的 GPIO 引腳？</li>
-                    <li>[ ] <strong>燒錄流程</strong>：是否能熟練掌握 BOOT/EN 按鈕進入燒錄模式的時機（若需要）？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">作業 1-2：串口通訊的偵探遊戲</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統分析師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>資訊提取</strong>：撰寫代碼並透過 Serial Monitor 讀取並打印晶片資訊（如 MAC Address, Chip Model）。</li>
-                    <li><strong>偵查亂碼</strong>：嘗試切換不同 Baud Rate，並記錄亂碼出現的特徵。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>API 調用</strong>：是否正確使用了 esp_chip_info 等系統 API？</li>
-                    <li>[ ] <strong>觀察敏銳度</strong>：是否能總結出 Baud Rate 不匹配對數據完整性的物理影響？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">作業 1-3：電源與發熱量監測</h3>
-            <div class="quest-meta">
-                <span>角色扮演：硬體測試專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>日誌分析</strong>：觀察開機時第一秒內的 Bootloader 原始日誌輸出。</li>
-                    <li><strong>物理感知</strong>：在執行 WiFi 掃描等高功耗任務時，用手感測晶片表面溫升。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>日誌解讀</strong>：能否從 Bootloader 日誌中識別出 Flash 模式與頻率參數？</li>
-                    <li>[ ] <strong>穩定性感知</strong>：是否理解供電不足與散熱對 IoT 裝置長期運行的重要性？</li>
-                </ul>
-            </div>
-        </div>
-    </section>
-
-    <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>在 GitHub 建立新 Repo（名為 <code>basic-01-esp32-arch-template</code>）。</li>
-                <li>上傳包含基礎 Serial 設定但僅有「空框架」的專案結構。</li>
-                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
-                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，觀察開發板實體元件（LDO 穩壓器、WROOM 模組等）。</li>
-                <li>依照範本實作核心資訊讀取代碼 (使用 <code>esp_chip_info</code>)，並驗證輸出結果。</li>
-                <li>本地開發後 <strong>Push 代碼</strong> 提交進度。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
-                <li>針對學生的「硬體元件辨識準確率」與「系統資源讀取邏輯」予以具體點評。</li>
-            </ol>
-        </div>
-
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元聚焦於 ESP32 的 SoC 架構認知與硬體元件辨識，引導學生理解 MCU 的資源邊界。</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── platformio.ini   # 包含基礎開發環境配置
-├── src/
-│   └── main.cpp      # (重點) 需加入 esp_chip_info 讀取框架
-└── README.md        # 紀錄晶片型號、核心數量、記憶體大小與硬體標註照片</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>main.cpp (讀取系統資訊)</strong></p>
-        <pre><code>#include &lt;Arduino.h&gt;
-#include "esp_system.h"
-#include "esp_spi_flash.h"
-
-void setup() {
-  Serial.begin(115200);
-  delay(1000);
-
-  // 1. 取得晶片資訊
-  esp_chip_info_t chip_info;
-  esp_chip_info(&chip_info);
-
-  Serial.println("--- System Info ---");
-  Serial.printf("CPU Cores: %d\n", chip_info.cores);
-  Serial.printf("Flash Size: %d MB\n", spi_flash_get_chip_size() / (1024 * 1024));
-  Serial.printf("Rev: %d\n", chip_info.revision);
-}
-
-void loop() {}</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>語法掃描：</strong> 檢查 <code>main.cpp</code> 是否包含了 <code>esp_chip_info</code> 相關函數調用。</li>
-            <li><strong>邏輯檢核：</strong> 驗證學生在 README 中對「3.3V 穩壓器」位置的標註是否與實機一致。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「ESP32 內部之心：SoC 與多核心架構」影片。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學生已初步具備 CPU、Flash
-                        與 LDO 的基本概念。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實作系統資訊讀取 (1-1) 並透過 Serial 觀看數據分布。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>互動演示：</strong>解釋 Brownout detector
-                        無限重啟的供電成因與解方。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">撰寫「開發板元件識讀」分析報告並提交最終 PR。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>審核學生對硬體架構邊界與電源準位的理解深度。</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
 
     <script>
         // Define Resources
@@ -529,6 +284,136 @@ void loop() {}</code></pre>
         };
     </script>
     <script src="/js/course-shared-v4.js"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">ESP32 SoC 生態實驗室</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：硬體連通性與燒錄測試 (Hardware Connectivity & Flashing)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：韌體工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>環境建立</strong>：完成 VS Code + PlatformIO 安裝，建立新專案並通過編譯。</li>
+                    <li><strong>物理閃爍</strong>：實作一個 LED 閃爍程式。進階任務：修改 <code>delay()</code> 邏輯，讓板載 LED 閃爍出「SOS」摩斯密碼 (三短、三長、三短)。</li>
+                    <li><strong>驗證提交</strong>：在 <code>README.md</code> 貼上 PlatformIO 上傳成功 (SUCCESS) 的終端機內容與 LED 閃爍照片。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>引腳配置正確性</strong>：是否能正確找出板載 LED 的 GPIO 引腳（通常在 GPIO 2）？</li>
+                    <li>[ ] <strong>燒錄時機掌握</strong>：是否能在燒錄超時前，正確操作 BOOT 鈕進入燒錄模式？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：串口通訊的偵探遊戲 (Serial Communication Detective)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：系統分析師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>系統 API 調用</strong>：引入 <code>esp_system.h</code>，調用 <code>esp_chip_info()</code> 獲取晶片核心數與修訂版本。</li>
+                    <li><strong>數位指紋提取</strong>：透過 <code>ESP.getEfuseMac()</code> 打印晶片的唯一 MAC Address。</li>
+                    <li><strong>觀察亂碼特徵</strong>：故意調低 Serial Monitor 的 Baud Rate，截圖記錄並描述數據崩潰的視覺型態，分析「失步」原因。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>數據獲取完整性</strong>：README 中是否包含明確的晶片核心數與 Flash 容量報表？</li>
+                    <li>[ ] <strong>同步原理理解</strong>：能否正確解釋為什麼「發送端 115200 / 接收端 9600」會導致無法閱讀的亂碼？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：電源與發熱量監測 (Power & Thermal Monitoring)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：硬體測試專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>冷啟動日誌分析</strong>：監看按下 EN 鍵後第一毫秒產生的 Bootloader 日誌，識別出當前的 Flash Mode (DIO/QIO) 參數。</li>
+                    <li><strong>負載溫升感測</strong>：執行包含 WiFi 掃描 (<code>WiFi.scanNetworks()</code>) 的死循環程式，用手指輕壓金屬屏蔽罩，記錄運作前後的溫差感受。</li>
+                    <li><strong>元件佈局圖解</strong>：在 Repo 中上傳一張開發板照片，並用圈圖工具標示出 LDO 降壓元件與 RESET/BOOT 按鈕的物理位置。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>日誌解讀深度</strong>：能否從開機日誌中識別出 CPU 啟動頻率與 Flash 加載訊息？</li>
+                    <li>[ ] <strong>供電安全意識</strong>：是否理解 Brownout Detector 觸發的原因通常與 USB 供電電流不足有關？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：讓學生與晶片進行「第一次親密接觸」，建立抽象代碼與物理硬體間的感知。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-indigo-600">第一步：基礎燒錄</strong> - 確保所有學員能在 30 分鐘內解決驅動、線材與 COM 埠識別問題。</li>
+                <li><strong class="text-indigo-600">第二步：資源邊界探索</strong> - 通過讀取 Chip Info，讓學生理解即便外觀相似，每顆 SoC 的核心與 Flash 可能大不相同。</li>
+                <li><strong class="text-indigo-600">第三步：供電與穩定性</strong> - 藉由 Bootloader 日誌與溫升實驗，埋下未來除錯「穩定性」問題的種子。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/main.cpp      # (核心) 需填寫 esp_chip_info 讀取與 SOS 反饋邏輯
+├── include/soc_info.h# 預定義的資料結構定義
+└── README.md         # 繳交報告：需包含 SOS 代碼段落與晶片識別照片
+            </pre>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看「ESP32 SoC 架構速成」影片，了解雙核與單向 3.3V 供電原則。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員是否理解「3.3V vs 5V」的電壓禁區。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，對齊軟硬體環境。進行 SOS 摩斯密碼開發與晶片偵搜。</td>
+                        <td class="p-4 border-b"><strong>技術導師:</strong> 協助演示如何透過「EN 按鈕」重置 SoC 並捕捉開機微秒日誌。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">撰寫「ESP32 硬體佈局分析」並 Push，提交 PR 記錄遇到的連線問題與解法。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 點評學生對 SoC 內部架構參數的讀取正確性。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 </body>
 
 </html>

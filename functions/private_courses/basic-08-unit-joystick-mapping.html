@@ -32,7 +32,7 @@
                 搖桿數據的本質：<br><span class="text-blue-400">歸一化、映射與死區</span>
             </h1>
             <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
-                將混亂的物理像素轉化為精確的硬體指令，掌握操縱感的科學。
+                將混亂的物理像素轉化為精確的硬體指令，掌握操縱感的科學底層。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
@@ -53,43 +53,31 @@
 
         <!-- Module 1: Normalization -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
-                        <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <span class="text-4xl">📏</span> 1. 什麼是歸一化 (Normalization)？ (30 min)
-                            </h2>
-                            <div class="space-y-6 text-gray-600 text-lg">
-                                <p><strong>核心概念：</strong>將不規則的數值（如螢幕上的 142px）轉化為標準的範圍（如 \(0.0\) 到 \(1.0\) 或 \(-1.0\) 到
-                                    \(1.0\)）。</p>
-
-                                <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 shadow-sm">
-                                    <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">
-                                        <span>🌟</span> 為什麼重要？
-                                    </h4>
-                                    <p class="text-sm leading-relaxed">
-                                        不同手機的解析度不同，搖桿半徑可能是 80px 或 150px。若不歸一化，同樣的滑動距離在不同手機上會產生不同的車速。
-                                    </p>
-                                </div>
-
-                                <div class="bg-slate-900 p-8 rounded-2xl text-white text-center">
-                                    <h4 class="text-blue-400 font-bold mb-4">歸一化公式</h4>
-                                    <div class="text-2xl font-mono">
-                                        \[\text{Normalized Value} = \frac{\text{Offset}}{\text{Max Radius}}\]
-                                    </div>
-                                </div>
-
-                                <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
-                                    <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
-                                        <span>🎯</span> 線上任務
-                                    </h4>
-                                    <p class="text-base text-amber-900">
-                                        計算在 12-bit ADC 下，當讀取值為 3072 時，對應的歸一化座標是多少？（假設範圍為 0-4095）
-                                    </p>
-                                </div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-blue-500">📏</span> 1. 什麼是歸一化 (Normalization)？
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                不同手機解析度不同，搖桿半徑可能是 80px 或 150px。如果不歸一化，同樣的滑動距離在不同設備上會產生完全不同的車速。
+                            </p>
+                            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 italic">
+                                <h4 class="font-bold text-blue-900 mb-2 text-xs uppercase tracking-widest leading-relaxed">The Core Concept</h4>
+                                <p class="text-[10px] text-slate-500 font-light leading-relaxed">
+                                    將不規則的數值（像素偏移）轉換為標準的數學比例（如 0.0 到 1.0）。這讓你的代碼可以與硬體解析度完美解耦。
+                                </p>
                             </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center">
+                            <h4 class="text-[10px] font-bold text-slate-500 mb-8 uppercase tracking-widest">Normalization Formula</h4>
+                            <div class="text-2xl font-mono text-blue-400 mb-4">
+                                \[V_{norm} = \frac{Offset}{MaxRadius}\]
+                            </div>
+                            <p class="text-[10px] text-slate-500 italic">Range: [-1.0, 1.0]</p>
                         </div>
                     </div>
                 </div>
@@ -98,59 +86,43 @@
 
         <!-- Module 2: Mapping -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-indigo-500 to-blue-600"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12 items-center">
-                        <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <span class="text-4xl">🗺️</span> 2. 數值映射 (Mapping) 的邏輯 (30 min)
-                            </h2>
-                            <div class="space-y-6 text-gray-600 text-lg">
-                                <p><strong>定義：</strong>將歸一化後的數值轉換為硬體能理解的區間。</p>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 shadow-sm">
-                                        <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
-                                            <span>🏎️</span> PWM 控制
-                                        </h4>
-                                        <p class="text-sm">
-                                            \(-1.0\) 到 \(1.0\) 映射為 \(-255\) 到 \(255\)（馬達驅動器）。
-                                        </p>
-                                    </div>
-                                    <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 shadow-sm">
-                                        <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
-                                            <span>📐</span> 舵機控制
-                                        </h4>
-                                        <p class="text-sm">
-                                            \(-1.0\) 到 \(1.0\) 映射為 \(0^\circ\) 到 \(180^\circ\)。
-                                        </p>
-                                    </div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-indigo-500">🗺️</span> 2. 數值映射 (Mapping) 的藝術
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                歸一化後的數值（如 0.75）需要被轉換為硬體能理解的區間。這就是「職人級」操作感誕生的關鍵。
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
+                                    <h4 class="font-bold text-indigo-900 mb-2 text-xs uppercase tracking-widest">PWM Control</h4>
+                                    <p class="text-[10px] text-slate-500 font-light">將 0 ~ 1.0 映射為 0 ~ 255 (馬達動力)。</p>
                                 </div>
-
-                                <div
-                                    class="bg-slate-900 p-6 rounded-2xl text-white font-mono text-sm leading-relaxed overflow-x-auto">
-                                    <div class="text-gray-500 mb-2">// 萬用映射函式範例 (C++)</div>
-                                    <span class="text-blue-400">float</span> <span
-                                        class="text-yellow-400">mapValue</span>(<span class="text-blue-400">float</span>
-                                    x, <span class="text-blue-400">float</span> inMin, <span
-                                        class="text-blue-400">float</span> inMax, <span
-                                        class="text-blue-400">float</span> outMin, <span
-                                        class="text-blue-400">float</span> outMax) {<br>
-                                    &nbsp;&nbsp;<span class="text-purple-400">return</span> (x - inMin) * (outMax -
-                                    outMin) / (inMax - inMin) + outMin;<br>
-                                    }
-                                </div>
-
-                                <div class="bg-slate-900 p-6 rounded-2xl text-white">
-                                    <h4 class="text-blue-400 font-bold mb-3 flex items-center gap-2">
-                                        <span>⚙️</span> 學習任務
-                                    </h4>
-                                    <p class="text-gray-300 text-base leading-relaxed">
-                                        練習寫一個 <code>map(value, inMin, inMax, outMin, outMax)</code> 函式，並思考為什麼我們需要這個工具？
-                                    </p>
+                                <div class="bg-purple-50 p-6 rounded-2xl border border-purple-100">
+                                    <h4 class="font-bold text-purple-900 mb-2 text-xs uppercase tracking-widest">Servo Control</h4>
+                                    <p class="text-[10px] text-slate-500 font-light">將 -1.0 ~ 1.0 映射為 0 ~ 180 (轉向舵機)。</p>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="w-3 h-3 bg-red-400 rounded-full"></span>
+                                <span class="w-3 h-3 bg-amber-400 rounded-full"></span>
+                                <span class="w-3 h-3 bg-emerald-400 rounded-full"></span>
+                                <span class="ml-auto text-[10px] text-slate-500 font-mono tracking-widest">LINEAR MAP (C++)</span>
+                            </div>
+                            <pre class="text-xs md:text-sm leading-relaxed overflow-x-auto text-indigo-300 font-mono">
+<span class="text-blue-400">float</span> <span class="text-emerald-400">lerp</span>(<span class="text-blue-400">float</span> x, <span class="text-blue-400">float</span> inMax, <span class="text-blue-400">float</span> outMax) {
+  <span class="text-purple-400">return</span> (x / inMax) * outMax; 
+}
+
+<span class="text-slate-500">// 專業職人會加入非線性曲線：</span>
+<span class="text-blue-400">float</span> <span class="text-emerald-400">expMap</span> = <span class="text-yellow-400">pow</span>(normVal, <span class="text-amber-200">2.0</span>);</pre>
                         </div>
                     </div>
                 </div>
@@ -159,34 +131,33 @@
 
         <!-- Module 3: Deadzone -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="p-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">🌑</span> 3. 死區 (Deadzone) 的設計 (20 min)
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-purple-400">
+                        <span class="p-2 bg-purple-500/20 rounded-lg text-purple-400 text-2xl">🌑</span> 3. 死區 (Deadzone) 與雜訊抑制
                     </h2>
-                    <div class="space-y-6 text-gray-600 text-lg">
-                        <p><strong>概念：</strong>搖桿中心微小的偏移不應觸發馬達，以防止硬體因雜訊而抖動。</p>
-
-                        <div class="bg-indigo-50 p-8 rounded-2xl border border-indigo-100">
-                            <h4 class="font-bold text-indigo-900 mb-4 flex items-center gap-2">
-                                <span>🛡️</span> 為什麼需要死區？
-                            </h4>
-                            <p class="mb-4">搖桿在中央時，讀取值往往不會剛好是 0。若不設定死區，微小的雜訊會讓馬達微弱轉動，造成能量浪費或硬體抖動。</p>
-                            <div class="bg-slate-800 p-6 rounded-xl text-indigo-200 font-mono text-sm">
-                                if (abs(value) < 0.1) { <br>
-                                    &nbsp;&nbsp;value = 0; // 忽略小於 10% 的偏移<br>
-                                    }
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                搖桿在中央時，讀取值往往不會剛好是 0。如果不設定死區，微小的雜訊會讓馬達微弱共振抖動，造成能量浪費。
+                            </p>
+                            <div class="bg-purple-500/10 p-8 rounded-3xl border border-purple-500/20 shadow-inner">
+                                <h4 class="font-bold text-purple-400 mb-4 text-xs uppercase tracking-widest">Noise Suppression Loop</h4>
+                                <ol class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light list-decimal list-outside ml-4">
+                                    <li><strong class="text-white">採樣數值</strong>：獲取目前的 X/Y 歸一化座標。</li>
+                                    <li><strong class="text-white">閥值判定</strong>：檢查 <code>abs(v)</code> 是否大於 0.1 (10% 死區)。</li>
+                                    <li><strong class="text-white">數值切掉</strong>：若小於閥值，一律強制視為 0。</li>
+                                    <li><strong class="text-white">縮放插值</strong>：對剩餘的 0.1~1.0 進行線性補償，確保起點平滑。</li>
+                                </ol>
                             </div>
                         </div>
-
-                        <div class="bg-slate-800 p-8 rounded-2xl text-white">
-                            <h4 class="text-purple-400 font-bold mb-3 flex items-center gap-2 text-lg">
-                                <span>🔍</span> 學習目標
-                            </h4>
-                            <p class="text-gray-300 leading-relaxed text-lg">
-                                理解為何需要設定一個閥值（如 10%），低於此值一律視為 0。這在實際硬體控制中是極為重要的安全機制。
-                            </p>
+                        <div class="lg:w-80 bg-purple-600/10 p-10 rounded-3xl border border-purple-500/20 text-center relative overflow-hidden group">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-purple-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-purple-400 font-bold mb-4 text-[10px] uppercase tracking-widest">Safe System</h4>
+                           <p class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic">
+                               "一個好的控制系統，在靜止時應該像冰塊一樣安靜。"
+                           </p>
+                           <div class="inline-block px-8 py-3 bg-purple-500 text-white rounded-xl font-bold text-[10px] shadow-lg">Activate Noise Filter</div>
                         </div>
                     </div>
                 </div>
@@ -196,62 +167,56 @@
         <!-- Homework Section -->
         <section class="module-section">
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：操縱感的終極調校</h2>
-            <p class="text-center text-gray-500 mb-12">從數值歸一化到非線性映射，打造職人級的控制曲線。</p>
+            <p class="text-center text-gray-500 mb-12">從數值歸一化到非線性動力曲線實作，打造具備專業「賽車感」的控制系統。</p>
 
             <div class="grid md:grid-cols-3 gap-6">
-                <!-- Task 1-1 -->
-                <div onclick="openSubmissionModal('basic-08-joystick-1', '【作業 1-1】數據標準化實作')"
+                <!-- Task 8-1 -->
+                <div onclick="openSubmissionModal('basic-08-joystick-1', '【作業 8-1】數據標準化實作 (Joystick Normalization)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-blue-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">📉</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform">📉</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 1-1】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「數據標準化」</h4>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 8-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「跨屏座標標準化」</h4>
                         <p class="text-sm text-gray-600 leading-relaxed">
-                            實作搖桿座標轉換邏輯，並在 UI 上即時顯示歸一化後的 (X, Y)。不論在什麼尺寸的手機上，輸出範圍始終固定為 [-1, 1]。
+                            實作將物理像素偏移轉換為 [-1, 1] 的數學比例。加入死區 (Deadzone) 機制抑制雜訊，並在 UI 上動態回饋座標。
                         </p>
                     </div>
                 </div>
 
-                <!-- Task 1-2 -->
-                <div onclick="openSubmissionModal('basic-08-joystick-2', '【作業 1-2】非線性映射：指數型油門')"
+                <!-- Task 8-2 -->
+                <div onclick="openSubmissionModal('basic-08-joystick-2', '【作業 8-2】非線性映射：指數型油門 (Exponential Mapping Profile)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-indigo-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🚀</span>
-                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-indigo-500 group-hover:rotate-12 transition-transform">🚀</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 1-2】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「指數型油門」</h4>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 8-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「動力響應曲線調教」</h4>
                         <p class="text-sm text-gray-600 leading-relaxed">
-                            實作 \(y = x^2\) 或 \(y = x^3\) 的控制曲線。讓無人車在低速時更易微調（溫和），高速時具備爆發力。
+                            實作指數映射公式。比較線性與指數映射對低速微操感的影響，並驗證最大推動處是否仍能閉合於 100% 動力。
                         </p>
                     </div>
                 </div>
 
-                <!-- Task 1-3 -->
-                <div onclick="openSubmissionModal('basic-08-joystick-3', '【作業 1-3】數據打包與發送頻率')"
+                <!-- Task 8-3 -->
+                <div onclick="openSubmissionModal('basic-08-joystick-3', '【作業 8-3】數據打包與發送節流 (Throttling & Packaging)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-purple-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">📦</span>
-                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">45
-                                min</span>
+                            <span class="text-4xl text-purple-500 group-hover:translate-x-1 transition-transform">📦</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 1-3】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「數據打包」</h4>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 8-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「通訊負擔優化」</h4>
                         <p class="text-sm text-gray-600 leading-relaxed">
-                            將歸一化的數據封裝進 JSON 並限制小數點後兩位。實作「數值未改變則不發送」機制，降低通訊負擔。
+                            將數據封裝進標準 JSON 並限制有效位數。實作 Throttling 機制，避免在數值未改變或微小抖動時浪費頻寬。
                         </p>
                     </div>
                 </div>
@@ -265,7 +230,7 @@
         <div class="container mx-auto px-4 text-center">
             <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
-                <span>單元課程 基礎 8</span>
+                <span>課程單元 基礎 8 - 控制數學</span>
                 <span class="hidden md:inline">|</span>
                 <span>講師：Antigravity Assistant</span>
             </div>
@@ -282,112 +247,136 @@
     <script src="/js/course-shared-v4.js"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">控制數據處理實驗室</h2>
 
-        <h3>【作業 1-1】數據標準化實作</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 操縱感設計師 (Control Feel Designer)。</li>
-            <li><strong>執行方式：</strong> 實作搖桿座標轉換邏輯，並在 UI 上即時顯示歸一化後的 (X, Y)。不論在什麼尺寸的手機上，輸出範圍始終固定為 [-1, 1]。</li>
-            <li><strong>評分重點 :</strong> 歸一化算法正確，能處理不同螢幕解析度的比例差異。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：數據標準化實作 (Joystick Normalization)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：操縱感設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
 
-        <h3>【作業 1-2】非線性映射：指數型油門</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 車輛動力調校工程師 (Vehicle Dynamics Engineer)。</li>
-            <li><strong>執行方式：</strong> 實作 \(y = x^2\) 或 \(y = x^3\) 的控制曲線。讓無人車在低速時更易微調（溫和），高速時具備爆發力。</li>
-            <li><strong>評分重點 :</strong> 成功實作非線性轉換，低速區操控感顯著提升。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>歸一化演算</strong>：實作將物理像素偏移轉換為純數學座標 <code>[-1.0, 1.0]</code> 的演算邏輯。</li>
+                    <li><strong>死區過濾 (Deadzone)</strong>：設定 10% 的閥值，確保搖桿在中心附近的雜訊位移不會觸發任何通訊。</li>
+                    <li><strong>UI 回饋驗證</strong>：在畫面顯示目前實時的標準化 <code>(X, Y)</code>，確認各方向極值均能正確觸發。</li>
+                </ol>
+            </div>
 
-        <h3>【作業 1-3】數據打包與發送頻率</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 通訊協定優化專家 (Protocol Optimization Expert)。</li>
-            <li><strong>執行方式：</strong> 將歸一化的數據封裝進 JSON 並限制小數點後兩位。實作「數值未改變則不發送」機制，降低頻繁傳輸對硬體造成的負擔。</li>
-            <li><strong>評分重點 :</strong> JSON 格式正確，數據吞吐量 (Throughput) 獲得有效控制，無頻寬浪費。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>極值完整性</strong>：不論螢幕解析度如何，搖桿完全推到底時，輸出是否能精準穩定在 <code>1.0</code>？</li>
+                    <li>[ ] <strong>中心點穩定度</strong>：手指離開搖桿後，輸出是否能立刻恢復為 <code>0.0</code> 且不產生任何脈動數據？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：非線性映射：指數型油門 (Exponential Mapping Profile)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：車輛動力調校工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>動力曲線編寫</strong>：在控制邏輯中導入指數映射公式（如 <code>out = in^2</code> 或 <code>pow(in, 2)</code>）。</li>
+                    <li><strong>微操感實測</strong>：比較並記錄線性映射與指數映射在 0% ~ 30% 低速區間的數據增量差異。</li>
+                    <li><strong>端點閉合校準</strong>：驗證非線性處理後，最大輸入值是否依然與硬體滿額輸出 (100% PWM) 完美對應。</li>
+                    <li><strong>調校報告</strong>：在 README 中說明指數映射如何協助駕駛在過彎時進行更精細的速度微調。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>指數特性掌握</strong>：輸出的動力曲線是否體現出明顯的「起始溫和、末段爆發」特徵？</li>
+                    <li>[ ] <strong>代碼穩健性</strong>：處理非線性運算時，是否正確處理了負數值（方向）的符號保留？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：數據打包與發送節流 (Throttling & Packaging)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：通訊協定優化專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>報文格式規範</strong>：將最終數據封裝進標準 JSON (例：<code>{"x":0.58,"y":-1.0}</code>) 並嚴格限制有效位數。</li>
+                    <li><strong>發送頻率控制</strong>：實作 Throttling (節流) 機制，設定最短發送間隔（如 50ms）或變動門檻判定。</li>
+                    <li><strong>負擔減輕驗證</strong>：觀察 Console logs，確認在靜止狀態下，網路通訊頻寬開銷已被有效抑制。</li>
+                    <li><strong>正式提交</strong>：將具備效能優化意識的完整代碼 Push 提交至作業倉庫 PR。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>優化實效性</strong>：控制請求的發送頻率是否處於合理區間，且能隨操作積極度自動調節？</li>
+                    <li>[ ] <strong>報文解析度</strong>：生成的 JSON 結構是否簡練、標準，符合嵌入式後端低負載解析的需求？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>在 GitHub 建立新 Repo（名為 <code>basic-08-joystick-template</code>）。</li>
-                <li>上傳包含 `JoyStick` 座標讀取框架但「未完成解耦 (Mapping) 邏輯」的專案。</li>
-                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
-                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，獲得個人專屬 Repo。</li>
-                <li>實作線性與非線性映射公式，並在 Web 端繪製數據分佈圖。</li>
-                <li>完成歸一化與數據打包實作後 <strong>Push 代碼</strong> 提交進度。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
-                <li>針對學生的「Deadzone 門檻設定」與「非線性映射的平滑度」予以回饋。</li>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：掌握數據標準化、非線性動力學與高效通訊優化。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-indigo-600">重點 1：歸一化的純粹數學意義</strong> - 解釋為何將「像素」這種物理量轉化為「比率」感官變數是開發跨平台控制器的基石。</li>
+                <li><strong class="text-indigo-600">重點 2：感官與數值的映射</strong> - 引導學員理解人類手部操作的非線性特質，以及為何指數曲線能創造「高級」的操作感。</li>
+                <li><strong class="text-indigo-600">重點 3：通訊節流的必要性</strong> - 討論在物聯網賽道中，不必要的頻繁 Request 如何導致路由器擁塞與控制延遲。</li>
             </ol>
         </div>
 
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元聚焦於「數據解構與重組」，引導學生理解如何將抽象的感測器物理量轉化為具體的驅動參數。</p>
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── index.html        # 含有搖桿畫布與即時座標顯示標籤的基礎 UI
+├── js/control.js     # (必修) 學員需在此實作 Normalize, ExpMap 與 Throttling 邏輯
+└── README.md         # 實驗日誌：記錄不同指數下的操控心得與 JSON 封包樣本
+            </pre>
+        </div>
 
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── src/
-│   └── main.cpp      # (重點) 需填充 mapValue() 或指數映射核心
-├── test/             # 包含數值邊界測試腳本
-└── README.md         # 映射曲線圖：展示 y = f(x) 的結果</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>main.cpp (Linear Mapping)</strong></p>
-        <pre><code>float normalized = (float)rawValue / 4095.0; // Normalization
-float output = normalized * normalized;        // Quadratic Curve</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>精確度檢驗：：</strong> 輸入特定的測試向量庫，檢查輸出是否準確符合歸一化預期（誤差範圍 < 0.01）。</li>
-            <li><strong>數據格式匹配：：</strong> 驗證學生提交的 JSON 報文是否符合 `{"x": val, "y": val}` 嚴格格式。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「歸一化：為什麼工程師都喜歡 0 到 1？」影片。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>Dashboard：</strong>確認學員能理解座標系平移與縮放的基本代數。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，對比在不同映射指數（n=1, 2, 3）下的操縱響應速度。
-                    </td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>演示「死區」如何解決搖桿漂移問題。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作數據變化濾波（Damping）機制並 Push，閱讀教師回覆 PR。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>審核學生對「操縱反饋」與「網路頻寬管理」的權衡設計。</td>
-                </tr>
-            </tbody>
-        </table>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看歸一化公式與座標系變換影片，練習計算不同半徑下的標準化座標。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員是否能正確辨識「死區」對硬體保護的作用。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，挑戰手刻非線性映射函式並實際測試油門的細膩度。</td>
+                        <td class="p-4 border-b"><strong>助教引導:</strong> 指導如何使用 <code>console.debug</code> 觀察節流器的工作頻率。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">將「座標變動門檻 (Hysteresis)」概念加入節流邏輯，並 Push 最終成果。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 評價學員對「控制精度」與「系統開銷」之間平衡點的設計深度。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 </body>
 

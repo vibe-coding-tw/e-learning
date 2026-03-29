@@ -4,31 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adv 13: 視覺敘事：如何展示技術專案 - Vibe Coding</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <title>視覺敘事：如何展示技術專案 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
-    <style>
-        .gradient-text {
-            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-
-        .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        }
-    </style>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
-<body class="bg-gray-50 text-gray-800 font-sans">
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
 
     <!-- Hero Section -->
     <header
@@ -40,22 +25,21 @@
 
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
-                class="inline-block py-1 px-3 rounded-full bg-violet-500/20 border border-violet-400/30 text-violet-300 text-sm font-semibold mb-6 tracking-wide uppercase">
-                進階 13 - 單元 3
+                class="inline-block py-1 px-3 rounded-full bg-pink-500/20 border border-pink-400/30 text-pink-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 13 - 技術敘事
             </span>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
-                視覺敘事：<span class="text-pink-400">如何展示技術專案</span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">視覺敘事：<br><span class="text-pink-400">如何展示技術專案</span>
             </h1>
-            <p class="text-xl md:text-2xl text-purple-100 max-w-3xl mx-auto font-light leading-relaxed">
-                技術再強，沒人看懂也是白搭。學習用「故事」和「視覺」為你的程式碼注入靈魂，打造令人驚艷的作品集。
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
+                技術再強，沒人看懂也是白搭。學習用視覺與故事為代碼注入靈魂，打造令人驚艷的作品集。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="window.courseShared.enterMediaMode('video', window.RESOURCES.youtube)"
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="window.courseShared.enterMediaMode('doc', window.RESOURCES.doc)"
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -64,432 +48,346 @@
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
-        <!-- Use Cases / Intro -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 card-hover">
-                <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 mb-6">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z">
-                        </path>
-                    </svg>
+        <!-- Module 1: The Hero's Journey Framework -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-violet-500 to-purple-500"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-violet-500">📖</span> 1. 英雄之旅：技術敘事的骨架
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                別只說 "I made a car."，試著講一個關於「解決挑戰」的故事。Reviewer 只有 30 秒能被你吸引，你需要有邏輯的敘事。
+                            </p>
+                            <div class="bg-violet-50 p-6 rounded-2xl border border-violet-100">
+                                <h4 class="font-bold text-violet-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed">Narrative Structure</h4>
+                                <ul class="text-[9px] text-slate-500 space-y-2 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-violet-500 rounded-full mt-1"></span> <div><strong>挑戰 (The Problem)</strong>：為什麼要做這專案？解決了什麼現實痛點。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-violet-500 rounded-full mt-1"></span> <div><strong>掙扎 (The Struggle)</strong>：開發中遇到了什麼技術障礙（延遲、崩潰）？</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-violet-500 rounded-full mt-1"></span> <div><strong>突破 (The Solution)</strong>：你用了什麼黑科技（PID, FSM, Binary Proto）解決它。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-violet-500/5 group-hover:bg-violet-500/10 transition-colors"></div>
+                           <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10">Story Arc Visualization</h4>
+                           <div class="relative z-10 flex flex-col items-center gap-2">
+                               <div class="flex items-end gap-1 h-20">
+                                   <div class="w-4 bg-slate-700 h-8"></div>
+                                   <div class="w-4 bg-violet-500 h-16 animate-pulse"></div>
+                                   <div class="w-4 bg-slate-700 h-12"></div>
+                                   <div class="w-4 bg-emerald-500 h-20"></div>
+                               </div>
+                               <div class="flex justify-between w-full text-[7px] text-slate-500 font-mono tracking-tighter">
+                                   <span>START</span>
+                                   <span>STRUGGLE</span>
+                                   <span>PEAK</span>
+                                   <span>SUCCESS</span>
+                               </div>
+                           </div>
+                        </div>
+                    </div>
                 </div>
-                <h3 class="text-xl font-bold mb-3 text-gray-900">為什麼要學技術敘事？</h3>
-                <p class="text-gray-600 leading-relaxed">
-                    在開源社群或求職面試中，Reviewer 只有 30 秒能被你吸引。單純貼 GitHub code 並不足夠，你需要一個引人入勝的故事 (Hero's Journey)
-                    和直觀的視覺展示，讓不懂代碼的人也能感受到技術的價值。
-                </p>
             </div>
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 card-hover">
-                <div class="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center text-pink-600 mb-6">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z">
-                        </path>
-                    </svg>
+        </section>
+
+        <!-- Module 2: Logic Visualization -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-pink-500 to-rose-500"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-pink-500">🎨</span> 2. 邏輯視覺化：讓代碼「被看見」
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                看不見的代碼很難被欣賞。利用圖表、流程圖與子母畫面展示，將抽象的邏輯轉化為直觀的「視覺證據」。
+                            </p>
+                            <div class="bg-pink-50 p-8 rounded-3xl border border-pink-100 text-center">
+                                <h4 class="text-pink-900 font-bold mb-4 text-xs uppercase tracking-widest">Visual Assets Portfolio</h4>
+                                <ul class="text-[10px] text-slate-500 text-left space-y-2">
+                                    <li class="flex items-center gap-2 italic">✓ 系統架構圖 (Architecture Diagrams)</li>
+                                    <li class="flex items-center gap-2 italic">✓ 即時感測器波形截圖 (Waveform Proof)</li>
+                                    <li class="flex items-center gap-2 italic">✓ PID 誤差修正曲線 (Precision Metrics)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-pink-500/5"></div>
+                           <h4 class="text-pink-400 font-bold mb-4 text-[10px] uppercase tracking-widest relative z-10">Data Flow Mapping</h4>
+                           <div class="relative z-10 flex gap-4 items-center">
+                               <div class="p-2 border border-slate-600 rounded text-[8px]">ESP32</div>
+                               <div class="text-pink-500 animate-[bounce_1s_infinite]">→</div>
+                               <div class="p-2 border border-slate-600 rounded text-[8px]">BLE</div>
+                               <div class="text-pink-500 animate-[bounce_1s_infinite]">→</div>
+                               <div class="p-2 bg-pink-600 rounded text-[8px] font-bold shadow-[0_0_15px_rgba(236,72,153,0.5)]">DASHBOARD</div>
+                           </div>
+                           <p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest uppercase text-center">Transparent Architecture</p>
+                        </div>
+                    </div>
                 </div>
-                <h3 class="text-xl font-bold mb-3 text-gray-900">本單元目標</h3>
-                <ul class="space-y-2 text-gray-600">
-                    <li class="flex items-center"><span class="mr-2 text-pink-500">✓</span>掌握「英雄之旅」技術敘事框架</li>
-                    <li class="flex items-center"><span class="mr-2 text-pink-500">✓</span>設計「一眼就懂」的系統架構圖</li>
-                    <li class="flex items-center"><span class="mr-2 text-pink-500">✓</span>製作專業質感的 Demo 影片</li>
+            </div>
+        </section>
+
+        <!-- Module 3: Demo & Pitch -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-violet-400">
+                        <span class="p-2 bg-violet-500/20 rounded-lg text-violet-400 text-2xl">🎬</span> 3. 實機演示與電梯簡報
+                    </h2>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                沒有影片就沒真相 (Pics or it didn't happen)。錄製子母畫面 (PiP) 影片同步展示操作與反應，展現系統的毫秒級實力。
+                            </p>
+                            <div class="bg-violet-500/10 p-8 rounded-3xl border border-violet-500/20 shadow-inner">
+                                <h4 class="font-bold text-violet-400 mb-4 text-xs uppercase tracking-widest text-center">Video Production Tips</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-violet-500 rounded-full mt-1"></span><div><strong class="text-white">子母畫面 (PiP)</strong>：左側放手機錄影，右側放車子實際動態。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-violet-500 rounded-full mt-1"></span><div><strong class="text-white">高光特寫</strong>：拍攝馬達精確停靠或高速過彎的慢動作鏡頭。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-violet-500 rounded-full mt-1"></span><div><strong class="text-white">30 秒原則</strong>：別錄太長！在最初的 10 秒內就要讓觀眾看到最亮眼的功能。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="lg:w-80 bg-violet-600/10 p-10 rounded-3xl border border-violet-500/20 text-center relative overflow-hidden group">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-violet-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-violet-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center">Professional Demo</h4>
+                           <div class="w-full h-40 bg-black/60 rounded-xl relative overflow-hidden border border-slate-700">
+                               <div class="absolute top-2 left-2 w-12 h-20 bg-slate-800 border border-slate-700 rounded text-[6px] p-1">PHONE APP</div>
+                               <div class="absolute inset-0 flex items-center justify-center">
+                                   <div class="w-4 h-4 bg-slate-500 rounded-full animate-ping"></div>
+                               </div>
+                               <div class="absolute bottom-2 right-2 text-[8px] bg-red-600 px-1 rounded">● REC</div>
+                           </div>
+                           <p class="text-[9px] text-slate-500 mt-4 font-mono uppercase tracking-widest">PiP Layout: Code Meets Action</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：說一個動人的技術故事</h2>
+            <p class="text-center text-gray-500 mb-12">打造你的專業技術作品集。將這十二週的汗水轉化為一眼就能吸引評審與面試官的視覺資產。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 13-1 -->
+                <div onclick="openSubmissionModal('adv-13-architecture', '【作業 13-1】「一眼就懂」的架構圖設計 (System Architecture Design)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-violet-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-violet-500 group-hover:scale-110 transition-transform">🧭</span>
+                            <span class="bg-violet-100 text-violet-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-violet-600 transition">【作業 13-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「系統藍圖繪製」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            整理系統模組架構。使用方塊圖標註前後端、藍牙通訊與馬達控制層的數據流向。將邏輯轉化為清晰的視覺文檔。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 13-2 -->
+                <div onclick="openSubmissionModal('adv-13-dashboard', '【作業 13-2】動態數據儀表板展示 (Visualizing Results)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-pink-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-pink-500 group-hover:rotate-12 transition-transform">📉</span>
+                            <span class="bg-pink-100 text-pink-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-pink-600 transition">【作業 13-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「性能證據採集」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            定義專案的核心里程碑與效能數據（如延遲對比）。採集即時波形截圖或 GIF，並在 README 中展示優化後的具體成效。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 13-3 -->
+                <div onclick="openSubmissionModal('adv-13-pitch', '【作業 13-3】「技術電梯簡報」錄製 (Technical Pitch & Demo)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-indigo-500 group-hover:translate-x-1 transition-transform">🎬</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 13-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「30 秒電梯簡報」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            錄製包含子母畫面 (PiP) 的 Demo 影片。結合口述與實機演示，在 60 秒內清楚介紹專案背景、遇到的坎以及你解決它的黑科技。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 進階 13 - 技術敘事</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/placeholder",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vTQOeZStAJUwGm1JlEo2r6vGVx20USevDP69swtB7BSJY33Jq9A5dYSQiey6nFjXs1IL3D6ibH5UySB/pub?embedded=true"
+        };
+    </script>
+    <script src="/js/course-shared-v4.js"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">技術劇場：作品展示與敘事實驗室</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：「一眼就懂」的架構圖設計 (System Architecture Design)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：技術文件作家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>系統拆解</strong>：將專案分為「感測層」、「控制層 (ESP32)」、「通訊層 (BLE)」與「應用層 (Dashboard)」。</li>
+                    <li><strong>圖表繪製</strong>：使用 Mermaid (於 README 內) 或 Figma 繪製數據流動圖。標註出關鍵的指令包 (Payload) 是如何流動的。</li>
+                    <li><strong>文檔提交</strong>：將架構圖嵌入 README 並 Push。確保這張圖能讓新手快速理解目前的代碼結構。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>視圖專業度</strong>：架構圖是否能準確反映硬體介面 (GPIO/ADC) 與軟體層級的關聯？</li>
+                    <li>[ ] <strong>傳達效率</strong>：看完架構圖後，是否能在大腦中概括出數據從「感測器」到「馬達」的完整鏈路？</li>
                 </ul>
             </div>
         </div>
 
-        <!-- Section 1: Hero's Journey -->
-        <section class="mb-16">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                <span
-                    class="w-8 h-8 bg-violet-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">1</span>
-                英雄之旅：技術敘事的框架
-            </h2>
-            <div class="prose prose-violet max-w-none text-gray-600">
-                <p>
-                    別只寫 "I made a car."，試著講一個故事。好的技術敘事遵循「英雄之旅」的結構，讓讀者跟著你一起經歷開發的過程。
-                </p>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
-                    <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                        <h4 class="font-bold text-gray-800 mb-2">核心結構 (Structure)</h4>
-                        <ul class="list-none space-y-3">
-                            <li class="relative pl-6">
-                                <span class="absolute left-0 top-1.5 w-2 h-2 rounded-full bg-red-400"></span>
-                                <strong>挑戰 (The Problem)：</strong><br>
-                                為什麼要做這台車？解決了什麼痛點（如：狹窄空間的物流、危險環境探勘）？
-                            </li>
-                            <li class="relative pl-6">
-                                <span class="absolute left-0 top-1.5 w-2 h-2 rounded-full bg-yellow-400"></span>
-                                <strong>掙扎 (The Struggle)：</strong><br>
-                                開發中遇到了什麼技術障礙（如：搖桿數據延遲 - causing crash、CORS 錯誤 - blocked data）？不要害怕暴露弱點，這才是真實的工程。
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                        <h4 class="font-bold text-gray-800 mb-2">解決與成果 (Result)</h4>
-                        <ul class="list-none space-y-3">
-                            <li class="relative pl-6">
-                                <span class="absolute left-0 top-1.5 w-2 h-2 rounded-full bg-green-400"></span>
-                                <strong>突破 (The Solution)：</strong><br>
-                                你用了什麼黑科技解決它（如：引入 FSM 穩定狀態、數據歸一化優化控制手感）？這是展示技術深度的時刻。
-                            </li>
-                            <li class="relative pl-6">
-                                <span class="absolute left-0 top-1.5 w-2 h-2 rounded-full bg-blue-400"></span>
-                                <strong>成果 (The Result)：</strong><br>
-                                最終的性能表現。用數據說話（如：延遲從 500ms 降至 50ms、辨識準確率達 95%）。
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：動態數據儀表板展示 (Visualizing Results)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：數據視覺化工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
             </div>
-        </section>
 
-        <!-- Section 2: Visual Tools -->
-        <section class="mb-16">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                <span
-                    class="w-8 h-8 bg-violet-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">2</span>
-                視覺化工具：讓邏輯「被看見」
-            </h2>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <p class="text-gray-600 mb-6">
-                    看不見的代碼很難被欣賞。我們需要將抽象的數據流 (Data Flow) 和系統架構 (Architecture) 具象化。
-                </p>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="border border-l-4 border-l-indigo-500 border-gray-200 rounded-lg p-4">
-                        <h4 class="font-bold text-gray-800 flex items-center mb-2">
-                            <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
-                                </path>
-                            </svg>
-                            動態圖表 (Dynamic Charts)
-                        </h4>
-                        <p class="text-sm text-gray-600 mb-2">使用 Chart.js 等函式庫將感測器數據轉化為動態曲線。</p>
-                        <ul class="text-sm text-gray-500 list-disc list-inside">
-                            <li>即時馬達轉速 (RPM)</li>
-                            <li>電池電壓監控</li>
-                            <li>PID 誤差修正曲線</li>
-                        </ul>
-                    </div>
-
-                    <div class="border border-l-4 border-l-purple-500 border-gray-200 rounded-lg p-4">
-                        <h4 class="font-bold text-gray-800 flex items-center mb-2">
-                            <svg class="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
-                                </path>
-                            </svg>
-                            架構圖設計 (Architecture Diagrams)
-                        </h4>
-                        <p class="text-sm text-gray-600 mb-2">清楚展示前端、藍牙、硬體三方的關係。工具推薦：Lucidchart, Figma, Excalidraw</p>
-                        <ul class="text-sm text-gray-500 list-disc list-inside">
-                            <li>分層架構 (Layered Architecture)</li>
-                            <li>數據流向 (Data Flow)</li>
-                        </ul>
-                    </div>
-                </div>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>採集性能指標</strong>：挑選最亮點的數據（如：每秒處理 100 筆更新、誤差收斂曲線）。</li>
+                    <li><strong>視覺化證據</strong>：錄製 Dashboard 上的即時波形。使用 GIF 錄製軟體擷取系統在「過彎」或「加速」時的波形特寫。</li>
+                    <li><strong>成效對比</strong>：在 README 中呈現「優化前 vs 優化後」的延遲數據對比表。</li>
+                    <li><strong>PR 發起</strong>：提交包含視覺化圖表與效能說明的 docs 資料夾。</li>
+                </ol>
             </div>
-        </section>
 
-        <!-- Section 3: Recording -->
-        <section class="mb-16">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                <span
-                    class="w-8 h-8 bg-violet-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">3</span>
-                錄影與剪輯技巧
-            </h2>
-            <div class="prose prose-violet max-w-none text-gray-600">
-                <p>沒有影片就沒真相 (Pics or it didn't happen)。一個好的 Demo 影片勝過千言萬語。</p>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    <div class="bg-gray-100 p-4 rounded-lg text-center">
-                        <span class="block text-2xl mb-2">🎥</span>
-                        <h5 class="font-bold text-gray-800">POV 第一人稱視角</h5>
-                        <p class="text-xs text-gray-600">把手機架在頭上或胸前，展示「操作者」的真實體驗，讓觀眾有代入感。</p>
-                    </div>
-                    <div class="bg-gray-100 p-4 rounded-lg text-center">
-                        <span class="block text-2xl mb-2">🖼️</span>
-                        <h5 class="font-bold text-gray-800">PiP 子母畫面</h5>
-                        <p class="text-xs text-gray-600">左邊放手機螢幕錄影，右邊放車子實際跑動畫面。同步展示「操作 -> 反應」。</p>
-                    </div>
-                    <div class="bg-gray-100 p-4 rounded-lg text-center">
-                        <span class="block text-2xl mb-2">🎬</span>
-                        <h5 class="font-bold text-gray-800">敘事節奏</h5>
-                        <p class="text-xs text-gray-600">問題定義 (5s) -> 技術特寫 (10s) -> 實際功能演示 (15s) -> 未來展望</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Assignment Highlights -->
-        <section class="module-section">
-            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-                        <div>
-                            <h2
-                                class="text-3xl font-bold text-white mb-2 underline decoration-pink-500 underline-offset-8">
-                                實作任務：說一個動人的技術故事</h2>
-                            <p class="text-slate-400">打造你的專屬作品集，讓冷冰冰的代碼散發溫度。</p>
-                        </div>
-                    </div>
-
-                    <div class="grid md:grid-cols-2 gap-8 mb-12">
-                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
-                            <div class="flex items-center gap-4 mb-6">
-                                <div
-                                    class="w-12 h-12 rounded-full bg-pink-500/20 flex items-center justify-center text-2xl">
-                                    📡</div>
-                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
-                            </div>
-                            <p class="mb-4 text-slate-400">完成任務後，請將數據與結果推送到你的專屬倉庫。</p>
-                            <ul class="space-y-3 text-slate-300">
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-pink-500 text-white text-xs flex items-center justify-center font-bold">1</span>
-                                    <span>接受 GitHub Classroom 邀請並 Clone 倉庫</span>
-                                </li>
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-pink-500 text-white text-xs flex items-center justify-center font-bold">2</span>
-                                    <span>完成代碼後執行 <code
-                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code></span>
-                                </li>
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-pink-500 text-white text-xs flex items-center justify-center font-bold">3</span>
-                                    <span>在 PR 中查看自動化評分與教師回饋</span>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div class="grid gap-4">
-                            <!-- Task 3-1 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-13-architecture', '【作業 3-1】「一眼就懂」的架構圖設計')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-violet-600 transition">
-                                        作業 3-1</h3>
-                                    <span class="bg-violet-100 text-violet-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">「一眼就懂」的架構圖設計</h4>
-                                <p class="text-sm text-gray-500">繪製系統數據流與分層結構，展示無人車運作邏輯。</p>
-                            </div>
-
-                            <!-- Task 3-2 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-13-dashboard', '【作業 3-2】動態數據儀表板')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-pink-600 transition">作業
-                                        3-2</h3>
-                                    <span class="bg-pink-100 text-pink-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">動態數據儀表板</h4>
-                                <p class="text-sm text-gray-500">實作即時波形與數值儀表，視覺化呈現無人車性能指標。</p>
-                            </div>
-
-                            <!-- Task 3-3 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-13-pitch', '【作業 3-3】30 秒電梯簡報')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-indigo-600 transition">
-                                        作業 3-3</h3>
-                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">45
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">30 秒電梯簡報</h4>
-                                <p class="text-sm text-gray-500">錄製具備專業質感的技術成果短片，結合實機演示與特寫。</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <div class="mt-8 bg-indigo-50 border border-indigo-100 p-6 rounded-xl flex items-start">
-            <span class="text-2xl mr-4">🚀</span>
-            <div>
-                <h4 class="font-bold text-indigo-900 mb-2">Next Level: 放入你的 Portfolio</h4>
-                <p class="text-sm text-indigo-700">
-                    完成這些挑戰後，你將擁有一份完整的專案作品集素材。將架構圖、截圖和演示影片整理到你的 GitHub README 或個人網站，這將是你成為頂尖開發者的重要資產。
-                </p>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>數據真實性</strong>：展示的圖表是否具備標籤、單位與具體的測試場景描述？</li>
+                    <li>[ ] <strong>視覺品質</strong>：波形截圖或 GIF 是否清晰，能輔助觀看者理解艱澀的控制理論？</li>
+                </ul>
             </div>
         </div>
 
-        </section>
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：「技術電梯簡報」錄製 (Technical Pitch & Demo)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：產品經理 (PM)</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
 
-        <!-- Footer -->
-        <footer class="mt-16 border-t border-gray-200 pt-8 flex justify-between text-gray-500">
-            <a href="/courses/adv-13-unit-system-perf.html" class="hover:text-violet-600 flex items-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-                Previous: 13-2 Performance
-            </a>
-            <a href="/courses/adv-13-master-robustness.html" class="hover:text-violet-600 flex items-center">
-                Back to Menu
-                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
-                </svg>
-            </a>
-        </footer>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>劇本構思</strong>：採用「問題 -> 掙扎 -> 突破」框架編寫個人自白。準備一段 30 秒的技術亮點介紹。</li>
+                    <li><strong>PiP 演示錄製</strong>：同時錄製車子在地板跑與手機上的控制 UI 面板。同步展示「當我按下煞車，車子即刻停下」的低延遲實力。</li>
+                    <li><strong>成品發布</strong>：將影片連結放入 README 最上方。確保這是讀者點開 Repo 後第一眼看到的亮點。</li>
+                    <li><strong>Push Final</strong>：推送所有作品集素材，完成本單元任務。</li>
+                </ol>
+            </div>
 
-    </main>
-
-    <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
-
-        <h3>作業 3-1：「架構地圖」：系統方塊圖繪製</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 技術文件作家。</li>
-            <li><strong>執行方式：</strong> 使用 Mermaid 或網頁工具繪製系統架構圖，包含前端、BLE 與 ESP32 的數據流向。</li>
-            <li><strong>評分重點：</strong> 能否清晰區分出「輸入端」（感測器）、「處理端」（PID）與「輸出端」（馬達），並正確標註通訊協議。</li>
-        </ul>
-
-        <h3>作業 3-2：「一分鐘專題」：技術演示影片</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 產品經理 (PM)。</li>
-            <li><strong>執行方式：</strong> 錄製 60 秒的展示影片，包含循進、過彎與遇到異常（斷訊）時的自動停機演示。</li>
-            <li><strong>評分重點：</strong> 技術口條是否清晰，演示過程是否能突顯系統的「穩定性」優勢。</li>
-        </ul>
-
-        <h3>作業 3-3：「開源文件」：README 與 Wiki</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 開源社群維護者。</li>
-            <li><strong>執行方式：</strong> 在 GitHub 上完善 README.md，包含安裝步驟、功能介紹與代碼導讀。</li>
-            <li><strong>評分重點：</strong> 文件內容是否能讓一個「完全沒碰過這專案的人」在 10 分鐘內成功部署並運行車子。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>敘事連貫性</strong>：口述內容是否緊扣技術重點？有無展現出解決問題的工程師思維？</li>
+                    <li>[ ] <strong>示範完整性</strong>：影片中是否涵蓋了功能正常運行與異常處理 (Fail-safe) 的雙重展示？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
-    <!-- Instructor Guide (Hidden) -->
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        A. 範本倉庫 (Template Repo) 結構
-                    </h4>
-                    <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：培養「溝通」能力。如何將硬核技術轉化為非技術主管或贊助者也能懂的視覺報告。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-pink-600">重點 1：架構圖即語言</strong> - 引導學員理解高質量架構圖的價值：它能讓團隊快速同步技術藍圖，減少溝通成本。</li>
+                <li><strong class="text-pink-600">重點 2：數據的視覺說服力</strong> - 教導學員不要只寫「很快」，要展示「縮短了 200ms」並輔以波形圖證據。</li>
+                <li><strong class="text-pink-600">重點 3：作品集意識 (Portfolio Mindset)</strong> - 提醒學員這不僅是作業，這是未來職涯或升學的重要技術背書。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-pink-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
 .
-├── README.md               # 待學生填充的專案展示首頁
-├── docs/
-│   ├── architecture.png    # 系統方塊圖與數據流向
-│   └── manual.md           # 硬體連接與軟體部署手冊
-└── assets/                 # 技術展示影片與系統運行 GIF</pre>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        B. 評估 (Evaluation) 與同儕審查
-                    </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">📝</span>
-                            <p class="text-sm text-gray-700"><strong>技術文件完整度：</strong> 掃描 README，確認包含功能列表、架構說明與性能指標。</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🤝</span>
-                            <p class="text-sm text-gray-700"><strong>同儕回饋機制：</strong> 讓學員互相審查，指出「最難懂的部分」並給予建議。</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+├── assets/         # 存放 Demo 影片連結與演示專用 GIF
+├── docs/           # 性能測試報告與架構圖原始檔
+└── README.md       # (重點) 提供專業作品集模板，包含技術亮點標章
+            </pre>
         </div>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">上傳 README 專業範本。預先設定 GitHub Pages 路徑規範。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「互評 (Peer Review)」機制。討論技術與產品的平衡點。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">執行架構繪圖與展示影片錄製。提交作品集 README PR。執行 Git Push。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對技術溝通能力給予評價，審核專案展示的專業性與精確度。</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
-            </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
-                        <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">整理實驗數據，篩選最具挑戰性的成果作為作品集核心。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「技術敘事：如何介紹你的硬體解方」導讀。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，繪製系統方塊圖並錄製展示影片初稿。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，引導進行「閃電互評」，檢核 README 可行性。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">修正文件並發布 Portfolio 並 Push，閱讀對技術敘事能力的 PR 回饋。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，引導學員思考技術品牌在職涯中的價值。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">蒐集前幾週的測試數據截圖。觀看「一分鐘技術簡報」範例影片。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 展示多個 GitHub README 範例，讓學員選出「最容易被看懂」的排版。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，繪製系統圖並錄製 Demo，撰寫具備故事性的專案文檔。</td>
+                        <td class="p-4 border-b"><strong>巡場師資:</strong> 提供繪圖與剪輯工具建議 (Canvas, Kap, Mermaid)，協助學員淬煉技術亮點文案。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">將更新完善後的 README 與影片連結推送至 GitHub。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 點評對「專案展示」的專業度。針對口述內容的流暢性與技術用語的精確度給予修正。</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </section>
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/placeholder", // Needs actual link
-            doc: "https://docs.google.com/document/d/e/2PACX-1vT7O_vUu8uV6-3Vn27S1jUw8D4G9s65l4V6Y8S9G7p7W0dC-G9Y8N_P9Y8N_P9Y8N_P9Y8/pub?embedded=true" // Placeholder
-        };
-    </script>
-    <script src="/js/course-shared-v4.js"></script>
 </body>
 
 </html>

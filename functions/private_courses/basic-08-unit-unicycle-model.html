@@ -32,7 +32,7 @@
                 差速轉換數學：<br><span class="text-blue-400">Unicycle Model</span>
             </h1>
             <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
-                將抽象的速度與轉向，解構成左右馬達的動力之源。
+                將抽象的速度與轉向指令，精準解構成左右馬達的動力輸出來源。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
@@ -53,43 +53,45 @@
 
         <!-- Module 1: Unicycle Model -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl">🚲</span> 1. 什麼是 Unicycle Model？ (30 min)
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-blue-500">🚲</span> 1. 什麼是 Unicycle Model？
                     </h2>
-                    <div class="space-y-6 text-gray-600 text-lg">
-                        <p><strong>核心概念：</strong>將車輛簡化為一個點，透過兩個參數來控制其運動模式。</p>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div
-                                class="bg-blue-50 p-6 rounded-xl border border-blue-100 shadow-sm transition hover:shadow-md">
-                                <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">
-                                    <span class="text-2xl">v</span> 線速度 (Linear Velocity)
-                                </h4>
-                                <p class="text-sm leading-relaxed">
-                                    代表車輛前進或後退的速度。在搖桿上，這通常對應到 <strong>Y 軸</strong>。
-                                </p>
-                            </div>
-                            <div
-                                class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 shadow-sm transition hover:shadow-md">
-                                <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
-                                    <span class="text-2xl">ω</span> 角速度 (Angular Velocity)
-                                </h4>
-                                <p class="text-sm leading-relaxed">
-                                    代表車輛旋轉或轉向的速度。在搖桿上，這通常對應到 <strong>X 軸</strong>。
-                                </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                將複雜的機器人簡化為一個運動點。我們不直接控制馬達轉速，而是控制兩個宏觀參數：
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+                                    <h4 class="font-bold text-blue-800 mb-2 border-b border-blue-200 pb-2 text-xs uppercase italic tracking-widest">
+                                        <span class="text-lg">v</span> 線速度 (Linear)
+                                    </h4>
+                                    <p class="text-[10px] text-slate-500 font-light leading-relaxed">
+                                        代表整體前進/後退速度。在搖桿上通常對應 Y 軸。
+                                    </p>
+                                </div>
+                                <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 shadow-sm">
+                                    <h4 class="font-bold text-indigo-800 mb-2 border-b border-indigo-200 pb-2 text-xs uppercase italic tracking-widest">
+                                        <span class="text-lg">ω</span> 角速度 (Angular)
+                                    </h4>
+                                    <p class="text-[10px] text-slate-500 font-light leading-relaxed">
+                                        代表自轉或轉向速度。在搖桿上通常對應 X 軸。
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
-                            <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
-                                <span>🎯</span> 學習目標
-                            </h4>
-                            <p class="text-base text-amber-900">
-                                理解為何搖桿的垂直位移控制速度，水平位移控制旋轉，這是建立直覺操控的基礎。
-                            </p>
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center">
+                            <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest">Velocity Decomposition</h4>
+                            <div class="space-y-4">
+                                <p class="text-[11px] text-slate-300">"這是建立直覺操控的基礎：將『想去哪裡』與『怎麼轉』解耦。"</p>
+                                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 italic text-[9px] text-blue-400">
+                                    MotorMix = f(v, ω)
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -98,75 +100,80 @@
 
         <!-- Module 2: Differential Drive -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-indigo-500 to-blue-600"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl">⚙️</span> 2. 差速驅動 (Differential Drive) 原理 (30 min)
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-indigo-500">⚙️</span> 2. 差速驅動與混控公式
                     </h2>
-                    <div class="space-y-6 text-gray-600 text-lg">
-                        <p><strong>物理結構：</strong>兩輪獨立驅動。要讓車轉向，左輪與右輪必須產生「速度差」。</p>
-
-                        <div class="bg-slate-900 p-8 rounded-2xl text-white text-center shadow-2xl">
-                            <h4 class="text-blue-400 font-bold mb-6 tracking-widest uppercase">基本混合公式</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                                <div class="p-6 bg-slate-800 rounded-xl border border-slate-700">
-                                    <div class="text-3xl font-mono text-cyan-400">\[L = v - \omega\]</div>
-                                    <div class="text-xs text-gray-400 mt-2">左輪轉速</div>
-                                </div>
-                                <div class="p-6 bg-slate-800 rounded-xl border border-slate-700">
-                                    <div class="text-3xl font-mono text-indigo-400">\[R = v + \omega\]</div>
-                                    <div class="text-xs text-gray-400 mt-2">右輪轉速</div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                左右兩輪獨立驅動。要讓車轉向，必須在左輪與右輪之間產生「速度差」。
+                            </p>
+                            <div class="space-y-4">
+                                <div class="bg-slate-50 p-8 rounded-3xl border border-slate-100 flex items-center gap-8 shadow-inner">
+                                    <div class="text-center">
+                                       <div class="text-2xl font-mono text-blue-500">\[L = v - \omega\]</div>
+                                       <span class="text-[9px] text-slate-400 uppercase font-bold tracking-widest">Left Motor</span>
+                                    </div>
+                                    <div class="w-px h-12 bg-slate-200"></div>
+                                    <div class="text-center">
+                                       <div class="text-2xl font-mono text-indigo-500">\[R = v + \omega\]</div>
+                                       <span class="text-[9px] text-slate-400 uppercase font-bold tracking-widest">Right Motor</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-200">
-                            <h4 class="font-bold text-emerald-800 mb-3 flex items-center gap-2">
-                                <span>🧠</span> 學習任務：腦力激盪
-                            </h4>
-                            <p class="text-gray-700 leading-relaxed">
-                                若 \(v=100\), \(\omega=50\)（代表前進中右轉），算出左、右輪各是多少？<br>
-                                <span class="text-sm text-emerald-600 italic">（提示：左輪 50, 右輪 150）</span>
-                            </p>
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="w-3 h-3 bg-red-400 rounded-full"></span>
+                                <span class="w-3 h-3 bg-amber-400 rounded-full"></span>
+                                <span class="w-3 h-3 bg-emerald-400 rounded-full"></span>
+                                <span class="ml-auto text-[10px] text-slate-500 font-mono tracking-widest uppercase">MIXER LOGIC (C++)</span>
+                            </div>
+                            <pre class="text-xs md:text-sm leading-relaxed overflow-x-auto text-blue-300 font-mono">
+<span class="text-blue-500">void</span> <span class="text-emerald-400">applyMix</span>(<span class="text-blue-400">float</span> v, <span class="text-blue-400">float</span> w) {
+  <span class="text-blue-400">float</span> left = v - w;
+  <span class="text-blue-400">float</span> right = v + w;
+  <span class="text-yellow-400">motorL</span>.<span class="text-blue-400">setSpeed</span>(left * <span class="text-amber-200">255</span>);
+  <span class="text-yellow-400">motorR</span>.<span class="text-blue-400">setSpeed</span>(right * <span class="text-amber-200">255</span>);
+}</pre>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Module 3: Normalization & Limits -->
+        <!-- Module 3: Dynamic Scaling -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="p-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">🛑</span> 3. 飽和度處理與比例縮放 (20 min)
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-purple-400">
+                        <span class="p-2 bg-purple-500/20 rounded-lg text-purple-400 text-2xl">🛑</span> 3. 飽和處理：工程師的限幅思維
                     </h2>
-                    <div class="space-y-6 text-gray-600 text-lg">
-                        <div class="bg-red-50 p-6 rounded-xl border border-red-100">
-                            <h4 class="font-bold text-red-800 mb-2 flex items-center gap-2">
-                                <span>⚠️</span> 問題：當數值溢出時？
-                            </h4>
-                            <p class="text-sm">
-                                若 \(v=255\) 且 \(\omega=100\)，算出的 \(R\) 會變成 \(355\)。但馬達最大 PWM 只有
-                                \(255\)，直接裁切（Clipping）會導致轉向失靈。
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                若 $v=1.0, \omega=0.5$，算出的 $R = 1.5$。但馬達最大只有 1.0 (255 PWM)，若直接裁切 (Clipping) 會導致車輪鎖死轉向失靈。
                             </p>
-                        </div>
-
-                        <h4 class="font-bold text-gray-800 mt-8 mb-4">預習概念：等比例縮放 (Normalization)</h4>
-                        <div class="bg-slate-900 p-8 rounded-2xl text-white">
-                            <div class="text-xl font-mono space-y-4">
-                                <div>\[max\_val = \max(|L|, |R|, 255)\]</div>
-                                <div class="text-blue-400">\[L_{final} = (L / max\_val) \times 255\]</div>
-                                <div class="text-indigo-400">\[R_{final} = (R / max\_val) \times 255\]</div>
+                            <div class="bg-purple-500/10 p-8 rounded-3xl border border-purple-500/20 shadow-inner">
+                                <h4 class="font-bold text-purple-400 mb-4 text-xs uppercase tracking-widest">Normalizing Mixers</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1"></span><div><strong class="text-white">等比例縮放</strong>：當數值溢出時，將左右馬達同步按比例縮小，確保轉向比 (ω) 被保留。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1"></span><div><strong class="text-white">防裁切機制</strong>：這讓車子在全速行駛時仍能做出順滑的蛇行轉向。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1"></span><div><strong class="text-white">飽和度判定</strong>：使用 <code>max(|L|, |R|, 1.0)</code> 作為縮放的分母。</div></li>
+                                </ul>
                             </div>
                         </div>
-
-                        <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                            <p class="text-gray-600 italic text-base">
-                                目標：即使在全速前進時，轉向指令依然能有效發揮作用，保持車輛的動態平衡。
-                            </p>
+                        <div class="lg:w-80 bg-purple-600/10 p-10 rounded-3xl border border-purple-500/20 text-center relative overflow-hidden group">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-purple-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-purple-400 font-bold mb-4 text-[10px] uppercase tracking-widest">Robust Control</h4>
+                           <p class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic">
+                               "比例大於絕對值。在極限輸出下保留轉向意圖，是控制理論的核心優雅。"
+                           </p>
+                           <div class="inline-block px-8 py-3 bg-purple-500 text-white rounded-xl font-bold text-[10px] shadow-lg">Run Saturation Lab</div>
                         </div>
                     </div>
                 </div>
@@ -175,63 +182,57 @@
 
         <!-- Homework Section -->
         <section class="module-section">
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實戰挑戰：差速驅動混合器</h2>
-            <p class="text-center text-gray-500 mb-12">將數學公式轉化為代碼，賦予機器人靈魂般的運動能力。</p>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：差速驅動混合器建構</h2>
+            <p class="text-center text-gray-500 mb-12">從基本的 $v,\omega$ 混控到具備動態比例縮放保護的強韌運動控制器實作。</p>
 
             <div class="grid md:grid-cols-3 gap-6">
-                <!-- Task 2-1 -->
-                <div onclick="openSubmissionModal('basic-08-kinematics-1', '【作業 2-1】基礎差速混合器實作')"
+                <!-- Task 8-1 -->
+                <div onclick="openSubmissionModal('basic-08-kinematics-1', '【作業 8-1】基礎差速混合器實作 (Kinematics Mixer)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-blue-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🔀</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform">🔀</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 2-1】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「基礎差速混合器」</h4>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 8-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「基礎混控線性引擎」</h4>
                         <p class="text-sm text-gray-600 leading-relaxed">
-                            編寫 <code>mix(v, w)</code> 函式。在教室進行原地旋轉測試與方向校正，確保搖桿指令與車體運動完美契合。
+                            實作 $v,\omega$ 轉換公式。確保原地旋轉測試時左右輪速度相等且方向相反，完成車體運動方向的物理校準。
                         </p>
                     </div>
                 </div>
 
-                <!-- Task 2-2 -->
-                <div onclick="openSubmissionModal('basic-08-kinematics-2', '【作業 2-2】飽和度處理與比例縮放')"
+                <!-- Task 8-2 -->
+                <div onclick="openSubmissionModal('basic-08-kinematics-2', '【作業 8-2】飽和度處理與比例縮放 (Saturation Scaling)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-indigo-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">⚖️</span>
-                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-indigo-500 group-hover:rotate-12 transition-transform">⚖️</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 2-2】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「飽和度等比例限幅」</h4>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 8-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「全速轉向比例保護」</h4>
                         <p class="text-sm text-gray-600 leading-relaxed">
-                            實作等比例限幅演算法。當 \(L\) 或 \(R\) 超過 255 時進行縮放，防止全速前進時轉向失效。
+                            實作等比例限幅演算法。當指令飽和時，進行同步縮放以保留轉向意圖，解決全速前進時無法轉彎的 Clipping 問題。
                         </p>
                     </div>
                 </div>
 
-                <!-- Task 2-3 -->
-                <div onclick="openSubmissionModal('basic-08-kinematics-3', '【作業 2-3】動態響應調教')"
+                <!-- Task 8-3 -->
+                <div onclick="openSubmissionModal('basic-08-kinematics-3', '【作業 8-3】轉向敏感度調教 (Sensitivity Tuning)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-purple-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🎚️</span>
-                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">45
-                                min</span>
+                            <span class="text-4xl text-purple-500 group-hover:translate-x-1 transition-transform">🎚️</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 2-3】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「轉向敏感度調教」</h4>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 8-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「動態敏感度實測」</h4>
                         <p class="text-sm text-gray-600 leading-relaxed">
-                            加入 <code>Sensitivity (K)</code> 參數。透過實驗找出最適合賽道的 K 值，將數學轉化為卓越的操控性能。
+                            在公式中加入 K 權重參數。透過實驗尋找在不同地面摩擦力下的最佳 K 值，並在 README 撰寫調校實驗報告。
                         </p>
                     </div>
                 </div>
@@ -245,7 +246,7 @@
         <div class="container mx-auto px-4 text-center">
             <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
-                <span>單元課程 基礎 8</span>
+                <span>課程單元 基礎 8 - 運動學轉換</span>
                 <span class="hidden md:inline">|</span>
                 <span>講師：Antigravity Assistant</span>
             </div>
@@ -262,117 +263,136 @@
     <script src="/js/course-shared-v4.js"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">差速運動學與控制保護實驗室</h2>
 
-        <h3>【作業 2-1】基礎差速混合器實作</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 軟體運動學工程師 (Software Kinematics Engineer)。</li>
-            <li><strong>執行方式：</strong> 編寫 <code>mix(v, w)</code> 函式。在教室進行原地旋轉測試與方向校正。觀察 \(v=0\)
-                時車子是否能精準原地打轉，並排除接線反向導致的誤型。</li>
-            <li><strong>評分重點 :</strong> 公式實作正確，左右馬達分量與 \(v, \omega\) 同步，操作感符合幾何直覺。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：基礎差速混合機實作 (Kinematics Mixer)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：軟體運動學工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
 
-        <h3>【作業 2-2】飽和度處理與比例縮放</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 控制系統優化專家 (Control System Optimization Expert)。</li>
-            <li><strong>執行方式：</strong> 實作等比例限幅演算法。當混控後的馬達數值超過 255 時，進行比例壓縮而非直接裁切。測試在全速前進時是否仍能保有良好的轉向能力。</li>
-            <li><strong>評分重點 :</strong> 演算法能有效防止全速前進時其中一輪飽和導致的控制失效，車體動態保持平衡。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>線性混控器編寫</strong>：在驅動代碼中實作 <code>v, ω</code> 轉換公式：<code>L = v - ω</code> 與 <code>R = v + ω</code>。</li>
+                    <li><strong>原地自旋校準</strong>：輸入 <code>v=0, ω=0.5</code>，觀察車子是否能精準原地空轉。若左輪前進右輪後退，則方向正確。</li>
+                    <li><strong>物理直覺同步</strong>：驗證搖桿往右推時，右輪轉速應低於左輪。Push 具備正確運動學邏輯的代碼。</li>
+                </ol>
+            </div>
 
-        <h3>【作業 2-3】轉向敏感度調教</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 賽道調校教練 (Track Tuning Coach)。</li>
-            <li><strong>執行方式：</strong> 加入 <code>Sensitivity (K)</code> 參數動態縮放 $\omega$。透過實驗找出最適合目前賽道寬度的 K 值，優化在 S
-                彎道中的循跡性能。</li>
-            <li><strong>評分重點 :</strong> 參數設計合理，能顯著改善在特定地形下的操控手感。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>模型一致性</strong>：馬達的真實轉向是否完美呼應搖桿的 \(v, \omega\) 二維指令？</li>
+                    <li>[ ] <strong>自旋對稱性</strong>：原地旋轉測試中，左右輪的 PWM 數值是否嚴格對應且方向完全相反？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：飽和度處理與比例縮放 (Saturation Scaling)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：控制系統優化專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>飽和極限診斷</strong>：全速前進時嘗試急轉向，記錄單純數值截斷 (Clipping) 造成的控制失效現象。</li>
+                    <li><strong>縮放演算法開發</strong>：實作等比例縮放邏輯：當 <code>max(|L|, |R|) > 1.0</code> 時，將兩輪轉速同步縮放，保留轉向比。</li>
+                    <li><strong>高速穩定度路測</strong>：在極限速度 (v=100%) 場景下執行蛇行，驗證轉向精確度是否顯著提升。</li>
+                    <li><strong>模塊化交付</strong>：將具備限幅保護能力的高階 <code>MotorMixer</code> 類別推送到 GitHub 倉庫。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>控制韌性感</strong>：在飽和輸出狀態下，設備是否仍能遵循角速度意圖進行偏轉而非直線鎖死？</li>
+                    <li>[ ] <strong>代碼穩健度</strong>：縮放邏輯是否處理了極小分母的異常值，且運算流程具備優良的即時性？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：轉向敏感度調教 (Dynamic Sensitivity)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：賽道調校教練</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>權重係數引入</strong>：在混控公式中加入 <code>Sensitivity (K)</code> 參數：<code>R = v + (K * ω)</code>。</li>
+                    <li><strong>環境適配性測試</strong>：在不同摩擦係數的地板上測試不同 <code>K</code> 值對彎道響應的影響。</li>
+                    <li><strong>實驗日誌彙整</strong>：尋找並記錄能最穩、最快通過 S 彎賽道的黃金 K 值。</li>
+                    <li><strong>正式提交成果</strong>：將包含調教參數設定與實驗數據心得的代碼 Push 至 GitHub PR。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>架構靈活性</strong>：代碼是否支持外部動態調校參數，以便在不同賽道環境快速切換設定？</li>
+                    <li>[ ] <strong>操控優化實效</strong>：調校後的 K 值是否顯著改善了車輛在高速彎道中的操控精確性與體感？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>在 GitHub 建立新 Repo（名為 <code>basic-08-kinematics-template</code>）。</li>
-                <li>上傳包含 PWM 基本驅動但「未實作 mix() 邏輯」的專案框架。</li>
-                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
-                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，獲得個人專屬 Repo。</li>
-                <li>實作「Unicycle Model」轉換公式，並在桌面或模擬器上驗證原地旋轉邏輯。</li>
-                <li>完成混控限幅調校後 <strong>Push 代碼</strong> 提交進度。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
-                <li>針對學生的「左右平衡係數」設計與「溢位壓縮演算法」合理性予以回饋。</li>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：掌握差速運動學模型與飽和度限幅的工程思維。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-indigo-600">重點 1：向量拆解的直覺</strong> - 引導學員理解 $v$ 與 $\omega$ 是如何拆分為左右馬達轉速分量的幾何關係。</li>
+                <li><strong class="text-indigo-600">重點 2： Clipping vs Scaling</strong> - 這是本單元的靈魂，務必強調等比例縮放對於保持控制系統意圖的重要性。</li>
+                <li><strong class="text-indigo-600">重點 3：實驗數據驅動</strong> - 讓學員明白參數 K 的設定不是隨機的，而是基於物理環境實驗的工程選擇。</li>
             </ol>
         </div>
 
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元聚焦於「從虛擬到實體」，引導學生理解如何將抽象的幾何向量轉化為決定機器人行為的真實物理量。</p>
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/kinematics_mix.cpp # (核心) 需填充 v, w 到雙輪轉速的混控保護邏輯
+├── include/constants.h    # 預留 Sensitivity (K) 與 PWM 最大值的定義
+└── README.md              # 實驗報告：不同 K 值過彎軌跡圖與飽和測試心得
+            </pre>
+        </div>
 
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── src/
-│   └── main.cpp      # (重點) 需實作 v, w 到 L, R 的混控
-├── data/             # 指令與實際轉速的對應測試 log
-└── README.md         # 軌跡分析：車子在特定 K 值下的轉向角度紀錄</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>main.cpp (Kinematics Mixing)</strong></p>
-        <pre><code>float left = v - w;
-float right = v + w;
-float scale = max(1.0f, max(abs(left), abs(right)));
-left /= scale; right /= scale; // Normalization</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>極限行為檢測：：</strong> 設定 \(v=1, \omega=1\)，驗證學生的演算法是否會導致其中一輪停擺或單純裁切 (Clipping)。</li>
-            <li><strong>原地旋轉驗證：：</strong> 給予 \(v=0, \omega \neq 0\)，檢查左右馬達 PWM 是否嚴格符合「一正一負且相等的絕對值」。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「Unicycle Model：現代機器人的基礎運動學」影片。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員對「角速度」的概念有初步認知。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，對比有無「飽和限幅」演算法在全速大彎時的操作感官差異。
-                    </td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>演示「原地旋轉」與「差速迴轉」中心點的幾何差異。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作具備動態敏感度係數調校能力的驅動庫並 Push，閱讀教師回覆 PR。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核學生對「運動平衡度
-                        (Dynamic Balance)」與「代碼結構清晰度」的掌握。</td>
-                </tr>
-            </tbody>
-        </table>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看差速模型與 Unicycle 模型解說影片，練習預算不同 $\omega$ 下的轉速差。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 檢查學員對「為什麼線性速度不變下旋轉需要減速」的預習理解。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，先實作純線性混控，再逐步加入等比例縮放與敏感度權重。</td>
+                        <td class="p-4 border-b"><strong>巡場點評:</strong> 演示 Clipping 如何導致全速前進時車輛完全「轉不動」。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">將限幅擴增為通用的 <code>Kinematics</code> 類別並 Push PR，撰寫不同地形的 K 值調校心得。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 評價學員對「控制精度 vs 物理極限」之間工程權衡的邏輯嚴密度。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 </body>
 

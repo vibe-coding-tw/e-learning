@@ -26,7 +26,7 @@
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
                 class="inline-block py-1 px-3 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-sm font-semibold mb-6 tracking-wide uppercase">
-                基礎 3 - 數位與類比 I/O
+                基礎 3 - 量化感知
             </span>
             <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
                 類比與數位：<br><span class="text-emerald-400">解碼真實世界的訊號</span>
@@ -53,59 +53,43 @@
 
         <!-- Module 1: ADC Concept -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
+                <div class="p-8 md:p-14">
+                    <div class="flex flex-col md:flex-row gap-16">
                         <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                <span class="text-4xl">🌉</span> 1. 類比與數位的橋樑：什麼是 ADC？
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl text-emerald-500">🌉</span> 1. 類比與數位的橋樑：什麼是 ADC？
                             </h2>
-                            <div class="space-y-4 text-gray-600 text-lg">
-                                <p>
-                                    物理訊號：世界是<span class="font-bold text-emerald-600">類比 (Analog)</span>
-                                    的。光線強弱、氣溫、甚至是你的聲音，它們都是平滑、連續地變動。
+                            <div class="space-y-6 text-gray-600">
+                                <p class="text-lg leading-relaxed">
+                                    世界是<span class="font-bold text-emerald-600">類比 (Analog)</span> 的。光線強弱、氣溫變動，它們都是平滑、連續地存在於實體空間中。
                                 </p>
-                                <p>
-                                    數位轉換：<span class="font-bold text-blue-600">ADC (Analog-to-Digital Converter)</span>
-                                    就像一把「數位量尺」，將 0V 到 3.3V 的電壓範圍切成好幾格，量測目前在哪一格。
+                                <p class="text-lg leading-relaxed">
+                                    <span class="font-bold text-blue-600">ADC (Analog-to-Digital Converter)</span> 就像一把「數位量尺」，將 0V 到 3.3V 的電壓範圍切成好幾格，來度量目前在哪個刻度上。
                                 </p>
-                                <div class="bg-gray-50 p-6 rounded-xl border border-gray-100 mt-6">
-                                    <h4 class="font-bold text-gray-800 mb-3">解析度 (Resolution) 的差異：</h4>
-                                    <ul class="space-y-3">
-                                        <li class="flex items-center gap-3">
-                                            <span
-                                                class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm font-bold">10-bit</span>
-                                            <span>Arduino Uno: 切成 \(2^{10} = 1024\) 格 (0–1023)</span>
-                                        </li>
-                                        <li class="flex items-center gap-3">
-                                            <span
-                                                class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-sm font-bold">12-bit</span>
-                                            <span>ESP32 預設: 切成 \(2^{12} = 4096\) 格 (0–4095)</span>
-                                        </li>
-                                    </ul>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+                                    <div class="p-6 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm">
+                                        <div class="text-xs text-slate-400 font-mono mb-2 uppercase tracking-widest">10-bit Resolution</div>
+                                        <div class="text-2xl font-bold text-slate-800 mb-1">1,024 Steps</div>
+                                        <p class="text-xs text-slate-500">Arduino Uno 典型精細度</p>
+                                    </div>
+                                    <div class="p-6 bg-emerald-50 border border-emerald-200 rounded-2xl shadow-sm">
+                                        <div class="text-xs text-emerald-500 font-mono mb-2 uppercase tracking-widest">12-bit Resolution</div>
+                                        <div class="text-2xl font-bold text-emerald-700 mb-1">4,096 Steps</div>
+                                        <p class="text-xs text-emerald-600">ESP32 預設之精準量測能力</p>
+                                    </div>
                                 </div>
-                            </div>
-
-                            <div class="mt-8 bg-slate-900 text-slate-300 p-6 rounded-xl border border-slate-700">
-                                <h4 class="text-white font-bold mb-3 flex items-center gap-2">
-                                    <span class="text-amber-400">🔍</span> 學習任務
-                                </h4>
-                                <p class="text-sm leading-relaxed">
-                                    思考一下：為什麼解析度越高（格子越細），讀取的數值就越能代表真實的電壓？如果我們量測 3.3V，10-bit 與 12-bit 的「一小格」分別代表多少電壓？
-                                </p>
                             </div>
                         </div>
 
-                        <div class="md:w-1/3">
-                            <div class="sticky top-24">
-                                <div class="bg-slate-100 rounded-2xl p-4 shadow-inner border border-gray-200">
-                                    <img src="/assets/basic-03/adc_resolution_ruler.png" alt="ADC Resolution Ruler"
-                                        class="w-full h-auto rounded-xl">
-                                    <p class="text-center text-xs text-gray-400 mt-4 italic font-medium">
-                                        圖示：ADC 就像不同密度的量尺
-                                    </p>
-                                </div>
+                        <div class="md:w-80 flex items-center justify-center">
+                            <div class="bg-slate-100 p-6 rounded-3xl border border-slate-200 shadow-inner overflow-hidden group">
+                                <img src="/assets/basic-03/adc_resolution_ruler.png" alt="ADC Resolution Ruler"
+                                    class="w-full h-auto rounded-2xl group-hover:scale-105 transition-transform duration-500">
+                                <p class="text-center text-[10px] text-slate-400 mt-4 italic font-medium">
+                                    數位解析度越高，量尺刻度越細緻
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -115,49 +99,47 @@
 
         <!-- Module 2: Map Function -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl">🪄</span> 2. 數學映射：Map 函式的魔力
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-indigo-500">🪄</span> 2. 數據映射：Map 函式的數學魔法
                     </h2>
 
-                    <div class="grid md:grid-cols-2 gap-12 items-center">
-                        <div class="space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                        <div class="space-y-8">
                             <p class="text-gray-600 text-lg leading-relaxed">
-                                為什麼要 Mapping？感測器讀到的是 <span class="text-emerald-600 font-bold">0–4095</span>，但馬達控制需要的是
-                                <span class="text-indigo-600 font-bold">0–255</span>，或者我們想顯示真實電壓 0.0V–3.3V。
+                                為什麼需要 Mapping？感測器讀到的是 <span class="text-emerald-600 font-bold">0–4095</span>，但馬達控制只需 <span class="text-indigo-600 font-bold">0–255</span>。我們需要一個「比例轉換器」。
                             </p>
-                            <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
-                                <h4 class="font-bold text-indigo-800 mb-4">線性換算公式：</h4>
-                                <div
-                                    class="bg-white p-4 rounded-lg shadow-sm border border-indigo-200 text-center text-xl overflow-x-auto">
-                                    \[TargetValue = (SourceValue - In_{min}) \times \frac{(Out_{max} -
-                                    Out_{min})}{(In_{max} - In_{min})} + Out_{min}\]
-                                </div>
-                            </div>
-                            <div class="bg-slate-900 text-slate-300 p-6 rounded-xl border border-slate-700">
-                                <h4 class="text-white font-bold mb-3 flex items-center gap-2">
-                                    <span class="text-amber-400">🧠</span> 數學挑戰
+                            <div class="bg-indigo-50 p-8 rounded-3xl border border-indigo-100 shadow-sm">
+                                <h4 class="font-bold text-indigo-900 mb-4 flex items-center gap-2">
+                                    <span>∑</span> 線性變換公式
                                 </h4>
-                                <p class="text-sm leading-relaxed mb-4">
-                                    練習計算：若 ESP32 (12-bit, 0-4095) 讀到數值 <span
-                                        class="text-amber-400 font-mono">2048</span>，透過 map() 函式對應到 8-bit 的馬達 PWM 值是多少？
-                                </p>
-                                <div class="bg-slate-800 p-3 rounded-lg font-mono text-emerald-400 text-xs">
-                                    // Arduino 語法<br>
-                                    int pwmValue = map(2048, 0, 4095, 0, 255);
+                                <div class="bg-white p-6 rounded-2xl shadow-inner border border-indigo-200 text-center text-lg overflow-x-auto font-serif">
+                                    \[V_{out} = (V_{in} - In_{min}) \times \frac{(Out_{max} - Out_{min})}{(In_{max} - In_{min})} + Out_{min}\]
                                 </div>
                             </div>
                         </div>
 
-                        <div>
-                            <div class="bg-slate-100 rounded-2xl p-6 shadow-inner border border-gray-200">
-                                <img src="/assets/basic-03/map_function_diagram.png" alt="Map Function Diagram"
-                                    class="w-full h-auto rounded-xl">
-                                <p class="text-center text-xs text-gray-400 mt-4 italic font-medium">
-                                    圖示：數值區間的比例轉換
-                                </p>
+                        <div class="bg-slate-900 p-10 rounded-3xl border border-slate-700 relative shadow-2xl overflow-hidden group">
+                            <div class="absolute top-0 right-0 p-4 font-mono text-[10px] text-slate-500 tracking-widest uppercase">mapping-logic</div>
+                            <h4 class="text-white font-bold mb-6 flex items-center gap-2">
+                                <span class="w-2 h-2 bg-indigo-400 rounded-full"></span>
+                                Arduino 語法實境應用
+                            </h4>
+                            <div class="space-y-6">
+                                <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
+                                    <p class="text-xs text-slate-400 mb-3">// 將 12-bit 轉為 8-bit PMW</p>
+                                    <code class="text-indigo-300 font-mono text-sm leading-none block">
+                                        int pwm = map(val, 0, 4095, 0, 255);
+                                    </code>
+                                </div>
+                                <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
+                                    <p class="text-xs text-slate-400 mb-3">// 將讀值轉為真實電量百分比</p>
+                                    <code class="text-emerald-300 font-mono text-sm leading-none block">
+                                        float battery = map(val, 2800, 4000, 0, 100);
+                                    </code>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -165,61 +147,39 @@
             </div>
         </section>
 
-        <!-- Module 3: ESP32 ADC Characteristics -->
+        <!-- Module 3: Characteristics -->
         <section class="module-section mb-16">
-            <div class="bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white">
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col lg:flex-row gap-12">
-                        <div class="lg:w-1/2 space-y-6">
-                            <h2 class="text-3xl font-bold mb-4 flex items-center gap-3">
-                                <span class="text-4xl">⚠️</span> 3. ESP32 ADC 的特性與限制
+            <div class="bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <div class="flex flex-col lg:flex-row gap-16">
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold mb-10 flex items-center gap-3">
+                                <span class="text-4xl">⚠️</span> 3. ESP32 ADC 的真實面貌
                             </h2>
-                            <div class="space-y-6">
-                                <div class="flex gap-4 p-5 bg-red-500/10 rounded-2xl border border-red-500/20">
-                                    <div class="text-3xl">📉</div>
-                                    <div>
-                                        <h4 class="font-bold text-red-400">非線性區 (Non-linearity)</h4>
-                                        <p class="text-sm text-slate-300 mt-1 leading-relaxed">
-                                            ESP32 的 ADC 在極低電壓 (接近 0V) 與極高電壓 (接近 3.3V) 附近並不準確，會出現斜率變平的現象。
-                                        </p>
-                                    </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="p-6 bg-slate-800/50 rounded-2xl border border-slate-700 hover:border-red-500/50 transition">
+                                    <h4 class="font-bold text-red-400 mb-2">非線性「死區」現象</h4>
+                                    <p class="text-xs text-slate-400 leading-relaxed italic">
+                                        在電壓接近 0V 與 3.3V 附近時，讀值變化會趨於平緩，這在精準溫控或極限控制時需要補償。
+                                    </p>
                                 </div>
-                                <div class="flex gap-4 p-5 bg-amber-500/10 rounded-2xl border border-amber-500/20">
-                                    <div class="text-3xl">📶</div>
-                                    <div>
-                                        <h4 class="font-bold text-amber-400">ADC1 與 ADC2 的差異</h4>
-                                        <p class="text-sm text-slate-300 mt-1 leading-relaxed">
-                                            <strong>當 Wi-Fi 開啟時，ADC2 會失效！</strong> 專案中若需要網路功能，請優先選擇 ADC1 (GPIO 32-39)。
-                                        </p>
-                                    </div>
+                                <div class="p-6 bg-slate-800/50 rounded-2xl border border-slate-700 hover:border-amber-500/50 transition">
+                                    <h4 class="font-bold text-amber-400">Wi-Fi & ADC2 衝突</h4>
+                                    <p class="text-xs text-slate-400 leading-relaxed italic">
+                                        當 Wi-Fi 開啟通訊時，ADC2 將被系統占用。開發無人車聯網時，務必選擇 ADC1 (GPIO 32-39)。
+                                    </p>
                                 </div>
                             </div>
                         </div>
-
-                        <div
-                            class="lg:w-1/2 bg-slate-800 p-8 rounded-2xl border border-slate-700 relative overflow-hidden">
-                            <h4 class="text-xl font-bold mb-6 flex items-center gap-2">
-                                <span class="text-emerald-400">⚙️</span> Wokwi 預習任務
-                            </h4>
-                            <p class="text-slate-300 leading-relaxed mb-6">
-                                在 Wokwi 線上模擬器中，嘗試讀取一個可變電阻 (Potentiometer) 的數值，並以此數值動態改變 LED 閃爍的速度。
+                        <div class="lg:w-80 bg-emerald-500/10 p-8 rounded-3xl border border-emerald-500/20 shadow-inner flex flex-col justify-center text-center">
+                            <h3 class="font-bold mb-4 text-emerald-400 uppercase tracking-widest text-xs">Simulate First</h3>
+                            <p class="text-sm text-slate-300 mb-8 font-light">
+                                在 Wokwi 預先測試你的 Mapping 邏輯，避免直接燒毀實體感應器。
                             </p>
-                            <div class="space-y-4">
-                                <div class="flex items-center gap-4 text-sm text-slate-400">
-                                    <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
-                                    <span>使用 analogRead(pin) 讀取數據</span>
-                                </div>
-                                <div class="flex items-center gap-4 text-sm text-slate-400">
-                                    <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
-                                    <span>體驗數值跳動 (Noise) 的現象</span>
-                                </div>
-                            </div>
-                            <div class="mt-8">
-                                <a href="https://wokwi.com/projects/new/esp32" target="_blank"
-                                    class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-emerald-900/40">
-                                    開啟 Wokwi 模擬器
-                                </a>
-                            </div>
+                            <a href="https://wokwi.com/projects/new/esp32" target="_blank"
+                                class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold text-xs transition-all shadow-lg hover:shadow-emerald-900/40">
+                                打開 Wokwi 模擬器
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -228,83 +188,58 @@
 
         <!-- Homework Section -->
         <section class="module-section">
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實作任務：極限校準與應用</h2>
-            <p class="text-center text-gray-500 mb-12">透過三個層次的實驗，從物理電壓到複雜邏輯。</p>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實戰任務：極限校準與應用</h2>
+            <p class="text-center text-gray-500 mb-12">從物理電壓到複雜邏輯，徹底掌握類比資料的處理藝術。</p>
 
             <div class="grid md:grid-cols-3 gap-6">
                 <!-- Task 3-1 -->
-                <div onclick="openSubmissionModal('basic-03-adc-1', '作業 3-1: 「數位量尺」：電壓量測實驗')"
+                <div onclick="openSubmissionModal('basic-03-adc-1', '【作業 3-1】電壓量測實驗 (Digital Ruler)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-emerald-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
                             <span class="text-4xl">📏</span>
-                            <span
-                                class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">作業 3-1
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「數位量尺」：電壓量測實驗</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
-                            使用可變電阻與三用電表，建立 ADC 讀值與實際電壓的對應表。觀察 ESP32 的死區 (Deadzone) 現象。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業 3-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「精準採樣對應」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            使用三用電表測量真實電壓，並記錄對應的 12-bit ADC 讀值。分析 ESP32 在 0.1V 以下的「死區」誤差現象。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-emerald-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳實驗數據</span>
                     </div>
                 </div>
 
                 <!-- Task 3-2 -->
-                <div onclick="openSubmissionModal('basic-03-adc-2', '作業 3-2: 「自製感測器變量儀」')"
+                <div onclick="openSubmissionModal('basic-03-adc-2', '【作業 3-2】自製感測器變量儀 (Sensor Interactor)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-blue-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
                             <span class="text-4xl">🌓</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">作業 3-2
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">自製感測器變量儀</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
-                            將 ADC 讀值映射為 PWM 輸出控制 LED 亮度。實作「光線越暗，燈越亮」的反向控制與平均濾波演算法。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 3-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「反向映射與濾波」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            實作「旋鈕控制 LED 亮度」。挑戰反向映射邏輯（越轉越暗），並加入移動平均濾波來消除數據末位跳動。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-blue-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳程式單元</span>
                     </div>
                 </div>
 
                 <!-- Task 3-3 -->
-                <div onclick="openSubmissionModal('basic-03-adc-3', '作業 3-3: 「精準轉向模擬器」')"
+                <div onclick="openSubmissionModal('basic-03-adc-3', '【作業 3-3】精準轉向模擬器 (Steering Simulator)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-indigo-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
                             <span class="text-4xl">🏎️</span>
-                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">作業 3-3
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">精準轉向模擬器</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
-                            利用可變電阻模擬遙控器搖桿，計算左右輪速差。實作「死區設定」以消除靜態手抖造成的誤觸。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 3-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「盲區補償與運動模型」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            將旋鈕轉換為無人車轉角。實作死區 (Dead-band) 設定以防止中心點震顫，計算並輸出左右輪的理論速差。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-indigo-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳運動程式</span>
                     </div>
                 </div>
             </div>
@@ -315,140 +250,14 @@
     <!-- Footer -->
     <footer class="bg-gray-800 py-12 border-t border-gray-700">
         <div class="container mx-auto px-4 text-center">
-            <p class="text-gray-500 text-sm mb-4">&copy; 2025 Vibe Coding. All rights reserved.</p>
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
-                <span>單元課程 基礎 3</span>
+                <span>課程單元 基礎 3 - 量化感知</span>
                 <span class="hidden md:inline">|</span>
                 <span>講師：Antigravity Assistant</span>
             </div>
         </div>
     </footer>
-
-    <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
-
-        <h3>作業 3-1：「數位量尺」：電壓量測實驗</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 測試工程師 (Test Engineer)。</li>
-            <li><strong>執行方式：</strong> 使用可變電阻，建立 ADC 讀值與實際電壓（由三用電表量測）的對應表。記錄並觀察 ESP32 的 0V-0.1V 與 3.2V-3.3V 的死區
-                (Dead-zone) 現象。</li>
-            <li><strong>評分重點 :</strong> 成功量測並記錄至少 5 個電壓點與對應的 ADC 數值。</li>
-        </ul>
-
-        <h3>作業 3-2：「自製感測器變量儀」</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 控制系統工程師 (Control Systems Engineer)。</li>
-            <li><strong>執行方式：</strong> 將 ADC 讀值映射為 PWM 輸出以控制 LED 亮度。實作「反向控制」（數據越大燈越暗）與簡單的「移動平均」濾波演算法。</li>
-            <li><strong>評分重點 :</strong> 程式能流暢地根據類比輸入改變 LED 亮度，且數據跳動明顯減少。</li>
-        </ul>
-
-        <h3>作業 3-3：「精準轉向模擬器」</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 運動控制專家 (Motion Control Specialist)。</li>
-            <li><strong>執行方式：</strong> 利用可變電阻模擬搖桿，計算左右輪速差。實作「死區設定」（中心點 ±50 範圍內不觸發），以消除靜態時的小幅跳動。</li>
-            <li><strong>評分重點 :</strong> 掌握線性映射邏輯，並能有效實作死區過濾以提升系統穩定性。</li>
-        </ul>
-    </section>
-
-    <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>在 GitHub 建立新 Repo（名為 <code>basic-03-adc-template</code>）。</li>
-                <li>上傳包含基礎 Serial 設定但「未實作類比讀取與 map 轉換」的 Repo 框架。</li>
-                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
-                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，獲得個人專屬 Repo。</li>
-                <li>實作 ADC 讀取、數據映射與「死區 (Dead zone)」過濾。</li>
-                <li>本地開發後 <strong>Push 代碼</strong> 提交進度。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
-                <li>針對學生的「雜訊抑制策略 (Smoothing)」與「硬體非線性校準」予以具體點評。</li>
-            </ol>
-        </div>
-
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元聚焦於類比與數位訊號的轉換橋樑，處理現實世界的雜訊與映射邏輯。</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── platformio.ini   # 包含基礎開發環境配置
-├── src/
-│   └── main.cpp      # (重點) 需實作 analogRead 與 map 邏輯
-└── README.md        # 實驗紀錄：ADC 解析度設定、數據跳動觀察報告與曲線圖</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>main.cpp (ADC 讀取與映射)</strong></p>
-        <pre><code>#include &lt;Arduino.h&gt;
-
-const int potPin = 32; // 使用 ADC1 引腳避開 Wi-Fi 衝突
-
-void setup() {
-  Serial.begin(115200);
-  analogReadResolution(12); // 設定 ADC 解析度為 12-bit
-  analogSetAttenuation(ADC_11db); // 設定衰減量以讀取 3.3V
-}
-
-void loop() {
-  int rawValue = analogRead(potPin);
-  // 映射到 0-100%
-  int percent = map(rawValue, 0, 4095, 0, 100);
-  Serial.printf("Raw: %d | Percent: %d%%\n", rawValue, percent);
-  delay(100);
-}</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>核心 API 檢索：：</strong> 偵測程式中是否呼叫了 <code>analogRead()</code>。</li>
-            <li><strong>邏輯邊界測試：：</strong> 透過腳本驗證學員的 <code>map()</code> 參數是否對齊 12-bit 解析度 (4095)。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「類比訊號讀取：從電壓到數位的量化過程」影片。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員理解解析度與 Bit
-                        depth 的數學關係。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實作移動平均 (Moving Average) 濾波。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>現場指導：：</strong>解釋 ADC2 與 Wi-Fi
-                        共用資源導致的衝突機制。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">撰寫「環境雜訊抑制報告」並提交最終改善代碼。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>審核學生對數據穩定性與硬體限制的應對策略。</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
 
     <script>
         // Define Resources
@@ -458,6 +267,138 @@ void loop() {
         };
     </script>
     <script src="/js/course-shared-v4.js"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">ADC 解析度與量測實驗室</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：「數位量尺」：電壓量測實驗 (Digital Ruler: Voltage Measurement)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：測試工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>採樣量測</strong>：連接電位計，並記錄 12-bit ADC 在不同旋轉位置對應的三用電表讀值。</li>
+                    <li><strong>邊界分析</strong>：特別針對 0V 附近與 3.3V 附近的數據進行取樣，在 <code>README.md</code> 中標註出硬體的非線性死區。</li>
+                    <li><strong>結果記錄</strong>：繪製一張簡易對應表，說明「目前電壓」與「ADC 讀值」的線性誤差。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>數據完整度</strong>：是否涵蓋了全量程（0V 至 3.3V）的數據採樣？</li>
+                    <li>[ ] <strong>物理洞察力</strong>：能否在 README 中描述出 ESP32 在極限電壓值附近的測量偏差？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：「自製感測器變量儀」 (Sensor Interactor: Inverse & Filter)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：控制系統工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>映射開發</strong>：實作 <code>map()</code> 函式，將電位計的 0-4095 讀值平滑映射到 LED PWM 控制值 (0-255)。</li>
+                    <li><strong>反轉邏輯</strong>：修改代碼，讓物理旋轉方向與亮度呈現反向關係。</li>
+                    <li><strong>雜訊抑制</strong>：實作移動平均（Moving Average）算法，計算最近 10 次讀值的均值，消除串口繪圖儀中的細微波動。</li>
+                    <li><strong>提交驗證</strong>：將包含濾波邏輯的專案 Commit 並 Push。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>映射正確性</strong>：LED 亮度變化是否符合預期的線性及反向邏輯？</li>
+                    <li>[ ] <strong>濾波有效性</strong>：在 Serial Plotter 中觀察到的數值跳動是否顯著減少？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：「精準轉向模擬器」 (Motion Control: Steering & Dead-band)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：運動控制專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>運動模型建立</strong>：將類比手柄（電位計）對應到 -90° 至 +90° 的轉向角模型。</li>
+                    <li><strong>盲區補償實作</strong>：在中心點附近設置 ±5 度的死區 (Dead-band)。只有當旋鈕偏移足夠大時，系統才發出運動指令。</li>
+                    <li><strong>速差計算</strong>：根據目前的虛擬轉角，計算並在 Serial 輸出左右馬達的動態速差百分比。</li>
+                    <li><strong>最終提交</strong>：整併所有算法邏輯並 Push 最終報告，討論盲區設定對操控手感的正面影響。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>算法邊界處理</strong>：死區補償是否有效過濾了中心點附近的雜訊（即在中心旋轉時輸出維持為零）？</li>
+                    <li>[ ] <strong>系統導引策略</strong>：左右輪速差的計算邏輯是否符合基本的差速轉向物理原則？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：理解「數位量化」的過程，並學會處理實體感測帶來的雜訊與非線性。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-emerald-600">重點 1：Bit 與解析度</strong> - 強調解析度不是越高越好，而是要與記憶體、採樣率進行權衡。</li>
+                <li><strong class="text-emerald-600">重點 2：過濾實體雜訊</strong> - 透過移動平均濾波，讓學員掌握最基礎的數位訊號處理 (DSP) 手段。</li>
+                <li><strong class="text-emerald-600">重點 3：人機互動邏輯</strong> - 藉由死區 (Dead-band) 概念，引導學生思考 UX 在硬體開發中的應用。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-emerald-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/main.cpp      # (練習點) 提供 analogRead(32) 框架，需製作 map 與 deadzone 邏輯
+└── README.md         # 實驗日誌：描述 12-bit 下的數據抖動量與對應電壓表
+            </pre>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看「ADC 解析度：10-bit vs 12-bit 有多大差別？」影片，掌握 0-4095 概念。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 確認學員是否理解 12-bit 解析度的數學意義。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，挑戰在高頻雜訊環境下，透過平均濾波實現穩定的亮度控制。</td>
+                        <td class="p-4 border-b"><strong>數據指導:</strong> 展示如何使用 Serial Plotter 實時比對濾波前後的波形差異。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">實作「校準函數」並 Push，提交 PR 總結如何在專案中補償硬體的非線性誤差。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 評點學員對「盲區補償」與「資料一致性」的優化細膩度。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 </body>
 
 </html>

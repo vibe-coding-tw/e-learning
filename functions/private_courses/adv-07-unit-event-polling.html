@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
 <body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
@@ -50,189 +52,177 @@
     <!-- Main Content -->
     <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
-        <!-- Section 1: Concept Breakdown -->
-        <section class="mb-12">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        <!-- Module 1: Concept Breakdown -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
                         <span class="text-4xl">🍕</span> 1. 觀念拆解：外送員與餐廳的溝通 (25 min)
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
-                            <ul class="space-y-6">
-                                <li class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
-                                    <h4 class="font-bold text-blue-900 mb-2 flex items-center gap-2">輪詢 (Polling)</h4>
-                                    <p class="text-sm">像是一個飢餓的顧客，每隔 1 分鐘就打電話問餐廳「我的飯好了嗎？」。</p>
-                                    <div class="mt-3 flex gap-4 text-xs font-bold text-gray-500">
-                                        <span class="text-green-600">✅ 邏輯簡單、可預測執行時間</span>
-                                        <span class="text-red-600">❌ 浪費資源、高手延遲</span>
-                                    </div>
-                                </li>
-                                <li class="bg-purple-50 p-6 rounded-2xl border border-purple-100">
-                                    <h4 class="font-bold text-purple-900 mb-2 flex items-center gap-2">事件驅動
-                                        (Event-Driven)</h4>
-                                    <p class="text-sm">像是顧客點完餐後去做自己的事，等餐廳主動「傳簡訊」通知領餐。</p>
-                                    <div class="mt-3 flex gap-4 text-xs font-bold text-gray-500">
-                                        <span class="text-green-600">✅ 省電、零閒置浪費、即時反應</span>
-                                        <span class="text-red-600">❌ 程式流程跳躍、初學者難追蹤</span>
-                                    </div>
-                                </li>
-                            </ul>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                輪詢像是不停打電話問「好了嗎？」，而事件驅動則是等對方主動傳簡訊通知。這在嵌入式系統中直接影響到 CPU 的佔用率。
+                            </p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+                                    <h4 class="font-bold text-blue-900 mb-2 text-[10px] uppercase tracking-widest">Polling</h4>
+                                    <p class="text-[9px] text-slate-500 leading-relaxed">主動詢問、邏輯簡單，但極度浪費資源且具備固定延遲。</p>
+                                </div>
+                                <div class="bg-purple-50 p-6 rounded-2xl border border-purple-100">
+                                    <h4 class="font-bold text-purple-900 mb-2 text-[10px] uppercase tracking-widest">Event-Driven</h4>
+                                    <p class="text-[9px] text-slate-500 leading-relaxed">被動中斷、零閒置浪費，反應即時但程式流程較跳躍。</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100">
-                            <img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=1000&auto=format&fit=crop"
-                                alt="Communication Logic Illustration" class="w-full h-auto">
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-purple-500/5 group-hover:bg-purple-500/10 transition-colors"></div>
+                           <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10">Logic Flow Comparison</h4>
+                           <div class="relative z-10 flex items-center justify-around">
+                               <div class="flex flex-col items-center">
+                                   <div class="w-8 h-8 rounded-full border-2 border-dashed border-slate-600 animate-spin"></div>
+                                   <div class="text-[8px] mt-2 text-slate-500 font-mono">POLLING (LOOP)</div>
+                               </div>
+                               <div class="text-2xl text-slate-700">VS</div>
+                               <div class="flex flex-col items-center">
+                                   <div class="w-8 h-8 bg-purple-500 rounded-lg animate-bounce"></div>
+                                   <div class="text-[8px] mt-2 text-purple-400 font-mono">EVENT (INTERRUPT)</div>
+                               </div>
+                           </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 2: Browser Events -->
-        <section class="mb-12">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        <!-- Module 2: Browser Events -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-indigo-600 to-purple-600"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
                         <span class="text-4xl">🔄</span> 2. 瀏覽器中的事件與循環 (25 min)
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 order-2 md:order-1">
-                            <div class="bg-slate-800 p-6 h-full text-indigo-300 font-mono text-sm leading-relaxed">
-                                <div class="text-gray-500 mb-2">// 事件驅動 vs 輪詢實作範例</div>
-                                <div class="text-emerald-400">// 事件驅動</div>
-                                <div class="text-blue-300">btn.addEventListener('click', () => { ... });</div>
-                                <div class="my-4 border-t border-slate-700"></div>
-                                <div class="text-emerald-400">// 輪詢更新</div>
-                                <div class="text-blue-300">setInterval(() => {</div>
-                                <div class="ml-4">if (checkStatus()) { handleResult(); }</div>
-                                <div class="text-blue-300">}, 100);</div>
-                            </div>
-                        </div>
-                        <div class="space-y-6 order-1 md:order-2">
-                            <div class="bg-indigo-50 border-l-4 border-indigo-500 p-6 rounded-r-xl">
-                                <ul class="text-indigo-900 font-light space-y-4 text-sm">
-                                    <li><strong class="font-bold">addEventListener：</strong>理解瀏覽器如何監聽藍牙斷線、按鈕點擊。</li>
-                                    <li><strong class="font-bold">setInterval/setTimeout：</strong>理解如何利用定時器實作輪詢。</li>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify">
+                                理解 <code>addEventListener</code> 如何監聽藍牙斷線與按鈕點擊。在 JavaScript 中，Event Loop 決定了回調函式的執行時機，而輪詢則常透過 <code>setInterval</code> 實作。
+                            </p>
+                            <div class="bg-indigo-50 p-8 rounded-3xl border border-indigo-100">
+                                <h4 class="text-indigo-900 font-bold mb-4 text-xs uppercase tracking-widest">Scenario Selection</h4>
+                                <ul class="text-[10px] text-slate-500 space-y-3 font-light">
+                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span> <strong>搖桿控制</strong>：適合輪詢 (定時更新座標)。</li>
+                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span> <strong>連線成功/失敗</strong>：適合事件 (異步回調)。</li>
                                 </ul>
                             </div>
-                            <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                                <h4 class="font-bold text-slate-800 mb-2 items-center flex gap-2"><span>🔍</span>
-                                    學習任務</h4>
-                                <p class="text-sm text-slate-600 leading-relaxed">
-                                    思考：為什麼「搖桿控制」適合輪詢，而「藍牙連線成功」適合事件驅動？
-                                </p>
-                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-indigo-500/5"></div>
+                           <h4 class="text-indigo-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10">Event Loop Tracker</h4>
+                           <div class="w-full space-y-2 px-10 relative z-10 font-mono text-[9px]">
+                               <div class="text-slate-500">// Stack processing...</div>
+                               <div class="text-purple-400">CALLBACK QUEUE: [ bleNotify, clickMsg ]</div>
+                               <div class="w-full h-px bg-slate-800 my-2"></div>
+                               <div class="text-indigo-300">WAITING FOR NEXT EVENT...</div>
+                           </div>
+                           <p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest uppercase italic">Non-Blocking I/O Architecture</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 3: Hardware Interrupts -->
-        <section class="mb-12">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-red-600 to-orange-600"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl">🚨</span> 3. 硬體端的中斷 (Interrupts) (10 min)
+        <!-- Module 3: Hardware Interrupts -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-red-400">
+                        <span class="p-2 bg-red-500/20 rounded-lg text-red-400 text-2xl">🚨</span> 3. 硬體端的中斷 (Hardware Interrupts)
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
-                            <p><strong>ESP32 attachInterrupt：</strong>理解當網頁傳送「緊急停止」或車子撞到東西時，硬體如何立即跳出主程式進行處理（事件驅動的極致表現）。
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                當網頁傳送「緊急停止」或車子撞到東西時，ESP32 如何利用 <code>attachInterrupt</code> 立即跳出主程式進行處理？這是安全性通訊的最終防線。
                             </p>
-                            <div class="bg-red-50 p-6 rounded-2xl border border-red-100">
-                                <h4 class="font-bold text-red-900 mb-3 flex items-center gap-2">
-                                    <span>🧠</span> 進階思考
-                                </h4>
-                                <p class="text-sm text-gray-700 leading-relaxed">
-                                    比較 WebSocket.onmessage (事件驅動) 與 setInterval + Fetch (輪詢)
-                                    的優缺點。何時該追求「極低延遲」與「省電穩定」？
-                                </p>
+                            <div class="bg-red-500/10 p-8 rounded-3xl border border-red-500/20 shadow-inner">
+                                <h4 class="font-bold text-red-400 mb-4 text-xs uppercase tracking-widest text-center">Fail-safe Logic</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light text-justify">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-red-500 rounded-full mt-1"></span><div><strong class="text-white">致命延遲</strong>：輪詢 100ms 代表你可能有 100ms 的空白期無法煞車。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-red-500 rounded-full mt-1"></span><div><strong class="text-white">優先級調色</strong>：中斷處理器 (ISR) 會強制暫停 CPU 目前的工作。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-red-500 rounded-full mt-1"></span><div><strong class="text-white">連線監聽</strong>：瀏覽器 <code>gattserverdisconnected</code> 的零秒感應能力。</div></li>
+                                </ul>
                             </div>
                         </div>
-                        <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100">
-                            <img src="https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?q=80&w=1000&auto=format&fit=crop"
-                                alt="Hardware Interrupt Illustration" class="w-full h-auto">
+                        <div class="lg:w-80 bg-red-600/10 p-10 rounded-3xl border border-red-500/20 text-center relative overflow-hidden group">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-red-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-red-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center">Emergency Vector</h4>
+                           <div class="text-5xl font-bold text-white mb-2 animate-pulse">STOP</div>
+                           <p class="text-[11px] text-slate-500 mt-8 leading-relaxed font-light italic text-center">
+                               "事件驅動不僅是為了效能，更是為了安全。"
+                           </p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 4: Assignments -->
-        <section>
+        <!-- Homework Section -->
+        <section class="module-section">
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：極致通訊優化</h2>
-            <p class="text-center text-gray-500 mb-12">採用 <b>Git Workflow</b>：領取 GitHub Classroom 任務，實作過濾算法並提交 PR。</p>
+            <p class="text-center text-gray-500 mb-12">透過 Git Workflow 建立高頻響應系統。對比輪詢與監聽在 CPU 跳動與反應速度上的數據差異。</p>
 
-            <div class="grid md:grid-cols-3 gap-8">
+            <div class="grid md:grid-cols-3 gap-6">
                 <!-- Task 4-1 -->
-                <div onclick="openSubmissionModal('adv-07-polling-optimization', '【作業 4-1】從輪詢到監聽：介面啟動邏輯')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                <div onclick="openSubmissionModal('adv-07-polling-optimization', '【作業 4-1】從輪詢到監聽：UI 反應速度實驗 (From Polling to Event)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-blue-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">⏱️</span>
-                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform">⏱️</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
-                            4-1】效率大挑戰</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>優化 WiFi 密碼輸入介面的按鈕啟動邏輯。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>階段 A (輪詢)：使用 `setInterval` 檢查輸入框。</li>
-                                <li>階段 B (事件驅動)：改用 `input` 事件監聽器。</li>
-                                <li>觀測：使用 Performance Tab 觀察 CPU 消耗差異。</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 4-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「效率極限大挑戰」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            實作 WiFi 密碼輸入框按鈕啟動邏輯。首度對比 <code>setInterval</code> 與 <code>input</code> 事件的效能開銷，並使用 Performance Tab 截圖 CPU Idle 時間差異。
+                        </p>
                     </div>
                 </div>
 
                 <!-- Task 4-2 -->
-                <div onclick="openSubmissionModal('adv-07-hybrid-joystick', '【作業 4-2】「手感微調」：搖桿的自適應輪詢')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                <div onclick="openSubmissionModal('adv-07-hybrid-joystick', '【作業 4-2】「手感微調」：搖桿的自適應輪詢 (Hybrid Joystick Logic)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-purple-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🕹️</span>
-                            <span class="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-purple-500 group-hover:rotate-12 transition-transform">🕹️</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-purple-600 transition">【作業
-                            4-2】手感微調</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>實作一個混合模式 (Hybrid) 的搖桿發送器。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>解決事件雨：在高頻 `mousemove` 下防止 BLE 崩潰。</li>
-                                <li>緩衝策略：將座標存入變數，但定時發出。</li>
-                                <li>目標：兼顧即時性與通訊頻寬穩定。</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 4-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「搖桿混合調校器」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-left">
+                            解決「事件雨」導致的 BLE 崩潰。將高頻 Mousemove 事件存入 Buffer，但實作定時發送 (Hybrid) 策略，在手感即時性與頻寬壓力之間取得完美平衡。
+                        </p>
                     </div>
                 </div>
 
                 <!-- Task 4-3 -->
-                <div onclick="openSubmissionModal('adv-07-failsafe-stop', '【作業 4-3】硬體緊急停止 (Fail-safe) 實作')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                <div onclick="openSubmissionModal('adv-07-failsafe-stop', '【作業 4-3】硬體緊急停止代碼與安全系統 (Fail-safe Emergency Logic)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-red-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🆘</span>
-                            <span class="bg-red-50 text-red-700 text-xs px-3 py-1 rounded-full font-bold">45
-                                min</span>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-red-500 group-hover:translate-x-1 transition-transform">🆘</span>
+                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-red-600 transition">【作業
-                            4-3】緊急停止</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>模擬事件驅動在「安全性」上的應用。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>斷線監聽：使用 `gattserverdisconnected` 事件。</li>
-                                <li>立即反應：觸發時跳出警告並重置狀態。</li>
-                                <li>延遲對比：記錄「定時詢問」與「事件監聽」的反應秒數差異。</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition">【作業 4-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「零秒煞車系統」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            模擬中斷概念。利用 <code>gattserverdisconnected</code> 事件，實作一旦連線斷開即刻清空所有馬達暫存器的安全機制。對比「定時監控連線」的危險延遲。
+                        </p>
                     </div>
                 </div>
             </div>
@@ -244,229 +234,149 @@
     <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
         <div class="container mx-auto px-4 text-center">
             <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
-            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
-                <span>進階課程 7 - 單元 4</span>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 進階 7 - 事件架構</span>
                 <span class="hidden md:inline">|</span>
-                <span>事件驅動 vs. 輪詢更新實務</span>
+                <span>講師：Antigravity Assistant</span>
             </div>
         </div>
     </footer>
 
-    <!-- Footer -->
-    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
-        <div class="container mx-auto px-4 text-center">
-            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
-            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
-                <span>進階課程 7 - 單元 4</span>
-                <span class="hidden md:inline">|</span>
-                <span>事件驅動 vs. 輪詢更新實務</span>
-            </div>
-        </div>
-    </footer>
+    <script src="/js/course-shared-v4.js"></script>
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <div class="guide-header mb-12 border-b-2 border-indigo-200 pb-6">
-            <h2 class="text-4xl font-black text-indigo-900 mb-2">作業指引 (Assignment Guide)</h2>
-            <p class="text-indigo-600 font-bold uppercase tracking-widest text-sm">進階 7 - 通訊優化實務</p>
-        </div>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">架構實驗室：效率通訊與非阻塞 I/O</h2>
 
-        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                <span
-                    class="flex items-center justify-center w-10 h-10 bg-indigo-600 text-white rounded-xl text-lg">4-1</span>
-                效率大挑戰：從輪詢到監聽
-            </h3>
-            <div class="space-y-4 text-gray-700">
-                <p><strong>角色扮演：</strong> 介面效能優化師。</p>
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 text-justify">
-                    <p class="font-bold mb-2 text-indigo-900">執行步驟：</p>
-                    <ol class="list-decimal list-inside space-y-1 text-sm">
-                        <li>實作一個 WiFi 密碼輸入框。</li>
-                        <li>先使用 <code>setInterval</code> 每 100ms 檢查一次內容長度 (輪詢)。</li>
-                        <li>再改用 <code>input</code> 事件監聽器 (事件驅動) 實作一樣的功能。</li>
-                    </ol>
-                </div>
-                <p class="text-sm"><strong>評分重點：</strong> 能否說明「事件驅動」在輸入框場景下為什麼能節省不必要的 CPU 運算。</p>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：從輪詢到監聽 (From Polling to Event)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：介面效能優化師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>對比實驗 A (Polling)</strong>：使用 <code>setInterval</code> 每 100ms 檢查輸入框 <code>value.length > 8</code>，開啟按鈕。</li>
+                    <li><strong>對比實驗 B (Event)</strong>：移除 Timer，改用 <code>input</code> 事件回調實現相同邏輯。</li>
+                    <li><strong>效能分析</strong>：錄製 Chrome DevTools Performance 面板的截圖，對比兩者在靜止與輸入時的 Scripting Scripting 負載，並寫入 README。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>資源消耗觀察</strong>：是否能清楚識別出 Timer 在背後不斷「空轉」造成的能耗浪費？</li>
+                    <li>[ ] <strong>代碼可維護性</strong>：事件驅動後的代碼是否更具備處理特定動作的語意化特徵？</li>
+                </ul>
             </div>
         </div>
 
-        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                <span
-                    class="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-xl text-lg">4-2</span>
-                「手感微調」：搖桿的自適應輪詢
-            </h3>
-            <div class="space-y-4 text-gray-700 text-justify">
-                <p><strong>角色扮演：</strong> 遙控系統開發者。</p>
-                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-justify">
-                    <p class="font-bold mb-2 text-blue-900">執行步驟：</p>
-                    <ul class="list-disc list-inside space-y-1 text-sm text-justify">
-                        <li>實作一個「定時發送器」。</li>
-                        <li>將搖桿 <code>mousemove</code> 事件的高頻座標存入變數。</li>
-                        <li>限制每隔 50ms 才從該變數撈出數值並透過藍牙發出一次。</li>
-                    </ul>
-                </div>
-                <p class="text-sm"><strong>評分重點：</strong> 此種「混合模式 (Hybrid)」是否能有效解決數據發送過快導致的 BLE 連線崩潰問題。</p>
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：搖桿的自適應輪詢 (Hybrid Joystick Logic)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：遙控通訊協議開發者</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>數據緩衝區實作</strong>：在 global 變數中保存最新的 X, Y 座標。</li>
+                    <li><strong>事件與輪詢解耦</strong>：<code>mousemove</code> 事件只負責更新變數（極快）；另起一個 20Hz 的 <code>setInterval</code> 負責讀取變數並發送 BLE 指令。</li>
+                    <li><strong>穩定性測試</strong>：快速晃動搖桿 30 秒，觀察是否有發生 BLE 底層的「Write Busy」錯誤。</li>
+                    <li><strong>Push Final</strong>：提交具備「流量節流 (Throttling)」能力的通訊引擎。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>流量控制效果</strong>：是否有效防止了高頻事件導致的藍牙協議棧堵塞？</li>
+                    <li>[ ] <strong>操作平滑度</strong>：20Hz 的發送速率是否依然能提供足夠流暢的車體反應？</li>
+                </ul>
             </div>
         </div>
 
-        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                <span
-                    class="flex items-center justify-center w-10 h-10 bg-emerald-600 text-white rounded-xl text-lg">4-3</span>
-                硬體緊急停止 (Fail-safe) 實作
-            </h3>
-            <div class="space-y-4 text-gray-700">
-                <p><strong>角色扮演：</strong> 安全系統工程師。</p>
-                <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
-                    <p class="font-bold mb-2 text-emerald-900">執行步驟：</p>
-                    <ul class="list-disc list-inside space-y-1 text-sm">
-                        <li>模擬「中斷 (Interrupt)」的概念。</li>
-                        <li>利用藍牙的 <code>gattserverdisconnected</code> 事件。</li>
-                        <li>一旦連線中斷，立即彈出全畫面警告並清空所有馬達指令。</li>
-                    </ul>
-                </div>
-                <p class="text-sm"><strong>評分重點：</strong> 系統對於「突發事件」的反饋及時性，對比「定時詢問是否斷線」所造成的延遲差異。</p>
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：安全緊急停止系統 (Emergency Fail-safe)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：安全架構工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>中斷事件監聽</strong>：建立 <code>gattserverdisconnected</code> 回調。</li>
+                    <li><strong>安全性重置</strong>：一旦進入回調，強制將馬達變數歸零，並在畫面上顯示紅色的「CONNECTION LOST - SAFETY STOP」全屏警告。</li>
+                    <li><strong>Push Final</strong>：提交具備「系統自我意識」的安全應對方案。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>事故處理及時性</strong>：當藍牙斷開時，UI 與系統狀態是否能「瞬間」轉變為安全模式？</li>
+                    <li>[ ] <strong>狀態清理徹度</strong>：是否正確清理了所有待處理的 Timer 或未發送的數據包？</li>
+                </ul>
             </div>
         </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <div class="guide-header mb-12 border-b-2 border-emerald-200 pb-6">
-            <h2 class="text-4xl font-black text-emerald-900 mb-2">講師指引 (Instructor Guide)</h2>
-            <p class="text-emerald-600 font-bold uppercase tracking-widest text-sm">GitHub Classroom & Flipped Teaching
-            </p>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：破解「程式就是一條路走到底」的線性思考。學習非阻塞 I/O 與異步思維。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-purple-600">重點 1：事件雨 (Event Flood)</strong> - 教導學員面對高頻率事件（如滑鼠移動、高速感測器）時，必須學會「節流 (Throttling)」而非盲目響應。</li>
+                <li><strong class="text-purple-600">重點 2：資源佔用可視化</strong> - 透過 Performance Tab 讓學員第一次看到「程式沒在動、CPU 卻在燒」的真相 (Polling 缺點)。</li>
+                <li><strong class="text-purple-600">重點 3：安全防範意識</strong> - 強調「中斷」在生命安全系統（如自動駕駛煞車）中的不可取代性。</li>
+            </ol>
         </div>
 
-        <!-- Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-8 bg-blue-50 border border-blue-100 rounded-3xl shadow-inner text-justify">
-            <h3 class="text-2xl font-bold text-blue-900 mb-6 flex items-center gap-3">
-                <span class="text-3xl">🚀</span> 在 GitHub Classroom 的實戰部署
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-4 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        A. 範本倉庫 (Template Repo) 結構
-                    </h4>
-                    <pre
-                        class="bg-gray-900 text-gray-100 p-6 rounded-2xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700 text-justify text-left">
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-purple-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
 .
-├── js/
-│   ├── event_handlers.js # 實作事件監聽 (Listener)
-│   └── polling_logic.js  # 實作輪詢 (Timer-based)
-├── tests/
-│   └── latency.test.js   # 測試：響應延遲與資源佔用
-└── README.md              # 對比分析與煞車系統邏輯紀錄</pre>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-4 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        B. 自動評估 (Autograding) 的設計
-                    </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-blue-100 space-y-4">
-                        <div class="flex gap-4">
-                            <span class="text-2xl">⏱️</span>
-                            <p class="text-sm text-gray-700"><strong>響應時間測試：</strong> 模擬隨機訊號，自動記錄從「訊號出現」到「攔截」的毫秒數。</p>
-                        </div>
-                        <div class="flex gap-4">
-                            <span class="text-2xl">🔋</span>
-                            <p class="text-sm text-gray-700"><strong>資源消耗校驗：</strong> 監控 Timer 數量與壓力，確保學員未濫用
-                                <code>setInterval</code>。</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+├── js/bench_polling.js # 測試：實作低效輪詢版本
+├── js/bench_event.js   # 優化：實作高效事件監聽版本
+├── js/joystick_lib.js  # 庫：待學員撰寫 Throttling 數據發送邏輯
+└── performance_logs/    # 作業成果：需放置對比測試的效能截圖
+            </pre>
         </div>
 
-        <!-- Detailed operations guide -->
-        <div class="guide-section mb-10 p-8 bg-white border border-gray-200 rounded-3xl">
-            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <span class="text-3xl">🛠️</span> GitHub Classroom 詳細操作指南
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
-                        1</span>
-                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">準備範本專案</p>
-                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">提供串接好 Log 追蹤工具與模擬訊號源的 JS
-                        環境，設定為 Template repository。</p>
-                </div>
-                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
-                        2</span>
-                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">建立 Classroom 作業</p>
-                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">設定「優化通訊」驗證。提供「中斷向量表」與「Event
-                        Loop」的解析圖。</p>
-                </div>
-                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
-                        3</span>
-                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">學生端作業 (Flipped)</p>
-                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">領取作業，討論生活場景。提交包含
-                        Performance 面板截圖的報告。</p>
-                </div>
-                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full">STEP
-                        4</span>
-                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify">教師代碼審閱 (Review)</p>
-                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify">針對「Race
-                        Condition」理解以及「即時性系統」評估標準的認知予以回饋。</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Flipped classroom strategy table -->
-        <div class="guide-section p-8 bg-blue-50/50 border border-blue-100 rounded-3xl">
-            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <span class="text-3xl">🔄</span> 翻轉教室的實施策略
-            </h3>
-            <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
-                        <tr>
-                            <th class="px-6 py-4">階段</th>
-                            <th class="px-6 py-4">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
-                        <tr>
-                            <td
-                                class="px-6 py-5 font-black text-slate-800 bg-slate-50/50 w-32 text-center uppercase tracking-tighter">
-                                Pre-class<br><span class="text-[10px] font-normal text-slate-400">課前</span></td>
-                            <td class="px-6 py-5 text-justify">理解「鬧鐘 (事件)」與「每五分鐘看手錶 (輪詢)」的比喻。</td>
-                            <td class="px-6 py-5 text-xs text-justify">檢查 Dashboard 進度，提供不同架構下數據流動的模擬動畫。</td>
-                        </tr>
-                        <tr>
-                            <td
-                                class="px-6 py-5 font-black text-blue-800 bg-blue-50/30 w-32 text-center uppercase tracking-tighter">
-                                In-class<br><span class="text-[10px] font-normal text-blue-400">課中</span></td>
-                            <td class="px-6 py-5 font-medium text-slate-900 text-justify">領取 Classroom 作業，實測 10Hz vs
-                                100Hz 輪詢速率對控制手感的影響。</td>
-                            <td class="px-6 py-5 text-xs text-blue-700 text-justify text-left">
-                                即時連線排除阻礙，解答監聽器過多時網頁變慢的底層原理。</td>
-                        </tr>
-                        <tr>
-                            <td
-                                class="px-6 py-5 font-black text-slate-800 bg-slate-50/50 w-32 text-center uppercase tracking-tighter">
-                                Post-class<br><span class="text-[10px] font-normal text-slate-400">課後</span></td>
-                            <td class="px-6 py-5 text-justify">設計最安全反應最快的「緊急煞車系統」並 Push，閱讀教師回覆 PR。</td>
-                            <td class="px-6 py-5 text-xs text-justify">核發評量，引導學員探究「中斷優先級」在物聯網設備中的價值。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5">觀看「JavaScript Event Loop 機制」科普影片。理解單執行緒如何處理異步任務。</td>
+                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能正確分辨同步 (Sync) 與異步 (Async) 的執行順序。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900 text-justify">領取作業 (Repo)，調教搖桿發送頻率。觀察不同 Hz 下藍牙斷連的機率，找出最優發送區間。</td>
+                        <td class="px-6 py-5 text-justify text-left"><strong>技術架構師:</strong> 演示如何使用 Performance Tab 追蹤「Long Task」並進行優化。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
+                        <td class="px-6 py-5">完成「Fail-safe 安全中斷」機制並 Push。分析為何事件驅動比輪詢更安全。</td>
+                        <td class="px-6 py-5 text-justify"><strong>Feedback PR:</strong> 點評對「混合架構 (Hybrid)」的理解深度，表揚具備系統安全性思維的學員。</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </section>
-
-    <script src="/js/course-shared-v4.js"></script>
 </body>
 
 </html>

@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
 <body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
@@ -24,20 +26,20 @@
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
                 class="inline-block py-1 px-3 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-sm font-semibold mb-6 tracking-wide uppercase">
-                進階 11 - 單元 1
+                進階 11 - 感測器
             </span>
             <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">光電感測器原理<br>與 <span class="text-indigo-400">方波訊號</span>
             </h1>
             <p class="text-xl md:text-2xl text-indigo-100 max-w-2xl mx-auto font-light leading-relaxed">
-                看不見的數位之眼：從光的遮斷到精確的速度測量。
+                看不見的數位之眼：從光的遮斷到高精度的物理速度測量。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="window.courseShared.enterMediaMode('video', window.RESOURCES.youtube)"
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="window.courseShared.enterMediaMode('doc', window.RESOURCES.doc)"
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -48,232 +50,169 @@
     <!-- Main Content -->
     <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
-        <!-- Section 1: Photoelectric Interrupter -->
-        <section class="mb-16">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-indigo-500 to-blue-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
-                        <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <span class="text-4xl">👁️</span> 1. 光電遮斷器：數位化的眼睛 (20 min)
-                            </h2>
-                            <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
-                                <p>
-                                    <strong>物理構造：</strong>理解發光二極體（Emitter）與光敏電晶體（Receiver）的對稱配置。
-                                </p>
-                                <p>
-                                    <strong>遮斷原理：</strong>當編碼盤（Encoder Disk）轉動時，葉片會交替「阻擋」與「通過」光線。
-                                </p>
-                                <p>
-                                    <strong>訊號轉換：</strong>光線通過時輸出低電位（0V），遮斷時輸出高電位（3.3V/5V）。
-                                </p>
-
-                                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                                    <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
-                                        <span>🔍</span> 學習任務
-                                    </h4>
-                                    <p class="text-slate-700 text-sm">
-                                        觀察家中的滾輪滑鼠或老式印表機，思考裡面哪裡運用了類似的結構？
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex-1 bg-slate-100 rounded-2xl p-6 flex items-center justify-center">
-                            <!-- Diagram Placeholder or Code illustration -->
-                            <div class="text-center">
-                                <div
-                                    class="relative w-48 h-48 mx-auto border-4 border-dashed border-gray-300 rounded-full flex items-center justify-center animate-spin-slow">
-                                    <div class="absolute w-full h-2 bg-gray-300"></div>
-                                    <div class="absolute w-2 h-full bg-gray-300"></div>
-                                </div>
-                                <p class="mt-4 text-gray-500 text-sm">編碼盤轉動示意圖</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 2: Square Wave & Frequency -->
-        <section class="mb-16">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
-                <div class="p-8 md:p-12">
+        <!-- Module 1: Photoelectric Interrupter -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                <div class="p-8 md:p-14">
                     <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">📈</span> 2. 方波訊號 (Square Wave) 與頻率 (20 min)
+                        <span class="text-4xl text-blue-500">👁️</span> 1. 光電遮斷器：數位化的眼睛
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-                        <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
-                            <ul class="list-disc list-inside space-y-2">
-                                <li><strong>振幅 (Amplitude)：</strong>電壓的高低 (0V - 3.3V)。</li>
-                                <li><strong>頻率 (Frequency)：</strong>每秒鐘產生多少個脈衝（Pulse）。</li>
-                                <li><strong>佔空比 (Duty Cycle)：</strong>高電位在一個週期內所佔的時間比例。</li>
-                            </ul>
-
-                            <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                                <h4 class="font-bold text-blue-800 mb-2 flex items-center gap-2">
-                                    <span>🧮</span> 轉速計算數學
-                                </h4>
-                                <p class="text-blue-700 text-sm mb-2">
-                                    已知編碼盤一圈有 $N$ 個齒，每秒測得 $P$ 個脈衝。<br>
-                                    則每秒轉速 $RPS = P / N$
-                                </p>
-                            </div>
-
-                            <div class="bg-amber-50 p-6 rounded-xl border border-amber-100">
-                                <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2"><span>🎯</span> 學習任務
-                                </h4>
-                                <p class="text-amber-700 text-sm">
-                                    計算若編碼盤有 20 個齒，測得頻率為 100Hz，這台車的馬達每分鐘轉多少圈 (RPM)？
-                                </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                透過紅外線對管與編碼盤（Encoder Disk）的組合，將旋轉的機械運動轉化為 0 與 1 的數位訊號。
+                            </p>
+                            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+                                <h4 class="font-bold text-blue-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed">Working Principle</h4>
+                                <ul class="text-[9px] text-slate-500 space-y-2 font-light">
+                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> <strong>遮斷 (Blocked)</strong>：輸出高電位 (3.3V)。</li>
+                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> <strong>通過 (Clear)</strong>：輸出低電位 (0V)。</li>
+                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> <strong>解析度 (PPR)</strong>：一圈產生的脈衝數計為格數。</li>
+                                </ul>
                             </div>
                         </div>
-                        <div class="space-y-4 flex flex-col justify-center">
-                            <div
-                                class="bg-slate-900 p-6 rounded-xl overflow-hidden relative h-48 flex items-center justify-center">
-                                <!-- Simple CSS Square Wave -->
-                                <div class="w-full h-24 flex items-end gap-1">
-                                    <div class="w-1/6 h-full border-t-2 border-r-2 border-green-400"></div>
-                                    <div class="w-1/6 h-1/4 border-t-2 border-r-2 border-green-400"></div>
-                                    <div class="w-1/6 h-full border-t-2 border-r-2 border-green-400"></div>
-                                    <div class="w-1/6 h-1/4 border-t-2 border-r-2 border-green-400"></div>
-                                    <div class="w-1/6 h-full border-t-2 border-r-2 border-green-400"></div>
-                                    <div class="w-1/6 h-1/4 border-t-2 border-green-400"></div>
-                                </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center">
+                            <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest">Digital Edge Detection</h4>
+                            <div class="relative w-32 h-32 mx-auto border-4 border-dashed border-indigo-500/30 rounded-full flex items-center justify-center animate-[spin_4s_linear_infinite]">
+                                <div class="absolute w-full h-1 bg-indigo-500"></div>
+                                <div class="absolute w-1 h-full bg-indigo-500"></div>
                             </div>
-                            <p class="text-center text-gray-500 text-sm">數位方波示意圖 (0 與 1 的切換)</p>
+                            <p class="text-[9px] text-indigo-400 mt-6 font-mono tracking-widest">PHOTO-INTERRUPTER SENSING...</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 3: Noise & Hysteresis -->
-        <section class="mb-16">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
-                        <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                                <span class="text-4xl">📉</span> 3. 雜訊與遲滯 (Hysteresis) (15 min)
-                            </h2>
-
-                            <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
-                                <p>
-                                    解釋紅外線發射與接收對管如何透過「柵格盤」產生高低電平（0 與 1）。
-                                </p>
-                                <p>
-                                    <strong>解析度 (PPR)：</strong>Pulses Per Revolution。例如：10 格的柵格盤轉一圈產生 10 個脈衝。
-                                </p>
-
-                                <div class="bg-red-50 p-6 rounded-xl border border-red-100">
-                                    <h4 class="font-bold text-red-800 mb-2 flex items-center gap-2">
-                                        <span>⚠️</span> 預習任務
-                                    </h4>
-                                    <p class="text-red-700 text-sm">
-                                        思考當編碼盤停在「半遮半掩」的位置時，訊號會不會在 0 與 1 之間瘋狂跳動？這對計算會有什麼影響？
-                                    </p>
+        <!-- Module 2: Square Wave Math -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-fuchsia-500"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-purple-500">📉</span> 2. 方波訊號與物理換算
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                我們透過計算「每秒產生的脈衝數」來得知物理速度。重點在於邊緣 (Edge) 的精確捕捉。
+                            </p>
+                            <div class="bg-purple-50 p-8 rounded-3xl border border-purple-100">
+                                <h4 class="text-purple-900 font-bold mb-4 text-xs uppercase tracking-widest text-center">RPM Formula</h4>
+                                <div class="text-xl font-mono text-purple-600 text-center">
+                                   \[RPM = \frac{Ticks_{1s} \times 60}{PPR}\]
                                 </div>
-
-                                <div class="bg-green-50 p-6 rounded-xl border border-green-100">
-                                    <h4 class="font-bold text-green-800 mb-2 flex items-center gap-2">
-                                        <span>📏</span> 學習目標
-                                    </h4>
-                                    <p class="text-green-700 text-sm">
-                                        計算公式練習——已知輪胎直徑與 PPR，如何算出「一個脈衝代表前進了多少公厘」。
-                                    </p>
-                                </div>
+                                <p class="text-[10px] text-slate-400 mt-4 italic font-light text-center">關鍵指標：PPR (Pulses Per Revolution)</p>
                             </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent"></div>
+                           <h4 class="text-purple-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10">Real-time Signal View</h4>
+                           <div class="w-full h-24 flex items-end gap-1 relative z-10">
+                                <div class="w-1/6 h-full border-t-2 border-r-2 border-purple-400/60 transition-all group-hover:border-purple-400"></div>
+                                <div class="w-1/6 h-1/4 border-t-2 border-r-2 border-purple-400/60 transition-all group-hover:border-purple-400"></div>
+                                <div class="w-1/6 h-full border-t-2 border-r-2 border-purple-400/60 transition-all group-hover:border-purple-400"></div>
+                                <div class="w-1/6 h-1/4 border-t-2 border-r-2 border-purple-400/60 transition-all group-hover:border-purple-400"></div>
+                                <div class="w-1/6 h-full border-t-2 border-r-2 border-purple-400/60 transition-all group-hover:border-purple-400"></div>
+                           </div>
+                           <p class="text-[9px] text-slate-500 mt-4 font-mono tracking-tighter uppercase relative z-10">Square Wave Amplitude: 3.3V</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Assignment Highlights -->
+        <!-- Module 3: PPR & Calibration -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-emerald-400">
+                        <span class="p-2 bg-emerald-500/20 rounded-lg text-emerald-400 text-2xl">📏</span> 3. 解析度與物理量映射
+                    </h2>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                理解「一個脈衝代表前進多少公分」是自動導航的基石。這涉及到輪胎直徑與格數的幾何關係。
+                            </p>
+                            <div class="bg-emerald-500/10 p-8 rounded-3xl border border-emerald-500/20 shadow-inner">
+                                <h4 class="font-bold text-emerald-400 mb-4 text-xs uppercase tracking-widest">Kinematic Calibration</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span><div><strong class="text-white">解析度 (Ticks)</strong>：格數越多，解析度越高，能感知的最小移動量越小。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span><div><strong class="text-white">遲滯 (Hysteresis)</strong>：防止在臨界位置時訊號因微小晃動而瘋狂跳動。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span><div><strong class="text-white">映射邏輯</strong>：建立從脈衝到 RPM，再從 RPM 到 cm/s 的穩定轉換管線。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="lg:w-80 bg-emerald-600/10 p-10 rounded-3xl border border-emerald-500/20 text-center relative overflow-hidden group">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-emerald-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-emerald-400 font-bold mb-4 text-[10px] uppercase tracking-widest">Hardware Logic</h4>
+                           <p class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic">
+                               "將物理世界的旋轉轉化為精確的代碼指令，是機器人感知的第一步。"
+                           </p>
+                           <div class="inline-block px-8 py-3 bg-emerald-500 text-white rounded-xl font-bold text-[10px] shadow-lg cursor-pointer hover:bg-emerald-400 transition-colors">Apply Scale Factor</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
         <section class="module-section">
-            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-                        <div>
-                            <h2
-                                class="text-3xl font-bold text-white mb-2 underline decoration-indigo-500 underline-offset-8">
-                                實作任務：物理量到數據的轉換</h2>
-                            <p class="text-slate-400">掌握光電感測器的訊號特性，建立精確的量測基礎。</p>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：物理量到數據的轉換</h2>
+            <p class="text-center text-gray-500 mb-12">掌握光電感測器的訊號特性，建立自動駕駛系統的精確量測基礎。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 11-1 -->
+                <div onclick="openSubmissionModal('adv-11-oscilloscope', '【作業 11-1】訊號觀測站：方波與波形分析 (Signal Observation & Waveform)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform">📈</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 11-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「方波物理特性分析」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            手動旋轉馬達，觀測光電電平的邊緣銳利度。在 README 中標記高低電平對應的光線遮斷物理狀態。
+                        </p>
                     </div>
+                </div>
 
-                    <div class="grid md:grid-cols-2 gap-8 mb-12">
-                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
-                            <div class="flex items-center gap-4 mb-6">
-                                <div
-                                    class="w-12 h-12 rounded-full bg-indigo-500/20 flex items-center justify-center text-2xl">
-                                    📡</div>
-                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
-                            </div>
-                            <p class="mb-4 text-slate-400">完成任務後，請將數據與結果推送到你的專屬倉庫。</p>
-                            <ul class="space-y-3 text-slate-300">
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white text-xs flex items-center justify-center font-bold">1</span>
-                                    <span>接受 GitHub Classroom 邀請並 Clone 倉庫</span>
-                                </li>
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white text-xs flex items-center justify-center font-bold">2</span>
-                                    <span>完成代碼後執行 <code
-                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code></span>
-                                </li>
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white text-xs flex items-center justify-center font-bold">3</span>
-                                    <span>在 PR 中查看自動化評分與教師回饋</span>
-                                </li>
-                            </ul>
+                <!-- Task 11-2 -->
+                <div onclick="openSubmissionModal('adv-11-interrupt-counter', '【作業 11-2】外部中斷計數器：精確脈衝統計 (Interrupt Counter & PPR)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-purple-500 group-hover:rotate-12 transition-transform">⏱️</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 11-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「中斷與解析度標定」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            實作 attachInterrupt() 精確捕捉脈衝。實測得出輪胎旋轉一圈的 Ticks 數 (PPR)，驗證硬體分辨率。
+                        </p>
+                    </div>
+                </div>
 
-                        <div class="grid gap-4">
-                            <!-- Task 1-1 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-11-oscilloscope', '【作業 1-1】「訊號觀測站」：示波器波形分析')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-indigo-600 transition">
-                                        作業 1-1</h3>
-                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">訊號觀測站 (方波分析)</h4>
-                                <p class="text-sm text-gray-500">手動轉動馬達，觀察邊緣銳利度與高頻雜訊。</p>
-                            </div>
-
-                            <!-- Task 1-2 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-11-interrupt-counter', '【作業 1-2】「外部中斷計數器」實作')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-purple-600 transition">
-                                        作業 1-2</h3>
-                                    <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">外部中斷計數器</h4>
-                                <p class="text-sm text-gray-500">在 ESP32 上實作 attachInterrupt()，驗證一圈脈衝數。</p>
-                            </div>
-
-                            <!-- Task 1-3 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-11-tachometer', '【作業 1-3】即時轉速計開發')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition">作業
-                                        1-3</h3>
-                                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">45
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">即時轉速計 (物理單位)</h4>
-                                <p class="text-sm text-gray-500">換算脈衝為 cm/s，並在網頁介面即時顯示。</p>
-                            </div>
+                <!-- Task 11-3 -->
+                <div onclick="openSubmissionModal('adv-11-tachometer', '【作業 11-3】即時轉速計：物理單位轉換 (Tachometer & Unit Scaling)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-emerald-500 group-hover:translate-x-1 transition-transform">🏎️</span>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業 11-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「時速表換算引擎」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            將格數轉換為 RPM 與 cm/s。在網頁端同步動態數據流，打造與實體機器人精確同步的戰術儀表板。
+                        </p>
                     </div>
                 </div>
             </div>
@@ -285,15 +224,16 @@
     <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
         <div class="container mx-auto px-4 text-center">
             <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
-            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
-                <span>進階 11 - 單元 1</span>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 進階 11 - 感測器</span>
                 <span class="hidden md:inline">|</span>
-                <span>光電感測器原理與方波訊號</span>
+                <span>講師：Antigravity Assistant</span>
             </div>
         </div>
     </footer>
 
     <script>
+        // Define Resources
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/RRfda9VCol4",
             doc: "https://docs.google.com/document/d/e/2PACX-1vRlAIs9unT06-B1B9r03L3DhpZJ4xockSmXqbFGoYxvyg-SazhjiJ8aKRlF6t56y0Dg1DR4M4qwRHqX/pub?embedded=true"
@@ -302,149 +242,137 @@
     <script src="/js/course-shared-v4.js"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">光電感測器與物理標定實驗室</h2>
 
-        <h3>作業 1-1：訊號觀測站 (方波分析)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 訊號分析師。</li>
-            <li><strong>執行方式：</strong> 手動轉動馬達，觀察光電感測器的輸出波形圖（示波器或 Serial Plotter）。</li>
-            <li><strong>評分重點：</strong> 能否分辨數位訊號的邊緣（Rising/Falling Edge）並說明 0V/3.3V 的意義。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：訊號觀測站：方波與波形分析 (Signal Observation & Waveform)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：訊號分析師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
 
-        <h3>作業 1-2：外部中斷計數器 (計數精確度)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 數據採集員。</li>
-            <li><strong>執行方式：</strong> 在 ESP32 上實作 attachInterrupt() 精確計數，並驗證轉動一圈的脈衝數。</li>
-            <li><strong>評分重點：</strong> 確認程式正確配置 RISING 觸發，且一圈的計數是否與編碼器格數準確吻合。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>波形觀測</strong>：手動轉動馬達，利用 Serial Plotter 或示波器觀察光電感測器的輸出波形。</li>
+                    <li><strong>邊緣定義</strong>：識別並記錄數位訊號的上升沿 (Rising Edge) 與下降沿 (Falling Edge)。</li>
+                    <li><strong>電平驗證</strong>：測量並確認遮斷時的高電位 (High) 與通過時的低電位 (Low) 是否符合 ESP32 規範。</li>
+                </ol>
+            </div>
 
-        <h3>作業 1-3：即時轉速計 (物理單位轉換)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 儀表板開發者。</li>
-            <li><strong>執行方式：</strong> 將格數轉換為物理長度（cm）或轉速（RPM），並顯示在網頁介面上。</li>
-            <li><strong>執行方式：：</strong> 將格數轉換為物理長度（cm）或轉速（RPM），並顯示在網頁介面上。</li>
-            <li><strong>評分重點：：</strong> 單位轉換公式（格 -> 圈 -> 公分）的正確性，及 Web 數據顯示是否即時。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>訊號解讀力</strong>：能否在 README 中正確標註 0V 與 3.3V 代表的物理意義（光線遮斷 vs. 通過）？</li>
+                    <li>[ ] <strong>銳利度分析</strong>：觀察在高低電位切換時是否具備足夠的切換速度（Edge Sharpness），以支持後續的高速中斷計數？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：外部中斷計數器：精確脈衝統計 (Interrupt Counter & PPR)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：數據採集工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>中斷配置</strong>：在 ESP32 上實作 <code>attachInterrupt()</code>，設定為 RISING 或 FALLING 觸發。</li>
+                    <li><strong>物理校準</strong>：手動旋轉輪胎剛好一圈，記錄產生的總脈衝數 (Ticks)。</li>
+                    <li><strong>解析度定義 (PPR)</strong>：根據實驗結果定義出該編碼盤的 PPR (Pulses Per Revolution) 參數。</li>
+                    <li><strong>穩定性測試</strong>：快速旋轉馬達，驗證在高速下計數值是否依然穩定，不發生漏噴或異常跳動。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>計數精準度</strong>：實測得到的一圈脈衝數是否與編碼器實體格數準確吻合？</li>
+                    <li>[ ] <strong>代碼規範</strong>：中斷服務常式 (ISR) 是否保持最精簡，無違禁的 Serial.print 或 delay 呼叫？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：即時轉速計：物理單位轉換 (Tachometer & Unit Scaling)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：儀表板開發者</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>公式推導</strong>：推導從脈衝數 (Ticks) 轉換為物理距離 (cm) 與每分鐘轉速 (RPM) 的數學比例尺。</li>
+                    <li><strong>即時演算實作</strong>：在主程式中定時計算過去一段時間內的脈衝增量，並換算為 cm/s 單位。</li>
+                    <li><strong>網頁同步顯示</strong>：將換算後的物理數據透過 BLE 發送，並在網頁 UI 儀表板上即時更新數值。</li>
+                    <li><strong>成果交付</strong>：將具備物理單位換算邏輯的代碼提交至 GitHub。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>轉換正確性</strong>：輸出的轉速與距離數據是否符合物理邏輯，且具備正確的量綱 (Dimension)？</li>
+                    <li>[ ] <strong>UI 即時性</strong>：網頁端數據顯示是否能流暢反映馬達轉速的動態變化，延遲感低於 200ms？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        A. 範本倉庫 (Template Repo) 結構
-                    </h4>
-                    <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：將「光與電」的連續物理現象轉化為「0 與 1」的高精度數位模型。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-indigo-600">第一步：理解波形的意義</strong> - 引導學員觀察真實波形中的雜訊與邊緣，建立對數位感知的硬體直覺。</li>
+                <li><strong class="text-indigo-600">第二步：標定物理比例尺</strong> - 強調 PPR 參數是銜接虛擬代碼與真實世界的關鍵，必須透過實驗親手測得。</li>
+                <li><strong class="text-indigo-600">第三步：數據到價值的轉換</strong> - 指導學員將抽象的 Ticks 轉換為有意義的 RPM，這是開發導航系統的最底層基礎。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
 .
-├── src/
-│   ├── basic_ticks.cpp     # 基礎中斷計數框架
-│   └── serial_display.cpp  # 轉速即時顯示模板
-├── platformio.ini          # 環境設定
-└── README.md               # 一圈脈衝數驗證報告</pre>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        B. 自動評估 (Autograding) 的設計
-                    </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🧪</span>
-                            <p class="text-sm text-gray-700"><strong>物理單位換算驗證：</strong> 比對 <code>Ticks</code> 到
-                                <code>RPM</code> 換算公式，檢查浮點精確度。
-                            </p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🔍</span>
-                            <p class="text-sm text-gray-700"><strong>概念理解掃描：</strong> 檢查 <code>README.md</code>
-                                是否包含對數位邊緣觸發與訊號差異描述。</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+├── src/main.cpp       # (必修) 學員需實作中斷計數與單位換算引擎
+├── src/Display.js     # (前端) 學員需補全儀表板數據同步與顯示邏輯
+└── README.md          # 標定報告：紀錄實測與理論 PPR 的差異分析
+            </pre>
         </div>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供包含基礎計數框架與轉速顯示模板的專案樣板。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「物理單位換算」評分。引導學員透過 PR 描述格數換算過程。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，觀察方波訊號，利用中斷完成計數。提交驗證數據 PR。執行 Git Push。
-                    </p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對浮點運算精確度，以及對「數位訊號邊緣」概念理解予以點評。</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
-            </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
-                        <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">觀看感測器原理影片，計算理論 PPR 並理解數位與類比訊號差異。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「數位邊緣觸發」導讀。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，實作中斷計數並驗證一圈脈衝數。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，引導討論為什麼 digitalRead 無法應對高速訊號。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">完成轉速儀表板開發，校準物理距離公式並 Push，閱讀回覆 PR。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，引導思考感測數據對控制與導航的影響。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看「光電感測器：數位世界的眼睛」影片。推算不同格數編碼盤的理論解析度。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員能否正確回答「遮斷 vs 通過」對應的預期電壓值。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，開發外部中斷計數器，並現場校準出機器人的物理步長。</td>
+                        <td class="p-4 border-b"><strong>巡場引導:</strong> 輔導學員如何解決中斷中變數共享產生的臨界區問題。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">實作具備「里程計 (Odometer)」功能的數據紀錄器並 Push PR。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 點評對「數據傳感路徑 (Sensor Path)」與「累積誤差處理」的考量深度。</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </section>
 </body>
-
 
 </html>

@@ -4,31 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adv 14: 代碼重構與模組化 - Vibe Coding</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <title>代碼重構與模組化設計 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
-    <style>
-        .gradient-text {
-            background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-
-        .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        }
-    </style>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
-<body class="bg-gray-50 text-gray-800 font-sans">
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
 
     <!-- Hero Section -->
     <header
@@ -41,21 +26,20 @@
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
                 class="inline-block py-1 px-3 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-sm font-semibold mb-6 tracking-wide uppercase">
-                進階 14 - 單元 3
+                進階 14 - 軟體架構
             </span>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
-                代碼重構與<span class="text-teal-400">模組化設計</span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">代碼重構與<br><span class="text-teal-400">模組化設計</span>
             </h1>
-            <p class="text-xl md:text-2xl text-emerald-100 max-w-3xl mx-auto font-light leading-relaxed">
-                從「義大利麵代碼」進化到優雅的軟體架構。學習如何償還技術債，設計高內聚、低耦合的系統。
+            <p class="text-xl md:text-2xl text-emerald-100 max-w-2xl mx-auto font-light leading-relaxed">
+                從「義大利麵代碼」進化到優雅的軟體架構。學習償還技術債，設計高內聚、低耦合的精品系統。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="window.courseShared.enterMediaMode('video', window.RESOURCES.youtube)"
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="window.courseShared.enterMediaMode('doc', window.RESOURCES.doc)"
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
                     class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -64,408 +48,343 @@
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
-        <!-- Use Cases / Intro -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 card-hover">
-                <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mb-6">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
-                        </path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold mb-3 text-gray-900">為什麼要重構？</h3>
-                <p class="text-gray-600 leading-relaxed">
-                    為了趕進度而寫的快餐代碼是「技術債 (Technical Debt)」，利息就是未來修改時的高昂代價。重構不是增加新功能，而是讓代碼「更健康、更易讀、更好改」。
-                </p>
-            </div>
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 card-hover">
-                <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center text-teal-600 mb-6">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
-                        </path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold mb-3 text-gray-900">模組化原則</h3>
-                <ul class="space-y-2 text-gray-600">
-                    <li class="flex items-center"><span class="mr-2 text-emerald-500">✓</span>高內聚 (High
-                        Cohesion)：一個檔案只做一件事</li>
-                    <li class="flex items-center"><span class="mr-2 text-emerald-500">✓</span>低耦合 (Low
-                        Coupling)：模組間依賴越少越好</li>
-                    <li class="flex items-center"><span class="mr-2 text-emerald-500">✓</span>關注點分離 (SoC)：感知、決策、執行分家
-                    </li>
-                </ul>
-            </div>
-        </div>
+        <!-- Module 1: Identifying Code Smells -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-green-500"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-emerald-500">👃</span> 1. 識別「代碼壞味道」 (Code Smells)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                重構不是增加新功能，而是優化內在結構。好的代碼應該像優美的散文，讓人讀起來賞心悅目。學會聞出代碼中的「技術債」。
+                            </p>
+                            <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
+                                <h4 class="font-bold text-emerald-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed">Common Code Symptoms</h4>
+                                <ul class="text-[9px] text-slate-500 space-y-2 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span> <div><strong>冗長函式 (Long Method)</strong>：一個 <code>loop()</code> 超過 50 行，且混雜了多種職責。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span> <div><strong>魔術數字 (Magic Numbers)</strong>：代碼中充滿寫死的比例與閾值，缺乏具名常數。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span> <div><strong>義大利麵依賴</strong>：改動 A 卻導致完全不相關的 B 壞掉。</div></li>
+                                </ul>
+                            </div>
+                        </div>
 
-        <!-- Section 1: Code Smells -->
-        <section class="mb-16">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                <span
-                    class="w-8 h-8 bg-emerald-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">1</span>
-                識別「代碼壞味道」 (Code Smells)
-            </h2>
-            <div class="prose prose-emerald max-w-none text-gray-600">
-                <p>
-                    像聞牛奶一樣，有些代碼一打開就有「味道」。學會識別這些徵兆，是重構的第一步。
-                </p>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                    <div class="bg-red-50 p-6 rounded-xl border border-red-100">
-                        <h4 class="font-bold text-red-800 mb-2">🐢 冗長函式 (Long Method)</h4>
-                        <p class="text-sm">一個 <code>loop()</code> 裡面寫了 500 行，包含連線、影像處理、馬達控制。看都看不完，更別說改了。</p>
-                    </div>
-                    <div class="bg-yellow-50 p-6 rounded-xl border border-yellow-100">
-                        <h4 class="font-bold text-yellow-800 mb-2">🔁 重複代碼 (Duplication)</h4>
-                        <p class="text-sm">違反 DRY (Don't Repeat Yourself) 原則。同樣的 JSON 解析邏輯複製貼上在三個地方，改了一個忘了改另外兩個。</p>
-                    </div>
-                    <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                        <h4 class="font-bold text-gray-800 mb-2">🧱 硬編碼 (Hardcoding)</h4>
-                        <p class="text-sm">IP 地址、PID 參數直接寫死在程式碼深處。每次要微調參數都要重新編譯燒錄，浪費生命。</p>
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors"></div>
+                           <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10">Refactoring Transformation</h4>
+                           <div class="relative z-10 flex flex-col items-center gap-2">
+                               <div class="text-[7px] text-red-400 font-mono line-through">spaghetti_logic() { ... 500 lines ... }</div>
+                               <div class="text-emerald-500 animate-bounce">↓</div>
+                               <div class="space-y-1">
+                                   <div class="text-[8px] text-emerald-400 font-mono">sense_environment()</div>
+                                   <div class="text-[8px] text-emerald-400 font-mono">think_logic()</div>
+                                   <div class="text-[8px] text-emerald-400 font-mono">act_motors()</div>
+                               </div>
+                           </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 2: Architecture Layers -->
-        <section class="mb-16">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                <span
-                    class="w-8 h-8 bg-emerald-600 text-white rounded-lg flex items-center justify-center text-lg mr-3">2</span>
-                系統分層架構 (Separation of Concerns)
-            </h2>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <p class="text-gray-600 mb-6">
-                    將你的無人車拆解為三個獨立的大腦區域，就像神經系統一樣。
-                </p>
+        <!-- Module 2: System Architecture Layers -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-teal-500 to-emerald-500"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-teal-500">🧱</span> 2. 關注點分離：三層神經架構
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                將系統拆解為不互相依賴的獨立模組。感知 (Perception)、決策 (Logic) 與執行 (Action) 三權分立，實現高內聚低耦合。
+                            </p>
+                            <div class="bg-teal-50 p-8 rounded-3xl border border-teal-100 text-center">
+                                <h4 class="text-teal-900 font-bold mb-4 text-xs uppercase tracking-widest">Architectural Tiering</h4>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div class="p-3 bg-white border border-teal-200 rounded-xl text-[9px] font-bold">感知<br><span class="text-[7px] font-normal text-slate-400">INPUT</span></div>
+                                    <div class="p-3 bg-teal-600 text-white rounded-xl text-[9px] font-bold shadow-lg">決策<br><span class="text-[7px] font-normal text-teal-200">PROCESS</span></div>
+                                    <div class="p-3 bg-white border border-teal-200 rounded-xl text-[9px] font-bold">執行<br><span class="text-[7px] font-normal text-slate-400">OUTPUT</span></div>
+                                </div>
+                                <p class="text-[10px] text-slate-400 mt-4 italic font-light">介面隔離：模組間僅透過標準通訊協議溝通</p>
+                            </div>
+                        </div>
 
-                <div class="flex flex-col md:flex-row gap-4 items-stretch">
-                    <!-- Layer 1 -->
-                    <div class="flex-1 bg-blue-50 p-4 rounded-lg border border-blue-100 text-center">
-                        <h4 class="font-bold text-blue-900 mb-2">👁️ 感知層 (Perception)</h4>
-                        <p class="text-xs text-blue-700">負責「看」與「聽」。影像讀取、感測器濾波、特徵提取。</p>
-                        <div class="mt-2 text-xs bg-white py-1 px-2 rounded inline-block text-blue-500 font-mono">
-                            Camera, IMU, LiDAR</div>
-                    </div>
-
-                    <!-- Arrow -->
-                    <div class="hidden md:flex items-center justify-center text-gray-400">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
-                        </svg>
-                    </div>
-                    <div class="md:hidden flex items-center justify-center text-gray-400 my-2">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-                        </svg>
-                    </div>
-
-                    <!-- Layer 2 -->
-                    <div class="flex-1 bg-purple-50 p-4 rounded-lg border border-purple-100 text-center">
-                        <h4 class="font-bold text-purple-900 mb-2">🧠 決策層 (Logic)</h4>
-                        <p class="text-xs text-purple-700">負責「想」。狀態機切換 (FSM)、PID 運算、路徑規劃。</p>
-                        <div class="mt-2 text-xs bg-white py-1 px-2 rounded inline-block text-purple-500 font-mono">
-                            State Machine, PID</div>
-                    </div>
-
-                    <!-- Arrow -->
-                    <div class="hidden md:flex items-center justify-center text-gray-400">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
-                        </svg>
-                    </div>
-                    <div class="md:hidden flex items-center justify-center text-gray-400 my-2">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-                        </svg>
-                    </div>
-
-                    <!-- Layer 3 -->
-                    <div class="flex-1 bg-orange-50 p-4 rounded-lg border border-orange-100 text-center">
-                        <h4 class="font-bold text-orange-900 mb-2">⚡ 執行層 (Action)</h4>
-                        <p class="text-xs text-orange-700">負責「做」。馬達 PWM 輸出、LED 顯示、蜂鳴器。</p>
-                        <div class="mt-2 text-xs bg-white py-1 px-2 rounded inline-block text-orange-500 font-mono">
-                            Motor, LED, Buzzer</div>
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-teal-500/5"></div>
+                           <h4 class="text-teal-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10">Interface Isolation</h4>
+                           <div class="p-6 border border-slate-800 rounded-2xl relative">
+                               <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-slate-900 px-2 text-teal-500 text-[8px] font-mono">MODULAR API</div>
+                               <div class="flex gap-4">
+                                   <div class="w-2 h-2 rounded-full bg-teal-500"></div>
+                                   <div class="text-[9px] text-slate-400 font-mono tracking-tighter">bleManager.send(data)</div>
+                               </div>
+                               <div class="text-[7px] text-slate-600 mt-2 italic px-6 font-light">"No raw API calls in Main"</div>
+                           </div>
+                           <p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest uppercase">Decoupled Architecture</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Assignment Highlights -->
+        <!-- Module 3: Pipeline & Plugin Patterns -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-emerald-400">
+                        <span class="p-2 bg-emerald-500/20 rounded-lg text-emerald-400 text-2xl">🧩</span> 3. 插件化與管道設計模式
+                    </h2>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                追求硬核的擴展性。設計「處理鏈」模式，在不修改核心引擎的前提下，只需幾行代碼即可動態載入新的濾鏡或控制策略。
+                            </p>
+                            <div class="bg-emerald-500/10 p-8 rounded-3xl border border-emerald-500/20 shadow-inner">
+                                <h4 class="font-bold text-emerald-400 mb-4 text-xs uppercase tracking-widest text-center">Open-Closed Design</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span><div><strong class="text-white">對擴展開放 (Open)</strong>：新增濾鏡只需開發獨立的 Plugin，不影響主迴圈。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span><div><strong class="text-white">對修改封閉 (Closed)</strong>：核心處理邏輯一旦穩定，不再因為細微需求變動而改寫。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span><div><strong class="text-white">Pipeline 模式</strong>：像生產線一樣，各模組按序處理數據流。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="lg:w-80 bg-emerald-600/10 p-10 rounded-3xl border border-emerald-500/20 text-center relative overflow-hidden group">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-emerald-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-emerald-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center">Plugin Chain</h4>
+                           <div class="space-y-2">
+                               <div class="py-1 px-4 border border-slate-700 rounded text-[9px] bg-slate-800">Grayscale Filter</div>
+                               <div class="py-1 px-4 border border-slate-700 rounded text-[9px] bg-slate-800">Edge Detect</div>
+                               <div class="py-1 px-4 border border-emerald-500/50 rounded text-[9px] bg-emerald-600/20 text-emerald-400 animate-pulse">+ New Plugin</div>
+                           </div>
+                           <p class="text-[11px] text-slate-500 mt-8 leading-relaxed font-light italic text-center">
+                               "模組化是人類對抗軟體複雜度的唯一機制。"
+                           </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
         <section class="module-section">
-            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-                        <div>
-                            <h2
-                                class="text-3xl font-bold text-white mb-2 underline decoration-emerald-500 underline-offset-8">
-                                實作任務：代碼重構</h2>
-                            <p class="text-slate-400">償還技術債，設計高內聚、低耦合的系統架構。</p>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：代碼重構</h2>
+            <p class="text-center text-gray-500 mb-12">償還技術債，設計高內聚、低耦合的系統架構。當你能寫出別人願意維護的代碼，你就是資深工程師。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 14-1 -->
+                <div onclick="openSubmissionModal('adv-14-refactor-surgery', '【作業 14-1】「手術台」：解構大雜燴 (Spaghetti Code Surgery)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-emerald-500 group-hover:scale-110 transition-transform">✂️</span>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業 14-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「代碼手術台」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            挑戰拆解一段 500 行的「義大利麵」代碼。將職責混合的 loop 邏輯抽取為功能單一的獨立函式，落實 Clean Code 的核心精神。
+                        </p>
                     </div>
+                </div>
 
-                    <div class="grid md:grid-cols-2 gap-8 mb-12">
-                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
-                            <div class="flex items-center gap-4 mb-6">
-                                <div
-                                    class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-2xl">
-                                    📡</div>
-                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
-                            </div>
-                            <p class="mb-4 text-slate-400">完成任務後，請將數據與結果推送到你的專屬倉庫。</p>
-                            <ul class="space-y-3 text-slate-300">
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center font-bold">1</span>
-                                    <span>接受 GitHub Classroom 邀請並 Clone 倉庫</span>
-                                </li>
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center font-bold">2</span>
-                                    <span>完成代碼後執行 <code
-                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code></span>
-                                </li>
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center font-bold">3</span>
-                                    <span>在 PR 中查看自動化評分與教師回饋</span>
-                                </li>
-                            </ul>
+                <!-- Task 14-2 -->
+                <div onclick="openSubmissionModal('adv-14-ble-class', '【作業 14-2】打造「通訊模組」Class (Encapsulating BLE Module)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-teal-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-teal-500 group-hover:rotate-12 transition-transform">📦</span>
+                            <span class="bg-teal-100 text-teal-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-teal-600 transition">【作業 14-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「封裝藍牙類別」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            使用 JavaScript Class 封裝 BLE 邏輯。建立一個具備事件驅動能力的通訊模組，隔離底層 API 改動對主程式的衝擊。
+                        </p>
+                    </div>
+                </div>
 
-                        <div class="grid gap-4">
-                            <!-- Task 3-1 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-14-refactor-surgery', '【作業 3-1】「手術台」：解構大雜燴程式碼')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-emerald-600 transition">
-                                        作業 3-1</h3>
-                                    <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">「手術台」：解構大雜燴程式碼</h4>
-                                <p class="text-sm text-gray-500">將義大利麵程式碼拆解為具用語義且功能單一的函式與 Config 物件。</p>
-                            </div>
-
-                            <!-- Task 3-2 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-14-ble-class', '【作業 3-2】打造「通訊模組」Class')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-emerald-600 transition">
-                                        作業 3-2</h3>
-                                    <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">打造「通訊模組」Class</h4>
-                                <p class="text-sm text-gray-500">使用 OOP 封裝 BLE 邏輯，落實介面隔離與多實例設計思考。</p>
-                            </div>
-
-                            <!-- Task 3-3 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-14-plugin-chain', '【作業 3-3】「插件化」影像處理鏈')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-emerald-600 transition">
-                                        作業 3-3</h3>
-                                    <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold">45
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">「插件化」影像處理鏈</h4>
-                                <p class="text-sm text-gray-500">設計 Pipeline 模式，實現對擴展開放、對修改封閉的插件化濾鏡系統。</p>
-                            </div>
+                <!-- Task 14-3 -->
+                <div onclick="openSubmissionModal('adv-14-plugin-chain', '【作業 14-3】「插件化」影像處理鏈 (Pipeline Pattern Plugin)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-green-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-green-500 group-hover:translate-x-1 transition-transform">🧩</span>
+                            <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-green-600 transition">【作業 14-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「影像插件管線」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            設計一個動態濾鏡管線。實現「對擴展開放、對修改封閉」的插件架構，證明你的系統具備跨專案、高度擴展的精品特質。
+                        </p>
                     </div>
                 </div>
             </div>
         </section>
-
-        <div class="mt-8 bg-teal-50 border border-teal-100 p-6 rounded-xl flex items-start">
-            <span class="text-2xl mr-4">🧩</span>
-            <div>
-                <h4 class="font-bold text-teal-900 mb-2">重構的藝術</h4>
-                <p class="text-sm text-teal-700">
-                    好的代碼應該像一篇優美的散文，讓人讀起來賞心悅目。當你能夠寫出別人願意維護的代碼時，你就正式晉升為資深工程師了。
-                </p>
-            </div>
-        </div>
-
-        </section>
-
-        <!-- Footer -->
-        <footer class="mt-16 border-t border-gray-200 pt-8 flex justify-between text-gray-500">
-            <a href="/courses/adv-14-unit-kpi-definition.html" class="hover:text-emerald-600 flex items-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-                Previous: 14-2 KPI Definition
-            </a>
-            <a href="/courses/adv-14-master-debugging-art.html" class="hover:text-emerald-600 flex items-center">
-                Back to Menu
-                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
-                </svg>
-            </a>
-        </footer>
 
     </main>
 
-    <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
-
-        <h3>作業 3-1：「手術台」：解構大雜燴程式碼</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 代碼外科醫生。</li>
-            <li><strong>執行方式：</strong> 將提供一段所有功能都塞在 <code>loop()</code> 裡的「義大利麵代碼」，將其拆解為具備單一職責的 Function。</li>
-            <li><strong>評分重點：</strong> 代碼的可讀性（命名是否優雅）、全域變數的減少程度，以及是否成功將 Kp/Ki/Kd 封裝成 Config 物件。</li>
-        </ul>
-
-        <h3>作業 3-2：打造「通訊模組」Class</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 軟體架構師。</li>
-            <li><strong>執行方式：</strong> 利用 JavaScript Class 封裝 Web Bluetooth API，對外僅暴露 <code>connect()</code> 與
-                <code>sendJson()</code> 介面。
-            </li>
-            <li><strong>評分重點：</strong> 介面隔離 (Interface Segregation) 的落實程度，以及主程式是否能完全不知曉底層 BLE 的實作細節。</li>
-        </ul>
-
-        <h3>作業 3-3：「插件化」影像處理鏈</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 系統擴充工程師。</li>
-            <li><strong>執行方式：</strong> 設計一個處理鏈模式 (Pipeline Pattern)，能夠動態地將「灰階」、「二值化」、「濾波」等模組 push 進入處理陣列中。</li>
-            <li><strong>評分重點：</strong> 是否落實「對擴展開放，對修改封閉」原則，在不修改主迴圈的情況下即可增加新濾鏡。</li>
-        </ul>
-    </section>
-
-    <!-- Instructor Guide (Hidden) -->
-    <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        A. 範本倉庫 (Template Repo) 結構
-                    </h4>
-                    <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
-.
-├── src/
-│   ├── spaghetti_code.cpp  # 重構區：命名模糊的代碼
-│   └── ble_manager.js      # 封裝區：OOP Class 模組骨架
-├── platformio.ini          # 環境設定
-└── docs/
-    └── refactor_notes.md   # Pattern 應用與性能比較</pre>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        B. 自動評估 (Autograding) 的設計
-                    </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">📏</span>
-                            <p class="text-sm text-gray-700"><strong>循環複雜度檢測：</strong> 檢查函式長度與巢狀深度，確保代碼維持在低複雜度狀態。</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🧱</span>
-                            <p class="text-sm text-gray-700"><strong>多實例封裝驗證：</strong> 嘗試建立多個實例，驗證有無全域變數污染或硬體競爭。</p>
-                        </div>
-                    </div>
-                </div>
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 進階 14 - 重構藝術</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
             </div>
         </div>
-
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">上傳原始代碼與骨架。提供重構日誌模板。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定 Code Review 機制。Discussion 探討代碼平衡點。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，執行解構與封裝。提交包含維護性分析的 PR。執行 Git Push。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對介面落實與擴充性優雅度點評，給予命名建議。</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
-            </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
-                        <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">學習 Clean Code 與 OOP 思想，思考如何將混亂代碼轉化為結構化 Class。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「重構的藝術」導讀。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，實施「拆解手術」，分組探討封裝策略。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，針對命名哲學引發討論。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">完成重構日誌並 Push，閱讀回覆 PR 以最佳化架構優雅度。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，引導理解良好架構的重要性。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
+    </footer>
 
     <script>
+        // Define Resources
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/PWrwVgsj4ow",
             doc: "https://docs.google.com/document/d/e/2PACX-1vT8koEKGVubw4v11Iysdxz1VTA5kCN2VQI0CMwXnw_NDuxnrk49ZQ02N4NYIlbZN1Irtz8H2BaO9NZT/pub?embedded=true"
         };
     </script>
     <script src="/js/course-shared-v4.js"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">重構實驗室：代碼病態分析與精品架構設計</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：「代碼手術台」：解構大雜燴 (Spaghetti Code Surgery)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：代碼外科醫生</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>壞味道偵測</strong>：審視專案中的 spaghetti-logic.js。標記出：哪裡出現了超過三層的巢狀迴圈？哪裡全域變數正在被濫用？</li>
+                    <li><strong>單一職責拆解</strong>：利用 <code>Extract Function</code> 手法，將原始龐大的迴圈拆解為「感知」、「處理」、「輸出」三個標準函數。</li>
+                    <li><strong>具名常數化</strong>：將代碼中散落的魔術數字（如：0.35, 255）統一抽取至外部的 Config 設定物件中。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>命名精確度</strong>：拆解後的函式名稱是否具備高可讀性，無需註解即可看懂用途？</li>
+                    <li>[ ] <strong>技術債削減度</strong>：全域變數是否被最小化？代碼的循環複雜度 (Cyclomatic Complexity) 是否有顯著降低？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：打造「通訊模組」Class (Encapsulating BLE Module)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：軟體架構師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>OOP 封裝</strong>：定義 <code>CarComms</code> 類別，將 Web Bluetooth 的事件監聽與數據序列化封裝在內部成員中。</li>
+                    <li><strong>介面合約制定</strong>：確保主程式與通訊模組僅透過 <code>send()</code> 與 <code>onReceive()</code> 介面互動，不得存取內部底層 Buffer。</li>
+                    <li><strong>異常靜默處理</strong>：在類別內部實作「短暫斷線自動重連」邏輯，對外部僅回報目前連線健康度。</li>
+                    <li><strong>類別測試</strong>：嘗試在 PR 範例中同時建立兩個測試實例，驗證模組是否達成了真正的隔離（無互斥干擾）。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>封裝層次感</strong>：主邏輯代碼是否已完全從底層 BLE 的繁雜 API 中解放？</li>
+                    <li>[ ] <strong>系統穩定性</strong>：類別是否能正確處理「非同步初始化」與「突發性中斷」的邊界狀態？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：「插件化」影像處理鏈 (Pipeline Pattern Plugin)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：系統擴充工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>處理管線設計</strong>：設計一個「影像處理管線 (ImagePipeline)」。實作 <code>addPlugin(plugin)</code> 與 <code>process(frame)</code> 方法。</li>
+                    <li><strong>插件規範</strong>：定義一個簡單的插件物件結構（Interface），要求每個插件必須具備 <code>apply</code> 函式。</li>
+                    <li><strong>動態配置實踐</strong>：實作一個範例：透過 <code>pipeline.add(gray).add(binarize)</code> 的鏈式調用完成視覺優化。</li>
+                    <li><strong>Push Final</strong>：提交具備「高度彈性、易於擴展」特質的最終影像處理引擎。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>擴展開放性檢核</strong>：當我想要新增一個新的顏色過濾器時，是否完全「不需要」改動 Pipeline 核心類別的代碼？</li>
+                    <li>[ ] <strong>架構優雅度</strong>：數據在各插件間的流動是否清晰且具備一致性（Input Frame -> Output Frame）？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：引導學生從「程式員 (Coder)」晉升為「工程師 (Engineer)」。學習不僅讓程式動起來，更要讓它具備生命力（易維護）。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-emerald-600">重點 1：對抗複雜度</strong> - 所有的重構手段都是為了「降低認知負荷」。如果拆解後反而更難讀，那就不是好的重構。</li>
+                <li><strong class="text-emerald-600">重點 2：技術債的感知力</strong> - 讓學員「聞到」味道。培養對 Long Method 與 Global Variables 的不耐受感。</li>
+                <li><strong class="text-emerald-600">重點 3：開閉原則 (OCP) 的實戰體悟</strong> - 透過插件化任務，讓學員感受到「穩定核心 + 二方套件」的現代軟體開發模式之美。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-emerald-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/spaghetti.js      # 重構手術對象：故意混亂的控制邏輯
+├── src/architect/        # 存放重構後的精品類別檔 (Class Based)
+└── docs/DesignDesign.md  # 重構思路與架構決策說明
+            </pre>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看「重構：從混亂到秩序」範例影片。閱讀關於 OOP 封裝的基本設計模式導讀。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員能否在一小段代碼中挑出魔術數字並將其改為 named constant。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，執行「手術拆解」，進行小組內的 Code Review 互評，找出對方的介面漏洞。</td>
+                        <td class="p-4 border-b"><strong>架構顧問:</strong> 挑戰學員的封裝邏輯：「如果我現在想把 BLE 換成 WiFi，我要改多少行代碼？」</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">將封裝好的精品模組與重構日誌推送至 GitHub Classroom。閱讀導師對介面設計的細節回饋。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 點評對「關注點分離」的實踐深度，表揚模組邊界劃分極其優雅的「架構師」範例。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 </body>
 
 </html>

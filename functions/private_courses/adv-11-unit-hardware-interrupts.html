@@ -9,13 +9,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
 <body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
 
     <!-- Hero Section -->
     <header
-        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white pt-24 pb-32 overflow-hidden">
+        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-fuchsia-900 text-white pt-24 pb-32 overflow-hidden">
         <div
             class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517433874015-8137351543b3?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
         </div>
@@ -24,20 +26,20 @@
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
                 class="inline-block py-1 px-3 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-sm font-semibold mb-6 tracking-wide uppercase">
-                進階 11 - 單元 2
+                進階 11 - 即時響應
             </span>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">硬體中斷<br><span class="text-purple-400">(Hardware Interrupts)</span> 觀念
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">硬體中斷<br><span class="text-purple-400">Hardware Interrupts</span>
             </h1>
             <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
-                即時運算的引擎：從輪詢的忙碌中釋放你的 CPU。
+                即時運算的引擎：從輪詢的忙碌中釋放你的 CPU，實現微秒級的精確響應。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="window.courseShared.enterMediaMode('video', window.RESOURCES.youtube)"
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="window.courseShared.enterMediaMode('doc', window.RESOURCES.doc)"
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -48,250 +50,176 @@
     <!-- Main Content -->
     <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
-        <!-- Section 1: Polling vs Interrupts -->
-        <section class="mb-16">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        <!-- Module 1: Event Driven Architecture -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
-                        <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <span class="text-4xl">🤔</span> 1. 什麼是中斷？生活中的類比 (15 min)
-                            </h2>
-                            <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
-                                <div
-                                    class="bg-gray-50 p-6 rounded-xl border border-gray-200 hover:border-purple-300 transition-colors">
-                                    <h3 class="font-bold text-gray-800 text-xl mb-2">🐢 輪詢 (Polling)</h3>
-                                    <p>你正在煮泡麵，每隔 5 秒就跑去廚房看水開了沒。這讓你無法專心寫作業（浪費 CPU 資源）。</p>
-                                </div>
-                                <div
-                                    class="bg-purple-50 p-6 rounded-xl border border-purple-200 hover:border-purple-300 transition-colors">
-                                    <h3 class="font-bold text-purple-800 text-xl mb-2">⚡ 中斷 (Interrupt)</h3>
-                                    <p>你回房間寫作業，等水開了水壺發出「鳴笛聲」，你才放下筆去關火。這讓你效率極大化。</p>
-                                </div>
-
-                                <p>
-                                    <strong>關鍵觀念：</strong>中斷能讓處理器從繁重的任務中被「強行暫停」，去處理更緊急的事。
-                                </p>
-                            </div>
-                        </div>
-                        <div class="flex-1 flex items-center justify-center">
-                            <!-- Visual Analogy -->
-                            <div
-                                class="relative w-full max-w-sm aspect-video bg-gray-100 rounded-2xl overflow-hidden flex flex-col items-center justify-center p-4">
-                                <div class="flex justify-between w-full px-8 mb-4">
-                                    <div class="text-center">
-                                        <div class="text-4xl mb-2">📝</div>
-                                        <div class="text-xs text-gray-500">Main Loop</div>
-                                    </div>
-                                    <div class="text-center animate-bounce">
-                                        <div class="text-4xl mb-2">🔔</div>
-                                        <div class="text-xs text-red-500 font-bold">Interrupt!</div>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="text-4xl mb-2">🚨</div>
-                                        <div class="text-xs text-gray-500">ISR</div>
-                                    </div>
-                                </div>
-                                <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                                    <div class="w-2/3 h-full bg-indigo-500"></div>
-                                </div>
-                                <p class="text-xs text-gray-400 mt-2">CPU 執行流程切換示意</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 2: ISR Rules -->
-        <section class="mb-16">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
-                <div class="p-8 md:p-12">
+                <div class="p-8 md:p-14">
                     <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">📜</span> 2. 中斷服務函式 (ISR) 的三大法則 (25 min)
+                        <span class="text-4xl text-purple-500">🧐</span> 1. 什麼是中斷？主動 vs. 被動
                     </h2>
-                    <p class="text-lg text-gray-600 mb-8">當 CPU 被中斷後，會跳轉去執行一段特殊的程式碼，稱為 <strong>ISR (Interrupt Service
-                            Routine)</strong>。</p>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-orange-50 p-6 rounded-xl border border-orange-100">
-                            <span class="text-3xl mb-4 block">🚀</span>
-                            <h3 class="font-bold text-orange-900 text-lg mb-2">短小精悍</h3>
-                            <p class="text-orange-800 text-sm">ISR 必須極快地執行完畢，否則會阻塞主程式和其他中斷。</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                輪詢 (Polling) 就像是每隔一秒看一次手機有沒有簡訊；中斷 (Interrupt) 則是等簡訊來時讓鈴聲主動通知你。
+                            </p>
+                            <div class="bg-purple-50 p-6 rounded-2xl border border-purple-100">
+                                <h4 class="font-bold text-purple-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed">System Efficiency</h4>
+                                <ul class="text-[9px] text-slate-500 space-y-2 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1"></span> <div><strong>搶佔執行流</strong>：中斷能立即暫停 Main Loop，確保緊急事件（如限位開關、感測脈衝）不漏失。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1"></span> <div><strong>釋放資源</strong>：CPU 不再需要浪費時間在無效的判斷上，可以全速處理主要的演算法。</div></li>
+                                </ul>
+                            </div>
                         </div>
 
-                        <div class="bg-red-50 p-6 rounded-xl border border-red-100">
-                            <span class="text-3xl mb-4 block">🚫</span>
-                            <h3 class="font-bold text-red-900 text-lg mb-2">禁止延遲</h3>
-                            <p class="text-red-800 text-sm">在 ISR 內絕對不能使用 <code>delay()</code> 或複雜的
-                                <code>Serial.print()</code>。
-                            </p>
-                        </div>
-
-                        <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                            <span class="text-3xl mb-4 block">🔄</span>
-                            <h3 class="font-bold text-blue-900 text-lg mb-2">變數共享</h3>
-                            <p class="text-blue-800 text-sm">在 ISR 中被修改的變數，必須宣告為
-                                <code>volatile</code>（告訴編譯器：這個數值隨時會變，不要亂優化）。
-                            </p>
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center">
+                            <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest">Execution Pipeline Switch</h4>
+                            <div class="flex items-center justify-around gap-2 mb-4">
+                               <div class="px-3 py-1 bg-slate-700 rounded text-[10px]">Main Loop (Task A)</div>
+                               <div class="text-red-500 animate-pulse">⚡</div>
+                               <div class="px-3 py-1 bg-purple-600 rounded text-[10px] font-bold shadow-[0_0_15px_rgba(147,51,234,0.5)]">ISR Handler (Jump!)</div>
+                            </div>
+                            <p class="text-[9px] text-slate-500 font-mono tracking-widest mt-4 uppercase">Context Saving & Restoring...</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 3: Trigger Types -->
-        <section class="mb-16">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-green-500 to-teal-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
-                        <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                                <span class="text-4xl">🎚️</span> 3. 中斷觸發類型 (10 min)
-                            </h2>
-
-                            <ul class="space-y-4">
-                                <li class="flex items-start gap-4">
-                                    <span
-                                        class="bg-green-100 text-green-800 font-bold px-3 py-1 rounded text-sm whitespace-nowrap mt-1">RISING</span>
-                                    <div>
-                                        <strong class="text-gray-900">上升沿：</strong>
-                                        <span class="text-gray-600">電位從 0 變 1 的瞬間。常用於按鈕按下瞬間。</span>
-                                    </div>
-                                </li>
-                                <li class="flex items-start gap-4">
-                                    <span
-                                        class="bg-blue-100 text-blue-800 font-bold px-3 py-1 rounded text-sm whitespace-nowrap mt-1">FALLING</span>
-                                    <div>
-                                        <strong class="text-gray-900">下降沿：</strong>
-                                        <span class="text-gray-600">電位從 1 變 0 的瞬間。常用於按鈕放開瞬間。</span>
-                                    </div>
-                                </li>
-                                <li class="flex items-start gap-4">
-                                    <span
-                                        class="bg-purple-100 text-purple-800 font-bold px-3 py-1 rounded text-sm whitespace-nowrap mt-1">CHANGE</span>
-                                    <div>
-                                        <strong class="text-gray-900">改變時：</strong>
-                                        <span class="text-gray-600">只要電位有動靜就觸發。常用於編碼器計數。</span>
-                                    </div>
-                                </li>
-                            </ul>
-
-                            <div class="mt-8 bg-teal-50 p-6 rounded-xl border border-teal-100">
-                                <h4 class="font-bold text-teal-800 mb-2 flex items-center gap-2">
-                                    <span>🧠</span> 預習任務
-                                </h4>
-                                <p class="text-teal-700 text-sm">
-                                    對於一個「緊急停止按鈕」，你覺得用哪種觸發方式最安全？為什麼不能在 loop() 裡用 digitalRead() 讀取編碼器？（提示：高轉速下會漏計）。
-                                </p>
+        <!-- Module 2: ISR Principles -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-red-500">📜</span> 2. 中斷服務函式 (ISR) 的嚴苛規則
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                ISR 程式碼必須「極速執行」。在裡面做太多事會導致主程式崩潰，甚至造成硬體重啟。
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div class="bg-red-50 p-4 rounded-xl border border-red-100">
+                                    <h4 class="font-bold text-red-900 mb-1 text-[10px] uppercase tracking-widest text-center">No Delay</h4>
+                                    <p class="text-[8px] text-red-600 text-center">絕對不准調用延遲函式。</p>
+                                </div>
+                                <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                                    <h4 class="font-bold text-orange-900 mb-1 text-[10px] uppercase tracking-widest text-center">No Serial</h4>
+                                    <p class="text-[8px] text-orange-600 text-center">Serial 輸出太慢，請避免使用。</p>
+                                </div>
+                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                    <h4 class="font-bold text-blue-900 mb-1 text-[10px] uppercase tracking-widest text-center">Volatile</h4>
+                                    <p class="text-[8px] text-blue-600 text-center">共享變數必須宣告為 volatile。</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="flex-1 flex flex-col items-center justify-center space-y-4">
-                            <!-- Rising/Falling Diagram -->
-                            <div class="w-full relative h-32 bg-gray-900 rounded-lg p-4 flex items-end">
-                                <div class="absolute left-4 top-4 text-xs text-green-400">Signal Level</div>
-                                <svg class="w-full h-full" viewBox="0 0 300 100" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M0 80 H50 V20 H150 V80 H250 V20 H300" stroke="#4ade80" />
-                                    <!-- Annotations -->
-                                    <text x="55" y="50" fill="white" font-size="10"
-                                        transform="rotate(-90 50,50)">RISING</text>
-                                    <text x="155" y="50" fill="white" font-size="10"
-                                        transform="rotate(-90 150,50)">FALLING</text>
+
+                        <div class="bg-slate-950 rounded-3xl p-8 shadow-2xl border border-slate-800 font-mono text-[10px] text-blue-300">
+                            <span class="text-gray-500">// 專業 ISR 範例</span><br>
+                            <span class="text-purple-400">volatile int</span> count = <span class="text-pink-400">0</span>;<br><br>
+                            <span class="text-purple-400">void IRAM_ATTR</span> <span class="text-yellow-400">handleEvent</span>() {<br>
+                            &nbsp;&nbsp;count++; <span class="text-gray-500">// 極簡邏輯，僅遞增</span><br>
+                            }<br><br>
+                            <span class="text-gray-500">// setup() 內綁定</span><br>
+                            <span class="text-yellow-400">attachInterrupt</span>(PIN, handleEvent, <span class="text-emerald-400">RISING</span>);
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Digital Edges -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-indigo-400">
+                        <span class="p-2 bg-indigo-500/20 rounded-lg text-indigo-400 text-2xl">⚡</span> 3. 中斷觸發類型與防抖
+                    </h2>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                數位訊號的物理邊緣 (Edge) 是觸發核心。但機械開關的「彈跳雜訊」常導致錯誤的多重觸發。
+                            </p>
+                            <div class="bg-indigo-500/10 p-8 rounded-3xl border border-indigo-500/20 shadow-inner">
+                                <h4 class="font-bold text-indigo-400 mb-4 text-xs uppercase tracking-widest">Trigger Strategy</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1"></span><div><strong class="text-white">RISING / FALLING</strong>：偵測電位從 0 變 1 或 1 變 0 的瞬間。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1"></span><div><strong class="text-white">Software Debounce</strong>：在 ISR 內利用時間檢查，剔除短於 50ms 的重複跳火。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1"></span><div><strong class="text-white">IRAM_ATTR</strong>：將處理程式存放在內存中，加速中斷反應。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="lg:w-96 text-center">
+                            <div class="relative w-full aspect-video bg-black/50 rounded-2xl border border-slate-800 p-4">
+                                <svg class="w-full h-full" viewBox="0 0 300 100" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M0 80 H50 V20 H120 V80 H130 V20 H140 V80 H220 V20 H300" stroke="#4ade80" />
+                                    <circle cx="50" cy="50" r="5" fill="#ef4444" class="animate-ping" />
+                                    <text x="60" y="45" fill="#ef4444" font-size="10" font-weight="bold">TRIGGER</text>
+                                    <text x="110" y="95" fill="#facc15" font-size="8">BOUNCE NOISE</text>
                                 </svg>
                             </div>
-                            <p class="text-xs text-gray-500">波形邊緣觸發示意圖</p>
+                            <p class="text-[9px] text-slate-500 mt-4 uppercase tracking-widest font-mono">Signal Jitter Observation</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Assignment Highlights -->
+        <!-- Homework Section -->
         <section class="module-section">
-            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-                        <div>
-                            <h2
-                                class="text-3xl font-bold text-white mb-2 underline decoration-purple-500 underline-offset-8">
-                                實作任務：即時響應的核心</h2>
-                            <p class="text-slate-400">掌握硬體中斷機制，解決高轉速下的精確計數挑戰。</p>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：即時響應的核心</h2>
+            <p class="text-center text-gray-500 mb-12">建立高性能的中斷管線，解決高轉速感知與物理雜訊過濾的實戰難題。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 11-1 -->
+                <div onclick="openSubmissionModal('adv-11-reaction-test', '【作業 11-1】光速反應測試：中斷 vs 輪詢 (Reaction Speed Challenge)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-indigo-500 group-hover:scale-110 transition-transform">⚡</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 11-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「搶佔執行權挑戰」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            模擬 CPU 忙碌計算環境，觀察輪詢法漏失按鈕的機率。重構為 attachInterrupt 模式，證明即時攔截的威力。
+                        </p>
                     </div>
+                </div>
 
-                    <div class="grid md:grid-cols-2 gap-8 mb-12">
-                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
-                            <div class="flex items-center gap-4 mb-6">
-                                <div
-                                    class="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center text-2xl">
-                                    📡</div>
-                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
-                            </div>
-                            <p class="mb-4 text-slate-400">完成任務後，請將數據與結果推送到你的專屬倉庫。</p>
-                            <ul class="space-y-3 text-slate-300">
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500 text-white text-xs flex items-center justify-center font-bold">1</span>
-                                    <span>接受 GitHub Classroom 邀請並 Clone 倉庫</span>
-                                </li>
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500 text-white text-xs flex items-center justify-center font-bold">2</span>
-                                    <span>完成代碼後執行 <code
-                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code></span>
-                                </li>
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500 text-white text-xs flex items-center justify-center font-bold">3</span>
-                                    <span>在 PR 中查看自動化評分與教師回饋</span>
-                                </li>
-                            </ul>
+                <!-- Task 11-2 -->
+                <div onclick="openSubmissionModal('adv-11-debouncing', '【作業 11-2】「彈跳惡夢」：軟體去彈跳實作 (Software Debouncing)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-purple-500 group-hover:rotate-12 transition-transform">🧼</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 11-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「訊號濾波器設計」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            實作 ISR 內的微秒級時間過濾邏輯。解決機械按壓產生的多重抖動，確保「按一下、加一」的變數單調性。
+                        </p>
+                    </div>
+                </div>
 
-                        <div class="grid gap-4">
-                            <!-- Task 2-1 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-11-reaction-test', '【作業 2-1】「光速反應測試」：中斷 vs 輪詢')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-indigo-600 transition">
-                                        作業 2-1</h3>
-                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">光速反應測試</h4>
-                                <p class="text-sm text-gray-500">比較忙碌時 Polling 與 Interrupt 對按鈕的反應速度。</p>
-                            </div>
-
-                            <!-- Task 2-2 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-11-debouncing', '【作業 2-2】「彈跳惡夢」：解決機械開關的雜訊')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-purple-600 transition">
-                                        作業 2-2</h3>
-                                    <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">彈跳惡夢 (去彈跳)</h4>
-                                <p class="text-sm text-gray-500">實作 ISR 內的軟體去彈跳，解決機械開關雜訊。</p>
-                            </div>
-
-                            <!-- Task 2-3 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-11-encoder-interrupt', '【作業 2-3】「馬達編碼器」實戰應用')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition">作業
-                                        2-3</h3>
-                                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">馬達編碼器實戰</h4>
-                                <p class="text-sm text-gray-500">高頻觸發計數，驗證全速下無漏計。 (>1kHz)</p>
-                            </div>
+                <!-- Task 11-3 -->
+                <div onclick="openSubmissionModal('adv-11-encoder-interrupt', '【作業 11-3】馬達編碼器實戰：高頻壓力計數 (High-Freq Stress Test)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-fuchsia-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-fuchsia-500 group-hover:translate-x-1 transition-transform">🏎️</span>
+                            <span class="bg-fuchsia-100 text-fuchsia-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-fuchsia-600 transition">【作業 11-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「IRAM 高速計數」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            利用 IRAM_ATTR 優化中斷響應。在馬達全速（>1kHz 訊號）下進行壓力測試，驗證計數框架的零漏計性能。
+                        </p>
                     </div>
                 </div>
             </div>
@@ -303,166 +231,155 @@
     <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
         <div class="container mx-auto px-4 text-center">
             <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
-            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
-                <span>進階 11 - 單元 2</span>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 進階 11 - 中斷機制</span>
                 <span class="hidden md:inline">|</span>
-                <span>硬體中斷觀念</span>
+                <span>講師：Antigravity Assistant</span>
             </div>
         </div>
     </footer>
 
     <script>
+        // Define Resources
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/Vf4KKlodIac",
             doc: "https://docs.google.com/document/d/e/2PACX-1vRPouKufRZ8cbXQdwXvgDVz_oydkDOt78eWVDST4bzUtrtt1osHVpI-hbP7UP0gj1iIJb-y0R5Z69uW/pub?embedded=true"
         };
     </script>
     <script src="/js/course-shared-v4.js"></script>
-
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">硬體中斷與即時通訊實驗室</h2>
 
-        <h3>作業 2-1：光速反應測試 (中斷 vs 輪詢)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 對照組實驗室。</li>
-            <li><strong>執行方式：</strong> 比較 CPU 忙碌時，Polling 與 Interrupt 對按鈕的反應速度。</li>
-            <li><strong>評分重點：</strong> 確認學生配置 attachInterrupt 的觸發模式，並理解中斷搶佔 CPU 的原理。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：光速反應測試：中斷 vs. 輪詢 (Reaction Speed Challenge)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：效能對比實驗員</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
 
-        <h3>作業 2-2：彈跳惡夢 (軟體去彈跳)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 邏輯驗證中心。</li>
-            <li><strong>執行方式：</strong> 解決按一下按鈕卻觸發多次中斷的問題，在 ISR 內加入 50ms 時間差判斷。</li>
-            <li><strong>評分重點：</strong> 檢查變數是否宣告為 volatile，及時間判斷邏輯是否正確。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>模擬 CPU 忙碌</strong>：在 <code>loop()</code> 內加入一組 100ms 的 Busy Wait 計算任務。</li>
+                    <li><strong>輪詢法故障再現</strong>：用 <code>digitalRead()</code> 判斷按鍵，記錄在忙碌狀態下連續嘗試觸發按鈕的成功率（漏失紀錄）。</li>
+                    <li><strong>中斷法重構</strong>：引入 <code>attachInterrupt()</code>，將按鍵事件掛載到 ISR 中，驗證即使 CPU 在做繁重計算，按鈕是否能「瞬間奪回」控制權。</li>
+                </ol>
+            </div>
 
-        <h3>作業 2-3：馬達編碼器實戰 (高頻計數)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 效能儀表板。</li>
-            <li><strong>執行方式：</strong> 利用光電感測器方波訊號觸發中斷，計算全速轉動時的脈衝數。</li>
-            <li><strong>評分重點：</strong> 確認 ISR 程式碼簡潔且無 delay() 或 Serial.print() 等漏計處理邏輯。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>執行流劫持驗證</strong>：是否能透過實驗結果證明中斷法在高負載下依然具備 100% 的事件捕捉能力？</li>
+                    <li>[ ] <strong>ISR 安全規範</strong>：ISR 內是否確實移除了 <code>Serial.print</code> 等低效呼叫，避免造成執行流擁塞？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：「彈跳惡夢」：軟體去彈跳實作 (Software Debouncing)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：訊號濾波工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>機械抖動監測</strong>：觀察並輸出按一下按鈕後中斷觸發的次數。紀錄物理抖動造成的 False Positive 次數。</li>
+                    <li><strong>微秒計時過濾</strong>：在 ISR 中實作 <code>mills()</code> 判斷邏輯，過濾掉任何在 50ms 以內的二連跳訊號。</li>
+                    <li><strong>變數同步一致性</strong>：正確使用 <code>volatile</code> 關鍵字宣告全域變數，防止編譯器優化導致數據讀取過期。</li>
+                    <li><strong>正確性驗證報告</strong>：確保連續快速手點 10 次後，變數累計值精確等於 10。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>去彈跳邏輯完整性</strong>：程式是否能有效排除物理抖動，達到「真實一人一次」的感知一致？</li>
+                    <li>[ ] <strong>存取關鍵字正確性</strong>：共享變數是否具備必要的 <code>volatile</code> 標籤以支持跨上下文數據交換？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：馬達編碼器實戰：高頻壓力計數 (High-Frequency Stress Test)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：系統可靠性工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>極速脈衝輸入</strong>：將光電編碼器訊號接入中斷引腳，模擬馬達全速轉動時的高頻脈衝流（>1000 次/秒）。</li>
+                    <li><strong>內存響應優化</strong>：為 ISR 函式添加 <code>IRAM_ATTR</code>，確保處理程式直接在靜態記憶體中極速運行。</li>
+                    <li><strong>亂序與丟包分析</strong>：在 README 中對比在高頻下，使用 <code>IRAM_ATTR</code> 與否在數據穩定度上的差異。</li>
+                    <li><strong>代碼 Push</strong>：將具備高效能中斷計數框架的代碼提交至 GitHub 倉庫。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>高速環境適配度</strong>：在馬達全速環境下，中斷計數器是否能維持單調遞增，不發生漏噴或溢位 Bug？</li>
+                    <li>[ ] <strong>進階屬性應用</strong>：是否了解並正確使用了 <code>IRAM_ATTR</code> 來榨乾 ESP32 的即時處理性能？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>包含基礎中斷處理框架與 Serial 圖表顯示建議的範例專案樣板。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>設定「ISR 效能優化」評分。引導學員透過 PR 提交去彈跳截圖。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>領取作業，對比輪詢與中斷法反應差異。</li>
-                <li>提交包含分析報告的 PR。</li>
-                <li>執行 Git Push。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>針對學員平衡「延時」與「即時性」策略，以及 ISR 優化予以點評。</li>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：將處理器從「被動等待」轉為「事件驅動」的高效架構。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-indigo-600">第一步：建立搶佔意識</strong> - 透過「忙碌計算 vs. 按鈕漏失」的實驗，讓學員親手證實輪詢法的不可信。</li>
+                <li><strong class="text-indigo-600">第二步：對抗物理雜訊</strong> - 強調整個嵌入式世界皆有「彈跳」，去彈跳是從實驗室進入工業產品的第一道工序。</li>
+                <li><strong class="text-indigo-600">第三步：極致效能優化</strong> - 解釋 `IRAM_ATTR` 的內在機制，讓學員體悟即使是微秒級的優化，在高頻感知中也有巨大差異。</li>
             </ol>
         </div>
 
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>建議範本倉庫設置如下：</p>
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/InterruptDemo.cpp # (重點) 學員需在此實作 IRAM_ATTR ISR 與去彈跳邏輯
+├── src/BusyLoop.cpp      # (對比) 提供一個會造成 CPU 阻塞的輪詢程式作為對照
+└── tests/StressTest.py   # 自評指令：自動發送高頻脈衝，檢測漏計比率
+            </pre>
+        </div>
 
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── src/
-│   ├── basic_interrupt.cpp # 中斷法實作框架
-│   └── polling_check.cpp   # 對照：傳統輪詢法
-├── tests/
-│   └── debounce.test.cpp   # 測試：去彈跳時間驗證
-└── README.md               # 反應時間對比與壓力報告</code></pre>
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>src/basic_interrupt.cpp (中斷法框架)</strong></p>
-        <pre><code>volatile unsigned long last_time = 0;
-volatile int count = 0;
-
-void IRAM_ATTR handleInterrupt() {
-  unsigned long now = millis();
-  if (now - last_time > 50) { // 軟體去彈跳
-    count++;
-  }
-  last_time = now;
-}
-
-void setup() {
-  Serial.begin(115200);
-  attachInterrupt(D2, handleInterrupt, FALLING);
-}
-
-void loop() {
-  Serial.printf("Count: %d\n", count);
-  delay(100);
-}</code></pre>
-
-        <p><strong>src/polling_check.cpp (傳統輪詢法對照)</strong></p>
-        <pre><code>void loop() {
-  if (digitalRead(D2) == LOW) {
-    // 輪詢法容易因 loop 內的其他延遲（如以下 delay）而漏計
-    count++; 
-    delay(5); // 模擬去彈跳
-  }
-  delay(100); // 模擬其他繁重任務
-}</code></pre>
-
-        <p><strong>README.md (分析報告樣板)</strong></p>
-        <pre><code># 中斷效能分析報告
-- 測試環境：ESP32-C3 + 光電編碼器
-- 觀察結果：
-  1. 輪詢法在全速轉動時丟失約 30% 脈衝。
-  2. 中斷法透過 IRAM_ATTR 實現微秒級響應。
-  3. 軟體去彈跳閾值設定為 50ms 最為穩定。</code></pre>
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>關鍵字過濾：</strong> 靜態掃描檢查是否正確使用
-                <code>attachInterrupt</code> 與 <code>volatile</code>。
-            </li>
-            <li><strong>邏輯單元測試：：</strong> 模擬按鈕抖動，驗證 ISR 是否具備正確的軟體去彈跳機制。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody style="color: #4b5563;">
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看中斷觀念影片，撰寫對比代碼，體會中斷的「即時搶佔」特性。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">檢查 Dashboard 預習進度，確保理解
-                        <code>attachInterrupt</code> 配置。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，實作軟體去彈跳與編碼器計數，解決物理雜訊。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0; color: #1d4ed8;">即時連線排除阻礙，引導討論訊號抖動觀察並調校過濾閾值。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">優化 ISR 效能，完成高頻壓力測試並 Push，閱讀教師回覆 PR。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">核發評量，引導思考中斷機制對硬體即時響應的核心價值。</td>
-                </tr>
-            </tbody>
-        </table>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看中斷與水開鳴笛的生活類比影片。預習 <code>volatile</code> 關鍵字在跨核存取中的意義。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員能否分析出 ISR 中點用 <code>delay()</code> 會引發何種系統死鎖。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，挑戰在高負載運算中，精確獲取並過濾物理按鈕數據。</td>
+                        <td class="p-4 border-b"><strong>專案導師:</strong> 協助演示如何透過 Logic Analyzer 觀察按鍵抖動的真實微秒波形。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">將具備中斷去彈跳的計數類庫封裝成 Lib 並 Push PR。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 點評對「ISR 確定性 (Determinism)」與「中斷優先級」的理解掌握度。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 </body>
-
 
 </html>

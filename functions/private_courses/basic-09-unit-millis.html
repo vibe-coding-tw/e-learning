@@ -26,13 +26,13 @@
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
                 class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
-                基礎 9 - 單元 1
+                基礎 9 - 多工處理
             </span>
             <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
                 擺脫 <span class="text-red-400">delay()</span>：<br><span class="text-blue-400">millis() 與非阻塞邏輯</span>
             </h1>
             <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
-                解鎖 ESP32 的多工潛力，讓你的機器人不再因為「等待」而錯失指令。
+                解鎖 ESP32 的並行潛力，讓機器人不再因為「等待」而錯失關鍵指令。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
@@ -51,145 +51,115 @@
     <!-- Main Content -->
     <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
-        <!-- Module 1: Why delay is evil -->
+        <!-- Module 1: Blocking Is Evil -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
-                        <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <span class="text-4xl">😈</span> 1. 為什麼 delay() 是邪惡的？ (20 min)
-                            </h2>
-                            <div class="space-y-6 text-gray-600 text-lg">
-                                <p><strong>阻塞 (Blocking)：</strong>當執行 <code>delay(1000)</code>
-                                    時，處理器會完全停下來什麼都不做。這就像你在等紅綠燈時閉上眼睛，完全不理會周遭發生的事。</p>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div class="bg-red-50 p-6 rounded-xl border border-red-100 shadow-sm">
-                                        <h4 class="font-bold text-red-800 mb-2">指令被無視</h4>
-                                        <p class="text-sm">
-                                            如果這時無人車快撞牆了，你急忙按下「停止」鍵，但處理器還在 delay 中，你的指令將會被完全無視。
-                                        </p>
-                                    </div>
-                                    <div class="bg-orange-50 p-6 rounded-xl border border-orange-100 shadow-sm">
-                                        <h4 class="font-bold text-orange-800 mb-2">通訊中斷</h4>
-                                        <p class="text-sm">
-                                            對於藍牙或 Wi-Fi 連線，長時間的阻塞可能導致緩衝區溢位或連線超時，讓遙控器顯得反應遲鈍甚至斷線。
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div class="bg-blue-50 p-6 rounded-xl border border-blue-200">
-                                    <h4 class="font-bold text-blue-800 mb-2 flex items-center gap-2">
-                                        <span>🎯</span> 學習目標
-                                    </h4>
-                                    <p class="text-base text-blue-900 leading-relaxed">
-                                        理解「多工 (Multitasking)」的必要性。讓車子在閃爍 LED 的同時，還能以毫秒等級的速度檢查感測器與藍牙指令。
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Module 2: millis() Essence -->
-        <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl">⏱️</span> 2. millis() 的本質：碼錶邏輯 (40 min)
-                    </h2>
-                    <div class="space-y-6 text-gray-600 text-lg">
-                        <p><strong>核心概念：</strong><code>millis()</code> 就像一個永不停止的碼錶，從電源開啟那一刻起紀錄經過的毫秒數。</p>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="space-y-4">
-                                <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
-                                    <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
-                                        <span>🔄</span> 非阻塞邏輯公式
-                                    </h4>
-                                    <p class="text-sm">
-                                        不要叫電腦「等待 1 秒」，而是要它「檢查現在時間，減去上次執行的時間，是否大於 1 秒」。
-                                    </p>
-                                    <div
-                                        class="mt-4 font-bold text-xl text-center bg-white p-3 rounded-lg border border-indigo-200">
-                                        $$\text{Current} - \text{Previous} \ge \text{Interval}$$
-                                    </div>
-                                </div>
-                                <div class="bg-green-50 p-6 rounded-xl border border-green-100">
-                                    <h4 class="font-bold text-green-800 mb-3 flex items-center gap-2">
-                                        <span>💎</span> 關鍵技術：unsigned long
-                                    </h4>
-                                    <p class="text-sm">
-                                        <code>millis()</code> 的數值會隨時間變得非常大（約 50 天才會溢位），因此必須使用 <code>unsigned long</code>
-                                        變數來存儲時間戳記。
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="bg-slate-900 p-8 rounded-2xl text-white font-mono text-sm overflow-x-auto">
-                                <div class="text-gray-500 mb-2">// millis() Pattern</div>
-                                <div>
-                                    <span class="text-purple-400">unsigned long</span> lastTime = <span
-                                        class="text-blue-400">0</span>;<br>
-                                    <span class="text-purple-400">const long</span> interval = <span
-                                        class="text-blue-400">1000</span>;<br><br>
-                                    <span class="text-purple-400">void</span> <span
-                                        class="text-yellow-400">loop</span>() {<br>
-                                    &nbsp;&nbsp;<span class="text-purple-400">unsigned long</span> currentTime = <span
-                                        class="text-yellow-400">millis</span>();<br><br>
-                                    &nbsp;&nbsp;<span class="text-purple-400">if</span> (currentTime - lastTime >=
-                                    interval) {<br>
-                                    &nbsp;&nbsp;&nbsp;&nbsp;lastTime = currentTime;<br>
-                                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-gray-500">// Do something...</span><br>
-                                    &nbsp;&nbsp;}<br>
-                                    &nbsp;&nbsp;<span class="text-gray-500">// Loop continues instantly!</span><br>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Module 3: Cooperative Multitasking -->
-        <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-600"></div>
-                <div class="p-8 md:p-12">
+                <div class="p-8 md:p-14">
                     <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">🤝</span> 3. 合作式多工 (Cooperative Multitasking)
+                        <span class="text-4xl text-red-500">😈</span> 1. 為什麼 delay() 是邪惡的？
                     </h2>
-                    <div class="space-y-6 text-gray-600 text-lg">
-                        <div class="flex flex-col md:flex-row gap-8">
-                            <div class="flex-1 space-y-4">
-                                <p><strong>什麼是合作？</strong>每個任務都只佔用處理器極短的時間（檢查一下時間，如果不該做就馬上跳過），這讓多個任務看起來像是同時運行的。</p>
-                                <div class="bg-slate-100 p-6 rounded-xl border border-slate-200">
-                                    <h4 class="font-bold text-slate-800 mb-3">為什麼發送數據會讓遙控失靈？</h4>
-                                    <p class="text-sm">如果在發送遙測數據（如電量）時使用
-                                        <code>delay()</code>，處理器會卡在發送任務中，無法即時讀取新的遙控指令，造成嚴重的操作延遲。
-                                    </p>
-                                </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                執行 <code>delay(1000)</code> 時，處理器會完全停下來。這就像你在等紅綠燈時閉上眼睛，完全無視周遭發生的緊急狀況。
+                            </p>
+                            <div class="bg-red-50 p-6 rounded-2xl border border-red-100">
+                                <h4 class="font-bold text-red-900 mb-2 text-xs uppercase tracking-widest leading-relaxed">The Impact</h4>
+                                <ul class="text-[10px] text-slate-500 font-light space-y-2">
+                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-red-400 rounded-full"></span>指令無視：若無人車快撞牆，你的按鈕指令會因為 CPU 还忙著 delay 而被丟棄。</li>
+                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-red-400 rounded-full"></span>連線中斷：緩衝區溢位或超時會導致遙控器反應遲鈍甚至斷線。</li>
+                                </ul>
                             </div>
-                            <div class="flex-1">
-                                <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
-                                    <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
-                                        <span>🎯</span> 線上任務：虛擬碼挑戰
-                                    </h4>
-                                    <p class="text-sm text-amber-900 leading-relaxed mb-4">
-                                        嘗試撰寫一段邏輯結構，實現「LED 每 500ms 閃爍一次，同時每 100ms 檢查一次按鈕狀態」，且完全不使用 <code>delay()</code>。
-                                    </p>
-                                    <div
-                                        class="bg-white/50 p-4 rounded-lg font-mono text-xs text-amber-900 border border-amber-100">
-                                        IF (now - T1 > 500) { toggleLED(); T1 = now; }<br>
-                                        IF (now - T2 > 100) { checkButton(); T2 = now; }
-                                    </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center">
+                            <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest">Single Thread Problem</h4>
+                            <div class="space-y-4">
+                                <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                                   <div class="w-full h-full bg-red-500 animate-[pulse_2s_infinite]"></div>
                                 </div>
+                                <p class="text-[10px] text-slate-500 italic">"CPU is Doing Absolutely Nothing but Waiting."</p>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Millis Essence -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-blue-500">⏱️</span> 2. millis() 的本質：碼錶邏輯
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                不要叫電腦「等待 1 秒」，而是要它「檢查現在時間，減去上次執行的時間，是否大於 1 秒」。
+                            </p>
+                            <div class="bg-blue-50 p-8 rounded-3xl border border-blue-100 text-center flex flex-col justify-center">
+                                <h4 class="text-blue-900 font-bold mb-4 text-xs uppercase tracking-widest">Non-blocking Formula</h4>
+                                <div class="text-2xl font-mono text-blue-600">
+                                   \[T_{now} - T_{prev} \ge Interval\]
+                                </div>
+                                <p class="text-[10px] text-slate-400 mt-4 italic font-light">Variable type: unsigned long</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="w-3 h-3 bg-red-400 rounded-full"></span>
+                                <span class="w-3 h-3 bg-amber-400 rounded-full"></span>
+                                <span class="w-3 h-3 bg-emerald-400 rounded-full"></span>
+                                <span class="ml-auto text-[10px] text-slate-500 font-mono tracking-widest uppercase">MILLIS PATTERN (C++)</span>
+                            </div>
+                            <pre class="text-xs md:text-sm leading-relaxed overflow-x-auto text-blue-300 font-mono">
+<span class="text-purple-400">unsigned long</span> last = <span class="text-amber-200">0</span>;
+<span class="text-blue-500">void</span> <span class="text-emerald-400">loop</span>() {
+  <span class="text-purple-400">unsigned long</span> now = <span class="text-yellow-400">millis</span>();
+  <span class="text-purple-400">if</span> (now - last >= <span class="text-amber-200">1000</span>) {
+    last = now;
+    <span class="text-slate-500">// Task Executed!</span>
+  }
+  <span class="text-slate-500">// Free to handle other tasks instantly...</span>
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Multitasking -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-emerald-400">
+                        <span class="p-2 bg-emerald-500/20 rounded-lg text-emerald-400 text-2xl">🤝</span> 3. 合作式多工：任務並行
+                    </h2>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                每個任務都只佔用處理器極短的時間（檢查一下時間，不該做就跳過），這讓多個任務看起來像是「同時運行」。
+                            </p>
+                            <div class="bg-emerald-500/10 p-8 rounded-3xl border border-emerald-500/20 shadow-inner">
+                                <h4 class="font-bold text-emerald-400 mb-4 text-xs uppercase tracking-widest">Cooperative Loop</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span><div><strong class="text-white">高頻任務</strong>：10ms 讀取一次感測器與控制指令。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span><div><strong class="text-white">低頻任務</strong>：500ms 回傳一次電量資料。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span><div><strong class="text-white">失效保護</strong>：偵測通訊超時，若 2s 沒訊號則強制剎車。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="lg:w-80 bg-emerald-600/10 p-10 rounded-3xl border border-emerald-500/20 text-center relative overflow-hidden group">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-emerald-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-emerald-400 font-bold mb-4 text-[10px] uppercase tracking-widest">Concurrency</h4>
+                           <p class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic">
+                               "雖然只有一個核心在跑，但透過毫秒級切換，你賦予了機器人並行思考的靈魂。"
+                           </p>
+                           <div class="inline-block px-8 py-3 bg-emerald-500 text-white rounded-xl font-bold text-[10px] shadow-lg cursor-pointer hover:bg-emerald-400 transition-colors">Test Task Scheduler</div>
                         </div>
                     </div>
                 </div>
@@ -198,73 +168,57 @@
 
         <!-- Homework Section -->
         <section class="module-section">
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：打造並行處理系統</h2>
-            <p class="text-center text-gray-500 mb-12">透過 millis() 重新定義你的程式循環結構。</p>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：並行處理與穩定架構</h2>
+            <p class="text-center text-gray-500 mb-12">透過 millis() 重新定義程式循環結構，打造零延遲反應的強韌控制系統。</p>
 
             <div class="grid md:grid-cols-3 gap-6">
-                <!-- Task 1-1 -->
-                <div onclick="openSubmissionModal('basic-09-heartbeat', '【作業 1-1】「心跳燈」與「指令接收」並行')"
+                <!-- Task 9-1 -->
+                <div onclick="openSubmissionModal('basic-09-millis-1', '【作業 9-1】心跳與指令並行 (Heartbeat & Commands)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-red-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">❤️</span>
-                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-red-500 group-hover:scale-110 transition-transform">❤️</span>
+                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition">【作業 1-1】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「心跳與指令並行」</h4>
-                        <div class="text-sm text-gray-600 space-y-2">
-                            <ul class="list-disc list-inside space-y-1">
-                                <li>將 Blink 程式改寫為 millis() 版本。</li>
-                                <li>保持 LED 每 500ms 閃爍（心跳）。</li>
-                                <li>測試：觀察在閃爍時發送藍牙指令是否能「瞬間」反應。</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition">【作業 9-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「非阻塞系統心跳」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            將阻塞式 LED 閃爍重構為 millis() 版本。驗證在燈號循環的任何時刻發送藍牙指令，馬達皆能瞬間響應，消滅毫秒級延遲。
+                        </p>
                     </div>
                 </div>
 
-                <!-- Task 1-2 -->
-                <div onclick="openSubmissionModal('basic-09-multi-timer', '【作業 1-2】多重計時器：定時讀取與超時保護')"
+                <!-- Task 9-2 -->
+                <div onclick="openSubmissionModal('basic-09-millis-2', '【作業 9-2】多重計時器管理 (Multi-Tasking Timers)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="bg-blue-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">📊</span>
-                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-blue-500 group-hover:rotate-12 transition-transform">⏱️</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 1-2】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「多重計時器管理」</h4>
-                        <div class="text-sm text-gray-600 space-y-2">
-                            <p>實作兩個互不干擾的任務：</p>
-                            <ul class="list-disc list-inside space-y-1">
-                                <li>任務 A：每 100ms 讀取超音波感測器。</li>
-                                <li>任務 B：每 500ms 回傳電池電量。</li>
-                                <li><strong>魔王級超時保護</strong>：若超過 1000ms 沒收到指令，自動切斷馬達電源。</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 9-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「多週期並發調度」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            配置獨立時間戳追蹤。實作每 100ms 觸發高頻測距與每 500ms 觸發低頻電量回傳，並測量兩任務間的執行時間偏移 (Jitter)。
+                        </p>
                     </div>
                 </div>
 
-                <!-- Task 1-3 -->
-                <div onclick="openSubmissionModal('basic-09-stress-test', '【作業 1-3】避障反應速度壓力測試')"
+                <!-- Task 9-3 -->
+                <div onclick="openSubmissionModal('basic-09-millis-3', '【作業 9-3】反應速度壓力測試 (Response Speed & Safety)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-emerald-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🏎️</span>
-                            <span
-                                class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">45
-                                min</span>
+                            <span class="text-4xl text-emerald-500 group-hover:translate-x-1 transition-transform">🏎️</span>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業
-                            1-3】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「反應速度壓力測試」</h4>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業 9-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「零延遲安全限幅」</h4>
                         <p class="text-sm text-gray-600 leading-relaxed">
-                            AB 測試：撰寫一個帶有 <code>delay(100)</code> 的避障邏輯，與純 millis() 版本在高速行駛下對比。觀察哪一個更能避免與障礙物發生碰撞。
+                            數據對比：量化測試 delay(200) 對避障剎車距離的滑行影響。實作 Failsafe 機制：超時 1.5s 未連線則自動強迫停機。
                         </p>
                     </div>
                 </div>
@@ -278,7 +232,7 @@
         <div class="container mx-auto px-4 text-center">
             <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
-                <span>單元課程 基礎 9-1</span>
+                <span>課程單元 基礎 9 - 多工處理</span>
                 <span class="hidden md:inline">|</span>
                 <span>講師：Antigravity Assistant</span>
             </div>
@@ -295,120 +249,136 @@
     <script src="/js/course-shared-v4.js"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">millis() 非阻塞機制實驗室</h2>
 
-        <h3>【作業 1-1】「心跳與指令並行」</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 系統架構優化師 (System Architecture Optimizer)。</li>
-            <li><strong>執行方式：</strong> 將原本使用 <code>delay()</code> 的閃爍程式改寫為 <code>millis()</code> 非阻塞版本。在 LED 閃爍 (心跳燈)
-                的同時，確保藍牙指令接收能達到「零延遲」反應。</li>
-            <li><strong>評分重點 :</strong> 成功移除 <code>delay()</code>，LED 頻率穩定且藍牙操作指令能瞬間觸發馬達。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：心跳與指令並行 (Heartbeat & Commands Parallel)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：系統架構優化師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
 
-        <h3>【作業 1-2】「多重計時器管理」</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 多工系統工程師 (Multi-tasking Engineer)。</li>
-            <li><strong>執行方式：</strong> 實作兩個獨立週期的任務管理。任務 A 每 100ms 讀取一次超音波感測器；任務 B 每 500ms 回傳一次電量狀態。兩個任務需互補干擾。</li>
-            <li><strong>評分重點 :</strong> 使用多個 <code>previousMillis</code> 變數，任務計時精確且程式結構清晰易讀。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>阻塞重構</strong>：將原本使用 <code>delay(500)</code> 控制的 LED 閃爍（系統活動心跳）重寫為基於 <code>millis()</code> 的判定版本。</li>
+                    <li><strong>響應驗證</strong>：在 LED 持續閃爍的過程中發送藍牙控制報文，確保馬達能瞬間對應動作，而非等待當前閃爍循環完成。</li>
+                    <li><strong>性能監測</strong>：在 Serial Monitor 顯示單次 <code>loop()</code> 的執行間隔，驗證週期性阻塞已被成功消除。</li>
+                </ol>
+            </div>
 
-        <h3>【作業 1-3】「反應速度壓力測試」</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 安全測試專家 (Safety Testing Expert)。</li>
-            <li><strong>執行方式：</strong> 進行 AB 測試對比。撰寫一個帶有 100ms 延遲的避障版本與純 <code>millis()</code>
-                版本。在高速行駛下觀察兩者在面對突發障礙物時的剎車距離差異。</li>
-            <li><strong>評分重點 :</strong> 透過實驗數據說明非阻塞邏輯對實時避障的重要性。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>非阻塞完整度</strong>：<code>loop()</code> 中是否成功根除了所有會造成 CPU 空轉等待的 <code>delay()</code> 指令？</li>
+                    <li>[ ] <strong>異步互動感</strong>：按鈕點擊後的指令執行延遲是否穩定低於 10 毫秒？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：多重計時器管理 (Multi-Tasking Timers)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：多工系統工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>分時追蹤實作</strong>：配置獨立的 <code>unsigned long prevMillisA, prevMillisB</code> 追蹤變量。</li>
+                    <li><strong>多週期任務鎖定</strong>：實作任務 A 每 100ms 獲取測距感測器數據；任務 B 每 500ms 回傳電池健康狀態。</li>
+                    <li><strong>溢位安全演算</strong>：嚴格採用減法公式進行臨界判定，以正確處理 ESP32 定時器溢位循環情形。</li>
+                    <li><strong>干擾度分析</strong>：觀察任務 A 的執行頻率對任務 B 的週期抖動 (Jitter) 影響程度。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>計時獨立性</strong>：與 A、B 兩項任務是否能在各自定義的時序內穩定觸發，不因其中一項負載增加而產生耦合偏移？</li>
+                    <li>[ ] <strong>結構清晰度</strong>：代碼架構是否清晰呈現了合作式多工 (Cooperative) 的輪詢結構？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：反應速度壓力測試 (Response Speed & Safety)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：安全測試專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>對照組建置</strong>：撰寫兩套程式邏輯：版本 A 包含 <code>delay(200)</code>；版本 B 為基於 <code>millis()</code> 的純並發版本。</li>
+                    <li><strong>碰撞位移量化</strong>：在全速行駛中觸發紅外線障礙，量化測試兩版本從「偵測到風險」到「物理剎車生效」的滑行距離差。</li>
+                    <li><strong>失效保護 (Failsafe)</strong>：實行指令心跳檢查。若超過 1.5 秒未維持藍牙連線，系統應即刻強制停旋所有馬達。</li>
+                    <li><strong>最終提交</strong>：上傳包含實驗距離數據對比報告與強韌性防護代碼的作業 PR。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>數據支持力</strong>：README 報告中是否能量化展示非阻塞邏輯對於降低「指令空窗期」的具體安全貢獻？</li>
+                    <li>[ ] <strong>保護機敏性</strong>：切斷遙控連線後，車輛是否能在預定的 1.5 秒內可靠觸發 Safe-stop 安全防線？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>在 GitHub 建立新 Repo（名為 <code>basic-09-millis-template</code>）。</li>
-                <li>上傳包含 `delay()` 阻塞邏輯的「反面教材」代碼。</li>
-                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
-                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，獲得個人專屬 Repo。</li>
-                <li>將「阻塞式計時」重構為「狀態檢查式計時」，實作多工任務分配。</li>
-                <li>完成多重計時器管理後 <strong>Push 代碼</strong> 提交 PR。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
-                <li>重點審查學生是否正確使用 `unsigned long` 處理時間差，避免溢位問題。</li>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：掌握合作式多工思維與即時任務調度。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-indigo-600">重點 1：封印 delay()</strong> - 讓學員理解在通訊系統中，任何毫秒級的延遲都會導致 CPU 進入「盲聽」狀態，造成操控事故。</li>
+                <li><strong class="text-indigo-600">重點 2：減法判定的數學原理</strong> - 務必詳細解釋為何必須使用 <code>now - last >= interval</code> 而不能用加法，這關乎系統的長期運行穩定性。</li>
+                <li><strong class="text-indigo-600">重點 3：優先級與時間片</strong> - 引導學員思考：接收控制指令的任務優先級永遠應該高於傳送狀態資料的低頻任務。</li>
             </ol>
         </div>
 
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元聚焦於「從同步思維轉向異步思維」，引導學生透過 `millis()` 重新定義程式的循環結構，建立多工處理的基礎直覺。</p>
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/main.cpp       # (必修) 學員需手動將阻塞式示範程式重構成 millis 異步架構
+├── include/scheduler.h# 預留的多重計時器管理類別定義
+└── README.md          # 實驗報告：量化紀錄阻塞與非阻塞版本下的指令反應時差
+            </pre>
+        </div>
 
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── src/
-│   └── main.cpp      # (重點) 需實作並行的 millis() 任務區塊
-├── docs/             # 提供阻塞與非阻塞的時序圖對比
-└── README.md         # 壓力測試結果：藍牙指令的平均反應毫秒數</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>main.cpp (millis() Pattern)</strong></p>
-        <pre><code>unsigned long last = 0;
-void loop() {
-  if (millis() - last >= 1000) {
-    last = millis();
-    // 執行任務
-  }
-}</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>關鍵字篩選：：</strong> 偵測程式碼中是否出現 `millis()` 與 `unsigned long` 變數宣告。</li>
-            <li><strong>死代碼檢測：：</strong> 檢查 `loop()` 函式內是否完全移除了 `delay()` 呼叫，確保系統非阻塞。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「為什麼 delay() 會殺死你的機器人？」動畫。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員理解「處理器空轉」造成的損失。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom
-                        作業，對比在有無「阻塞」的情況下，系統對突發事件（按鈕/中斷）的反應。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>演示如何利用 Delta Time
-                        邏輯同時處理多個不同頻率的任務。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作具備溢位防護機制的計時函式庫並 Push，閱讀教師回覆 PR。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核學生對「狀態持久性
-                        (Persistence of State)」的概念掌握。</td>
-                </tr>
-            </tbody>
-        </table>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看「為什麼專業嵌入式開發從不使用 delay()」動畫解說。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 檢查預習測驗中對「連線心跳超時機制」的初步構思。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，在路測中對比兩種版本的剎車反應，紀錄物理位移差異。</td>
+                        <td class="p-4 border-b"><strong>助教引導:</strong> 展示如何配置多組獨立的 <code>previousMillis</code> 追蹤不連續任務。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">將非阻塞邏輯全面覆蓋至所有感測器採樣工作中並 Push 並發 PR。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 評價學員對「系統即時性實測」的數據支撐感與邏輯細節處理。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 </body>
 

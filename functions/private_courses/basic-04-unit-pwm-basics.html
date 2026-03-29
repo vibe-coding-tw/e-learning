@@ -26,13 +26,13 @@
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
                 class="inline-block py-1 px-3 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-sm font-semibold mb-6 tracking-wide uppercase">
-                基礎 4 - PWM 與速度控制
+                基礎 4 - 能量調變控制
             </span>
             <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
                 脈衝的藝術：<br><span class="text-purple-400">解密 PWM 占空比魔法</span>
             </h1>
             <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
-                理解如何透過極速開關切換，讓數位腳位模擬出連續的類比電壓感。
+                理解如何透過極速開關切換，讓數位腳位模擬出連續的類比電壓感，驅動光線與動能。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
@@ -53,70 +53,48 @@
 
         <!-- Module 1: What is PWM -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
+                <div class="p-8 md:p-14">
+                    <div class="flex flex-col md:flex-row gap-16">
                         <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                <span class="text-4xl">🌉</span> 1. 數位轉類比的橋樑：什麼是 PWM？
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                <span class="text-4xl text-purple-500">🌉</span> 1. 數位轉類比的橋樑：什麼是 PWM？
                             </h2>
-                            <div class="space-y-4 text-gray-600 text-lg">
-                                <p>
-                                    開關的藝術：電腦腳位本質上是數位的，只能輸出 <span class="font-bold text-gray-400">0V (OFF)</span> 或 <span
-                                        class="font-bold text-amber-500">3.3V (ON)</span>。
+                            <div class="space-y-6 text-gray-600">
+                                <p class="text-lg leading-relaxed">
+                                    電腦腳位本質上是數位的，只能輸出 <span class="font-bold text-slate-400">0V (OFF)</span> 或 <span
+                                        class="font-bold text-amber-500">3.3V (ON)</span>。但透過 <span class="font-bold text-purple-600">PWM (Pulse Width Modulation)</span>，我們可以模擬中間值。
                                 </p>
-                                <p>
-                                    <span class="font-bold text-purple-600">PWM (Pulse Width Modulation)</span>
-                                    是透過極快速地切換開關，讓外部設備感受到一個「平均電壓」。
+                                <p class="text-lg leading-relaxed font-light">
+                                    這是一種利用極高頻率切換開關，讓外部設備（LED 或馬達）因為物理慣性感受到一個「平均能量」的技術。
                                 </p>
-                                <div class="bg-purple-50 p-6 rounded-xl border border-purple-100 mt-6">
-                                    <h4 class="font-bold text-purple-800 mb-3">占空比 (Duty Cycle) 的奧祕：</h4>
-                                    <p class="text-sm mb-4 text-purple-700">在一個固定週期內，「開啟時間」佔「總週期時間」的百分比。</p>
-                                    <ul class="space-y-3">
-                                        <li class="flex items-center gap-3">
-                                            <span
-                                                class="bg-purple-100 text-purple-700 px-2 py-1 rounded text-sm font-bold w-32 text-center">25%
-                                                Duty Cycle</span>
-                                            <span>1/4 時間開，3/4 時間關 → 感覺像是 3.3V 的 25%。</span>
-                                        </li>
-                                        <li class="flex items-center gap-3">
-                                            <span
-                                                class="bg-purple-200 text-purple-800 px-2 py-1 rounded text-sm font-bold w-32 text-center">50%
-                                                Duty Cycle</span>
-                                            <span>一半開，一半關 → 感覺像是 3.3V 的一半。</span>
-                                        </li>
-                                    </ul>
+                                <div class="bg-purple-50 p-6 rounded-2xl border border-purple-100 mt-4">
+                                    <h4 class="font-bold text-purple-900 mb-4 text-sm uppercase tracking-widest">占空比 (Duty Cycle) 的奧秘</h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div class="p-4 bg-white rounded-xl shadow-sm border border-purple-200 group hover:bg-purple-600 transition-colors duration-300">
+                                            <div class="text-xs text-purple-500 group-hover:text-purple-200 mb-1">25% Duty Cycle</div>
+                                            <p class="text-xs text-slate-600 group-hover:text-white">輸出端感覺像是 3.3V 的 1/4 強度。</p>
+                                        </div>
+                                        <div class="p-4 bg-white rounded-xl shadow-sm border border-purple-200 group hover:bg-purple-600 transition-colors duration-300">
+                                            <div class="text-xs text-purple-500 group-hover:text-purple-200 mb-1">75% Duty Cycle</div>
+                                            <p class="text-xs text-slate-600 group-hover:text-white">高電位占多數，光線明亮且馬達高速。</p>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-
-                            <div class="mt-8 bg-slate-900 text-slate-300 p-6 rounded-xl border border-slate-700">
-                                <h4 class="text-white font-bold mb-3 flex items-center gap-2">
-                                    <span class="text-amber-400">🔍</span> 學習任務
-                                </h4>
-                                <p class="text-sm leading-relaxed">
-                                    觀察家中的電磁爐或微波爐低溫模式，它們是如何透過「開開停停」來控制溫度的？這與 PWM 的概念有什麼異曲同工之妙？
-                                </p>
                             </div>
                         </div>
 
-                        <div class="md:w-1/3">
-                            <div class="sticky top-24">
-                                <div class="bg-slate-100 rounded-2xl p-4 shadow-inner border border-gray-200">
-                                    <!-- Use a generated diagram description for now -->
-                                    <div
-                                        class="aspect-video bg-white flex flex-col items-center justify-center border border-dashed border-gray-300 rounded-lg p-4">
-                                        <div class="w-full flex justify-around items-end h-24 mb-2">
-                                            <div class="w-8 bg-purple-500 h-[25%] rounded-t"></div>
-                                            <div class="w-8 bg-purple-500 h-[50%] rounded-t"></div>
-                                            <div class="w-8 bg-purple-500 h-[75%] rounded-t"></div>
-                                            <div class="w-8 bg-purple-500 h-[100%] rounded-t"></div>
-                                        </div>
-                                        <p class="text-xs text-gray-500 font-medium">PWM 占空比示意圖</p>
+                        <div class="md:w-80 flex items-center">
+                            <div class="bg-slate-100 p-8 rounded-3xl border border-slate-200 shadow-inner group">
+                                <div class="aspect-square bg-white flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-2xl p-6">
+                                    <div class="w-full flex justify-around items-end h-32 mb-4">
+                                        <div class="w-4 bg-purple-500 h-[25%] rounded-t-sm group-hover:animate-pulse"></div>
+                                        <div class="w-4 bg-purple-500 h-[50%] rounded-t-sm group-hover:animate-pulse" style="animation-delay: 0.1s"></div>
+                                        <div class="w-4 bg-purple-500 h-[75%] rounded-t-sm group-hover:animate-pulse" style="animation-delay: 0.2s"></div>
+                                        <div class="w-4 bg-purple-500 h-[100%] rounded-t-sm group-hover:animate-pulse" style="animation-delay: 0.3s"></div>
                                     </div>
-                                    <p class="text-center text-xs text-gray-400 mt-4 italic font-medium">
-                                        圖示：透過寬度變化改變輸出能量
-                                    </p>
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Width = Energy</p>
                                 </div>
                             </div>
                         </div>
@@ -127,62 +105,42 @@
 
         <!-- Module 2: Energy Equivalence -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-blue-500 to-teal-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl">⚡</span> 2. 能量等效原理：平均電壓
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-blue-500">⚡</span> 2. 能量等效：平均電壓原理
                     </h2>
 
-                    <div class="grid md:grid-cols-2 gap-12 items-center">
-                        <div class="space-y-6">
-                            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
-                                <h4 class="font-bold text-blue-800 mb-4">核心數學公式：</h4>
-                                <div
-                                    class="bg-white p-4 rounded-lg shadow-sm border border-blue-200 text-center text-2xl overflow-x-auto font-[Outfit]">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                        <div class="space-y-8">
+                            <div class="bg-blue-50 p-8 rounded-3xl border border-blue-100">
+                                <h4 class="font-bold text-blue-900 mb-4 flex items-center gap-2">
+                                    <span>∑</span> 電壓等效公式
+                                </h4>
+                                <div class="bg-white p-6 rounded-2xl shadow-inner border border-blue-200 text-center text-2xl font-[Outfit]">
                                     \[V_{avg} = V_{max} \times \text{Duty Cycle}\]
                                 </div>
                             </div>
-                            <div class="space-y-4 text-gray-600">
-                                <p class="text-lg">
-                                    <span class="font-bold text-blue-600">視覺暫留與慣性：</span> 為什麼我們看不到燈在閃？
-                                </p>
-                                <p>
-                                    因為切換速度（頻率）通常高達數千赫茲 (Hz)，人眼與馬達轉子因為慣性來不及反應，只會感受到平滑的平均能量輸出。
-                                </p>
-                            </div>
-                            <div class="bg-slate-900 text-slate-300 p-6 rounded-xl border border-slate-700">
-                                <h4 class="text-white font-bold mb-3 flex items-center gap-2">
-                                    <span class="text-amber-400">🎥</span> 線上任務
-                                </h4>
-                                <p class="text-sm leading-relaxed mb-4">
-                                    觀看示波器演示影片，觀察當 Duty Cycle 從 10% 變到 90% 時，LED 亮度與馬達轉速的視覺變化。
-                                </p>
-                                <div
-                                    class="p-4 bg-slate-800 rounded-lg border border-slate-700 flex items-center gap-4">
-                                    <span class="text-2xl text-red-500">▶️</span>
-                                    <span class="text-sm font-medium">示波器實測影片 (待跳轉)</span>
-                                </div>
-                            </div>
+                            <p class="text-gray-600 leading-relaxed font-light">
+                                為什麼我們看不到 LED 在閃爍？因為切換頻率通常高達數千赫茲 (Hz)，超越了人眼的「視覺暫留 (POV)」與機械轉子的慣性極限。
+                            </p>
                         </div>
 
-                        <div>
-                            <div class="bg-slate-100 rounded-2xl p-6 shadow-inner border border-gray-200">
-                                <div class="bg-slate-800 aspect-video rounded-xl flex items-center justify-center">
-                                    <!-- Oscilloscope visual simulated -->
-                                    <svg viewBox="0 0 200 100" class="w-full h-auto">
-                                        <path
-                                            d="M 0 80 L 10 80 L 10 20 L 30 20 L 30 80 L 50 80 L 50 20 L 70 20 L 70 80 L 90 80 L 90 20 L 110 20 L 110 80 L 130 80 L 130 20 L 150 20 L 150 80"
-                                            fill="none" stroke="#22c55e" stroke-width="2" />
-                                        <line x1="0" y1="50" x2="200" y2="50" stroke="#475569" stroke-dasharray="2,2" />
-                                        <text x="5" y="15" fill="#22c55e" font-size="8" font-family="monospace">50% Duty
-                                            Cycle</text>
-                                    </svg>
-                                </div>
-                                <p class="text-center text-xs text-gray-400 mt-4 italic font-medium">
-                                    示波器波形：方波的占比決定了有效電壓
-                                </p>
-                            </div>
+                        <div class="bg-slate-900 p-8 rounded-3xl border border-slate-700 shadow-2xl overflow-hidden group">
+                           <h4 class="text-white font-bold mb-6 flex items-center gap-2 text-sm uppercase tracking-widest">
+                                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
+                                Oscilloscope Visual
+                           </h4>
+                           <div class="bg-black/50 aspect-video rounded-2xl p-6 border border-white/5 shadow-inner">
+                                <svg viewBox="0 0 200 100" class="w-full h-auto">
+                                    <path d="M 0 80 L 10 80 L 10 20 L 30 20 L 30 80 L 50 80 L 50 20 L 70 20 L 70 80 L 90 80 L 90 20 L 110 20 L 110 80 L 130 80"
+                                        fill="none" stroke="#22c55e" stroke-width="2" class="group-hover:stroke-emerald-400 transition-colors" />
+                                    <line x1="0" y1="50" x2="200" y2="50" stroke="#475569" stroke-dasharray="4,4" />
+                                    <text x="5" y="12" fill="#22c55e" font-size="6" font-family="monospace" class="opacity-50">50% DUTY @ 5kHz</text>
+                                </svg>
+                           </div>
+                           <p class="text-center text-[10px] text-slate-500 mt-6 italic">方波的寬度精準定義了輸出能量的大小</p>
                         </div>
                     </div>
                 </div>
@@ -191,60 +149,38 @@
 
         <!-- Module 3: ESP32 LEDC -->
         <section class="module-section mb-16">
-            <div class="bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white">
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col lg:flex-row gap-12">
-                        <div class="lg:w-1/2 space-y-6">
+            <div class="bg-gradient-to-br from-slate-900 to-black rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <div class="flex flex-col lg:flex-row gap-16">
+                        <div class="flex-1 space-y-8">
                             <h2 class="text-3xl font-bold mb-4 flex items-center gap-3">
-                                <span class="text-4xl">🛠️</span> 3. ESP32 的 PWM 工具：LEDC 頻道
+                                <span class="p-2 bg-purple-500/20 rounded-lg text-purple-400 text-2xl">🛠️</span> 3. ESP32 LEDC 控制核心
                             </h2>
-                            <div class="space-y-6">
-                                <div class="flex gap-4 p-5 bg-purple-500/10 rounded-2xl border border-purple-500/20">
-                                    <div class="text-3xl">🧩</div>
-                                    <div>
-                                        <h4 class="font-bold text-purple-400">解析度 (Resolution)</h4>
-                                        <p class="text-sm text-slate-300 mt-1 leading-relaxed">
-                                            如果解析度是 8-bit，代表我們可以將占空比分成 \(2^8 = 256\) 階（0–255）。解析度越高，控制越精細，但最高頻率也會隨之限制。
-                                        </p>
-                                    </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-purple-500/50 transition duration-300">
+                                    <h4 class="font-bold text-purple-400 mb-2">解析度 (Resolution)</h4>
+                                    <p class="text-xs text-slate-400 leading-relaxed font-light">
+                                        定義占空比的精細程度。若是 8-bit 解析度，代表你可以將動力切成 256 階 (0-255)。
+                                    </p>
                                 </div>
-                                <div class="flex gap-4 p-5 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
-                                    <div class="text-3xl">📡</div>
-                                    <div>
-                                        <h4 class="font-bold text-indigo-400">頻率 (Frequency)</h4>
-                                        <p class="text-sm text-slate-300 mt-1 leading-relaxed">
-                                            控制 LED 通常用 5000Hz (避開人眼閃爍與攝影機掃描頻率)；控制馬達則常用 1000Hz - 20000Hz。
-                                        </p>
-                                    </div>
+                                <div class="p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-indigo-500/50 transition duration-300">
+                                    <h4 class="font-bold text-indigo-400">PWM 頻率 (Frequency)</h4>
+                                    <p class="text-xs text-slate-400 leading-relaxed font-light">
+                                        LED 控制建議 5000Hz 以避開啟閃爍；馬達控制則依據電感特性通常在 1k~20kHz 之間選擇。
+                                    </p>
                                 </div>
                             </div>
                         </div>
-
-                        <div
-                            class="lg:w-1/2 bg-slate-800 p-8 rounded-2xl border border-slate-700 relative overflow-hidden">
-                            <h4 class="text-xl font-bold mb-6 flex items-center gap-2">
-                                <span class="text-amber-400">🧪</span> 預習任務
-                            </h4>
-                            <p class="text-slate-300 leading-relaxed mb-6">
-                                查閱 ESP32 的資料，為什麼控制馬達時，頻率不能設得太低（例如 10Hz）？這會對馬達產生什麼物理影響？（提示：能量連續性與機械抖動）。
+                        <div class="md:w-80 bg-slate-800/50 p-8 rounded-3xl border border-slate-700 flex flex-col justify-center text-center shadow-inner">
+                            <h3 class="font-bold mb-4 text-purple-400 text-xs uppercase tracking-widest">Efficiency Hint</h3>
+                            <p class="text-[11px] text-slate-500 mb-8 leading-relaxed italic">
+                                頻率太高會增加開關損耗，太低則會產生物理共振與噪音。尋找你的驅動「甜蜜點」。
                             </p>
-                            <div class="space-y-4">
-                                <div class="flex items-center gap-4 text-sm text-slate-400">
-                                    <span class="w-2 h-2 bg-purple-500 rounded-full"></span>
-                                    <span>關鍵概念：頻率 與 占空比 的定義</span>
-                                </div>
-                                <div class="flex items-center gap-4 text-sm text-slate-400">
-                                    <span class="w-2 h-2 bg-purple-500 rounded-full"></span>
-                                    <span>計算公式：\(V_{avg} = V_{total} \times \text{Duty Cycle}\)</span>
-                                </div>
-                            </div>
-                            <div class="mt-8">
-                                <a href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/ledc.html"
-                                    target="_blank"
-                                    class="inline-block bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-purple-900/40">
-                                    閱讀 LEDC 官方文件
-                                </a>
-                            </div>
+                            <a href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/ledc.html"
+                                target="_blank"
+                                class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold text-[10px] transition-all shadow-lg hover:shadow-indigo-900/40">
+                                閱讀 LEDC 技術官網
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -254,81 +190,57 @@
         <!-- Homework Section -->
         <section class="module-section">
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實作任務：掌控能量的規律</h2>
-            <p class="text-center text-gray-500 mb-12">將抽象的數位訊號轉化為真實的物理動能與光線。</p>
+            <p class="text-center text-gray-500 mb-12">將抽象的數位訊號轉化為真實的物理動能與感官體驗。</p>
 
             <div class="grid md:grid-cols-3 gap-6">
-                <!-- Task 1-1 -->
-                <div onclick="openSubmissionModal('basic-04-pwm-1', '作業 1-1: 「捉摸不定的波形」：示波器實測')"
+                <!-- Task 4-1 -->
+                <div onclick="openSubmissionModal('basic-04-pwm-1', '【作業 4-1】捕捉脈衝：波形觀測實驗 (Pulse Audit)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-purple-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">📉</span>
-                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">45
-                                min</span>
+                            <span class="text-4xl text-purple-500 group-hover:scale-110 transition-transform">📉</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">作業 1-1
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「捉摸不定的波形」：示波器實測</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
-                            觀察占空比從 10% 到 90% 的寬度變化，並嘗試降低頻率 (10Hz) 觀察馬達的抖動現象，驗證有效電壓公式。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 4-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「階梯式能量觀測」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            觀察占空比從 10% 到 90% 的寬度變化。實測降低頻率至 10Hz 時馬達的「抽搐」現象，並驗證有效電壓公式的運作。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-purple-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳示波器截圖</span>
                     </div>
                 </div>
 
-                <!-- Task 1-2 -->
-                <div onclick="openSubmissionModal('basic-04-pwm-2', '作業 1-2: 「呼吸燈與線性感知」')"
+                <!-- Task 4-2 -->
+                <div onclick="openSubmissionModal('basic-04-pwm-2', '【作業 4-2】視覺平衡：Gamma 校正呼吸燈 (Lighting UX)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-blue-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">✨</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-blue-500 group-hover:rotate-12 transition-transform">✨</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">作業 1-2
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">呼吸燈與線性感知</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
-                            實作呼吸燈，並探討人類對亮度的非線性感知。嘗試使用平方關係 $PWM = i^2$ 讓燈光變化看起來更平滑。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 4-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「非線性感知優化」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            對比線性呼吸與平方關係呼吸燈。實作平方映射補償人眼的非線性感知，讓 LED 亮度的過渡看起來更加自然與柔和。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-blue-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳程式碼單元</span>
                     </div>
                 </div>
 
-                <!-- Task 1-3 -->
-                <div onclick="openSubmissionModal('basic-04-pwm-3', '作業 1-3: 「馬達啟動挑戰」：克服靜摩擦力')"
+                <!-- Task 4-3 -->
+                <div onclick="openSubmissionModal('basic-04-pwm-3', '【作業 4-3】啟動突破：克服靜摩擦力 (Motor Power Break)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-indigo-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🏎️</span>
-                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-indigo-500 group-hover:translate-x-2 transition-transform">🏎️</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">作業 1-3
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">馬達啟動挑戰：靜摩擦力</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
-                            尋找馬達啟動的「死區 (Dead Zone)」，撰寫 smartDrive(value) 函式來自動補償初始動力，克服物理阻力。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 4-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「smartDrive 補償算法」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            尋找馬達啟動的「死區」閥值。撰寫自動加上 Offset 的驅動函式，讓無人車在低速指令下也能流暢起步。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-indigo-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳啟動測試影片</span>
                     </div>
                 </div>
             </div>
@@ -341,139 +253,12 @@
         <div class="container mx-auto px-4 text-center">
             <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
-                <span>單元課程 基礎 4</span>
+                <span>課程單元 基礎 4 - 能量調變控制</span>
                 <span class="hidden md:inline">|</span>
                 <span>講師：Antigravity Assistant</span>
             </div>
         </div>
     </footer>
-
-    <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
-
-        <h3>作業 1-1：「捉摸不定的波形」：示波器實測</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 訊號分析工程師 (Signal Analysis Engineer)。</li>
-            <li><strong>執行方式：</strong> 觀察占空比從 10% 到 90% 的寬度變化，記錄 LED 亮度變化，並嘗試降低頻率（例如 10Hz）觀察馬達的抖動現象，驗證有效電壓公式。</li>
-            <li><strong>評分重點 :</strong> 能成功捕獲不同占空比下的波形變化，並能口頭或文字解釋平均電壓與占空比的關係。</li>
-        </ul>
-
-        <h3>作業 1-2：「呼吸燈與線性感知」</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> UI/UX 燈光設計師 (UI/UX Lighting Designer)。</li>
-            <li><strong>執行方式：</strong>
-                實作呼吸燈效果。挑戰題目：探討人類對亮度的非線性感知。嘗試使用平方關係（例如：<code>duty = i * i / 255</code>）讓燈光變化看起來比純線性遞增更平滑。</li>
-            <li><strong>評分重點 :</strong> 呼吸燈效果流暢，且能比較線性與非線性（Gamma 校正）在視覺感受上的差異。</li>
-        </ul>
-
-        <h3>作業 1-3：「馬達啟動挑戰」：克服靜摩擦力</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 動力系統工程師 (Power System Engineer)。</li>
-            <li><strong>執行方式：</strong> 尋找馬達啟動的「死區 (Dead Zone)」，記錄在多少 PWM 值以下馬達只會發出嗡嗡聲但不轉動。撰寫一段代碼來自動補償初始動力。</li>
-            <li><strong>評分重點 :</strong> 找出精確的死區臨界值，並實作補償邏輯讓馬達能從極低速平穩啟動。</li>
-        </ul>
-    </section>
-
-    <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>在 GitHub 建立新 Repo（名為 <code>basic-04-pwm-template</code>）。</li>
-                <li>上傳包含基礎引腳定義但「未實作 PWM 初始化與控制邏輯」的 Repo 框架。</li>
-                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
-                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，獲得個人專屬 Repo。</li>
-                <li>實作呼吸燈效果或 LED 亮度階梯式調整功能。</li>
-                <li>本地開發後 <strong>Push 代碼</strong> 提交進度。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
-                <li>針對學生的「LEDC Channel 分配」與「占空比映射與解析度匹配度」予以具體點評。</li>
-            </ol>
-        </div>
-
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元引導學生掌握「數位模擬類比」的核心技術，理解電壓等效原理與 PWM 波形控制。</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── platformio.ini   # 包含基礎開發環境配置
-├── src/
-│   └── main.cpp      # (重點) 需實作 ledcSetup、ledcAttachPin 與 ledcWrite
-└── README.md        # 不同 Duty Cycle 亮度觀察、呼吸燈計算公式與實驗日誌</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>main.cpp (基礎 LEDC 應用)</strong></p>
-        <pre><code>#include &lt;Arduino.h&gt;
-
-const int ledPin = 2; // PWM 引腳
-const int freq = 5000;
-const int ledChannel = 0;
-const int resolution = 8; // 8-bit (0-255)
-
-void setup() {
-  ledcSetup(ledChannel, freq, resolution);
-  ledcAttachPin(ledPin, ledChannel);
-}
-
-void loop() {
-  for(int duty = 0; duty <= 255; duty++){   
-    ledcWrite(ledChannel, duty);
-    delay(7);
-  }
-}</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>核心語法檢索：：</strong> 偵測程式中是否呼叫了 <code>ledcWrite()</code> 與 <code>ledcSetup()</code>。</li>
-            <li><strong>配置參數驗證：：</strong> 驗證學生設定的解析度是否與其迴圈邊界 (如 0-255) 相互匹配。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「PWM：如何用數位開關模擬類比輸出？」教學影片。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員理解「平均電壓」等效概念。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實作亮度測試，記錄 LED 在不同工作週期下視覺感受。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>解釋頻率太低導致的閃爍 (POV) 現象。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作「Gamma 校正呼吸燈」並提交至 PR。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>審核學生對「定時器資源分配」的理解。</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
 
     <script>
         // Define Resources
@@ -483,6 +268,138 @@ void loop() {
         };
     </script>
     <script src="/js/course-shared-v4.js"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">PWM 占空比與能量控制實驗室</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：「捕捉脈衝」：示波器波形觀測 (Pulse Capture: Audit)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：訊號分析工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>占空比步進開發</strong>：編寫程式，將 PWM 占空比從 10% 階梯式增加到 90%，觀察並記錄 LED 亮度的階梯對比。</li>
+                    <li><strong>低頻物理測試</strong>：將頻率調降至 10Hz，觀察馬達轉子或 LED 的不連續跳動（抽搐）現象。</li>
+                    <li><strong>結果報告</strong>：在 <code>README.md</code> 中以此實驗為例，列出由 Duty Cycle 計算出的「等效平均電壓」數據。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>訊號直覺掌握</strong>：能否正確描述不同 Duty Cycle 所對應的波形寬度與能量強度關係？</li>
+                    <li>[ ] <strong>物理極限認知</strong>：是否理解在高頻與低頻環境下，物理慣性對 PWM 輸出平滑度的決定性影響？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：「視覺平衡」：Gamma 校正呼吸燈 (Lighting: Gamma Correction)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：UI/UX 燈光設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>線性呼吸實作</strong>：在 8-bit 解析度下實作一個純線性的遞增遞減呼吸燈。</li>
+                    <li><strong>Gamma 映射開發</strong>：引入平方公式 (Duty = i*i/255) 重新映射 PWM 數值。</li>
+                    <li><strong>視覺差異分析</strong>：對比兩種方式在亮、暗轉換瞬間的平滑度差異，分析人眼感知的感知非線性。</li>
+                    <li><strong>最終提交</strong>：整併包含平方映射補償的專案並 Push。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>感知優底度</strong>：最終呈現的呼吸燈是否呈現出符合直覺、均勻無突兀感的亮度演變？</li>
+                    <li>[ ] <strong>代碼邏輯嚴謹性</strong>：在進行平方運算時，是否正確處理了數據類型 (float/int) 與邊界限制？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：「啟動突破」：克服馬達靜摩擦力 (Motor: Static Friction Workaround)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：動力系統工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>死區閥值量測</strong>：從零開始緩慢增加 PWM，紀錄在多少數值以上馬達才能成功克服靜摩擦力開始轉動。</li>
+                    <li><strong>補償函式封裝</strong>：撰寫 <code>smartDrive(value)</code> 函式。若指令不為零，則自動加上量測到的死區 Offset。</li>
+                    <li><strong>平滑起步驗證</strong>：實測在極低速指令下，馬達能否立即轉動而非悶哼或暴衝。</li>
+                    <li><strong>最終 Commit</strong>：封裝動力補償模組並 Push，附上測試日誌。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>物理補償精確度</strong>：所設定的 Offset 是否能精準補償馬達的物理阻力？</li>
+                    <li>[ ] <strong>運動邊界處理</strong>：補償邏輯是否正確排除了「靜止指令 (Zero)」以防止馬達在待機時微轉？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：掌握「數位模擬類比」的工業級精髓，並理解物理世界與數位指令間的落差補償。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-purple-600">重點 1：波形即能量</strong> - 讓學生不再將 PWM 看作簡單的數值，而是理解「平均電壓」的實體意義。</li>
+                <li><strong class="text-purple-600">重點 2：從線性到感知</strong> - 透過呼吸燈實驗，引導學員從單純的邏輯轉向 UI/UX 設計中的「人類感知校準」。</li>
+                <li><strong class="text-purple-600">重點 3：軟體解決物理問題</strong> - 藉由 smartDrive 補償靜摩擦力的實作，建立「硬體不完美，軟體來救」的強大開發心理。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-purple-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/main.cpp      # (核心實作) 提供基本的驅動框架，需學員補全 smartDrive 邏輯
+└── README.md         # 實驗日誌：記錄馬達啟動死區閥值與 Gamma 校正前後的觀測對比
+            </pre>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看「PWM：為什麼極速開關能控制速度？」原理影片。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員是否能根據最大電壓與占空比換算出理論平均值。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，挑戰在實體板子上測出馬達的第一動死區，並實作 Gamma 補償。</td>
+                        <td class="p-4 border-b"><strong>示波器教學:</strong> 即時展示如何觀察 PWM 頻率與波形寬度。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">將動力補償函數精鍊化並 Push，提交 PR 說明針對不同硬體（LED vs 馬達）設定參數的差異。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 點評學員對「線性與非線性」轉換邏輯的工程嚴謹度。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 </body>
 
 </html>

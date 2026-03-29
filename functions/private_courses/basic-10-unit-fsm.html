@@ -26,13 +26,13 @@
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
                 class="inline-block py-1 px-3 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-sm font-semibold mb-6 tracking-wide uppercase">
-                基礎 10 - 單元 1
+                基礎 10 - 邏輯架構
             </span>
             <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
                 <span class="text-blue-400">有限狀態機 (FSM)</span><br>日常裝置中的秘密邏輯
             </h1>
             <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
-                擺脫混亂的 if-else 嵌套，用「狀態」優化你的無人車控制架構。
+                擺脫混亂的 if-else 嵌套，用「狀態」思維優化你的機器人控制架構。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
@@ -51,41 +51,37 @@
     <!-- Main Content -->
     <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
-        <!-- Module 1: What is FSM -->
+        <!-- Module 1: FSM Essence -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
-                        <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <span class="text-4xl">🤖</span> 1. 什麼是 FSM？ (20 min)
-                            </h2>
-                            <div class="space-y-6 text-gray-600 text-lg">
-                                <p><strong>核心定義：</strong>一個系統在任何時間點，都處於「有限個狀態」中的其中一個。這能讓系統行為變得可預測且穩定。</p>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div
-                                        class="bg-blue-50 p-6 rounded-xl border border-blue-100 shadow-sm transition hover:shadow-md">
-                                        <h4 class="font-bold text-blue-800 mb-2">狀態 (State)</h4>
-                                        <p class="text-sm">例如「前進」、「停止」、「倒車」。系統目前「正在做什麼」。</p>
-                                    </div>
-                                    <div
-                                        class="bg-purple-50 p-6 rounded-xl border border-purple-100 shadow-sm transition hover:shadow-md">
-                                        <h4 class="font-bold text-purple-800 mb-2">事件 (Event)</h4>
-                                        <p class="text-sm">觸發改變的條件，如「按下按鈕」、「感測器偵測到障礙物」。</p>
-                                    </div>
-                                    <div
-                                        class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 shadow-sm transition hover:shadow-md">
-                                        <h4 class="font-bold text-indigo-800 mb-2">轉移 (Transition)</h4>
-                                        <p class="text-sm">從一個狀態變成另一個狀態的「動作」。</p>
-                                    </div>
-                                    <div
-                                        class="bg-slate-50 p-6 rounded-xl border border-slate-100 shadow-sm transition hover:shadow-md">
-                                        <h4 class="font-bold text-slate-800 mb-2">動作 (Action)</h4>
-                                        <p class="text-sm">進入該狀態後要做的事（如：馬達轉動、變換 LED 顏色）。</p>
-                                    </div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-blue-500">🤖</span> 1. 什麼是 FSM (有限狀態機)？
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                一個系統在任何時間點，都處於「有限個狀態」中的其中一個。這能讓系統行為從混亂變得「可預測」。
+                            </p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-sm">
+                                    <h4 class="font-bold text-blue-800 mb-1 text-[10px] uppercase tracking-widest">State</h4>
+                                    <p class="text-[9px] text-slate-500">「正在做什麼」。如：前進、待機、急停。</p>
                                 </div>
+                                <div class="bg-purple-50 p-4 rounded-xl border border-purple-100 shadow-sm">
+                                    <h4 class="font-bold text-purple-800 mb-1 text-[10px] uppercase tracking-widest">Event</h4>
+                                    <p class="text-[9px] text-slate-500">「發生了什麼」。如：按下按鈕、偵測障礙。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center">
+                            <h4 class="text-[10px] font-bold text-slate-500 mb-4 uppercase tracking-widest">Deterministic Architecture</h4>
+                            <div class="flex items-center justify-around gap-2">
+                                <div class="w-16 h-16 rounded-full border-2 border-dashed border-blue-400 p-2 flex items-center justify-center text-[8px]">IDLE</div>
+                                <div class="text-blue-400 animate-pulse">→</div>
+                                <div class="w-16 h-16 rounded-full border-2 border-blue-500 p-2 flex items-center justify-center text-[8px] bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.5)]">DRIVING</div>
                             </div>
                         </div>
                     </div>
@@ -95,115 +91,76 @@
 
         <!-- Module 2: State Diagram -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl">🎨</span> 2. 畫出狀態轉移圖 (30 min)
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-emerald-500">🎨</span> 2. 繪製狀態轉移圖
                     </h2>
-                    <div class="space-y-6 text-gray-600 text-lg">
-                        <p><strong>關鍵符號：</strong>圓圈代表狀態，箭頭代表轉移。這張圖將成為你編寫程式的「設計說明書」。</p>
-
-                        <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                            <h4 class="font-bold text-slate-800 mb-4">實例：紅綠燈系統</h4>
-                            <div class="flex flex-col items-center gap-4 py-8 overflow-x-auto">
-                                <div class="flex items-center gap-4 min-w-[600px] justify-center">
-                                    <div
-                                        class="w-24 h-24 rounded-full border-4 border-red-500 flex items-center justify-center text-red-600 font-bold bg-red-50 shadow-lg">
-                                        紅燈</div>
-                                    <div class="flex-1 h-1 bg-gray-300 relative">
-                                        <span
-                                            class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-mono text-gray-500">等
-                                            60 秒</span>
-                                        <span class="absolute right-0 top-1/2 -translate-y-1/2 text-gray-300">▶</span>
-                                    </div>
-                                    <div
-                                        class="w-24 h-24 rounded-full border-4 border-green-500 flex items-center justify-center text-green-600 font-bold bg-green-50 shadow-lg">
-                                        綠燈</div>
-                                    <div class="flex-1 h-1 bg-gray-300 relative">
-                                        <span
-                                            class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-mono text-gray-500">等
-                                            5 秒</span>
-                                        <span class="absolute right-0 top-1/2 -translate-y-1/2 text-gray-300">▶</span>
-                                    </div>
-                                    <div
-                                        class="w-24 h-24 rounded-full border-4 border-yellow-500 flex items-center justify-center text-yellow-600 font-bold bg-yellow-50 shadow-lg">
-                                        黃燈</div>
-                                    <div class="flex-1 h-1 bg-gray-300 relative">
-                                        <span
-                                            class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-mono text-gray-500">等
-                                            3 秒</span>
-                                        <span class="absolute right-0 top-1/2 -translate-y-1/2 text-gray-300">▶</span>
-                                    </div>
-                                    <div class="w-2 h-2 rounded-full bg-red-500 -ml-4"></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                圓圈代表狀態，箭頭代表轉移條件。這張圖是你編寫複雜邏輯的「戰略地圖」。
+                            </p>
+                            <div class="bg-emerald-50 p-8 rounded-3xl border border-emerald-100">
+                                <h4 class="text-emerald-900 font-bold mb-4 text-xs uppercase tracking-widest">Traffic Light Example</h4>
+                                <div class="flex items-center gap-2 overflow-x-auto py-4">
+                                     <div class="px-4 py-2 bg-red-500 rounded-full text-white text-[9px] font-bold">RED</div>
+                                     <div class="text-slate-300">→</div>
+                                     <div class="px-4 py-2 bg-green-500 rounded-full text-white text-[9px] font-bold">GREEN</div>
+                                     <div class="text-slate-300">→</div>
+                                     <div class="px-4 py-2 bg-yellow-500 rounded-full text-white text-[9px] font-bold">YELLOW</div>
                                 </div>
+                                <p class="text-[10px] text-slate-400 mt-4 italic font-light">"確保所有邊界條件都導向某個合理狀態。"</p>
                             </div>
                         </div>
 
-                        <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
-                            <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
-                                <span>🎯</span> 線上任務：繪製狀態圖
-                            </h4>
-                            <p class="text-base text-amber-900 leading-relaxed mb-4">
-                                繪製一張狀態轉換圖（State Diagram），標出在什麼情況下（例如：按下按鈕、偵測到障礙物）系統會切換模式。
-                            </p>
+                        <div class="bg-slate-900 rounded-3xl p-10 shadow-2xl border border-slate-700 text-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent"></div>
+                           <h4 class="text-emerald-400 font-bold mb-4 text-[10px] uppercase tracking-widest">Design Thinking</h4>
+                           <p class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic">
+                               "好的邏輯不是寫出來的，是畫出來的。狀態圖讓『 Bug 』在動筆前就無所遁形。"
+                           </p>
+                           <div class="inline-block px-8 py-3 bg-emerald-500 text-white rounded-xl font-bold text-[10px] shadow-lg">Start Logic Drawing</div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Module 3: Syntax -->
+        <!-- Module 3: Implementation -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-indigo-500 to-blue-600"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">💻</span> 3. 程式語法：switch...case 與 enum (20 min)
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-indigo-400">
+                        <span class="p-2 bg-indigo-500/20 rounded-lg text-indigo-400 text-2xl">💻</span> 3. 程式實作：switch...case 與 enum
                     </h2>
-                    <div class="space-y-6 text-gray-600 text-lg">
-                        <p><strong>優點：</strong>FSM 在程式碼中通常不是用一大堆 if...else，而是用 <code>switch</code> 語法，這能讓邏輯更清晰、易於擴充。</p>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="space-y-4">
-                                <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                                    <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">
-                                        <span>💎</span> enum: 定義狀態名稱
-                                    </h4>
-                                    <p class="text-sm">
-                                        使用 <code>enum</code> 來給狀態一個可讀的名字，避免在程式碼中使用 0, 1, 2 這種難以理解的「魔術數字」。
-                                    </p>
-                                </div>
-                                <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
-                                    <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
-                                        <span>💎</span> switch: 事件處理中心
-                                    </h4>
-                                    <p class="text-sm">
-                                        根據目前的狀態變數進行對應的跳轉。
-                                    </p>
-                                </div>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                擺脫魔術數字。使用 <code>enum</code> 定義語義化狀態，並用 <code>switch</code> 攤平多層嵌套邏輯。
+                            </p>
+                            <div class="bg-indigo-500/10 p-8 rounded-3xl border border-indigo-500/20 shadow-inner">
+                                <h4 class="font-bold text-indigo-400 mb-4 text-xs uppercase tracking-widest">Clean Architecture</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1"></span><div><strong class="text-white">消滅 Magic Numbers</strong>：用 <code>IDLE</code> 代替 <code>0</code>，代碼即文檔。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1"></span><div><strong class="text-white">高擴充性</strong>：新增工作模式只需在 switch 中增加一個 case。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1"></span><div><strong class="text-white">事件驅動</strong>：由條件觸發轉移，而非程式流隨機跳轉。</div></li>
+                                </ul>
                             </div>
-                            <div class="bg-slate-900 p-8 rounded-2xl text-white font-mono text-sm overflow-x-auto">
-                                <div class="text-gray-500 mb-2">// Arduino / C++ Version</div>
-                                <div>
-                                    <span class="text-purple-400">enum</span> State {<br>
-                                    &nbsp;&nbsp;IDLE, DRIVING, STOPPED<br>
-                                    };<br><br>
-                                    State currentState = IDLE;<br><br>
-                                    <span class="text-purple-400">void</span> <span
-                                        class="text-yellow-400">loop</span>() {<br>
-                                    &nbsp;&nbsp;<span class="text-purple-400">switch</span>(currentState) {<br>
-                                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">case</span> IDLE:<br>
-                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">if</span>
-                                    (buttonPressed) currentState = DRIVING;<br>
-                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">break</span>;<br>
-                                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">case</span> DRIVING:<br>
-                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">if</span>
-                                    (obstacle) currentState = STOPPED;<br>
-                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">break</span>;<br>
-                                    &nbsp;&nbsp;}<br>
-                                    }
-                                </div>
+                        </div>
+                        <div class="lg:w-96">
+                            <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-inner font-mono text-[10px] text-blue-300">
+                                <span class="text-purple-400">enum</span> State { IDLE, AUTO };<br>
+                                State s = IDLE;<br><br>
+                                <span class="text-purple-400">switch</span>(s) {<br>
+                                &nbsp;&nbsp;<span class="text-purple-400">case</span> IDLE:<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">if</span>(btn) s = AUTO;<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">break</span>;<br>
+                                &nbsp;&nbsp;<span class="text-purple-400">case</span> AUTO:<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;motorOn();<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">break</span>;<br>
+                                }
                             </div>
                         </div>
                     </div>
@@ -213,81 +170,58 @@
 
         <!-- Homework Section -->
         <section class="module-section">
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：設計你的無人車邏輯</h2>
-            <p class="text-center text-gray-500 mb-12">透過 FSM 結構，讓車子在複雜任務間切換得游刃有餘。</p>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：設計機器人智慧大腦</h2>
+            <p class="text-center text-gray-500 mb-12">透過 FSM 架構，賦予機器人在複雜任務與異常環境間冷靜切換的能力。</p>
 
             <div class="grid md:grid-cols-3 gap-6">
-                <!-- Task 1-1 -->
-                <div onclick="openSubmissionModal('basic-10-fsm-control', '【作業 1-1】實作基礎控制狀態機')"
+                <!-- Task 10-1 -->
+                <div onclick="openSubmissionModal('basic-10-fsm-1', '【作業 10-1】基礎控制狀態機 (Core FSM Architecture)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-blue-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🕹️</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform">🕹️</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 1-1】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「基礎控制狀態機」</h4>
-                        <div class="text-sm text-gray-600 space-y-2">
-                            <ul class="list-disc list-inside space-y-1">
-                                <li>設計三個狀態：<code>IDLE</code> (待機)、<code>REMOTE</code> (手控)、<code>AUTO</code> (自律避障)。
-                                </li>
-                                <li><strong>循環切換</strong>：按下網頁按鈕後循環切換。</li>
-                                <li><strong>視覺反饋</strong>：不同狀態對應不同 LED 顏色（如 待機綠、手控藍、自律紅）。</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 10-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「三模切換骨幹」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            實作 IDLE、REMOTE、AUTO 狀態機。透過按鈕進行有序切換，並以 RGB LED 同步呈現當前系統模式。
+                        </p>
                     </div>
                 </div>
 
-                <!-- Task 1-2 -->
-                <div onclick="openSubmissionModal('basic-10-fsm-obstacle', '【作業 1-2】「避障邏輯」狀態機')"
+                <!-- Task 10-2 -->
+                <div onclick="openSubmissionModal('basic-10-fsm-2', '【作業 10-2】避障邏輯狀態機 (Obstacle Sub-FSM)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="bg-purple-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🛡️</span>
-                            <span
-                                class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-purple-500 group-hover:rotate-12 transition-transform">🛡️</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業
-                            1-2】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「避障邏輯狀態機」</h4>
-                        <div class="text-sm text-gray-600 space-y-2">
-                            <ul class="list-disc list-inside space-y-1">
-                                <li>細分避障行為：<code>FOR_SEARCH</code> -> <code>OBSTACLE_DETECTED</code> ->
-                                    <code>BACKING</code> -> <code>TURNING</code>。
-                                </li>
-                                <li><strong>計時器結合</strong>：利用 <code>millis()</code> 設定轉向 500ms 後自動切回前進。</li>
-                                <li><strong>解決混亂</strong>：用 FSM 取代傳統深層嵌套的 if-else 邏輯。</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 10-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「避障行為原子化」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            將自動避障細分為 SEARCH 到 TURN 的有序子狀態機。結合 millis() 實現非阻塞的動作時間窗口管理。
+                        </p>
                     </div>
                 </div>
 
-                <!-- Task 1-3 -->
-                <div onclick="openSubmissionModal('basic-10-fsm-emergency', '【作業 1-3】異常狀態：救援模式')"
+                <!-- Task 10-3 -->
+                <div onclick="openSubmissionModal('basic-10-fsm-3', '【作業 10-3】異常救援模式：最高優先權 (Emergency Failsafe)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-red-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🆘</span>
-                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase">45
-                                min</span>
+                            <span class="text-4xl text-red-500 group-hover:translate-x-1 transition-transform">🆘</span>
+                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition">【作業 1-3】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「異常救援模式」</h4>
-                        <div class="text-sm text-gray-600 space-y-2">
-                            <ul class="list-disc list-inside space-y-1">
-                                <li>新增 <code>EMERGENCY_STOP</code> 狀態。</li>
-                                <li><strong>最高優先權</strong>：斷開藍牙或按下緊急鈕時，「強行轉移」到此狀態並鎖死馬達。</li>
-                                <li><strong>重置機制</strong>：設計長按 3 秒重置回 <code>IDLE</code> 的邏輯。</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition">【作業 10-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「搶佔式安全防線」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            新增 EMERGENCY 狀態。實作斷線或硬體異常時的瞬間轉移邏輯，並設計嚴謹的防誤觸救援解鎖機制。
+                        </p>
                     </div>
                 </div>
             </div>
@@ -300,7 +234,7 @@
         <div class="container mx-auto px-4 text-center">
             <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
-                <span>單元課程 基礎 10 - 1</span>
+                <span>課程單元 基礎 10 - 邏輯架構</span>
                 <span class="hidden md:inline">|</span>
                 <span>講師：Antigravity Assistant</span>
             </div>
@@ -317,121 +251,136 @@
     <script src="/js/course-shared-v4.js"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">有限狀態機基礎實驗室</h2>
 
-        <h3>【作業 1-1】實作「基礎控制狀態機」 (三模切換)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 韌體架構工程師 (Firmware Architect)。</li>
-            <li><strong>執行方式：</strong> 建立三個基礎狀態：<code>IDLE</code> (待機)、<code>REMOTE</code> (手控)、<code>AUTO</code>
-                (自律)。透過網頁按鈕切換狀態，並結合板載 LED 顯示對應顏色（如綠、藍、紅）。</li>
-            <li><strong>評分重點 :</strong> 成功實作 <code>enum</code> 與 <code>switch...case</code> 結構，狀態切換流暢，且 LED 反饋即時。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：基礎控制狀態機 (Core FSM Architecture)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：韌體架構工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
 
-        <h3>【作業 1-2】實作「避障邏輯狀態機」 (含計時轉向)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 自動駕駛演算法工程師 (Autonomous Driving Engineer)。</li>
-            <li><strong>執行方式：</strong> 細分避障行為為 <code>SEARCH</code> (前行搜尋) -> <code>DETECTED</code> (偵測障礙) ->
-                <code>TURN</code> (轉向) 三個子狀態。利用 <code>millis()</code> 設定轉向 500ms 後自動切回搜尋狀態。</li>
-            <li><strong>評分重點 :</strong> 成功利用狀態機取代傳統 if-else 嵌套，邏輯清晰且能準確處理計時觸發的轉移。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>狀態定義</strong>：使用 <code>enum</code> 定義三核心狀態：<code>IDLE</code> (待機)、<code>REMOTE</code> (手控)、<code>AUTO</code> (自律)。</li>
+                    <li><strong>中轉邏輯實作</strong>：構建 <code>switch...case</code> 核心，根據按鈕事件與通訊報文進行狀態轉移判定。</li>
+                    <li><strong>視覺反饋實施</strong>：根據當前 <code>State</code> 控制 RGB LED（如：待機綠、手控藍、自律紅），實現狀態的可視化診斷。</li>
+                </ol>
+            </div>
 
-        <h3>【作業 1-3】異常處理：最高優先權「救援模式」</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 安全系統工程師 (Safety Systems Engineer)。</li>
-            <li><strong>執行方式：</strong> 新增 <code>EMERGENCY</code> 狀態。實作最高優先權切換機制：當按下物理緊急鈕或藍牙斷線時，「強行轉移」到此狀態鎖死馬達。需設計長按重置回
-                <code>IDLE</code> 的解鎖邏輯。</li>
-            <li><strong>評分重點 :</strong> 安全保護機制具備最高優先權，且重置邏輯嚴謹，無誤觸風險。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>命名規範</strong>：是否完全捨棄了「魔術數字」，改採具備高可讀性的 <code>enum</code> 命名狀態？</li>
+                    <li>[ ] <strong>邏輯一致性</strong>：狀態切換時，硬體端的物理動作與 LED 燈號是否與內部軟體模式完全同步？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：避障邏輯狀態機 (Obstacle Logic Sub-FSM)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：自動駕駛演算法工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>子狀態細分</strong>：將 <code>AUTO</code> 模式細化為 <code>SEARCH</code> -> <code>DETECTED</code> -> <code>BACKING</code> -> <code>TURN</code> 序列。</li>
+                    <li><strong>非阻塞計時轉場</strong>：利用 <code>millis()</code> 設定轉發計時器，實現如「後退 500ms 後自動轉場至轉向模式」的非阻塞邏輯。</li>
+                    <li><strong>邏輯攤平重構</strong>：移除所有深層嵌套的 <code>if-else</code>，改由事件驅動狀態機進行扁平化處理。</li>
+                    <li><strong>閉環實測</strong>：驗證車體在突發障礙下，是否能順暢執行整套「察覺、閃避、重啟搜尋」的閉環行為。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>計時精準度</strong>：狀態間的轉換延遲是否準確執行，且未對系統主循環 (Loop) 造成任何阻塞掛起？</li>
+                    <li>[ ] <strong>狀態覆蓋率</strong>：避障邏輯是否周全考慮了所有轉場邊界，不存在導致車輛「原地死鎖」的邏輯空洞？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：異常救援模式：最高優先權 (Emergency Recovery & Failsafe)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：安全系統工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>救援模式接入</strong>：新增 <code>EMERGENCY_STOP</code> 狀態，並在 <code>loop()</code> 最頂部實施最高搶佔優先權判定。</li>
+                    <li><strong>失效即轉移</strong>：若偵測到藍牙心跳丟失、電池電量過低或緊急虛擬鈕觸發，立即強行關閉任何運轉任務並保速鎖死。</li>
+                    <li><strong>解鎖序列設計</strong>：實作防誤觸解鎖邏輯（如：特定指令序列或控制端長按 3s），確保現場安全後方可回歸 <code>IDLE</code>。</li>
+                    <li><strong>報告提交</strong>：評估緊急狀態的響應時間，並將具備安全防護邏輯的代碼 Push 至 GitHub PR。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>搶佔實效性</strong>：在任何高頻運算模式下（如全速 AUTO），緊急觸發是否能瞬間（<20ms）接管硬體控制權？</li>
+                    <li>[ ] <strong>安全嚴密性</strong>：解鎖機制是否能有效防止在未排除硬體故障的情況下，系統意外重新啟動？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>在 GitHub 建立新 Repo（名為 <code>basic-10-fsm-template</code>）。</li>
-                <li>上傳包含 `enum State` 定義但 `switch` 區塊留空的專案骨架。</li>
-                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
-                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，獲得個人專屬 Repo。</li>
-                <li>繪製狀態轉移圖 (State Diagram)，將紙本邏輯實作為 <code>switch...case</code> 語句。</li>
-                <li>完成三模切換與避障邏輯後 <strong>Push 代碼</strong> 提交 PR。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
-                <li>重點審查學生是否漏掉 <code>break</code> 語句 (Fall-through bug) 以及轉移條件的嚴謹度。</li>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：從「功能導向」進化至「系統狀態」導向的系統建模。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-indigo-600">重點 1：邏輯的可視化</strong> - 引導學員不只是盲目編碼，而是先繪製狀態轉移圖，釐清行為邊界與事件觸發關係。</li>
+                <li><strong class="text-indigo-600">重點 2：switch-case 的優雅性</strong> - 強調 FSM 是解決代碼「義大利麵化 (Spaghetti Code)」的最佳武器。</li>
+                <li><strong class="text-indigo-600">重點 3：防禦性救援機制</strong> - 灌輸工業級系統設計思維：在任何不可控異常發生時，系統必須能進入穩定的、已知的低權限安全狀態。</li>
             </ol>
         </div>
 
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元聚焦於「從功能導向思維轉向狀態導向思維」，引導學生透過狀態圖規劃程式流程，提升複雜系統的可維護性。</p>
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/main.cpp       # (必修) 學員需實作狀態調度 switch-case 核心
+├── docs/state_map.md  # 邏輯圖：學員上傳繪製的狀態轉移 Mermaid 或截圖
+└── README.md          # 報告：分析救援模式在不同超時場景下的響應時耗
+            </pre>
+        </div>
 
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── src/
-│   └── main.cpp      # (重點) 需實作 FSM loop 與 Event 偵測
-├── docs/             # 存放學生繪製的狀態圖 (JPG/SVG)
-└── README.md         # 描述避障邏輯的優先順序說明</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>main.cpp (FSM Skeleton)</strong></p>
-        <pre><code>enum State { IDLE, AUTO };
-State mode = IDLE;
-void loop() {
-  switch(mode) {
-    case IDLE: if(btn) mode = AUTO; break;
-    case AUTO: avoidObstacles(); break;
-  }
-}</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>關鍵字掃描：：</strong> 檢查是否包含 <code>enum</code> 定義與 <code>switch</code> 語法。</li>
-            <li><strong>分支覆蓋率：：</strong> 透過測試腳本模擬不同輸入，驗證每個狀態是否都能被正確觸發與退出。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「用狀態機思考：交通號誌與販賣機」影片。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>Dashboard：</strong>確認學員能辨識環境中的「狀態」與「事件」。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，先畫圖再寫 Code，實機測試避障切換手感。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>邏輯診斷：</strong>協助修正狀態「震盪」或「死結」的問題。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作具備 Fail-safe (失效安全) 機制的救援狀態並 Push，閱讀教師回覆 PR。
-                    </td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>核發最終課程評量，肯定學生對系統穩定度的考量。</td>
-                </tr>
-            </tbody>
-        </table>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看「狀態機：現代系統設計的靈魂」動畫。嘗試用圖畫出自動販賣機的運作邏輯。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 檢查學員能否準確區分「當前狀態 (Current)」與「即發事件 (Event)」。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，將圖面邏輯對應至 enum 語法。測試在快速切換模式時，系統是否會發生狀態「震盪」。</td>
+                        <td class="p-4 border-b"><strong>巡場引導:</strong> 展示如何利用 Serial Monitor 實時打印狀態標籤進行除錯。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">實作具備記憶功能的「模式恢復」擴充並 Push。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 評價學員對「狀態窮舉性」的考量完整度與異常處理的邊界嚴密性。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 </body>
 

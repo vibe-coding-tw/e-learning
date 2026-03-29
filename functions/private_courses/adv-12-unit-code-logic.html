@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
 <body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
@@ -24,20 +26,20 @@
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
                 class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
-                進階 12 - 單元 3
+                進階 12 - 程式邏輯
             </span>
             <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">代碼實作邏輯預習<br><span class="text-cyan-400">Logic, Loop & FSM</span>
             </h1>
             <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
-                無人車的大腦如何思考？從混亂到控制的系統藍圖。
+                無人車的大腦如何思考？從混亂的訊號轉化為精確的決策時序。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="window.courseShared.enterMediaMode('video', window.RESOURCES.youtube)"
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="window.courseShared.enterMediaMode('doc', window.RESOURCES.doc)"
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -48,230 +50,179 @@
     <!-- Main Content -->
     <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
-        <!-- Section 1: FSM -->
-        <section class="mb-16">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        <!-- Module 1: Finite State Machine -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
-                        <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <span class="text-4xl">🔄</span> 1. 有限狀態機 (FSM) (20 min)
-                            </h2>
-                            <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
-                                <p>
-                                    無人車不是「隨機」運行的，它在不同時刻處於不同「狀態」。
-                                    FSM 用來管理這些狀態的切換。
-                                </p>
-                                <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                                    <h3 class="font-bold text-gray-800 text-xl mb-2">⚡ 核心概念</h3>
-                                    <ul class="list-disc list-inside space-y-2">
-                                        <li><strong>狀態 (States)：</strong>系統當下的模式（如：搜尋線條、循跡中、遇到障礙物停止）。</li>
-                                        <li><strong>觸發條件 (Triggers)：</strong>從狀態 A 跳轉到狀態 B 的「關鍵事件」（如：感測器讀值全白時，進入搜尋狀態）。
-                                        </li>
-                                    </ul>
-                                </div>
-                                <p>
-                                    <strong>學習任務：</strong>嘗試畫出「自動洗車機」的狀態轉換圖（閒置 -> 噴水 -> 刷洗 -> 烘乾 -> 閒置）。
-                                </p>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-orange-500">🔄</span> 1. 有限狀態機 (FSM)：決策的骨架
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                無人車不是在一行程式跑到底。它會根據目前的模式（Idle / Run / Search）採取不同的計算策略。
+                            </p>
+                            <div class="bg-orange-50 p-6 rounded-2xl border border-orange-100">
+                                <h4 class="font-bold text-orange-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed">FSM Core Elements</h4>
+                                <ul class="text-[9px] text-slate-500 space-y-2 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-orange-500 rounded-full mt-1"></span> <div><strong>狀態 (States)</strong>：系統當下的身份。如「搜尋循跡線中」。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-orange-500 rounded-full mt-1"></span> <div><strong>轉換 (Transitions)</strong>：觸發身份切換的事件。如「感測器全白」。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-orange-500 rounded-full mt-1"></span> <div><strong>行為 (Actions)</strong>：在特定狀態下執行的邏輯。</div></li>
+                                </ul>
                             </div>
                         </div>
-                        <div class="flex-1 flex items-center justify-center">
-                            <!-- Visual Analogy -->
-                            <div
-                                class="relative w-full max-w-sm aspect-square bg-gray-100 rounded-2xl p-6 flex items-center justify-center border-2 border-dashed border-gray-300">
-                                <div class="text-center space-y-4">
-                                    <div class="bg-white p-4 rounded-lg shadow font-bold text-gray-700">閒置 (IDLE)</div>
-                                    <div class="text-gray-400 text-2xl">⬇️ 投幣</div>
-                                    <div
-                                        class="bg-orange-100 p-4 rounded-lg shadow font-bold text-orange-700 border border-orange-200">
-                                        運转 (RUN)</div>
-                                    <div class="text-gray-400 text-2xl">⬇️ 結束</div>
-                                    <div class="bg-white p-4 rounded-lg shadow font-bold text-gray-700">閒置 (IDLE)</div>
-                                </div>
-                            </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-orange-500/5 group-hover:bg-orange-500/10 transition-colors"></div>
+                           <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10">State Transition Graph</h4>
+                           <div class="relative z-10 flex flex-col items-center gap-4">
+                               <div class="px-4 py-2 border border-slate-600 rounded-full text-xs">IDLE</div>
+                               <div class="text-orange-500 animate-[bounce_2s_infinite]">↓ Start cmd</div>
+                               <div class="px-6 py-2 bg-orange-600 rounded-full text-xs font-bold shadow-[0_0_15px_rgba(234,88,12,0.5)]">TRACKING</div>
+                               <div class="text-slate-500">↓ Off track</div>
+                               <div class="px-4 py-2 border border-slate-600 rounded-full text-xs">SEARCHING</div>
+                           </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 2: Main Loop -->
-        <section class="mb-16">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        <!-- Module 2: Non-Blocking Control -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
-                <div class="p-8 md:p-12">
+                <div class="p-8 md:p-14">
                     <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">♾️</span> 2. 控制迴圈 (The Main Loop) (20 min)
+                        <span class="text-4xl text-cyan-500">♾️</span> 2. 非阻塞迴圈：維持大腦的清醒
                     </h2>
-                    <p class="text-lg text-gray-600 mb-8">
-                        程式的核心是「永不停歇的思考」。輸入 -> 處理 -> 輸出。
-                    </p>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="space-y-4">
-                            <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                                <h4 class="font-bold text-blue-900 mb-2">📥 1. 感測 (Input)</h4>
-                                <p class="text-blue-800 text-sm">讀取影像質心、檢查藍牙指令。</p>
-                            </div>
-                            <div class="bg-cyan-50 p-6 rounded-xl border border-cyan-100">
-                                <h4 class="font-bold text-cyan-900 mb-2">🧠 2. 決策 (Process)</h4>
-                                <p class="text-cyan-800 text-sm">計算 PID、判斷當前狀態。</p>
-                            </div>
-                            <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
-                                <h4 class="font-bold text-indigo-900 mb-2">📤 3. 執行 (Output)</h4>
-                                <p class="text-indigo-800 text-sm">更新 PWM 到馬達、更新網頁數據。</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                嚴禁在 PID 迴圈中使用 <code>delay()</code>。每一毫秒的阻塞，感測器都是盲目的，這足以讓高速行駛的車子衝出跑道。
+                            </p>
+                            <div class="bg-cyan-50 p-8 rounded-3xl border border-cyan-100 text-center">
+                                <h4 class="text-cyan-900 font-bold mb-4 text-xs uppercase tracking-widest">Efficiency Paradigm</h4>
+                                <div class="text-xl font-mono text-cyan-600">
+                                   \[\Delta T \approx Constant\]
+                                </div>
+                                <p class="text-[10px] text-slate-400 mt-4 italic font-light">使用 millis() 取代沉睡：讓 CPU 隨時能響應緊急中斷</p>
                             </div>
                         </div>
 
-                        <div class="bg-red-50 p-6 rounded-xl border border-red-100">
-                            <h3 class="font-bold text-red-900 text-xl mb-4">🚫 阻塞 (Blocking) 的威脅</h3>
-                            <p class="text-red-800 mb-4">
-                                理解為什麼在迴圈內使用 <code class="bg-red-100 px-1 rounded text-red-700">delay()</code> 會導致車子失控。
-                            </p>
-                            <div class="bg-white p-4 rounded-lg border border-red-200 text-sm">
-                                <p class="font-bold text-gray-700 mb-2">為什麼？</p>
-                                <p class="text-gray-600">
-                                    因為延遲期間，CPU 是「睡著」的，感測器是盲目的。
-                                    車子若正在全速衝刺，會無法即時煞車。
-                                </p>
-                            </div>
-                            <p class="mt-4 text-red-800 font-bold">
-                                學習任務：思考如何不用 delay() 也能讓 LED 每隔一秒閃爍一次？（提示：millis()）
-                            </p>
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-cyan-500/5"></div>
+                           <h4 class="text-cyan-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10">Thread-like Multi-tasking</h4>
+                           <div class="space-y-4 w-full px-10 relative z-10">
+                                <div class="flex justify-between items-center text-[10px]">
+                                    <span class="text-slate-400">PID Calc (10ms)</span>
+                                    <div class="w-20 h-1 bg-cyan-500 rounded-full"></div>
+                                </div>
+                                <div class="flex justify-between items-center text-[10px]">
+                                    <span class="text-slate-400">Sensor Sync (2ms)</span>
+                                    <div class="w-32 h-1 bg-blue-500 rounded-full"></div>
+                                </div>
+                                <div class="flex justify-between items-center text-[10px]">
+                                    <span class="text-slate-400">Web Telemetry (500ms)</span>
+                                    <div class="w-12 h-1 bg-indigo-500 rounded-full"></div>
+                                </div>
+                           </div>
+                           <p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest uppercase">Zero Blocking Execution</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 3: Pseudocode -->
-        <section class="mb-16">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-emerald-500 to-green-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">📝</span> 3. 虛擬碼 (Pseudocode) 撰寫 (20 min)
+        <!-- Module 3: Fail-Safe Design -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-red-400">
+                        <span class="p-2 bg-red-500/20 rounded-lg text-red-400 text-2xl">🛡️</span> 3. 防錯邏輯與系統魯棒性
                     </h2>
-
-                    <div class="bg-gray-50 p-6 rounded-xl border border-gray-200 mb-8">
-                        <h3 class="font-bold text-gray-800 text-lg mb-4">用人類語言寫程式</h3>
-                        <p class="text-gray-600 mb-4">
-                            先別急著寫 C++！先用中文寫出邏輯。
-                        </p>
-                        <div class="font-mono text-sm bg-gray-900 text-green-400 p-4 rounded-lg shadow-inner">
-                            也就是說：<br>
-                            如果 (看到線在左邊) {<br>
-                            &nbsp;&nbsp;就左轉;<br>
-                            } 否則 如果 (沒看到線) {<br>
-                            &nbsp;&nbsp;就後退搜尋;<br>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="grid md:grid-cols-2 gap-6">
-                        <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-100">
-                            <h4 class="font-bold text-emerald-900 mb-2">⏱️ 取樣時間 (Sampling Time)</h4>
-                            <p class="text-emerald-800 text-sm">
-                                決策頻率有多快？
-                                預習任務：如何使用 <code class="bg-emerald-100 px-1 rounded">micros()</code> 函數精確計算 PID 的更新頻率。
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                工業級程式必須考量「意外」。通訊中斷、數據溢位、感測器誤報，都必須具備相應的保護機制。
                             </p>
+                            <div class="bg-red-500/10 p-8 rounded-3xl border border-red-500/20 shadow-inner">
+                                <h4 class="font-bold text-red-400 mb-4 text-xs uppercase tracking-widest text-center">Robustness Checklist</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-red-500 rounded-full mt-1"></span><div><strong class="text-white">數值鉗位 (Clamping)</strong>：確保 PWM 永不超出 [0, 255]，防止因計算溢位導致的倒車。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-red-500 rounded-full mt-1"></span><div><strong class="text-white">斷連保護 (Heartbeat)</strong>：若一段時間未收到藍牙指令，系統應立刻進入 SAFE STOP。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-red-500 rounded-full mt-1"></span><div><strong class="text-white">卡死判定 (Stall Guard)</strong>：若馬達全速運轉但位置未更新，應切斷電力防止電機過熱燒毀。</div></li>
+                                </ul>
+                            </div>
                         </div>
-                        <div class="bg-green-50 p-6 rounded-xl border border-green-100">
-                            <h4 class="font-bold text-green-900 mb-2">📐 PID 代碼化</h4>
-                            <p class="text-green-800 text-sm">
-                                學習解析 <code
-                                    class="bg-green-100 px-1 rounded">output = Kp*e + Ki*integral + Kd*derivative</code>
-                                在 C++ 中的寫法。
-                            </p>
+                        <div class="lg:w-80 bg-red-600/10 p-10 rounded-3xl border border-red-500/20 text-center relative overflow-hidden group">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-red-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-red-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center">Safety Shield</h4>
+                           <p class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic">
+                               "一個好的控制程式，不但要跑得快，更要停得穩。"
+                           </p>
+                           <div class="inline-block px-8 py-3 bg-red-500 text-white rounded-xl font-bold text-[10px] shadow-lg cursor-pointer hover:bg-red-400 transition-colors">Invoke Emergency Stop</div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Assignment Highlights -->
+        <!-- Homework Section -->
         <section class="module-section">
-            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-                        <div>
-                            <h2
-                                class="text-3xl font-bold text-white mb-2 underline decoration-blue-500 underline-offset-8">
-                                實作任務：Coding 之前的 Logical Thinking</h2>
-                            <p class="text-slate-400">掌握狀態機與非阻塞控制，打造工業級的魯棒性代碼。</p>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：控制邏輯之戰</h2>
+            <p class="text-center text-gray-500 mb-12">掌握狀態機與非阻塞多工，打造一個強韌、安全且高性能的無人駕駛控制大腦。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 12-1 -->
+                <div onclick="openSubmissionModal('adv-12-logic-puzzle', '【作業 12-1】「偽代碼建築師」：循跡狀態邏輯規劃 (Pseudocode Architect)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-orange-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-orange-500 group-hover:scale-110 transition-transform">📝</span>
+                            <span class="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-orange-600 transition">【作業 12-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「邏輯藍圖規劃」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            繪製包含 IDLE / SEARCH / RUN 的狀態轉換圖。撰寫偽代碼解釋各狀態下的 PID 權重配置，處理脫線重尋邏輯。
+                        </p>
                     </div>
+                </div>
 
-                    <div class="grid md:grid-cols-2 gap-8 mb-12">
-                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
-                            <div class="flex items-center gap-4 mb-6">
-                                <div
-                                    class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-2xl">
-                                    📡</div>
-                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
-                            </div>
-                            <p class="mb-4 text-slate-400">完成任務後，請將數據與結果推送到你的專屬倉庫。</p>
-                            <ul class="space-y-3 text-slate-300">
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">1</span>
-                                    <span>接受 GitHub Classroom 邀請並 Clone 倉庫</span>
-                                </li>
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">2</span>
-                                    <span>完成代碼後執行 <code
-                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code></span>
-                                </li>
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">3</span>
-                                    <span>在 PR 中查看自動化評分與教師回饋</span>
-                                </li>
-                            </ul>
+                <!-- Task 12-2 -->
+                <div onclick="openSubmissionModal('adv-12-non-blocking', '【作業 12-2】「非阻塞任務器」：millis() 與 micros() 實戰 (Non-Blocking Multi-tasking)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-cyan-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-cyan-500 group-hover:rotate-12 transition-transform">🕒</span>
+                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition">【作業 12-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「多工併行實踐」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            建立精確 100Hz 的控制迴圈。確保在讀取循跡數據的同時，能併行閃爍 LED 並非阻塞發送藍牙遙測包。
+                        </p>
+                    </div>
+                </div>
 
-                        <div class="grid gap-4">
-                            <!-- Task 3-1 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-12-logic-puzzle', '【作業 3-1】「邏輯拼圖」：流程圖轉代碼')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-orange-600 transition">
-                                        作業 3-1</h3>
-                                    <span class="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">邏輯拼圖</h4>
-                                <p class="text-sm text-gray-500">繪製流程圖並設計狀態框架，釐清循跡邏輯。</p>
-                            </div>
-
-                            <!-- Task 3-2 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-12-non-blocking', '【作業 3-2】「非阻塞任務器」：millis() 實踐')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition">作業
-                                        3-2</h3>
-                                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">非阻塞任務器</h4>
-                                <p class="text-sm text-gray-500">使用 millis() 實現多工並行，確保系統不掉幀。</p>
-                            </div>
-
-                            <!-- Task 3-3 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-12-safeguard', '【作業 3-3】「防錯邏輯保護」：魯棒性設計')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-red-600 transition">作業
-                                        3-3</h3>
-                                    <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold">45
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">防錯邏輯保護</h4>
-                                <p class="text-sm text-gray-500">建立斷連保護與數據過濾，增加系統魯棒性。</p>
-                            </div>
+                <!-- Task 12-3 -->
+                <div onclick="openSubmissionModal('adv-12-safeguard', '【作業 12-3】「防錯邏輯保護」：系統魯棒性設計 (Robustness & Safeguard)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-red-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-red-500 group-hover:translate-x-1 transition-transform">🛡️</span>
+                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition">【作業 12-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「災難防禦腳本」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            實作通訊斷連 Heartbeat 與馬達堵轉 Stall Guard。確保所有控制輸出皆經過 Clamping 強制範圍鎖定。
+                        </p>
                     </div>
                 </div>
             </div>
@@ -283,166 +234,155 @@
     <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
         <div class="container mx-auto px-4 text-center">
             <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
-            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
-                <span>進階 12 - 單元 3</span>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 進階 12 - 程式邏輯</span>
                 <span class="hidden md:inline">|</span>
-                <span>代碼實作邏輯預習</span>
+                <span>講師：Antigravity Assistant</span>
             </div>
         </div>
     </footer>
 
-    <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
-
-        <h3>作業 3-1：「偽代碼建築師」：邏輯規劃</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 架構設計師。</li>
-            <li><strong>執行方式：</strong> 在不寫實際 C++ 代碼的情況下，用中文偽代碼描述整個 PID 迴圈的執行流程。</li>
-            <li><strong>評分重點：</strong> 能否清晰標註出「讀取」、「計算」、「輸出」與「採樣控制」的先後順序及邏輯判斷。</li>
-        </ul>
-
-        <h3>作業 3-2：「採樣頻率大探索」：時間穩定性</h3>
-        <ul>
-            <li><strong>角色扮演：：</strong> 性能測試員。</li>
-            <li><strong>執行方式：</strong> 故意將採樣時間從 10ms 調整到 100ms，觀察無人車循航穩定性的急遽惡化。</li>
-            <li><strong>評分重點：</strong> 紀錄不同採樣頻率下的控制波形，並推導出適合本硬體設備的「黃金採樣週期」。</li>
-        </ul>
-
-        <h3>作業 3-3：「非阻塞代碼重構」：millis() 實戰</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 代碼優化師。</li>
-            <li><strong>執行方式：：</strong> 將一段包含 <code>delay()</code> 的舊代碼改寫為基於 <code>millis()</code> 的狀態機結構。</li>
-            <li><strong>評分重點：</strong> 代碼執行時能否同時閃爍 LED 燈而不影響 PID 的精準計時（多工驗證）。</li>
-        </ul>
-    </section>
-
-    <!-- Instructor Guide (Hidden) -->
-    <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        A. 範本倉庫 (Template Repo) 結構
-                    </h4>
-                    <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
-.
-├── src/
-│   ├── legacy_blocking.cpp # 含有 delay() 的舊代碼
-│   └── main_loop.cpp       # millis() 狀態機模板
-├── platformio.ini          # 環境設定
-└── docs/
-    └── jitter_analysis.md  # 採樣週期分析紀錄表</pre>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        B. 自動評估 (Autograding) 的設計
-                    </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🧪</span>
-                            <p class="text-sm text-gray-700"><strong>時間戳記驗證：</strong> 分析 <code>loop()</code>
-                                執行間隔，檢查採樣週期是否穩定。</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🔍</span>
-                            <p class="text-sm text-gray-700"><strong>靜態掃描：</strong> 比對 <code>delay()</code>
-                                關鍵字，確保核心迴圈中移除阻塞指令。</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供包含 `millis()` 挑戰骨架與 Log 輸出範例的專案樣板。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「採樣週期穩定度」評分點。引導學員說明如何消除阻塞行為。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業測試 `delay()` 與 `millis()` 差異。提交重構代碼 PR。執行
-                        Git Push。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對代碼重構擴展性，以及對狀態機概念的應用予以點評。</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
-            </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
-                        <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">學習 `millis()` 原理，理解 `delay()` 導致控制失靈的原因。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「從阻塞到併發」導讀。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，測量最佳採樣率，重構狀態機代碼。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，引導討論採樣頻率與計算量權衡。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">完成非阻塞架構轉換並 Push，閱讀教師回覆 PR 優化擴展性。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，引導思考高效邏輯對硬體控制的支撐價值。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-
     <script>
+        // Define Resources
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/wrcmKrYpNA0",
             doc: "https://docs.google.com/document/d/e/2PACX-1vTQOeZStAJUwGm1JlEo2r6vGVx20USevDP69swtB7BSJY33Jq9A5dYSQiey6nFjXs1IL3D6ibH5UySB/pub?embedded=true"
         };
     </script>
     <script src="/js/course-shared-v4.js"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">控制大腦：邏輯與時序實驗室</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：「偽代碼建築師」：循跡狀態邏輯規劃 (Pseudocode Architect)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：架構設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>邏輯梳理</strong>：用中文撰寫 PID 循跡的主迴圈架構：如何初始化誤差、何時更新積分、何時應急停止。</li>
+                    <li><strong>特殊狀態處理</strong>：定義「全白（脫線）」時的分支行為：是左右搜尋還是原地打轉？將此邏輯寫入狀態機分支中。</li>
+                    <li><strong>時序規劃報告</strong>：在 README 中說明為何不能頻繁讀取序列埠數據（如每一行 loop 都 print），分析對控制時間戳的影響。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>狀態轉換完整性</strong>：偽代碼是否具備應對外界感測變化的「非線性」決策能力（而不僅是簡單的 if-else）？</li>
+                    <li>[ ] <strong>關鍵時鐘理解</strong>：能否正確定位 PID 更新點必須處於「定時器」或「準確時間檢測」之下？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：「非阻塞任務器」：millis() 與 micros() 實戰 (Non-Blocking Multi-tasking)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：代碼優化師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>消除阻塞</strong>：移除所有的 <code>delay()</code>。實作 <code>if (millis() - last_time > T)</code> 結構來執行週期性任務。</li>
+                    <li><strong>高速控制迴圈</strong>：設定一個 10ms (100Hz) 的控制視窗。在該視窗內精確執行一次 PID 運算。</li>
+                    <li><strong>混合通訊壓測</strong>：在後台背景每隔 500ms 同步一次狀態數據至藍牙，驗證是否會導致主控制迴圈的「抖動 (Jitter)」。</li>
+                    <li><strong>結果 Push</strong>：將優化後的無阻塞主迴圈代碼推送至 GitHub。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>併行處理效率</strong>：在維持 PID 高頻更新的同時，副任務（如 LED 顯示、通訊）是否能順暢執行？</li>
+                    <li>[ ] <strong>控制週期穩定性</strong>：透過 Serial Plotter 輸出的執行時間戳，觀察 \(\Delta t\) 的波動是否控制在 10% 以內？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：「防錯邏輯保護」：系統魯棒性設計 (Robustness & Safeguard)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：魯棒性工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>範圍安全鉗位</strong>：實作 <code>map()</code> 與 <code>constrain()</code> 組合，保證馬達控制量永不溢位或出現非法負值。</li>
+                    <li><strong>看門狗與心跳檢測</strong>：實作一套機制，若連續 2 秒未從 App 收到校準指令，自動切換至安全模式或停機。</li>
+                    <li><strong>自我診斷邏輯</strong>：偵測「堵轉（感測器有差額但轉速為 0）」。若持續 3 秒，則發出警報並斷電。</li>
+                    <li><strong>Push PR</strong>：提交具備工業防錯思維的最終版代碼支撐。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>軟體防禦意識</strong>：代碼中是否包含對感測器「突變值」或「無效值 (NaN)」的排除邏輯？</li>
+                    <li>[ ] <strong>安全性測試合格</strong>：在模擬通訊線路中斷時，系統是否能按照預期安全停擺，無危害行人行為。</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：在微控制器資源有限的環境下，建立高效且可預測的實時控制架構。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-orange-600">重點 1：邏輯先於語法</strong> - 強制要求學員先寫「偽代碼」，避免他們陷入分號細節而忽略了狀態切換的大藍圖。</li>
+                <li><strong class="text-orange-600">重點 2：對延遲的零容忍</strong> - 嚴厲糾正學員使用 <code>delay()</code> 的習慣，指導他們理解 CPU 的「多工併行」是基於非阻塞判斷實現的。</li>
+                <li><strong class="text-orange-600">重點 3：工程風險意識</strong> - 透過「防錯保護」任務，讓學員體悟到一個產品的代碼只有 20% 在處理正常流程，80% 在處理異常。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-orange-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/ControlLogic.cpp  # (重點) 需實作基於 millis() 的非阻塞 FSM 框架
+├── src/SafeGuard.h      # (工具) 夾具與限制器函式定義
+└── docs/Algorithm.md   # 圖解：繪製狀態轉換流程圖與異常處理矩陣
+            </pre>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看「多工控制與非阻塞代碼」影片。預習 <code>millis()</code> 如何構成計時閥門。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員能否正確分析「狀態機」為何能簡化複雜的邏輯巢狀 if。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，挑戰將舊有的阻塞式循跡代碼重構為高效的非阻塞架構。</td>
+                        <td class="p-4 border-b"><strong>性能評測師:</strong> 協助學員使用 <code>micros()</code> 測量 Loop 的 Jitter，並分析瓶頸所在。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">實作具備「Stall Guard 堵轉保護」的防錯機制並 Push PR。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 點評對「系統強韌度 (Robustness)」與「容錯設計 (Fail-safe)」的考量周全度。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 </body>
 
 </html>

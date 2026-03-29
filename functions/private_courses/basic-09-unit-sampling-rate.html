@@ -28,13 +28,13 @@
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
                 class="inline-block py-1 px-3 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-sm font-semibold mb-6 tracking-wide uppercase">
-                基礎 9 - 單元 3
+                基礎 9 - 數據通訊
             </span>
             <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
                 數據、速度與控制：<br><span class="text-pink-400">數據流與取樣率</span>
             </h1>
             <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
-                理解機器人學的隱藏法則：如何在高頻率更新與通訊瓶頸之間找到完美的「甜蜜點」。
+                理解機器人學的隱藏法則：如何在高頻更新與通訊瓶頸之間找到完美的「平衡點」。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
@@ -53,187 +53,112 @@
     <!-- Main Content -->
     <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
-        <!-- Module 1: What is Sampling Rate -->
+        <!-- Module 1: Sampling Rate Definition -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
-                        <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3 text-blue-700">
-                                <span class="text-4xl">📡</span> 1. 什麼是取樣率？ (Sampling Rate)
-                            </h2>
-                            <div class="space-y-6 text-gray-600 text-lg">
-                                <p><strong>核心概念：</strong>取樣率是指每秒鐘讀取感測器或發送控制指令的次數，單位是 <strong>Hz (赫茲)</strong>。</p>
-
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div
-                                        class="bg-slate-50 p-6 rounded-xl border border-slate-200 shadow-sm transition hover:shadow-md">
-                                        <div class="text-3xl mb-3">🚶</div>
-                                        <h4 class="font-bold text-slate-800 mb-1">1 Hz</h4>
-                                        <p class="text-sm text-gray-500">每秒更新一次</p>
-                                        <p class="mt-2 text-sm font-medium text-red-600 italic">「車子像喝醉一樣，無法修正路線。」</p>
-                                    </div>
-                                    <div
-                                        class="bg-blue-50 p-6 rounded-xl border border-blue-200 shadow-sm transition hover:shadow-md">
-                                        <div class="text-3xl mb-3">🚗</div>
-                                        <h4 class="font-bold text-blue-800 mb-1">10 Hz</h4>
-                                        <p class="text-sm text-gray-400">每 0.1 秒更新一次</p>
-                                        <p class="mt-2 text-sm font-medium text-blue-600">「基本的遙控手感，能開但反應稍慢。」</p>
-                                    </div>
-                                    <div
-                                        class="bg-emerald-50 p-6 rounded-xl border border-emerald-200 shadow-sm transition hover:shadow-md">
-                                        <div class="text-3xl mb-3">🛸</div>
-                                        <h4 class="font-bold text-emerald-800 mb-1">50-100 Hz</h4>
-                                        <p class="text-sm text-emerald-400">專業級更新率</p>
-                                        <p class="mt-2 text-sm font-medium text-emerald-600">「流暢手感，專業無人機或平衡車的標準。」</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Module 2: Bottlenecks -->
-        <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="p-1 bg-gradient-to-r from-amber-500 to-orange-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3 text-orange-700">
-                        <span class="text-4xl">⚠️</span> 2. 數據流的瓶頸：頻寬與延遲
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-blue-500">📡</span> 1. 什麼是取樣率 (Sampling Rate)？
                     </h2>
-                    <div class="space-y-6 text-gray-600 text-lg">
-                        <p>為什麼我們不乾脆設到 1000Hz？因為硬體有其極限：</p>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="space-y-4">
-                                <div class="bg-orange-50 p-6 rounded-xl border border-orange-200">
-                                    <h4 class="font-bold text-orange-800 mb-2 flex items-center gap-2">
-                                        <span>📦</span> 藍牙 MTU (最大傳輸單元)
-                                    </h4>
-                                    <p class="text-sm">
-                                        藍牙每次傳輸的封包大小有限制（通常是 20 到 200 字節）。如果數據太長，會被拆成多個封包，增加延遲。
-                                    </p>
-                                </div>
-                                <div class="bg-orange-50 p-6 rounded-xl border border-orange-200">
-                                    <h4 class="font-bold text-orange-800 mb-2 flex items-center gap-2">
-                                        <span>🧠</span> 處理時間 (Parsing Time)
-                                    </h4>
-                                    <p class="text-sm">
-                                        ESP32 解析一個複雜的 JSON 封包需要時間。如果發送頻率高過解析速度，系統就會卡死 (Lag)。
-                                    </p>
-                                </div>
-                                <div class="bg-slate-900 p-6 rounded-xl text-white">
-                                    <h4 class="font-bold text-slate-300 mb-2">💡 關鍵黃金公式</h4>
-                                    <div class="text-xl font-bold text-center py-2 text-amber-400">
-                                        取樣率 (Hz) × 數據大小 (Bytes) < 頻寬上限 </div>
-                                    </div>
-                                </div>
-                                <div
-                                    class="flex items-center justify-center p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
-                                    <div class="mermaid">
-                                        graph TD
-                                        A[App 指令] -->|發送頻率| B{通訊通道}
-                                        B -->|頻寬上限| C[ESP32 接收]
-                                        C -->|解析速度| D[馬達執行]
-                                        D -->|反饋| A
-                                        style B fill:#fee2e2,stroke:#ef4444
-                                        style D fill:#dcfce7,stroke:#22c55e
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-        </section>
-
-        <!-- Module 3: Nyquist & Aliasing -->
-        <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="p-1 bg-gradient-to-r from-pink-500 to-rose-600"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3 text-rose-700">
-                        <span class="text-4xl">🌀</span> 3. 奈奎斯特與混疊 (Aliasing)
-                    </h2>
-                    <div class="space-y-6 text-gray-600 text-lg">
-                        <div class="bg-rose-50 p-6 rounded-xl border border-rose-200 mb-8">
-                            <h4 class="font-bold text-rose-800 mb-2">理論基礎：奈奎斯特定理</h4>
-                            <p class="text-base text-rose-900 leading-relaxed italic">
-                                「若要精確捕捉某種動作，取樣頻率必須大於該動作頻率的兩倍。」(fs > 2f)
-                            </p>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-                            <div class="space-y-4">
-                                <h4 class="font-bold text-gray-800 flex items-center gap-2">
-                                    <span>🎥</span> 生活中的現象：倒轉的電風扇
-                                </h4>
-                                <p>當電風扇轉很快時，在相機畫面裡看起來會像在倒著轉？這就是 <strong>混疊
-                                        (Aliasing)</strong>。因為相機的取樣率（幀率）不足以追上扇葉的速度，導致大腦誤判了運動方向。</p>
-                                <div class="p-4 bg-slate-100 rounded-lg border border-slate-200">
-                                    <p class="text-sm font-medium text-slate-700">🤔 線上思考任務：</p>
-                                    <p class="text-sm">如果你的輪胎轉速是每秒 20 圈 (20Hz)，但你的光電編碼器取樣率只有 30Hz，會發生什麼事？</p>
-                                </div>
-                            </div>
-                            <div class="space-y-4">
-                                <h4 class="font-bold text-gray-800 flex items-center gap-2">
-                                    <span>📊</span> 頻寬佔用計算
-                                </h4>
-                                <div class="bg-slate-900 p-6 rounded-xl text-indigo-300 font-mono text-sm">
-                                    <p class="text-white font-bold mb-4">// 計算傳輸成本</p>
-                                    <p>頻率：100 Hz (每秒 100 次)</p>
-                                    <p>內容：100 Bytes (JSON 字串)</p>
-                                    <p>-------------------------</p>
-                                    <p class="text-amber-400">總頻寬：10,000 Bytes/sec</p>
-                                    <p class="text-amber-400">約 80 Kbps (藍牙負擔較大)</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Module 4: Data Encapsulation -->
-        <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="p-1 bg-gradient-to-r from-teal-500 to-emerald-600"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3 text-emerald-700">
-                        <span class="text-4xl">📦</span> 4. 數據封裝與調度
-                    </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
                         <div class="space-y-6">
-                            <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-200">
-                                <h4 class="font-bold text-emerald-800 mb-2">定時發送 vs. 有數據就發送</h4>
-                                <p class="text-sm leading-relaxed">
-                                    「有數據就送」在搖桿快速亂動時會瞬間產生大量封包，導致藍牙擁塞。使用 <strong>節流 (Throttling)</strong> 技術，確保最高取樣率被限制在
-                                    50Hz，系統會更穩定。
-                                </p>
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                取樣率是指每秒鐘讀取感測器或發送控制指令的次數，單位是 <strong>Hz (赫茲)</strong>。它是衡量控制精準度的核心指標。
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm text-center">
+                                    <p class="text-[10px] text-slate-800 font-bold mb-1">1 Hz</p>
+                                    <p class="text-[9px] text-red-500 italic">"機器人動作極其頓挫，無法穩定直線。"</p>
+                                </div>
+                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-sm text-center">
+                                    <p class="text-[10px] text-blue-800 font-bold mb-1">20 Hz</p>
+                                    <p class="text-[9px] text-blue-500 italic">"基本遙控感，適合低速巡航。"</p>
+                                </div>
+                                <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100 shadow-sm text-center">
+                                    <p class="text-[10px] text-emerald-800 font-bold mb-1">50+ Hz</p>
+                                    <p class="text-[9px] text-emerald-500 italic">"專業級響應，操控感覺如絲般順滑。"</p>
+                                </div>
                             </div>
-                            <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-200">
-                                <h4 class="font-bold text-indigo-800 mb-3">🛠️ 線上任務：JSON 設計</h4>
-                                <p class="text-sm mb-4">設計一個精簡的 JSON 格式，將以下數據打包在一起回傳：</p>
-                                <ul class="text-xs space-y-2 list-disc list-inside text-indigo-900">
-                                    <li>電池電壓 (V)</li>
-                                    <li>左/右馬達轉速 (RPM)</li>
-                                    <li>超音波距離 (cm)</li>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center">
+                            <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest">Discrete Control Theory</h4>
+                            <p class="text-[11px] text-slate-400 font-light mb-4">"控制頻率越高，系統對誤差的修正就越及時。"</p>
+                            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                <div class="w-4/5 h-full bg-blue-500 animate-[pulse_1s_infinite]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Bottlenecks & Bandwidth -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-orange-500">⚠️</span> 2. 數據流瓶頸：頻寬與延遲
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                取樣率不能無限提高。硬體瓶頸（如藍牙 MTU 限制、解析 JSON 的時間）限制了我們的傳輸速度。
+                            </p>
+                            <div class="bg-amber-50 p-8 rounded-3xl border border-amber-100 text-center">
+                                <h4 class="text-amber-900 font-bold mb-4 text-xs uppercase tracking-widest">Golden Rule</h4>
+                                <div class="text-xl font-mono text-amber-600">
+                                   \[Hz \times PacketSize < Bandwidth\]
+                                </div>
+                                <p class="text-[10px] text-slate-400 mt-4 italic font-light">優化策略：減少 JSON Key 長度以降低負擔</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex items-center justify-center">
+                           <div class="mermaid">
+                                graph TD
+                                A[App Cmd] -->|Hz| B{BT Channel}
+                                B -->|BW Limit| C[ESP32 Buffer]
+                                C -->|Parse| D[Motor Execution]
+                                style B fill:#451a03,stroke:#9a3412,color:#fff
+                                style D fill:#064e3b,stroke:#059669,color:#fff
+                           </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Nyquist & Smoothing -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-pink-400">
+                        <span class="p-2 bg-pink-500/20 rounded-lg text-pink-400 text-2xl">🌀</span> 3. 奈奎斯特定理與滑動濾波
+                    </h2>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                若要精確捕捉動作，取樣率必須大於信號頻率的兩倍。同時，高頻取樣會帶來更多噪聲，我們需要「滑動平均」來平滑數據。
+                            </p>
+                            <div class="bg-pink-500/10 p-8 rounded-3xl border border-pink-500/20 shadow-inner">
+                                <h4 class="font-bold text-pink-400 mb-4 text-xs uppercase tracking-widest">Signal Processing</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-pink-500 rounded-full mt-1"></span><div><strong class="text-white">混疊 (Aliasing)</strong>：取樣太慢導致方向轉向誤判（就像電風扇倒著轉）。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-pink-500 rounded-full mt-1"></span><div><strong class="text-white">滑動平均 (SMA)</strong>：利用 FIFO Buffer 取均值，消除感測器的毛刺噪聲。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-pink-500 rounded-full mt-1"></span><div><strong class="text-white">節流 (Throttling)</strong>：確保發送頻率封頂，防止藍牙緩衝區堆棧性當機。</div></li>
                                 </ul>
                             </div>
                         </div>
-                        <div class="bg-slate-900 p-8 rounded-2xl text-white font-mono text-sm">
-                            <div class="text-gray-500 mb-4">// 精簡後的 JSON 範例</div>
-                            <div class="text-blue-300">
-                                {<br>
-                                &nbsp;&nbsp;"v": <span class="text-pink-400">7.42</span>,<br>
-                                &nbsp;&nbsp;"rpm": [<span class="text-pink-400">120, 118</span>],<br>
-                                &nbsp;&nbsp;"d": <span class="text-pink-400">15.5</span><br>
-                                }
-                            </div>
-                            <p class="mt-6 text-xs text-gray-400">💡 提示：使用短 Key 名稱 (如 v 代替 batteryVoltage)
-                                可以大幅減少字節數，提高取樣率容量。</p>
+                        <div class="lg:w-80 bg-pink-600/10 p-10 rounded-3xl border border-pink-500/20 text-center relative overflow-hidden group">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-pink-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-pink-400 font-bold mb-4 text-[10px] uppercase tracking-widest">Bandwidth Optimization</h4>
+                           <p class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic">
+                               "優雅的數據流在於：發送適量的資訊，並賦予其最大的執行價值。"
+                           </p>
+                           <div class="inline-block px-8 py-3 bg-pink-500 text-white rounded-xl font-bold text-[10px] shadow-lg cursor-pointer hover:bg-pink-400 transition-colors">Start Stream Lab</div>
                         </div>
                     </div>
                 </div>
@@ -242,79 +167,58 @@
 
         <!-- Homework Section -->
         <section class="module-section">
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實戰挑戰：優化數據流</h2>
-            <p class="text-center text-gray-500 mb-12">學會管理數據，讓控制變得精準且優雅。</p>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：數據流管理與優化</h2>
+            <p class="text-center text-gray-500 mb-12">管理取樣頻率與數據格式，提升控制系統的即時性與韌性。</p>
 
             <div class="grid md:grid-cols-3 gap-6">
-                <!-- Task 3-1 -->
-                <div onclick="openSubmissionModal('basic-09-jitter-test', '【作業 3-1】「抖動測試」：頻率對手感的影響')"
+                <!-- Task 9-1 -->
+                <div onclick="openSubmissionModal('basic-09-sampling-1', '【作業 9-1】抖動測試：取樣頻率與手感 (Jitter & Control Feel)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-blue-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🕹️</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform">🕹️</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 3-1】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「抖動測試」</h4>
-                        <div class="text-sm text-gray-600 space-y-4">
-                            <p>在前端實作滑桿，動態調整發送頻率 (1Hz - 100Hz)。</p>
-                            <ul class="list-disc list-inside space-y-1 text-xs">
-                                <li><strong>實機駕駛</strong>：挑戰在 5Hz 與 50Hz 下通過障礙物。</li>
-                                <li><strong>觀察</strong>：100Hz 時是否出現 Lag 或斷連？</li>
-                                <li><strong>目標</strong>：找出流暢與穩定的「甜蜜點」。</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 9-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「動態取樣感官實測」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            實作頻率滑桿。對比 5Hz 與 50Hz 下的行駛軌跡精準度，量化分析取樣頻率對「操控延時感」的物理貢獻。
+                        </p>
                     </div>
                 </div>
 
-                <!-- Task 3-2 -->
-                <div onclick="openSubmissionModal('basic-09-moving-average', '【作業 3-2】感測器數據降噪：滑動平均濾波')"
+                <!-- Task 9-2 -->
+                <div onclick="openSubmissionModal('basic-09-sampling-2', '【作業 9-2】感測器數據降噪：滑動平均濾波 (Moving Average)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-amber-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">📈</span>
-                            <span class="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-amber-500 group-hover:rotate-12 transition-transform">📈</span>
+                            <span class="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-amber-600 transition">【作業 3-2】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「滑動平均濾波」</h4>
-                        <div class="text-sm text-gray-600 space-y-2">
-                            <p>處理 50Hz 高頻取樣下的超音波跳動：</p>
-                            <ul class="list-disc list-inside space-y-1 text-xs">
-                                <li>建立長度為 10 的陣列作為 Buffer。</li>
-                                <li>實現「先進先出」數據更新邏輯。</li>
-                                <li><strong>體驗</strong>：感受「平滑度提升」與「時間延遲增加」之間的權衡。</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-amber-600 transition">【作業 9-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「數據平滑緩衝架構」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            實作 16 級 FIFO Buffer。處理超音波數據毛刺噪聲，權衡「過濾品質」與「響應延遲」間的工程拉鋸。
+                        </p>
                     </div>
                 </div>
 
-                <!-- Task 3-3 -->
-                <div onclick="openSubmissionModal('basic-09-throttle-logic', '【作業 3-3】事件驅動 vs. 定時取樣')"
+                <!-- Task 9-3 -->
+                <div onclick="openSubmissionModal('basic-09-sampling-3', '【作業 9-3】通訊節流與協定優化 (Throttling & Protocol)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="bg-pink-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🛡️</span>
-                            <span
-                                class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">45
-                                min</span>
+                            <span class="text-4xl text-pink-500 group-hover:translate-x-1 transition-transform">🛡️</span>
+                            <span class="bg-pink-100 text-pink-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業
-                            3-3】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「強韌通訊機制」</h4>
-                        <div class="text-sm text-gray-600 space-y-2">
-                            <p>比較「搖桿一動就傳」與「20ms 定時傳」：</p>
-                            <ul class="list-disc list-inside space-y-1 text-xs">
-                                <li><strong>擁塞模擬</strong>：快速亂動搖桿，觀察系統是否卡死。</li>
-                                <li><strong>節流實作</strong>：確保無論手速多快，傳輸頻率最高僅 50Hz。</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-pink-600 transition">【作業 9-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「精簡封裝與節流保護」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            實施 Throttling 機制防止藍牙擁塞。優化 JSON Key 長度以降低頻寬負擔，達成更高頻率的穩定通訊。
+                        </p>
                     </div>
                 </div>
             </div>
@@ -327,7 +231,7 @@
         <div class="container mx-auto px-4 text-center">
             <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
-                <span>課程單元 基礎 9-3</span>
+                <span>課程單元 基礎 9 - 通訊管理</span>
                 <span class="hidden md:inline">|</span>
                 <span>講師：Antigravity Assistant</span>
             </div>
@@ -337,123 +241,143 @@
     <script>
         // Define Resources
         window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/pGw6b-owQEQ", // 數據、速度與控制：機器人學的隱藏法則
+            youtube: "https://www.youtube.com/embed/pGw6b-owQEQ",
             doc: "https://docs.google.com/document/d/e/2PACX-1vRoNkB1atBGt4pIMazI4QH0Z6RFPyNqnfTgC6eJ1tgzf2GBXwpoobcVIvLI3MFgP3hGgXTRJ5MyZgfP/pub?embedded=true"
         };
     </script>
     <script src="/js/course-shared-v4.js"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">數據流與信號處理實驗室</h2>
 
-        <h3>【作業 3-1】「抖動測試」：頻率對手感的影響</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 操縱感調校工程師 (Control Feel Tuning Engineer)。</li>
-            <li><strong>執行方式：</strong> 在前端 App 實作滑桿，讓發送頻率可動態從 1Hz 調整至 100Hz。實施通過障礙物的側向移動測試，對比 5Hz 與 50Hz 的駕駛手感差異。</li>
-            <li><strong>評分重點 :</strong> 成功實作頻率切換邏輯，並能清楚描述高取樣率如何減少控制時的「頓挫感」。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：抖動測試：取樣頻率與手感 (Jitter & Control Feel)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：操縱感調校工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
 
-        <h3>【作業 3-2】感測器數據降噪：滑動平均濾波</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 數據科學家 (Data Scientist)。</li>
-            <li><strong>執行方式：</strong> 建立一個長度為 10 的陣列作為 Buffer。對 50Hz 高頻取樣下的超音波數據進行「先進先出」式平滑處理。對比處理前後的距離跳動圖表。</li>
-            <li><strong>評分重點 :</strong> 濾波器邏輯正確，數據輸出明顯比原始採樣更平滑。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並拉取基礎 App 框架。</li>
+                    <li><strong>取樣率控制器實作</strong>：在前端 App 介面加入滑桿，使指令發送週期能在 <code>10ms</code> (100Hz) 到 <code>1000ms</code> (1Hz) 間動態切換。</li>
+                    <li><strong>實機手感對比</strong>：分別在 5Hz 與 50Hz 設定下挑戰狹隘的 S 彎道。記錄不同取樣頻率對操控「精準度」與「頓挫感」的具體影響。</li>
+                    <li><strong>擁塞邊界探究</strong>：不斷提高頻率，尋找並記錄該藍牙環境下開始發生封包丟失 (Packet Loss) 或明顯卡頓的臨界頻寬值。</li>
+                </ol>
+            </div>
 
-        <h3>【作業 3-3】事件驅動 vs. 定時取樣 (節流機制)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 通訊協定優化專家 (Protocol Optimization Expert)。</li>
-            <li><strong>執行方式：</strong> 模擬快速亂動搖桿觸發的高頻封包。實作 Throttling 機制，確保無論輸入頻率多快，藍牙發送頻率最高限制在 50Hz (每 20ms 一次)。</li>
-            <li><strong>評分重點 :</strong> 節流邏輯能有效防止藍牙 MTU 擁塞導致的 Lag 或是 ESP32 系統當機。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>對比數據完整性</strong>：README 中是否能量化展示不同取樣率對避障成功率或行駛穩定度的具體影響？</li>
+                    <li>[ ] <strong>參數優化結論</strong>：能否根據實驗得出一個兼顧即時手感與通訊長期穩定性的「黃金頻率」值？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：感測器數據降噪：滑動平均濾波 (Moving Average Filter)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：數據科學家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>噪雜採樣觀察</strong>：以 100Hz 高頻連續輸出原始超音波測距日誌。量化靜止狀態下數據的「隨機抖動」範圍。</li>
+                    <li><strong>FIFO 緩衝區實作</strong>：建立一個長度為 8-16 的循環 Buffer 陣列，儲存最新的歷史採樣數據。</li>
+                    <li><strong>均值平滑演算</strong>：計算 Buffer 內的數據平均值。對比處理前後的感測器數據流平滑程度。</li>
+                    <li><strong>延遲補償分析</strong>：觀察加大 Buffer 長度後，「噪聲消除效果」與「物理反應遲滯」之間的權衡結果。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>濾波品質優異性</strong>：處理後的感測器數據流是否成功消除了 80% 以上的隨機噪聲，且無明顯的數值突跳？</li>
+                    <li>[ ] <strong>計算邏輯穩健度</strong>：數據緩衝區的索引環繞 (Wraparound) 邏輯是否正確，各項邊界條件處理是否妥當？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：通訊節流與協定優化 (Throttling & Protocol Optimization)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：通訊協定優化專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>通訊壓力測試</strong>：以超高頻率（亂動搖桿）產發封包，觀察未處理狀態下藍牙底層 Buffer 是否會因寫入過快而當機。</li>
+                    <li><strong>節流閥機制 (Throttling)</strong>：在發送指令前實施 <code>millis()</code> 判定，強迫發送間隔絕不低於 20ms，平滑化發送負載。</li>
+                    <li><strong>協定壓縮優化</strong>：重寫 JSON 數據交換協定。壓縮 Key 名稱（如用 "v" 代替 "voltage"）並量化單個封包節省的位元組數。</li>
+                    <li><strong>最終提交</strong>：將具備節流保護與高効率壓縮協定邏輯的代碼 Push 至 GitHub PR。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>連線稳定性提升</strong>：在極限操控頻率下，藍牙連線是否仍能保持不掉線且指令傳達順暢？</li>
+                    <li>[ ] <strong>資源効能指標</strong>：README 中是否清晰展示了「協定瘦身」對整體吞吐量與實時響應性的貢獻？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>在 GitHub 建立新 Repo（名為 <code>basic-09-sampling-template</code>）。</li>
-                <li>上傳包含超音波讀取、馬達驅動但「取樣週期為寫死變數」的專案。</li>
-                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
-                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，獲得個人專屬 Repo。</li>
-                <li>研究「奈奎斯特準則」，實作動態取樣率調整滑桿與 `millis()` 二層任務調度。</li>
-                <li>完成滑動平均濾波後 <strong>Push 代碼</strong> 提交進度。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
-                <li>重點評價學生對「頻寬限制」與「數據更新即時性」之間的權衡判斷。</li>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：從「原始數據」到「高品質控制流」的轉化實踐。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-indigo-600">重點 1：奈奎斯特實踐</strong> - 引導學員理解取樣並不是越快越好，而是要跟物理動作頻率匹配。</li>
+                <li><strong class="text-indigo-600">重點 2：平滑與延遲的拔河</strong> - 這是一個經典的工程權衡問題，鼓勵學員透過實驗找出該環境下的最優解。</li>
+                <li><strong class="text-indigo-600">重點 3：協定効能與節流</strong> - 培養「頻寬是有價資源」的核心意識，學習如何優雅地管理有限的通訊帶寬。</li>
             </ol>
         </div>
 
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元聚焦於「從單點控制轉向信號處理」，引導學生理解如何優化數據流品質，讓控制系統在充滿雜訊的物理環境中依然保持穩健。</p>
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/DataHandler.js# (前端) 學員需實作 Throttling 與動態頻率控制邏輯
+├── src/main.cpp      # (硬體) 學員需實作滑動平均環形緩衝區 (Buffer)
+└── README.md         # 實驗日誌：記錄不同取樣頻率下的轉向軌跡偏差圖表
+            </pre>
+        </div>
 
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── src/
-│   └── main.cpp      # (重點) 需實作 Sampling Queue 與 Filter
-├── data/
-│   └── analysis.csv  # 供紀錄不同取樣率下的數據跳動情況
-└── README.md         # 實驗報告：取樣率如何影響 PID 迴路的穩定性分析</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>main.cpp (Throttling / Rate Limit)</strong></p>
-        <pre><code>if (millis() - lastSend > 20) { // Max 50Hz
-  sendData(jsonData);
-  lastSend = millis();
-}</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>邏輯檢測：：</strong> 驗證遞迴或循環緩衝區 (Circular Buffer) 的數據更新指標計算是否會發生溢位。</li>
-            <li><strong>通訊開銷估計：：</strong> 根據學生設計的 JSON 長度與頻率，自動計算並警示是否超過 BLE 常規頻寬。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「採樣定律：為什麼車子會喝醉？」科普影片。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>Dashboard：</strong>確認學員對「取樣損失」與「混疊」有視覺化認知。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，對比在高速與低速行駛時，不同取樣頻率如何大幅改變避障成功率。
-                    </td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>技術督導：</strong>演示「滑動平均」如何消除超音波感測器在複雜牆面下的跳動雜訊。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作具備 JSON 壓縮策略的高效通訊協議與 Push，閱讀教師回覆 PR。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核學生對「控制反應時間
-                        (Control Latency)」與「系統負載」之權衡思維。</td>
-                </tr>
-            </tbody>
-        </table>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看「取樣頻率：為什麼電風扇在鏡頭下會倒著轉？」科普解說影片。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員能否識別出「混疊現象」對運動控制的關鍵誤導點。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，透過手機介面調整頻率並完成 S 彎道挑戰，量化操控手感差異。</td>
+                        <td class="p-4 border-b"><strong>助教引導:</strong> 演示如何利用開發者面板 (DevTools) 查看藍牙數據流的真實推送間隔。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">將自適應頻率過濾機制整合至高階控制庫並 Push PR。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 評價學員對「資源開銷 vs. 系統反應性」綜合動態平衡的設計深度。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 </body>
 

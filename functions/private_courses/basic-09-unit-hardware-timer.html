@@ -26,12 +26,12 @@
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
                 class="inline-block py-1 px-3 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-sm font-semibold mb-6 tracking-wide uppercase">
-                基礎 9 - 單元 2
+                基礎 9 - 多工處理
             </span>
             <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">精通 <span class="text-blue-400">硬體定時器</span><br>& <span class="text-emerald-400">ISR 中斷服務</span>
             </h1>
             <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
-                超越 millis() 的極致精確度，讓處理器為你「插隊」執行關鍵任務。
+                超越 millis() 的極致精確度，讓處理器為你「搶佔」資源執行關鍵防線。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
@@ -50,45 +50,38 @@
     <!-- Main Content -->
     <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
-        <!-- Module 1: What is Hardware Timer -->
+        <!-- Module 1: Hardware Timer Concept -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
-                        <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <span class="text-4xl">⏰</span> 1. 什麼是硬體定時器？ (30 min)
-                            </h2>
-                            <div class="space-y-6 text-gray-600 text-lg">
-                                <p><strong>核心概念：</strong>想像處理器內部有一個<strong>獨立的小鬧鐘</strong>。主程式（Loop）在跑的時候，鬧鐘時間一到，處理器會「強行暫停」手邊工作，去執行特定任務。
-                                </p>
-
-                                <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                                    <h4 class="font-bold text-blue-800 mb-4 flex items-center gap-2">
-                                        <span>⚔️</span> 與 millis() 的差異
-                                    </h4>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div class="bg-white p-4 rounded-lg shadow-sm border border-blue-200">
-                                            <span class="font-bold text-blue-600">millis()：被動查詢</span>
-                                            <p class="text-sm mt-1">「看錶」，必須在 loop 裡面手動檢查時間，會受其他程式阻塞影響。</p>
-                                        </div>
-                                        <div class="bg-white p-4 rounded-lg shadow-sm border border-blue-200">
-                                            <span class="font-bold text-blue-600">定時器中斷：主動通知</span>
-                                            <p class="text-sm mt-1">「鬧鐘響」，時間到直接插隊執行，不受 loop 阻塞影響，精度極高。</p>
-                                        </div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-blue-500">⏰</span> 1. 什麼是硬體定時器？
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                處理器內部有一個獨立的「小鬧鐘」。當時間一到，處理器會「強行暫停」主程式 (Loop)，去執行被稱為 ISR 的特定緊急任務。
+                            </p>
+                            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+                                <h4 class="font-bold text-blue-900 mb-4 text-xs uppercase tracking-widest leading-relaxed">Active vs Passive</h4>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div class="bg-white p-4 rounded-xl shadow-sm">
+                                        <p class="text-[10px] text-blue-800 font-bold mb-1">millis() - 被動查詢</p>
+                                        <p class="text-[9px] text-slate-500">要在 loop 中手動檢查。容易受其他耗時代碼阻塞而失效。</p>
+                                    </div>
+                                    <div class="bg-white p-4 rounded-xl shadow-sm border border-blue-200">
+                                        <p class="text-[10px] text-indigo-800 font-bold mb-1">Timer - 主動插隊</p>
+                                        <p class="text-[9px] text-slate-500">鬧鐘強迫中斷主程式。精度極高，不受 loop 阻塞影響。</p>
                                     </div>
                                 </div>
-
-                                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                                    <h4 class="font-bold text-slate-800 mb-2 flex items-center gap-2">
-                                        <span>🎯</span> 學習目標
-                                    </h4>
-                                    <p class="text-base text-slate-700 leading-relaxed">
-                                        理解 ESP32 擁有 4 個硬體定時器，可以達到微秒 (\(\mu s\)) 等級的精確度。
-                                    </p>
-                                </div>
                             </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center">
+                            <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest">ESP32 Hardware Resource</h4>
+                            <div class="text-2xl font-mono text-cyan-400 mb-2">\[4 \times Hardware Timers\]</div>
+                            <p class="text-[10px] text-slate-500 italic">Resolution: Microseconds (\(\mu s\))</p>
                         </div>
                     </div>
                 </div>
@@ -97,79 +90,78 @@
 
         <!-- Module 2: ISR Taboos -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-red-500 to-rose-600"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl">🚫</span> 2. 中斷服務常式 (ISR) 的三大禁忌 (30 min)
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-red-500">🚫</span> 2. 中斷服務常式 (ISR) 的三大禁忌
                     </h2>
-                    <div class="space-y-6 text-gray-600 text-lg">
-                        <p class="font-semibold text-red-600 decoration-wavy underline">關鍵概念：ISR 必須「快進快出」。</p>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div class="bg-red-50 p-6 rounded-xl border border-red-100 shadow-sm">
-                                <h4 class="font-bold text-red-800 mb-2">不可使用 delay()</h4>
-                                <p class="text-sm">會導致系統鎖死，因為中斷已經停止了時間流逝的計數環境。</p>
-                            </div>
-                            <div class="bg-orange-50 p-6 rounded-xl border border-orange-100 shadow-sm">
-                                <h4 class="font-bold text-orange-800 mb-2">不可進行耗時運算</h4>
-                                <p class="text-sm">例如複雜的 JSON 解析或大容量浮點運算。這會卡住主程式太久。</p>
-                            </div>
-                            <div class="bg-rose-50 p-6 rounded-xl border border-rose-100 shadow-sm">
-                                <h4 class="font-bold text-rose-800 mb-2">不可使用 Serial.print()</h4>
-                                <p class="text-sm">I/O 操作太慢，會干擾中斷時序，甚至導致 Watchdog 重新啟動。</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                中斷代碼必須遵循「快進快出」原則。如果 ISR 執行太久，會導致主系統 Watchdog 重啟甚至崩潰。
+                            </p>
+                            <div class="grid grid-cols-1 gap-4">
+                                <div class="flex items-center gap-4 bg-rose-50 p-4 rounded-2xl border border-rose-100">
+                                   <span class="w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+                                   <p class="text-[10px] text-rose-900 font-bold uppercase tracking-widest">NO delay() & Serial.print()</p>
+                                </div>
+                                <div class="flex items-center gap-4 bg-orange-50 p-4 rounded-2xl border border-orange-100">
+                                   <span class="w-2 h-2 bg-orange-500 rounded-full"></span>
+                                   <p class="text-[10px] text-orange-900 font-bold uppercase tracking-widest">NO Complex Calculation</p>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="bg-slate-900 p-8 rounded-2xl text-white">
-                            <h4 class="text-emerald-400 font-bold mb-4 flex items-center gap-2">
-                                <span>⚡</span> 加速關鍵：IRAM_ATTR
-                            </h4>
-                            <p class="text-sm text-slate-300 mb-6">
-                                使用 <code>IRAM_ATTR</code> 關鍵字，可以確保 ISR 程式碼存放在 RAM 中，而不是從較慢的 Flash 讀取，確保中斷反應即時。
-                            </p>
-                            <div class="bg-slate-800 p-4 rounded-lg font-mono text-sm border border-slate-700">
-                                <span class="text-purple-400">void</span> <span class="text-yellow-400">IRAM_ATTR</span>
-                                <span class="text-blue-400">onTimer</span>() {<br>
-                                &nbsp;&nbsp;<span class="text-gray-500">// 內容越精簡越好</span><br>
-                                }
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent"></div>
+                            <div class="flex items-center gap-3 mb-6 relative z-10">
+                                <span class="w-3 h-3 bg-red-400 rounded-full"></span>
+                                <span class="w-3 h-3 bg-amber-400 rounded-full"></span>
+                                <span class="w-3 h-3 bg-emerald-400 rounded-full"></span>
+                                <span class="ml-auto text-[10px] text-slate-500 font-mono tracking-widest uppercase">IRAM ATTRIBUTE</span>
                             </div>
+                            <pre class="text-xs md:text-sm leading-relaxed overflow-x-auto text-rose-300 font-mono relative z-10">
+<span class="text-slate-500">// 確保 ISR 存在 RAM 中以獲取極速響應</span>
+<span class="text-purple-400">void</span> <span class="text-yellow-400">IRAM_ATTR</span> <span class="text-emerald-400">onTimer</span>() {
+  <span class="text-purple-400">digitalWrite</span>(LED_PIN, !<span class="text-purple-400">digitalRead</span>(LED_PIN));
+}
+
+<span class="text-slate-500">// Fast in, Fast out.</span></pre>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Module 3: Volatile -->
+        <!-- Module 3: Volatile Memory -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="p-1 bg-gradient-to-r from-amber-500 to-yellow-600"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">🛡️</span> 3. 變數共享：volatile 關鍵字 (20 min)
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-amber-400">
+                        <span class="p-2 bg-amber-500/20 rounded-lg text-amber-400 text-2xl">🛡️</span> 3. 變數共享：volatile 關鍵字
                     </h2>
-                    <div class="space-y-6 text-gray-600 text-lg">
-                        <div class="flex flex-col md:flex-row gap-8">
-                            <div class="flex-1 space-y-4">
-                                <p><strong>核心概念：</strong>當主程式與 ISR 都會用到同一個變數（如：計數器）時，必須加上 <code>volatile</code>。</p>
-                                <p class="text-sm bg-amber-50 p-4 rounded-lg border border-amber-100 italic">
-                                    這會防止編譯器為了優化速度，而把變數存在暫存器中「懶得讀取」，導致主程式讀到舊的數值。
-                                </p>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                當主程式與中斷共用同一個變數（如計數器）時，必須告訴編譯器：這東西「隨時會變」，不准擅自優化暫存。
+                            </p>
+                            <div class="bg-amber-500/10 p-8 rounded-3xl border border-amber-500/20 shadow-inner">
+                                <h4 class="font-bold text-amber-400 mb-4 text-xs uppercase tracking-widest">Memory Visibility</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-amber-500 rounded-full mt-1"></span><div><strong class="text-white">volatile 修飾字</strong>：指示 CPU 每次都必須從真實內存中讀取數值，不可讀取暫存器副本。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-amber-500 rounded-full mt-1"></span><div><strong class="text-white">數據完整性</strong>：防止主程式讀到「舊時空」的過期數據。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-amber-500 rounded-full mt-1"></span><div><strong class="text-white">臨界區保護</strong>：針對多位元數值（如 long），需配合原子操作指令或臨界鎖。</div></li>
+                                </ul>
                             </div>
-                            <div class="flex-1">
-                                <div class="bg-slate-100 p-6 rounded-xl border border-slate-200">
-                                    <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
-                                        <span>📝</span> 線上任務
-                                    </h4>
-                                    <p class="text-sm text-slate-600 leading-relaxed mb-4">
-                                        下載並閱讀 ESP32 定時器範例，畫出「定時中斷」觸發與主程式運行的時序圖。觀察「插隊」發生的瞬間。
-                                    </p>
-                                    <div class="bg-white p-4 rounded-lg border border-slate-300 font-mono text-xs">
-                                        volatile int interruptCounter = 0;<br>
-                                        // 告訴編譯器：這東西隨時會變，不要快取它！
-                                    </div>
-                                </div>
-                            </div>
+                        </div>
+                        <div class="lg:w-80 bg-amber-600/10 p-10 rounded-3xl border border-amber-500/20 text-center relative overflow-hidden group">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-amber-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-amber-400 font-bold mb-4 text-[10px] uppercase tracking-widest">Data Integrity</h4>
+                           <p class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic">
+                               "硬體計數的核心在於確保主程式與中斷程式『看見』的是同一個真相。"
+                           </p>
+                           <div class="inline-block px-8 py-3 bg-amber-500 text-white rounded-xl font-bold text-[10px] shadow-lg cursor-pointer hover:bg-amber-400 transition-colors">Apply Volatile Guard</div>
                         </div>
                     </div>
                 </div>
@@ -179,69 +171,56 @@
         <!-- Homework Section -->
         <section class="module-section">
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：硬體級別的精確控制</h2>
-            <p class="text-center text-gray-500 mb-12">運用硬體中斷，實現那些不容許延遲的關鍵功能。</p>
+            <p class="text-center text-gray-500 mb-12">運用硬體定時器實現微秒級的精確採樣，建立機器人的底層安全防禦體系。</p>
 
             <div class="grid md:grid-cols-3 gap-6">
-                <!-- Task 2-1 -->
-                <div onclick="openSubmissionModal('basic-09-timer-blink', '【作業 2-1】精確頻率：硬體定時器閃燈')"
+                <!-- Task 9-1 -->
+                <div onclick="openSubmissionModal('basic-09-timer-1', '【作業 9-1】精確頻率：硬體定時器與閃燈 (Precision Timer Blink)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-blue-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🚨</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform">🚨</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 2-1】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「硬體定時器閃燈」</h4>
-                        <div class="text-sm text-gray-600 space-y-4">
-                            <p>利用硬體定時器，每隔精確的 \(1,000,000 \mu s\) (1秒) 切換 LED 狀態。</p>
-                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 text-xs">
-                                <strong>挑戰：</strong>在 loop 裡寫 <code>delay(5000)</code>，觀察 LED 是否依然能精確閃爍？
-                            </div>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 9-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「搶佔式定時器開發」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            配置 hardware timer 實現 1s 週期中斷。驗證在 loop() 被極長延遲阻塞時，LED 是否依然能維持物理級別的精確閃爍。
+                        </p>
                     </div>
                 </div>
 
-                <!-- Task 2-2 -->
-                <div onclick="openSubmissionModal('basic-09-tachometer', '【作業 2-2】轉速計實作：計算馬達 Encoder 訊號')"
+                <!-- Task 9-2 -->
+                <div onclick="openSubmissionModal('basic-09-timer-2', '【作業 9-2】轉速計實作：馬達 Encoder 採樣 (Tachometer & RPM)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-emerald-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🏎️</span>
-                            <span
-                                class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-emerald-500 group-hover:rotate-12 transition-transform">🏎️</span>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業
-                            2-2】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「轉速計實作」</h4>
-                        <div class="text-sm text-gray-600 space-y-4">
-                            <p>利用定時器每 100ms 觸發中斷，計算這段時間內馬達轉了幾圈。</p>
-                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 text-xs">
-                                <strong>技術：</strong>學習使用 <code>portENTER_CRITICAL</code> 來保護共享數據。
-                            </div>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業 9-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「高頻脈衝數值取樣」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            運用 100ms 週期定時器作為窗口。讀取 volatile 計數變量並計算馬達實時 RPM，實作臨界區讀寫保護。
+                        </p>
                     </div>
                 </div>
 
-                <!-- Task 2-3 -->
-                <div onclick="openSubmissionModal('basic-09-watchdog', '【作業 2-3】安全保護：硬體級 Watchdog')"
+                <!-- Task 9-3 -->
+                <div onclick="openSubmissionModal('basic-09-timer-3', '【作業 9-3】安全保護：硬體級 Watchdog (Watchdog Guard)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-rose-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🛡️</span>
-                            <span class="bg-rose-100 text-rose-700 text-xs px-2 py-1 rounded font-bold uppercase">45
-                                min</span>
+                            <span class="text-4xl text-rose-500 group-hover:translate-x-1 transition-transform">🛡️</span>
+                            <span class="bg-rose-100 text-rose-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-rose-600 transition">【作業 2-3】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「硬體級 Watchdog」</h4>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-rose-600 transition">【作業 9-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「緊急安全防禦防線」</h4>
                         <p class="text-sm text-gray-600 leading-relaxed">
-                            實作一個「看門狗」，如果藍牙 2 秒內沒收到心跳指令，定時器自動強制停止馬達。模擬當 loop 陷入死迴圈時，定時器如何發揮保護作用。
+                            開發超時限停器。人為造成 Loop 掛起實驗，驗證定時器能否在 2s 內接管 CPU 並強行切斷驅動輸出，守護物理安全。
                         </p>
                     </div>
                 </div>
@@ -255,7 +234,7 @@
         <div class="container mx-auto px-4 text-center">
             <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
-                <span>單元課程 基礎 9-2</span>
+                <span>課程單元 基礎 9 - 多工處理</span>
                 <span class="hidden md:inline">|</span>
                 <span>講師：Antigravity Assistant</span>
             </div>
@@ -272,117 +251,136 @@
     <script src="/js/course-shared-v4.js"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">硬體級定時中斷實驗室</h2>
 
-        <h3>【作業 2-1】精確頻率：硬體定時器閃燈</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 嵌入式系統開發者 (Embedded Systems Developer)。</li>
-            <li><strong>執行方式：</strong> 利用硬體定時器，每隔精確的 1,000,000 微秒 (1秒) 切換一次 LED 狀態。在主程式 loop 裡刻意加入
-                <code>delay(5000)</code>，觀察 LED 是否依然能維持每秒閃爍。</li>
-            <li><strong>評分重點 :</strong> 成功配置硬體定時器與 ISR，且 LED 閃爍完全不受 loop 阻塞影響。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：精確頻率：硬體定時器與閃燈 (Precision Timer Blink)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：嵌入式系統開發者</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
 
-        <h3>【作業 2-2】轉速計實作：計算馬達 Encoder 訊號</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 自動駕駛演算法工程師 (Autonomous Driving Algorithm Engineer)。</li>
-            <li><strong>執行方式：</strong> 設定定時器每 100ms 觸發一次中斷。在 ISR 中快照目前馬達轉動步數，並計算出目前的 RPM (每分鐘轉數)。</li>
-            <li><strong>評分重點 :</strong> 成功實作定時快照，RPM 計算邏輯正確，並展現出穩定的輸出頻率。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>定時器硬體初始化</strong>：使用 <code>timerBegin</code> 分配硬體定時器 0，設定 80 分頻與計數值，實現精確的 1s 週期。</li>
+                    <li><strong>ISR 中斷服務</strong>：實作 <code>IRAM_ATTR</code> 修飾的回呼函式，僅執行最精簡的接腳電位翻轉。</li>
+                    <li><strong>搶佔性壓力測試</strong>：在 <code>loop()</code> 執行模擬耗時 5s 的無意義死迴圈，觀察 LED 是否依然在背景維持 1s 閃爍，不受主程式影響。</li>
+                </ol>
+            </div>
 
-        <h3>【作業 2-3】安全保護：硬體級 Watchdog</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 工業安全工程師 (Industrial Safety Engineer)。</li>
-            <li><strong>執行方式：</strong> 實作一個看門狗保護機制。如果 2 秒內未收到心跳指令，定時器中斷將強制停止所有馬達。模擬當主程式陷入死迴圈或藍牙斷線時的自動安全防範。</li>
-            <li><strong>評分重點 :</strong> 安全保護機制確實發揮作用，並能在中斷端完成硬體緊急剎車操作。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>頻率穩定性</strong>：LED 閃爍是否完全無視 loop 內的所有阻塞指令，維持物理級別的週期一致性？</li>
+                    <li>[ ] <strong>ISR 代碼規範</strong>：回呼函式內是否完全杜絕了 <code>delay</code>、<code>Serial.print</code> 或動態內存分配等違禁動作？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：轉速計實作：馬達 Encoder 採樣 (Tachometer & RPM)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：自動駕駛演算法工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>窗口採樣策略</strong>：配置定時器每 100ms 觸發中斷，作為實時速換算的物理窗口期。</li>
+                    <li><strong>跨域變數宣告</strong>：正確使用 <code>volatile</code> 關鍵字維護脈衝計數變數，確保主程式讀取的是真實內存快照。</li>
+                    <li><strong>RPM 量化演算</strong>：根據 100ms 內的增量數據反推馬達每分鐘轉速 (RPM)。</li>
+                    <li><strong>原子操作保護</strong>：在讀取計數器時使用 <code>portENTER_CRITICAL</code>，防止讀取過程中數據被中斷改寫導致出錯。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>數據映射準確度</strong>：輸出的 RPM 數據是否與物理端的轉速變動保持高度線性對應？</li>
+                    <li>[ ] <strong>變數定義嚴謹性</strong>：所有參與中斷修改的全域共享變數是否皆已正確添加 <code>volatile</code> 修飾字？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：安全保護：硬體級 Watchdog (Watchdog Guard)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：工業安全工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>監控邏輯編寫</strong>：配置定時器中斷作為「監督者」。實作遞減計數器遞減機制。</li>
+                    <li><strong>心跳餵狗程序</strong>：在控制指令成功解析的瞬間重置（Feeding）該計數器。</li>
+                    <li><strong>緊急制動接管</strong>：若計數歸零（即 loop 掛起超過 2s），定時器需主動接管並強制將馬達暫停，防止設備暴走。</li>
+                    <li><strong>成果交付</strong>：將具備自動超時限停保護的 <code>main.cpp</code> 推送至作業倉庫，並附帶觸發日誌截圖。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>失效安全反應</strong>：在人為製造的系統掛起 (Freezing) 實驗中，定時器是否能在規定時間內奪回馬達控制權？</li>
+                    <li>[ ] <strong>誤觸抑制效能</strong>：在控制流程正常運作時，安全機制是否能維持靜默、不產生任何誤判觸發？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>在 GitHub 建立新 Repo（名為 <code>basic-09-timer-template</code>）。</li>
-                <li>上傳包含 `timerBegin()` 配置但「ISR 函式處於空白」的專案框架。</li>
-                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
-                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，獲得個人專屬 Repo。</li>
-                <li>閱讀單元內的「中斷禁忌」，實作基於 `volatile` 變數的高頻率採購 (Sampling) 邏輯。</li>
-                <li>解決 Watchdog 觸發重啟的問題後 <strong>Push 代碼</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
-                <li>重點審核學生是否在 ISR 中誤用了 `delay()` 或過長的運算邏輯。</li>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：掌握硬體搶佔式多工機制與數據一致性保護。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-indigo-600">重點 1：中斷的權限</strong> - 強調中斷是硬體層級的強行介入，這是理解「為什麼 delay 無效」的關鍵認知轉折。</li>
+                <li><strong class="text-indigo-600">重點 2：內存可見性問題</strong> - 解釋 <code>volatile</code> 的物理意義，引導學員建立嚴謹的變數宣告習慣。</li>
+                <li><strong class="text-indigo-600">重點 3：防禦性架構</strong> - 讓學員理解硬體定時器不只是為了精確，更是為了在軟體崩潰時提供物理層的安全保險。</li>
             </ol>
         </div>
 
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元聚焦於「從查詢模式轉向事件驅動」，引導學生理解如何利用硬體層級的搶佔機制，讓系統兼顧高頻即時性與複雜邏輯處理能力。</p>
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/timer_service.cpp# (必修) 需補全 timerBegin 與 ISR 指令處理
+├── include/types.h      # 規範全域 volatile 變數的定義標準
+└── README.md            # 壓力實驗日誌：記錄 loop 不同負載下定時器的漂移數據 (Jitter)
+            </pre>
+        </div>
 
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── src/
-│   └── main.cpp      # (重點) 需填充 IRAM_ATTR 修飾的 ISR
-├── include/
-│   └── safety.h      # 提供給看門狗任務的硬體封鎖 API
-└── README.md         # 壓力測試：展示 loop 負載如何不影響定時器精度</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>main.cpp (Hardware Timer & volatile)</strong></p>
-        <pre><code>volatile int cnt = 0; 
-void IRAM_ATTR onTimer() { 
-  cnt++; // 極簡邏輯
-}</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>關鍵字篩選：：</strong> 偵測程式碼中是否正確使用了 `IRAM_ATTR` 修飾詞與 `volatile` 聲明。</li>
-            <li><strong>靜態分析：：</strong> 檢查 ISR 函式內是否存在 `Serial.print` 等通訊語句，確保中斷安全性。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「多工處理：為什麼高級工程師都愛用硬體中斷？」影片。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員理解「搶佔
-                        (Preemption)」的概念。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，對比 millis() 與 Timer 在負載增加（如
-                        loop 內有 1s 忙碌等待）時的精度表現。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>演示定時中斷如何作為系統的「最後一道防線
-                        (Safety Guard)」。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">優化 RPM 採樣率平滑演算法並 Push，閱讀教師回覆 PR。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>審核學生對「中斷優先級」與「數據原子化 (Atomicity)」的概念理解。</td>
-                </tr>
-            </tbody>
-        </table>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看「處理器的插隊藝術：ISR 全解析」影片，推演 Flash 與 RAM 的讀取速度差異。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員能否識別出 ISR 中導致系統鎖死的違禁代碼。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，開發精確的馬達測速儀，並實施臨界區保護確保數據不失真。</td>
+                        <td class="p-4 border-b"><strong>技術演示:</strong> 演示為何 Serial.print 在中斷中會導致 Guru Meditation 重啟。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">將安全 Watchdog 機制封裝為獨立監控模組並 Push 至 PR，撰寫安全性測試報告。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 評價學員對「數據原子性」與「搶佔式調度」思維的應用成熟度。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 </body>
 

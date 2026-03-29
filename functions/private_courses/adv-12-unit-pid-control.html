@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
 <body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
@@ -23,21 +25,21 @@
 
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
-                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
-                進階 12 - 單元 1
+                class="inline-block py-1 px-3 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-cyan-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                進階 12 - 控制原理
             </span>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">為什麼需要 PID？<br><span class="text-cyan-400">Open-Loop vs. Closed-Loop</span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">為什麼需要 PID？<br><span class="text-cyan-400">Open vs. Closed Loop</span>
             </h1>
-            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
-                從盲目信任輸出，到學會觀察與修正的智慧控制。
+            <p class="text-xl md:text-2xl text-cyan-100 max-w-2xl mx-auto font-light leading-relaxed">
+                從盲目預測到精確修正：掌握自動駕駛最核心的反饋控制邏輯。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="window.courseShared.enterMediaMode('video', window.RESOURCES.youtube)"
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="window.courseShared.enterMediaMode('doc', window.RESOURCES.doc)"
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -48,232 +50,170 @@
     <!-- Main Content -->
     <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
-        <!-- Section 1: Open-Loop -->
-        <section class="mb-16">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-gray-500 to-slate-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
-                        <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <span class="text-4xl">🙈</span> 1. 開迴路控制 (Open-Loop)：盲目的信任 (15 min)
-                            </h2>
-                            <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
-                                <div
-                                    class="bg-gray-50 p-6 rounded-xl border border-gray-200 hover:border-blue-300 transition-colors">
-                                    <h3 class="font-bold text-gray-800 text-xl mb-2">📡 定義</h3>
-                                    <p>輸出僅取決於輸入指令，系統不看結果。</p>
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div class="bg-blue-50 p-4 rounded-lg">
-                                        <h4 class="font-bold text-blue-800 mb-1">🍕 例子：微波爐</h4>
-                                        <p class="text-sm">定時 3 分鐘。它不管食物熱了沒，時間到就停。</p>
-                                    </div>
-                                    <div class="bg-red-50 p-4 rounded-lg">
-                                        <h4 class="font-bold text-red-800 mb-1">🚗 無人車困境</h4>
-                                        <p class="text-sm">給馬達 PWM=150，但因摩擦力、地面不平或電壓下降，車速永遠不如預期。</p>
-                                    </div>
-                                </div>
-                                <p>
-                                    <strong>學習任務：</strong>思考為什麼「蒙眼走路」是一個典型的開迴路行為？
-                                </p>
-                            </div>
-                        </div>
-                        <div class="flex-1 flex items-center justify-center">
-                            <!-- Visual Analogy -->
-                            <div
-                                class="relative w-full max-w-sm aspect-video bg-gray-100 rounded-2xl overflow-hidden flex flex-col items-center justify-center p-4">
-                                <div class="text-6xl mb-4">🙈 ➡️ 🏃</div>
-                                <div class="text-center">
-                                    <div class="text-gray-900 font-bold">Input Only</div>
-                                    <div class="text-sm text-gray-500">No Feedback</div>
-                                </div>
-                                <div class="mt-4 w-3/4 h-2 bg-gray-300 rounded-full overflow-hidden">
-                                    <div class="w-full h-full bg-gray-400 animate-pulse"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 2: Closed-Loop -->
-        <section class="mb-16">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-green-500 to-emerald-500"></div>
-                <div class="p-8 md:p-12">
+        <!-- Module 1: Open-Loop Control -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-slate-400 to-slate-600"></div>
+                <div class="p-8 md:p-14">
                     <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">👀</span> 2. 閉迴路控制 (Closed-Loop)：觀察與修正 (20 min)
+                        <span class="text-4xl text-slate-500">🙈</span> 1. 開迴路控制：盲目的信任
                     </h2>
-                    <p class="text-lg text-gray-600 mb-8">系統會將輸出結果「回饋」回來與目標比較，計算出誤差 (Error)。就像淋浴調水溫，手摸覺得冷（回饋），就轉熱一點（修正）。
-                    </p>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                        <div class="bg-emerald-50 p-8 rounded-xl border border-emerald-100">
-                            <h3 class="font-bold text-emerald-900 text-2xl mb-4 text-center">核心公式</h3>
-                            <div
-                                class="text-4xl font-mono text-center text-emerald-600 bg-white py-4 rounded-lg shadow-inner mb-4">
-                                Error = Target - Measured
-                            </div>
-                            <p class="text-emerald-800 text-center">
-                                誤差 = 目標值 - 量測值
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                系統僅根據事先設定的指令做事，完全不觀察輸出的結果。就像蒙著眼睛走路。
                             </p>
-                        </div>
-
-                        <div class="space-y-4">
-                            <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                                <h4 class="font-bold text-blue-900 mb-2">📉 負回饋機制</h4>
-                                <ul class="list-disc list-inside text-blue-800 space-y-2">
-                                    <li>當誤差 > 0 (太慢/太冷)：增加輸出</li>
-                                    <li>當誤差 < 0 (太快/太熱)：減少輸出</li>
+                            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                                <h4 class="font-bold text-slate-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed">System Characteristics</h4>
+                                <ul class="text-[9px] text-slate-500 space-y-2 font-light">
+                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-slate-500 rounded-full"></span> <strong>無反饋 (No Feedback)</strong>：輸出不影響輸入。</li>
+                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-slate-500 rounded-full"></span> <strong>抗干擾力弱</strong>：電壓下降、摩擦力增加會直接導致任務失敗。</li>
+                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-slate-500 rounded-full"></span> <strong>範例</strong>：微波爐定時、舊式洗衣機。</li>
                                 </ul>
                             </div>
                         </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-slate-500/5 group-hover:bg-slate-500/10 transition-colors"></div>
+                           <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10">Blind Command Line</h4>
+                           <div class="relative z-10 flex items-center justify-center gap-4">
+                               <div class="px-3 py-1 bg-slate-700 rounded text-[10px] border border-slate-600">INPUT PWM</div>
+                               <div class="text-slate-500">➡️</div>
+                               <div class="px-3 py-1 bg-slate-800 rounded text-[10px] border border-slate-700 italic text-slate-500">UNKNOWN RESULT</div>
+                           </div>
+                           <p class="text-[9px] text-slate-500 mt-6 font-mono tracking-widest">ERROR IS NOT CALCULATED...</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 3: PID -->
-        <section class="mb-16">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
-                <div class="p-8 md:p-12">
+        <!-- Module 2: Closed-Loop Control -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
+                <div class="p-8 md:p-14">
                     <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">🎛️</span> 3. 為什麼需要 PID？ (25 min)
+                        <span class="text-4xl text-cyan-500">👁️</span> 2. 閉迴路控制：觀察與修正的智慧
                     </h2>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div
-                            class="bg-blue-50 p-6 rounded-xl border border-blue-100 hover:-translate-y-1 transition-transform duration-300">
-                            <div
-                                class="text-4xl mb-4 bg-white w-12 h-12 flex items-center justify-center rounded-full shadow-sm text-blue-600 font-bold">
-                                P</div>
-                            <h3 class="font-bold text-blue-900 text-lg mb-2">Proportional (比例)</h3>
-                            <p class="text-blue-800 text-sm"><strong>現在</strong>的誤差。誤差越大，修正越強，負責主要的修正力道。</p>
-                        </div>
-
-                        <div
-                            class="bg-purple-50 p-6 rounded-xl border border-purple-100 hover:-translate-y-1 transition-transform duration-300">
-                            <div
-                                class="text-4xl mb-4 bg-white w-12 h-12 flex items-center justify-center rounded-full shadow-sm text-purple-600 font-bold">
-                                I</div>
-                            <h3 class="font-bold text-purple-900 text-lg mb-2">Integral (積分)</h3>
-                            <p class="text-purple-800 text-sm"><strong>累積</strong>的誤差。解決「靜態誤差」，補償那些微小但持續存在的阻力。</p>
-                        </div>
-
-                        <div
-                            class="bg-pink-50 p-6 rounded-xl border border-pink-100 hover:-translate-y-1 transition-transform duration-300">
-                            <div
-                                class="text-4xl mb-4 bg-white w-12 h-12 flex items-center justify-center rounded-full shadow-sm text-pink-600 font-bold">
-                                D</div>
-                            <h3 class="font-bold text-pink-900 text-lg mb-2">Derivative (微分)</h3>
-                            <p class="text-pink-800 text-sm"><strong>預測</strong>未來的誤差。抑制震盪，像避震器一樣讓修正變平穩。</p>
-                        </div>
-                    </div>
-
-                    <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                        <h4 class="font-bold text-gray-800 mb-2 flex items-center gap-2">
-                            <span>🧠</span> 預習/線上任務
-                        </h4>
-                        <div class="grid md:grid-cols-2 gap-4">
-                            <div class="text-sm text-gray-600">
-                                <p class="mb-2"><strong>觀看影片：</strong>PID 控制器直觀解釋。</p>
-                                <p><strong>觀察重點：</strong>當只有 P 控制時，系統為何會不停地在目標線上下晃動（過衝）？</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                系統會將目前的輸出（如速度、位置）反饋回來與目標值對比，算出「誤差 (Error)」，並動態調整出力。
+                            </p>
+                            <div class="bg-cyan-50 p-8 rounded-3xl border border-cyan-100 text-center">
+                                <h4 class="text-cyan-900 font-bold mb-4 text-xs uppercase tracking-widest">Feedback Equation</h4>
+                                <div class="text-xl font-mono text-cyan-600">
+                                   \[Error = Target - Measured\]
+                                </div>
+                                <p class="text-[10px] text-slate-400 mt-4 italic font-light">自動化控制的核心：依據誤差進行負回饋修正</p>
                             </div>
-                            <div class="text-sm text-gray-600">
-                                <p class="mb-2"><strong>思考問題：</strong>為什麼給馬達一樣的電壓，車子不會走直線？</p>
-                                <p class="text-xs text-gray-500">（提示：地面積木、摩擦力、電池電壓變動）</p>
-                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-cyan-500/5"></div>
+                           <h4 class="text-cyan-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10">Real-time Correction Loop</h4>
+                           <div class="w-full h-1 bg-slate-800 relative z-10 mb-6">
+                                <div class="absolute left-0 top-0 h-full bg-cyan-500 w-2/3 shadow-[0_0_15px_rgba(6,182,212,0.5)]"></div>
+                           </div>
+                           <div class="flex justify-between w-full text-[9px] font-mono text-slate-500 relative z-10">
+                                <span>TARGET: 100cm</span>
+                                <span class="text-cyan-400 animate-pulse font-bold">CURRENT: 68cm</span>
+                           </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Assignment Highlights -->
-        <section class="module-section">
-            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-                        <div>
-                            <h2
-                                class="text-3xl font-bold text-white mb-2 underline decoration-blue-500 underline-offset-8">
-                                實作任務：進化之路</h2>
-                            <p class="text-slate-400">從盲人領航到精確控制，體會 PID 的核心價值。</p>
+        <!-- Module 3: PID Logic -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-blue-400">
+                        <span class="p-2 bg-blue-500/20 rounded-lg text-blue-400 text-2xl">🎛️</span> 3. 進化：為什麼需要 PID？
+                    </h2>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                單純的比例修正 (P) 常因物理阻力無法到達精確點。PID 結合成熟的歷史累積 (I) 與未來預測 (D)，達成絲滑控制。
+                            </p>
+                            <div class="bg-blue-500/10 p-8 rounded-3xl border border-blue-500/20 shadow-inner">
+                                <h4 class="font-bold text-blue-400 mb-4 text-xs uppercase tracking-widest text-center">Control Matrix</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1"></span><div><strong class="text-white">P (Now)</strong>：誤差越大出力越大。負責系統的主反應。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1"></span><div><strong class="text-white">I (Past)</strong>：解決靜態誤差。對抗摩擦力與長時間偏移。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1"></span><div><strong class="text-white">D (Future)</strong>：預判煞車。防止系統衝過頭 (Overshoot)。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="lg:w-80 bg-blue-600/10 p-10 rounded-3xl border border-blue-500/20 text-center relative overflow-hidden group">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-blue-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-blue-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center">Intelligent Control</h4>
+                           <p class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic">
+                               "讓機器人具備像人類淋浴調溫般的感知與修正能力。"
+                           </p>
+                           <div class="inline-block px-8 py-3 bg-blue-500 text-white rounded-xl font-bold text-[10px] shadow-lg cursor-pointer hover:bg-blue-400 transition-colors">Start Simulation</div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </section>
 
-                    <div class="grid md:grid-cols-2 gap-8 mb-12">
-                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
-                            <div class="flex items-center gap-4 mb-6">
-                                <div
-                                    class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-2xl">
-                                    📡</div>
-                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
-                            </div>
-                            <p class="mb-4 text-slate-400">完成任務後，請將數據與結果推送到你的專屬倉庫。</p>
-                            <ul class="space-y-3 text-slate-300">
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">1</span>
-                                    <span>接受 GitHub Classroom 邀請並 Clone 倉庫</span>
-                                </li>
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">2</span>
-                                    <span>完成代碼後執行 <code
-                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code></span>
-                                </li>
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">3</span>
-                                    <span>在 PR 中查看自動化評分與教師回饋</span>
-                                </li>
-                            </ul>
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：控制進化之路</h2>
+            <p class="text-center text-gray-500 mb-12">從盲人領航到精確比例控制，親手證實反饋系統在真實物理環境下的巨大價值。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 12-1 -->
+                <div onclick="openSubmissionModal('adv-12-open-loop', '【作業 12-1】「盲人領航員」：開迴路實驗 (Blind Navigator: Open-Loop Test)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-slate-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-slate-500 group-hover:scale-110 transition-transform">🙈</span>
+                            <span class="bg-slate-100 text-slate-700 text-xs px-2 py-1 rounded font-bold uppercase">40 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-slate-600 transition">【作業 12-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「盲測工程師」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            不看感測器，僅用固定 PWM 嘗試停在 1 公尺處。在磁磚與地毯上進行測試，紀錄開迴路控制在不同路面下的嚴重誤差。
+                        </p>
+                    </div>
+                </div>
 
-                        <div class="grid gap-4">
-                            <!-- Task 1-1 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-12-open-loop', '【作業 1-1】「盲人領航員」：開迴路實驗')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-gray-600 transition">作業
-                                        1-1</h3>
-                                    <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded font-bold">45
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">盲人領航員</h4>
-                                <p class="text-sm text-gray-500">僅用固定 PWM 嘗試停在目標點，紀錄開迴路誤差。</p>
-                            </div>
-
-                            <!-- Task 1-2 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-12-p-control', '【作業 1-2】「比例的力量」：實作 P 控制器')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition">作業
-                                        1-2</h3>
-                                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">75
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">比例的力量</h4>
-                                <p class="text-sm text-gray-500">實作 P 控制轉向，觀察 Kp 增加導致的蛇行現象。</p>
-                            </div>
-
-                            <!-- Task 1-3 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-12-i-control', '【作業 1-3】「靜態誤差挑戰」：對抗阻力')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-purple-600 transition">
-                                        作業 1-3</h3>
-                                    <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">靜態誤差挑戰</h4>
-                                <p class="text-sm text-gray-500">模擬阻力環境，觀察 P 控制殘餘誤差，理解 I 項需求。</p>
-                            </div>
+                <!-- Task 12-2 -->
+                <div onclick="openSubmissionModal('adv-12-p-control', '【作業 12-2】「比例的力量」：首個 P 控制器實作 (The Power of P Control)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-cyan-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-cyan-500 group-hover:rotate-12 transition-transform">👁️</span>
+                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition">【作業 12-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「闭迴路初探」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            實作 Error 計算與 Kp 比例增益。觀測機器人在不同 Kp 下的收斂速度，記錄系統產生「蛇行」震盪的臨界點。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 12-3 -->
+                <div onclick="openSubmissionModal('adv-12-i-control', '【作業 12-3】「靜態誤差挑戰」：對抗物理阻力 (Fighting Steady-State Error)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-blue-500 group-hover:translate-x-1 transition-transform">🪜</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">50 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 12-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「對抗死區阻力」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            模擬負重或斜坡環境，觀察 P 控制為何永遠「差一點點」才能到。分析物理死區現象，並推導對積分(I)項的需求。
+                        </p>
                     </div>
                 </div>
             </div>
@@ -285,164 +225,155 @@
     <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
         <div class="container mx-auto px-4 text-center">
             <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
-            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
-                <span>進階 12 - 單元 1</span>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 進階 12 - 控制原理</span>
                 <span class="hidden md:inline">|</span>
-                <span>為什麼需要 PID？</span>
+                <span>講師：Antigravity Assistant</span>
             </div>
         </div>
     </footer>
 
-    <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
-
-        <h3>作業 1-1：「盲人領航員」：開迴路實驗</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 盲測工程師。</li>
-            <li><strong>執行方式：</strong> 不看感測器，僅用 delay() 和固定 PWM 嘗試讓車子停在 1 公尺處。</li>
-            <li><strong>評分重點：</strong> 紀錄 5 次誤差值，計算標準差，體會環境干擾（摩擦力、電壓）對系統的影響。</li>
-        </ul>
-
-        <h3>作業 1-2：「比例的力量」：實作 P 控制器</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 控制工程師。</li>
-            <li><strong>執行方式：</strong> 利用影像質心實作 turn_output = Kp * Error。</li>
-            <li><strong>評分重點：</strong> 觀察並記錄 Kp 增加時系統從穩定到「蛇行」的臨界點，理解 P 項的物理意義。</li>
-        </ul>
-
-        <h3>作業 1-3：「靜態誤差挑戰」：對抗阻力</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 系統優化師。</li>
-            <li><strong>執行方式：</strong> 在緩坡或摩擦力較大的地面測試 P 控制。</li>
-            <li><strong>評分重點：</strong> 觀察並解釋為何系統無法精準到達目標點（殘餘誤差），並嘗試手動給予微小補償，建立對 I 項的需求感。</li>
-        </ul>
-    </section>
-
-    <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        A. 範本倉庫 (Template Repo) 結構
-                    </h4>
-                    <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
-.
-├── src/
-│   ├── open_loop_test.cpp  # 單純 PWM 驅動測試
-│   └── p_control_ready.cpp # 比例控制器骨架
-├── platformio.ini          # 環境設定
-└── docs/
-    └── experiment_log.md   # 蛇行臨界點觀察日誌</pre>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        B. 自動評估 (Autograding) 的設計
-                    </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🧪</span>
-                            <p class="text-sm text-gray-700"><strong>架構合規性檢查：</strong> 驗證是否將 <code>Kp</code>
-                                定義為獨立參數，避免硬編碼。</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">📊</span>
-                            <p class="text-sm text-gray-700"><strong>實驗日誌完整性：</strong> 檢查 <code>experiment_log.md</code>
-                                是否包含誤差計算與現象描述。</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供實驗日誌模板與 P 控制器骨架的專案樣板。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「Kp 調校實驗」評分。引導學員在 PR 註明 Kp 臨界值。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，觀察 P 控制修正能力，記錄靜態誤差並提交 PR。執行 Git Push。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對閉迴路差異理解與 P 項增益平衡分析予以點評。</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
-            </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
-                        <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">觀看 PID 直觀解釋影片，完成開迴路盲測實驗，紀錄誤差分佈。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「開迴路與閉迴路」導讀。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，實作 P 控制並觀察震盪，嘗試排除靜態誤差。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，引導討論 Kp 對穩定性的影響。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">整理調校數據與現象心得並 Push，閱讀回覆 PR 優化控制邏輯。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，引導思考比例控制與環境動態關係。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-
     <script>
+        // Define Resources
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/z9eX61iST0k",
             doc: "https://docs.google.com/document/d/e/2PACX-1vTQOeZStAJUwGm1JlEo2r6vGVx20USevDP69swtB7BSJY33Jq9A5dYSQiey6nFjXs1IL3D6ibH5UySB/pub?embedded=true"
         };
     </script>
     <script src="/js/course-shared-v4.js"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">開迴路與比例控制實驗室</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：「盲人領航員」：開迴路實驗 (Blind Navigator: Open-Loop Test)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：盲測工程師</span> | <span>難度：⭐️</span> | <span>估計時長：40 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>排除反饋</strong>：在 <code>setup()</code> 中刻意不初始化編碼器，僅憑 <code>delay()</code> 控制行進。</li>
+                    <li><strong>跨路面壓力測試</strong>：在阻力極低的磁磚與阻力高的地毯上執行同一命令（如 PWM 150, 2000ms）。</li>
+                    <li><strong>誤差紀錄分析</strong>：測量與目標(1公尺)的實際差距。將路面差異導致的距離差紀錄在 README 中。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>物理直覺證實</strong>：能否透過實驗結果具體描述開迴路系統在「變動環境」下的低度強韌性？</li>
+                    <li>[ ] <strong>實驗數據嚴謹度</strong>：README 是否包含多種路面下的測量值對比曲線或表格？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：「比例的力量」：首個 P 控制器實作 (The Power of P Control)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：控制工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>Error 計算實作</strong>：在主迴圈內持續讀取編碼器，並實作 <code>Error = Target - CurrentPos</code>。</li>
+                    <li><strong>比例輸出映射</strong>：定義 \(K_p\)，並將 \(Output = K_p \times Error\) 限制在馬達可接受的 PWM 範圍（0-255）。</li>
+                    <li><strong>臨界震盪觀測</strong>：逐漸增加 \(K_p\)，直到機器人抵達終點時發生劇烈的前後晃動。在 README 紀錄此臨界 \(K_p\)。</li>
+                    <li><strong>成果 Push</strong>：將具備基礎 P 回饋邏輯的代碼提交至 GitHub 倉庫。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>閉環邏輯正確性</strong>：當 Error 變小時，出力是否也跟著線性減小，而非保持恆定？</li>
+                    <li>[ ] <strong>現象描述力</strong>：能否說明 \(K_p\) 的物理意義與系統穩定性（穩態 vs 震盪）之間的關係？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：「靜態誤差挑戰」：對抗物理阻力 (Fighting Steady-State Error)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：系統優質化專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：50 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>阻力場景重現</strong>：在機器人背部增加重物，並使用任務 2 調校出的最佳 \(K_p\) 運行。</li>
+                    <li><strong>死區現象紀錄</strong>：觀測並記錄機器人最終停止的位置（通常會早於 1 公尺）。</li>
+                    <li><strong>靜態誤差量化</strong>：測量此時的「殘餘誤差」，並解釋為什麼 P 項無法獨自克服此阻力。</li>
+                    <li><strong>對策提案</strong>：在 README 中提出：除了加大 Kp，還有什麼數學方法能對抗「長時間累積」的阻力？</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>殘餘誤差概念掌握</strong>：學員是否理解當出力小於靜摩擦力時，單純依賴當前 Error 是無法收斂的？</li>
+                    <li>[ ] <strong>邏輯推演力</strong>：提出的對策（如積分項概念）是否具備邏輯連貫性，為下一單元的 I 做準備？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：從「蒙眼行軍」到「睜眼修正」的範式轉移。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-cyan-600">重點 1：開迴路的代價</strong> - 透過跨路面實驗，讓學員親手證實缺乏反饋的系統在真實世界中有多脆弱。</li>
+                <li><strong class="text-cyan-600">重點 2：負回饋的初探</strong> - 手把手指導學員實作 Error 與 Kp，建立「偏差越大力度越大」的直覺物理關聯。</li>
+                <li><strong class="text-cyan-600">重點 3：工程死區 (Dead-zone)</strong> - 關鍵在於讓學員觀察到 P 項的侷限性，從而對下一單元的積分 (I) 產生強烈求知慾。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-cyan-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/OpenLoopTest.cpp  # 單純的 PWM 控制，不讀感測器
+├── src/P_Controller.cpp   # (重點) 提供 Error 計算骨架，學員需填寫增益映射
+└── README.md              # 實驗報告：跨路面誤差統計與 Kp 震盪紀錄
+            </pre>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看「淋浴調溫：反饋控制類比」影片。預習 Error 計算的基本公式。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員能否正確分析微波爐與冷氣機在控制架構上的差異。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，完成比例控制器，並現場比較不同 Kp 在障礙路面下的修正能力。</td>
+                        <td class="p-4 border-b"><strong>巡場導師:</strong> 協助演示「蛇行震盪」現象，提醒 Kp 過大可能對驅動器造成的震盪負擔。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">將分析日誌整理成 Commit 並 Push 推送到 GitHub Classroom。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 點評對「系統強韌性 (Robustness)」與「靜態誤差」的物理洞察深度。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 </body>
 
 </html>

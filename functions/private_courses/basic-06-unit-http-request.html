@@ -30,7 +30,7 @@
                 數位世界的溝通橋樑：<br><span class="text-emerald-400">HTTP 協議與 Fetch API</span>
             </h1>
             <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
-                從餐廳點餐模型出發，掌握讓網頁、伺服器與無人車互相「對話」的核心技術。
+                從餐廳點餐模型出發，掌握讓網頁、伺服器與物聯網設備互相「對話」的核心技術。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
@@ -51,44 +51,56 @@
 
         <!-- Module 1: Restaurant Model -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
+                <div class="p-8 md:p-14">
+                    <div class="flex flex-col md:flex-row gap-16">
                         <div class="flex-1">
                             <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <span class="text-4xl">🍽️</span> 1. 餐廳模型：理解 HTTP 對話 (20 min)
+                                <span class="text-4xl text-blue-500">🍽️</span> 1. 餐廳模型：理解 HTTP 對話
                             </h2>
-                            <div class="space-y-6 text-gray-600 text-lg">
-                                <p>HTTP (HyperText Transfer Protocol) 是網路上交換數據的標準格式。最簡單的理解方式就是「餐廳點餐」：</p>
+                            <div class="space-y-6 text-gray-600">
+                                <p class="text-lg leading-relaxed font-light">
+                                    HTTP (HyperText Transfer Protocol) 是網路上交換數據的標準格式。最直觀的理解方式就是「餐廳點餐」流程：
+                                </p>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 shadow-sm">
-                                        <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">
+                                    <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 shadow-sm group hover:bg-blue-600 transition duration-300">
+                                        <h4 class="font-bold text-blue-800 group-hover:text-white mb-2 flex items-center gap-2 text-sm uppercase">
                                             <span>🙋‍♂️</span> 請求 (Request)
                                         </h4>
-                                        <p class="text-sm">你向服務生點餐。包含你想看的內容（網址）、你想做的動作、以及你提供的資訊。</p>
+                                        <p class="text-[11px] text-slate-500 group-hover:text-blue-100 font-light leading-relaxed">
+                                            你向服務生點餐。包含你想看的頁面網址、你想做的動作（讀取或儲存）以及你提供的參數。
+                                        </p>
                                     </div>
-                                    <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 shadow-sm">
-                                        <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
+                                    <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 shadow-sm group hover:bg-indigo-600 transition duration-300">
+                                        <h4 class="font-bold text-indigo-800 group-hover:text-white mb-2 flex items-center gap-2 text-sm uppercase">
                                             <span>🍛</span> 回應 (Response)
                                         </h4>
-                                        <p class="text-sm">服務生送來餐點。包含狀態（成功或賣完）以及具體的內容（網頁、圖檔或 JSON）。</p>
+                                        <p class="text-[11px] text-slate-500 group-hover:text-indigo-100 font-light leading-relaxed">
+                                            服務生送來餐點。包含狀態碼（成功或賣完）以及具體的內文（網頁內容、圖片或 JSON 數據）。
+                                        </p>
                                     </div>
-                                    <div class="bg-purple-50 p-6 rounded-xl border border-purple-100 shadow-sm">
-                                        <h4 class="font-bold text-purple-800 mb-3 flex items-center gap-2">
-                                            <span>🧠</span> 無狀態性 (Stateless)
+                                    <div class="bg-purple-50 p-6 rounded-2xl border border-purple-100 shadow-sm group hover:bg-purple-600 transition duration-300">
+                                        <h4 class="font-bold text-purple-800 group-hover:text-white mb-2 flex items-center gap-2 text-sm uppercase">
+                                            <span>🧠</span> 無狀態 (Stateless)
                                         </h4>
-                                        <p class="text-sm">伺服器很健忘！每次連線都是獨立的，它不會主動記得你是誰（除非使用 Cookie 或 Token）。</p>
+                                        <p class="text-[11px] text-slate-500 group-hover:text-purple-100 font-light leading-relaxed">
+                                            伺服器很健忘！每次連線都是獨立的，它不會主動記得你是誰，除非透過 Cookie 或 Token。
+                                        </p>
                                     </div>
                                 </div>
-                                <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
-                                    <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
-                                        <span>💡</span> 概念解析
-                                    </h4>
-                                    <p class="text-base text-amber-900">
-                                        為什麼「無狀態性」很重要？這讓伺服器可以同時服務成千上萬的人，而不需要為每個人保留一個龐大的記憶庫。
-                                    </p>
-                                </div>
+                            </div>
+                        </div>
+
+                        <div class="md:w-80">
+                            <div class="bg-slate-900 p-8 rounded-3xl shadow-2xl border border-slate-700 text-slate-300 relative overflow-hidden group">
+                                <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-blue-500/10 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                                <h4 class="text-blue-400 font-bold mb-4 uppercase tracking-widest text-[10px]">
+                                    <span>💡</span> Why Stateless?
+                                </h4>
+                                <p class="text-[11px] font-light leading-relaxed">
+                                    無狀態性讓伺服器能同時服務成千上萬的請求，而不需要為每個連線保留龐大的記憶體背景，這正是網際網路能大規模擴展的關鍵。
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -98,49 +110,54 @@
 
         <!-- Module 2: Components of Request -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12 items-center">
-                        <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <span class="text-4xl">✉️</span> 2. 請求的組成：方法、標頭與正文 (40 min)
-                            </h2>
-                            <div class="space-y-6 text-gray-600 text-lg">
-                                <p>一封完整的 HTTP 請求信件包含以下關鍵部分：</p>
-                                <ul class="space-y-4">
-                                    <li class="flex items-start gap-3">
-                                        <span
-                                            class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-mono text-sm mt-1">GET</span>
-                                        <div>
-                                            <p class="font-bold">像看菜單，僅請求數據。</p>
-                                            <p class="text-sm">例如：讀取當下無人車的感測器數值。</p>
-                                        </div>
-                                    </li>
-                                    <li class="flex items-start gap-3">
-                                        <span
-                                            class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-mono text-sm mt-1">POST</span>
-                                        <div>
-                                            <p class="font-bold">像填訂單，發送新數據。</p>
-                                            <p class="text-sm">例如：將無人車路徑紀錄傳回伺服器進行分析。</p>
-                                        </div>
-                                    </li>
-                                    <li class="flex items-start gap-3">
-                                        <span
-                                            class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-mono text-sm mt-1">Headers</span>
-                                        <div>
-                                            <p class="font-bold">信封上的備註。</p>
-                                            <p class="text-sm">告訴伺服器我傳的是 JSON 格式，或者我用的瀏覽器版本。</p>
-                                        </div>
-                                    </li>
-                                </ul>
-                                <div class="p-4 bg-slate-900 rounded-xl border border-slate-700">
-                                    <code class="text-sm text-emerald-400 font-mono">
-                                    // URL 參數 (Query Strings) 範例<br>
-                                    http://192.168.4.1/move?dir=forward&speed=200
-                                </code>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-emerald-500">✉️</span> 2. 請求組成：方法、標頭與正文
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">一封標準的 HTTP 請求信件包含三個核心部分：</p>
+                            <div class="space-y-4">
+                                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-emerald-400 transition">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <span class="bg-emerald-500 text-white px-3 py-1 rounded text-[10px] font-bold">GET</span>
+                                        <h5 class="font-bold text-emerald-900 text-sm italic">讀取菜單</h5>
+                                    </div>
+                                    <p class="text-[11px] text-slate-500 font-light leading-relaxed">向伺服器請求數據。參數通常直接掛載在網址後面 (Query Strings)。</p>
+                                </div>
+                                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-blue-400 transition">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <span class="bg-blue-500 text-white px-3 py-1 rounded text-[10px] font-bold">POST</span>
+                                        <h5 class="font-bold text-blue-900 text-sm italic">送交訂單</h5>
+                                    </div>
+                                    <p class="text-[11px] text-slate-500 font-light leading-relaxed">提交新數據給伺服器，資料封裝在 Body 中，更安全且不限長度。</p>
+                                </div>
+                                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-indigo-400 transition">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <span class="bg-indigo-500 text-white px-2 py-1 rounded text-[10px] font-bold">Headers</span>
+                                        <h5 class="font-bold text-indigo-900 text-sm italic">信封標註</h5>
+                                    </div>
+                                    <p class="text-[11px] text-slate-500 font-light leading-relaxed">備註資訊。例如：告訴對方「我傳的是 JSON 格式」或「我的 Token 是 XXX」。</p>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700">
+                             <div class="flex items-center gap-3 mb-6">
+                                <span class="w-3 h-3 bg-red-400 rounded-full"></span>
+                                <span class="w-3 h-3 bg-amber-400 rounded-full"></span>
+                                <span class="w-3 h-3 bg-emerald-400 rounded-full"></span>
+                                <span class="ml-auto text-[10px] text-slate-500 font-mono tracking-widest">URL ANATOMY</span>
+                            </div>
+                            <pre class="text-xs md:text-sm leading-relaxed overflow-x-auto text-emerald-400 font-mono">
+http://<span class="text-blue-400 font-bold">192.168.4.1</span>/<span class="text-amber-400">move</span>?<span class="text-white">dir=forward</span>&<span class="text-white">speed=200</span>
+<hr class="border-slate-800 my-4">
+<span class="text-slate-500">// GET 請求參數 (Query Strings) 解析：</span>
+Host: <span class="text-blue-300">192.168.4.1 (ESP32)</span>
+Path: <span class="text-blue-300">/move</span>
+Params: <span class="text-blue-300">{ dir: "forward", speed: 200 }</span></pre>
                         </div>
                     </div>
                 </div>
@@ -149,43 +166,36 @@
 
         <!-- Module 3: Status Codes -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="p-1 bg-gradient-to-r from-orange-500 to-red-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">🏷️</span> 3. 狀態碼：伺服器的表情符號 (20 min)
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-orange-400">
+                        <span class="p-2 bg-orange-500/20 rounded-lg text-orange-400 text-2xl">🏷️</span> 3. 狀態碼：伺服器的表情
                     </h2>
-                    <p class="text-gray-600 text-lg mb-8">當伺服器收到請求後，會回傳一個三位數的「狀態碼」來告訴你結果：</p>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
-                        <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-200">
-                            <h4 class="font-bold text-emerald-800 mb-3 flex items-center gap-2 text-xl">
-                                <span>✅</span> 200 OK
-                            </h4>
-                            <p class="text-gray-600 text-sm">請求成功！資料已經準備好送給你了。</p>
+                        <div class="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-emerald-500 transition group">
+                            <h4 class="text-emerald-400 font-bold mb-4 text-xl">200 OK</h4>
+                            <p class="text-xs text-slate-500 leading-relaxed font-light">
+                                請求成功！資料已經準時送達你的手機或設備。
+                            </p>
                         </div>
-                        <div class="bg-orange-50 p-6 rounded-2xl border border-orange-200">
-                            <h4 class="font-bold text-orange-800 mb-3 flex items-center gap-2 text-xl">
-                                <span>🔍</span> 404 Not Found
-                            </h4>
-                            <p class="text-gray-600 text-sm">找不到資源。可能是網址打錯了，或者檔案被刪除了。</p>
+                        <div class="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-orange-500 transition group">
+                            <h4 class="text-orange-400 font-bold mb-4 text-xl">404 Not Found</h4>
+                            <p class="text-xs text-slate-500 leading-relaxed font-light">
+                                找不到東西。可能是 API 網址打錯，或資源已被移除。
+                            </p>
                         </div>
-                        <div class="bg-red-50 p-6 rounded-2xl border border-red-200">
-                            <h4 class="font-bold text-red-800 mb-3 flex items-center gap-2 text-xl">
-                                <span>💥</span> 500 Error
-                            </h4>
-                            <p class="text-gray-600 text-sm">伺服器內部錯誤。通常是後端的程式碼寫壞了。</p>
+                        <div class="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-red-500 transition group">
+                            <h4 class="text-red-400 font-bold mb-4 text-xl">500 Server Error</h4>
+                            <p class="text-xs text-slate-500 leading-relaxed font-light">
+                                伺服器崩潰。通常代碼邏輯寫爛了，导致處理請求時拋出異常。
+                            </p>
                         </div>
                     </div>
-                    <div class="mt-12 bg-slate-900 p-8 rounded-2xl text-white">
-                        <h4 class="text-emerald-400 font-bold mb-3 flex items-center gap-2 text-lg">
-                            <span>🚀</span> 線上任務：手動發送指令
-                        </h4>
-                        <p class="text-gray-300 leading-relaxed text-lg mb-4">
-                            試著在瀏覽器網址列輸入下方網址，並觀察 ESP32 的序列監控視窗接收到的字串：
+                    <div class="mt-12 p-8 bg-blue-600/10 rounded-3xl border border-blue-500/20 text-center">
+                        <h4 class="text-blue-300 font-bold mb-4 text-xs uppercase tracking-widest">實踐挑戰</h4>
+                        <p class="text-sm font-light leading-relaxed text-slate-400 italic">
+                            「在瀏覽器網址列直接貼上指令網址，觀察序列監控視窗接收到的數據。這就是最原始的 Remote Control。」
                         </p>
-                        <code class="block bg-slate-800 p-4 rounded-lg text-emerald-300 font-mono break-all">
-                        http://192.168.4.1/move?dir=forward&speed=255
-                    </code>
                     </div>
                 </div>
             </div>
@@ -194,83 +204,57 @@
         <!-- Homework Section -->
         <section class="module-section">
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：掌握非同步通訊</h2>
-            <p class="text-center text-gray-500 mb-12">從取得資料到上傳日誌，打造強韌的 Web 應用程式。</p>
+            <p class="text-center text-gray-500 mb-12">從取得公開數據，到建立無人車專屬的數據上報與強韌防錯系統。</p>
 
             <div class="grid md:grid-cols-3 gap-6">
-                <!-- Task 1-1 -->
-                <div onclick="openSubmissionModal('basic-06-http-1', '【作業 1-1】Fetch API 實戰：向伺服器要資料')"
+                <!-- Task 6-1 -->
+                <div onclick="openSubmissionModal('basic-06-http-1', '【作業 6-1】數位點餐員：Postman GET 測試 (Digital Waiter)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-blue-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🌐</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform">🌐</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">30 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 1-1】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「Fetch API 實戰」</h4>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 6-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「API 端點勘查實戰」</h4>
                         <p class="text-sm text-gray-600 leading-relaxed">
-                            使用 JavaScript 的 `fetch()` 函式從 Open Data 取得天氣資訊。學習如何利用 `async/await` 等待回應，並使用
-                            `response.json()` 轉換數據。
+                            使用工具發送 GET 請求。解構 Headers 與 JSON Response Body。分析為什麼 GET 網址不適合傳送敏感密碼。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-blue-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳程式碼與 Console 截圖</span>
                     </div>
                 </div>
 
-                <!-- Task 1-2 -->
-                <div onclick="openSubmissionModal('basic-06-http-2', '【作業 1-2】數據上傳：無人車日誌系統')"
+                <!-- Task 6-2 -->
+                <div onclick="openSubmissionModal('basic-06-http-2', '【作業 6-2】數據整合師：實作 POST 發送 JSON (Data Integrator)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-emerald-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">📤</span>
-                            <span
-                                class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-emerald-500 group-hover:rotate-12 transition-transform">📤</span>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業
-                            1-2】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「數據上傳日誌」</h4>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業 6-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「標準化數據上報模組」</h4>
                         <p class="text-sm text-gray-600 leading-relaxed">
-                            實作當按下「存檔」時，將感測器數據以 POST 方式傳送到 Hookbin。學習 `JSON.stringify()` 封裝與設定 `Content-Type` 標頭。
+                            在 ESP32 中將感測器值封裝為 JSON。正確配置 Content-Type 並以 POST 方式傳送至 Webhook 端點進行同步。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-emerald-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳 Webhook 成功畫面</span>
                     </div>
                 </div>
 
-                <!-- Task 1-3 -->
-                <div onclick="openSubmissionModal('basic-06-http-3', '【作業 1-3】錯誤處理與逾時保護')"
+                <!-- Task 6-3 -->
+                <div onclick="openSubmissionModal('basic-06-http-3', '【作業 6-3】通訊守門員：狀態碼攔截與防錯 (Communication Sentry)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-red-500 h-2"></div>
+                    <div class="bg-orange-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🛡️</span>
-                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase">45
-                                min</span>
+                            <span class="text-4xl text-orange-500 group-hover:translate-x-1 transition-transform">🛡️</span>
+                            <span class="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition">【作業 1-3】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「錯誤處理與逾時」</h4>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-orange-600 transition">【作業 6-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「強韌性通訊異常分流」</h4>
                         <p class="text-sm text-gray-600 leading-relaxed">
-                            模擬網路斷線，實作 `try...catch` 捕捉錯誤。判斷 `if (!response.ok)`，針對不同錯誤（404/500）給予使用者不同的 UI 提示。
+                            模擬 404/500/Timeout 異常。實作自動重試與優雅錯誤提示 UI。確保通訊中斷時系統具備自我恢復能力。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-red-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳錯誤提示 UI 截圖</span>
                     </div>
                 </div>
             </div>
@@ -283,7 +267,7 @@
         <div class="container mx-auto px-4 text-center">
             <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
-                <span>單元課程 基礎 6</span>
+                <span>課程單元 基礎 6 - 網路通訊基礎</span>
                 <span class="hidden md:inline">|</span>
                 <span>講師：Antigravity Assistant</span>
             </div>
@@ -300,129 +284,135 @@
     <script src="/js/course-shared-v4.js"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">HTTP 協議與數據交換實驗室</h2>
 
-        <h3>【作業 1-1】Postman GET 測試與回傳解析</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> API 測試工程師 (API Test Engineer)。</li>
-            <li><strong>執行方式：</strong> 使用 Postman 或瀏覽器開發者工具，發送 GET 請求至公開 API（如 JSONPlaceholder）。觀察 Headers、Status Code 與
-                Response Body，並記錄解析後的 JSON 數據。</li>
-            <li><strong>評分重點 :</strong> 成功解析 JSON 結構，並能準確說明 200 OK 與 404 Not Found 的觸發場景。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：「數位點餐員」：Postman GET 測試 (Digital Waiter: GET Lab)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：API 測試工程師</span> | <span>難度：⭐️</span> | <span>估計時長：30 min</span>
+            </div>
 
-        <h3>【作業 1-2】實作 POST 發送 JSON 數據</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 後端數據整合師 (Backend Data Integrator)。</li>
-            <li><strong>執行方式：</strong> 實作一個 POST 請求，將模擬的感測器數據（如 <code>{ "temp": 25, "hum": 60 }</code>）發送至測試端點。確保
-                <code>Content-Type</code> 設定為 <code>application/json</code>。</li>
-            <li><strong>評分重點 :</strong> 數據成功送達伺服器並被正確識別，Payload 格式遵循標準 JSON 規範。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>端點請求實作</strong>：使用 Postman 或瀏覽器發送 GET 請求。目標：解析 JSON 客戶端回應。</li>
+                    <li><strong>協議解構記錄</strong>：在 README 中彙整 Headers 中的 <code>Content-Type</code>、Status Code 與 Response Body 截圖。</li>
+                    <li><strong>理論分析</strong>：撰寫簡短分析，說明為什麼 GET 參數掛載在網址上具有安全隱憂。</li>
+                </ol>
+            </div>
 
-        <h3>【作業 1-3】HTTP 狀態碼攔截與錯誤處理</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 韌體穩定性工程師 (Firmware Stability Engineer)。</li>
-            <li><strong>執行方式：</strong> 實作錯誤處理邏輯。當請求發生逾時或收到 500 錯誤時，ESP32 必須能攔截該狀態並顯示自定義的錯誤訊息，而非讓系統直接當機。</li>
-            <li><strong>評分重點 :</strong> 具備完善的狀態碼判斷邏輯，能有效提升系統的通訊強韌度。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>協議解構正確性</strong>：是否能清楚識別 HTTP 標頭與正文在該次通訊中的各別功能？</li>
+                    <li>[ ] <strong>數據擷取精確度</strong>：所擷取的 JSON 欄位是否與 API 原始定義完全吻合？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：「數據整合師」：實作 POST 發送 JSON (Data Integrator: POST/JSON)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：後端數據整合工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>封裝 JSON 實作</strong>：在 ESP32 代碼中利用 <code>ArduinoJson</code> 或字串拼接，封裝模擬傳感器數據 Payload。</li>
+                    <li><strong>同步通訊實作</strong>：配置 HTTPClient 標頭 <code>Content-Type: application/json</code> 並執行 POST 動作。</li>
+                    <li><strong>端點接收驗證</strong>：在 Webhook.site 或測試 Server 端截圖，證明 JSON 被正確解析為結構化物件。</li>
+                    <li><strong>最終 Commit</strong>：提交具備數據封裝上報能力的穩定代碼。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>Payload 規格性</strong>：發送的 JSON 字串是否完全符合 RFC 規範，無格式溢位或非法字元？</li>
+                    <li>[ ] <strong>Headers 宣告</strong>：是否有正確配置 Content-Type 標頭，否則伺服器端將無法解析正文。</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：「通訊守門員」：狀態碼攔截與防錯 (Communication Sentry: Error Handling)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：韌體穩定性工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>異步狀態捕獲</strong>：實作 <code>if (httpCode > 0)</code> 的狀態碼分流邏輯。</li>
+                    <li><strong>錯誤攔截實驗</strong>：故意訪問錯誤路徑，並使設備能攔截 404 狀態碼並在 Serial 噴出對應報警。</li>
+                    <li><strong>自動自我修復</strong>：針對 500 以上或逾時 (Timeout) 的請求，實作「限制次數的自動重新嘗試 (Retry)」邏輯。</li>
+                    <li><strong>穩定性報告</strong>：在 README 中說明此邏輯如何避免設備因短暫網路不穩而永久佔用 CPU 資源。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>異常分流度</strong>：是否涵蓋了 4xx、5xx 與 Timeout 三大類核心網路異常處理？</li>
+                    <li>[ ] <strong>非阻塞性</strong>：在異常重試期間，代碼是否能優雅應對，不導致設備主程序完全卡死？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>在 GitHub 建立新 Repo（名為 <code>basic-06-http-template</code>）。</li>
-                <li>上傳包含 WiFi 連線基礎模組但「未實作 HTTP 請求邏輯」的專案框架。</li>
-                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
-                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，獲得個人專屬 Repo。</li>
-                <li>實作 GET 讀取、POST 發送與 Response 解析邏輯，並透過序列監控視窗確認數據對齊。</li>
-                <li>本地開發後 <strong>Push 代碼</strong> 提交進度。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
-                <li>針對學生的「Headers 配置（特別是 Content-Type）」與「狀態碼判斷邏輯」予以回饋。</li>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：掌握網際網路通訊的基本語法與數據封裝規則。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-blue-600">重點 1：餐廳協議模型</strong> - 利用具象模型讓學員區分 Request/Response 的對稱性。</li>
+                <li><strong class="text-blue-600">重點 2：JSON 數據交換</strong> - 強申 JSON 是現代資訊交換的「世界語」，並引領學員掌握 C++ 中的字串封裝。</li>
+                <li><strong class="text-blue-600">重點 3：狀態語法糖</strong> - 讓學員不再只看到「通訊失敗」，而是能讀懂伺服器回報的 4xx/5xx 具體意義。</li>
             </ol>
         </div>
 
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元聚焦於「網路協議與數據封裝」，引導學生掌握物聯網設備與 Web 服務對接的核心技能。</p>
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-blue-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/main.cpp      # (必修) 提供 HTTPClient 基礎骨架，要求學員填寫狀態碼判斷
+└── README.md         # 測試日誌：Postman 結果截圖與 Webhook 接收證明
+            </pre>
+        </div>
 
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── platformio.ini   # 包含 WiFi 與 HTTPClient 函式庫配置
-├── src/
-│   └── main.cpp      # (重點) 需填充 http.begin(), http.GET(), http.POST()
-└── README.md        # 測試報告：API 端點列表、JSON 解析結果截圖</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>main.cpp (HTTP POST JSON)</strong></p>
-        <pre><code>#include &lt;HTTPClient.h&gt;
-
-void sendData() {
-  HTTPClient http;
-  http.begin("http://your-server.com/api");
-  http.addHeader("Content-Type", "application/json");
-  
-  String payload = "{\"status\": \"active\"}";
-  int httpResponseCode = http.POST(payload);
-  
-  if (httpResponseCode > 0) {
-    String response = http.getString();
-    Serial.println(httpResponseCode);
-  }
-  http.end();
-}</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>函式調用檢查：：</strong> 驗證是否正確使用 <code>http.addHeader()</code> 設定 JSON 格式。</li>
-            <li><strong>錯誤攔截驗證：：</strong> 透過測試代碼檢查是否包含 <code>if (httpResponseCode > 0)</code> 的防錯結構。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「HTTP 協議與餐廳點餐模型」影片，了解請求方法差異。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員能區分 GET 與 POST
-                        的基礎場景。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，對比瀏覽器發送與 ESP32 發送請求的 Headers
-                        差異。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>解釋 HTTP 4xx 與 5xx 的排除邏輯。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作複雜 JSON 解析並 Push，閱讀教師回覆 PR 並優化逾時保護。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>審核學生對「網路異常處理」的強韌性規劃。</td>
-                </tr>
-            </tbody>
-        </table>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看「HTTP 協議與餐廳點餐解密：揭開網路連線的神秘信封」影片。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 確認學員已安裝 Postman 或熟悉瀏覽器 DevTools。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，挑戰將感測器數據封裝為 JSON 並成功推送至測試端點。</td>
+                        <td class="p-4 border-b"><strong>技術協助:</strong> 排除 JSON 雙引號與轉義字元引起的格式錯誤。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">實作「自動斷線重試」邏輯並 Push，閱讀教師對防錯架構的評價。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 點評學員對 Timeout 與 5xx 錯誤應對措施的邏輯完備度。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 </body>
 

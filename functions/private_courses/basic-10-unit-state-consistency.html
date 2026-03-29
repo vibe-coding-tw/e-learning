@@ -26,7 +26,7 @@
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
                 class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
-                基礎 10 - 單元 3
+                基礎 10 - 系統一致性
             </span>
             <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]"><span class="text-cyan-400">非同步通訊</span><br>當你的螢幕說謊時
             </h1>
@@ -52,106 +52,105 @@
 
         <!-- Module 1: Race Condition -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
-                        <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <span class="text-4xl">🏁</span> 1. 競爭條件 (Race Condition) (30 min)
-                            </h2>
-                            <div class="space-y-6 text-gray-600 text-lg">
-                                <p><strong>核心概念：</strong>在非同步環境下，多個操作同時發生，最終結果取決於誰「跑得快」（抵達順序）。</p>
-
-                                <div class="bg-red-50 p-6 rounded-xl border border-red-100 relative">
-                                    <h4 class="font-bold text-red-800 mb-2">場景模擬：</h4>
-                                    <ul class="list-disc list-inside space-y-2 text-sm text-red-700">
-                                        <li>網頁發送「切換至自動模式」。</li>
-                                        <li>同一時間，車子偵測到電力不足，自動切回「待機模式」。</li>
-                                        <li>如果「待機回傳」比「模式確認」早到，網頁可能會卡在錯誤的狀態。</li>
-                                    </ul>
-                                </div>
-
-                                <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
-                                    <h4 class="font-bold text-amber-800 mb-2 flex items-center gap-2">
-                                        <span>🎯</span> 學習目標
-                                    </h4>
-                                    <p class="text-base text-amber-900 leading-relaxed">
-                                        理解 <strong>發送順序 $\neq$ 抵達順序</strong>。在不穩定的網路中，舊的數據可能會蓋掉新的數據。
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Module 2: Optimistic UI -->
-        <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-emerald-500 to-cyan-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl">✨</span> 2. 樂觀 UI (Optimistic UI) 的代價 (20 min)
-                    </h2>
-                    <div class="space-y-6 text-gray-600 text-lg">
-                        <p><strong>定義：</strong>點擊按鈕後立即改變介面顏色（假設成功），而不是等硬體回傳。這在社交媒體（如點讚）很常見，但在硬體控制中很危險。</p>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-100">
-                                <h4 class="font-bold text-emerald-800 mb-2">✅ 優點</h4>
-                                <p class="text-sm">極致的操作流暢感，使用者不會感覺到毫秒級的延遲。</p>
-                            </div>
-                            <div class="bg-rose-50 p-6 rounded-xl border border-rose-100">
-                                <h4 class="font-bold text-rose-800 mb-2">❌ 缺點</h4>
-                                <p class="text-sm">如果硬體端切換失敗，介面必須「閃回」原狀，造成使用者困惑甚至引發危險。</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Module 3: Polling vs Push -->
-        <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-indigo-500 to-purple-600"></div>
-                <div class="p-8 md:p-12">
+                <div class="p-8 md:p-14">
                     <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">🔄</span> 3. 定時輪詢 vs. 事件推送 (20 min)
+                        <span class="text-4xl text-red-500">🏁</span> 1. 競爭條件 (Race Condition)
                     </h2>
-                    <div class="space-y-6 text-gray-600 text-lg">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="space-y-4">
-                                <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                                    <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">
-                                        <span>❓</span> 輪詢 (Polling)
-                                    </h4>
-                                    <p class="text-sm">
-                                        網頁主動、定時地詢問：「你現在是什麼模式？」。優點是實作簡單，缺點是浪費頻寬且有同步延遲。
-                                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                無線環境下，指令發送順序不等於抵達順序。當多個操作同時發生，最終結果取決於誰「跑得快」，這會導致嚴重的邏輯錯誤。
+                            </p>
+                            <div class="bg-red-50 p-6 rounded-2xl border border-red-100">
+                                <h4 class="font-bold text-red-800 mb-2 text-[10px] uppercase tracking-widest">Failure Scenario</h4>
+                                <ol class="text-[9px] text-red-700 space-y-2 font-light">
+                                    <li>1. 網頁發送「進入自動模式」</li>
+                                    <li>2. 車子因電力不足自動退回「待機模式」</li>
+                                    <li>3. 「電力不足」的回報被延遲。網頁先收到「模式確認」，導致顯示錯誤狀態。</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center">
+                            <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest">Out-of-order Arrival</h4>
+                            <div class="flex items-center justify-around gap-2 mb-4">
+                               <div class="px-3 py-1 bg-blue-500 rounded text-[8px] animate-bounce">Cmd #2</div>
+                               <div class="px-3 py-1 bg-amber-500 rounded text-[8px]">Cmd #1</div>
+                            </div>
+                            <p class="text-[10px] text-red-400 font-bold uppercase tracking-widest leading-relaxed mt-4">UI State Corruption Risk</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Optimistic UI & SSoT -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-cyan-500"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-emerald-500">✨</span> 2. 樂觀 UI 與真值來源 (SSoT)
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                點擊按鈕立即變色（樂觀更新）能提升流暢感，但在硬體控制中，必須採用「真值來源 (SSoT)」：介面狀態必須由實體硬體回傳決定。
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 shadow-sm">
+                                    <h4 class="font-bold text-emerald-800 mb-2 text-[10px] uppercase tracking-widest">Optimistic Update</h4>
+                                    <p class="text-[9px] text-emerald-600">快速反應，但當切換失敗時會產生「畫面閃回」的尷尬感。</p>
                                 </div>
-                                <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
-                                    <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
-                                        <span>🔔</span> 事件推送 (Push / Notify)
-                                    </h4>
-                                    <p class="text-sm">
-                                        硬體狀態一改變，主動通知網頁。優點是效率極高、低延遲，缺點是實作較複雜（需建立雙向隧道）。
-                                    </p>
+                                <div class="bg-cyan-50 p-6 rounded-2xl border border-cyan-100 shadow-sm">
+                                    <h4 class="font-bold text-cyan-800 mb-2 text-[10px] uppercase tracking-widest">SSoT Framework</h4>
+                                    <p class="text-[9px] text-cyan-600">100% 同步。沒收到硬體確認前，介面不準變更，確保眼見即真實。</p>
                                 </div>
                             </div>
-                            <div
-                                class="bg-slate-50 p-6 rounded-2xl border border-slate-200 flex flex-col justify-center">
-                                <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                    <span>💡</span> 預習任務：思考題
-                                </h4>
-                                <p class="text-base text-slate-700 leading-relaxed italic">
-                                    「在藍牙 (BLE) 或 WiFi 頻寬有限且網路不穩定的情況下，哪種方式較能確保顯示器與無人車的『真實狀態』一致？」
-                                </p>
-                                <div class="mt-4 text-sm text-slate-500">
-                                    提示：考慮丟包 (Packet Loss) 的情況。
-                                </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-10 shadow-2xl border border-slate-700 text-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent"></div>
+                           <h4 class="text-cyan-400 font-bold mb-4 text-[10px] uppercase tracking-widest">Consistency Architecture</h4>
+                           <p class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic">
+                               "在攸關安全的控制系統中，精確的顯示權重永遠高於毫秒級的操作快感。"
+                           </p>
+                           <div class="inline-block px-8 py-3 bg-cyan-600 text-white rounded-xl font-bold text-[10px] shadow-lg">Enforce SSoT</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Polling vs Ack -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-indigo-400">
+                        <span class="p-2 bg-indigo-500/20 rounded-lg text-indigo-400 text-2xl">🔄</span> 3. 應答機制 (ACK) 與定時輪詢
+                    </h2>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                如何確認指令抵達？「輪詢」主動詢問，「應答 (ACK)」則由硬體執行完畢後主動通知，是最高效的一致性方案。
+                            </p>
+                            <div class="bg-indigo-500/10 p-8 rounded-3xl border border-indigo-500/20 shadow-inner">
+                                <h4 class="font-bold text-indigo-400 mb-4 text-xs uppercase tracking-widest">Protocol Strategy</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1"></span><div><strong class="text-white">版本序號 (Sequence)</strong>：為封包加上遞增編號，過期序號一律捨棄。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1"></span><div><strong class="text-white">雙向握手 (ACK)</strong>：包含指令 ID，確定特定的操作在遠端確實落地。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1"></span><div><strong class="text-white">指數退避 (Backoff)</strong>：通訊失敗時自動重試，但間隔逐漸拉長，避免癱瘓網路。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="lg:w-96">
+                            <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-inner font-mono text-[10px] text-blue-300">
+                                <span class="text-gray-500">// App 发送具備 ID 的指令</span><br>
+                                sendCmd({ id: <span class="text-pink-400">101</span>, action: <span class="text-emerald-400">"START"</span> });<br><br>
+                                <span class="text-gray-500">// 硬體執行後 ACK 回传</span><br>
+                                { <span class="text-pink-400">"ack"</span>: <span class="text-purple-400">true</span>, <span class="text-pink-400">"cmdId"</span>: <span class="text-pink-400">101</span> }
                             </div>
                         </div>
                     </div>
@@ -162,75 +161,57 @@
         <!-- Homework Section -->
         <section class="module-section">
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：解決「同步焦慮」</h2>
-            <p class="text-center text-gray-500 mb-12">實作專業的同步策略，確保遠端操作的安全與精確。</p>
+            <p class="text-center text-gray-500 mb-12">建立絕對一致的通訊管線，確保網頁面板與實體機器人之間「零謊言」同步。</p>
 
             <div class="grid md:grid-cols-3 gap-6">
-                <!-- Task 3-1 -->
-                <div onclick="openSubmissionModal('basic-10-sync-sequence', '【作業 3-1】實作「版本序號」同步法')"
+                <!-- Task 10-1 -->
+                <div onclick="openSubmissionModal('basic-10-sync-1', '【作業 10-1】版本序號同步法 (Sequence Number Logic)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-indigo-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🔢</span>
-                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-indigo-500 group-hover:scale-110 transition-transform">🔢</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 3-1】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「版本序號」同步法</h4>
-                        <div class="text-sm text-gray-600 space-y-2">
-                            <ul class="list-disc list-inside space-y-1">
-                                <li><strong>任務：</strong>為每一個狀態變更賦予一個遞增的 Sequence Number。</li>
-                                <li><strong>核心邏輯：</strong>網頁收到封包時，檢查序號是否大於上一次。</li>
-                                <li><strong>挑戰：</strong>模擬網路波動，觀察系統是否能自動忽略「遲到的舊資訊」。</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 10-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「代碼序號過濾層」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            為狀態封包注入遞增 seq。在網頁端實作有效性判定，徹底修復因網路亂序導致的數據「時光倒流」跳動 Bug。
+                        </p>
                     </div>
                 </div>
 
-                <!-- Task 3-2 -->
-                <div onclick="openSubmissionModal('basic-10-sync-ack', '【作業 3-2】實作應答確認機制 (ACK/NACK)')"
+                <!-- Task 10-2 -->
+                <div onclick="openSubmissionModal('basic-10-sync-2', '【作業 10-2】應答確認機制 (ACK/NACK Framework)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-blue-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">⚖️</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-blue-500 group-hover:rotate-12 transition-transform">⚖️</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 3-2】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">應答確認機制 (ACK/NACK)</h4>
-                        <div class="text-sm text-gray-600 space-y-2">
-                            <ul class="list-disc list-inside space-y-1">
-                                <li><strong>任務：</strong>實作具備「超時重試」功能的發送函式。</li>
-                                <li><strong>視覺回饋：</strong>在確認收到 ACK 前，按鈕顯示「轉圈圈」動畫。</li>
-                                <li><strong>目標：</strong>消除使用者對於指令是否傳遞成功的焦慮。</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 10-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「雙向握手握手通訊」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            實施 ACK 確認框架與 Pending 動畫。支援 500ms 超時下的指數退避自動重傳，挑戰惡劣無線環境下的高穩定控制。
+                        </p>
                     </div>
                 </div>
 
-                <!-- Task 3-3 -->
-                <div onclick="openSubmissionModal('basic-10-sync-ssot', '【作業 3-3】真值來源 (SSoT) 重構')"
+                <!-- Task 10-3 -->
+                <div onclick="openSubmissionModal('basic-10-sync-3', '【作業 10-3】真值來源 (SSoT) 重構 (SSoT Implementation)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-slate-500 h-2"></div>
+                    <div class="bg-cyan-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🏠</span>
-                            <span class="bg-slate-100 text-slate-700 text-xs px-2 py-1 rounded font-bold uppercase">45
-                                min</span>
+                            <span class="text-4xl text-cyan-500 group-hover:translate-x-1 transition-transform">🏠</span>
+                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-slate-600 transition">【作業 3-3】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">真值來源 (SSoT) 重構</h4>
-                        <div class="text-sm text-gray-600 space-y-2">
-                            <ul class="list-disc list-inside space-y-1">
-                                <li><strong>任務：</strong>強制 UI 遵循「單向數據流」，嚴禁樂觀更新。</li>
-                                <li><strong>測試：</strong>對比於延遲下，兩者的操作「體感差異」。</li>
-                                <li><strong>目標：</strong>理解安全性優先場景下，「精確」重於「反應」。</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition">【作業 10-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「視覺主權移交硬體」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            徹底移除前端樂觀更新架構。強制 UI 刷新必須訂閱來自硬體的 NOTIFY 推送，確保眼見之處皆為物理真相。
+                        </p>
                     </div>
                 </div>
             </div>
@@ -239,11 +220,11 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+    <footer class="bg-gray-800 py-12 border-t border-gray-700 mt-auto">
         <div class="container mx-auto px-4 text-center">
             <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
-                <span>單元課程 基礎 10 - 3</span>
+                <span>課程單元 基礎 10 - 系統一致性</span>
                 <span class="hidden md:inline">|</span>
                 <span>講師：Antigravity Assistant</span>
             </div>
@@ -253,127 +234,143 @@
     <script>
         // Define Resources
         window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/bSRF4GZHjI8", // 當你的螢幕說謊時：機器人控制的高風險世界
+            youtube: "https://www.youtube.com/embed/bSRF4GZHjI8",
             doc: "https://docs.google.com/document/d/e/2PACX-1vRT8P9woBLECRbTK0dhxf9hnfOuUIpcAVDuMfjGivWR9d2TyIkYFHAQN3JSPXw685pNJDFAqgCCxC2y/pub?embedded=true"
         };
     </script>
     <script src="/js/course-shared-v4.js"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">分散式一致性實驗室</h2>
 
-        <h3>【作業 3-1】實作「版本序號」同步法</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 分散式系統工程師 (Distributed Systems Engineer)。</li>
-            <li><strong>執行方式：</strong> 為狀態變更封包加上遞增的 Sequence
-                Number。在網頁端實作邏輯：僅接受序號大於目前存儲值的資料包。模擬網路延遲環境，測試系統是否能自動過濾「遲到」的過時訊息。</li>
-            <li><strong>評分重點 :</strong> 成功偵測並忽略舊序號封包，UI 狀態不再因延遲而產生「時光倒流」的閃爍現象。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：版本序號同步法 (Sequence Number Logic)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：分散式系統工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
 
-        <h3>【作業 3-2】實作應答確認機制 (ACK/NACK)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 通訊協定設計師 (Communication Protocol Designer)。</li>
-            <li><strong>執行方式：</strong> 實作具備「超時重試」與「狀態回執」功能的發送框架。在網頁按鈕點擊後顯示「讀取中」動畫，直到收到硬體回傳的 ACK (確認) 或 NACK (拒絕) 為止。
-            </li>
-            <li><strong>評分重點 :</strong> 成功處理指令丟包情況，具備自動重試邏輯，且 UI 能清晰反饋指令的執行結果。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>序號注入封裝</strong>：修改 ESP32 的 JSON 發送邏輯，為每個包含感知狀態或模式的封包新增遞增 <code>seq</code> 序號字段。</li>
+                    <li><strong>過濾機制作戰</strong>：在網頁端接收層實作邏輯：僅接受 <code>seq</code> 大於當前 local 最大儲存值的數據，高效忽略網路亂序包。</li>
+                    <li><strong>亂序穩定性驗證</strong>：手動擾亂數據發送順序（模擬高延遲波動），觀察網頁端 UI 顯示是否能維持穩定，不發生「新舊數據交錯跳動」。</li>
+                </ol>
+            </div>
 
-        <h3>【作業 3-3】真值來源 (SSoT) 重構</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 系統架構師 (System Architect)。</li>
-            <li><strong>執行方式：</strong> 強制 UI 模式遵循「單向數據流」：點擊按鈕不立即改變狀態，而是等待硬體端的主動推送（通知）。對比「樂觀更新」與「SSoT 控制」在不穩定的無線通訊下的穩定表現。
-            </li>
-            <li><strong>評分重點 :</strong> 徹底移除 UI 端的所有「先行假設」，確保網頁顯示與機器人物理現狀 100% 一致。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>序號過濾嚴密性</strong>：網頁端是否能 100% 擋下因延遲抵達的舊序號數據，保持顯示狀態的「線性前進」？</li>
+                    <li>[ ] <strong>極限溢位備案</strong>：README 中是否分析並提出針對序號遞增至極限值歸零 (Reset) 後的同步修正策略？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：應答確認機制 (ACK/NACK Framework)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：通訊協定設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>指令非同步化</strong>：將網頁 App 的發送函式改寫為異步 <code>Promise</code> 框架，點擊後的 UI 鈕進入 Pending 等待視覺。</li>
+                    <li><strong>確認回軌實作</strong>：硬體端在完成邏輯操作後立即回傳含 <code>cmdId</code> 的 ACK 報文；網頁收到匹配的 ACK 後方可確認切換成功。</li>
+                    <li><strong>自動重傳邏輯</strong>：實作超時偵測：若 500ms 內未獲響應，執行最多 3 次的指數退避 (Exponential Backoff) 重傳機制。</li>
+                    <li><strong>故障路徑驗證</strong>：模擬通訊斷路環境，確認 UI 能在重試失敗後正確顯示「同步失敗」警告，而非卡在載入動畫中。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>反饋同步品質</strong>：介面是否能透過明顯的視圖變換，讓使用者建立「指令處理中」與「執行已落地」的心理區分？</li>
+                    <li>[ ] <strong>傳輸魯棒性指標</strong>：在隨機丟包率 20% 的測試環境下，指令是否能最終成功同步且不產生雙端狀態分裂 Bug？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：真值來源 (SSoT) 重構 (Single Source of Truth Implementation)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：系統架構師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>前端主權剝離</strong>：徹底移除 App 內所有點擊即切換顏色的「樂觀更新」邏輯，UI 主動權交給通訊層。</li>
+                    <li><strong>全訂閱制 UI 刷新</strong>：強制所有關鍵面板（如模式標籤、解鎖狀態）之變更，必須由接收到的 <code>NOTIFY</code> 指令觸發。</li>
+                    <li><strong>一致性差異分析</strong>：在限速通訊環境下，記錄並分析「SSoT 架構」相較於傳統架構在消除「虚假反饋」上的實質優勢。</li>
+                    <li><strong>交付物提交</strong>：將重構後的單向數據流版本代碼推送到 GitHub PR。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>單向流架構純度</strong>：前端 App 是否真正達成 100% 被動刷新？（即必須由硬體事件回傳驅動 UI 變更）</li>
+                    <li>[ ] <strong>狀態吻合度實測</strong>：網頁面板顯示的數據狀態是否與機器人實體端的物理輸出（馬達、LED）達成了感知層的一致？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>在 GitHub 建立新 Repo（名為 <code>basic-10-sync-template</code>）。</li>
-                <li>上傳包含藍牙通訊框架但「未處理數據競爭 (Racing)」的實驗程式。</li>
-                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
-                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，獲得個人專屬 Repo。</li>
-                <li>模擬長延遲 (Long Latency) 環境，實作版本序號過濾器與 ACK 重傳邏輯。</li>
-                <li>完成 SSoT 結構重構後 <strong>Push 代碼</strong> 提交進度。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
-                <li>重點評價學生對「安全（精確性）高於體驗（反應速度）」這一權衡的理解程度。</li>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：在物理不可靠的通訊介質中，構建邏輯上的絕對可靠。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-indigo-600">重點 1：對抗時間的亂序</strong> - 引導學員理解無線網路中「後發先至」的常態，從而體會 版本序號 (Sequence) 的核心價值。</li>
+                <li><strong class="text-indigo-600">重點 2：從單向通知到雙向確認</strong> - 解釋 ACK 握手協議是提升系統等級、進入工業級控制系統的必經之路。</li>
+                <li><strong class="text-indigo-600">重點 3：工程美學的取捨</strong> - 引導學員思考為何在專業設備控制中，「寧可慢一點，也要保證準」的數據一致性 (SSoT) 重於 UI 響應快感。</li>
             </ol>
         </div>
 
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元聚焦於「分散式系統的一致性」，引導學生理解在不穩定的無線環境下，如何建立強韌的雙向通訊協議。</p>
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/main.cpp       # (必修) 需補全 JSON 封裝中的 seq 注入與指令 ACK 邏輯
+├── src/UIController.js# (前端) 學員需在此刪除樂觀更新，並實作訂閱制刷新
+└── README.md          # 壓力報告：紀錄在高丟包環境下，指令完成同步的平均延遲
+            </pre>
+        </div>
 
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── src/
-│   └── main.cpp      # (重點) 需實作 Sequence Check 邏輯
-├── tests/            # 模擬封包丟失與亂序的測試腳本
-└── README.md         # 實驗心得：版本序號如何解決 UI 閃跳問題</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>main.cpp (Sequence Filter)</strong></p>
-        <pre><code>static uint32_t lastSeq = 0;
-void onData(Data d) {
-  if (d.seq > lastSeq) {
-    lastSeq = d.seq;
-    updateUI(d.state);
-  }
-}</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>一致性檢測：：</strong> 透過 Python 測試腳本連續發送亂序封包，驗證 UI 最終狀態是否停留在最新序號的資料。</li>
-            <li><strong>ACK 健全度：：</strong> 斷開一部分通訊，檢查學生程式是否會觸發自動重傳 (Exponential Backoff 為優)。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「當螢幕說謊時：同步的代價」技術短片。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>Dashboard：</strong>確認學員理解「發送順序不等於抵達順序」的痛點。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，在刻意製造的亂序網路中實作計時與序號同步。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術督導：</strong>演示「單一真值來源 (SSoT)」如何簡化 UI
-                        更新邏輯。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">挑戰實作對話式應答 (Handshake) 邏輯並 Push，閱讀教師回覆 PR。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核學生對「系統魯棒性
-                        (Robustness)」的概念掌握。</td>
-                </tr>
-            </tbody>
-        </table>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看「網路延遲如何毀掉你的外科手術機器人？」案例分析影片，預習 Race Condition。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員能否識別出「UI 閃回 (Flicker)」背後的通訊一致性缺陷。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，在刻意加入隨機延遲的模擬通訊環境下，開發具備防禦性的同步協議層。</td>
+                        <td class="p-4 border-b"><strong>助教引導:</strong> 協助演示如何透過瀏覽器 Console 工具攔截並分析「過時序號」封包。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">將具備指數退避重傳的通訊框架封裝為獨立類庫並 Push PR。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 點評對「數據持久性 (Consistency)」與「通訊可用性 (Availability)」平衡的設計水準。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 </body>
 

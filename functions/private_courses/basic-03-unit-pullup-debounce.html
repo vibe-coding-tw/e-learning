@@ -30,17 +30,9 @@
         }
 
         @keyframes wave {
-            0% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-5px);
-            }
-
-            100% {
-                transform: translateY(0);
-            }
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0); }
         }
 
         .floating-anim {
@@ -62,7 +54,7 @@
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
                 class="inline-block py-1 px-3 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-sm font-semibold mb-6 tracking-wide uppercase">
-                基礎 3 - 數位控制進階
+                基礎 3 - 訊號穩定性
             </span>
             <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
                 數位控制：<br><span class="text-emerald-400">上拉與按鈕抖動</span>
@@ -89,51 +81,55 @@
 
         <!-- Module 1: Floating State -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
+                <div class="p-8 md:p-14">
+                    <div class="flex flex-col md:flex-row gap-16">
                         <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                                 <span class="text-4xl text-emerald-500">📡</span> 1. 消失的邏輯：為什麼需要上拉電阻？
                             </h2>
-                            <p class="text-gray-500 mb-8 text-lg">在數位世界中，「沒有東西」並不代表「零」。</p>
+                            <p class="text-gray-500 mb-10 text-lg font-light leading-relaxed">
+                                在電子數位世界中，「沒有接線」並不代表讀值是「零」。
+                            </p>
 
                             <div class="space-y-6">
-                                <div class="bg-gray-50 p-6 rounded-xl border-l-4 border-amber-400">
+                                <div class="bg-gray-50 p-6 rounded-2xl border-l-[6px] border-amber-400 group hover:shadow-md transition">
                                     <h3 class="font-bold text-gray-800 mb-2">浮空狀態 (Floating)</h3>
-                                    <p class="text-gray-600 leading-relaxed">
-                                        當 GPIO 沒接任何東西時，它就像天線一樣會吸收環境電磁波。讀取值會在 0 與 1 之間瘋狂跳動，導致系統誤判。
+                                    <p class="text-sm text-gray-600 leading-relaxed font-light">
+                                        當 GPIO 未與任何明確電壓相連時，它就像天線一樣會吸收環境中的雜訊與電磁波。讀取值會在 0 與 1 之間瘋狂跳動，導致極高的系統不確定性。
                                     </p>
                                 </div>
 
-                                <div class="bg-emerald-50 p-6 rounded-xl border-l-4 border-emerald-500">
-                                    <h3 class="font-bold text-emerald-800 mb-2">內建功能：INPUT_PULLUP</h3>
-                                    <p class="text-gray-600 leading-relaxed">
-                                        ESP32 內建了「上拉電阻」。透過 <code
-                                            class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-mono">pinMode(pin, INPUT_PULLUP)</code>，我們可以將引腳穩定在
-                                        HIGH 电平，直到按鈕將其拉至接地。
+                                <div class="bg-emerald-50 p-6 rounded-2xl border-l-[6px] border-emerald-500 group hover:shadow-md transition">
+                                    <h3 class="font-bold text-emerald-800 mb-2">解決方案：INPUT_PULLUP</h3>
+                                    <p class="text-sm text-gray-600 leading-relaxed font-light">
+                                        透過軟體配置內部的上拉電阻，將引腳穩定拉至 3.3V (HIGH)。當物理按鈕按下時才將其拉至接地 (LOW)。
                                     </p>
+                                    <div class="mt-4 p-3 bg-white/50 rounded-lg font-mono text-xs text-emerald-700">
+                                        pinMode(PIN, INPUT_PULLUP);
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="md:w-1/3">
-                            <div class="logic-card p-6 rounded-2xl shadow-2xl border border-slate-700 text-slate-300">
-                                <h4 class="text-emerald-400 font-bold mb-4 flex items-center gap-2">
-                                    <span>🧠</span> 快速筆記
+                        <div class="md:w-80">
+                            <div class="logic-card p-8 rounded-3xl shadow-2xl border border-slate-700 text-slate-300 relative overflow-hidden group">
+                                <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-emerald-500/10 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                                <h4 class="text-emerald-400 font-bold mb-6 flex items-center gap-2 uppercase tracking-widest text-xs">
+                                    <span>🧠</span> Logic Snapshot
                                 </h4>
-                                <ul class="space-y-4 text-sm">
+                                <ul class="space-y-5 text-xs">
                                     <li class="flex items-start gap-3">
-                                        <span class="text-emerald-500 mt-1">✓</span>
-                                        <span>未按按鈕時：讀取值為 <span class="text-white font-bold">HIGH (1)</span></span>
+                                        <span class="text-emerald-500 font-bold text-sm">✓</span>
+                                        <span>未按下時：讀取值為 <span class="text-white font-bold">HIGH (1)</span></span>
                                     </li>
                                     <li class="flex items-start gap-3">
-                                        <span class="text-emerald-500 mt-1">✓</span>
+                                        <span class="text-emerald-500 font-bold text-sm">✓</span>
                                         <span>按下按鈕時：讀取值為 <span class="text-white font-bold">LOW (0)</span></span>
                                     </li>
-                                    <li class="flex items-start gap-3 text-emerald-400 italic">
-                                        <span>💡 這就是所謂的「負邏輯」。</span>
+                                    <li class="pt-4 border-t border-slate-700/50 text-emerald-400 italic">
+                                        💡 這就是標準的「負邏輯」配置。
                                     </li>
                                 </ul>
                             </div>
@@ -145,51 +141,42 @@
 
         <!-- Module 2: Bouncing -->
         <section class="module-section mb-16">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-amber-500 to-orange-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl text-amber-500">📉</span> 2. 物理的真相：按鈕抖動 (Debounce)
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-amber-500">📉</span> 2. 物理現實：機械彈跳 (Debounce)
                     </h2>
 
-                    <div class="grid md:grid-cols-2 gap-12">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
                         <div class="space-y-6">
-                            <p class="text-gray-600 leading-relaxed">
-                                機械彈跳是物理現實。當金屬片接觸的一瞬間，並非完美的「0 到 1」，而是會在幾毫秒內產生數十次的快速開關。
+                            <p class="text-gray-600 text-lg leading-relaxed font-light">
+                                按鈕的內部的金屬片接觸的一瞬間，並非完美的「0 到 1」，而是會在極短的時間內（數個毫秒）產生密集的、猶如火花般的快速開合。
                             </p>
 
-                            <div
-                                class="bg-slate-900 p-8 rounded-2xl text-emerald-400 font-mono text-sm relative overflow-hidden group">
-                                <div class="absolute top-0 left-0 w-full h-1 bg-emerald-500/30"></div>
-                                <h4 class="text-slate-500 uppercase tracking-widest text-xs mb-4">微控制器的視角</h4>
+                            <div class="bg-slate-900 p-8 rounded-3xl text-emerald-400 font-mono text-sm relative overflow-hidden group border border-slate-700 shadow-inner">
+                                <div class="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-emerald-500 to-transparent"></div>
+                                <h4 class="text-slate-500 uppercase tracking-widest text-[10px] mb-6">Oscilloscope View (模擬雜訊)</h4>
                                 <p class="leading-relaxed">
-                                    // 按下一次的實際訊號<br>
-                                    11111010100010000000<br>
-                                    <span class="text-slate-500">^ 這裡會被判定為按了 5 次</span>
+                                    <span class="text-slate-600">// 按下一次按鈕，MCU 可能讀到：</span><br>
+                                    11111<span class="text-red-500">01011001</span>00000000<br>
+                                    <span class="text-slate-500">^ 此抖動區間會被誤判為多次按壓</span>
                                 </p>
                             </div>
                         </div>
 
-                        <div class="bg-amber-50 p-8 rounded-2xl border border-amber-100 flex flex-col justify-center">
-                            <h4 class="text-amber-800 font-bold mb-4 flex items-center gap-2">
-                                <span>🔍</span> 擴展思考
+                        <div class="bg-amber-50 p-10 rounded-3xl border border-amber-100 flex flex-col justify-center shadow-sm">
+                            <h4 class="text-amber-800 font-bold mb-6 flex items-center gap-2">
+                                <span class="text-2xl">🔍</span> 誰也會抖動？
                             </h4>
-                            <p class="text-gray-600 text-sm leading-relaxed mb-6">
-                                除了按鈕，還有哪些感測器會有這種物理現象？
+                            <p class="text-gray-600 text-sm leading-relaxed mb-8">
+                                除了常見的微控按鈕，所有具備「機械接觸點」的感測器都需要進行去抖處理。
                             </p>
                             <div class="grid grid-cols-2 gap-4">
-                                <div
-                                    class="bg-white p-3 rounded-lg shadow-sm text-center text-xs font-bold text-amber-700">
-                                    微動開關</div>
-                                <div
-                                    class="bg-white p-3 rounded-lg shadow-sm text-center text-xs font-bold text-amber-700">
-                                    磁簧開關</div>
-                                <div
-                                    class="bg-white p-3 rounded-lg shadow-sm text-center text-xs font-bold text-amber-700">
-                                    傾斜開關</div>
-                                <div
-                                    class="bg-white p-3 rounded-lg shadow-sm text-center text-xs font-bold text-amber-700">
-                                    繼電器接點</div>
+                                <div class="bg-white p-4 rounded-xl shadow-sm text-center text-xs font-bold text-amber-900 border border-amber-200">極限開關</div>
+                                <div class="bg-white p-4 rounded-xl shadow-sm text-center text-xs font-bold text-amber-900 border border-amber-200">磁簧開關</div>
+                                <div class="bg-white p-4 rounded-xl shadow-sm text-center text-xs font-bold text-amber-900 border border-amber-200">繼電器回傳</div>
+                                <div class="bg-white p-4 rounded-xl shadow-sm text-center text-xs font-bold text-amber-900 border border-amber-200">彈簧傾斜儀</div>
                             </div>
                         </div>
                     </div>
@@ -199,54 +186,50 @@
 
         <!-- Module 3: Software Solutions -->
         <section class="module-section mb-16">
-            <div class="bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white">
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col lg:flex-row gap-12 items-center">
-                        <div class="lg:w-1/2 space-y-6">
+            <div class="bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="lg:w-1/2 space-y-8">
                             <h2 class="text-3xl font-bold mb-4 flex items-center gap-3">
-                                <span class="text-4xl text-blue-400">⏱️</span> 3. 軟體解決方案：時間過濾
+                                <span class="p-2 bg-blue-500/20 rounded-lg text-blue-400 text-2xl">⏱️</span> 3. 軟體去抖：時間過濾術
                             </h2>
-                            <p class="text-slate-400 leading-relaxed">
-                                我們不能改變物理，但可以透過程式碼過濾雜訊。最核心的概念是「等待穩定」。
+                            <p class="text-slate-400 font-light leading-relaxed">
+                                我們不能改變物理特性，但可以透過演算法來「等待穩定」。這在專業開發中至關重要。
                             </p>
 
                             <div class="space-y-4">
-                                <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                                    <div
-                                        class="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 shrink-0">
-                                        1</div>
-                                    <p class="text-sm">偵測到電位改變 (Edge Tagging)。</p>
+                                <div class="flex items-center gap-6 p-4 bg-white/5 rounded-2xl border border-white/10 group hover:border-blue-500/50 transition">
+                                    <div class="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center font-bold text-lg shrink-0">1</div>
+                                    <p class="text-xs text-slate-300">Edge Catching：偵測到電位第一次改變的瞬間。</p>
                                 </div>
-                                <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                                    <div
-                                        class="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 shrink-0">
-                                        2</div>
-                                    <p class="text-sm">啟動計時器，忽略接下來 20ms 的波動。</p>
+                                <div class="flex items-center gap-6 p-4 bg-white/5 rounded-2xl border border-white/10 group hover:border-blue-500/50 transition">
+                                    <div class="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center font-bold text-lg shrink-0">2</div>
+                                    <p class="text-xs text-slate-300">Wait Epoch：忽略接下來 20~50 ms 內的所有波動。</p>
                                 </div>
-                                <div class="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                                    <div
-                                        class="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 shrink-0">
-                                        3</div>
-                                    <p class="text-sm">時間結束後再次確認，若狀態依然穩定，才判定為有效按下。</p>
+                                <div class="flex items-center gap-6 p-4 bg-white/5 rounded-2xl border border-white/10 group hover:border-blue-500/50 transition">
+                                    <div class="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center font-bold text-lg shrink-0">3</div>
+                                    <p class="text-xs text-slate-300">Double Confirm：再次確認狀態。若穩定，才判定為有效操作。</p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="lg:w-1/2">
-                            <div class="bg-slate-800 p-8 rounded-2xl border border-slate-700">
-                                <div class="flex justify-between items-center mb-6">
-                                    <h4 class="font-bold text-blue-300">非阻塞式去抖 (millis)</h4>
-                                    <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded">Best
-                                        Practice</span>
-                                </div>
-                                <div class="space-y-4 font-mono text-sm text-slate-300">
-                                    <div class="border-l-2 border-blue-500 pl-4 py-2 bg-blue-500/5">
-                                        為什麼不建議用 <code class="text-rose-400">delay(20)</code>？
-                                    </div>
-                                    <p class="text-slate-400 leading-relaxed">
-                                        在無人車專案中，主程式必須持續發送數據、接收指令、處理傳感器。任何內建的 <code class="text-rose-400">delay()</code>
-                                        都會導致馬達控制斷斷續續或通訊超時。
+                            <div class="bg-slate-800/80 p-10 rounded-3xl border border-slate-700 relative overflow-hidden group">
+                                <div class="absolute -right-4 top-4 p-2 bg-emerald-500/10 text-emerald-400 rounded-lg text-[10px] font-bold uppercase tracking-widest origin-right transition group-hover:bg-emerald-500 group-hover:text-white">Non-Blocking Only</div>
+                                <h4 class="font-bold text-blue-300 mb-6 text-lg">為什麼不建議用 delay()？</h4>
+                                <div class="space-y-6">
+                                    <p class="text-sm text-slate-400 leading-relaxed font-light italic">
+                                        在無人車開發中，系統必須 100% 同時監聽遙控指令與處理馬達。任何一丁點的阻塞 (blocking) 都會造成車輛反應遲鈍甚至斷線。
                                     </p>
+                                    <div class="p-6 bg-black/30 rounded-2xl border border-slate-600/50">
+                                        <div class="flex items-center gap-3 mb-4">
+                                            <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                                            <span class="text-xs font-bold text-slate-500 tracking-wider">最佳實踐</span>
+                                        </div>
+                                        <p class="text-xs text-emerald-400 font-mono">
+                                            使用 millis() 建立非阻塞(Non-blocking)計時狀態機是所有高級韌體的必修課。
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -258,82 +241,57 @@
         <!-- Homework Section -->
         <section class="module-section">
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實作任務：精準訊號處理</h2>
-            <p class="text-center text-gray-500 mb-12">從體會混亂開始，最後建立工業級的控制邏輯。</p>
+            <p class="text-center text-gray-500 mb-12">體會硬體混亂帶來的干擾，並實作跨越彈跳的穩健邏輯。</p>
 
             <div class="grid md:grid-cols-3 gap-6">
                 <!-- Task 2-1 -->
-                <div onclick="openSubmissionModal('basic-03-task-2-1', '作業 2-1: 「天線實驗」：體會浮空狀態')"
+                <div onclick="openSubmissionModal('basic-03-deb-1', '【作業 2-1】天線實驗：體會浮空狀態 (Floating)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-emerald-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
                             <span class="text-4xl text-emerald-500 floating-anim">📶</span>
-                            <span
-                                class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">45
-                                min</span>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">30 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">作業 2-1
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「天線實驗」：體會浮空</h4>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業 2-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「環境雜訊捕捉器」</h4>
                         <p class="text-sm text-gray-600 leading-relaxed">
-                            設定 GPIO 為單純 INPUT，手靠近但不觸碰該引腳，觀察序列監控視窗中的瘋狂跳動數值。體會定義「明確電平」的必要性。
+                            設定引腳為純 INPUT，觀察手部靠近時序列監視器的瘋狂跳動。開啟上拉電阻後觀察波形如何回歸穩定。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-emerald-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳觀察截圖</span>
                     </div>
                 </div>
 
                 <!-- Task 2-2 -->
-                <div onclick="openSubmissionModal('basic-03-task-2-2', '作業 2-2: 「計數器挑戰」：肉眼捕捉彈跳')"
+                <div onclick="openSubmissionModal('basic-03-deb-2', '【作業 2-2】計數器挑戰：捕捉按鈕彈跳 (Bouncing)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-amber-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
                             <span class="text-4xl">🔢</span>
-                            <span class="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-amber-600 transition">作業 2-2
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「計數器挑戰」：捕捉彈跳</h4>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-amber-600 transition">【作業 2-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「機械彈跳量化實驗」</h4>
                         <p class="text-sm text-gray-600 leading-relaxed">
-                            實作按鈕計數器。嘗試用正常速度按一下，看看 count 是增加 1 還是跳了好幾個數字？紀錄最嚴重的一次「判定次數」。
+                            實作按鈕計數器（無延遲），紀錄按一下卻跳出「連發」的倍數。體會機械缺陷對功能的嚴重干擾。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-amber-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳計數結果</span>
                     </div>
                 </div>
 
                 <!-- Task 2-3 -->
-                <div onclick="openSubmissionModal('basic-03-task-2-3', '作業 2-3: 「工業級去彈跳演算法」實作')"
+                <div onclick="openSubmissionModal('basic-03-deb-3', '【作業 2-3】工業級去彈跳演算法 (Pro Debounce)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-blue-600 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
                             <span class="text-4xl">🛠️</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">作業 2-3
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">工業級去彈跳演算法</h4>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 2-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「非阻塞式狀態切換」</h4>
                         <p class="text-sm text-gray-600 leading-relaxed">
-                            利用 <code class="text-blue-600">millis()</code> 撰寫非阻塞程式碼。按一下切換無人車「待機 / 啟動」模式，確保切換靈敏且絕不誤觸。
+                            使用 millis() 取代阻塞代碼。實做一個「按一下切換無人車模式」的功能，確保在高負載循環下依然穩如泰山。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-blue-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳程式碼單元</span>
                     </div>
                 </div>
             </div>
@@ -344,147 +302,14 @@
     <!-- Footer -->
     <footer class="bg-gray-800 py-12 border-t border-gray-700">
         <div class="container mx-auto px-4 text-center">
-            <p class="text-gray-500 text-sm mb-4">&copy; 2025 Vibe Coding. All rights reserved.</p>
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
-                <span>單元課程 基礎 3</span>
+                <span>課程單元 基礎 3 - 訊號穩定性</span>
                 <span class="hidden md:inline">|</span>
-                <span>數位控制與去彈跳</span>
+                <span>講師：Antigravity Assistant</span>
             </div>
         </div>
     </footer>
-
-    <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
-
-        <h3>作業 2-1：「天線實驗」：體會浮空狀態</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 電磁相容性 (EMC) 實習生。</li>
-            <li><strong>執行方式：</strong> 設定 GPIO 為純 INPUT 模式。將手或是金屬物體靠近（不觸碰）該引腳，觀察並記錄序列監控視窗中數值瘋狂跳動的現象，體會環境雜訊對數位電路的影響。</li>
-            <li><strong>評分重點 :</strong> 成功觀察到浮空狀態下的電位跳動，並能解釋其對系統穩定性的潛在風險。</li>
-        </ul>
-
-        <h3>作業 2-2：「計數器挑戰」：捕捉按鈕彈跳</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 韌體除錯工程師 (Firmware Debug Engineer)。</li>
-            <li><strong>執行方式：</strong> 實作按鈕計數器。關閉所有軟體濾波，以正常速度按下一秒後放開，紀錄 Serial 視窗中 count 增加的實際次數，找出計數器誤判最嚴重的一次記錄。</li>
-            <li><strong>評分重點 :</strong> 能量化呈現機械彈跳 (Bouncing) 現象，並了解為何此現象需要被「軟體過濾」。</li>
-        </ul>
-
-        <h3>作業 2-3：「工業級去彈跳演算法」實作</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 高級韌體工程師 (Senior Firmware Engineer)。</li>
-            <li><strong>執行方式：</strong> 利用 <code>millis()</code> 撰寫非阻塞式程式碼。按一下按鈕切換無人車「待機 / 啟動」模式（透過 LED
-                狀態顯示），確保切換過程靈敏且絕不因為抖動造成二次觸發。</li>
-            <li><strong>評分重點 :</strong> 掌握 <code>millis()</code> 去抖動邏輯，且程式碼中無任何 <code>delay()</code> 語句，確保主循環不中斷。</li>
-        </ul>
-    </section>
-
-    <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>在 GitHub 建立新 Repo（名為 <code>basic-03-pullup-template</code>）。</li>
-                <li>上傳包含按鈕 GPIO 基本定義但「未實作去彈跳邏輯」的 Repo 框架。</li>
-                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
-                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，獲得個人專屬 Repo。</li>
-                <li>實作負邏輯讀取與 <code>millis()</code> 式除彈跳功能。</li>
-                <li>本地開發後 <strong>Push 代碼</strong> 提交進度。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
-                <li>針對學生的「狀態變更邏輯 (Edge Detection)」與「除彈跳時間閾值」予以具體點評。</li>
-            </ol>
-        </div>
-
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元引導學生處理機械開關的物理特性（彈跳現象），並學習非阻塞式程式設計的基礎。</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── platformio.ini   # 包含基礎開發環境配置
-├── src/
-│   └── main.cpp      # (重點) 需實作 millis() 去彈跳邏輯
-└── README.md        # 彈跳現象觀察紀錄、去彈跳前後對比影片說明與實驗日誌</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>main.cpp (非阻塞式去彈跳)</strong></p>
-        <pre><code>#include &lt;Arduino.h&gt;
-
-const int buttonPin = 0; 
-int lastButtonState = HIGH;
-unsigned long lastDebounceTime = 0;
-unsigned long debounceDelay = 50;
-
-void setup() {
-  pinMode(buttonPin, INPUT_PULLUP); // 內建上拉
-}
-
-void loop() {
-  int reading = digitalRead(buttonPin);
-  if (reading != lastButtonState) {
-    lastDebounceTime = millis();
-  }
-
-  if ((millis() - lastDebounceTime) > debounceDelay) {
-    if (reading == LOW) {
-      // 穩定按下邏輯
-    }
-  }
-  lastButtonState = reading;
-}</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>語法關鍵字檢查：：</strong> 偵測程式中是否包含了 <code>INPUT_PULLUP</code> 關鍵字。</li>
-            <li><strong>演算法模擬：：</strong> 透過測試腳本模擬極短時間內的「脈衝彈跳」訊號，驗證去彈跳演算法是否能有效過濾雜訊。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「為什麼按鈕不能直接接 GPIO？Pull-up 與機械彈跳」原理影片。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>Dashboard：</strong>確認學員理解「浮空」狀態對數位電路的干擾風險。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業實作負邏輯讀取，觀察「按一下跳好幾下」的現象。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術引導：</strong>對比 delay() 與 millis()
-                        在響應速度上的巨大差異。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">將「除彈跳偵測」邏輯封裝成獨立函式並提交至 PR。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>審核學生對「狀態機」概念與採樣時間的工程化直覺。</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
 
     <script>
         // Define Resources
@@ -494,6 +319,137 @@ void loop() {
         };
     </script>
     <script src="/js/course-shared-v4.js"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">數位控制與去彈跳實驗室</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：「天線實驗」：體會浮空狀態 (The Antenna Experiment: Floating State)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：電磁相容性實習生</span> | <span>難度：⭐️</span> | <span>估計時長：30 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>硬體浮空測試</strong>：將 GPIO 設為純 <code>INPUT</code>，連接一條懸空杜邦線，手部靠近並觀察序列繪圖儀中雜訊。</li>
+                    <li><strong>對比觀察</strong>：開啟 <code>INPUT_PULLUP</code> 後記錄波形如何趨於穩定。</li>
+                    <li><strong>現象記錄</strong>：在 <code>README.md</code> 中以此實驗為例，解釋為何數位系統不允許「浮空引腳」的存在。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>原理描述</strong>：能否清晰描述浮空引腳為何會吸收環境電磁雜訊導致誤判？</li>
+                    <li>[ ] <strong>邏輯掌握</strong>：是否理解開啟上拉電阻後，按鈕的「按下/放開」邏輯會呈現反向？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：「計數器挑戰」：捕捉按鈕彈跳 (Counter: Bouncing Capture)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：韌體除錯工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>累積計數實作</strong>：撰寫一個每偵測到 <code>LOW</code> 電位就 <code>count++</code> 的代碼，且完全不添加去抖處理。</li>
+                    <li><strong>彈跳量化量測</strong>：用正常力道按壓，記錄 count 增加的「連發」倍數。</li>
+                    <li><strong>數據歸檔</strong>：歸納不同按下速度對彈跳次數的影響，將數據記錄在 README 實驗日誌中。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>量化分析能力</strong>：能量化呈現「物理彈跳」造成的功能災難嗎？</li>
+                    <li>[ ] <strong>系統化思維</strong>：是否理解實體限制必須經由韌體邏輯補償的開發者準則？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：「工業級去彈跳演算法」 (Pro Debounce: Non-blocking)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：高級韌體工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>非阻塞計時實作</strong>：完全移除 <code>delay()</code>，利用 <code>millis()</code> 實作時間過濾。</li>
+                    <li><strong>狀態切換邏輯</strong>：實作一個靈敏的「模式切換器」（按一下切換運行/待機），確保在高負載 loop 下依然精確。</li>
+                    <li><strong>整合測試</strong>：在程式中加入一段模擬耗時運算，驗證你的去彈跳機制是否具備工業級的獨立性與流暢度。</li>
+                    <li><strong>最終 Commit</strong>：封裝去彈跳功能為獨立模組並 Push。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>演算法正確性</strong>：代碼中是否完全移除 <code>delay()</code> 且邏輯穩定？</li>
+                    <li>[ ] <strong>系統穩定性</strong>：單次按壓是否能「100% 穩定」觸發單次事件，無任何二段顫動或失效？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：將「機械彈跳」這一物理現實問題，轉化為「非阻塞程式設計」的實習契機。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-indigo-600">Point 1：浮空與確定性</strong> - 強調在數位系統中，任何一個 bit 都必須有明確的 0 或 1，不存在「中間地帶」。</li>
+                <li><strong class="text-indigo-600">Point 2：硬體缺陷的補償</strong> - 引導學員理解：完美的程式往往是為了相容不完美的硬體。</li>
+                <li><strong class="text-indigo-600">Point 3：邁向 Non-blocking</strong> - 藉由去彈跳需求，正式引入 <code>millis()</code> 代替 <code>delay()</code>，這是後續開發複雜車輛控制的基石。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/main.cpp      # (必改點) 提供一個有 Bouncing 問題的計數範本讓學員修正
+└── README.md         # 實驗日誌：描述去彈跳前後的串口繪圖對照圖
+            </pre>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看「按鈕按一下變十下？解密機械彈跳與去抖動」影片。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員是否能區分 Pull-up 與 Pull-down 的硬體接法。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，挑戰在高負載 loop 中實作非阻塞去彈跳算法，成功控制 LED 模式切換。</td>
+                        <td class="p-4 border-b"><strong>除錯指導:</strong> 展示如何使用 Serial Plotter 放大觀察開關瞬間的「鋸齒狀」雜訊。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">將去彈跳邏輯封裝成 Class 或函式庫並 Push，提交 PR 交流如何自定義去彈跳時間閾值。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 點評學員對「時間邊界控制」與「狀態穩定度」的理解細節。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 </body>
 
 </html>

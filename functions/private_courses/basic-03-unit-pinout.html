@@ -44,7 +44,7 @@
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
                 class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
-                基礎 3 - 數位與類比 I/O
+                基礎 3 - I/O 硬體藍圖
             </span>
             <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
                 ESP32 引腳地圖：<br><span class="text-blue-400">創客的生存指南</span>
@@ -71,56 +71,48 @@
 
         <!-- Module 1: Pinout Map -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
+                <div class="p-8 md:p-14">
+                    <div class="flex flex-col md:flex-row gap-16">
                         <div class="flex-1">
                             <h2 class="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                                 <span class="text-4xl">🗺️</span> 1. 認識引腳地圖 (Pinout Map)
                             </h2>
-                            <p class="text-gray-500 mb-8 text-lg">ESP32 就像瑞士軍刀，每一條腿都有多重身分。</p>
+                            <p class="text-gray-500 mb-10 text-lg font-light leading-relaxed">
+                                ESP32 就像「硬體界的瑞士軍刀」，每一條引腳在不同的軟體配置下，都能變幻出截然不同的身分。
+                            </p>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                    <h3 class="font-bold text-blue-800 mb-1">GPIO (General Purpose)</h3>
-                                    <p class="text-sm text-gray-600">通用型輸入輸出，你的數位開關。</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div class="p-5 bg-blue-50 border border-blue-100 rounded-2xl group hover:bg-blue-600 transition-all duration-300">
+                                    <h3 class="font-bold text-blue-800 group-hover:text-white mb-1">GPIO (General Purpose)</h3>
+                                    <p class="text-xs text-blue-600 group-hover:text-white/80">你的數位開關，負責讀取按鈕或點亮 LED。</p>
                                 </div>
-                                <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                                    <h3 class="font-bold text-purple-800 mb-1">ADC & DAC</h3>
-                                    <p class="text-sm text-gray-600">類比訊號的入口(ADC)與出口(DAC)。</p>
+                                <div class="p-5 bg-purple-50 border border-purple-100 rounded-2xl group hover:bg-purple-600 transition-all duration-300">
+                                    <h3 class="font-bold text-purple-800 group-hover:text-white mb-1">ADC & DAC</h3>
+                                    <p class="text-xs text-purple-600 group-hover:text-white/80">類比訊號的魔法門。負責處理電壓大小的變化。</p>
                                 </div>
-                                <div class="bg-amber-50 p-4 rounded-xl border border-amber-100">
-                                    <h3 class="font-bold text-amber-800 mb-1">Touch (觸控)</h3>
-                                    <p class="text-sm text-gray-600">內建電容式觸控功能，不用按鈕也能感應。</p>
+                                <div class="p-5 bg-amber-50 border border-amber-100 rounded-2xl group hover:bg-amber-600 transition-all duration-300">
+                                    <h3 class="font-bold text-amber-800 group-hover:text-white mb-1">Capacitive Touch</h3>
+                                    <p class="text-xs text-amber-600 group-hover:text-white/80">內建電容感應。不用實體按鈕，隔著塑膠殼也能操作。</p>
                                 </div>
-                                <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
-                                    <h3 class="font-bold text-emerald-800 mb-1">硬體通訊</h3>
-                                    <p class="text-sm text-gray-600">UART (通訊)、I2C (感測器)、SPI (螢幕)。</p>
+                                <div class="p-5 bg-emerald-50 border border-emerald-100 rounded-2xl group hover:bg-emerald-600 transition-all duration-300">
+                                    <h3 class="font-bold text-emerald-800 group-hover:text-white mb-1">Hardware Bus</h3>
+                                    <p class="text-xs text-emerald-600 group-hover:text-white/80">硬體的高速公路：UART、I2C 與 SPI 通訊協議。</p>
                                 </div>
-                            </div>
-
-                            <div class="mt-8 bg-slate-900 text-slate-300 p-6 rounded-xl border border-slate-700">
-                                <h4 class="text-white font-bold mb-3 flex items-center gap-2">
-                                    <span class="text-amber-400">🔍</span> 學習任務
-                                </h4>
-                                <p class="text-sm leading-relaxed">
-                                    查閱資料，找出為什麼 <span class="highlight-amber">GPIO 1 (TX)</span> 與 <span
-                                        class="highlight-amber">GPIO 3 (RX)</span> 在開發時建議先留空？
-                                </p>
                             </div>
                         </div>
 
-                        <div class="md:w-1/3 flex flex-col justify-center">
-                            <div class="pin-map-card p-6 rounded-2xl shadow-2xl border border-slate-700">
-                                <h4 class="text-white font-bold mb-4 text-center">標記你的第一張 Pinout</h4>
-                                <div
-                                    class="aspect-square bg-slate-800 rounded-lg flex items-center justify-center border-2 border-dashed border-slate-600 text-slate-500 text-sm p-4 text-center">
-                                    此處應下載並標記一份 ESP32 Pinout 圖，標註出適合接按鈕與 LED 的位置。
+                        <div class="md:w-80 flex flex-col justify-center">
+                            <div class="pin-map-card p-8 rounded-3xl shadow-2xl border border-slate-700 relative overflow-hidden group">
+                                <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-blue-500/10 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                                <h4 class="text-white font-bold mb-6 text-center tracking-widest text-sm uppercase">Quick Navigation</h4>
+                                <div class="aspect-[3/4] bg-slate-800/50 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-slate-600 text-slate-500 text-[10px] p-6 text-center gap-4">
+                                    <span class="text-3xl">🖨️</span>
+                                    這裡通常需要對應特定機型的 Pinout 標記。
                                 </div>
-                                <button
-                                    class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold transition">
-                                    下載空白 Pinout 圖
+                                <button class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-xs transition shadow-lg">
+                                    領取官方 Pinout 藍圖
                                 </button>
                             </div>
                         </div>
@@ -131,45 +123,47 @@
 
         <!-- Module 2: Landmine Pins -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl">💣</span> 2. 絕對不能忽視的「地雷引腳」
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-red-500">💣</span> 2. 絕對不能忽視的「地雷引腳」
                     </h2>
 
-                    <div class="grid md:grid-cols-2 gap-8">
+                    <div class="grid md:grid-cols-2 gap-12 items-start">
                         <div class="space-y-6">
-                            <div class="flex gap-4 p-4 bg-red-50 rounded-xl border border-red-100">
-                                <div class="text-3xl">🚫</div>
+                            <div class="flex gap-4 p-6 bg-red-50 rounded-2xl border border-red-100 hover:shadow-md transition">
+                                <div class="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center text-2xl shrink-0">🚫</div>
                                 <div>
-                                    <h4 class="font-bold text-red-800">僅限輸入 (Input Only)</h4>
-                                    <p class="text-sm text-gray-600 mt-1">
-                                        <span class="highlight-red">GPIO 34, 35, 36,
-                                            39</span>。它們沒有內部拉高電阻，且<strong>不能輸出訊號</strong> (不能點亮 LED 或控制繼電器)。
+                                    <h4 class="font-bold text-red-900 mb-1">僅限輸入 (Input Only)</h4>
+                                    <p class="text-sm text-gray-600 leading-relaxed">
+                                        GPIO 34, 35, 36, 39 沒有輸出能力。它們適合感測器，但<strong>絕不能</strong>用來推動 LED 或馬達。
                                     </p>
                                 </div>
                             </div>
-                            <div class="flex gap-4 p-4 bg-orange-50 rounded-xl border border-orange-100">
-                                <div class="text-3xl">⚙️</div>
+                            <div class="flex gap-4 p-6 bg-orange-50 rounded-2xl border border-orange-100 hover:shadow-md transition">
+                                <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center text-2xl shrink-0">⚙️</div>
                                 <div>
-                                    <h4 class="font-bold text-orange-800">啟動配置 (Strapping Pins)</h4>
-                                    <p class="text-sm text-gray-600 mt-1">
-                                        <span class="highlight-amber">GPIO 0, 2, 5, 12, 15</span>。這些腳位在開機瞬間決定了進入什麼模式。
+                                    <h4 class="font-bold text-orange-900 mb-1">啟動配置 (Strapping Pins)</h4>
+                                    <p class="text-sm text-gray-600 leading-relaxed">
+                                        GPIO 0, 2, 5, 12, 15 掌握著開機瞬間的「生殺大權」。若接錯電阻，板子就會進入死鎖或燒錄模式。
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="bg-slate-100 p-8 rounded-2xl border border-slate-200 relative overflow-hidden">
-                            <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">⚠️</div>
-                            <h4 class="text-lg font-bold text-slate-800 mb-4">案例分析：車子為什麼不動？</h4>
-                            <p class="text-gray-600 leading-relaxed mb-4">
-                                「如果在 <span class="highlight-red">GPIO 0</span> 接了一個強力上拉按鈕，車子可能永遠無法正常啟動，因為它會被強制拉入燒錄模式。」
+                        <div class="bg-slate-900 p-10 rounded-3xl border border-slate-700 relative overflow-hidden group shadow-2xl">
+                            <div class="absolute -right-6 -top-6 p-4 opacity-5 text-9xl text-white">⚠️</div>
+                            <h4 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                                <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                                硬體生存守則 (Case Study)
+                            </h4>
+                            <p class="text-slate-400 leading-relaxed mb-6 font-light">
+                                「為什麼我的專案一接上外部電源就燒錄不進去？<br><br>
+                                通常是因為你在 <span class="text-amber-400 font-bold">GPIO 0</span> 接了一個強力的上拉按鈕，導致 SoC 開機時誤以為你要手工進入 Boot 模式。」
                             </p>
-                            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-                                <p class="text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">生存守則</p>
-                                <p class="text-sm text-slate-700">優先使用 GPIO 12 以後的通用腳位，把地雷區留給最無害的設備。</p>
+                            <div class="p-4 bg-white/5 rounded-2xl border border-white/10 text-xs text-slate-500 italic">
+                                * 專業建議：優先使用 GPIO 12 以後的通用引腳，將地雷區留給最輕量的訊號。
                             </div>
                         </div>
                     </div>
@@ -179,64 +173,54 @@
 
         <!-- Module 3: Power & Limits -->
         <section class="module-section mb-16">
-            <div class="bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white">
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col lg:flex-row gap-12 items-center">
-                        <div class="lg:w-1/2 space-y-6">
+            <div class="bg-gradient-to-br from-slate-900 via-blue-900 to-black rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="lg:w-1/2 space-y-8">
                             <h2 class="text-3xl font-bold mb-4 flex items-center gap-3">
-                                <span class="text-4xl">⚡</span> 3. 供電腳位與極限
+                                <span class="p-2 bg-blue-500/20 rounded-lg text-blue-400 text-2xl">⚡</span> 3. 供電腳位與安全電流
                             </h2>
-                            <div class="space-y-4">
-                                <div class="flex items-start gap-4">
-                                    <div
-                                        class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 font-bold shrink-0">
-                                        Vin</div>
+                            <p class="text-slate-400 font-light leading-relaxed">
+                                ESP32 不是電源供應器。過度汲取電流會直接燒毀內部的 I/O 閘道。
+                            </p>
+                            <div class="space-y-6">
+                                <div class="flex items-center gap-6 p-4 bg-white/5 rounded-2xl border border-white/10 group hover:border-blue-500/50 transition">
+                                    <div class="w-14 h-14 bg-indigo-500/20 text-indigo-400 rounded-xl flex items-center justify-center font-bold text-xl">Vin</div>
                                     <div>
-                                        <h4 class="font-bold">Vin (5V)</h4>
-                                        <p class="text-sm text-slate-400">外部 5V 輸入口。當你不用 USB 供電時，這是你的能量入口。</p>
+                                        <h4 class="font-bold">Voltage Input (5V)</h4>
+                                        <p class="text-xs text-slate-500">外部電源的總入口，通常由 USB 或 5V 變壓器提供。</p>
                                     </div>
                                 </div>
-                                <div class="flex items-start gap-4">
-                                    <div
-                                        class="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center text-green-400 font-bold shrink-0">
-                                        3V3</div>
+                                <div class="flex items-center gap-6 p-4 bg-white/5 rounded-2xl border border-white/10 group hover:border-emerald-500/50 transition">
+                                    <div class="w-14 h-14 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center font-bold text-xl text-center leading-none">3V3</div>
                                     <div>
-                                        <h4 class="font-bold">3V3</h4>
-                                        <p class="text-sm text-slate-400">降壓後的穩定輸出。可以用來驅動小型的感測器。</p>
+                                        <h4 class="font-bold">LDO Output (3.3V)</h4>
+                                        <p class="text-xs text-slate-500">降壓後的穩定輸出，專供精密的感測器使用。</p>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="bg-blue-900/30 p-6 rounded-2xl border border-blue-800/50 mt-8">
-                                <h4 class="font-bold text-blue-300 mb-2 flex items-center gap-2">
-                                    <span>🤔</span> 預習任務
-                                </h4>
-                                <p class="text-sm text-blue-100/80 leading-relaxed">
-                                    思考為什麼我們不能直接用 GPIO 供電給馬達？單個 GPIO 的建議電流極限是多少？(提示：12mA)
-                                </p>
                             </div>
                         </div>
 
-                        <div class="lg:w-1/2 grid grid-cols-2 gap-4">
-                            <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
-                                <div class="text-2xl mb-2">🚥</div>
-                                <h4 class="font-bold mb-1">數位 I/O</h4>
-                                <p class="text-xs text-slate-400">High / Low 的極限二進位。</p>
+                        <div class="lg:w-1/2 grid grid-cols-2 gap-6">
+                            <div class="p-6 bg-slate-800/40 rounded-3xl border border-slate-700/50 hover:bg-slate-800 transition shadow-inner">
+                                <div class="text-3xl mb-4">🚥</div>
+                                <h4 class="font-bold mb-2">數位 I/O</h4>
+                                <p class="text-[10px] text-slate-500 leading-relaxed uppercase tracking-widest">High (3.3V) / Low (0V)</p>
                             </div>
-                            <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
-                                <div class="text-2xl mb-2">🌊</div>
-                                <h4 class="font-bold mb-1">類比 I/O</h4>
-                                <p class="text-xs text-slate-400">ADC 讀取電壓，DAC 輸出電壓。</p>
+                            <div class="p-6 bg-slate-800/40 rounded-3xl border border-slate-700/50 hover:bg-slate-800 transition shadow-inner">
+                                <div class="text-3xl mb-4">🌊</div>
+                                <h4 class="font-bold mb-2">類比 I/O</h4>
+                                <p class="text-[10px] text-slate-500 leading-relaxed uppercase tracking-widest">ADC 採樣度：12-bit</p>
                             </div>
-                            <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
-                                <div class="text-2xl mb-2">🎚️</div>
-                                <h4 class="font-bold mb-1">PWM</h4>
-                                <p class="text-xs text-slate-400">用數位脈衝模擬類比輸出，馬達控速核心。</p>
+                            <div class="p-6 bg-slate-800/40 rounded-3xl border border-slate-700/50 hover:bg-slate-800 transition shadow-inner">
+                                <div class="text-3xl mb-4">🎚️</div>
+                                <h4 class="font-bold mb-2">PWM 核心</h4>
+                                <p class="text-[10px] text-slate-500 leading-relaxed uppercase tracking-widest">模擬輸出之魂</p>
                             </div>
-                            <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
-                                <div class="text-2xl mb-2">📉</div>
-                                <h4 class="font-bold mb-1">ADC1 vs ADC2</h4>
-                                <p class="text-xs text-slate-400">注意！開啟 Wi-Fi 時 ADC2 會失效。</p>
+                            <div class="p-6 bg-slate-800/40 rounded-3xl border border-slate-700/50 hover:bg-slate-800 transition shadow-inner">
+                                <div class="text-3xl mb-4">📉</div>
+                                <h4 class="font-bold mb-2">ADC2 限制</h4>
+                                <p class="text-[10px] text-slate-500 leading-relaxed uppercase tracking-widest">Wi-Fi 開啟時將失效</p>
                             </div>
                         </div>
                     </div>
@@ -246,81 +230,58 @@
 
         <!-- Homework Section -->
         <section class="module-section">
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實作任務：驗證與規劃</h2>
-            <p class="text-center text-gray-500 mb-12">透過動手做，徹底掌握硬體的物理限制。</p>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實戰任務：驗證與規劃</h2>
+            <p class="text-center text-gray-500 mb-12">透過動手做，徹底掌握硬體的物理邊界。</p>
 
             <div class="grid md:grid-cols-3 gap-6">
-                <!-- Task 1-1 -->
-                <div onclick="openSubmissionModal('basic-03-task-1', '作業 1-1: 「數位探針」：驗證引腳限制')"
+                <!-- Task 3-1 -->
+                <div onclick="openSubmissionModal('basic-03-pin-1', '【作業 3-1】實測引腳限制 (Digital Probe)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-red-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
                             <span class="text-4xl">🔬</span>
-                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase">45
-                                min</span>
+                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition">作業 1-1</h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「數位探針」：驗證引腳限制</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
-                            挑戰 Input Only 與 Strapping 引腳。實測將 GPIO 34 設為輸出是否有效？將 GPIO 12 接地重啟會發生什麼事？
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition">【作業 3-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「數位探針實驗」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            挑戰 Input Only 引腳。實測將 GPIO 34 設為輸出的無效性，並實驗 GPIO 12 接地重啟後的「Flash 讀取故障」現象。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-red-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳實驗報告</span>
                     </div>
                 </div>
 
-                <!-- Task 1-2 -->
-                <div onclick="openSubmissionModal('basic-03-task-2', '作業 1-2: 「無人車引腳資源大規劃」')"
+                <!-- Task 3-2 -->
+                <div onclick="openSubmissionModal('basic-03-pin-2', '【作業 3-2】系統資源大規劃 (Architecture Plan)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-blue-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
                             <span class="text-4xl">🏎️</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">作業 1-2
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">無人車引腳資源大規劃</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
-                            針對馬達(4 PWM)、編碼器(2 中斷)、I2C 感測器，繪製出「最佳配置圖」。避開地雷，建立系統整合的全局思維。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 3-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「無人車引腳配置藍圖」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            針對馬達、編碼器與感測器，避開地雷區繪製出最佳配置圖。建立系統整合的全局架構思維。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-blue-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳配置圖</span>
                     </div>
                 </div>
 
-                <!-- Task 1-3 -->
-                <div onclick="openSubmissionModal('basic-03-task-3', '作業 1-3: 「類比掃描儀」：ADC 精度與底噪')"
+                <!-- Task 3-3 -->
+                <div onclick="openSubmissionModal('basic-03-pin-3', '【作業 3-3】類比掃描儀 (Signal Filtering)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-purple-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
                             <span class="text-4xl">📊</span>
-                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">45
-                                min</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">作業 1-3
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「類比掃描儀」：ADC 精度</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
-                            測試類比引腳讀取表現。觀察 12-bit 解析度下的數值跳動，並撰寫一段「平均濾波」程式碼來優化數據。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 3-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「ADC 精度與底噪濾波」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            觀察 12-bit 解析度下的電壓跳動量。撰寫「平均值濾波」程式碼來平滑採樣數據，提升感測穩定度。
                         </p>
-                    </div>
-                    <div
-                        class="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span
-                            class="bg-white text-purple-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">📤
-                            上傳程式碼單元</span>
                     </div>
                 </div>
             </div>
@@ -331,140 +292,14 @@
     <!-- Footer -->
     <footer class="bg-gray-800 py-12 border-t border-gray-700">
         <div class="container mx-auto px-4 text-center">
-            <p class="text-gray-500 text-sm mb-4">&copy; 2025 Vibe Coding. All rights reserved.</p>
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
-                <span>單元課程 基礎 3</span>
+                <span>課程單元 基礎 3 - I/O 硬體藍圖</span>
                 <span class="hidden md:inline">|</span>
                 <span>講師：Antigravity Assistant</span>
             </div>
         </div>
     </footer>
-
-    <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
-
-        <h3>作業 3-1：「數位探針」：驗證引腳限制</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 硬體測試工程師 (Hardware Test Engineer)。</li>
-            <li><strong>執行方式：</strong> 挑戰 Input Only 與 Strapping 引腳。實測將 GPIO 34 設為輸出是否有效？將 GPIO 12 接地重啟會發生什麼事？並記錄實驗結果。
-            </li>
-            <li><strong>評分重點 :</strong> 能正確識別哪些引腳具備輸出功能，並解釋 Strapping 引腳對開機模式的影響。</li>
-        </ul>
-
-        <h3>作業 3-2：「無人車引腳資源大規劃」</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 系統架構師 (System Architect)。</li>
-            <li><strong>執行方式：</strong> 針對馬達 (4 PWM)、編碼器 (2 中斷)、I2C 感測器，在 <code>README.md</code>
-                中繪製出最佳配置圖。避開地雷引腳，確保所有組件不衝突。</li>
-            <li><strong>評分重點 :</strong> 規劃的引腳分配合理，無功能衝突（如避開了 Wi-Fi 開啟時失效的 ADC2）。</li>
-        </ul>
-
-        <h3>作業 3-3：「類比掃描儀」：ADC 精度與底噪</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 訊號處理專家 (Signal Processing Specialist)。</li>
-            <li><strong>執行方式：</strong> 測試類比引腳讀取表現。觀察 12-bit 解析度下的數值跳動，並撰寫一段「平均濾波」程式碼來優化數據。</li>
-            <li><strong>評分重點 :</strong> 成功實作數據平滑邏輯，且讀值穩定性顯著提升。</li>
-        </ul>
-    </section>
-
-    <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>在 GitHub 建立新 Repo（名為 <code>basic-03-pinout-template</code>）。</li>
-                <li>上傳包含基礎 GPIO 框架但「引腳定義衝突 (例如使用 Strapping Pins)」的 Repo 框架。</li>
-                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
-                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，獲得個人專屬 Repo。</li>
-                <li>修正引腳衝突，實作 IO 初始化與基本的 LED 控制驗證。</li>
-                <li>本地開發後 <strong>Push 代碼</strong> 提交進度。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
-                <li>針對學生的「Strapping Pins 衝突排除思維」與「資源映射 (Mapping)」予以具體點評。</li>
-            </ol>
-        </div>
-
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元引導學生理解 ESP32 引腳的多樣性與物理限制（Strapping Pins）。</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── platformio.ini   # 包含基礎開發環境配置
-├── src/
-│   └── main.cpp      # (重點) 需定義引腳映射並避開啟動關鍵引腳
-└── README.md        # ESP32 Pinout 對照表、Strapping Pins 觀察日誌與實測報告</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>main.cpp (引腳定義與安全檢查)</strong></p>
-        <pre><code>#include &lt;Arduino.h&gt;
-
-// 理解為什麼 GPIO 34-39 只有 Input 功能
-#define SENSOR_PIN 34
-#define LED_PIN    2  // GPIO 2 在某些板子上與 Strapping 相關
-
-void setup() {
-  Serial.begin(115200);
-  pinMode(SENSOR_PIN, INPUT);
-  pinMode(LED_PIN, OUTPUT);
-}
-
-void loop() {
-  int state = digitalRead(SENSOR_PIN);
-  digitalWrite(LED_PIN, state);
-}</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>語法規則檢測：：</strong> 檢查程式中是否嘗試對 Input-only 引腳（如 GPIO 36）執行 <code>pinMode(..., OUTPUT)</code>。</li>
-            <li><strong>衝突風險檢查：：</strong> 掃描引腳宏定義，驗證是否誤用了會影響燒錄的 GPIO 引腳。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「ESP32 引腳地圖：為什麼有些腳位不能隨便接？」影片。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員掌握 GPIO
-                        與實體的對應關係。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業排除「一接電就重啟」的 GPIO 12 衝突案例。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>即時救助：</strong>協助辨識 Strapping Pins
-                        (GPIO 0, 2, 5, 12, 15)。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">繪製「引腳資源備忘錄」並提交至 PR。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核學生對「資源規劃」與「IO
-                        多工」的理解。</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
 
     <script>
         // Define Resources
@@ -474,6 +309,139 @@ void loop() {
         };
     </script>
     <script src="/js/course-shared-v4.js"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">引腳地圖與硬體資源實驗室</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：「數位探針」：驗證引腳限制 (Digital Probe: Pin Validation)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：硬體測試工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地開發環境。</li>
+                    <li><strong>Input Only 實測</strong>：編寫程式嘗試將 GPIO 34 設為 <code>OUTPUT</code> 並輸出高電位，使用 LED 驗證其失敗現象。</li>
+                    <li><strong>Strapping 重啟實驗</strong>：將 GPIO 12 接地後按下 Reset 鈕，觀察串口日誌輸出的 Flash 電壓 (MTDI) 錯誤。</li>
+                    <li><strong>結果記錄</strong>：在 README 中對比「正常啟動」與「引腳鎖定」的行為差異，並記錄各引腳的物理特性。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>功能辨識</strong>：能否正確識別 Input-only 引腳與通用 GPIO 的底層硬體差異？</li>
+                    <li>[ ] <strong>原理理解</strong>：是否能合理解釋 Strapping 引腳在系統「引導階段」的關鍵作用？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：「無人車引腳資源大規劃」 (Architecture: Pin Planning)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：系統架構師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>配置分析</strong>：針對雙馬達、編碼器與 I2C 感測器需求，繪製一份完整的引腳配置 Markdown 表格。</li>
+                    <li><strong>衝突解耦</strong>：確保規劃成功避開 Wi-Fi 開啟時會失效的 ADC2 區域。</li>
+                    <li><strong>代碼映射</strong>：在 <code>main.cpp</code> 中建立清楚的 <code>#define</code> 引腳映射，並包含技術備註。</li>
+                    <li><strong>文檔提交</strong>：將配置圖與理由 Push，展現出對系統資源分配的全局觀。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>分配邏輯</strong>：規劃的引腳分配是否具備良好的模組化（如通訊區與驅動區分離）？</li>
+                    <li>[ ] <strong>硬體適配性</strong>：是否成功避開了對燒錄或 Wi-Fi 功能有潛在干擾的敏感腳位？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：「類比掃描儀」：ADC 精度與底噪 (Signal: ADC Precision)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：訊號處理專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>雜訊採樣</strong>：在 12-bit 解析度下讀取 ADC 數據，觀察懸空狀態下的隨機跳動幅度。</li>
+                    <li><strong>濾波實作</strong>：撰寫「滑動平均濾波 (Moving Average)」邏輯，將連續採樣數據進行平滑處理。</li>
+                    <li><strong>效能分析</strong>：使用 Serial Plotter 繪製濾波前後對比曲線，證明數據穩定度有所提升。</li>
+                    <li><strong>最終 Commit</strong>：整理包含濾波演算法的專案碼並 Push，提交最終實驗報告。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>數據處理技巧</strong>：實作的平均濾波邏輯是否正確且有效降低了訊號抖動？</li>
+                    <li>[ ] <strong>採樣策略意識</strong>：是否理解在高頻控制場景中，採樣次數對系統反應時間 (Response Time) 的影響？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：在撰寫程式碼之前，先建立對「物理實體限制」的絕對敬畏與認識。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-indigo-600">Core 1：認識 Swiss Army Knife</strong> - 強調 ESP32 引腳的高度複用性，但也伴隨著配置上的複雜度。</li>
+                <li><strong class="text-indigo-600">Core 2：規避硬體地雷</strong> - 透過 Strapping Pins 實驗，讓學員體會到「僅僅是接錯一根線」就可能導致整個軟體系統無法引導。</li>
+                <li><strong class="text-indigo-600">Core 3：數據的物理性</strong> - 經由 ADC 雜訊實驗，引導學員理解實體世界與數位邏輯之間的「模糊地帶」與濾波必要性。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/main.cpp      # (重點) 提供 ADC 採樣框架，需學員補全濾波演算法
+├── include/pins.h    # 留空的引腳定義文件，讓學員自行規劃
+└── README.md         # 實驗日誌：包含 GPIO 12 衝突實驗紀錄與 ADC 波形截圖
+            </pre>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看「ESP32 Pinout 完全手冊：避開 34-39 引腳的陷阱」影片。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員是否能正確分辨 5V Vin 與 3.3V Out 的用途。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，動手測量 GPIO 34 的輸出限制與 ADC 的原始跳動值。</td>
+                        <td class="p-4 border-b"><strong>硬體顧問:</strong> 指導如何使用示波器或 Serial Plotter 觀察訊號細節。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">繪製專案專屬的「IO 資源地圖」並 Push，提交 PR 交流如何配置才能兼顧感測與驅動。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 點評學員對「資源解耦」與「地雷腳位避讓」的策略成熟度。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 </body>
 
 </html>

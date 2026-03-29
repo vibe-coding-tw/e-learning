@@ -9,14 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
-    <style>
-        .gradient-text {
-            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-    </style>
 </head>
 
 <body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
@@ -34,18 +26,18 @@
                 class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
                 進階 15 - 單元 4
             </span>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">影像處理與 <span class="text-cyan-400">DMA 觀念</span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">影像處理與<br><span class="text-cyan-400">DMA 觀念</span>
             </h1>
-            <p class="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto font-light leading-relaxed">
-                賦予 ESP32-S3 雙眼，利用 DMA 引擎驅動高速影像數據流，實現零延遲的邊緣視覺。
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                賦予 ESP32-S3 雙眼。利用 DMA 引擎驅動高速影像數據流，實現零延遲的邊緣視覺。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="window.courseShared.enterMediaMode('video', window.RESOURCES.youtube)"
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
                     class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📺</span> 觀看教學影片
                 </button>
-                <button onclick="window.courseShared.enterMediaMode('doc', window.RESOURCES.doc)"
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
                     <span>📄</span> 閱讀課程講義
                 </button>
@@ -56,222 +48,178 @@
     <!-- Main Content -->
     <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
-        <!-- Intro Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 px-4">
-            <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 hover:shadow-2xl transition-all">
-                <div
-                    class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6 font-bold text-xl">
-                    ⚡
-                </div>
-                <h3 class="text-xl font-bold mb-3 text-gray-900">為什麼需要 DMA？</h3>
-                <p class="text-gray-600 leading-relaxed">
-                    在高速影像傳輸中，CPU 不應浪費在搬運數據上。DMA (Direct Memory Access) 就像專業的搬運助手，自動完成數據流動，釋放處理核心的算力。
-                </p>
-            </div>
-            <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 hover:shadow-2xl transition-all">
-                <div
-                    class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center text-cyan-600 mb-6 font-bold text-xl">
-                    🎯
-                </div>
-                <h3 class="text-xl font-bold mb-3 text-gray-900">本單元重點</h3>
-                <ul class="space-y-2 text-gray-600 text-sm">
-                    <li class="flex items-center gap-2"><span>✅</span> 揭祕 DMA 的搬運機制與 CPU 優勢</li>
-                    <li class="flex items-center gap-2"><span>✅</span> 計算 RGB、YUV 與 JPEG 的頻寬消耗</li>
-                    <li class="flex items-center gap-2"><span>✅</span> 掌握 ESP32-S3 LCD_CAM 控制器組態</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Module 1: Why DMA? -->
+        <!-- Module 1: The Magic of DMA -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
-                <div class="p-8 md:p-12 text-gray-600">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                <div class="p-8 md:p-14">
                     <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">🚀</span> 1. 揭祕 DMA：高速數據流 (30 min)
+                        <span class="text-4xl text-blue-500">🚀</span> 1. 揭祕 DMA：硬體數據搬運助手
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
                         <div class="space-y-6">
-                            <h3 class="text-xl font-bold text-gray-800">核心概念：搬運助手的藝術</h3>
-                            <p class="text-base leading-relaxed">想像 CPU
-                                是「主廚」，搬運食材（數據傳輸）如果是主廚親自做，就沒時間做菜。<strong>DMA</strong> 就是搬運工，讓數據在記憶體與鏡頭間自動流動。</p>
-                            <div class="flex flex-col gap-4">
-                                <div class="bg-red-50 p-4 rounded-xl border border-red-100 text-sm">
-                                    <p class="font-bold text-red-800">輪詢 (Polling)</p>
-                                    <p class="text-red-700">CPU 不斷詢問「數據好了嗎？」，搬運時 CPU 無法做其他事。</p>
-                                </div>
-                                <div class="bg-green-50 p-4 rounded-xl border border-green-100 text-sm">
-                                    <p class="font-bold text-green-800">DMA 模式</p>
-                                    <p class="text-green-700">硬體自動搬運，完成後才發中斷通知 CPU。效率極大化。</p>
-                                </div>
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                CPU 不應浪費在搬運像素點上。DMA (Direct Memory Access) 就像專業的搬運助手，讓鏡頭數據自動流向記憶體，釋放極其珍貴的 CPU 算力。
+                            </p>
+                            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+                                <h4 class="font-bold text-blue-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed">System Architecture Advantages</h4>
+                                <ul class="text-[9px] text-slate-500 space-y-2 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1"></span> <div><strong>非阻塞傳輸</strong>：CPU 在傳輸過程中可同時運算避障邏輯。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1"></span> <div><strong>直接緩存 (PSRAM)</strong>：繞過繁忙的總線，直接進入外部大容量記憶體。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1"></span> <div><strong>中斷驅動</strong>：傳完一幀才通知 CPU，最大化效率。</div></li>
+                                </ul>
                             </div>
                         </div>
-                        <div
-                            class="bg-gray-100 p-8 rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-4">
-                            <div class="bg-blue-600 text-white p-4 rounded-lg w-full text-center font-bold">CPU Core
-                            </div>
-                            <div class="w-1 h-8 bg-gray-300"></div>
-                            <div class="bg-amber-500 text-white p-4 rounded-lg w-full text-center font-bold shadow-lg">
-                                GDMA Controller</div>
-                            <div class="w-1 h-8 bg-gray-300"></div>
-                            <div class="flex gap-4 w-full">
-                                <div
-                                    class="flex-1 bg-cyan-600 text-white p-4 rounded text-center text-xs font-bold uppercase tracking-wider">
-                                    Camera</div>
-                                <div
-                                    class="flex-1 bg-indigo-600 text-white p-4 rounded text-center text-xs font-bold uppercase tracking-wider">
-                                    PSRAM</div>
-                            </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors"></div>
+                           <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10">DMA Data Flow</h4>
+                           <div class="relative z-10 flex flex-col items-center gap-4">
+                               <div class="flex items-center gap-6">
+                                   <div class="p-3 border border-slate-700 rounded text-[9px]">Sensor Data</div>
+                                   <div class="text-blue-500 font-bold animate-pulse">>>>></div>
+                                   <div class="p-3 border border-indigo-500/50 bg-indigo-500/10 rounded text-[9px] text-indigo-400">DMA Controller</div>
+                                   <div class="text-blue-500 font-bold animate-pulse">>>>></div>
+                                   <div class="p-3 border border-slate-700 rounded text-[9px]">PSRAM</div>
+                               </div>
+                               <div class="text-[8px] text-slate-600 font-mono mt-4">"CPU ZERO INTERVENTION"</div>
+                           </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Module 2: Image Formats -->
+        <!-- Module 2: Throughput & JPEG -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
-                <div class="p-8 md:p-12 text-gray-600">
+                <div class="p-8 md:p-14">
                     <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">🎞️</span> 2. 影像格式：RGB vs. JPEG (30 min)
+                        <span class="text-4xl text-cyan-500">🎞️</span> 2. 頻寬戰爭：RGB vs. JPEG
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-                        <div class="p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                            <h3 class="font-bold text-gray-800 mb-4">數據量計算：頻寬戰爭</h3>
-                            <div class="bg-gray-900 p-6 rounded-xl font-mono text-sm text-cyan-400 mb-4">
-                                <p>// RGB565 (16-bit)</p>
-                                <p>320x240 x 2B = 153.6 KB / 幀</p>
-                                <p class="mt-3">// 30 FPS Stream</p>
-                                <p>153.6KB x 30 = 4.6 MB/s</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                影像數據是通訊的巨獸。了解為什麼 RGB 不能用於遠程串流，而硬體加速的 JPEG 卻能實現 30 FPS 的流暢視覺效果。
+                            </p>
+                            <div class="bg-cyan-50 p-8 rounded-3xl border border-cyan-100 text-center">
+                                <h4 class="text-cyan-900 font-bold mb-4 text-xs uppercase tracking-widest">Bandwidth Comparison</h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="p-4 bg-white rounded-xl shadow-sm text-[9px]"><span class="block font-bold text-slate-500 mb-1">RGB565</span> 4.6 MB/s</div>
+                                    <div class="p-4 bg-cyan-600 text-white rounded-xl shadow-lg text-[9px]"><span class="block font-bold text-cyan-200 mb-1">M-JPEG</span> 250 KB/s</div>
+                                </div>
+                                <p class="text-[10px] text-slate-400 mt-4 italic font-light">高達 20:1 的壓縮比，實現穩定連線</p>
                             </div>
-                            <p class="text-xs text-gray-400 italic">在 320x240 下就有 36.8 Mbps！如果是 720P WiFi 將崩潰。</p>
                         </div>
-                        <div
-                            class="p-6 bg-indigo-900 rounded-2xl shadow-xl relative overflow-hidden flex flex-col justify-center">
-                            <h3 class="font-bold text-cyan-300 text-xl mb-4">JPEG 解救任務</h3>
-                            <p class="text-blue-100 mb-6 text-sm">S3 搭載硬體 JPEG 編碼器，壓縮率可達 10:1 至 20:1，是網路串流的首選。</p>
-                            <ul class="text-xs text-blue-200 space-y-2">
-                                <li class="flex gap-2"><span>🔹</span> RGB565：適合循線等局部運算</li>
-                                <li class="flex gap-2"><span>🔹</span> JPEG：串流王者，具硬體加速</li>
-                            </ul>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-cyan-500/5"></div>
+                           <h4 class="text-cyan-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10">Stream Analytics Performance</h4>
+                           <div class="w-full space-y-4 px-10 relative z-10">
+                               <div class="flex justify-between text-[8px] text-slate-400"><span>Frame Rate</span> <span>32 FPS</span></div>
+                               <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden"><div class="bg-cyan-500 h-full w-[95%]"></div></div>
+                               <div class="flex justify-between text-[8px] text-slate-400"><span>Buffer Usage</span> <span>12%</span></div>
+                               <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden"><div class="bg-green-500 h-full w-[12%]"></div></div>
+                           </div>
+                           <p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest uppercase text-center">Hardware Accelerated Encoding</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Module 3: LCD_CAM & PSRAM -->
+        <!-- Module 3: Double Buffering & Tearing -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-                <div class="p-8 md:p-12 text-gray-600">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">📼</span> 3. LCD_CAM 與 PSRAM (20 min)
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-cyan-400">
+                        <span class="p-2 bg-cyan-500/20 rounded-lg text-cyan-400 text-2xl">📼</span> 3. 雙緩衝機制：消滅影像撕裂
                     </h2>
-                    <div class="flex flex-col md:flex-row gap-8">
-                        <div class="flex-1 space-y-4">
-                            <h3 class="font-bold text-gray-800">外部緩衝的角色</h3>
-                            <p class="text-sm">SRAM 只有 512KB，裝不下 720P 影像。DMA 將攝像頭數據直接傾倒進 PSRAM 中，過程完全自動化。</p>
-                            <div class="bg-emerald-50 p-4 rounded-xl border-l-4 border-emerald-500 text-xs">
-                                <strong>Grab Mode:</strong> CAMERA_GRAB_LATEST 確保每次取得都是最新影幀，降低處理延遲。
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                完美並行的工業標準。當 DMA 正在填入 Buffer A 時，WiFi 任務同時發送 Buffer B。透過輪替機制，徹底消滅影像斷層（撕裂）現象。
+                            </p>
+                            <div class="bg-cyan-500/10 p-8 rounded-3xl border border-cyan-500/20 shadow-inner">
+                                <h4 class="font-bold text-cyan-400 mb-4 text-xs uppercase tracking-widest text-center">Industrial Sync Rules</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1"></span><div><strong class="text-white">FB_COUNT = 2</strong>：配置兩個框緩衝區。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1"></span><div><strong class="text-white">GRAB_LATEST</strong>：自動丟棄過期影幀，減少顯示延遲。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1"></span><div><strong class="text-white">中斷回呼</strong>：確保在 Buffer 切換的瞬間不發生讀寫競爭。</div></li>
+                                </ul>
                             </div>
                         </div>
-                        <div
-                            class="flex-1 bg-gray-900 p-6 rounded-2xl font-mono text-xs text-cyan-500 flex flex-col justify-center">
-                            <p>// S3 CAM Buffer Config</p>
-                            <p class="mt-2 text-gray-400">config.fb_count = 2;</p>
-                            <p class="text-white">config.fb_location = <span
-                                    class="text-emerald-400">CAMERA_FB_IN_PSRAM</span>;</p>
-                            <p class="text-gray-400">config.grab_mode = CAMERA_GRAB_LATEST;</p>
+                        <div class="lg:w-80 bg-cyan-600/10 p-10 rounded-3xl border border-cyan-500/20 text-center relative overflow-hidden group">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-cyan-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-cyan-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center">Sync Matrix</h4>
+                           <div class="flex justify-center gap-4">
+                               <div class="p-3 border border-emerald-500 rounded text-emerald-400 text-[10px] animate-pulse">BUFA: WRITING</div>
+                               <div class="p-3 border border-blue-500 rounded text-blue-400 text-[10px]">BUFB: READING</div>
+                           </div>
+                           <p class="text-[11px] text-slate-500 mt-8 leading-relaxed font-light italic text-center">
+                               "將軟硬體協同優化到極致。"
+                           </p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Assignment Highlights -->
+        <!-- Homework Section -->
         <section class="module-section">
-            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-                        <div>
-                            <h2
-                                class="text-3xl font-bold text-white mb-2 underline decoration-indigo-500 underline-offset-8">
-                                實作任務：邊緣視覺</h2>
-                            <p class="text-slate-400">驅動 S3 影像引擎，實現數據流的高速擷取與分析。</p>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：邊緣視覺</h2>
+            <p class="text-center text-gray-500 mb-12">驅動 S3 影像引擎，實現數據流的高速擷取與分析。讓你的無人車具備清晰且快速的「數位雙眼」。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 15-1 -->
+                <div onclick="openSubmissionModal('adv-15-dma-capture', '【作業 15-1】「零延遲」影像擷取測試 (Zero-Latency Image Capture)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform">📸</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 15-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「硬體加速擷取」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            配置 S3 LCD_CAM 的 DMA 描述符，並實作 PSRAM 緩衝對齊。測量「拍照」到「首像素解析」的完整延遲，證明 CPU 在傳輸時的零負擔。
+                        </p>
                     </div>
+                </div>
 
-                    <div class="grid md:grid-cols-2 gap-8 mb-12">
-                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
-                            <div class="flex items-center gap-4 mb-6">
-                                <div
-                                    class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-2xl">
-                                    📡</div>
-                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
-                            </div>
-                            <p class="mb-4 text-slate-400">完成任務後，請將數據與結果推送到你的專屬倉庫。</p>
-                            <ul class="space-y-3 text-slate-300">
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">1</span>
-                                    <span>接受 GitHub Classroom 邀請並 Clone 倉庫</span>
-                                </li>
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">2</span>
-                                    <span>完成代碼後執行 <code
-                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code></span>
-                                </li>
-                                <li class="flex items-center gap-3">
-                                    <span
-                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-bold">3</span>
-                                    <span>在 PR 中查看自動化評分與教師回饋</span>
-                                </li>
-                            </ul>
+                <!-- Task 15-2 -->
+                <div onclick="openSubmissionModal('adv-15-stream-analyzer', '【作業 15-2】影像數據流分析儀 (Stream Analytics Dashboard)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-cyan-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-cyan-500 group-hover:rotate-12 transition-transform">📊</span>
+                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition">【作業 15-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「串流指標監測」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            在前端解構 JPEG 標頭，即時顯示 FPS、傳輸速率 (Mbps) 與品質係數 (QF)。對比不同壓縮品質對控制穩定度的影響。
+                        </p>
+                    </div>
+                </div>
 
-                        <div class="grid gap-4">
-                            <!-- Task 4-1 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-15-dma-capture', '【作業 4-1】「零延遲」影像擷取測試')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-indigo-600 transition">
-                                        作業 4-1</h3>
-                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">「零延遲」影像擷取測試</h4>
-                                <p class="text-sm text-gray-500">配置 S3 DMA 模式驅動攝像頭，並實作雙緩衝機制以釋放 CPU 負擔。</p>
-                            </div>
-
-                            <!-- Task 4-2 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-15-stream-analyzer', '【作業 4-2】影像數據流分析儀')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition">作業
-                                        4-2</h3>
-                                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">影像數據流分析儀</h4>
-                                <p class="text-sm text-gray-500">在控制網頁實作接收解析器，即時監測 JPEG 數據流的 FPS 與傳輸延遲。</p>
-                            </div>
-
-                            <!-- Task 4-3 -->
-                            <div onclick="window.courseShared.openSubmissionModal('adv-15-pixel-filter', '【作業 4-3】簡易影像濾鏡處理')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-cyan-600 transition">作業
-                                        4-3</h3>
-                                    <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold">45
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">簡易影像濾鏡處理</h4>
-                                <p class="text-sm text-gray-500">實作二值化與局部裁切傳輸，觀察數據量優化對系統穩定性的影響。</p>
-                            </div>
+                <!-- Task 15-3 -->
+                <div onclick="openSubmissionModal('adv-15-double-buffer', '【作業 15-3】雙緩衝區 (Double Buffering) 優化實作 (Firmware Optimization)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-indigo-500 group-hover:translate-x-1 transition-transform">⚡</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 15-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「消滅撕裂優化」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            修改驅動實作 <code>fb_count = 2</code> 的輪替機制。實現 DMA 填入與網頁讀取的完美並行，消滅影像斷層並提升 20% 以上的幀率。
+                        </p>
                     </div>
                 </div>
             </div>
@@ -280,167 +228,158 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 py-12 border-t border-gray-700 mt-auto">
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
         <div class="container mx-auto px-4 text-center">
-            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
-                <span>進階課程 15 - 單元 4</span>
+                <span>單元課程 進階 15 - 影像 DMA</span>
                 <span class="hidden md:inline">|</span>
                 <span>講師：Antigravity Assistant</span>
             </div>
         </div>
     </footer>
 
-    <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
-
-        <h3>作業 3-1：「零延遲」影像捕獲測試</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 嵌入式影像工程師。</li>
-            <li><strong>執行方式：</strong> 設定 ESP32-S3 的 LCD_CAM 介面，開啟 DMA 傳輸，並在網頁端測量從「快門觸發」到「首個 Byte 到達」的時間。</li>
-            <li><strong>評分重點：</strong> 能否成功將影像直接搬運至 PSRAM 而不佔用 CPU 週期，並證明影像數據的完整性（無斷層）。</li>
-        </ul>
-
-        <h3>作業 3-2：影像數據流分析儀</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 訊號處理專家。</li>
-            <li><strong>執行方式：</strong> 分析傳輸過程中的 JPEG 標頭檔，計算單張圖片的平均壓縮率與傳輸帶寬佔用。</li>
-            <li><strong>評分重點：</strong> 提交一份「影像質量 vs 帶寬」的對照表，找出在維持辨識穩定度下的最低品質係數 (Quality Factor)。</li>
-        </ul>
-
-        <h3>作業 3-3：雙緩衝區 (Double Buffering) 優化實作</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 驅動程式開發人員。</li>
-            <li><strong>執行方式：</strong> 修改底層驅動，實作輪替 Buffer 機制，讓 DMA 在傳輸 Buffer A 的同時，CPU 正在處理 Buffer B。</li>
-            <li><strong>評分重點：</strong> 對比優化前後的 Frame Rate (FPS)，驗證是否存在影像撕裂 (Tearing) 現象。</li>
-        </ul>
-    </section>
-
-    <!-- Instructor Guide (Hidden) -->
-    <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        A. 範本倉庫 (Template Repo) 結構
-                    </h4>
-                    <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
-.
-├── src/
-│   ├── dma_config.h        # 核心：DMA 描述符配置
-│   └── camera_driver.cpp   # 驅動：待實作雙緩衝邏輯
-├── platformio.ini          # 硬體環境
-└── docs/
-    └── latency_report.md   # 報告：延遲與 CPU 分析</pre>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        B. 自動評估 (Autograding) 的設計
-                    </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">⚡</span>
-                            <p class="text-sm text-gray-700"><strong>性能檢核 (FPS)：</strong> 驗證雙緩衝機制是否有效釋放 CPU 並達到預期幀率。</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🔍</span>
-                            <p class="text-sm text-gray-700"><strong>記憶體一致性：</strong> 監視 PSRAM 分配，確保數據無誤且無撕裂現象。</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">上傳相機驅動與 DMA 專案。描述雙緩衝概念與時序。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供延遲測試腳本。引導學員紀錄品質與穩定性數據。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，執行測試與優化。提交包含 FPS 增益分析的 PR。執行 Git Push。
-                    </p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對快取一致性與邏輯點評，點評影像撕裂解決方案。</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
-            </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
-                        <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">觀看 DMA 與 CPU 並行處理影片，思考如何在高幀率傳輸下減輕負擔。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「硬體加速」導讀。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，執行延遲極限挑戰，實作雙緩衝機制。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，分享修復方案，引發驅動優化興趣。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">完成配置與優化並 Push，閱讀回覆 PR 以最佳化中斷處理。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，引導學員理解 DMA 在高階 SoC 中的角色。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-
     <script>
+        // Define Resources
         window.RESOURCES = {
             youtube: "https://www.youtube.com/embed/Jq_JxUEKepA",
             doc: "https://docs.google.com/document/d/e/2PACX-1vRWhh757o8_dO1V32Yan6X_lV3dhXH6QVithXfL-gvgsRRvn2nE24L4cAe_v2MJWbc6Xhl0L4q60AfE/pub?embedded=true"
         };
     </script>
     <script src="/js/course-shared-v4.js"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">視覺實驗室：DMA 搬運與雙緩衝優化</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：「零延遲」影像擷取測試 (Zero-Latency Image Capture)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：嵌入式影像工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>DMA 控制器配製</strong>：開啟用於 LCD_CAM 的 GDMA 引擎。指定 descriptors 以處理高速像素搬運。</li>
+                    <li><strong>PSRAM 邊界對齊</strong>：配置 <code>config.fb_location = CAMERA_FB_IN_PSRAM</code>。驗證大規模數據塊是否能正確避開內部 SRAM。</li>
+                    <li><strong>性能量測</strong>：在 README 中記錄從發送「Snap」指令到前端顯示第一幀的毫秒值。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>搬運效能</strong>：影像傳輸期間，是否有成功釋放 CPU？（透過監測同步執行的 PID 控制任務有無掉幀來判斷）。</li>
+                    <li>[ ] <strong>像素完整性</strong>：影像邊緣是否出現因 PSRAM 存取衝突導致的「綠色斷條」？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：影像數據流分析儀 (Stream Analytics Dashboard)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：訊號處理專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>JPEG 二進制解析</strong>：在 javascript 中掃描 <code>ffd8</code> (Start of Image) 與 <code>ffc4</code> 等標記位，動態讀取 Quality Factor。</li>
+                    <li><strong>傳輸帶寬分析</strong>：實作一個滑動窗口演算法，每秒計算一次接收到的 byte 總量，換算為 Mbps 指標。</li>
+                    <li><strong>品質平衡實驗</strong>：對比 QF=20 (模糊但快) 與 QF=90 (清晰但慢) 下的 RTT 延遲。</li>
+                    <li><strong>分析匯報</strong>：在 PR 描述中提交你的延遲-品質關係圖。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>監測即時性</strong>：Dashboard 顯示的 FPS 是否能精確反映網絡抖動？</li>
+                    <li>[ ] <strong>優化決策力</strong>：提案中的「最佳 QF 配置」是否具備數據支撐且兼顧了辨識效果與頻寬限制？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：雙緩衝區 (Double Buffering) 優化實作 (Firmware Optimization)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：驅動程式開發人員</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>緩衝輪替實作</strong>：修改固件配製 <code>fb_count = 2</code>。實作 <code>camera_fb_get</code> 與 <code>camera_fb_return</code> 的正確順序。</li>
+                    <li><strong>並行化驗證</strong>：確保在 DMA 寫入 Buffer A 的同時，WiFi 任務正在發送 Buffer B。</li>
+                    <li><strong>消滅撕裂 (Tearing)</strong>：測試在快速移動鏡頭時，影像是否已經消滅了因讀寫競爭產生的斷層現象。</li>
+                    <li><strong>提交 PR</strong>：發起變更請求，展現提升 20% 以上幀率的高效驅動架構。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>架構優雅度</strong>：緩衝區的切換邏輯是否清晰？是否有效解決了潛在的 Race Condition？</li>
+                    <li>[ ] <strong>幀率增益</strong>：對比單緩衝區，實測 FPS 是否有達成 20% 的線性提升？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：掌握 SoC 層級的硬體加速。讓學員學會利用 DMA 與雙緩衝區，在資源極度受限的 ESP32 上實現「專業級」影像處理效能。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-cyan-600">重點 1：CPU 的解放</strong> - 強調 DMA 不是把 CPU 變快，而是讓它「不用做雜事」。這是邊緣計算的設計哲學。</li>
+                <li><strong class="text-cyan-600">重點 2：記憶體架構觀感</strong> - 深入 SRAM 與 PSRAM 的差異。讓學員體悟到大數據必須擺在外部緩衝的工程必要性。</li>
+                <li><strong class="text-cyan-600">重點 3：消滅隨機性</strong> - 雙緩衝區是為了消滅影像撕裂與傳輸不穩定性。這是高品質串流產品的標配。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-cyan-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/camera_adapter.cpp # 核心：待優化的鏡頭驅動適配器
+├── public/stream_viewer/  # 前端：具備 JPEG 解析能力的監測器
+└── docs/HardwareSync.md   # 紀錄雙緩衝測試與撕裂修復日誌
+            </pre>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看「DMA 搬運工與 PSRAM 的奧秘」影片。預習 JPEG 硬體編碼器的基礎參數。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員能否算出 320x240 RGB565 影像在無壓縮下的頻寬壓力。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，執行「雙緩衝」優化實驗。捕捉並分析影像撕裂現象，實施鎖定修復。</td>
+                        <td class="p-4 border-b"><strong>影像顧問:</strong> 協助學員解讀「綠條紋」報錯，引導小組討論如何在 QF 品質與流暢度間取得黃金平衡。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">將優化後的驅動與性能監測文檔推送至 GitHub。閱讀並比較同學對於 PSRAM 存取衝突的解決方案。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 點評對「競爭條件」的處理深度，表揚影像穩定度最高且 FPS 提升最顯著的「視覺專家」範例。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 </body>
 
 </html>

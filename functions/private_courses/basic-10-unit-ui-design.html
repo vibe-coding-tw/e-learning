@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
 <body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
@@ -24,13 +26,13 @@
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
                 class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
-                基礎 10 - 單元 2
+                基礎 10 - 使用者介面
             </span>
             <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
                 網頁端<span class="text-blue-400">模式控制</span><br>介面設計與安全實務
             </h1>
             <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
-                設計一個直覺、零失誤且與硬體同步的戰術控制面板。
+                設計一個直覺、零失誤且與硬體狀態「絕對同步」的戰術控制面板。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
@@ -49,135 +51,108 @@
     <!-- Main Content -->
     <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
-        <!-- Module 1: UI Logic -->
+        <!-- Module 1: UX Patterns -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
-                        <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <span class="text-4xl">🖱️</span> 1. 模式切換的 UI 邏輯 (30 min)
-                            </h2>
-                            <div class="space-y-6 text-gray-600 text-lg">
-                                <p><strong>控制組件選擇：</strong>介面的直覺性來自於選擇正確的控制項。</p>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 shadow-sm">
-                                        <h4 class="font-bold text-blue-800 mb-2">Segmented Control</h4>
-                                        <p class="text-sm">適合 2-3 個互斥模式（如：手控 / 自動）。所有選項攤開，當前選中項高亮。</p>
-                                    </div>
-                                    <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 shadow-sm">
-                                        <h4 class="font-bold text-indigo-800 mb-2">Toggle Switch</h4>
-                                        <p class="text-sm">適合單一功能的開啟/關閉（如：避障功能 ON/OFF）。直觀模擬物理開關。</p>
-                                    </div>
-                                </div>
-
-                                <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                                    <h4 class="font-bold text-gray-800 mb-4">視覺層級 (Visual Hierarchy)</h4>
-                                    <ul class="list-disc list-inside space-y-2 text-sm">
-                                        <li><strong>顏色語義：</strong>紅色代表「緊急/停止」、藍色代表「手控模式」、綠色代表「全自動」。</li>
-                                        <li><strong>狀態顯眼化：</strong>當前模式應有明顯的背景色或陰影（.active 類別的視覺呈現）。</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Module 2: Responsive & Touch Safety -->
-        <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-teal-500 to-emerald-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl">📱</span> 2. 響應式佈局與防誤觸 (30 min)
-                    </h2>
-                    <div class="space-y-6 text-gray-600 text-lg">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div>
-                                <h4 class="font-bold text-teal-800 mb-3">CSS Flexbox/Grid</h4>
-                                <p class="text-base leading-relaxed">
-                                    確保按鈕在不同尺寸的手機上都能輕鬆被大拇指點擊。使用 <code>min-height: 44px</code> 或更大的觸控熱區。
-                                </p>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-emerald-800 mb-3">防誤觸設計</h4>
-                                <p class="text-base leading-relaxed">
-                                    模式切換按鈕不應緊貼著「前進/後退」搖桿，避免操作時誤觸導致模式突變，造成安全隠憂。
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-200">
-                            <h4 class="font-bold text-emerald-800 mb-2 flex items-center gap-2">
-                                <span>💡</span> 實務技巧
-                            </h4>
-                            <p class="text-base text-emerald-900">
-                                在自動駕駛模式下，應將手動控制項（如搖桿）變為「禁用狀態」或降低透明度，讓使用者明確知道目前操作權已交給系統。
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Module 3: Data Binding -->
-        <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
-                <div class="p-8 md:p-12">
+                <div class="p-8 md:p-14">
                     <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">🔄</span> 3. 預習：資料雙向綁定 (20 min)
+                        <span class="text-4xl text-blue-500">🖱️</span> 1. 模式切換的 UI 邏輯
                     </h2>
-                    <div class="space-y-6 text-gray-600 text-lg">
-                        <p><strong>核心概念：</strong>硬體狀態與網頁介面必須始終如一。</p>
-
-                        <div class="bg-amber-50 p-6 rounded-2xl border border-amber-200">
-                            <h4 class="font-bold text-amber-800 mb-4">狀態自動校正邏輯</h4>
-                            <p class="text-base mb-4">
-                                當車子因為感測器故障「自動切回待機」時，網頁上的按鈕也要透過 <strong>WebSocket/BLE Notify</strong> 跟著變動，而非只是單向發送指令。
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                控制組件的選擇決定了介面的直覺程度。我們需要明確區分「互斥模式」與「功能開關」。
                             </p>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="bg-white p-4 rounded-lg shadow-sm border border-amber-100 text-sm">
-                                    <span class="font-bold text-amber-700">關鍵概念：</span><br>
-                                    單選按鈕 (Radio Buttons) 與切換開關 (Toggle Switch) 的前端實作。
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-sm">
+                                    <h4 class="font-bold text-blue-800 mb-1 text-[10px] uppercase tracking-widest">Segmented Control</h4>
+                                    <p class="text-[9px] text-slate-500">適合互斥模式。如：手控 vs. 自動。當前選中項必須具備高對比高亮。</p>
                                 </div>
-                                <div class="bg-white p-4 rounded-lg shadow-sm border border-amber-100 text-sm">
-                                    <span class="font-bold text-amber-700">學習核心：</span><br>
-                                    使用 JavaScript 的 fetch() 或 WebSocket 發送「模式切換」指令給 ESP32。
+                                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 shadow-sm">
+                                    <h4 class="font-bold text-indigo-800 mb-1 text-[10px] uppercase tracking-widest">Toggle Switch</h4>
+                                    <p class="text-[9px] text-slate-500">適合單項功能的啟用。如：避障功能 ON/OFF。直覺且省空間。</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="bg-slate-900 p-8 rounded-2xl text-white font-mono text-sm overflow-x-auto">
-                            <div class="text-gray-500 mb-2">// JavaScript 狀態同步範例</div>
-                            <div>
-                                <span class="text-purple-400">function</span> <span
-                                    class="text-yellow-400">updateUI</span>(hardwareMode) {<br>
-                                &nbsp;&nbsp;<span class="text-gray-400">// 移除所有模式的 active 類別</span><br>
-                                &nbsp;&nbsp;document.<span class="text-yellow-400">querySelectorAll</span>(<span
-                                    class="text-green-400">'.mode-btn'</span>).<span
-                                    class="text-yellow-400">forEach</span>(btn => btn.classList.<span
-                                    class="text-yellow-400">remove</span>(<span
-                                    class="text-green-400">'active'</span>));<br><br>
-                                &nbsp;&nbsp;<span class="text-gray-400">// 根據硬體回傳值設定對應按鈕</span><br>
-                                &nbsp;&nbsp;<span class="text-purple-400">const</span> targetBtn = document.<span
-                                    class="text-yellow-400">getElementById</span>(<span
-                                    class="text-green-400">`btn-${hardwareMode}`</span>);<br>
-                                &nbsp;&nbsp;<span class="text-purple-400">if</span> (targetBtn) {<br>
-                                &nbsp;&nbsp;&nbsp;&nbsp;targetBtn.classList.<span
-                                    class="text-yellow-400">add</span>(<span
-                                    class="text-green-400">'active'</span>);<br>
-                                &nbsp;&nbsp;&nbsp;&nbsp;document.body.style.backgroundColor = (hardwareMode === <span
-                                    class="text-green-400">'AUTO'</span>) ? <span
-                                    class="text-green-400">'#f0fdf4'</span> : <span
-                                    class="text-green-400">'#f8fafc'</span>;<br>
-                                &nbsp;&nbsp;}<br>
-                                }
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center">
+                            <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest">Visual Feedback States</h4>
+                            <div class="flex items-center justify-around gap-2">
+                                <div class="px-6 py-2 rounded-full border border-slate-700 text-[10px] text-slate-500">Manual</div>
+                                <div class="text-blue-500 scale-150">↔</div>
+                                <div class="px-6 py-2 rounded-full bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.5)] text-[10px] font-bold">Auto-Pilot</div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Touch Safety -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-teal-500 to-emerald-500"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-teal-500">📱</span> 2. 響應式佈局與觸控安全
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                機器人介面需要在晃動的手機上操作，按鈕必須夠大。同時在自動駕駛時，必須隔離手動搖桿防止誤觸。
+                            </p>
+                            <div class="bg-emerald-50 p-8 rounded-3xl border border-emerald-100">
+                                <h4 class="text-emerald-900 font-bold mb-4 text-xs uppercase tracking-widest">Safety Guidelines</h4>
+                                <ul class="text-[10px] text-emerald-700 space-y-2 font-medium">
+                                    <li>❌ 避免在搖桿附近放置關鍵切換鈕。</li>
+                                    <li>✅ 自動模式下，將搖桿設為 <code>pointer-events: none</code>。</li>
+                                    <li>✅ 按鈕最小觸控尺寸需大於 48dp x 48dp。</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-10 shadow-2xl border border-slate-700 text-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent"></div>
+                           <h4 class="text-emerald-400 font-bold mb-4 text-[10px] uppercase tracking-widest">UX Engineering</h4>
+                           <p class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic">
+                               "介面的權限隔離設計，是軟體層級對物理安全的第一道防禦。"
+                           </p>
+                           <div class="inline-block px-8 py-3 border border-emerald-500 text-emerald-500 rounded-xl font-bold text-[10px] hover:bg-emerald-500 hover:text-white transition-all shadow-lg">Authority Shield: Active</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Sync & Feedback -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-amber-400">
+                        <span class="p-2 bg-amber-500/20 rounded-lg text-amber-400 text-2xl">🚨</span> 3. 雙向同步與 E-Stop 警報
+                    </h2>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                介面必須反映硬體的真實物理狀態。E-Stop 按鈕應整合視覺與觸覺 (Haptic) 回饋，確保高度注意力鎖定。
+                            </p>
+                            <div class="bg-amber-500/10 p-8 rounded-3xl border border-amber-500/20 shadow-inner">
+                                <h4 class="font-bold text-amber-400 mb-4 text-xs uppercase tracking-widest">Haptic & Vision</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-amber-500 rounded-full mt-1"></span><div><strong class="text-white">狀態自動校正</strong>：若硬體自動退出某模式，網頁按鈕必須同步自動跳回，徹底消除假象。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-amber-500 rounded-full mt-1"></span><div><strong class="text-white">紅色遮罩 (Red Overlay)</strong>：最高優先權全螢幕覆蓋，強制阻止所有非安全操作。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-amber-500 rounded-full mt-1"></span><div><strong class="text-white">震動 API</strong>：利用 <code>navigator.vibrate()</code> 在緊急事件發生時提供物理脈衝警告。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="lg:w-96 text-center">
+                            <div onclick="navigator.vibrate && navigator.vibrate([100, 30, 200])" class="w-48 h-48 rounded-full border-8 border-red-500/20 p-2 mx-auto cursor-pointer group active:scale-95 transition-all">
+                                <div class="w-full h-full rounded-full bg-red-600 flex items-center justify-center font-bold text-white shadow-[0_0_30px_rgba(220,38,38,0.5)] group-hover:bg-red-500">
+                                   E-STOP
+                                </div>
+                            </div>
+                            <p class="text-[9px] text-slate-500 mt-6 uppercase tracking-widest font-bold font-mono">Simulate Haptic Alert</p>
                         </div>
                     </div>
                 </div>
@@ -187,75 +162,57 @@
         <!-- Homework Section -->
         <section class="module-section">
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：設計「零失誤」戰術面板</h2>
-            <p class="text-center text-gray-500 mb-12">透過 UI/UX 上的巧思，讓使用者在操作複雜機器時也能得心應手。</p>
+            <p class="text-center text-gray-500 mb-12">透過 UI/UX 上的極致細覺與安全考量，讓遠端操控變得精準且優雅。</p>
 
             <div class="grid md:grid-cols-3 gap-6">
-                <!-- Task 2-1 -->
-                <div onclick="openSubmissionModal('basic-10-ui-tactical', '【作業 2-1】「戰術面板」：CSS 狀態切換實作')"
+                <!-- Task 10-1 -->
+                <div onclick="openSubmissionModal('basic-10-ui-1', '【作業 10-1】戰術面板：CSS 狀態切換實作 (Tactical Panel & Authority)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-blue-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🎨</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform">🎨</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 2-1】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「戰術面板」：CSS 狀態切換</h4>
-                        <div class="text-sm text-gray-600 space-y-2">
-                            <ul class="list-disc list-inside space-y-1">
-                                <li><strong>三模面板：</strong>設計 Manual、Auto-Pilot、Eco-Mode 選項。</li>
-                                <li><strong>動態樣式：</strong>利用 JS 切換 CSS 類別（例如 .active），讓按鈕發光或變色。</li>
-                                <li><strong>UI 鎖定：</strong>當切換至 Auto-Pilot 時，虛擬搖桿應變為「半透明」且「無法觸控」。</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 10-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「戰術狀態選單」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            設計 Manual 與 Auto-Pilot 模式切換。實作高亮 CSS 類別，並在自動駕駛模式下鎖死手動搖桿區域。
+                        </p>
                     </div>
                 </div>
 
-                <!-- Task 2-2 -->
-                <div onclick="openSubmissionModal('basic-10-ui-sync', '【作業 2-2】雙向狀態同步 (WebSocket/BLE 回傳)')"
+                <!-- Task 10-2 -->
+                <div onclick="openSubmissionModal('basic-10-ui-2', '【作業 10-2】雙向狀態同步與校正 (Bi-directional State Sync)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-orange-500 h-2"></div>
+                    <div class="bg-emerald-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🔄</span>
-                            <span class="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded font-bold uppercase">60
-                                min</span>
+                            <span class="text-4xl text-emerald-500 group-hover:rotate-12 transition-transform">🔄</span>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-orange-600 transition">【作業 2-2】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">雙向狀態同步 (WebSocket/BLE)</h4>
-                        <div class="text-sm text-gray-600 space-y-2">
-                            <ul class="list-disc list-inside space-y-1">
-                                <li><strong>心跳同步：</strong>每秒從 ESP32 發送一次當前 FSM 狀態給網頁。</li>
-                                <li><strong>自動校正：</strong>如果收到的狀態與網頁顯示不符，網頁應自動修正外觀。</li>
-                                <li><strong>安全隱憂：</strong>解決「網頁顯示手動，但機器正在自動」的不一致危險。</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業 10-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「物理真值同步器」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            監聽硬體狀態心跳。實作面板自動校準邏輯，確保介面上的選取按鈕永遠對齊實體端的目前運行模式。
+                        </p>
                     </div>
                 </div>
 
-                <!-- Task 2-3 -->
-                <div onclick="openSubmissionModal('basic-10-ui-emergency', '【作業 2-3】緊急停機與視覺警告')"
+                <!-- Task 10-3 -->
+                <div onclick="openSubmissionModal('basic-10-ui-3', '【作業 10-3】「E-Stop」緊急停機與警報 (Haptic & Visual Alert)')"
                     class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-red-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🚨</span>
-                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase">45
-                                min</span>
+                            <span class="text-4xl text-red-500 group-hover:translate-x-1 transition-transform">🚨</span>
+                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition">【作業 2-3】
-                        </h3>
-                        <h4 class="font-medium text-gray-500 mb-4">緊急停機與視覺警告</h4>
-                        <div class="text-sm text-gray-600 space-y-2">
-                            <ul class="list-disc list-inside space-y-1">
-                                <li><strong>滿版遮罩：</strong>點擊緊急鈕時，彈出一個紅色半透明遮罩，鎖死所有操作。</li>
-                                <li><strong>觸覺反饋：</strong>呼叫 <code>navigator.vibrate()</code> 讓手機震動提醒。</li>
-                                <li><strong>多感官回饋：</strong>利用視覺、觸覺確保危險發生時的即時警示。</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition">【作業 10-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「多維安全屏障」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">
+                            開發紅色滿版 E-Stop 遮罩。整合手機震動回饋與安全長按 3s 解鎖機制，建立層次化的停機防衛。
+                        </p>
                     </div>
                 </div>
             </div>
@@ -268,7 +225,7 @@
         <div class="container mx-auto px-4 text-center">
             <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
-                <span>單元課程 基礎 10 - 2</span>
+                <span>課程單元 基礎 10 - 面板設計</span>
                 <span class="hidden md:inline">|</span>
                 <span>講師：Antigravity Assistant</span>
             </div>
@@ -278,125 +235,141 @@
     <script>
         // Define Resources
         window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/ZHMOvKhC6r8", // 網頁機器人：設計零失誤介面
-            doc: "https://docs.google.com/document/d/e/2PACX-1vSlx__HC3CHq9Mh9sRjh0Xmauj-5y6vLp6RGMuoz1bOD7mFqC7B7nFAMyCTTawbJ2a-A5wyR81R5u1q/pub?embedded=true" // 網頁端模式控制介面設計
+            youtube: "https://www.youtube.com/embed/ZHMOvKhC6r8",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vSlx__HC3CHq9Mh9sRjh0Xmauj-5y6vLp6RGMuoz1bOD7mFqC7B7nFAMyCTTawbJ2a-A5wyR81R5u1q/pub?embedded=true"
         };
     </script>
     <script src="/js/course-shared-v4.js"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">人機介面安全實驗室</h2>
 
-        <h3>【作業 2-1】「戰術面板」：CSS 狀態切換實作</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 介面設計工程師 (UI/UX Engineer)。</li>
-            <li><strong>執行方式：</strong> 為 Manual、Auto-Pilot、Eco-Mode 設計一組戰術按鈕。利用 JavaScript 切換 CSS 類別（例如
-                <code>.active</code>）讓當前選中的按鈕變色或發光。當切換至 Auto-Pilot 時，手動搖桿應自動變為「半透明且禁用觸控」。</li>
-            <li><strong>評分重點 :</strong> 成功實作動態 CSS 狀態且 UI 邏輯嚴密，能有效利用視覺遮擋或禁用狀態防止誤觸。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：戰術面板：CSS 狀態切換實作 (Tactical Panel & Authority)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：介面設計工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
 
-        <h3>【作業 2-2】雙向狀態同步 (WebSocket/BLE 回傳)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 全端開發工程師 (Full-stack Developer)。</li>
-            <li><strong>執行方式：</strong> 實作「心跳同步」邏輯：ESP32 每隔一秒主動向上層 App 推送目前當前的 FSM
-                狀態。網頁端收到後應立即校正介面顯示，確保使用者看到的開關位置與機器人真實現狀 100% 吻合。</li>
-            <li><strong>評分重點 :</strong> 成功實作「推送模式 (Push Mode)」狀態同步，UI 能在硬體狀態意外改變時（如斷電重啟）自動恢復一致。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並引入基礎樣式表。</li>
+                    <li><strong>面板佈構設計</strong>：實作包含 <code>Manual</code> (手控)、<code>Auto-Pilot</code> (自律) 與 <code>Eco-Mode</code> (節能) 的側邊切換選單。</li>
+                    <li><strong>動態反饋開發</strong>：利用 JavaScript 在切換時切換 <code>.active</code> 類別，賦予選中項發光、陰影或微縮放的視覺反饋。</li>
+                    <li><strong>權限隔離實施</strong>：設計核心逻辑：當模式切換至 <code>Auto-Pilot</code> 時，原本的手動搖桿區應自動設定為 <code>pointer-events: none</code> 並降低不透明度。</li>
+                </ol>
+            </div>
 
-        <h3>【作業 2-3】緊急停機與視覺警告</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 安全互動設計師 (Safety Interaction Designer)。</li>
-            <li><strong>執行方式：</strong> 實作 E-Stop 緊急停機功能。當按下按鈕時，網頁彈出紅色滿版遮罩鎖死所有操作，並呼叫 <code>navigator.vibrate()</code>
-                觸發手機震動回饋，確保危險發生時使用者能即時獲得多感官警示。</li>
-            <li><strong>評分重點 :</strong> 緊急機制優先權最高，遮罩邏輯嚴謹，且成功整合 Haptic Feedback (觸覺反饋) 以提升安全性。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>視覺層級清晰度</strong>：當前激活模式是否具备極高的視覺對比度，讓使用者能瞬间判斷系統控制權歸屬？</li>
+                    <li>[ ] <strong>操作安全機制</strong>：切換至自動模式後，原本的手動觸發事件是否能被確實拦截，防止震動或意外誤觸干預行駛？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：雙向狀態同步與校正 (Bi-directional State Sync)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：全端開發工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>心跳監聽層實作</strong>：在 App 端實作數據解析層，監聽來自 ESP32 每秒回傳的 <code>current_state</code> 心跳報文。</li>
+                    <li><strong>真值校正邏輯</strong>：若回傳狀態與 UI 現狀不符（如硬體因低壓自動退回 IDLE），介面必須強制跳轉至正確狀態，不允許「假性成功」。</li>
+                    <li><strong>重連一致性驗證</strong>：測試機器人斷電重啟後，網頁介面是否能根據連線後收到的首筆數據包自動恢復正確的模式按鈕。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>狀態真實性</strong>：網頁面板顯示的選項是否 100% 代表「硬體真實現狀」而非僅是「使用者最後點擊的紀錄」？</li>
+                    <li>[ ] <strong>解析効能優化</strong>：狀態同步的報文解析邏輯是否簡潔，有無造成前端 UI 渲染主執行緒的顯著卡頓？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：「E-Stop」緊急停機與多感官警告 (Haptic & Visual E-Stop)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：安全互動設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>緊急遮罩設計</strong>：按下實體或虛擬 E-Stop 後，立即呼叫一組帶有最高 <code>z-index</code> 的紅色全覆蓋遮罩，強行封鎖所有操作。</li>
+                    <li><strong>觸覺回饋接入</strong>：正確實作 <code>navigator.vibrate()</code> API，在緊急觸發或異常報警時提供同步的物理脈衝震動感。</li>
+                    <li><strong>安全重置序列</strong>：設計具備高注意力的「長按 3s」或「特定滑動解鎖」機制，才能解除紅色遮罩並復歸至待機狀態。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>安全機制搶佔性</strong>：緊急停機遮罩是否能優先於任何 UI 層級觸發，並成功鎖定全域輸入權限？</li>
+                    <li>[ ] <strong>多感官警示實效</strong>：是否充分利用了行動裝置特性（震動）來顯著提升緊急事件的知覺強度？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>在 GitHub 建立新 Repo（名為 <code>basic-10-ui-template</code>）。</li>
-                <li>上傳包含 `course-shared.js` 與基礎控制項 CSS 框架的網頁專案。</li>
-                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>進入 GitHub Classroom 建立「Individual Assignment」。</li>
-                <li>連結上述的範本倉庫，並勾選 <strong>"Enable feedback pull requests"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，獲得個人專屬 Repo。</li>
-                <li>研究 UI 視覺層級，實作具備 <code>.active</code> 樣式切換的戰術面板。</li>
-                <li>整合 E-Stop 遮罩與 <code>vibrate()</code> API 後 <strong>Push 代碼</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
-                <li>重點點評學生對「控制語義化」的理解（如：互斥選項是否使用了正確的 UI 組件）。</li>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：從「展示型 UI」進化為具備工業安全標準的「控制面板」。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-indigo-600">重點 1：交互的權限感</strong> - 引導學員理解 UI 不只是按鈕，更是賦予或限制機器動作权力的樞紐（活用 `pointer-events`）。</li>
+                <li><strong class="text-indigo-600">重點 2：對抗認知假象</strong> - 強調「雙向同步」的物理性意義：若硬體壞了，UI 絕不准顯示「運行中」。</li>
+                <li><strong class="text-indigo-600">重點 3：多維警訊告知</strong> - 演示紅色遮罩（視覺）與震動（觸覺）如何共同作用，確保操作者在極端突發狀況下能瞬間察覺系統停擺。</li>
             </ol>
         </div>
 
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元聚焦於「人機互動安全 (Safety in HMI)」，引導學生透過 UI/UX 技巧降低複雜機器人操作中的誤觸風險。</p>
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/PanelControls.js # (重點) 學員需實作 active 狀態管理與震動 API 调用
+├── src/SyncEngine.js    # (必修) 需補全狀態包解析與 DOM 強制同步邏輯
+└── README.md            # UX 論證：描述為何 E-Stop 遮罩需要採用紅色與震動組配
+            </pre>
+        </div>
 
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── index.html        # 戰術面板主介面
-├── style.css         # (重點) 需實作 .active 與警告動畫
-└── main.js           # 處理模式切換與硬體同步的 JS 邏輯</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>main.js (Modal Alert)</strong></p>
-        <pre><code>function emergencyStop() {
-  overlay.show(); // 覆蓋所有操作按鈕
-  navigator.vibrate([100, 50, 100]); // 震動警告
-  sendBLE("STOP_ALL");
-}</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>佈局檢查：：</strong> 驗證緊急鈕 (E-Stop) 是否位於視覺中心且具備明顯區隔度。</li>
-            <li><strong>交互測試：：</strong> 模擬切換至 AUTO 模式，檢查手動搖桿 (Joystick) 的 DOM 屬性是否被正確設為 <code>disabled</code>。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">研究現代戰機或是特斯拉控制面板的模式切換 UX 特點。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>Dashboard：</strong>確認學員對「視覺引導」與「防呆設計」有初步概念。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，實作高對比、易觸控的 Dashboard 並串接硬體心跳包。
-                    </td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>設計評論：</strong>指出學生介面中可能導致誤點的潛在風險點。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">挑戰實作黑暗模式 (Dark Mode) 適配與高難度動畫回饋並 Push。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>審核學生對「多感官互動」的整合能力與代碼優雅度。</td>
-                </tr>
-            </tbody>
-        </table>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀察「現代汽車觸控面板的警示設計」。了解視覺反饋如何影響決策。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員能否識別出「樂觀 UI」在硬體控制中的潛在危險。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，挑戰在動態同步情境下的 UI 非同步渲染問題，並美化 E-Stop 遮罩。</td>
+                        <td class="p-4 border-b"><strong>助教引導:</strong> 輔導學員如何正確使用瀏覽器 <code>navigator.vibrate</code> API 進行物理互動開發。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">將「低電量自動鎖定介面」邏輯整合至戰術面板中並 Push PR。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 點評對「操作主導權 (Authority)」與「反饋即時性」在工程美學上的平衡。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 </body>
 
