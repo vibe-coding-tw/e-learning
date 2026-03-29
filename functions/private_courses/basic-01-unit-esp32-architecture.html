@@ -348,29 +348,76 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2>ESP32 架構與開發板</h2>
 
-        <h3>作業 1-1：硬體連通性與燒錄測試</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 韌體工程師 (Firmware Engineer)。</li>
-            <li><strong>執行方式：</strong> 成功上傳第一個「Blink」程式。更進一步，讓 LED 閃爍出「SOS」摩斯密碼 (三短、三長、三短)。</li>
-            <li><strong>評分重點：</strong> 確認學生能正確識別板載 LED 引腳並完成基本的代碼燒錄。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">作業 1-1：硬體連通性與燒錄測試</h3>
+            <div class="quest-meta">
+                <span>角色扮演：韌體工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
 
-        <h3>作業 1-2：串口通訊的偵探遊戲</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 系統分析師 (System Analyst)。</li>
-            <li><strong>執行方式：</strong> 撰寫代碼並透過 Serial Monitor 讀取晶片資訊（如 MAC Address, Chip Model）。嘗試不同 Baud Rate
-                觀察並紀錄亂碼現象。</li>
-            <li><strong>評分重點：</strong> 紀錄對 Baud Rate 不匹配的觀察細節。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>核心功能</strong>：成功上傳第一個「Blink」控制程式。</li>
+                    <li><strong>進階挑戰</strong>：修改延遲參數，讓 LED 閃爍出「SOS」摩斯密碼 (三短、三長、三短)。</li>
+                </ol>
+            </div>
 
-        <h3>作業 1-3：電源與發熱量監測</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 硬體測試專家 (Hardware QA)。</li>
-            <li><strong>執行方式：</strong> 觀察開機時 Bootloader 原始訊息。在執行 WiFi 掃描等高功耗任務時，觀察晶片溫度變化，並建立對「電源穩定性」的物理感知。</li>
-            <li><strong>評分重點：</strong> 能辨識並記錄 Bootloader 的基本參數輸出。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>引腳辨識</strong>：是否能正確識別板載 LED 的 GPIO 引腳？</li>
+                    <li>[ ] <strong>燒錄流程</strong>：是否能熟練掌握 BOOT/EN 按鈕進入燒錄模式的時機（若需要）？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">作業 1-2：串口通訊的偵探遊戲</h3>
+            <div class="quest-meta">
+                <span>角色扮演：系統分析師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>資訊提取</strong>：撰寫代碼並透過 Serial Monitor 讀取並打印晶片資訊（如 MAC Address, Chip Model）。</li>
+                    <li><strong>偵查亂碼</strong>：嘗試切換不同 Baud Rate，並記錄亂碼出現的特徵。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>API 調用</strong>：是否正確使用了 esp_chip_info 等系統 API？</li>
+                    <li>[ ] <strong>觀察敏銳度</strong>：是否能總結出 Baud Rate 不匹配對數據完整性的物理影響？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">作業 1-3：電源與發熱量監測</h3>
+            <div class="quest-meta">
+                <span>角色扮演：硬體測試專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>日誌分析</strong>：觀察開機時第一秒內的 Bootloader 原始日誌輸出。</li>
+                    <li><strong>物理感知</strong>：在執行 WiFi 掃描等高功耗任務時，用手感測晶片表面溫升。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>日誌解讀</strong>：能否從 Bootloader 日誌中識別出 Flash 模式與頻率參數？</li>
+                    <li>[ ] <strong>穩定性感知</strong>：是否理解供電不足與散熱對 IoT 裝置長期運行的重要性？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->

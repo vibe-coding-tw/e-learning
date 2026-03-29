@@ -322,31 +322,77 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2>VS Code + PlatformIO 環境搭建</h2>
 
-        <h3>作業 1-1：新環境的首航</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 韌體開發實習生 (Firmware Intern)。</li>
-            <li><strong>執行方式：</strong> 在 VS Code 中建立一個全新的 PlatformIO 專案，將原本的 <code>.ino</code> 程式碼移植到
-                <code>main.cpp</code>，成功編譯並上傳 Blink 程式。</li>
-            <li><strong>評分重點：</strong> 確認編譯輸出視窗顯示 [SUCCESS]，且學生能正確手動包含 <code>#include &lt;Arduino.h&gt;</code>。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">作業 1-1：新環境的首航</h3>
+            <div class="quest-meta">
+                <span>角色扮演：韌體開發實習生</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
 
-        <h3>作業 1-2：函式庫管家 (Library Manager)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 軟體套件管理員 (Package Manager)。</li>
-            <li><strong>執行方式：</strong> 練習「配置即安裝」。在 <code>platformio.ini</code> 中使用 <code>lib_deps</code> 加入
-                <code>Adafruit NeoPixel</code> 或指定的 Library，並截圖證明自動下載過程。</li>
-            <li><strong>評分重點：</strong> 展現對 <code>platformio.ini</code> 依賴管理機制的理解，而非手動下載 ZIP。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>專案初始化</strong>：在 VS Code 中建立全新的 PlatformIO 專案，選擇對應板型。</li>
+                    <li><strong>代碼移植</strong>：將原本的 .ino 程式碼搬移到 src/main.cpp。</li>
+                    <li><strong>標頭包含</strong>：手動加上關鍵的 #include &lt;Arduino.h&gt; 並完成編譯上傳。</li>
+                </ol>
+            </div>
 
-        <h3>作業 1-3：多環境並行配置</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 自動化工程師 (DevOps Engineer)。</li>
-            <li><strong>執行方式：</strong> 設定 <code>monitor_speed</code> 解決串口亂碼。嘗試在 <code>platformio.ini</code> 中建立
-                <code>[env:debug]</code> 與 <code>[env:release]</code> 兩個環境。</li>
-            <li><strong>評分重點：</strong> 能在不同 Profile 間切換並解釋 <code>monitor_speed</code> 的物理意義。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>編譯成功率</strong>：確認 Build 視窗顯示 [SUCCESS] 字樣？</li>
+                    <li>[ ] <strong>結構掌握</strong>：是否理解 src/ 目錄與 IntelliSense 的運作機制？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">作業 1-2：函式庫管家 (Library Manager)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：軟體套件管理員</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>依賴聲明</strong>：在 platformio.ini 中使用 lib_deps 指示要安裝的 Library。</li>
+                    <li><strong>自動化驗證</strong>：觸發重新編譯，觀察 PIO 如何自動從伺服器抓取並安裝函式庫。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>配置導向思維</strong>：是否掌握了透過配置文件管理依賴的現代開發規範？</li>
+                    <li>[ ] <strong>版本控制意識</strong>：是否能在 configuration 中指定特定的函式庫版本？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">作業 1-3：多環境並行配置</h3>
+            <div class="quest-meta">
+                <span>角色扮演：自動化工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>通訊配置</strong>：設定正確的 monitor_speed 以解決 Serial Monitor 亂碼。</li>
+                    <li><strong>環境切換</strong>：在 platformio.ini 中建立不同的 [env] 設定，並學習如何在圖形介面切換。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>環境抽象化</strong>：是否理解不同的環境配置（Profile）對開發效率的提升？</li>
+                    <li>[ ] <strong>串口調優力</strong>：是否能根據設備輸出自動調整相應的波特率參數？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->

@@ -305,31 +305,77 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2>驅動程式與通訊埠</h2>
 
-        <h3>作業 1-1：驅動與硬體偵錯</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 部署工程師 (Deployment Engineer)。</li>
-            <li><strong>執行方式：</strong> 學生在 <code>README.md</code> 中貼上裝置管理員（或 Mac 的 <code>ls /dev/tty.*</code>）成功辨識出
-                ESP32 COM 埠的截圖，並標註晶片型號。</li>
-            <li><strong>評分重點：</strong> 確認學生能正確安裝驅動程式並手動排除「消失的裝置」障礙。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">作業 1-1：驅動與硬體偵錯</h3>
+            <div class="quest-meta">
+                <span>角色扮演：部署工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
 
-        <h3>作業 1-2：Baud Rate 匹配實驗</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 通訊協定測試員 (Protocol Tester)。</li>
-            <li><strong>執行方式：</strong> 故意在 <code>platformio.ini</code> 設置錯誤的
-                <code>monitor_speed</code>，觀察亂碼現象後修復，並於報告中記錄不同速率下的表現。</li>
-            <li><strong>評分重點：</strong> 代碼中 <code>Serial.begin()</code> 參數與 <code>platformio.ini</code> 的一致性。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>身份識別</strong>：在 README.md 貼上裝置管理員（或 ls /dev/tty.*）成功辨識出 ESP32 COM 埠的截圖。</li>
+                    <li><strong>標註型號</strong>：明確指出板端所使用的 USB-to-UART 橋接晶片型號（如 CP2102 或 CH340）。</li>
+                </ol>
+            </div>
 
-        <h3>作業 1-3：Loopback 自我對話測試</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 硬體診斷工程師 (Hardware Diagnostic Engineer)。</li>
-            <li><strong>執行方式：</strong> 短路 TX/RX 引腳進行環回測試，驗證橋接晶片收發功能，並在 <code>README.md</code> 紀錄測試成功的 Serial Monitor 輸出。
-            </li>
-            <li><strong>評分重點：</strong> 理解序列通訊的全雙工 (Full-Duplex) 物理特性與排障邏輯。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>環境通聯</strong>：是否已正確安裝驅動程式並能穩定偵測到裝置？</li>
+                    <li>[ ] <strong>排障能力</strong>：是否能手動排除「消失的裝置」等常見硬體通訊障礙？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">作業 1-2：Baud Rate 匹配實驗</h3>
+            <div class="quest-meta">
+                <span>角色扮演：通訊協定測試員</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>故意失步</strong>：在 platformio.ini 設置錯誤的 monitor_speed。</li>
+                    <li><strong>觀察亂碼</strong>：觀察並紀錄亂碼現象。</li>
+                    <li><strong>修復同步</strong>：修正速率後恢復正常通訊。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>邏輯一致性</strong>：代碼中 Serial.begin() 參數與 platformio.ini 設置是否正確同步？</li>
+                    <li>[ ] <strong>紀錄詳實</strong>：是否清晰描述了速率不匹配時的螢幕輸出特徵？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">作業 1-3：Loopback 自我對話測試</h3>
+            <div class="quest-meta">
+                <span>角色扮演：硬體診斷工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>硬體短路</strong>：短路開發板上的 TX 與 RX 引腳。</li>
+                    <li><strong>環回測試</strong>：透過 Serial Monitor 發送字串並觀察是否能接收到相同的回音。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>物理特性理解</strong>：是否理解序列通訊的全雙工 (Full-Duplex) 物理特性？</li>
+                    <li>[ ] <strong>診斷邏輯</strong>：能否利用環回測試驗證橋接晶片的收發完整性？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
