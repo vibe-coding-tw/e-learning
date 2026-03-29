@@ -213,14 +213,9 @@ exports.initiatePayment = onRequest(async (req, res) => {
         ecpayParams.CheckMacValue = generateCheckMacValue(ecpayParams, HASH_KEY, HASH_IV);
 
         await admin.firestore().collection("orders").doc(orderNumber).set({
-            uid: uid,
-            amount: finalAmount,
-            status: "PENDING",
             gateway: "ECPAY",
-            items: cartDetails || {},
-            logistics: logistics || null, // [NEW] Store logistics info
-            createdAt: admin.firestore.FieldValue.serverTimestamp()
-        });
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
 
         res.status(200).json({ result: { paymentParams: ecpayParams, apiUrl: ECPAY_API_URL } });
 
@@ -311,10 +306,11 @@ exports.paymentNotify = onRequest(async (req, res) => {
             });
             console.log(`訂單 ${orderId} 更新成功`);
 
-            // [NEW] Send Payment Success Email
+            // [NEW] Send Payment Success Email + auto teacher assignment from promo code
             try {
                 // Fetch order details to get email and items
-                const orderDoc = await admin.firestore().collection("orders").doc(orderId).get();
+                const db = admin.firestore();
+                const orderDoc = await db.collection("orders").doc(orderId).get();
                 if (orderDoc.exists) {
                     const orderData = orderDoc.data();
                     let userEmail = "";
@@ -333,9 +329,34 @@ exports.paymentNotify = onRequest(async (req, res) => {
                         const itemDesc = Object.values(items).map(i => `${i.name} x${i.quantity || 1}`).join(', ');
                         await sendPaymentSuccessEmail(userEmail, orderId, orderData.amount, itemDesc);
                     }
+
+                    if (orderData.uid && orderData.uid !== 'GUEST' && orderData.promoCode) {
+                        const lessons = await getLessons();
+                        const promoDoc = await db.collection('promo_codes').doc(orderData.promoCode).get();
+
+                        if (promoDoc.exists && promoDoc.data()?.isActive !== false) {
+                            const promoData = promoDoc.data();
+                            const targetUnitId = resolveCanonicalUnitId(promoData.courseId, lessons);
+                            const purchasedUnits = collectPurchasedUnitIds(orderData.items || {}, lessons);
+
+                            if (targetUnitId && purchasedUnits.includes(targetUnitId) && promoData.mentorEmail) {
+                                await upsertStudentUnitAssignment(
+                                    db,
+                                    orderData.uid,
+                                    targetUnitId,
+                                    promoData.mentorEmail,
+                                    'paymentNotify',
+                                    true
+                                );
+                                console.log(`[paymentNotify] Auto-assigned ${orderData.uid} -> ${promoData.mentorEmail} for ${targetUnitId}`);
+                            } else {
+                                console.warn(`[paymentNotify] Promo ${orderData.promoCode} did not match purchased units for order ${orderId}`);
+                            }
+                        }
+                    }
                 }
             } catch (emailErr) {
-                console.error("Failed to send payment email:", emailErr);
+                console.error("Failed to process payment follow-up:", emailErr);
             }
         }
 
@@ -426,6 +447,155 @@ function findParentCourseIdByUnit(unitId, lessons = []) {
     const canonicalUnitId = resolveCanonicalUnitId(unitId, lessons);
     const lesson = lessons.find(l => Array.isArray(l.courseUnits) && l.courseUnits.includes(canonicalUnitId));
     return lesson?.courseId || null;
+}
+
+function findCourseByPageOrUnit(pageId, fileName, lessons = []) {
+    return lessons.find(l =>
+        l.courseId === pageId ||
+        (fileName && Array.isArray(l.courseUnits) && l.courseUnits.includes(fileName)) ||
+        (fileName && l.classroomUrl && l.classroomUrl.endsWith(fileName))
+    ) || null;
+}
+
+function collectPurchasedUnitIds(items = {}, lessons = []) {
+    const purchasedUnits = new Set();
+
+    Object.keys(items || {}).forEach(itemKey => {
+        const lesson = lessons.find(l => l.courseId === itemKey);
+        if (lesson) {
+            (lesson.courseUnits || []).forEach(unitId => purchasedUnits.add(resolveCanonicalUnitId(unitId, lessons)));
+            return;
+        }
+
+        const canonicalUnitId = resolveCanonicalUnitId(itemKey, lessons);
+        if (canonicalUnitId) purchasedUnits.add(canonicalUnitId);
+    });
+
+    return Array.from(purchasedUnits);
+}
+
+function hasActiveOrderForCourse(ordersSnapshot, courseId) {
+    let hasCourse = false;
+    const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+
+    ordersSnapshot.forEach(doc => {
+        const data = doc.data();
+        const items = data.items || {};
+        if (!items[courseId]) return;
+
+        if (data.expiryDate?.toDate) {
+            const expiry = data.expiryDate.toDate().getTime();
+            if (now < expiry) hasCourse = true;
+            return;
+        }
+
+        let orderDate = null;
+        if (data.paymentDate) {
+            orderDate = new Date(data.paymentDate).getTime();
+        } else if (data.createdAt?.toDate) {
+            orderDate = data.createdAt.toDate().getTime();
+        }
+
+        if (orderDate && (now - orderDate < ONE_YEAR_MS)) {
+            hasCourse = true;
+        }
+    });
+
+    return hasCourse;
+}
+
+function resolveClassroomUrlForTeacher(urlConfig, teacherEmail) {
+    if (!urlConfig) return null;
+    if (typeof urlConfig === 'string') return urlConfig;
+    if (typeof urlConfig !== 'object') return null;
+    if (teacherEmail && typeof urlConfig[teacherEmail] === 'string') return urlConfig[teacherEmail];
+    if (typeof urlConfig.default === 'string') return urlConfig.default;
+    return Object.values(urlConfig).find(value => typeof value === 'string' && value.trim()) || null;
+}
+
+async function upsertStudentUnitAssignment(db, studentUid, unitId, teacherEmail, assignedByUid = 'system', notify = true) {
+    const userRef = db.collection('users').doc(studentUid);
+    const userDoc = await userRef.get();
+    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    const previousTeacher = userData.unitAssignments?.[unitId] || null;
+
+    await userRef.set({
+        unitAssignments: {
+            [unitId]: teacherEmail || null
+        },
+        lastAssignmentUpdate: admin.firestore.FieldValue.serverTimestamp(),
+        lastAssignedBy: assignedByUid
+    }, { merge: true });
+
+    if (notify && teacherEmail && previousTeacher !== teacherEmail) {
+        const studentName = userData.displayName || userData.name || userData.email || "學生";
+        const studentEmail = userData.email;
+
+        if (studentEmail) {
+            await sendStudentLinkedToTeacherEmail(studentEmail, studentName, unitId, teacherEmail);
+        }
+        await sendTeacherLinkedToStudentEmail(teacherEmail, studentName, unitId);
+    }
+
+    return { previousTeacher, changed: previousTeacher !== (teacherEmail || null) };
+}
+
+async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons = []) {
+    const canonicalUnitId = resolveCanonicalUnitId(unitId, lessons);
+    const course = findCourseByPageOrUnit(courseId, canonicalUnitId, lessons) || findCourseByPageOrUnit(courseId, unitId, lessons);
+    const effectiveCourseId = course ? course.courseId : (courseId || findParentCourseIdByUnit(canonicalUnitId, lessons));
+
+    if (!effectiveCourseId || !canonicalUnitId) {
+        return { authorized: false, reason: 'missing-context', canonicalUnitId, effectiveCourseId };
+    }
+
+    const userRecord = await admin.auth().getUser(uid);
+    const now = Date.now();
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    const isFreeCourse = !!(course && course.price === 0);
+    const isTrialCourse = !!(course && course.category === 'started' && ((now - new Date(userRecord.metadata.creationTime).getTime()) < THIRTY_DAYS_MS));
+
+    const userDoc = await db.collection('users').doc(uid).get();
+    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    const assignedTeacherEmail = userData.unitAssignments?.[canonicalUnitId] || null;
+
+    if (isFreeCourse || isTrialCourse) {
+        return {
+            authorized: true,
+            canonicalUnitId,
+            effectiveCourseId,
+            assignedTeacherEmail,
+            requiresTeacherAssignment: false,
+            course
+        };
+    }
+
+    const ordersSnapshot = await db.collection('orders')
+        .where('uid', '==', uid)
+        .where('status', '==', 'SUCCESS')
+        .get();
+
+    const hasPaidCourse = !ordersSnapshot.empty && hasActiveOrderForCourse(ordersSnapshot, effectiveCourseId);
+    if (!hasPaidCourse) {
+        return {
+            authorized: false,
+            reason: 'payment-required',
+            canonicalUnitId,
+            effectiveCourseId,
+            assignedTeacherEmail: null,
+            course
+        };
+    }
+
+    return {
+        authorized: true,
+        canonicalUnitId,
+        effectiveCourseId,
+        assignedTeacherEmail,
+        requiresTeacherAssignment: true,
+        course
+    };
 }
 
 // [NEW] API to expose lessons to frontend
@@ -988,6 +1158,60 @@ exports.getCourseConfigs = onCall(async (request) => {
     }
 });
 
+exports.resolveAssignmentAccess = onCall(async (request) => {
+    const { data, auth } = request;
+    if (!auth) throw new HttpsError('unauthenticated', '請先登入');
+
+    const { unitId, courseId } = data || {};
+    if (!unitId) throw new HttpsError('invalid-argument', '缺少單元 ID');
+
+    const db = admin.firestore();
+    const lessons = await getLessons();
+    const access = await resolveStudentAssignmentAccess(db, auth.uid, courseId, unitId, lessons);
+    if (!access.authorized) return { authorized: false, reason: access.reason || 'forbidden' };
+
+    const { canonicalUnitId, effectiveCourseId, assignedTeacherEmail, requiresTeacherAssignment } = access;
+
+    if (requiresTeacherAssignment && !assignedTeacherEmail) {
+        return {
+            authorized: true,
+            classroomUrl: null,
+            assignedTeacherEmail: null,
+            canonicalUnitId,
+            courseId: effectiveCourseId,
+            requiresTeacherAssignment: true
+        };
+    }
+
+    const parentDoc = effectiveCourseId ? await db.collection('course_configs').doc(effectiveCourseId).get() : null;
+    const unitDoc = canonicalUnitId ? await db.collection('course_configs').doc(canonicalUnitId).get() : null;
+    const candidateConfigs = [parentDoc?.data() || {}, unitDoc?.data() || {}];
+
+    let classroomUrl = null;
+    for (const cfg of candidateConfigs) {
+        if (cfg.githubClassroomUrls && cfg.githubClassroomUrls[canonicalUnitId]) {
+            classroomUrl = resolveClassroomUrlForTeacher(cfg.githubClassroomUrls[canonicalUnitId], assignedTeacherEmail);
+        }
+        if (classroomUrl) break;
+    }
+
+    if (!classroomUrl) {
+        const course = lessons.find(l => l.courseId === effectiveCourseId);
+        if (course?.githubClassroomUrls?.[canonicalUnitId]) {
+            classroomUrl = resolveClassroomUrlForTeacher(course.githubClassroomUrls[canonicalUnitId], assignedTeacherEmail);
+        }
+    }
+
+    return {
+        authorized: true,
+        classroomUrl: classroomUrl || null,
+        assignedTeacherEmail: assignedTeacherEmail || null,
+        canonicalUnitId,
+        courseId: effectiveCourseId,
+        requiresTeacherAssignment
+    };
+});
+
 // 7.3 授權課程老師 (Admin Only)
 exports.authorizeTeacherForCourse = onCall(async (request) => {
     const { data, auth } = request;
@@ -1173,6 +1397,83 @@ exports.applyForTeacherRole = onCall(async (request) => {
     // Notify Admin via Email
     const adminEmail = process.env.ADMIN_EMAIL || 'rover.k.chen@gmail.com';
     await sendAdminNewApplicationEmail(adminEmail, email, canonicalUnitId);
+
+    return { success: true, applicationId: newAppRef.id };
+});
+
+exports.recommendTeacherForUnit = onCall(async (request) => {
+    const data = request.data || {};
+    const auth = request.auth;
+    if (!auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
+
+    const requesterRole = await getRole(auth.uid);
+    if (!['admin', 'teacher'].includes(requesterRole)) {
+        throw new HttpsError('permission-denied', 'Only teachers can recommend candidates.');
+    }
+
+    const { assignmentId } = data;
+    if (!assignmentId) throw new HttpsError('invalid-argument', 'Missing assignmentId');
+
+    const db = admin.firestore();
+    const lessons = await getLessons();
+    const assignmentRef = db.collection('assignments').doc(assignmentId);
+    const assignmentDoc = await assignmentRef.get();
+    if (!assignmentDoc.exists) throw new HttpsError('not-found', 'Assignment not found');
+
+    const assignment = assignmentDoc.data();
+    const candidateUid = assignment.userId;
+    const candidateEmail = assignment.userEmail;
+    const canonicalUnitId = resolveCanonicalUnitId(assignment.unitId, lessons);
+    if (!candidateUid || !candidateEmail || !canonicalUnitId) {
+        throw new HttpsError('failed-precondition', 'Assignment metadata is incomplete.');
+    }
+    if (assignment.grade === null || assignment.grade === undefined) {
+        throw new HttpsError('failed-precondition', 'Assignment must be graded before recommendation.');
+    }
+
+    const unitDocRef = db.collection('course_configs').doc(canonicalUnitId);
+    const unitDoc = await unitDocRef.get();
+    const unitConfig = unitDoc.exists ? unitDoc.data() : {};
+    const authorizedTeachers = Array.isArray(unitConfig.authorizedTeachers) ? unitConfig.authorizedTeachers : [];
+
+    if (requesterRole !== 'admin' && !authorizedTeachers.includes(auth.token.email)) {
+        throw new HttpsError('permission-denied', 'Only the qualified teacher for this unit can recommend students.');
+    }
+    if (requesterRole !== 'admin' && assignment.assignedTeacherEmail !== auth.token.email) {
+        throw new HttpsError('permission-denied', 'Only the assigned teacher can recommend this student.');
+    }
+
+    if (authorizedTeachers.includes(candidateEmail)) {
+        throw new HttpsError('already-exists', 'Student is already a qualified teacher for this unit.');
+    }
+
+    const existingPending = await db.collection('teacher_applications')
+        .where('userId', '==', candidateUid)
+        .where('unitId', '==', canonicalUnitId)
+        .where('status', '==', 'pending')
+        .limit(1)
+        .get();
+
+    if (!existingPending.empty) {
+        throw new HttpsError('already-exists', 'Student already has a pending application for this unit.');
+    }
+
+    const application = {
+        userId: candidateUid,
+        userEmail: candidateEmail,
+        unitId: canonicalUnitId,
+        status: 'pending',
+        source: 'teacher_recommendation',
+        recommendedByUid: auth.uid,
+        recommendedByEmail: auth.token.email || '',
+        recommendedFromAssignmentId: assignmentId,
+        appliedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    const newAppRef = await db.collection('teacher_applications').add(application);
+
+    const adminEmail = process.env.ADMIN_EMAIL || 'rover.k.chen@gmail.com';
+    await sendAdminNewApplicationEmail(adminEmail, candidateEmail, canonicalUnitId);
 
     return { success: true, applicationId: newAppRef.id };
 });
@@ -1803,31 +2104,7 @@ exports.assignStudentToTeacher = onCall(async (request) => {
     if (!unitId) throw new HttpsError('invalid-argument', '缺少單元 ID');
 
     try {
-        const userRef = admin.firestore().collection('users').doc(studentUid);
-        await userRef.set({
-            unitAssignments: {
-                [unitId]: teacherEmail || null
-            },
-            lastAssignmentUpdate: admin.firestore.FieldValue.serverTimestamp(),
-            lastAssignedBy: uid
-        }, { merge: true });
-
-        // Notifications
-        if (teacherEmail) {
-            const studentDoc = await userRef.get();
-            if (studentDoc.exists) {
-                const studentData = studentDoc.data();
-                const studentName = studentData.displayName || studentData.email || "學生";
-                const studentEmail = studentData.email;
-
-                // 1. Notify Student
-                if (studentEmail) {
-                    await sendStudentLinkedToTeacherEmail(studentEmail, studentName, unitId, teacherEmail);
-                }
-                // 2. Notify Teacher
-                await sendTeacherLinkedToStudentEmail(teacherEmail, studentName, unitId);
-            }
-        }
+        await upsertStudentUnitAssignment(admin.firestore(), studentUid, unitId, teacherEmail || null, uid, true);
 
         return { success: true };
     } catch (e) {
@@ -1864,9 +2141,16 @@ exports.submitAssignment = onCall(async (request) => {
     const docRef = db.collection('assignments').doc(docId);
 
     try {
-        const userDoc = await db.collection('users').doc(userId).get();
-        const userData = userDoc.data() || {};
-        const assignedTeacherEmail = userData.unitAssignments?.[unitId] || null;
+        const lessons = await getLessons();
+        const access = await resolveStudentAssignmentAccess(db, userId, courseId, unitId, lessons);
+        if (!access.authorized) {
+            throw new HttpsError('permission-denied', '尚未完成此課程付款授權。');
+        }
+
+        const assignedTeacherEmail = access.assignedTeacherEmail || null;
+        if (access.requiresTeacherAssignment && !assignedTeacherEmail) {
+            throw new HttpsError('failed-precondition', '此單元尚未完成老師指派，暫時無法建立作業紀錄。');
+        }
 
         // [NEW] Prevent status downgrade
         const existingDoc = await docRef.get();
@@ -1922,18 +2206,17 @@ exports.submitAssignment = onCall(async (request) => {
             await docRef.set(assignmentData, { merge: true });
         }
 
-        // Notify Teacher ONLY on final submission
-        if (currentStatus === 'submitted') {
-            const teacherToNotify = assignedTeacherEmail || process.env.ADMIN_EMAIL || process.env.MAIL_USER;
-            if (teacherToNotify) {
-                await sendAssignmentNotification(teacherToNotify, userName, assignmentData.assignmentTitle);
-            }
+        // Notify Teacher ONLY on final submission and only when a teacher is assigned
+        if (currentStatus === 'submitted' && assignedTeacherEmail) {
+            const dashboardUrl = `https://vibe-coding.tw/dashboard.html?courseId=${encodeURIComponent(access.effectiveCourseId)}&unitId=${encodeURIComponent(access.canonicalUnitId)}&tab=assignments`;
+            await sendAssignmentNotification(assignedTeacherEmail, userName, assignmentData.assignmentTitle, dashboardUrl);
         }
 
         return { success: true, message: currentStatus === 'started' ? "紀錄已更新" : "作業繳交成功！" };
 
     } catch (e) {
         console.error("Submit Assignment Error:", e);
+        if (e instanceof HttpsError) throw e;
         throw new HttpsError('internal', '操作失敗，請稍後再試');
     }
 });
@@ -1956,6 +2239,14 @@ exports.gradeAssignment = onCall(async (request) => {
     const docRef = db.collection('assignments').doc(assignmentId);
 
     try {
+        const assignDoc = await docRef.get();
+        if (!assignDoc.exists) throw new HttpsError('not-found', 'Assignment not found.');
+
+        const assignData = assignDoc.data();
+        if (role !== 'admin' && assignData.assignedTeacherEmail !== auth.token.email) {
+            throw new HttpsError('permission-denied', 'Only the assigned teacher can grade this assignment.');
+        }
+
         const historyEntry = {
             timestamp: admin.firestore.Timestamp.now(),
             content: `Grade: ${grade}, Feedback: ${feedback}`,
@@ -1972,21 +2263,19 @@ exports.gradeAssignment = onCall(async (request) => {
         });
 
         // Notify Student
-        const assignDoc = await docRef.get();
-        if (assignDoc.exists) {
-            const assignData = assignDoc.data();
-            const studentEmail = assignData.userEmail;
-            const studentName = assignData.userName || studentEmail.split('@')[0];
-            const title = assignData.assignmentTitle || "您的作業";
+        const studentEmail = assignData.userEmail;
+        const studentName = assignData.userName || studentEmail.split('@')[0];
+        const title = assignData.assignmentTitle || "您的作業";
 
-            if (studentEmail) {
-                await sendGradingNotification(studentEmail, studentName, title, Number(grade), feedback);
-            }
+        if (studentEmail) {
+            const dashboardUrl = `https://vibe-coding.tw/dashboard.html?courseId=${encodeURIComponent(assignData.courseId)}&unitId=${encodeURIComponent(assignData.unitId)}&tab=assignments`;
+            await sendGradingNotification(studentEmail, studentName, title, Number(grade), feedback, dashboardUrl);
         }
 
         return { success: true };
     } catch (e) {
         console.error("Grade Error:", e);
+        if (e instanceof HttpsError) throw e;
         throw new HttpsError('internal', 'Grading failed.');
     }
 });

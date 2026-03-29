@@ -1,4 +1,4 @@
-console.log("Dashboard Script v11_3_136 (Cache-Busted) Loaded");
+console.log("Dashboard Script v11_3_138 (Payment-Assignment Flow) Loaded");
 // alert("Dashboard Script v5 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -42,6 +42,13 @@ let charts = {};
 let dashboardData = null;
 let lessonsMap = {};
 let allLessons = [];
+let currentGradingAssignment = null;
+let currentDashboardPermissions = {
+    isAdmin: false,
+    isQualifiedTeacher: false,
+    isPaidStudent: false,
+    canViewAssignments: false
+};
 
 // [NEW] Admin Super Mode state
 let adminSuperMode = localStorage.getItem('adminSuperMode') === 'true';
@@ -155,6 +162,8 @@ async function loadDashboard() {
         const isPaidStudent = myRole === 'student' && hasUnitContext
             ? await hasPaidStudentAccessForUnit(filterCourseId, filterUnitId)
             : false;
+        updateCurrentDashboardPermissions({ isAdmin, isQualifiedTeacher, isPaidStudent });
+        const requestedTab = getRequestedTabFromUrl();
 
         if (!hasUnitContext && !isAdmin) {
             showAccessDenied("ADMIN_ONLY_NO_UNIT");
@@ -173,14 +182,14 @@ async function loadDashboard() {
             if (activeTab) {
                 const tabId = activeTab.id.replace('tab-btn-', '');
 
-                // If filtered to a unit and on Overview, switch to Assignments or Settings
-                if (filterUnitId && tabId === 'overview') {
-                    // Default to assignments if filtered to a unit
-                    switchTab('assignments');
+                if (requestedTab) {
+                    switchTab(requestedTab);
+                } else if (filterUnitId && tabId === 'overview') {
+                    switchTab(getPreferredDashboardTab(filterUnitId));
                 } else {
                     if (tabId === 'admin') renderAdminConsole();
                     if (tabId === 'settings') renderSettingsTab(filterUnitId);
-                    if (tabId === 'assignments') {
+                    if (tabId === 'assignments' && canCurrentUserViewAssignmentsTab()) {
                         // Handled by renderAdminDashboard or switchTab
                     }
                 }
@@ -188,6 +197,7 @@ async function loadDashboard() {
         } else if (isPaidStudent) {
             // Paid student unit view
             renderStudentDashboard(data, filterUnitId);
+            if (requestedTab) switchTab(requestedTab);
         } else {
             showAccessDenied();
         }
@@ -238,6 +248,31 @@ function showAccessDenied(errorType = "") {
             accessDenied.appendChild(errorDisplay);
         }
     }
+}
+
+function updateCurrentDashboardPermissions({ isAdmin = false, isQualifiedTeacher = false, isPaidStudent = false } = {}) {
+    currentDashboardPermissions = {
+        isAdmin,
+        isQualifiedTeacher,
+        isPaidStudent,
+        canViewAssignments: isQualifiedTeacher || isPaidStudent || (isAdmin && adminSuperMode)
+    };
+}
+
+function canCurrentUserViewAssignmentsTab() {
+    return !!currentDashboardPermissions.canViewAssignments;
+}
+
+function getPreferredDashboardTab(filterUnitId = null) {
+    if (filterUnitId && canCurrentUserViewAssignmentsTab()) return 'assignments';
+    if (myRole === 'admin') return 'admin';
+    if (document.getElementById('tab-btn-settings') && !document.getElementById('tab-btn-settings').classList.contains('hidden')) {
+        return 'settings';
+    }
+    if (document.getElementById('tab-btn-overview') && !document.getElementById('tab-btn-overview').classList.contains('hidden')) {
+        return 'overview';
+    }
+    return 'assignments';
 }
 
 // Helper: Resolve URL param (e.g. "basic-01") to Course UUID
@@ -340,6 +375,13 @@ function getCurrentDashboardContext() {
     return { filterUnitId, filterCourseId };
 }
 
+function getRequestedTabFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestedTab = (urlParams.get('tab') || '').trim();
+    const allowedTabs = new Set(['overview', 'assignments', 'settings', 'earnings', 'admin']);
+    return allowedTabs.has(requestedTab) ? requestedTab : '';
+}
+
 function hasQualifiedTeacherAccessForUnit(fileName, courseId, email) {
     if (!email || !fileName || !courseId) return false;
     
@@ -382,15 +424,32 @@ function configureStudentTabsForUnitAccess() {
     const adminTabBtn = document.getElementById('tab-btn-admin');
 
     if (overviewTabBtn) overviewTabBtn.classList.add('hidden');
-    if (assignmentsTabBtn) assignmentsTabBtn.classList.remove('hidden');
+    if (assignmentsTabBtn) assignmentsTabBtn.classList.toggle('hidden', !canCurrentUserViewAssignmentsTab());
     if (settingsTabBtn) settingsTabBtn.classList.add('hidden');
     if (earningsTabBtn) earningsTabBtn.classList.add('hidden');
     if (adminTabBtn) adminTabBtn.classList.add('hidden');
 }
 
 function filterAssignmentsForCurrentView(assignments = []) {
-    if (myRole !== 'student') return assignments;
-    return assignments.filter(a => (a.userId || a.uid) === myUid);
+    const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
+    const isQualifiedTeacher = hasQualifiedTeacherAccessForUnit(filterUnitId, filterCourseId, myEmail);
+    const normalizeEmail = (value = '') => String(value || '').trim().toLowerCase();
+    const isOwnAssignment = (assignment) =>
+        (assignment.userId || assignment.uid) === myUid ||
+        normalizeEmail(assignment.studentEmail || assignment.userEmail) === normalizeEmail(myEmail);
+
+    if (isQualifiedTeacher) {
+        return assignments.filter(a =>
+            normalizeEmail(a.assignedTeacherEmail) === normalizeEmail(myEmail) &&
+            !isOwnAssignment(a)
+        );
+    }
+
+    if (myRole === 'student' || (currentDashboardPermissions.isAdmin && adminSuperMode)) {
+        return assignments.filter(isOwnAssignment);
+    }
+
+    return [];
 }
 
 // --- Rendering ---
@@ -568,9 +627,14 @@ function renderAdminDashboard(data, filterUnitId = null) {
     dashboardContent.classList.remove('hidden');
 
     // Tab Buttons
+    const assignmentsTabBtn = document.getElementById('tab-btn-assignments');
     const adminTabBtn = document.getElementById('tab-btn-admin');
     const settingsTabBtn = document.getElementById('tab-btn-settings');
     const earningsTabBtn = document.getElementById('tab-btn-earnings');
+
+    if (assignmentsTabBtn) {
+        assignmentsTabBtn.classList.toggle('hidden', !canCurrentUserViewAssignmentsTab());
+    }
 
     // 1. Admin Tab (Always Admin-only, always visible if myRole is admin)
     if (adminTabBtn) {
@@ -959,24 +1023,57 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
         return;
     }
 
-    const cfg = (dashboardData && dashboardData.courseConfigs) ? dashboardData.courseConfigs[courseId] : null;
-    const inviteLink = cfg && cfg.githubClassroomUrls ? cfg.githubClassroomUrls[unitId] : null;
+    if (myRole === 'admin' || myRole === 'teacher') {
+        const cfg = (dashboardData && dashboardData.courseConfigs) ? dashboardData.courseConfigs[courseId] : null;
+        const inviteLink = cfg && cfg.githubClassroomUrls ? cfg.githubClassroomUrls[unitId] : null;
 
-    if (inviteLink) {
-        let finalUrl = inviteLink;
-        if (typeof inviteLink === 'object') {
-            finalUrl = inviteLink.default || Object.values(inviteLink)[0];
+        if (inviteLink) {
+            let finalUrl = inviteLink;
+            if (typeof inviteLink === 'object') {
+                finalUrl = inviteLink[myEmail] || inviteLink.default || Object.values(inviteLink)[0];
+            }
+            if (finalUrl) {
+                window.open(finalUrl, '_blank');
+                return;
+            }
         }
-        window.open(finalUrl, '_blank');
-    } else {
+
         alert("此單元尚未設定 GitHub Classroom 邀請連結，請管理員/老師至「課程設定」中設定。");
+        return;
     }
+
+    (async () => {
+        try {
+            const resolveAssignmentAccess = httpsCallable(functions, 'resolveAssignmentAccess');
+            const result = await resolveAssignmentAccess({ courseId, unitId });
+            const access = result.data || {};
+
+            if (!access.authorized) {
+                alert("尚未完成此課程付款授權，暫時無法開啟作業入口。");
+                return;
+            }
+
+            if (access.requiresTeacherAssignment && !access.assignedTeacherEmail) {
+                alert("此單元尚未完成老師指派，作業入口會在老師指派完成後開放。");
+                return;
+            }
+
+            if (access.classroomUrl) {
+                window.open(access.classroomUrl, '_blank');
+                return;
+            }
+
+            alert("此單元尚未設定 GitHub Classroom 邀請連結，請管理員/老師至「課程設定」中設定。");
+        } catch (error) {
+            console.error('[Dashboard] Failed to resolve assignment link:', error);
+            alert("暫時無法取得作業入口，請稍後再試。");
+        }
+    })();
 };
 
 function renderAssignments(assignments, guideContent = "") {
     const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
-    const canManageAssignments = myRole === 'admin' ||
-        hasQualifiedTeacherAccessForUnit(filterUnitId, filterCourseId, myEmail);
+    const canManageAssignments = hasQualifiedTeacherAccessForUnit(filterUnitId, filterCourseId, myEmail);
     const thAction = document.getElementById('assignment-th-action');
     if (thAction) thAction.classList.toggle('hidden', !canManageAssignments);
 
@@ -1059,47 +1156,11 @@ function renderAssignments(assignments, guideContent = "") {
 
     // [NEW] Append Assignment Guide below the table
     if (guideContent) {
-        // [NEW] Resolve Unit Auth Status for Application Button
-        const urlParams = new URLSearchParams(window.location.search);
-        const currentUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
-        const isAuthorized = currentUnitId && dashboardData.courseConfigs && 
-                           dashboardData.courseConfigs[currentUnitId]?.authorizedTeachers?.includes(myEmail);
-        
-        let applicationButtonHtml = "";
-        if (!isAuthorized && currentUnitId) {
-            const appStatus = dashboardData.myApplications?.[currentUnitId]?.status;
-            if (appStatus === 'pending') {
-                applicationButtonHtml = `
-                    <div class="mt-4 flex items-center justify-center gap-2 p-3 bg-orange-50 border border-orange-100 rounded-xl text-orange-700 font-bold text-sm animate-pulse">
-                        <span>⏳ 資格審核中 (Application Pending Review)</span>
-                    </div>
-                `;
-            } else if (appStatus === 'rejected') {
-                applicationButtonHtml = `
-                    <div class="mt-4 flex flex-col items-center gap-2 p-4 bg-red-50 border border-red-100 rounded-xl">
-                        <span class="text-red-700 font-bold text-sm">❌ 申請未通過 (Application Declined)</span>
-                        <button onclick="openTeacherApplicationModal('${currentUnitId}')" class="text-xs text-red-600 underline font-black">重新申請 / Re-apply</button>
-                    </div>
-                `;
-            } else {
-                applicationButtonHtml = `
-                    <div class="mt-6 flex flex-col items-center gap-3">
-                        <button onclick="openTeacherApplicationModal('${currentUnitId}')" 
-                            class="w-full sm:w-auto px-10 py-3.5 bg-orange-500 text-white rounded-2xl font-black text-sm hover:bg-orange-600 transition-all shadow-lg active:scale-95 flex items-center gap-2 justify-center">
-                            🏅 申請成為「合格教師」 (Apply for Teacher Role) 🚀
-                        </button>
-                        <p class="text-[10px] text-gray-400 font-medium italic">獲准後可批改作業並獲得推薦分潤</p>
-                    </div>
-                `;
-            }
-        }
-
         const guideHtml = `
             <div class="mt-8 p-4 md:p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner overflow-x-auto">
                 <div class="instructor-guide-content text-sm md:text-base text-blue-900/90 leading-relaxed prose prose-blue max-w-none">
                     ${guideContent}
                 </div>
-                ${applicationButtonHtml}
             </div>
         `;
         // Find existing or append
@@ -1158,6 +1219,13 @@ function renderChart(students) {
 
 // --- Tab Logic ---
 window.switchTab = function (tabName) {
+    if (tabName === 'assignments' && !canCurrentUserViewAssignmentsTab()) {
+        tabName = getPreferredDashboardTab(resolveCanonicalUnitId(new URLSearchParams(window.location.search).get('unitId')));
+        if (tabName === 'assignments' && !canCurrentUserViewAssignmentsTab()) {
+            return;
+        }
+    }
+
     // Hide all contents
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     // Show target content
@@ -1270,6 +1338,7 @@ function renderAdminConsole() {
                                 <div>
                                     <div class="text-sm font-black text-gray-800">${escapeHtml(app.userEmail)}</div>
                                     <div class="text-[10px] font-mono text-gray-400 mt-0.5">${escapeHtml(app.unitId)}</div>
+                                    ${app.source === 'teacher_recommendation' ? `<div class="text-[10px] text-orange-500 mt-0.5">由老師推薦：${escapeHtml(app.recommendedByEmail || 'unknown')}</div>` : ''}
                                     <div class="text-[10px] text-gray-400 mt-0.5">${new Date(app.appliedAt?._seconds * 1000).toLocaleString()}</div>
                                 </div>
                             </div>
@@ -1539,13 +1608,25 @@ window.handleUnitTeacherAuth = async function (courseId, unitFile, teacherEmail,
 window.toggleAdminSuperMode = function (enabled) {
     adminSuperMode = enabled;
     localStorage.setItem('adminSuperMode', enabled);
-    
-    // [MODIFIED] Full Refresh for Admin
-    if (myRole === 'admin') {
+
+    updateCurrentDashboardPermissions(currentDashboardPermissions);
+
+    if (myRole === 'admin' && dashboardData) {
         const params = new URLSearchParams(window.location.search);
-        renderAdminDashboard(dashboardData, params.get('unitId'));
+        const filterUnitId = resolveCanonicalUnitId(params.get('unitId'));
+        renderAdminDashboard(dashboardData, filterUnitId);
+
+        const activeTab = document.querySelector('.tab-btn.text-blue-600');
+        const activeTabName = activeTab ? activeTab.id.replace('tab-btn-', '') : null;
+        const preferredTab = getPreferredDashboardTab(filterUnitId);
+
+        if (activeTabName === 'assignments' && !canCurrentUserViewAssignmentsTab()) {
+            switchTab(preferredTab);
+        } else if (!activeTabName || document.getElementById(`tab-btn-${activeTabName}`)?.classList.contains('hidden')) {
+            switchTab(preferredTab);
+        }
     }
-    
+
     renderAdminConsole();
 };
 
@@ -1585,10 +1666,85 @@ function setupGradingFunctions() {
     const feedbackInput = document.getElementById('grade-feedback');
     const submitBtn = document.getElementById('btn-submit-grade');
     const historyContainer = document.getElementById('assignment-history');
+    const recommendationBox = document.getElementById('teacher-recommendation-box');
+    const recommendationDesc = document.getElementById('teacher-recommendation-desc');
+    const recommendationStatus = document.getElementById('teacher-recommendation-status');
+    const recommendationBtn = document.getElementById('btn-submit-recommendation');
+
+    function setTeacherRecommendationState({
+        visible,
+        message = '',
+        messageClass = 'text-orange-700',
+        buttonLabel = '推薦此學生',
+        buttonDisabled = false
+    }) {
+        if (!recommendationBox || !recommendationStatus || !recommendationBtn) return;
+
+        recommendationBox.classList.toggle('hidden', !visible);
+        recommendationStatus.className = `mt-3 text-xs font-bold ${messageClass}`;
+        recommendationStatus.textContent = message;
+        recommendationBtn.textContent = buttonLabel;
+        recommendationBtn.disabled = buttonDisabled;
+        recommendationBtn.classList.toggle('opacity-50', buttonDisabled);
+        recommendationBtn.classList.toggle('cursor-not-allowed', buttonDisabled);
+    }
+
+    function refreshTeacherRecommendationUI(assignment) {
+        if (!recommendationBox || !recommendationDesc) return;
+
+        if (!assignment) {
+            setTeacherRecommendationState({ visible: false });
+            return;
+        }
+
+        const canonicalUnitId = resolveCanonicalUnitId(assignment.unitId);
+        const unitConfig = dashboardData?.courseConfigs?.[canonicalUnitId] || {};
+        const authorizedTeachers = Array.isArray(unitConfig.authorizedTeachers) ? unitConfig.authorizedTeachers : [];
+        const pendingApps = dashboardData?.pendingApplications || [];
+        const studentEmail = assignment.studentEmail || assignment.userEmail || '';
+        const hasPendingRecommendation = pendingApps.some(app =>
+            app.status === 'pending' &&
+            unitIdsMatch(app.unitId, canonicalUnitId) &&
+            (app.userEmail === studentEmail || app.userId === assignment.userId)
+        );
+
+        recommendationDesc.textContent = `若 ${studentEmail || '該學生'} 在此單元表現成熟，可由授課老師直接送出推薦，交由管理員審核。`;
+
+        if (authorizedTeachers.includes(studentEmail)) {
+            setTeacherRecommendationState({
+                visible: true,
+                message: '此學生已是本單元合格教師。',
+                messageClass: 'text-green-700',
+                buttonLabel: '已具資格',
+                buttonDisabled: true
+            });
+            return;
+        }
+
+        if (hasPendingRecommendation) {
+            setTeacherRecommendationState({
+                visible: true,
+                message: '此學生已有待審推薦，等待管理員審核中。',
+                messageClass: 'text-orange-700',
+                buttonLabel: '審核中',
+                buttonDisabled: true
+            });
+            return;
+        }
+
+        setTeacherRecommendationState({
+            visible: true,
+            message: '推薦送出後，管理員控制台會出現待審申請卡片。',
+            messageClass: 'text-orange-700',
+            buttonLabel: '推薦此學生',
+            buttonDisabled: false
+        });
+    }
 
     window.openGradingModal = function (id) {
         const assignment = dashboardData.assignments.find(a => a.id === id);
         if (!assignment) return;
+        currentGradingAssignment = assignment;
 
         idInput.value = id;
         scoreInput.value = assignment.grade || '';
@@ -1617,6 +1773,7 @@ function setupGradingFunctions() {
         }).join('');
 
         historyContainer.innerHTML = historyMap || '<p class="text-gray-400 text-center">No history</p>';
+        refreshTeacherRecommendationUI(assignment);
 
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -1628,6 +1785,7 @@ function setupGradingFunctions() {
     }
 
     window.closeGradingModal = function () {
+        currentGradingAssignment = null;
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         document.body.classList.remove('modal-open');
@@ -1663,7 +1821,69 @@ function setupGradingFunctions() {
             submitBtn.disabled = false;
             submitBtn.textContent = '送出評分';
         }
-    }
+    };
+
+    window.submitTeacherRecommendation = async function () {
+        if (!currentGradingAssignment || !recommendationBtn) return;
+
+        recommendationBtn.disabled = true;
+        recommendationBtn.textContent = '送出推薦中...';
+        if (recommendationStatus) {
+            recommendationStatus.className = 'mt-3 text-xs font-bold text-orange-700';
+            recommendationStatus.textContent = '正在送出推薦...';
+        }
+
+        try {
+            const recommendTeacherForUnit = httpsCallable(functions, 'recommendTeacherForUnit');
+            const result = await recommendTeacherForUnit({ assignmentId: currentGradingAssignment.id });
+
+            setTeacherRecommendationState({
+                visible: true,
+                message: '已成功送出老師推薦，等待管理員審核。',
+                messageClass: 'text-green-700',
+                buttonLabel: '已送出推薦',
+                buttonDisabled: true
+            });
+
+            dashboardData.pendingApplications = dashboardData.pendingApplications || [];
+            dashboardData.pendingApplications.unshift({
+                id: result?.data?.applicationId || `pending-${currentGradingAssignment.id}`,
+                userId: currentGradingAssignment.userId,
+                userEmail: currentGradingAssignment.studentEmail || currentGradingAssignment.userEmail,
+                unitId: resolveCanonicalUnitId(currentGradingAssignment.unitId),
+                status: 'pending'
+            });
+        } catch (e) {
+            console.error('Teacher recommendation failed:', e);
+            const msg = e?.message || '';
+
+            if (msg.includes('already a qualified teacher')) {
+                setTeacherRecommendationState({
+                    visible: true,
+                    message: '此學生已是本單元合格教師。',
+                    messageClass: 'text-green-700',
+                    buttonLabel: '已具資格',
+                    buttonDisabled: true
+                });
+            } else if (msg.includes('pending application')) {
+                setTeacherRecommendationState({
+                    visible: true,
+                    message: '此學生已有待審推薦，等待管理員審核中。',
+                    messageClass: 'text-orange-700',
+                    buttonLabel: '審核中',
+                    buttonDisabled: true
+                });
+            } else {
+                setTeacherRecommendationState({
+                    visible: true,
+                    message: `推薦失敗：${msg}`,
+                    messageClass: 'text-red-600',
+                    buttonLabel: '重新推薦',
+                    buttonDisabled: false
+                });
+            }
+        }
+    };
 }
 
 // Utils
@@ -2198,71 +2418,6 @@ function renderEarningsTab(data) {
 
     totalEarningsEl.innerText = total.toLocaleString();
 }
-
-// --- Teacher Application Workflow ---
-
-window.openTeacherApplicationModal = function (unitId) {
-    const modal = document.getElementById('teacher-application-modal');
-    const termsContainer = document.getElementById('teacher-terms-content');
-    const submitBtn = document.getElementById('btn-submit-application');
-    
-    if (!modal || !termsContainer || !submitBtn) return;
-
-    // 1. Load Terms from dashboardData
-    termsContainer.innerHTML = dashboardData.teacherTerms || "尚未設定合格教師權利義務細則。";
-    
-    // 2. Set action
-    submitBtn.onclick = () => handleTeacherApplication(unitId);
-    
-    // 3. Show
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    document.body.style.overflow = 'hidden';
-};
-
-window.closeTeacherApplicationModal = function () {
-    const modal = document.getElementById('teacher-application-modal');
-    if (modal) {
-        modal.classList.remove('flex');
-        modal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }
-};
-
-window.handleTeacherApplication = async function (unitId) {
-    const btn = document.getElementById('btn-submit-application');
-    const statusMsg = document.createElement('div');
-    statusMsg.className = "text-center text-orange-600 font-bold my-4 animate-fade-in";
-    statusMsg.textContent = "🚀 申請已成功提交！正在同步數據...";
-
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = "提交成功！";
-    }
-
-    try {
-        const applyFunc = httpsCallable(functions, 'applyForTeacherRole');
-        const result = await applyFunc({ unitId });
-        
-        if (result.data.success) {
-            // Replace modal content with success message briefly
-            const container = document.getElementById('teacher-terms-content');
-            if (container) container.innerHTML = `<div class="py-10 text-center">${statusMsg.outerHTML}</div>`;
-            
-            setTimeout(() => {
-                closeTeacherApplicationModal();
-                loadDashboard();
-            }, 1500);
-        }
-    } catch (e) {
-        console.error("Application failed:", e);
-        alert("申請失敗: " + e.message); // Keep error alert for visibility
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = "同意並提交申請 🚀";
-        }
-    }
-};
 
 window.handleDecideApplication = async function (applicationId, status) {
     // [MODIFIED] No more confirm dialog as per user request

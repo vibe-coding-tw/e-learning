@@ -33,6 +33,7 @@
 ### 2. GitHub Classroom 作業系統
 - **深度整合**: 每個單元可設定專屬 Github Classroom 邀請連結。
 - **批改與反饋**: 老師可直接在 Dashboard 預覽作業進度、給予 0-100 評分並撰寫文字建議。
+- **老師推薦制**: 學生不再自行申請合格教師，改由授課老師在「評分作業」對話框中推薦，交由管理員審核。
 
 ### 3. 多層級分潤與推薦 (Profit Sharing)
 - **推薦代碼 (Promotion Code)**: 學生結帳時輸入導師代碼。
@@ -47,11 +48,30 @@
 
 ## 🛠️ 操作使用說明 (Usage Guide)
 
+### 0. 付款、老師指派、作業與推薦的正式流程
+1. 學生在 `cart.html` 結帳前可輸入老師的 `promo code`。
+2. 前端先呼叫 `verifyPromoCode` 驗證代碼，成功後會把 `promoCode` 與對應 `referralMentor` 一起送進 `initiatePayment`。
+3. 綠界付款成功後，`paymentNotify` 會：
+   - 將訂單標記為 `SUCCESS`
+   - 保留 `promoCode` / `referralMentor`
+   - 若該 promo code 對應到已購買的單元，系統會自動把學生指派到該單元老師 (`users/{uid}.unitAssignments[{unitId}] = teacherEmail`)
+   - 自動寄出付款成功、老師指派成功的 email 通知
+4. 學生在課程頁或 Dashboard 點擊作業時，前端不再直接讀第一個 Classroom URL，而是先呼叫 `resolveAssignmentAccess`：
+   - 若未付款：不開放作業入口
+   - 若已付款但尚未完成老師指派：不開放作業入口
+   - 若已付款且已指派老師：回傳該老師對應的 GitHub Classroom 連結
+5. 學生透過該入口開始作業後，`submitAssignment` 才允許建立作業紀錄；若該單元需要老師指派但尚未指派，後端會拒絕寫入。
+6. 只有該筆作業的 `assignedTeacherEmail` 對應老師，或 admin，才可以：
+   - 評分
+   - 推薦學生成為合格教師
+7. 老師推薦學生時，會建立 `teacher_applications` 待審資料並寄送 admin 通知；admin 核准/拒絕後，系統再寄結果通知。
+
 ### 對於導師與管理員 (Admin/Teacher)
 1. **進入 Dashboard**: 登入後點擊右上角「儀表板」。
 2. **作業批改**:
     - 在「作業 (Assignments)」標籤中查看所有學生提交。
     - 點擊「✍️ 評分」按鈕輸入分數與評語。
+    - 若學生表現成熟，可在同一個評分對話框中點擊「老師推薦成為合格教師」。
 3. **分潤管理**:
     - 在「分潤 (Earnings)」標籤中查看您的月度累積佣金與當前使用的推薦代碼。
 4. **權限授予**: 管理員可在 `view-admin` 控制台授權特定 Email 成為教師。
@@ -60,8 +80,9 @@
 1. **選購課程**: 在 `cart.html` 加入課程或硬體。
 2. **代碼驗證**: 結帳前輸入 Promotion Code 享受導師專業指導 (如有)。
 3. **提交作業**:
-    - 點擊單元下方的「作業連結/作業指引」進入 Github 完成程式開發。
-    - 按下「提交作業」通知老師批改。
+    - 付款成功且老師指派完成後，點擊作業入口會自動導向該老師提供的 GitHub Classroom。
+    - 完成實作後，將 Repo / Demo 連結貼回提交視窗。
+    - 系統會寄送作業繳交通知給對應老師；老師評分後，學生也會收到評分通知信。
 
 ## 🔧 教師與管理員進階功能 (Teacher & Admin Advanced Features)
 
@@ -72,7 +93,15 @@
 
 ### 2. 精確的權限委派
 - **Email 直接授權**: 管理員只需輸入教師的 Google 帳號 Email，即可快速開通特定課程的管理權限。
-- **課程層級控制**: 教師僅能存取其獲准管理之課程的學生資料，確保資訊透明且兼顧個人隱私。
+- **單元層級控制**: 教師僅能存取其獲准管理之單元的學生資料，且只能批改自己被指派之學生作業。
+
+### 4. Email 通知與 Callback 規則
+- **付款成功**: 寄送課程付款成功通知。
+- **老師指派成功**: 同步寄送給學生與老師，連結回對應單元的 Dashboard。
+- **學生繳交作業**: 寄送給該筆作業的 `assignedTeacherEmail`。
+- **老師完成評分**: 寄送給學生，連結回對應單元的 `Assignments` 分頁。
+- **老師推薦學生成為合格教師**: 寄送給 admin，連結回 `Dashboard?tab=admin`。
+- **申請審核結果**: 寄送給申請者，核准後可直接回對應單元 Dashboard。
 
 ### 3. 深層連結 (Deep Linking) 技術
 - **URL 直接導航**: 支援在網址後方加上標籤 (如 `#assignment-guide`) 直接跳轉至特定段落。

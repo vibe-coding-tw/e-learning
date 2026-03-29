@@ -373,22 +373,22 @@ function draw() {
     <!-- Scripts -->
     <script>
         // --- Canvas Demo Logic ---
-        const canvas = document.getElementById('demoCanvas');
-        const ctx = canvas.getContext('2d');
+        const demoCanvas = document.getElementById('demoCanvas');
+        const ctx = demoCanvas.getContext('2d');
         const coordsLabel = document.getElementById('coords');
 
         // Draw coordinate grid basics
         function drawGrid() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, demoCanvas.width, demoCanvas.height);
 
             // Grid lines
             ctx.strokeStyle = '#e5e7eb';
             ctx.lineWidth = 1;
-            for (let x = 0; x <= canvas.width; x += 20) {
-                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            for (let x = 0; x <= demoCanvas.width; x += 20) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, demoCanvas.height); ctx.stroke();
             }
-            for (let y = 0; y <= canvas.height; y += 20) {
-                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            for (let y = 0; y <= demoCanvas.height; y += 20) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(demoCanvas.width, y); ctx.stroke();
             }
         }
 
@@ -402,12 +402,12 @@ function draw() {
 
             ctx.beginPath();
             ctx.moveTo(x, 0);
-            ctx.lineTo(x, canvas.height);
+            ctx.lineTo(x, demoCanvas.height);
             ctx.stroke();
 
             ctx.beginPath();
             ctx.moveTo(0, y);
-            ctx.lineTo(canvas.width, y);
+            ctx.lineTo(demoCanvas.width, y);
             ctx.stroke();
             ctx.setLineDash([]);
 
@@ -425,19 +425,18 @@ function draw() {
 
         drawGrid();
 
-        canvas.addEventListener('mousemove', (e) => {
-            const rect = canvas.getBoundingClientRect();
+        demoCanvas.addEventListener('mousemove', (e) => {
+            const rect = demoCanvas.getBoundingClientRect();
             const x = Math.round(e.clientX - rect.left);
             const y = Math.round(e.clientY - rect.top);
             coordsLabel.innerText = `X: ${x}, Y: ${y}`;
             drawCursor(x, y);
         });
 
-        canvas.addEventListener('mouseleave', () => {
+        demoCanvas.addEventListener('mouseleave', () => {
             drawGrid();
             coordsLabel.innerText = "X: 0, Y: 0";
         });
-
 
         // --- Standard Media Overlay Logic ---
         // Injected by course-shared.js
@@ -448,125 +447,145 @@ function draw() {
         };
     </script>
     <script src="/js/course-shared-v4.js"></script>
-    <script>
-    </script>
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">Canvas 渲染實驗室</h2>
 
-        <h3>作業 1-1：虛擬搖桿：觸控映射 (Touch Mapping)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 遊戲介面工程師。</li>
-            <li><strong>執行方式：</strong> 讓 CSS 製作的小圓（搖桿頭）跟隨手指移動，並確保在觸控移動時座標能正確映射到 -100 到 +100 的區間。</li>
-            <li><strong>評分重點：</strong> 觸控點與搖桿頭移動的同步性，以及對於螢幕邊界與偏移量的精確計算。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：從 DOM 到 Canvas 的降維打擊 (View Transformation)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：高效能介面工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫。</li>
+                    <li><strong>座標變換</strong>：在 <code>mousemove</code> 中將螢幕座標轉換為畫布內部相對座標 <code>(canvasX, canvasY)</code>。</li>
+                    <li><strong>像素繪製</strong>：使用 <code>arc()</code> 配合 <code>fill()</code> 實作一個隨滑鼠移動的小球，並確保背景能被正確 <code>clearRect()</code>。</li>
+                    <li><strong>同步提交</strong>：撰寫 README 紀錄 Canvas 與 DOM 事件座標系的不同，並 <code>push</code> 成果。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>渲染循環</strong>：是否在繪製前正確執行 <code>clearRect</code>？有無殘影現象？</li>
+                    <li>[ ] <strong>座標精準度</strong>：小球中心點是否精確對準滑鼠游標？是否有偏移？</li>
+                    <li>[ ] <strong>性能意識</strong>：是否理解 <code>requestAnimationFrame</code> 與一般 <code>setInterval</code> 的優劣？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：打造動態儀表板 (Visual Gauge)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：視覺化專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>設計邏輯</strong>：利用 <code>save()</code> 與 <code>restore()</code> 管理畫布狀態，模擬一個轉動的指針。</li>
+                    <li><strong>旋轉運算</strong>：使用 <code>rotate()</code> 指令，將數值映射至 0~180 度的弧度角度。</li>
+                    <li><strong>視覺強化</strong>：加入 <code>lineWidth</code> 與 <code>lineCap</code> 優化線條質感。</li>
+                    <li><strong>提交報告</strong>：將實作截圖與旋轉公式填入 README 後 <code>push</code>。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>座標系轉換</strong>：是否熟練使用 <code>translate()</code> 將原點移至儀表中心？</li>
+                    <li>[ ] <strong>狀態管理</strong>：<code>save/restore</code> 是否配對使用，避免污染後續繪圖？</li>
+                    <li>[ ] <strong>角度變換</strong>：度數轉弧度 (Math.PI / 180) 的計算是否正確？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：實作視覺回饋特效 (Visual Feedback)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：特效設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：40 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>定義狀態</strong>：模擬一個「警告狀態」，當變數為 true 時觸發。</li>
+                    <li><strong>實作動畫</strong>：利用透明度變化 (Alpha) 製作呼吸燈效果或紅色閃爍遮罩。</li>
+                    <li><strong>封裝功能</strong>：將特效封裝進 <code>renderLoop</code>，確保在高頻率更新下依然流暢。</li>
+                    <li><strong>版本提交</strong>：紀錄動畫實作的心得，推送到 GitHub。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>透明度控制</strong>：<code>globalAlpha</code> 或 <code>rgba()</code> 的應用是否平滑？</li>
+                    <li>[ ] <strong>繪圖邏輯</strong>：遮罩是否覆蓋全畫布？是否在最上層繪製？</li>
+                    <li>[ ] <strong>代碼結構</strong>：動畫變數（如 time 或 counter）是否妥善管理？</li>
+                </ul>
+            </div>
+        </div>
 
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>上傳基礎專案框架（含 <code><canvas></code> 元素背景）與 <code>joystick.js</code> 註解框架，並勾選 <strong>"Template
-                        repository"</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>建立作業並連結範本。建議開啟 <strong>Feedback Pull Requests</strong> 選項以便對比學生的渲染循環與座標映射邏輯。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，實作從 DOM 座標到 Canvas 像素的映射與動態搖桿繪製。</li>
-                <li>本地開發後 <strong>Push 代碼</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>打開 Feedback PR，重點檢查學生對 <code>clearRect</code> 的調用位置、座標歸一化公式及資源管理（如 <code>save/restore</code>）的嚴謹度。
-                </li>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：從「靜態標記」轉向「動態渲染」的思維切換。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-indigo-600">第一步：範本設置</strong> - 準備好 <code>index.html</code> 中空的 <code><canvas></code> 標籤，並在 JS 範本中標註核心生命週期函數 (Setup, Loop)。</li>
+                <li><strong class="text-indigo-600">第二步：發布作業</strong> - 在 Classroom 啟用 <strong>Feedback PRs</strong>，這對於審視學生的渲染邏輯與繪圖效能建議非常有用。</li>
+                <li><strong class="text-indigo-600">第三步：學生端操作 (Flipped Workflow)</strong> - 指導學生理解為何 Canvas 需要 <code>clearRect</code>，否則會變成「小畫家」式的殘影效果。</li>
+                <li><strong class="text-indigo-600">第四步：代碼審閱</strong> - 重點檢查 <code>requestAnimationFrame</code> 是否正確遞迴，以及座標歸一化邏輯。</li>
             </ol>
         </div>
 
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元引導學生從 DOM 操作轉向高性能的 Canvas 繪圖，並實作基礎的虛擬搖桿渲染，建議範本倉庫設置如下：</p>
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── index.html        # 包含畫布元素與控制按鈕
+├── main.js           # 存放渲染循環與座標邏輯 (重點評分項)
+├── assets/           # 放置儀表板底座背景圖片
+└── README.md         # 紀錄座標變換公式與渲染效能觀察
+            </pre>
+        </div>
 
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── index.html       # 包含畫布元素 <canvas id="joystick">
-├── js/joystick.js    # (重點) 需實作繪圖循環與座標歸一化邏輯
-└── README.md        # 座標歸一化公式推導與 Canvas 效能評測報告</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>joystick.js (Canvas 渲染循環)</strong></p>
-        <pre><code>const canvas = document.getElementById('joystick');
-const ctx = canvas.getContext('2d');
-
-function drawJoystick(x, y) {
-  // 1. 清除舊畫面，防止殘影
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // 2. 繪製底座 (固定)
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, baseRadius, 0, Math.PI * 2);
-  ctx.strokeStyle = '#cbd5e1';
-  ctx.stroke();
-
-  // 3. 繪製搖桿頭 (隨觸控點動態移動)
-  ctx.beginPath();
-  ctx.arc(x, y, stickRadius, 0, Math.PI * 2);
-  ctx.fillStyle = '#6366f1';
-  ctx.fill();
-
-  // 4. 指令歸一化 (Task 1-1)
-  const normalizedX = Math.round((x - centerX) / baseRadius * 100);
-  const normalizedY = Math.round((y - centerY) / baseRadius * -100); 
-  sendJoyData(normalizedX, normalizedY);
-}</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>渲染檢查：</strong> 使用 Actions 檢查 <code>joystick.js</code> 是否包含必要的繪圖指令如 <code>clearRect</code> 與
-                <code>arc</code>。</li>
-            <li><strong>範圍驗證：</strong> 傳入極限座標值，驗證輸出的歸一化數值是否嚴格控制在 [-100, 100] 的整數區間內。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody style="color: #4b5563;">
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">研讀 Canvas 與 DOM 性能對抗實驗，觀察本頁 Lab 中的座標日誌。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>Dashboard：</strong>確認學生已初步具備座標系變換的基本概念。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業完成搖桿基礎渲染與座標歸一化核心邏輯 (1-1) 並更新代碼。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>現場觀察：</strong>展示學生繪製的不同搖桿風格，討論渲染層的回刷開銷。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">挑戰動態儀表板或多層繪圖特效 (1-2) 並提交最終 PR 筆記。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核繪圖函數的重用性、代碼優雅度與
-                        resource-cleanup 的嚴謹度。
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
+                        <td class="p-4 border-b">觀看影片，理解 Canvas 座標系與 DOM 座標系的差異點。</td>
+                        <td class="p-4 border-b"><strong>Dashboard:</strong> 觀察學生是否理解 (0,0) 的位置。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
+                        <td class="p-4 border-b">領取作業 (Repo)，完成基礎小球跟隨任務 (Quest 1) 並 Push 代碼。</td>
+                        <td class="p-4 border-b"><strong>現場指導:</strong> 診斷為何畫布出現殘影 (忘了 clearRect)。</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
+                        <td class="p-4">挑戰儀表板與視覺特效 (Quest 2-3)，撰寫效能心得並提交最後 Commit。</td>
+                        <td class="p-4"><strong>Feedback PR:</strong> 點評渲染結構的優雅度與擴充性。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 </body>
 

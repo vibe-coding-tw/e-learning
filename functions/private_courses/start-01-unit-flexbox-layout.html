@@ -471,29 +471,82 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2>Flexbox 遙控器版面配置</h2>
 
-        <h3>作業 2-1：十字方向鍵 (幾何對稱挑戰)</h3>
-        <ul>
-            <li><strong>技術點：</strong> 巢狀容器（Nested Containers）的運用與軸線向性。</li>
-            <li><strong>GitHub 優勢：</strong> 這是練習 <strong>Code Review</strong> 的好機會。你可以檢查學生是否為了達成對齊而使用了不必要的
-                <code>margin</code>，「抓出」那些沒用到 Flexbox 優勢的寫法（如手動推位置）。
-            </li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：十字方向鍵幾何對稱挑戰</h3>
+            <div class="quest-meta">
+                <span>角色扮演：版面工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
 
-        <h3>作業 2-2：響應式佈局 (RWD 切換)</h3>
-        <ul>
-            <li><strong>技術點：</strong> <code>flex-direction</code> 隨螢幕寬度改變的邏輯判斷。</li>
-            <li><strong>GitHub 優勢：</strong> 學生提交 PR 時，助教可以在 <strong>Files Changed</strong> 中直接對比不同中斷點（Breakpoint）下的 CSS
-                數值變動，確保其 <code>flex-grow</code> 或 <code>flex-shrink</code> 設定符合邏輯。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立骨架</strong>：先把方向鍵拆成上、中、下三層容器，明確區分主軸與交叉軸。</li>
+                    <li><strong>使用 Flexbox</strong>：用巢狀 <code>display: flex</code> 完成上下左右按鈕的對齊，不以手動位移湊位置。</li>
+                    <li><strong>微調中心點</strong>：檢查四顆按鈕是否圍繞同一中心，並在不同螢幕寬度下維持對稱。</li>
+                    <li><strong>提交說明</strong>：在 README 說明你如何利用主軸、交叉軸與巢狀容器解決對齊問題。</li>
+                </ol>
+            </div>
 
-        <h3>作業 2-3：間距與觸控優化 (精確控制)</h3>
-        <ul>
-            <li><strong>技術點：</strong> <code>gap</code> 屬性取代傳統 margin 的效率。</li>
-            <li><strong>GitHub 優勢：</strong> 透過 **Commit History**，你可以看到學生如何微調 <code>gap</code> 數值，這反映了他們在不同模擬設備上測試佈局的過程。
-            </li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>結構正確</strong>：是否使用合理的 Flexbox 容器層級，而不是靠大量 <code>margin</code> 或絕對定位硬推？</li>
+                    <li>[ ] <strong>幾何對稱</strong>：方向鍵的中心點、間距與視覺平衡是否穩定？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：響應式儀表板切換</h3>
+            <div class="quest-meta">
+                <span>角色扮演：RWD 架構師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>規劃版面</strong>：定義橫式裝置使用左右並排、直式裝置使用上下堆疊的資訊區與控制區。</li>
+                    <li><strong>撰寫斷點</strong>：利用 <code>flex-direction</code>、<code>flex-grow</code> 與 Media Query 切換布局方向。</li>
+                    <li><strong>多尺寸測試</strong>：至少檢查一種手機直式、一種手機橫式與一種桌面尺寸。</li>
+                    <li><strong>提交成果</strong>：在 README 記錄你設定的 breakpoint 與各版面配置的預期行為。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>切換邏輯</strong>：版面是否真的依裝置寬度切換，而非單一尺寸碰巧看起來正常？</li>
+                    <li>[ ] <strong>空間分配</strong>：是否善用 <code>flex-grow</code> / <code>flex-shrink</code> 讓主畫面保有足夠可視區？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：間距與觸控優化</h3>
+            <div class="quest-meta">
+                <span>角色扮演：互動設計師</span> | <span>難度：⭐️</span> | <span>估計時長：30 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>盤點熱區</strong>：找出最容易誤觸的速度切換、方向控制與輔助按鈕群。</li>
+                    <li><strong>調整間距</strong>：使用 <code>gap</code>、等寬按鈕與一致 padding 提升手指操作容錯。</li>
+                    <li><strong>實機驗證</strong>：在手機模擬或實機環境連續測試點擊，確認不會互相擠壓或誤觸。</li>
+                    <li><strong>提交記錄</strong>：於 README 紀錄你最後採用的間距數值與調整原因。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>觸控精度</strong>：學生是否用 <code>gap</code> 與一致的按鈕寬度改善誤觸，而不是局部微調單顆按鈕？</li>
+                    <li>[ ] <strong>測試痕跡</strong>：是否留下不同裝置或不同尺寸下的比較與理由？</li>
+                </ul>
+            </div>
+        </div>
 
     </section>
 

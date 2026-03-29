@@ -680,6 +680,17 @@ function initFirebaseFeatures() {
             }
         };
 
+        window.firebaseResolveAssignmentAccess = async (payload) => {
+            try {
+                const resolveAssignmentAccess = httpsCallable(functions, 'resolveAssignmentAccess');
+                const result = await resolveAssignmentAccess(payload);
+                return result.data;
+            } catch (e) {
+                console.error("Failed to resolve assignment access:", e);
+                throw e;
+            }
+        };
+
         console.log("[Firebase] Initialized.");
     `;
 
@@ -745,55 +756,79 @@ function injectSubmissionModal() {
 
 // Global functions for Modal
 window.openSubmissionModal = async function (assignmentId, title) {
-    let classroomUrl = null;
     const pathParts = window.location.pathname.split('/');
     const fileName = pathParts[pathParts.length - 1];
+    const courseId = await findCourseIdByUnit(fileName);
+    let classroomUrl = null;
+    let assignmentAccess = null;
 
-    // --- 1. Resolve Classroom URL (Priority Order) ---
-
-    // A. Try Dynamic Configs (Firestore) [NEW]
     try {
-        if (typeof window.firebaseGetCourseConfigs === 'function') {
-            if (!globalCourseConfigs) {
-                globalCourseConfigs = await window.firebaseGetCourseConfigs();
+        if (typeof window.firebaseResolveAssignmentAccess === 'function') {
+            assignmentAccess = await window.firebaseResolveAssignmentAccess({ courseId, unitId: fileName });
+            classroomUrl = assignmentAccess?.classroomUrl || null;
+
+            if (assignmentAccess && !assignmentAccess.authorized) {
+                alert("尚未完成此課程付款授權，暫時無法開啟作業入口。");
+                return;
             }
 
-            if (globalCourseConfigs) {
-                for (const [cid, cfg] of Object.entries(globalCourseConfigs)) {
-                    if (cfg && cfg.githubClassroomUrls && cfg.githubClassroomUrls[fileName]) {
-                        classroomUrl = resolveClassroomUrl(cfg.githubClassroomUrls[fileName]);
-                        break;
-                    }
-                }
+            if (assignmentAccess?.requiresTeacherAssignment && !assignmentAccess?.assignedTeacherEmail) {
+                alert("此單元尚未完成老師指派，作業入口會在老師指派完成後開放。");
+                return;
             }
         }
     } catch (e) {
-        console.error("[CourseShared] Dynamic config lookup failed:", e);
+        alert("暫時無法確認您的作業入口，請稍後再試。");
+        return;
     }
 
-    // B. Try local RESOURCES (unit-level manual override)
-    if (!classroomUrl && typeof window.RESOURCES !== 'undefined' && window.RESOURCES.githubClassroomUrl) {
-        classroomUrl = resolveClassroomUrl(window.RESOURCES.githubClassroomUrl);
-    }
-
-    // C. Fallback to centralized lessons metadata (Firestore cached)
+    // --- 1. Resolve Classroom URL (Priority Order) ---
     if (!classroomUrl) {
+
+        // A. Try Dynamic Configs (Firestore) [NEW]
         try {
-            if (!globalLessonsData) {
-                // If not cached, try fetching now (strictly Firestore)
-                globalLessonsData = await vibeFetchLessons();
-            }
-            // Search all courses for this filename key
-            if (globalLessonsData) {
-                for (const course of globalLessonsData) {
-                    if (course.githubClassroomUrls && course.githubClassroomUrls[fileName]) {
-                        classroomUrl = resolveClassroomUrl(course.githubClassroomUrls[fileName]);
-                        break;
+            if (typeof window.firebaseGetCourseConfigs === 'function') {
+                if (!globalCourseConfigs) {
+                    globalCourseConfigs = await window.firebaseGetCourseConfigs();
+                }
+
+                if (globalCourseConfigs) {
+                    for (const [cid, cfg] of Object.entries(globalCourseConfigs)) {
+                        if (cfg && cfg.githubClassroomUrls && cfg.githubClassroomUrls[fileName]) {
+                            classroomUrl = resolveClassroomUrl(cfg.githubClassroomUrls[fileName]);
+                            break;
+                        }
                     }
                 }
             }
         } catch (e) {
-            console.error("[CourseShared] Firestore link fetch failed:", e);
+            console.error("[CourseShared] Dynamic config lookup failed:", e);
+        }
+
+        // B. Try local RESOURCES (unit-level manual override)
+        if (!classroomUrl && typeof window.RESOURCES !== 'undefined' && window.RESOURCES.githubClassroomUrl) {
+            classroomUrl = resolveClassroomUrl(window.RESOURCES.githubClassroomUrl);
+        }
+
+        // C. Fallback to centralized lessons metadata (Firestore cached)
+        if (!classroomUrl) {
+            try {
+                if (!globalLessonsData) {
+                    // If not cached, try fetching now (strictly Firestore)
+                    globalLessonsData = await vibeFetchLessons();
+                }
+                // Search all courses for this filename key
+                if (globalLessonsData) {
+                    for (const course of globalLessonsData) {
+                        if (course.githubClassroomUrls && course.githubClassroomUrls[fileName]) {
+                            classroomUrl = resolveClassroomUrl(course.githubClassroomUrls[fileName]);
+                            break;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("[CourseShared] Firestore link fetch failed:", e);
+            }
         }
     }
 
@@ -805,7 +840,6 @@ window.openSubmissionModal = async function (assignmentId, title) {
         
         // [NEW] Automated Assignment Tracking
         if (typeof window.firebaseSubmitAssignment === 'function') {
-            const courseId = await findCourseIdByUnit(fileName);
             window.firebaseSubmitAssignment({
                 courseId: courseId,
                 unitId: fileName,
@@ -940,4 +974,3 @@ async function findCourseIdByUnit(fileName) {
     console.log(`[CourseShared] Fallback resolution for ${fileName} -> ${fallbackId}`);
     return fallbackId;
 }
-
