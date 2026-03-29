@@ -2740,39 +2740,3 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
         console.error("Error in calculateMonthlySharing:", error);
     }
 });
-
-exports.triggerSeedFirestore = onRequest(async (req, res) => {
-    try {
-        const filePath = path.join(__dirname, 'reconstructed_lessons.json');
-        const fallbackPath = path.join(__dirname, '../public/examples/reconstructed_lessons.json');
-        
-        let targetPath = fs.existsSync(filePath) ? filePath : fallbackPath;
-        
-        if (!fs.existsSync(targetPath)) {
-            return res.status(404).send({ success: false, error: "Source file not found." });
-        }
-
-        const data = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
-        const batch = db.batch();
-        
-        // 1. Clear existing
-        const oldSnap = await db.collection('metadata_lessons').get();
-        oldSnap.forEach(doc => batch.delete(doc.ref));
-        
-        // 2. Add new
-        data.forEach((lesson, index) => {
-            const docRef = db.collection('metadata_lessons').doc();
-            batch.set(docRef, {
-                ...lesson,
-                orderWeight: (index + 1) * 10,
-                updatedAt: admin.firestore.FieldValue.serverTimestamp()
-            });
-        });
-        
-        await batch.commit();
-        res.status(200).send({ success: true, count: data.length, source: targetPath });
-    } catch (err) {
-        console.error("Seeding failed:", err);
-        res.status(500).send({ success: false, error: err.message });
-    }
-});
