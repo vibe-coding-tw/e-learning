@@ -242,13 +242,13 @@
         <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">語音實驗室：STT/TTS 整合與自然語義控制</h2>
 
         <div class="assignment-quest">
-            <h3 class="quest-title">任務 1：模糊意圖解析 (Intent Mapping Lab)</h3>
+            <h3 class="quest-title text-justify">任務 1：模糊意圖解析 (Intent Mapping Lab)</h3>
             <div class="quest-meta">
                 <span>角色扮演：VUI 體驗設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
                     <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
                     <li><strong>詞典建立</strong>：在 <code>intent_parser.js</code> 定義語音與指令的映射表（包含多種同義詞）。</li>
@@ -258,7 +258,7 @@
             </div>
 
             <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
                     <li>[ ] <strong>語義覆蓋率</strong>：指令是否具備基本的同義詞容錯？（如：停、停止、不要動）。</li>
                     <li>[ ] <strong>指令純淨度</strong>：是否能從複雜的句子中精準分離出關鍵動作，而不發生誤觸？</li>
@@ -267,13 +267,13 @@
         </div>
 
         <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 2：語音對話回饋 (Two-way Feedback Lab)</h3>
+            <h3 class="quest-title text-justify">任務 2：語音對話回饋 (Two-way Feedback Lab)</h3>
             <div class="quest-meta">
                 <span>角色扮演：人機互動工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
                     <li><strong>狀態同步器</strong>：辨識成功後，利用 <code>window.speechSynthesis</code> 讓機器人「復誦」確認（如："收到指令，即將右轉"）。</li>
                     <li><strong>置信度過濾</strong>：只在 Confidence > 0.85 時執行馬達寫入。</li>
@@ -283,7 +283,7 @@
             </div>
 
             <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
                     <li>[ ] <strong>互動流暢性</strong>：語音回饋是否有與辨識衝突？（需考量回饋時是否應暫停辨識以防自說自聽）。</li>
                     <li>[ ] <strong>環境適應力</strong>：在 README 錄製噪音環境下的辨識成功率測試結果。</li>
@@ -292,13 +292,13 @@
         </div>
 
         <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 3：全天候自動辨識核心 (Continuous VUI Engine)</h3>
+            <h3 class="quest-title text-justify">任務 3：全天候自動辨識核心 (Continuous VUI Engine)</h3>
             <div class="quest-meta">
                 <span>角色扮演：系統可靠度專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
                     <li><strong>自動重啟路徑</strong>：在 <code>onend</code> 事件中，監測全域控制變數，實作無縫重啟邏輯。</li>
                     <li><strong>FSM 狀態橋接</strong>：將「語音控制中」作為 FSM 的一個子狀態。當偵測到關鍵字後，發送 <code>VOICE_EVENT</code> 事件。</li>
@@ -307,7 +307,7 @@
             </div>
 
             <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
                     <li>[ ] <strong>系統續航力</strong>：在「不點擊」的情況下，系統是否能維持 1 分鐘以上的待命聽取狀態？</li>
                     <li>[ ] <strong>穩定性分析</strong>：針對辨識器偶發的 <code>network</code> 錯誤，是否有實作指數退避式的重連策略？</li>
@@ -331,7 +331,7 @@
         <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
         <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
             <h3 class="text-emerald-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
 .
 ├── js/speech_wrapper.js # 核心：包裝好的 SpeechRecognition 事件偵聽
 ├── js/voice_map.js      # 配置：口語標籤與 BLE DataPakc 的映射表

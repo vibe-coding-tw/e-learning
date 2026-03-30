@@ -254,13 +254,13 @@
         <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">核心實驗室：視覺質心演算與實體連動</h2>
 
         <div class="assignment-quest">
-            <h3 class="quest-title">任務 1：實作「質心追蹤器」函式 (Build Centroid Tracker)</h3>
+            <h3 class="quest-title text-justify">任務 1：實作「質心追蹤器」函式 (Build Centroid Tracker)</h3>
             <div class="quest-meta">
                 <span>角色扮演：視覺導航工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
                     <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
                     <li><strong>像素遍歷實作</strong>：在 <code>Tracker.js</code> 撰寫一個迴圈遍歷二值化後的 ImageData。當像素值為 0（黑色目標）時，累加 X, Y 座標。</li>
@@ -270,7 +270,7 @@
             </div>
 
             <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
                     <li>[ ] <strong>座標運算精準度</strong>：紅色準星是否能準確鎖定在單一色塊的幾何中心？</li>
                     <li>[ ] <strong>程式穩健度</strong>：當影像中「完全沒有黑色像素」時，程式是否能優雅保持（不報錯、不報 NAN）？</li>
@@ -279,13 +279,13 @@
         </div>
 
         <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 2：「質心穩定化」過濾器 (Centroid Stabilization Filter)</h3>
+            <h3 class="quest-title text-justify">任務 2：「質心穩定化」過濾器 (Centroid Stabilization Filter)</h3>
             <div class="quest-meta">
                 <span>角色扮演：訊號處理專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
                     <li><strong>面積門檻實作</strong>：設定 <code>MIN_PIXELS = 50</code>。若偵測到的目標像素數低於此值，則維持上一次的質心座標。</li>
                     <li><strong>低通濾波演算法</strong>：實作 <code>current = (target * 0.7) + (prev * 0.3)</code>，實現加權移動平均。</li>
@@ -295,7 +295,7 @@
             </div>
 
             <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
                     <li>[ ] <strong>抗噪有效性</strong>：在環境光線不穩引起像素閃動時，準星是否依然能保持穩定不劇烈晃動？</li>
                     <li>[ ] <strong>追蹤靈敏度</strong>：進行低通濾波後，準星對物體快速移動的跟隨延遲是否仍在可接受範圍內？</li>
@@ -304,13 +304,13 @@
         </div>
 
         <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 3：質心誤差與轉向控制連動 (Centroid-to-Control Linkage)</h3>
+            <h3 class="quest-title text-justify">任務 3：質心誤差與轉向控制連動 (Centroid-to-Control Linkage)</h3>
             <div class="quest-meta">
                 <span>角色扮演：機器人系統整合師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
                     <li><strong>誤差映射實作</strong>：計算水平偏離值 $e = \bar{x} - 160$。將 $e \in [-160, 160]$ 映射至舵機角度 $A \in [60, 120]$。</li>
                     <li><strong>通訊整合</strong>：當 $e$ 發生變化時，透過封裝好的 BLE 介面發送 <code>{steer: A}</code> 到 ESP32 韌體。</li>
@@ -320,7 +320,7 @@
             </div>
 
             <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
                     <li>[ ] <strong>物理反應正確性</strong>：當質心位於畫面左側（Error 為負值）時，舵機轉向角度是否正確。</li>
                     <li>[ ] <strong>系統集成度</strong>：是否成功打通了從影像二元化到物理底層控制的完整閉環 (Close-loop)？</li>
@@ -344,7 +344,7 @@
         <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
         <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
             <h3 class="text-blue-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
 .
 ├── js/vision.js        # 包含二值化框架，待填寫質心計算邏輯
 ├── js/car_link.js      # 包含 BLE 連線框架，待實作 Error 到轉向的映射

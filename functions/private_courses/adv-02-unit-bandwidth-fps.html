@@ -226,18 +226,44 @@
                             <!-- Task 3-3 -->
                             <div onclick="openSubmissionModal('adv-02-abr-logical', '【作業 3-3】動態頻寬適應 (ABR) 邏輯設計')"
                                 class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                    <!-- Assignment Guide (Hidden) -->
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-purple-600 transition">作業 3-3</h3>
+                                    <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold">45 min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">ABR 動態邏輯</h4>
+                                <p class="text-sm text-gray-500">實作偵測 FPS 下降後自動降低解析度的防擁塞設計。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>進階課程 2 - 單元 3</span>
+                <span class="hidden md:inline">|</span>
+                <span>講師：Antigravity Assistant</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>影像實驗室：頻寬、解析度與 FPS 的三角博弈</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">影像實驗室：頻寬、解析度與 FPS 的三角博弈</h2>
 
         <div class="assignment-quest">
-            <h3 class="quest-title">任務 1：頻寬消耗標定法 (Bandwidth Profiling)</h3>
+            <h3 class="quest-title text-justify">任務 1：頻寬消耗標定法 (Bandwidth Profiling)</h3>
             <div class="quest-meta">
                 <span>角色扮演：網路效能分析師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
                     <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
                     <li><strong>解析度掃描</strong>：分別設置 QQVGA、QVGA、VGA 解析度。</li>
@@ -247,7 +273,7 @@
             </div>
 
             <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
                     <li>[ ] <strong>關係識別</strong>：能否準確描述解析度加倍時，頻寬與 FPS 的反比變動規律？</li>
                     <li>[ ] <strong>瓶頸分析</strong>：報告中是否能指出系統瓶頸是發生在「編碼速度」還是「網路傳輸」？</li>
@@ -256,13 +282,13 @@
         </div>
 
         <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 2：動態擁塞控制實驗 (Congestion Control Lab)</h3>
+            <h3 class="quest-title text-justify">任務 2：動態擁塞控制實驗 (Congestion Control Lab)</h3>
             <div class="quest-meta">
                 <span>角色扮演：系統開發工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
                     <li><strong>干擾導入</strong>：在串流過程中開啟大型檔案下載，模擬網路擁塞。</li>
                     <li><strong>自動降級</strong>：開發一段邏輯，當偵測到 FPS 低於 5 秒持續 3 秒時，自動將解析度調低。</li>
@@ -272,7 +298,7 @@
             </div>
 
             <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
                     <li>[ ] <strong>狀態轉換</strong>：解析度切換瞬間，系統是否發生溢位 (Buffer Overflow) 或重啟？</li>
                     <li>[ ] <strong>邏輯嚴謹度</strong>：README 是否解釋了「遲滯 (Hysteresis)」設計以避免解析度頻繁跳動？</li>
@@ -281,13 +307,13 @@
         </div>
 
         <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 3：硬體加速與 FPS 極限挑戰 (Clock Speed Optimization)</h3>
+            <h3 class="quest-title text-justify">任務 3：硬體加速與 FPS 極限挑戰 (Clock Speed Optimization)</h3>
             <div class="quest-meta">
                 <span>角色扮演：底層韌體工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
                     <li><strong>時鐘調整</strong>：嘗試調整 XCLK (感測器主時鐘) 頻率 (10MHz vs 20MHz)。</li>
                     <li><strong>效能對比</strong>：觀察 CPU 溫度與影像幀率的變動關係。</li>
@@ -297,7 +323,7 @@
             </div>
 
             <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
                     <li>[ ] <strong>硬體深度</strong>：能否解釋 XCLK 與感測器取樣週期及 I2C 通訊的同步關係？</li>
                     <li>[ ] <strong>安全邊際</strong>：在追求極限 FPS 的同時，是否能保留合理的硬體安全邊際？</li>
@@ -306,100 +332,6 @@
         </div>
     </section>
 
-    <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：掌握「頻寬博弈」。讓學生理解 Wi-Fi 並非無限，必須根據傳輸反饋動態調整。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600">重點 1：封包遺失 (Packet Loss)</strong> - 強調 MJPEG 只針對一張圖，而 H.264 針對「時間軸上的差異」。</li>
-                <li><strong class="text-indigo-600">重點 2：ABR (Adaptive Bit Rate) 的種子</strong> - 實驗 2-2 是最有感的，讓學生看見演算法「預測」需要代價（延測）。</li>
-                <li><strong class="text-indigo-600">重點 3：瓶頸診斷</strong> - 引導學生不只看技術參數，要從「使用者需求（遙控 vs 存擋）」出發做技術選型。</li>
-            </ol>
-        </div>
-
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
-.
-├── src/codec_switch.cpp  # 核心：學員實作 MJPEG/H.264 切換邏輯
-├── tools/latency_calc.py # 工具：協助測算 End-to-End 延遲
-└── README.md             # 紀錄：編碼延遲與畫質殘影對比報告
-            </pre>
-        </div>
-
-        <h2>教學實施策略 (Flipped Workflow)</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台引導</th>
-                </tr>
-            </thead>
-            <tbody style="color: #4b5563;">
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前預習</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「H.264 I/P 幀動態演示」短片。理解運動補償 (Motion Vector) 概念。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard:</strong> 測試學員能否預判 H.264 在靜態畫面下的頻寬優勢。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中實作</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業 (Repo)，執行 2-1 壓力測試與 2-2 延遲觀測。優化解碼器緩衝區配置。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術教練:</strong> 現場拆解馬賽克殘影產生的數據丟包成因。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後精進</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">提交最終場景編碼方案。閱讀導師對「H.265 與 AV1」在物聯網邊緣端應用前景的補充。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR:</strong> 點評對「編碼複雜度 vs 頻寬節省」的成本合算。</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
-
-└── README.md        # ABR 算法測試日誌</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>頻寬計算邏輯 (JavaScript)</strong></p>
-        <pre><code>const bitrate = (avgFrameSize * 8 * fps) / 1000000; // Mbps</code></pre>
-
-        <h3>C. 自動評估 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>數學正確性檢核：</strong> 檢查報告中的公式是否符合 $FPS \times Size \times 8$。</li>
-            <li><strong>邏輯分支測試：</strong> 模擬延遲輸入，檢查 ABR 算法輸出是否正確。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看影片，計算不同解析度的理論頻寬需求。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學員掌握解析度與數據量的比例關係。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實測 Wi-Fi 壓力，找出造成 FPS 掉幀的瓶頸並 Push。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>實體協助：</strong>討論偵測到 CPU
-                        負載過高而非頻寬不足時的對策。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">優化 ABR 邏輯中的震盪問題並閱讀 PR 回饋。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>PR
-                            Review：</strong>就學生對穩定性與畫質優先級的平衡給予回饋。</td>
-                </tr>
-            </tbody>
-        </table>
     </section>
 
     <script src="/js/course-shared-v4.js"></script>
