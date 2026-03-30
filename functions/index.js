@@ -1875,7 +1875,7 @@ exports.getDashboardData = onCall(async (request) => {
             usersSnapshot.forEach(doc => {
                 const userData = doc.data();
                 if (requesterRole === 'admin' || userData.role === 'student') {
-                    usersMap[doc.id] = userData;
+                    usersMap[doc.id] = { ...userData, _id: doc.id };
                 }
             });
         } else {
@@ -1988,6 +1988,11 @@ exports.getDashboardData = onCall(async (request) => {
                     // Map order items to course progress placeholder if missing
                     // This ensures the student appears under the specific course/unit management listing
                     if (studentStats[sid] && order.items) {
+                        if (!studentStats[sid].orderRecords) studentStats[sid].orderRecords = [];
+                        studentStats[sid].orderRecords.push({
+                            createdAt: order.createdAt || null,
+                            items: order.items
+                        });
                         Object.keys(order.items).forEach(originalCid => {
                             const cid = legacyMap[originalCid] || originalCid;
                             if (!studentStats[sid].orders.includes(cid)) {
@@ -2005,6 +2010,29 @@ exports.getDashboardData = onCall(async (request) => {
             } catch (orderErr) {
                 console.error("Error fetching orders for dashboard:", orderErr);
             }
+        }
+
+        // [NEW] Ensure ALL students are included, along with registration time
+        if (isManagementView) {
+            Object.keys(usersMap).forEach(sid => {
+                if (!studentStats[sid] && usersMap[sid].role === 'student') {
+                    studentStats[sid] = {
+                        uid: sid,
+                        email: usersMap[sid].email || 'Unknown',
+                        name: usersMap[sid].name || '',
+                        role: usersMap[sid].role || 'student',
+                        createdAt: usersMap[sid].createdAt || null,
+                        totalTime: 0, videoTime: 0, docTime: 0, pageTime: 0, lastActive: null,
+                        courseProgress: {},
+                        accountStatus: 'free',
+                        unitAssignments: usersMap[sid].unitAssignments || {},
+                        orders: [],
+                        orderRecords: []
+                    };
+                } else if (studentStats[sid]) {
+                    studentStats[sid].createdAt = usersMap[sid].createdAt || null;
+                }
+            });
         }
 
         result.students = Object.values(studentStats);

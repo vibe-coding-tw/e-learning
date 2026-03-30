@@ -700,7 +700,12 @@ function renderAdminDashboard(data, filterUnitId = null) {
         }
     }
 
-    if (stats.students) stats.students.textContent = summaryStudents;
+    // Show total registered vs paid
+    const totalRegistered = (data.students || []).filter(s => s.role === 'student').length;
+    const totalPaid = (data.students || []).filter(s => s.role === 'student' && s.accountStatus === 'paid').length;
+    if (stats.students) stats.students.textContent = totalRegistered;
+    const statPaidEl = document.getElementById('stat-paid');
+    if (statPaidEl) statPaidEl.textContent = totalPaid;
     if (stats.hours) stats.hours.textContent = summaryHours.toFixed(1);
 
 
@@ -787,10 +792,9 @@ function renderAdminDashboard(data, filterUnitId = null) {
                         <span id="icon-${courseUnitsId}" class="text-[8px] transform transition-transform">▶</span>
                         <span>${escapeHtml(courseTitle)}</span>
                     </td>
-                    <td class="text-right py-1.5 md:py-2 font-bold">${(progress.total / 60).toFixed(0)}m</td>
-                    <td class="text-right py-1.5 md:py-2 text-blue-600">${(progress.video / 60).toFixed(0)}m</td>
-                    <td class="text-right py-1.5 md:py-2 text-purple-600">${(progress.doc / 60).toFixed(0)}m</td>
-                    <td class="py-1.5 md:py-2"></td>
+                    <td></td>
+                    <td class="text-right py-1.5 md:py-2 font-bold text-blue-600">${(progress.total / 60).toFixed(0)}m</td>
+                    <td class="text-right py-1.5 md:py-2 text-[10px] text-gray-500 hidden sm:table-cell">📹${(progress.video / 60).toFixed(0)}m 📄${(progress.doc / 60).toFixed(0)}m</td>
                 </tr>
             `;
 
@@ -851,25 +855,58 @@ function renderAdminDashboard(data, filterUnitId = null) {
             return html;
         }).join('');
 
+        // Build registration time string
+        const regTime = s.createdAt
+            ? (s.createdAt._seconds ? new Date(s.createdAt._seconds * 1000) : new Date(s.createdAt))
+            : null;
+        const regStr = regTime && !isNaN(regTime) ? regTime.toLocaleDateString('zh-TW', { year:'numeric', month:'2-digit', day:'2-digit' }) : '–';
+
+        // Build status badge
+        const isPaid = s.accountStatus === 'paid';
+        const statusBadge = isPaid
+            ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">💳 付費</span>`
+            : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500">🆓 免費</span>`;
+
+        // Build paid units list
+        const orderRecords = s.orderRecords || [];
+        let paidUnitsHtml = '–';
+        if (orderRecords.length > 0) {
+            const tags = orderRecords.flatMap(rec => {
+                const orderDate = rec.createdAt
+                    ? (rec.createdAt._seconds ? new Date(rec.createdAt._seconds * 1000) : new Date(rec.createdAt))
+                    : null;
+                const dateStr = orderDate && !isNaN(orderDate) ? orderDate.toLocaleDateString('zh-TW', { month:'2-digit', day:'2-digit' }) : '';
+                return Object.keys(rec.items || {}).map(cid => {
+                    const title = lessonsMap[cid] || cid;
+                    return `<span class="inline-block px-1.5 py-0.5 mr-1 mb-0.5 rounded text-[9px] bg-blue-50 text-blue-700 border border-blue-100" title="${escapeHtml(title)}">${escapeHtml((title || cid).slice(0,10))}${dateStr ? ' ('+dateStr+')' : ''}</span>`;
+                });
+            }).join('');
+            paidUnitsHtml = tags || '–';
+        } else if (s.orders && s.orders.length > 0) {
+            paidUnitsHtml = s.orders.map(cid => {
+                const title = lessonsMap[cid] || cid;
+                return `<span class="inline-block px-1.5 py-0.5 mr-1 mb-0.5 rounded text-[9px] bg-blue-50 text-blue-700 border border-blue-100">${escapeHtml((title || cid).slice(0,10))}</span>`;
+            }).join('');
+        }
+
         return `
         <tr class="hover:bg-gray-50 transition border-b border-gray-100 cursor-pointer text-xs md:text-sm" onclick="toggleRow('${s.uid}')">
-            <td class="py-2 px-1 sm:py-3 sm:px-2 font-medium text-gray-800 flex items-center gap-1 md:gap-2">
-                <span id="icon-${s.uid}" class="text-gray-400 w-3 md:w-4 inline-block transform transition-transform">▶</span>
-                <span class="truncate max-w-[120px] md:max-w-none">${escapeHtml(s.email)}</span>
+            <td class="py-2 px-1 sm:py-3 sm:px-2 font-medium text-gray-800">
+                <div class="flex items-center gap-1 md:gap-2">
+                    <span id="icon-${s.uid}" class="text-gray-400 w-3 md:w-4 inline-block transform transition-transform shrink-0">▶</span>
+                    <div>
+                        <div class="truncate max-w-[140px] md:max-w-xs">${escapeHtml(s.name || s.email)}</div>
+                        <div class="text-[10px] text-gray-400 font-normal">${s.name ? escapeHtml(s.email) : ''}</div>
+                        <div class="text-[10px] text-gray-400 font-normal">🗓 ${regStr}</div>
+                    </div>
+                </div>
             </td>
+            <td class="py-2 px-1 sm:py-3 sm:px-2 text-center">${statusBadge}</td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-right font-mono text-blue-600">${(displayTotal / 3600).toFixed(1)}h</td>
-            <td class="py-2 px-1 sm:py-3 sm:px-2 text-right text-gray-500 text-[10px] md:text-xs text-nowrap">
-                <span title="Video">${(displayVideo / 60).toFixed(0)}m</span>
-            </td>
-            <td class="py-2 px-1 sm:py-3 sm:px-2 text-right text-gray-500 text-[10px] md:text-xs text-nowrap">
-                <span title="Doc">${(displayDoc / 60).toFixed(0)}m</span>
-            </td>
-            <td class="py-2 px-1 sm:py-3 sm:px-2 text-right text-[10px] md:text-xs text-gray-400 hidden sm:table-cell">
-                ${s.lastActive && !isNaN(new Date(s.lastActive)) ? new Date(s.lastActive).toLocaleString() : '-'}
-            </td>
+            <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-600 hidden sm:table-cell">${paidUnitsHtml}</td>
         </tr>
         <tbody id="detail-${s.uid}" class="hidden border-b border-gray-200">
-            ${courseRows.length ? courseRows : '<tr><td colspan="5" class="py-2 text-center text-xs text-gray-400">No specific course activity</td></tr>'}
+            ${courseRows.length ? courseRows : '<tr><td colspan="4" class="py-2 text-center text-xs text-gray-400">No specific course activity</td></tr>'}
         </tbody>
         `;
     }).join('');
