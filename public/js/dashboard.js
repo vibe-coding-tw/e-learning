@@ -775,160 +775,89 @@ function renderAdminDashboard(data, filterUnitId = null) {
             }
         }
 
-        const courseRows = Object.entries(courses).map(([cid, progress]) => {
+        const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+        const now = Date.now();
+        const regTime = s.createdAt
+            ? (s.createdAt._seconds ? new Date(s.createdAt._seconds * 1000) : new Date(s.createdAt))
+            : null;
+        const isTrialActive = regTime && (now - regTime.getTime() < THIRTY_DAYS_MS);
+        const trialExpiryStr = regTime ? new Date(regTime.getTime() + THIRTY_DAYS_MS).toLocaleDateString('zh-TW') : '';
+
+        // Pre-map order items for quick lookup
+        const orderItemMap = {};
+        (s.orderRecords || []).forEach(rec => {
+            const exp = rec.expiryDate
+                ? (rec.expiryDate._seconds ? new Date(rec.expiryDate._seconds * 1000) : new Date(rec.expiryDate))
+                : null;
+            const expStr = exp && !isNaN(exp) ? exp.toLocaleDateString('zh-TW') : '';
+            Object.keys(rec.items || {}).forEach(cid => {
+                orderItemMap[cid] = expStr;
+            });
+        });
+
+        // Generate Course Detail Rows
+        // Include both active courses and trial-eligible courses
+        const starterCid = '72uyaadl';
+        const allCourseIds = new Set(Object.keys(courses));
+        if (isTrialActive) allCourseIds.add(starterCid);
+
+        const courseRows = Array.from(allCourseIds).map(cid => {
+            const progress = courses[cid] || { total: 0, video: 0, doc: 0 };
             const courseTitle = lessonsMap[cid] || cid;
-            // Highlight the filtered course if needed?
-            const isMatch = filterCourseId && cid === filterCourseId;
-
-            // [Feature] Hide other courses if a filter is active
-            if (filterCourseId && !isMatch) return '';
-
-            const bgClass = isMatch ? "bg-blue-50" : "bg-gray-50";
-
-            const courseUnitsId = `units-${s.uid}-${cid.replace(/\./g, '-')}`;
-
-            // Render Main Course Row
-            let html = `
-                <tr class="${bgClass} text-[10px] md:text-xs border-b border-gray-100 cursor-pointer hover:bg-gray-100" onclick="toggleCourseRows('${courseUnitsId}', event)">
-                    <td class="pl-4 md:pl-8 py-1.5 md:py-2 border-l-4 ${isMatch ? 'border-blue-400 font-bold' : 'border-gray-200'} text-gray-800 flex items-center gap-1 md:gap-2">
-                        <span id="icon-${courseUnitsId}" class="text-[8px] transform transition-transform">▶</span>
-                        <span>${escapeHtml(courseTitle)}</span>
-                    </td>
-                    <td></td>
-                    <td class="text-right py-1.5 md:py-2 font-bold text-blue-600">${(progress.total / 60).toFixed(0)}m</td>
-                    <td class="text-right py-1.5 md:py-2 text-[10px] text-gray-500 hidden sm:table-cell">📹${(progress.video / 60).toFixed(0)}m 📄${(progress.doc / 60).toFixed(0)}m</td>
-                </tr>
-            `;
-
-            // Wrap units in a toggleable container 
-            // We'll use a specific class for the unit rows
-            const unitRowsClass = `course-unit-${courseUnitsId}`;
-
-            // Render Unit Rows (if any)
-            if (progress.units) {
-                const sortedUnits = Object.entries(progress.units)
-                    .filter(([unitKey]) => (!filterUnitId || unitIdsMatch(unitKey, filterUnitId)) && !unitKey.includes('-master-'))
-                    .sort();
-                const unitRows = sortedUnits.map(([unitKey, unitStats]) => {
-                    // Format Unit Name
-                    const unitName = formatUnitName(unitKey);
-
-                    const unitLogsId = `logs-${s.uid}-${cid}-${unitKey.replace(/\./g, '-')}`;
-
-                    const logRowsHtml = (unitStats.logs || []).sort((a, b) => {
-                        // Sort logs descending by timestamp
-                        const tA = a.timestamp && a.timestamp._seconds ? a.timestamp._seconds : 0;
-                        const tB = b.timestamp && b.timestamp._seconds ? b.timestamp._seconds : 0;
-                        return tB - tA;
-                    }).map(log => {
-                        let timeStr = '-';
-                        if (log.timestamp) {
-                            if (log.timestamp._seconds) timeStr = new Date(log.timestamp._seconds * 1000).toLocaleString();
-                            else timeStr = new Date(log.timestamp).toLocaleString();
-                        }
-                        return `
-                        <tr class="${bgClass} text-[9px] text-gray-400 italic unit-log-${unitLogsId}" style="display: none !important;">
-                            <td class="pl-16 py-0.5 border-l-2 border-dashed border-gray-200">
-                                ${timeStr} - ${log.action}
-                            </td>
-                            <td class="text-right py-0.5">${(log.duration / 60).toFixed(1)}m</td>
-                            <td colspan="3"></td>
-                        </tr>`;
-                    }).join('');
-
-                    return `
-                    <tr class="${bgClass} ${unitRowsClass} text-[10px] text-gray-500 hover:bg-gray-100 cursor-pointer" style="display: none !important;" onclick="toggleUnitLogs('${unitLogsId}', event)">
-                        <td class="pl-12 py-1 flex items-center gap-1 font-semibold">
-                            <span class="text-gray-300">↳</span> 
-                            <span id="icon-${unitLogsId}" class="text-[8px] transform transition-transform">▶</span>
-                            <span>${escapeHtml(unitName)}</span>
-                        </td>
-                        <td class="text-right py-1">${(unitStats.total / 60).toFixed(0)}m</td>
-                        <td class="text-right py-1">${(unitStats.video / 60).toFixed(0)}m</td>
-                        <td class="text-right py-1 md:py-1">${(unitStats.doc / 60).toFixed(0)}m</td>
-                        <td class="py-1 md:py-1"></td>
-                    </tr>
-                    ${logRowsHtml}
-                    `;
-                }).join('');
-                html += unitRows;
+            const cleanTitle = courseTitle.replace('course-', '').replace('unit-', '');
+            
+            let statusLabel = '';
+            if (cid === starterCid && isTrialActive) {
+                statusLabel = `<span class="text-blue-600 font-semibold ml-2">免費至：${trialExpiryStr}</span>`;
+            } else if (orderItemMap[cid]) {
+                statusLabel = `<span class="text-emerald-600 font-semibold ml-2">繳費至：${orderItemMap[cid]}</span>`;
+            } else {
+                statusLabel = `<span class="text-gray-400 ml-2">尚未開通</span>`;
             }
 
-            return html;
+            const usageStr = `Usage(Video: ${Math.round(progress.video / 60)}m, Doc: ${Math.round(progress.doc / 60)}m)`;
+            const isMatch = filterCourseId && cid === filterCourseId;
+            const bgClass = isMatch ? "bg-blue-50" : "bg-white";
+
+            return `
+                <tr class="${bgClass} text-[10px] md:text-xs border-b border-gray-50">
+                    <td class="pl-8 md:pl-12 py-2 text-gray-700" colspan="2">
+                        <div class="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                            <div class="font-bold">${escapeHtml(cleanTitle)}</div>
+                            <div class="text-[9px] md:text-[10px]">${statusLabel}</div>
+                            <div class="text-[9px] text-gray-400 font-mono">${usageStr}</div>
+                        </div>
+                    </td>
+                    <td class="text-right py-2 pr-2 text-blue-500 font-bold">${Math.round(progress.total / 60)}m</td>
+                </tr>
+            `;
         }).join('');
 
         // 1. Build identity row (fallback to uid if name/email missing)
         const displayName = s.name || s.email || `UID_${s.uid.slice(0,6)}`;
         const displaySub = s.name ? s.email : '';
         
-        // 2. Build registration time string
-        const regTime = s.createdAt
-            ? (s.createdAt._seconds ? new Date(s.createdAt._seconds * 1000) : new Date(s.createdAt))
-            : null;
-        const regStr = regTime && !isNaN(regTime) ? regTime.toLocaleDateString('zh-TW', { year:'numeric', month:'2-digit', day:'2-digit' }) : '–';
-
-        // 3. Build Status & Permissions (Unified Tag Cloud)
-        const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-        const now = Date.now();
-        const diff = now - (regTime ? regTime.getTime() : 0);
-        const isTrialActive = regTime && diff < THIRTY_DAYS_MS;
-        const trialExpiry = regTime ? new Date(regTime.getTime() + THIRTY_DAYS_MS) : null;
-        const trialExpiryStr = trialExpiry ? trialExpiry.toLocaleDateString('zh-TW', { year:'numeric', month:'2-digit', day:'2-digit' }) : '';
-        
-        let tagsHtml = '';
-        
-        // 3A. Paid Course Tags (Priority list)
-        const orderRecords = s.orderRecords || [];
-        if (orderRecords.length > 0) {
-            tagsHtml += orderRecords.flatMap(rec => {
-                const expiryDate = rec.expiryDate
-                    ? (rec.expiryDate._seconds ? new Date(rec.expiryDate._seconds * 1000) : new Date(rec.expiryDate))
-                    : null;
-                const expStr = expiryDate && !isNaN(expiryDate) ? ` (至 ${expiryDate.toLocaleDateString('zh-TW', { month:'2-digit', day:'2-digit' })})` : '';
-
-                return Object.keys(rec.items || {}).map(cid => {
-                    const title = lessonsMap[cid] || cid;
-                    const cleanTitle = (title || cid).replace('course-', '').replace('unit-', '').slice(0,10);
-                    return `<span class="inline-block px-1.5 py-0.5 mr-1 mb-1 rounded text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-100" title="${escapeHtml(title)}">💳 ${escapeHtml(cleanTitle)}${expStr}</span>`;
-                });
-            }).join('');
-        }
-
-        // 3B. Starter Trial Tag (Appears after Paid Tags)
-        if (isTrialActive) {
-            tagsHtml += `<span class="inline-block px-1.5 py-0.5 mr-1 mb-1 rounded text-[9px] bg-blue-50 text-blue-600 border border-blue-200">✨ 開發環境安裝與設定 (試用至 ${trialExpiryStr})</span>`;
-        }
-
-        if (!tagsHtml) {
-            tagsHtml = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-400">🆓 免費帳號</span>`;
-        }
-
-        // 4. Build Usage Layout
-        const totalH = (displayTotal / 3600).toFixed(1);
-        const vMin = Math.round((s.videoTime || 0) / 60);
-        const dMin = Math.round((s.docTime || 0) / 60);
+        // 2. Formatting Registration Date for the Header
+        const regHeaderStr = regTime && !isNaN(regTime) ? regTime.toLocaleDateString('zh-TW', { year:'numeric', month:'numeric', day:'numeric' }) : '–';
 
         return `
         <tr class="hover:bg-gray-50 transition border-b border-gray-100 cursor-pointer text-xs md:text-sm" onclick="toggleRow('${s.uid}')">
-            <td class="py-2 px-1 sm:py-3 sm:px-2 font-medium text-gray-800">
-                <div class="flex items-center gap-1 md:gap-2">
-                    <span id="icon-${s.uid}" class="text-gray-400 w-3 md:w-4 inline-block transform transition-transform shrink-0">▶</span>
-                    <div>
-                        <div class="truncate max-w-[140px] md:max-w-xs text-blue-600 font-bold">${escapeHtml(displayName)}</div>
+            <td class="py-3 px-2 font-medium text-gray-800" colspan="2">
+                <div class="flex items-center gap-2">
+                    <span id="icon-${s.uid}" class="text-gray-400 w-4 inline-block transform transition-transform shrink-0">▶</span>
+                    <div class="flex flex-col sm:flex-row sm:items-baseline sm:gap-3">
+                        <div class="text-blue-600 font-bold text-lg">${escapeHtml(displayName)}</div>
+                        <div class="text-[11px] text-gray-500">註冊日期: ${regHeaderStr}</div>
                         <div class="text-[10px] text-gray-400 font-normal">${escapeHtml(displaySub)}</div>
-                        <div class="text-[10px] text-gray-500 font-normal mt-0.5">🗓 註冊期: ${regStr}</div>
                     </div>
                 </div>
             </td>
-            <td class="py-2 px-1 sm:py-3 sm:px-2 text-left">
-                <div class="flex flex-wrap">${tagsHtml}</div>
-            </td>
-            <td class="py-2 px-1 sm:py-3 sm:px-2 text-right">
+            <td class="py-3 px-2 text-right">
                 <div class="flex flex-col items-end">
-                    <div class="font-mono text-blue-600 font-bold text-base">${totalH}h</div>
+                    <div class="font-mono text-blue-600 font-bold text-base">${(displayTotal / 3600).toFixed(1)}h</div>
                     <div class="flex gap-2 text-[9px] text-gray-400 font-normal">
-                        <span title="影片觀看時數">🎬 ${vMin}m</span>
-                        <span title="文件閱讀時數">📄 ${dMin}m</span>
+                        <span title="影片觀看時數">🎬 ${Math.round((s.videoTime || 0) / 60)}m</span>
+                        <span title="文件閱讀時數">📄 ${Math.round((s.docTime || 0) / 60)}m</span>
                     </div>
                 </div>
             </td>
