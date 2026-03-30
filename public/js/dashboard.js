@@ -877,12 +877,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
         
         let tagsHtml = '';
         
-        // 3A. Trial Tag
-        if (isTrialActive) {
-            tagsHtml += `<span class="inline-block px-1.5 py-0.5 mr-1 mb-1 rounded text-[9px] bg-blue-50 text-blue-600 border border-blue-200">✨ 入門試用 (至 ${trialExpiryStr})</span>`;
-        }
-
-        // 3B. Paid Course Tags
+        // 3A. Paid Course Tags (Priority list)
         const orderRecords = s.orderRecords || [];
         if (orderRecords.length > 0) {
             tagsHtml += orderRecords.flatMap(rec => {
@@ -897,6 +892,11 @@ function renderAdminDashboard(data, filterUnitId = null) {
                     return `<span class="inline-block px-1.5 py-0.5 mr-1 mb-1 rounded text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-100" title="${escapeHtml(title)}">💳 ${escapeHtml(cleanTitle)}${expStr}</span>`;
                 });
             }).join('');
+        }
+
+        // 3B. Trial Tag (Supplemental if active)
+        if (isTrialActive) {
+            tagsHtml += `<span class="inline-block px-1.5 py-0.5 mr-1 mb-1 rounded text-[9px] bg-blue-50 text-blue-600 border border-blue-200">✨ 入門試用 (至 ${trialExpiryStr})</span>`;
         }
 
         if (!tagsHtml) {
