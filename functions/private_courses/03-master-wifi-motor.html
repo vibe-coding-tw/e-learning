@@ -25,6 +25,9 @@
     <div class="unit-tabs-wrapper">
         <div class="unit-tabs-container">
             <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('vibe')" id="tab-vibe" class="unit-tab-btn">
+                    <span>0️⃣</span>Vibe Classroom 工作流
+                </button>
                 <button onclick="switchTab('wifi')" id="tab-wifi" class="unit-tab-btn active">
                     <span>1️⃣</span>WiFi 組態設定
                 </button>
@@ -42,6 +45,7 @@
 
     <script>
         const iframe = document.getElementById('content-frame');
+        const tabVibe = document.getElementById('tab-vibe');
         const tabWifi = document.getElementById('tab-wifi');
         const tabMotor = document.getElementById('tab-motor');
 
@@ -51,17 +55,22 @@
 
         if (initialTab === 'motor') {
             switchTab('motor');
-        } else {
+        } else if (initialTab === 'wifi') {
             switchTab('wifi');
+        } else {
+            switchTab('vibe');
         }
 
         function switchTab(tab) {
             // Helper to reset all tabs
-            [tabWifi, tabMotor].forEach(t => {
+            [tabVibe, tabWifi, tabMotor].forEach(t => {
                 if (t) t.classList.remove('active');
             });
 
-            if (tab === 'wifi') {
+            if (tab === 'vibe') {
+                tabVibe.classList.add('active');
+                loadContent('03-unit-vibe-classroom-intro.html');
+            } else if (tab === 'wifi') {
                 tabWifi.classList.add('active');
                 loadContent('03-unit-wifi-setup.html');
             } else if (tab === 'motor') {
