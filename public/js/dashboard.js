@@ -701,9 +701,11 @@ function renderAdminDashboard(data, filterUnitId = null) {
         }
     }
 
-    // Show total registered vs paid
-    const totalRegistered = (data.students || []).filter(s => s.role === 'student').length;
-    const totalPaid = (data.students || []).filter(s => s.role === 'student' && s.accountStatus === 'paid').length;
+    // Show total registered vs paid (Unified with the table list)
+    const allInList = data.students || [];
+    const totalRegistered = allInList.length;
+    const totalPaid = allInList.filter(s => (s.orderRecords || []).length > 0).length;
+    
     if (stats.students) stats.students.textContent = totalRegistered;
     const statPaidEl = document.getElementById('stat-paid');
     if (statPaidEl) statPaidEl.textContent = totalPaid;
