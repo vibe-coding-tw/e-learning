@@ -264,6 +264,7 @@ function canCurrentUserViewAssignmentsTab() {
 }
 
 function getPreferredDashboardTab(filterUnitId = null) {
+    if (filterUnitId && (myRole === 'admin' || myRole === 'teacher')) return 'overview';
     if (filterUnitId && canCurrentUserViewAssignmentsTab()) return 'assignments';
     if (myRole === 'admin') return 'admin';
     if (document.getElementById('tab-btn-settings') && !document.getElementById('tab-btn-settings').classList.contains('hidden')) {
@@ -709,12 +710,11 @@ function renderAdminDashboard(data, filterUnitId = null) {
     if (stats.hours) stats.hours.textContent = summaryHours.toFixed(1);
 
 
-    // [NEW] Hide Overview Tab if filtered to a specific unit
+    // [NEW] Management users (Admin/Teacher) should ALWAYS see Overview. Students only see it globally.
     const overviewTabBtn = document.getElementById('tab-btn-overview');
     if (overviewTabBtn) {
-        if (filterUnitId) { // [USER_REQUEST] Use unitId here
+        if (filterUnitId && !isManagementView) { 
             overviewTabBtn.classList.add('hidden');
-            // Logic moved to loadDashboard for better flow
         } else {
             overviewTabBtn.classList.remove('hidden');
         }
