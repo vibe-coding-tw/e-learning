@@ -880,7 +880,12 @@ exports.serveCourse = onRequest(async (req, res) => {
                 if (course) {
                     const masterFile = (course.classroomUrl || "").split('/').pop();
                     const isMasterMatch = (normalizedFileName === masterFile);
-                    const isUnitMatch = course.courseUnits && course.courseUnits.includes(normalizedFileName);
+                    let isUnitMatch = course.courseUnits && course.courseUnits.includes(normalizedFileName);
+                    
+                    // Hotfix for newly merged unit
+                    if (scopePart === '03-master-wifi-motor.html' && normalizedFileName === '03-unit-vibe-classroom-intro.html') {
+                        isUnitMatch = true;
+                    }
                     debugInfo = `CourseFound: ${course.courseId}, isMasterMatch: ${isMasterMatch}, isUnitMatch: ${isUnitMatch}, masterFile: ${masterFile}`;
 
                     if (isMasterMatch || isUnitMatch) {
@@ -903,7 +908,12 @@ exports.serveCourse = onRequest(async (req, res) => {
             // [MODIFIED v11.3.14] Fallback: If scopePart is a fileName and lesson contains it, allow.
             if (manualFallback) {
                 const isMasterMatch = (manualFallback.classroomUrl && manualFallback.classroomUrl.endsWith(normalizedFileName));
-                const isUnitMatch = (manualFallback.courseUnits && manualFallback.courseUnits.includes(normalizedFileName));
+                let isUnitMatch = (manualFallback.courseUnits && manualFallback.courseUnits.includes(normalizedFileName));
+                
+                // Hotfix for newly merged unit
+                if (scopePart === '03-master-wifi-motor.html' && normalizedFileName === '03-unit-vibe-classroom-intro.html') {
+                    isUnitMatch = true;
+                }
                 if (isMasterMatch || isUnitMatch) {
                     isAuthorizedScope = true;
                     console.log(`[serveCourse] ${normalizedFileName} authorized via manual fallback for scope ${scopePart}`);
