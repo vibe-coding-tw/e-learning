@@ -1873,36 +1873,34 @@ exports.getDashboardData = onCall(async (request) => {
             // Admins see all users. Teachers/Course-Teachers see students.
             let usersSnapshot = await db.collection('users').get();
             
-            // [NEW] Maintenance Sync: For admins, if the Firestore list is suspiciously shorter than Auth, sync them.
+            // [NEW] Maintenance Sync: For admins, ensure EVERY Auth user has a Firestore document.
             if (requesterRole === 'admin') {
                 try {
-                    const listUsersResult = await admin.auth().listUsers(100);
+                    const listUsersResult = await admin.auth().listUsers(1000);
                     const authUsers = listUsersResult.users;
-                    if (authUsers.length > usersSnapshot.size) {
-                        console.log(`[getDashboardData] Syncing ${authUsers.length} Auth users to ${usersSnapshot.size} Firestore docs...`);
-                        const batch = db.batch();
-                        let syncCount = 0;
-                        const existingUids = usersSnapshot.docs.map(doc => doc.id);
-                        
-                        for (const au of authUsers) {
-                            if (!existingUids.includes(au.uid)) {
-                                const userRef = db.collection('users').doc(au.uid);
-                                batch.set(userRef, {
-                                    email: au.email || "",
-                                    name: au.displayName || (au.email ? au.email.split('@')[0] : "New User"),
-                                    role: (au.email === 'rover.k.chen@gmail.com') ? 'admin' : 'student',
-                                    createdAt: au.metadata.creationTime ? new Date(au.metadata.creationTime) : admin.firestore.FieldValue.serverTimestamp(),
-                                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                                }, { merge: true });
-                                syncCount++;
-                            }
+                    
+                    const existingUids = usersSnapshot.docs.map(doc => doc.id);
+                    const batch = db.batch();
+                    let syncCount = 0;
+                    
+                    for (const au of authUsers) {
+                        if (!existingUids.includes(au.uid)) {
+                            const userRef = db.collection('users').doc(au.uid);
+                            batch.set(userRef, {
+                                email: au.email || "",
+                                name: au.displayName || (au.email ? au.email.split('@')[0] : "New User"),
+                                role: (au.email === 'rover.k.chen@gmail.com') ? 'admin' : 'student',
+                                createdAt: au.metadata.creationTime ? new Date(au.metadata.creationTime) : admin.firestore.FieldValue.serverTimestamp(),
+                                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                            }, { merge: true });
+                            syncCount++;
                         }
-                        if (syncCount > 0) {
-                            await batch.commit();
-                            console.log(`[getDashboardData] Sync complete: ${syncCount} users imported.`);
-                            // Re-fetch users after sync
-                            usersSnapshot = await db.collection('users').get();
-                        }
+                    }
+                    if (syncCount > 0) {
+                        console.log(`[getDashboardData] Syncing ${syncCount} missing Auth users...`);
+                        await batch.commit();
+                        // Refresh snapshot
+                        usersSnapshot = await db.collection('users').get();
                     }
                 } catch (syncErr) {
                     console.error("[getDashboardData] Auto-sync failed:", syncErr);
@@ -1911,8 +1909,9 @@ exports.getDashboardData = onCall(async (request) => {
 
             usersSnapshot.forEach(doc => {
                 const userData = doc.data();
-                if (requesterRole === 'admin' || userData.role === 'student') {
-                    usersMap[doc.id] = { ...userData, _id: doc.id };
+                const role = userData.role || 'student';
+                if (requesterRole === 'admin' || role === 'student') {
+                    usersMap[doc.id] = { ...userData, role: role, _id: doc.id };
                 }
             });
         } else {
