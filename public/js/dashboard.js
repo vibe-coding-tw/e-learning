@@ -867,7 +867,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
             : null;
         const regStr = regTime && !isNaN(regTime) ? regTime.toLocaleDateString('zh-TW', { year:'numeric', month:'2-digit', day:'2-digit' }) : '–';
 
-        // 3. Build Status & Permissions (The "Bundle")
+        // 3. Build Status & Permissions (Unified Tag Cloud)
         const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
         const now = Date.now();
         const diff = now - (regTime ? regTime.getTime() : 0);
@@ -875,17 +875,17 @@ function renderAdminDashboard(data, filterUnitId = null) {
         const trialExpiry = regTime ? new Date(regTime.getTime() + THIRTY_DAYS_MS) : null;
         const trialExpiryStr = trialExpiry ? trialExpiry.toLocaleDateString('zh-TW', { year:'numeric', month:'2-digit', day:'2-digit' }) : '';
         
-        let statusHtml = '';
+        let tagsHtml = '';
         
-        // 3A. Trial Badge
+        // 3A. Trial Tag
         if (isTrialActive) {
-            statusHtml += `<div class="mb-1"><span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-600 border border-blue-200">✨ 入門試用 (至 ${trialExpiryStr})</span></div>`;
+            tagsHtml += `<span class="inline-block px-1.5 py-0.5 mr-1 mb-1 rounded text-[9px] bg-blue-50 text-blue-600 border border-blue-200">✨ 入門試用 (至 ${trialExpiryStr})</span>`;
         }
 
-        // 3B. Paid Courses with Expiry
+        // 3B. Paid Course Tags
         const orderRecords = s.orderRecords || [];
         if (orderRecords.length > 0) {
-            const courseBadges = orderRecords.flatMap(rec => {
+            tagsHtml += orderRecords.flatMap(rec => {
                 const expiryDate = rec.expiryDate
                     ? (rec.expiryDate._seconds ? new Date(rec.expiryDate._seconds * 1000) : new Date(rec.expiryDate))
                     : null;
@@ -897,10 +897,16 @@ function renderAdminDashboard(data, filterUnitId = null) {
                     return `<span class="inline-block px-1.5 py-0.5 mr-1 mb-1 rounded text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-100" title="${escapeHtml(title)}">💳 ${escapeHtml(cleanTitle)}${expStr}</span>`;
                 });
             }).join('');
-            statusHtml += `<div class="flex flex-wrap">${courseBadges}</div>`;
-        } else if (!isTrialActive) {
-            statusHtml += `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500">🆓 免費</span>`;
         }
+
+        if (!tagsHtml) {
+            tagsHtml = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-400">🆓 免費帳號</span>`;
+        }
+
+        // 4. Build Usage Layout
+        const totalH = (displayTotal / 3600).toFixed(1);
+        const vMin = Math.round((s.videoTime || 0) / 60);
+        const dMin = Math.round((s.docTime || 0) / 60);
 
         return `
         <tr class="hover:bg-gray-50 transition border-b border-gray-100 cursor-pointer text-xs md:text-sm" onclick="toggleRow('${s.uid}')">
@@ -908,17 +914,27 @@ function renderAdminDashboard(data, filterUnitId = null) {
                 <div class="flex items-center gap-1 md:gap-2">
                     <span id="icon-${s.uid}" class="text-gray-400 w-3 md:w-4 inline-block transform transition-transform shrink-0">▶</span>
                     <div>
-                        <div class="truncate max-w-[140px] md:max-w-xs text-blue-600">${escapeHtml(displayName)}</div>
+                        <div class="truncate max-w-[140px] md:max-w-xs text-blue-600 font-bold">${escapeHtml(displayName)}</div>
                         <div class="text-[10px] text-gray-400 font-normal">${escapeHtml(displaySub)}</div>
-                        <div class="text-[10px] text-gray-400 font-normal">🗓 ${regStr}</div>
+                        <div class="text-[10px] text-gray-500 font-normal mt-0.5">🗓 註冊期: ${regStr}</div>
                     </div>
                 </div>
             </td>
-            <td class="py-2 px-1 sm:py-3 sm:px-2 text-left">${statusHtml}</td>
-            <td class="py-2 px-1 sm:py-3 sm:px-2 text-right font-mono text-blue-600 font-bold">${(displayTotal / 3600).toFixed(1)}h</td>
+            <td class="py-2 px-1 sm:py-3 sm:px-2 text-left">
+                <div class="flex flex-wrap">${tagsHtml}</div>
+            </td>
+            <td class="py-2 px-1 sm:py-3 sm:px-2 text-right">
+                <div class="flex flex-col items-end">
+                    <div class="font-mono text-blue-600 font-bold text-base">${totalH}h</div>
+                    <div class="flex gap-2 text-[9px] text-gray-400 font-normal">
+                        <span title="影片觀看時數">🎬 ${vMin}m</span>
+                        <span title="文件閱讀時數">📄 ${dMin}m</span>
+                    </div>
+                </div>
+            </td>
         </tr>
         <tbody id="detail-${s.uid}" class="hidden border-b border-gray-200">
-            ${courseRows.length ? courseRows : '<tr><td colspan="3" class="py-2 text-center text-xs text-gray-400">No specific course activity</td></tr>'}
+            ${courseRows.length ? courseRows : '<tr><td colspan="3" class="py-2 text-center text-xs text-gray-400 italic">尚未有具體單元操作紀錄</td></tr>'}
         </tbody>
         `;
     }).join('');
