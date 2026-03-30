@@ -2050,16 +2050,31 @@ exports.getDashboardData = onCall(async (request) => {
             }
         }
 
+        // [NEW] Data Repair Map for legacy 'Unknown' users
+        const legacyRepairMap = {
+            'Cj8Xb2jHPzNRAOv4FCsvstOI2FN2': { name: '蔡逸颺', email: 'spps109422@spps.tp.edu.tw', createdAt: 1771208655457 },
+            'a16Qty77LiQmC6o0PBjFnzX8AOG2': { name: 'Henry Hsu', email: 'tzuheng.h@gmail.com', createdAt: 1768810048165 },
+            'eocqN6Dmbwh5PVe1DVA1pd2NQLl2': { name: 'leo lee', email: 'leolee0621@gmail.com', createdAt: 1770340750763 },
+            'k36RVpPwZoftnLwMtG4S4d4yLmj2': { name: 'Rover Chen', email: 'rover.k.chen@gmail.com', createdAt: 1765873595493 },
+            'kUUp1Pe8V9OoSZLL4vwBTnrLcbT2': { name: '陳育亮', email: 'chen.yuiliang@gmail.com', createdAt: 1770432917964 },
+            'lmg7jPw34ffuxRrSWLohzL9uey23': { name: '華岡羅浮群', email: 'hkboyscout@gmail.com', createdAt: 1769267447489 },
+            'mPYudHif5LPeEeNKzTWW22nwdbG2': { name: 'Lee Leon', email: 'tech@furzzle-pet.com', createdAt: 1774598905687 },
+            'p1dtkMwd3GhjVAwzwfWcnWWjDQf2': { name: '蔡逸颺', email: 'koala540886@gmail.com', createdAt: 1771497405886 },
+            's1VCXo1mEDd9RVoVKIbxF6aZvk72': { name: '陳子展', email: 'ms0683735@gmail.com', createdAt: 1774251155821 }
+        };
+
         // [NEW] Ensure ALL students are included, along with registration time
         if (isManagementView) {
             Object.keys(usersMap).forEach(sid => {
+                const repair = legacyRepairMap[sid];
+                
                 if (!studentStats[sid] && usersMap[sid].role === 'student') {
                     studentStats[sid] = {
                         uid: sid,
-                        email: usersMap[sid].email || 'Unknown',
-                        name: usersMap[sid].name || '',
+                        email: usersMap[sid].email || (repair ? repair.email : 'Unknown'),
+                        name: usersMap[sid].name || (repair ? repair.name : ''),
                         role: usersMap[sid].role || 'student',
-                        createdAt: usersMap[sid].createdAt || null,
+                        createdAt: usersMap[sid].createdAt || (repair ? admin.firestore.Timestamp.fromMillis(repair.createdAt) : null),
                         totalTime: 0, videoTime: 0, docTime: 0, pageTime: 0, lastActive: null,
                         courseProgress: {},
                         accountStatus: 'free',
@@ -2068,7 +2083,15 @@ exports.getDashboardData = onCall(async (request) => {
                         orderRecords: []
                     };
                 } else if (studentStats[sid]) {
-                    studentStats[sid].createdAt = usersMap[sid].createdAt || null;
+                    // Patch existing record with repair data if name/email/createdAt is missing
+                    if (!studentStats[sid].name && repair) studentStats[sid].name = repair.name;
+                    if ((!studentStats[sid].email || studentStats[sid].email === 'Unknown') && repair) studentStats[sid].email = repair.email;
+                    if (!studentStats[sid].createdAt && repair) studentStats[sid].createdAt = admin.firestore.Timestamp.fromMillis(repair.createdAt);
+                    
+                    // Always try to use the raw createdAt from usersMap if available
+                    if (!studentStats[sid].createdAt) {
+                        studentStats[sid].createdAt = usersMap[sid].createdAt || null;
+                    }
                 }
             });
         }
