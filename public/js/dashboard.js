@@ -863,9 +863,22 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
         // Build status badge
         const isPaid = s.accountStatus === 'paid';
-        const statusBadge = isPaid
-            ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">💳 付費</span>`
-            : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500">🆓 免費</span>`;
+        const baseBadge = isPaid
+            ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">💳 付費</span>`
+            : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500">🆓 免費</span>`;
+
+        // [NEW] Trial Status Check (30 days for started courses)
+        const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+        const now = Date.now();
+        const diff = now - (regTime ? regTime.getTime() : 0);
+        const daysRemaining = Math.max(0, Math.ceil((THIRTY_DAYS_MS - diff) / (24 * 60 * 60 * 1000)));
+        const isTrialActive = regTime && diff < THIRTY_DAYS_MS;
+
+        const trialBadge = isTrialActive
+            ? `<div class="mt-1"><span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-600 border border-blue-200">✨ 體驗中 (剩 ${daysRemaining} 天)</span></div>`
+            : (regTime ? `<div class="mt-1 text-[9px] text-gray-300">體驗已過期</div>` : '');
+
+        const statusHtml = `<div class="flex flex-col items-center">${baseBadge}${trialBadge}</div>`;
 
         // Build paid units list
         const orderRecords = s.orderRecords || [];
@@ -901,7 +914,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
                     </div>
                 </div>
             </td>
-            <td class="py-2 px-1 sm:py-3 sm:px-2 text-center">${statusBadge}</td>
+            <td class="py-2 px-1 sm:py-3 sm:px-2 text-center">${statusHtml}</td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-right font-mono text-blue-600">${(displayTotal / 3600).toFixed(1)}h</td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-600 hidden sm:table-cell">${paidUnitsHtml}</td>
         </tr>
