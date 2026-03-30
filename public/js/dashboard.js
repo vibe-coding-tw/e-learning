@@ -742,9 +742,14 @@ function renderAdminDashboard(data, filterUnitId = null) {
         }
     }
 
-    // Table with Expansion
+    // Table with Expansion (Sorted by Registration Date: Newest First)
+    const sortedStudents = (data.students || []).sort((a, b) => {
+        const getTime = (c) => c ? (c._seconds ? c._seconds * 1000 : (typeof c === 'number' ? c : new Date(c).getTime())) : 0;
+        return getTime(b.createdAt) - getTime(a.createdAt);
+    });
+
     const tbody = document.getElementById('student-table-body');
-    tbody.innerHTML = data.students.map(s => {
+    tbody.innerHTML = sortedStudents.map(s => {
         const courses = s.courseProgress || {};
 
         // [Fix] Filter stats based on courseId
