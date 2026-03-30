@@ -1871,7 +1871,44 @@ exports.getDashboardData = onCall(async (request) => {
         let usersMap = {};
         if (isManagementView) {
             // Admins see all users. Teachers/Course-Teachers see students.
-            const usersSnapshot = await db.collection('users').get();
+            let usersSnapshot = await db.collection('users').get();
+            
+            // [NEW] Maintenance Sync: For admins, if the Firestore list is suspiciously shorter than Auth, sync them.
+            if (requesterRole === 'admin') {
+                try {
+                    const listUsersResult = await admin.auth().listUsers(100);
+                    const authUsers = listUsersResult.users;
+                    if (authUsers.length > usersSnapshot.size) {
+                        console.log(`[getDashboardData] Syncing ${authUsers.length} Auth users to ${usersSnapshot.size} Firestore docs...`);
+                        const batch = db.batch();
+                        let syncCount = 0;
+                        const existingUids = usersSnapshot.docs.map(doc => doc.id);
+                        
+                        for (const au of authUsers) {
+                            if (!existingUids.includes(au.uid)) {
+                                const userRef = db.collection('users').doc(au.uid);
+                                batch.set(userRef, {
+                                    email: au.email || "",
+                                    name: au.displayName || (au.email ? au.email.split('@')[0] : "New User"),
+                                    role: (au.email === 'rover.k.chen@gmail.com') ? 'admin' : 'student',
+                                    createdAt: au.metadata.creationTime ? new Date(au.metadata.creationTime) : admin.firestore.FieldValue.serverTimestamp(),
+                                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                                }, { merge: true });
+                                syncCount++;
+                            }
+                        }
+                        if (syncCount > 0) {
+                            await batch.commit();
+                            console.log(`[getDashboardData] Sync complete: ${syncCount} users imported.`);
+                            // Re-fetch users after sync
+                            usersSnapshot = await db.collection('users').get();
+                        }
+                    }
+                } catch (syncErr) {
+                    console.error("[getDashboardData] Auto-sync failed:", syncErr);
+                }
+            }
+
             usersSnapshot.forEach(doc => {
                 const userData = doc.data();
                 if (requesterRole === 'admin' || userData.role === 'student') {
@@ -2328,7 +2365,29 @@ exports.gradeAssignment = onCall(async (request) => {
 exports.onUserCreated = functionsV1.region(REGION).auth.user().onCreate(async (user) => {
     const email = user.email;
     const displayName = user.displayName;
+    const uid = user.uid;
 
+    const db = admin.firestore();
+
+    // 1. Create a basic Firestore record so the user appears in the dashboard
+    try {
+        const userRef = db.collection('users').doc(uid);
+        const doc = await userRef.get();
+        if (!doc.exists) {
+            await userRef.set({
+                email: email || "",
+                name: displayName || "",
+                role: 'student',
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+            console.log(`[onUserCreated] Initialized Firestore record for user ${uid} (${email})`);
+        }
+    } catch (e) {
+        console.error(`[onUserCreated] Failed to initialize Firestore record for ${uid}:`, e);
+    }
+
+    // 2. Send Welcome Email
     if (email) {
         // Calculate expiry date (30 days from now)
         const expiryDate = new Date();
