@@ -1749,9 +1749,13 @@ exports.getDashboardData = onCall(async (request) => {
             if (course && course.classroomUrl) {
                 try {
                     const masterFile = (course.classroomUrl || "").split('/').pop().split('?')[0];
-                    const units = Array.isArray(course.courseUnits) ? course.courseUnits : [];
+                    const units = Array.isArray(course.courseUnits) ? [...course.courseUnits] : [];
                     
-                    // [FIX] Explicitly match only files associated with THIS course to avoid category collisions (e.g. 00- series)
+                    // Hotfix for new vibe unit missing in DB
+                    if (masterFile === '03-master-wifi-motor.html' && !units.includes('03-unit-vibe-classroom-intro.html')) {
+                        units.push('03-unit-vibe-classroom-intro.html');
+                    }
+
                     const relatedFiles = [masterFile, ...units].filter(f => f && allFiles.includes(f));
                     let aggregatedGuides = {};
 
