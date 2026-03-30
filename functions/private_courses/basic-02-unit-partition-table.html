@@ -57,7 +57,7 @@
                 ESP32 記憶體分區表
             </h1>
             <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
-                晶片的秘密藍圖：你的智慧裝置如何保持井然有序。學習如何規劃 Flash 空間，突破硬體預設限制。
+                晶片藍圖：智慧裝置如何保持井然有序。規劃 Flash 空間，突破硬體預設限制。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
@@ -82,26 +82,26 @@
                 <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
                 <div class="p-8 md:p-14">
                     <h2 class="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-                        <span class="text-4xl">🗺️</span> 為什麼需要分區表？ (20 min)
+                        <span class="text-4xl">🗺️</span> 為什麼需要分區表？
                     </h2>
                     <p class="text-gray-500 mb-10 text-lg font-light">
-                        ESP32 的 4MB/16MB Flash 不是一個混沌的大容器，而是被精細劃分的「數位地產」。
+                        ESP32 的 4/16MB Flash 不是一個空箱，而是被精細劃分的「數位地產」。
                     </p>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-10">
                         <div class="space-y-6">
                             <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2 border-l-4 border-indigo-500 pl-4">數位地段規劃</h3>
-                            <p class="text-gray-600 leading-relaxed">
-                                想像 Flash 是一個大型倉儲。分區表就是一份土地權狀，清楚寫明了：每個功能的數據從哪個「偏移地址 (Offset)」開始，租用了多長的空間。
+                            <p class="text-gray-600 leading-relaxed text-justify">
+                                Flash 就是一個大型倉儲。分區表清楚寫明：每個功能數據從哪個「偏移地址 (Offset)」開始，租用多長空間。
                             </p>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
                                     <div class="font-bold text-indigo-700 mb-1">App 0 / App 1</div>
-                                    <p class="text-xs text-slate-500">存放執行的程式碼。OTA 更新需要兩個對應分區。</p>
+                                    <p class="text-xs text-slate-500">存放程式碼。OTA 更新需要兩個對分空間。</p>
                                 </div>
                                 <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
                                     <div class="font-bold text-indigo-700 mb-1">NVS (Data)</div>
-                                    <p class="text-xs text-slate-500">存放 Wi-Fi 設定、參數等長度固定的 Key-Value 數據。</p>
+                                    <p class="text-xs text-slate-500">存放 Wi-Fi 設定、參數等長度固定的數據。</p>
                                 </div>
                             </div>
                         </div>
@@ -114,15 +114,15 @@
                             <div class="space-y-4">
                                 <div class="flex justify-between border-b border-blue-900/50 pb-2 hover:bg-white/5 transition px-2 rounded">
                                     <span class="font-bold">otadata</span>
-                                    <span class="text-slate-500">OTA 引導標記 (8KB)</span>
+                                    <span class="text-slate-500 text-justify">OTA 引導標記 (8KB)</span>
                                 </div>
                                 <div class="flex justify-between border-b border-blue-900/50 pb-2 hover:bg-white/5 transition px-2 rounded">
                                     <span class="font-bold">nvs</span>
-                                    <span class="text-slate-500">非揮發性存儲 (16KB+)</span>
+                                    <span class="text-slate-500 text-justify">非揮發性存儲 (16KB+)</span>
                                 </div>
                                 <div class="flex justify-between border-b border-blue-900/50 pb-2 hover:bg-white/5 transition px-2 rounded">
                                     <span class="font-bold">spiffs</span>
-                                    <span class="text-slate-500">文件系統：存網頁/圖檔</span>
+                                    <span class="text-slate-500 text-justify">文件系統：存圖檔</span>
                                 </div>
                             </div>
                         </div>
@@ -139,22 +139,22 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-16">
                         <div class="lg:col-span-2">
                             <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <span class="text-4xl">🛠️</span> 預設 vs. 自定義分區 (25 min)
+                                <span class="text-4xl">🛠️</span> 預設 vs. 自定義分區
                             </h2>
-                            <p class="text-gray-600 mb-8 leading-relaxed">
-                                當你在程式中引入了大型的 AI 庫、顯示驅動時，常會遇到 `Region overflowed`。這時，預設的 1MB 程式空間已經無法負荷。
+                            <p class="text-gray-600 mb-8 leading-relaxed text-left text-justify">
+                                引入大型庫時，常遇 `Region overflowed`。這時 1MB 空間已不足，需重新規劃。
                             </p>
                             <div class="space-y-6">
                                 <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-2xl">
                                     <h4 class="font-bold text-red-900 mb-2">突破限制：partitions.csv</h4>
-                                    <p class="text-sm text-red-800">透過一個 CSV 文件，你可以自由縮減文件系統空間，將其騰挪給 App 分區，實現最大 4MB 的單體燒錄。</p>
+                                    <p class="text-sm text-red-800 text-justify">透過 CSV 文件，可縮減文件系統，將空間騰給 App，實現最大單體燒錄。</p>
                                 </div>
                                 <div class="code-block group">
                                     <div class="flex justify-between items-center mb-2 border-b border-slate-700 pb-2">
-                                        <span class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">partitions.csv format</span>
+                                        <span class="text-[10px] text-slate-500 uppercase font-bold tracking-widest text-justify">partitions.csv format</span>
                                         <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
                                     </div>
-                                    <span class="text-slate-500"># Name, Type, SubType, Offset, Size, Flags</span><br>
+                                    <span class="text-slate-500 italic text-justify"># Name, Type, SubType, Offset, Size, Flags</span><br>
                                     nvs, data, nvs, , 0x4000,<br>
                                     otadata, data, ota, , 0x2000,<br>
                                     <span class="text-emerald-400">factory, app, factory, , 2M,</span><br>
@@ -163,16 +163,16 @@
                             </div>
                         </div>
                         <div class="bg-slate-100 p-8 rounded-3xl border border-slate-200 shadow-inner flex flex-col justify-center">
-                            <h3 class="font-bold text-gray-800 mb-6 flex items-center gap-3">
+                            <h3 class="font-bold text-gray-800 mb-6 flex items-center gap-3 uppercase tracking-widest">
                                 <span class="text-2xl">📝</span> 空間預算挑戰
                             </h3>
-                            <p class="text-sm text-gray-600 mb-8 leading-relaxed">
-                                假設你的 Flash 總量是 <strong>4MB (4096KB)</strong>。<br><br>
-                                若 App 佔用了 2MB，NVS 分區佔用了 32KB，Bootloader 佔用了 64KB...<br><br>
+                            <p class="text-sm text-gray-600 mb-8 leading-relaxed text-justify">
+                                假設 Flash 總量是 <strong>4MB</strong>。<br><br>
+                                若 App 佔 2MB，NVS 佔 32KB，Bootloader 佔 64KB...<br><br>
                                 🔍 <strong>思考題：</strong><br>
-                                你的 LittleFS 分區最大能規劃到多少 KB？如果還要預留給 OTA 備援分區，這空間還夠嗎？
+                                你的 LittleFS 最大能規劃到多少？還要預留備援嗎？
                             </p>
-                            <div class="mt-4 p-4 bg-white rounded-2xl border border-slate-200 text-[10px] text-slate-400 font-mono italic">
+                            <div class="mt-4 p-4 bg-white rounded-2xl border border-slate-200 text-[10px] text-slate-400 font-mono italic text-justify">
                                 * Hint: All offsets must be aligned to 4KB blocks.
                             </div>
                         </div>
@@ -185,30 +185,30 @@
         <section class="module-section mb-16">
             <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
                 <div class="p-8 md:p-14">
-                    <h2 class="text-3xl font-bold mb-10 text-center">💾 持久化存儲的決擇 (15 min)</h2>
+                    <h2 class="text-3xl font-bold mb-10 text-center">💾 持久化存儲的決擇</h2>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
                         <div class="group p-8 bg-slate-800/50 rounded-3xl border border-slate-700 hover:border-blue-500 transition-all duration-300 transform hover:-translate-y-2">
-                            <div class="w-16 h-16 bg-blue-500/20 text-blue-400 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-lg group-hover:bg-blue-500 group-hover:text-white transition-colors">🔑</div>
-                            <h3 class="font-bold text-2xl text-white mb-4">NVS (Non-Volatile Storage)</h3>
-                            <p class="text-sm text-slate-400 leading-relaxed mb-6">
-                                專為 <strong>「小而碎」</strong> 的參數設計。Key-Value 結構，適合儲存 PID 常數、使用者暱稱或最後一次的操作記錄。
+                            <div class="w-16 h-16 bg-blue-500/20 text-blue-400 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-lg group-hover:bg-blue-500 group-hover:text-white transition-colors text-justify">🔑</div>
+                            <h3 class="font-bold text-2xl text-white mb-4 text-justify">NVS (Non-Volatile Storage)</h3>
+                            <p class="text-sm text-slate-400 leading-relaxed mb-6 text-justify">
+                                專為 <strong>「小而碎」</strong> 參數設計。Key-Value 結構，適合存 PID 常數或最後記錄。
                             </p>
-                            <div class="pt-6 border-t border-slate-700 flex justify-between items-center">
+                            <div class="pt-6 border-t border-slate-700 flex justify-between items-center text-justify">
                                 <span class="text-xs text-blue-300 font-mono tracking-widest uppercase">Preferences.h</span>
-                                <span class="px-2 py-1 bg-blue-500/10 rounded text-[10px] text-blue-400 border border-blue-500/20">4KB Aligned</span>
+                                <span class="px-2 py-1 bg-blue-500/10 rounded text-[10px] text-blue-400 border border-blue-500/20 text-justify">4KB Aligned</span>
                             </div>
                         </div>
 
                         <div class="group p-8 bg-slate-800/50 rounded-3xl border border-slate-700 hover:border-emerald-500 transition-all duration-300 transform hover:-translate-y-2">
-                            <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-lg group-hover:bg-emerald-500 group-hover:text-white transition-colors">📁</div>
-                            <h3 class="font-bold text-2xl text-white mb-4">LittleFS / SPIFFS</h3>
-                            <p class="text-sm text-slate-400 leading-relaxed mb-6">
-                                正式的文件系統。適合存放 <strong>「大而靜態」</strong> 的資源：如 HTML 遙控頁面、CSS 樣式表或預覽 JPG 圖檔。
+                            <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-lg group-hover:bg-emerald-500 group-hover:text-white transition-colors text-justify">📁</div>
+                            <h3 class="font-bold text-2xl text-white mb-4 text-justify uppercase tracking-widest">LittleFS / SPIFFS</h3>
+                            <p class="text-sm text-slate-400 leading-relaxed mb-6 text-justify">
+                                正式文件系統。適合存放 <strong>「大而靜態」</strong> 資源：如 HTML、CSS 或圖檔。
                             </p>
-                            <div class="pt-6 border-t border-slate-700 flex justify-between items-center">
-                                <span class="text-xs text-emerald-300 font-mono tracking-widest uppercase">LittleFS.h</span>
-                                <span class="px-2 py-1 bg-emerald-500/10 rounded text-[10px] text-emerald-400 border border-emerald-500/20">Dir Tree Structure</span>
+                            <div class="pt-6 border-t border-slate-700 flex justify-between items-center text-justify">
+                                <span class="text-xs text-emerald-300 font-mono tracking-widest uppercase text-justify">LittleFS.h</span>
+                                <span class="px-2 py-1 bg-emerald-500/10 rounded text-[10px] text-emerald-400 border border-emerald-500/20 text-justify">Dir Tree Structure</span>
                             </div>
                         </div>
                     </div>
@@ -219,7 +219,7 @@
         <!-- Homework Section -->
         <section class="module-section">
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實戰任務：擴容與持久化</h2>
-            <p class="text-center text-gray-500 mb-12">規劃你的 Flash 領地，打造具有記憶能力的穩健系統。</p>
+            <p class="text-center text-gray-500 mb-12">規劃 Flash 領地，打造具有記憶能力的系統。</p>
 
             <div class="grid md:grid-cols-3 gap-6">
                 <!-- Task 1-1 -->
@@ -228,13 +228,13 @@
                     <div class="bg-orange-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">💉</span>
+                            <span class="text-4xl text-orange-500 group-hover:scale-110 transition-transform">💉</span>
                             <span class="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-orange-600 transition">【作業 1-1】</h3>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-orange-600 transition text-justify">【作業 1-1】</h3>
                         <h4 class="font-medium text-gray-500 mb-4">「Flash 重新分地」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">
-                            挑戰自定義 CSV。將主程式空間 factory 擴大至 2MB，縮減 storage 空間，並在 platformio.ini 成功連結此配置。
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            挑戰 CSV。將 factory 擴大至 2MB，縮減 storage 空間並成功連結配置。
                         </p>
                     </div>
                 </div>
@@ -245,13 +245,13 @@
                     <div class="bg-blue-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🖤</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform text-justify">🖤</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase text-justify">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 1-2】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「NVS 參數永久記憶」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">
-                            實作在完全斷電重啟後仍能「記住」變數值的功能。透過 Preferences 庫讀寫 PID 參數或累計開機次數。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition text-justify">【作業 1-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「NVS 永久記憶」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            實作斷電後仍能「記住」變數。透過 Preferences 庫讀寫 PID 或開機次數。
                         </p>
                     </div>
                 </div>
@@ -262,13 +262,13 @@
                     <div class="bg-emerald-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl">🌐</span>
-                            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
+                            <span class="text-4xl text-emerald-500 group-hover:rotate-12 transition-transform text-justify">🌐</span>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase text-justify">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業 1-3】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「網頁資源分區隔離」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">
-                            將 HTML/CSS 靜態檔上傳至 LittleFS 分區。讓 ESP32 具備讀取文件系統的能力，實現網頁前端與硬體邏輯的解耦。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition text-justify">【作業 1-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「網頁資源隔離」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            將 HTML/CSS 上傳至 LittleFS。實作文件系統讀取，實現前端解耦。
                         </p>
                     </div>
                 </div>
@@ -280,7 +280,7 @@
     <!-- Footer -->
     <footer class="bg-gray-800 py-12 border-t border-gray-700">
         <div class="container mx-auto px-4 text-center">
-            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <p class="text-gray-500 text-sm mb-4 text-justify">&copy; 2026 Vibe Coding. All rights reserved.</p>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
                 <span>課程單元 基礎 2 - 儲存架構</span>
                 <span class="hidden md:inline">|</span>
@@ -299,79 +299,79 @@
     <script src="/js/course-shared-v4.js"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">Flash 映射與永續存儲實驗室</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">Flash 映射與永續存儲實驗室：分區規劃、NVS 與 LittleFS 實戰</h2>
 
         <div class="assignment-quest">
-            <h3 class="quest-title">任務 1：「擴容手術」自定義 partitions.csv (Flash Expansion Surgery)</h3>
+            <h3 class="quest-title text-justify">任務 1：「擴容手術」自定義 partitions.csv (Flash Expansion Surgery)</h3>
             <div class="quest-meta">
                 <span>角色扮演：韌體架構師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
-                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
-                    <li><strong>分區規劃實做</strong>：在專案根目錄建立 <code>partitions.csv</code>，重新劃分 Flash 空間，將 <code>factory</code> 分區擴大至 2MB 並相應對齊 Offset 地址。</li>
-                    <li><strong>配置連結</strong>：在 <code>platformio.ini</code> 中使用 <code>board_build.partitions</code> 指向該 CSV 檔案。</li>
-                    <li><strong>驗證繳交</strong>：成功燒錄後，在 <code>README.md</code> 貼上 PlatformIO 終端機顯示的 Flash 分區映射截圖。</li>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫教 Clone 到本地。</li>
+                    <li><strong>分區規劃實做</strong>：建立 <code>partitions.csv</code>，擴大 <code>factory</code> 並對齊地址。</li>
+                    <li><strong>配置連結</strong>：在 <code>platformio.ini</code> 中使用 <code>board_build.partitions</code>。</li>
+                    <li><strong>驗證繳交</strong>：在 <code>README.md</code> 貼上 Flash 分區映射截圖。</li>
                 </ol>
             </div>
 
             <div class="tutor-benchmark">
                 <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
-                    <li>[ ] <strong>語法準確性</strong>：CSV 語法是否完全符合 ESP-IDF 規範且 Offset 地址無重疊衝突？</li>
-                    <li>[ ] <strong>空間邊界分配</strong>：是否理解 4KB 對齊原則，並成功規劃出滿足專案需求的儲存邊界？</li>
+                    <li>[ ] <strong>語法準確性</strong>：CSV 語法是否符合規範且地址無衝突？</li>
+                    <li>[ ] <strong>空間邊界分配</strong>：是否理解 4KB 對齊。規劃出儲存邊界？</li>
                 </ul>
             </div>
         </div>
 
         <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 2：「數據黑盒子」NVS 參數持久化 (Data Blackbox: NVS Persistence)</h3>
+            <h3 class="quest-title text-justify">任務 2：「數據黑盒子」NVS 參數持久化 (Data Blackbox: NVS Persistence)</h3>
             <div class="quest-meta">
                 <span>角色扮演：嵌入式工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
-                    <li><strong>持久化開發</strong>：實作一個使用 <code>Preferences</code> 庫的「開機計數器」以及一個用來記住「上次操作檔位」的功能。</li>
-                    <li><strong>API 操作驗證</strong>：正確調用 <code>begin()</code>、<code>putInt()</code>、<code>getInt()</code> 並確保在適當時機關閉 Preferences 會話。</li>
-                    <li><strong>實機斷電測試</strong>：將開發板完全斷電後重新通電，記錄數據是否被正確還原。</li>
-                    <li><strong>技術分享</strong>：在 README 中寫一段關於 NVS 為何具有「磨損均衡 (Wear Leveling)」特性的簡短說明。</li>
+                    <li><strong>持久化開發</strong>：實作「開機計數器」與「記住檔位」功能。</li>
+                    <li><strong>API 操作驗證</strong>：正確調用 <code>begin()</code>、<code>putInt()</code>、<code>getInt()</code>。</li>
+                    <li><strong>實機斷電測試</strong>：斷電後重新通電，記錄數據是否被正確還原。</li>
+                    <li><strong>技術分享</strong>：寫下關於 NVS 磨損均衡 (Wear Leveling) 特性說明。</li>
                 </ol>
             </div>
 
             <div class="tutor-benchmark">
                 <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
-                    <li>[ ] <strong>邏輯健壯性</strong>：代碼是否處理了「初次讀取（Key 不存在）」時的預設值返回邏輯？</li>
-                    <li>[ ] <strong>持久化成功</strong>：斷電重啟後，計數器是否能連續遞增而非從 1 開始？</li>
+                    <li>[ ] <strong>邏輯健壯性</strong>：是否處理了「初次讀取」的預設值返回？</li>
+                    <li>[ ] <strong>持久化成功</strong>：斷電重啟後，計數器是否連續遞增？</li>
                 </ul>
             </div>
         </div>
 
         <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 3：「資源檔案庫」LittleFS 檔案部署 (Resource Vault: LittleFS)</h3>
+            <h3 class="quest-title text-justify">任務 3：「資源檔案庫」LittleFS 檔案部署 (Resource Vault: LittleFS)</h3>
             <div class="quest-meta">
                 <span>角色扮演：全端 IoT 開發者</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
-                    <li><strong>靜態資源製作</strong>：將遙控介面 HTML 與 CSS 放入專案的 <code>data</code> 目錄下。</li>
-                    <li><strong>鏡像打包與燒錄</strong>：執行 PlatformIO 的 <code>Upload Filesystem Image</code> 任務將 data 目錄映射至 <code>storage</code> 分區。</li>
-                    <li><strong>掛載存取開發</strong>：實作 <code>LittleFS.begin()</code> 初始化，並在 Web Server 中動態讀取此分區內的網頁內容返回給瀏覽器。</li>
-                    <li><strong>最終 Commit</strong>：整理包含 partitions.csv、data 目錄與完整存取代碼的 Repo 並 Push 提交。</li>
+                    <li><strong>資源製作</strong>：將 HTML/CSS 放入 <code>data</code> 目錄。</li>
+                    <li><strong>鏡像打包</strong>：執行 <code>Upload Filesystem Image</code> 映射至 <code>storage</code>。</li>
+                    <li><strong>掛載存取</strong>：實作 <code>LittleFS.begin()</code>，在 Web Server 中動態讀取返回。</li>
+                    <li><strong>最終 Commit</strong>：整理專案模組並 Push 提交。</li>
                 </ol>
             </div>
 
             <div class="tutor-benchmark">
                 <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
-                    <li>[ ] <strong>系統掛載完整度</strong>：日誌是否正確印出 LittleFS 的總容量與已使用空間百分比？</li>
-                    <li>[ ] <strong>路徑響應正確性</strong>：是否能透過 Web 路由成功顯示存放在 Flash 中的靜態 HTML？</li>
+                    <li>[ ] <strong>系統掛載完整度</strong>：日誌是否正确印出 LittleFS 容量訊息？</li>
+                    <li>[ ] <strong>路徑響應正確性</strong>：能否成功顯示 Flash 中的靜態 HTML？</li>
                 </ul>
             </div>
         </div>
@@ -379,52 +379,52 @@
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
-            <p class="font-bold text-slate-700 mb-4">本單元教學重點：透過分區表掌握硬體儲存的「實體層級」管理，消除對 Flash 燒錄的恐懼感。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600">第一 Point：土地重劃</strong> - 將 Flash 從黑盒子變成可量化的地址區塊，讓學生具備規劃大型專案的能力。</li>
-                <li><strong class="text-indigo-600">第二 Point：持久化思維</strong> - 從 `volatile`（揮發）轉向 `persistent`（持久），是開發真實世界 IoT 產品的必經之路。</li>
-                <li><strong class="text-indigo-600">第三 Point：解耦設計</strong> - 透過 LittleFS，示範如何將「UI 樣式」與「控制邏輯」在硬體層級進行實體隔離，優化更新效率。</li>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：掌握儲存的「實體層級」管理，消除對燒錄的恐懼。掌握持久化核心邏輯。</p>
+            <ol class="space-y-4 text-slate-600 text-justify">
+                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：土地重劃</strong> - 將 Flash 變成可量化的地址區塊，具備規劃大專案能力。</li>
+                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：持久化思維</strong> - 從 `volatile` 轉向 `persistent`。</li>
+                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：解耦設計</strong> - 透過 LittleFS 示範 UI 與邏輯實體隔離，優化效率。</li>
             </ol>
         </div>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify">在 GitHub Classroom 的實戰部署建議</h2>
         <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
             <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
 .
-├── partitions.csv   # (重點) 提供一個有 Offset 地址錯誤的範本供學生修正
-├── data/            # 存放 web-manual.html 供學生實作 LittleFS
-└── src/main.cpp      # 包含串口日誌觀察框架
+├── partitions.csv   # (重點) 提供 Offset 錯誤範本供修正
+├── data/            # 存放 web-manual.html
+└── src/main.cpp      # 包含日誌觀察框架
             </pre>
         </div>
 
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    <tr class="bg-slate-100 border border-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
                     </tr>
                 </thead>
                 <tbody class="text-sm text-slate-600">
                     <tr>
-                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
-                        <td class="p-4 border-b">觀看「為什麼 ArduinoIDE 沒有分區表？解密 ESP32 Flash 映射」影片。</td>
-                        <td class="p-4 border-b"><strong>Dashboard:</strong> 確認學員掌握 HEX 地址與 MB/KB 單位之間的換算邏輯。</td>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5 text-justify">觀看「為什麼 ArduinoIDE 沒有分區表？」影片。</td>
+                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 確認掌握 HEX 地址與 MB/KB 換算。</td>
                     </tr>
                     <tr>
-                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
-                        <td class="p-4 border-b">領取作業 (Repo)，挑戰「空間對齊」與「NVS 參數熱插拔」測試。</td>
-                        <td class="p-4 border-b"><strong>雲端督導:</strong> 指導如何使用 `esptool` 查詢實體板子的 Flash 實際容量。</td>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify">領取作業 (Repo)，挑戰「空間對齊」測試。實作擴容。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>雲端督導:</strong> 指導如何使用 <code>esptool</code> 查詢實際上 Flash 容量。</td>
                     </tr>
                     <tr>
-                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
-                        <td class="p-4">將遙控介面資產打包進 LittleFS 並 Push，提交 PR 總結儲存分區的最佳實踐。</td>
-                        <td class="p-4"><strong>Feedback PR:</strong> 點評學員對「資源隔離」與「讀寫生命週期」管理的嚴謹性。</td>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
+                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify">將資產打包進 LittleFS 並 Push，總結分區最佳實踐。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評估對「資源隔離」與「讀寫生命週期」管理。</td>
                     </tr>
                 </tbody>
             </table>

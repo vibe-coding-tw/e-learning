@@ -268,7 +268,7 @@
                             <div onclick="openSubmissionModal('adv-02-mirror-roi', '【作業 2-3】影像數據鏡像與 ROI 提取')"
                                 class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group    <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">影像處理實驗室：Canvas 像素級操控實戰</h2>
+        <h2>影像處理實驗室：Canvas 像素級操控實戰</h2>
 
         <div class="assignment-quest">
             <h3 class="quest-title">任務 1：即時濾鏡開發師 (Filter Development Lab)</h3>
@@ -348,57 +348,56 @@
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：將瀏覽器從「顯示器」進化為「感測器」。讓學生掌握底層像素的操作藝術，為後續的邊緣偵測奠基。</p>
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：掌握「影像主權」。讓學生明白網頁端如何接管影像數據並加上 UI 回饋。</p>
             <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600">重點 1：一維與二維的博弈</strong> - 透過索引公式讓學生理解計算機如何儲存多維數據，這對理解底層 Buffer 非常重要。</li>
-                <li><strong class="text-indigo-600">重點 2：圖層概念 (Layering)</strong> - 強調影像處理與標註 UI 的解耦。讓學生學會專業的前端圖靈工程實務。</li>
-                <li><strong class="text-indigo-600">重點 3：座標運算的嚴謹度</strong> - 在鏡像變換任務中，引導學生寫出「具備容錯能力」的座標變換邏輯。</li>
+                <li><strong class="text-indigo-600">重點 1：Blob 到 ImageBitmap</strong> - 強調 MJPEG 只針對一張圖，而 H.264 針對「時間軸上的差異」。</li>
+                <li><strong class="text-indigo-600">重點 2：ROI (Region of Interest) 的座標映射</strong> - 實驗 2-2 是最有感的，讓學生看見演算法「預測」需要代價（延測）。</li>
+                <li><strong class="text-indigo-600">重點 3：低延遲標記</strong> - 引導學生不只看技術參數，要從「使用者需求（遙控 vs 存擋）」出發做技術選型。</li>
             </ol>
         </div>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
         <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
             <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
             <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
 .
-├── src/processor.js  # 核心：學員需實作 ImageData 的 loop 變換
-├── src/overlay.js    # UI：實作十字準星與文字標註繪製
-└── README.md         # 紀錄：座標變換公式的推導心得與測試錄像
+├── src/codec_switch.cpp  # 核心：學員實作 MJPEG/H.264 切換邏輯
+├── tools/latency_calc.py # 工具：協助測算 End-to-End 延遲
+└── README.md             # 紀錄：編碼延遲與畫質殘影對比報告
             </pre>
         </div>
 
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #334155;">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課前預習</td>
-                        <td class="px-6 py-5">觀看「Canvas 影像矩陣原理」短片。理解 R-G-B-A 四通道的排列規律。</td>
-                        <td class="px-6 py-5"><strong>Dashboard:</strong> 測試學員是否能預估特定像素座標在一維陣列中的 Index。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900">領取作業 (Repo)，執行 2-1 濾鏡開發與 2-3 鏡像變換實驗。優化像素 loop 效率。</td>
-                        <td class="px-6 py-5"><strong>技術教練:</strong> 現場拆解為什麼索引計算錯誤會導致畫布「條紋化」或黑屏。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
-                        <td class="px-6 py-5">提交包含完整標註功能的 final project。閱讀導師對「Web Workers」如何在後台處理大型像素陣列的補充。</td>
-                        <td class="px-6 py-5"><strong>Feedback PR:</strong> 點評對「座標變換邏輯」的代碼優雅程度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <h2>教學實施策略 (Flipped Workflow)</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台引導</th>
+                </tr>
+            </thead>
+            <tbody style="color: #4b5563;">
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前預習</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「H.264 I/P 幀動態演示」短片。理解運動補償 (Motion Vector) 概念。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard:</strong> 測試學員能否預判 H.264 在靜態畫面下的頻寬優勢。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中實作</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業 (Repo)，執行 2-1 壓力測試與 2-2 延遲觀測。優化解碼器緩衝區配置。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術教練:</strong> 現場拆解馬賽克殘影產生的數據丟包成因。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後精進</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">提交最終場景編碼方案。閱讀導師對「H.265 與 AV1」在物聯網邊緣端應用前景的補充。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR:</strong> 點評對「編碼複雜度 vs 頻寬節省」的成本合算。</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
         <p><strong>灰階濾鏡邏輯 (C-style optimized)</strong></p>
         <pre><code>for (let i = 0; i < data.length; i += 4) {
     const avg = (data[i] + data[i+1] + data[i+2]) / 3;

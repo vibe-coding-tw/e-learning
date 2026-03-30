@@ -327,19 +327,18 @@ characteristic.startNotifications().then(_ => {
         </div>
     </section>
 
-    <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重：「拉」到「推」的阻思維轉。掌握異步事件處理與無線資源的高效分配。</p>
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：「拉」到「推」的思維轉向。掌握異步事件處理與無線資源的高效分配。</p>
             <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600">重 1：異步事件模</strong> - 讓學生理解 Web Bluetooth API 的事件監聽機制，這是開發高效能 Web App 的基石。</li>
-                <li><strong class="text-indigo-600">重 2：物理限制與策略</strong> - 透過 1-2 的閾值任務，傳達「數據即資源」的觀念，學會用數學邏輯換取硬體續航。</li>
-                <li><strong class="text-indigo-600">重 3：原子化解</strong> - 教導學生如何在大數據分段傳輸中，透過 Buffer 緩衝確保數據處理的原子性，避免系統崩潰。</li>
+                <li><strong class="text-indigo-600">重點 1：異步事件模型</strong> - 讓學生理解 Web Bluetooth API 的事件監聽機制，這是開發高效能 Web App 的基石。</li>
+                <li><strong class="text-indigo-600">重點 2：物理限制與策略</strong> - 透過 1-2 的閾值任務，傳達「數據即資源」的觀念，學會用數學邏輯換取硬體續航。</li>
+                <li><strong class="text-indigo-600">重點 3：原子化解析</strong> - 教導學生如何在大數據分段傳輸中，透過 Buffer 緩衝確保數據處理的原子性，避免系統崩潰。</li>
             </ol>
         </div>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
         <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
             <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
             <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
@@ -351,70 +350,34 @@ characteristic.startNotifications().then(_ => {
             </pre>
         </div>
 
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5">觀看「輪詢到通知：BLE 的通訊革命」影片。理解 CCCD 的訂閱含義。</td>
-                        <td class="px-6 py-5"><strong>Dashboard:</strong> 測試學員是否能區分 Read 與 Notify 在時序圖上的差異。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900">領取作業 (Repo)，挑戰在 50Hz 通知頻率下保持瀏覽器 UI 不卡頓。實施閾值過濾。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 協助學員診斷為何訂閱成功卻收不到通知（通常是未正確存檔或 UUID 錯位）。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
-                        <td class="px-6 py-5">提交包含分段重組邏輯的最終專案並 Push。閱讀 PR 對「逾時重置機制」的深度 Review。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價對「資料平滑度」與「發送頻率」權衡的考量。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <h2>教學實施策略 (Flipped Workflow)</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台引導</th>
+                </tr>
+            </thead>
+            <tbody style="color: #4b5563;">
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前預習</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「輪詢到通知：BLE 的通訊革命」影片。理解 CCCD 的訂閱含義。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard:</strong> 測試學員是否能區分 Read 與 Notify 在時序圖上的差異。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中實作</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業 (Repo)，挑戰在 50Hz 通知頻率下保持瀏覽器 UI 不卡頓。實施閾值過濾。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術教練:</strong> 協助學員診斷為何訂閱成功卻收不到通知。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後精進</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">提交包含分段重組邏輯的最終專案並 Push。閱讀 PR 對「逾時重置機制」的深度 Review。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR:</strong> 評價對「資料平滑度」與「發送頻率」權衡的考量。</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
-的情況下完成數據處理。</li>
-                    </ul>
-
-                    <h2>翻轉教室的實施策略</h2>
-                    <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-                        <thead>
-                            <tr style="background-color: #f8fafc;">
-                                <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                                <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git
-                                    Workflow)</th>
-                                <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                                <td style="padding: 12px; border: 1px solid #e2e8f0;">理解 BLE CCCD 在訂閱機制中的作用。</td>
-                                <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                                    <strong>Dashboard：</strong>檢查進度，引導觀看除錯手冊。</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                                <td style="padding: 12px; border: 1px solid #e2e8f0;">進行高頻 Notify 壓力測試，觀察封包堆積.</td>
-                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>實體協助：</strong>討論手機端的
-                                    Notify 頻率限制。</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                                <td style="padding: 12px; border: 1px solid #e2e8f0;">完成分段重組邏輯並 Push.</td>
-                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>PR
-                                        Review：</strong>檢核「逾時重置」邏輯是否完備。</td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </section>
 
                 <script src="/js/course-shared-v4.js"></script>

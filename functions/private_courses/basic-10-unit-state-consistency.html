@@ -17,30 +17,31 @@
 
     <!-- Hero Section -->
     <header
-        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden text-justify">
         <div
             class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
         </div>
-        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16 text-justify"></div>
 
         <div class="container mx-auto px-4 relative z-10 text-center">
             <span
-                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase text-justify">
                 基礎 10 - 系統一致性
             </span>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]"><span class="text-cyan-400">非同步通訊</span><br>當你的螢幕說謊時
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit] text-justify uppercase tracking-tighter">
+                <span class="text-cyan-400">非同步通訊</span><br>當你的螢幕說謊時
             </h1>
-            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
-                在指令發送與硬體執行之間，如何確保「網頁狀態」與「機器人現實」永遠同步？
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed text-justify">
+                確保「網頁狀態」與「機器人現實」永遠同步。
             </p>
 
-            <div class="mt-8 flex flex-wrap justify-center gap-4">
+            <div class="mt-8 flex flex-wrap justify-center gap-4 text-justify">
                 <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
-                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105 text-justify">
                     <span>📺</span> 觀看教學影片
                 </button>
                 <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
-                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105 text-justify">
                     <span>📄</span> 閱讀課程講義
                 </button>
             </div>
@@ -56,30 +57,30 @@
                 <div class="p-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
                 <div class="p-8 md:p-14">
                     <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl text-red-500">🏁</span> 1. 競爭條件 (Race Condition)
+                        <span class="text-4xl text-red-500 text-justify">🏁</span> 1. 競爭條件 (Race Condition)
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
-                        <div class="space-y-6">
-                            <p class="text-lg text-gray-600 leading-relaxed font-light">
-                                無線環境下，指令發送順序不等於抵達順序。當多個操作同時發生，最終結果取決於誰「跑得快」，這會導致嚴重的邏輯錯誤。
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 text-justify">
+                        <div class="space-y-6 text-justify">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify uppercase tracking-tight">
+                                無線環境順序亂。多個操作同時發生，結果取決於誰跑得快。
                             </p>
-                            <div class="bg-red-50 p-6 rounded-2xl border border-red-100">
-                                <h4 class="font-bold text-red-800 mb-2 text-[10px] uppercase tracking-widest">Failure Scenario</h4>
-                                <ol class="text-[9px] text-red-700 space-y-2 font-light">
+                            <div class="p-6 rounded-2xl border border-red-100 bg-red-50 text-justify uppercase tracking-widest leading-relaxed">
+                                <h4 class="font-bold text-red-800 mb-2 text-[10px] text-justify font-black">Failure Scenario</h4>
+                                <ol class="text-red-700 space-y-2 font-light text-[9px] text-justify uppercase tracking-widest font-black">
                                     <li>1. 網頁發送「進入自動模式」</li>
-                                    <li>2. 車子因電力不足自動退回「待機模式」</li>
-                                    <li>3. 「電力不足」的回報被延遲。網頁先收到「模式確認」，導致顯示錯誤狀態。</li>
+                                    <li>2. 車子電力不足自動退回「待機模式」</li>
+                                    <li>3. 通訊延遲。網頁收到模式確認，顯示錯誤。</li>
                                 </ol>
                             </div>
                         </div>
 
-                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center">
-                            <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest">Out-of-order Arrival</h4>
-                            <div class="flex items-center justify-around gap-2 mb-4">
-                               <div class="px-3 py-1 bg-blue-500 rounded text-[8px] animate-bounce">Cmd #2</div>
-                               <div class="px-3 py-1 bg-amber-500 rounded text-[8px]">Cmd #1</div>
+                        <div class="p-8 rounded-3xl shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center bg-slate-900 text-justify uppercase tracking-widest font-black">
+                            <h4 class="font-bold text-slate-500 mb-6 uppercase tracking-widest text-[10px] text-justify">Out-of-order Arrival</h4>
+                            <div class="flex items-center justify-around gap-2 mb-4 text-justify">
+                               <div class="px-3 py-1 rounded text-[8px] animate-bounce bg-blue-500 text-justify font-black">Cmd #2</div>
+                               <div class="px-3 py-1 rounded text-[8px] bg-amber-500 text-justify font-black">Cmd #1</div>
                             </div>
-                            <p class="text-[10px] text-red-400 font-bold uppercase tracking-widest leading-relaxed mt-4">UI State Corruption Risk</p>
+                            <p class="text-red-400 font-bold uppercase tracking-widest leading-relaxed mt-4 text-[10px] text-justify">UI State Corruption Risk</p>
                         </div>
                     </div>
                 </div>
@@ -92,32 +93,32 @@
                 <div class="p-1 bg-gradient-to-r from-emerald-500 to-cyan-500"></div>
                 <div class="p-8 md:p-14">
                     <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl text-emerald-500">✨</span> 2. 樂觀 UI 與真值來源 (SSoT)
+                        <span class="text-4xl text-emerald-500 text-justify">✨</span> 2. 樂觀 UI 與真值來源 (SSoT)
                     </h2>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
-                        <div class="space-y-8">
-                            <p class="text-lg text-gray-600 leading-relaxed font-light">
-                                點擊按鈕立即變色（樂觀更新）能提升流暢感，但在硬體控制中，必須採用「真值來源 (SSoT)」：介面狀態必須由實體硬體回傳決定。
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 text-justify">
+                        <div class="space-y-8 text-justify">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify uppercase tracking-tighter">
+                                介面狀態必須由實體硬體回傳決定 (SSoT)。
                             </p>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 shadow-sm">
-                                    <h4 class="font-bold text-emerald-800 mb-2 text-[10px] uppercase tracking-widest">Optimistic Update</h4>
-                                    <p class="text-[9px] text-emerald-600">快速反應，但當切換失敗時會產生「畫面閃回」的尷尬感。</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-justify uppercase tracking-widest leading-relaxed font-black">
+                                <div class="p-6 rounded-2xl border border-emerald-100 shadow-sm bg-emerald-50 text-justify">
+                                    <h4 class="font-bold text-emerald-800 mb-2 text-[10px] text-justify uppercase tracking-widest font-black">Optimistic</h4>
+                                    <p class="text-emerald-600 text-[9px] text-justify uppercase tracking-tighter font-black">快速反應。但失敗時產生「畫面閃回」。</p>
                                 </div>
-                                <div class="bg-cyan-50 p-6 rounded-2xl border border-cyan-100 shadow-sm">
-                                    <h4 class="font-bold text-cyan-800 mb-2 text-[10px] uppercase tracking-widest">SSoT Framework</h4>
-                                    <p class="text-[9px] text-cyan-600">100% 同步。沒收到硬體確認前，介面不準變更，確保眼見即真實。</p>
+                                <div class="p-6 rounded-2xl border border-cyan-100 shadow-sm bg-cyan-50 text-justify uppercase tracking-tighter font-black">
+                                    <h4 class="font-bold text-cyan-800 mb-2 text-[10px] text-justify uppercase tracking-widest font-black">SSoT Framework</h4>
+                                    <p class="text-cyan-600 text-[9px] text-justify uppercase tracking-widest font-black">100% 同步。沒收到確認前不變。眼見即真實。</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="bg-slate-900 rounded-3xl p-10 shadow-2xl border border-slate-700 text-center relative overflow-hidden group">
-                           <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent"></div>
-                           <h4 class="text-cyan-400 font-bold mb-4 text-[10px] uppercase tracking-widest">Consistency Architecture</h4>
-                           <p class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic">
-                               "在攸關安全的控制系統中，精確的顯示權重永遠高於毫秒級的操作快感。"
+                        <div class="p-10 rounded-3xl shadow-2xl border border-slate-700 text-center relative overflow-hidden group bg-slate-900 text-justify">
+                           <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent text-justify"></div>
+                           <h4 class="text-cyan-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-justify uppercase tracking-widest font-black">Consistency Architecture</h4>
+                           <p class="text-slate-500 leading-relaxed font-light mb-8 italic text-[11px] text-justify uppercase tracking-widest font-black">
+                                "精確權重高於毫秒級操作快感。"
                            </p>
-                           <div class="inline-block px-8 py-3 bg-cyan-600 text-white rounded-xl font-bold text-[10px] shadow-lg">Enforce SSoT</div>
+                           <div class="inline-block px-8 py-3 bg-cyan-600 text-white rounded-xl font-bold text-[10px] shadow-lg text-justify uppercase tracking-widest font-black">Enforce SSoT</div>
                         </div>
                     </div>
                 </div>
@@ -126,31 +127,31 @@
 
         <!-- Module 3: Polling vs Ack -->
         <section class="module-section mb-16">
-            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+            <div class="glass-card rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700 bg-slate-900">
                 <div class="p-8 md:p-14">
-                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-indigo-400">
-                        <span class="p-2 bg-indigo-500/20 rounded-lg text-indigo-400 text-2xl">🔄</span> 3. 應答機制 (ACK) 與定時輪詢
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-indigo-400 text-justify uppercase tracking-widest font-black">
+                        <span class="p-2 bg-indigo-500/20 rounded-lg text-indigo-400 text-2xl text-justify font-black">🔄</span> 3. ACK 與等級機制
                     </h2>
-                    <div class="flex flex-col lg:flex-row gap-16 items-center">
-                        <div class="flex-1 space-y-6">
-                            <p class="text-slate-400 font-light leading-relaxed text-lg">
-                                如何確認指令抵達？「輪詢」主動詢問，「應答 (ACK)」則由硬體執行完畢後主動通知，是最高效的一致性方案。
+                    <div class="flex flex-col lg:flex-row gap-16 items-center text-justify">
+                        <div class="flex-1 space-y-6 text-justify">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg text-justify uppercase tracking-tighter">
+                                「應答 (ACK)」是最高效方案：硬體執行後主動通知。
                             </p>
-                            <div class="bg-indigo-500/10 p-8 rounded-3xl border border-indigo-500/20 shadow-inner">
-                                <h4 class="font-bold text-indigo-400 mb-4 text-xs uppercase tracking-widest">Protocol Strategy</h4>
-                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
-                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1"></span><div><strong class="text-white">版本序號 (Sequence)</strong>：為封包加上遞增編號，過期序號一律捨棄。</div></li>
-                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1"></span><div><strong class="text-white">雙向握手 (ACK)</strong>：包含指令 ID，確定特定的操作在遠端確實落地。</div></li>
-                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1"></span><div><strong class="text-white">指數退避 (Backoff)</strong>：通訊失敗時自動重試，但間隔逐漸拉長，避免癱瘓網路。</div></li>
+                            <div class="p-8 rounded-3xl border border-indigo-500/20 shadow-inner bg-indigo-500/10 text-justify uppercase tracking-widest font-black">
+                                <h4 class="font-bold text-indigo-400 mb-4 text-xs uppercase tracking-widest text-justify">Protocol Strategy</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light text-justify uppercase tracking-widest">
+                                    <li class="flex items-start gap-2 text-justify"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1"></span><div><strong class="text-white text-justify">版本序號 (Sequence)</strong>：封包加上遞增編號。</div></li>
+                                    <li class="flex items-start gap-2 text-justify"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1"></span><div><strong class="text-white text-justify">雙向握手 (ACK)</strong>：包含指令 ID。</div></li>
+                                    <li class="flex items-start gap-2 text-justify"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1"></span><div><strong class="text-white text-justify">指數退避 (Backoff)</strong>：失敗時重試。</div></li>
                                 </ul>
                             </div>
                         </div>
-                        <div class="lg:w-96">
-                            <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-inner font-mono text-[10px] text-blue-300">
-                                <span class="text-gray-500">// App 发送具備 ID 的指令</span><br>
-                                sendCmd({ id: <span class="text-pink-400">101</span>, action: <span class="text-emerald-400">"START"</span> });<br><br>
-                                <span class="text-gray-500">// 硬體執行後 ACK 回传</span><br>
-                                { <span class="text-pink-400">"ack"</span>: <span class="text-purple-400">true</span>, <span class="text-pink-400">"cmdId"</span>: <span class="text-pink-400">101</span> }
+                        <div class="lg:w-96 text-justify uppercase tracking-widest font-black">
+                            <div class="p-6 rounded-2xl border border-slate-800 shadow-inner font-mono text-[10px] text-blue-300 bg-slate-950 text-justify uppercase tracking-widest font-black text-left">
+                                <span class="text-gray-500 text-justify font-black">// 发送具備 ID 指令</span><br>
+                                sendCmd({ id: <span class="text-pink-400">101</span>, act: <span class="text-emerald-400">"START"</span> });<br><br>
+                                <span class="text-gray-500 text-justify font-black">// ACK 回传</span><br>
+                                { <span class="text-pink-400 text-justify font-black">"ack"</span>: <span class="text-purple-400">true</span>, <span class="text-pink-400">"id"</span>: <span class="text-pink-400">101</span> }
                             </div>
                         </div>
                     </div>
@@ -161,56 +162,56 @@
         <!-- Homework Section -->
         <section class="module-section">
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：解決「同步焦慮」</h2>
-            <p class="text-center text-gray-500 mb-12">建立絕對一致的通訊管線，確保網頁面板與實體機器人之間「零謊言」同步。</p>
+            <p class="text-center text-gray-500 mb-12">確保面板與機器人「零謊言」同步。</p>
 
-            <div class="grid md:grid-cols-3 gap-6">
+            <div class="grid md:grid-cols-3 gap-6 text-justify uppercase tracking-widest">
                 <!-- Task 10-1 -->
                 <div onclick="openSubmissionModal('basic-10-sync-1', '【作業 10-1】版本序號同步法 (Sequence Number Logic)')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify text-left uppercase tracking-widest">
                     <div class="bg-indigo-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl text-indigo-500 group-hover:scale-110 transition-transform">🔢</span>
-                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
+                            <span class="text-4xl text-indigo-500 group-hover:scale-110 transition-transform text-justify">🔢</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase text-justify">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 10-1】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「代碼序號過濾層」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">
-                            為狀態封包注入遞增 seq。在網頁端實作有效性判定，徹底修復因網路亂序導致的數據「時光倒流」跳動 Bug。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition text-justify font-black">【作業 10-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify font-black uppercase tracking-widest leading-relaxed">「代碼序號過濾層」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify uppercase tracking-tighter">
+                            注入遞增 seq。網頁端實作有效性判定。修復亂序導致的跳動 Bug。
                         </p>
                     </div>
                 </div>
 
                 <!-- Task 10-2 -->
                 <div onclick="openSubmissionModal('basic-10-sync-2', '【作業 10-2】應答確認機制 (ACK/NACK Framework)')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify uppercase tracking-tighter">
                     <div class="bg-blue-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl text-blue-500 group-hover:rotate-12 transition-transform">⚖️</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
+                            <span class="text-4xl text-blue-500 group-hover:rotate-12 transition-transform text-justify">⚖️</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase text-justify">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 10-2】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「雙向握手握手通訊」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">
-                            實施 ACK 確認框架與 Pending 動畫。支援 500ms 超時下的指數退避自動重傳，挑戰惡劣無線環境下的高穩定控制。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition text-justify font-black uppercase tracking-widest text-left">【作業 10-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify uppercase tracking-widest font-black leading-relaxed">「雙向握手通訊」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            實施 ACK 確認框架與 Pending 動畫。支援指數退避自動重傳。
                         </p>
                     </div>
                 </div>
 
                 <!-- Task 10-3 -->
                 <div onclick="openSubmissionModal('basic-10-sync-3', '【作業 10-3】真值來源 (SSoT) 重構 (SSoT Implementation)')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify uppercase tracking-widest font-black text-left">
                     <div class="bg-cyan-500 h-2"></div>
                     <div class="p-8 flex-grow">
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl text-cyan-500 group-hover:translate-x-1 transition-transform">🏠</span>
-                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
+                            <span class="text-4xl text-cyan-500 group-hover:translate-x-1 transition-transform text-justify">🏠</span>
+                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase text-justify">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition">【作業 10-3】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「視覺主權移交硬體」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">
-                            徹底移除前端樂觀更新架構。強制 UI 刷新必須訂閱來自硬體的 NOTIFY 推送，確保眼見之處皆為物理真相。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition text-justify font-black uppercase tracking-widest">【作業 10-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-left text-justify font-black uppercase tracking-tighter leading-relaxed">「主權移交硬體」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            移除樂觀更新。強制 UI 刷新訂閱來自硬體的 NOTIFY 推送。
                         </p>
                     </div>
                 </div>
@@ -220,10 +221,10 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 py-12 border-t border-gray-700 mt-auto">
-        <div class="container mx-auto px-4 text-center">
-            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
-            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+    <footer class="bg-gray-800 py-12 border-t border-gray-700 text-justify">
+        <div class="container mx-auto px-4 text-center text-justify">
+            <p class="text-gray-500 text-sm mb-4 text-justify">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400 text-justify uppercase tracking-widest font-black border border-slate-700">
                 <span>課程單元 基礎 10 - 系統一致性</span>
                 <span class="hidden md:inline">|</span>
                 <span>講師：Antigravity Assistant</span>
@@ -241,79 +242,79 @@
     <script src="/js/course-shared-v4.js"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">分散式一致性實驗室</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">分散式一致性實驗室：序號同步、ACK 應答與 SSoT 真值架構實戰</h2>
 
         <div class="assignment-quest">
-            <h3 class="quest-title">任務 1：版本序號同步法 (Sequence Number Logic)</h3>
+            <h3 class="quest-title text-justify">任務 1：版本序號同步法 (Sequence Number Logic)</h3>
             <div class="quest-meta">
-                <span>角色扮演：分散式系統工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+                <span>角色扮演：系統工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
-                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
-                    <li><strong>序號注入封裝</strong>：修改 ESP32 的 JSON 發送邏輯，為每個包含感知狀態或模式的封包新增遞增 <code>seq</code> 序號字段。</li>
-                    <li><strong>過濾機制作戰</strong>：在網頁端接收層實作邏輯：僅接受 <code>seq</code> 大於當前 local 最大儲存值的數據，高效忽略網路亂序包。</li>
-                    <li><strong>亂序穩定性驗證</strong>：手動擾亂數據發送順序（模擬高延遲波動），觀察網頁端 UI 顯示是否能維持穩定，不發生「新舊數據交錯跳動」。</li>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫。</li>
+                    <li><strong>注入封裝</strong>：封包新增遞增 <code>seq</code> 字段。</li>
+                    <li><strong>過濾機制</strong>：網頁端僅接受 <code>seq</code> 大於 local 值的數據。</li>
+                    <li><strong>驗證</strong>：觀察顯示是否穩定不跳動。</li>
                 </ol>
             </div>
 
             <div class="tutor-benchmark">
                 <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
-                    <li>[ ] <strong>序號過濾嚴密性</strong>：網頁端是否能 100% 擋下因延遲抵達的舊序號數據，保持顯示狀態的「線性前進」？</li>
-                    <li>[ ] <strong>極限溢位備案</strong>：README 中是否分析並提出針對序號遞增至極限值歸零 (Reset) 後的同步修正策略？</li>
+                    <li>[ ] <strong>過濾嚴密</strong>：擋下延遲舊序號？</li>
+                    <li>[ ] <strong>策略備案</strong>：提出序號歸零同步策略？</li>
                 </ul>
             </div>
         </div>
 
         <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 2：應答確認機制 (ACK/NACK Framework)</h3>
+            <h3 class="quest-title text-justify">任務 2：應答確認機制 (ACK/NACK Framework)</h3>
             <div class="quest-meta">
-                <span>角色扮演：通訊協定設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+                <span>角色扮演：協定設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
-                    <li><strong>指令非同步化</strong>：將網頁 App 的發送函式改寫為異步 <code>Promise</code> 框架，點擊後的 UI 鈕進入 Pending 等待視覺。</li>
-                    <li><strong>確認回軌實作</strong>：硬體端在完成邏輯操作後立即回傳含 <code>cmdId</code> 的 ACK 報文；網頁收到匹配的 ACK 後方可確認切換成功。</li>
-                    <li><strong>自動重傳邏輯</strong>：實作超時偵測：若 500ms 內未獲響應，執行最多 3 次的指數退避 (Exponential Backoff) 重傳機制。</li>
-                    <li><strong>故障路徑驗證</strong>：模擬通訊斷路環境，確認 UI 能在重試失敗後正確顯示「同步失敗」警告，而非卡在載入動畫中。</li>
+                    <li><strong>非同步化</strong>：發送函式改寫為 <code>Promise</code>。</li>
+                    <li><strong>確認回軌</strong>：硬體完成後回傳 ACK。</li>
+                    <li><strong>重傳邏輯</strong>：實作超時偵測與指數退避重傳。</li>
+                    <li><strong>路徑驗證</strong>：失敗後正確顯示警告。</li>
                 </ol>
             </div>
 
             <div class="tutor-benchmark">
                 <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
-                    <li>[ ] <strong>反饋同步品質</strong>：介面是否能透過明顯的視圖變換，讓使用者建立「指令處理中」與「執行已落地」的心理區分？</li>
-                    <li>[ ] <strong>傳輸魯棒性指標</strong>：在隨機丟包率 20% 的測試環境下，指令是否能最終成功同步且不產生雙端狀態分裂 Bug？</li>
+                    <li>[ ] <strong>反饋品質</strong>：建立執行落地心理區分？</li>
+                    <li>[ ] <strong>魯棒性指標</strong>：丟包環境下最終成功？</li>
                 </ul>
             </div>
         </div>
 
         <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 3：真值來源 (SSoT) 重構 (Single Source of Truth Implementation)</h3>
+            <h3 class="quest-title text-justify">任務 3：真值來源 (SSoT) 重構 (Single Source of Truth)</h3>
             <div class="quest-meta">
                 <span>角色扮演：系統架構師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
-                    <li><strong>前端主權剝離</strong>：徹底移除 App 內所有點擊即切換顏色的「樂觀更新」邏輯，UI 主動權交給通訊層。</li>
-                    <li><strong>全訂閱制 UI 刷新</strong>：強制所有關鍵面板（如模式標籤、解鎖狀態）之變更，必須由接收到的 <code>NOTIFY</code> 指令觸發。</li>
-                    <li><strong>一致性差異分析</strong>：在限速通訊環境下，記錄並分析「SSoT 架構」相較於傳統架構在消除「虚假反饋」上的實質優勢。</li>
-                    <li><strong>交付物提交</strong>：將重構後的單向數據流版本代碼推送到 GitHub PR。</li>
+                    <li><strong>主權剝離</strong>：徹底移除樂觀更新。</li>
+                    <li><strong>全訂閱制</strong>：面板變更由 <code>NOTIFY</code> 觸發。</li>
+                    <li><strong>差異分析</strong>：分析 SSoT 實質優勢。</li>
+                    <li><strong>交付物</strong>：推送重構後版本。</li>
                 </ol>
             </div>
 
             <div class="tutor-benchmark">
                 <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
-                    <li>[ ] <strong>單向流架構純度</strong>：前端 App 是否真正達成 100% 被動刷新？（即必須由硬體事件回傳驅動 UI 變更）</li>
-                    <li>[ ] <strong>狀態吻合度實測</strong>：網頁面板顯示的數據狀態是否與機器人實體端的物理輸出（馬達、LED）達成了感知層的一致？</li>
+                    <li>[ ] <strong>架構純度</strong>：App 達成 100% 訂閱驅動？</li>
+                    <li>[ ] <strong>吻合度實測</strong>：顯示與硬體輸出達成一致？</li>
                 </ul>
             </div>
         </div>
@@ -321,52 +322,52 @@
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
-            <p class="font-bold text-slate-700 mb-4">本單元教學重點：在物理不可靠的通訊介質中，構建邏輯上的絕對可靠。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600">重點 1：對抗時間的亂序</strong> - 引導學員理解無線網路中「後發先至」的常態，從而體會 版本序號 (Sequence) 的核心價值。</li>
-                <li><strong class="text-indigo-600">重點 2：從單向通知到雙向確認</strong> - 解釋 ACK 握手協議是提升系統等級、進入工業級控制系統的必經之路。</li>
-                <li><strong class="text-indigo-600">重點 3：工程美學的取捨</strong> - 引導學員思考為何在專業設備控制中，「寧可慢一點，也要保證準」的數據一致性 (SSoT) 重於 UI 響應快感。</li>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify text-left">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：在物理不可靠環境中構建邏輯絕對可靠。</p>
+            <ol class="space-y-4 text-slate-600 text-justify text-left">
+                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：對抗亂序</strong> - 體會版本序號價值。</li>
+                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：從通知到確認</strong> - ACK 是工業級必經之路。</li>
+                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：美學取捨</strong> - 顯示一致性權重高於響應快感。</li>
             </ol>
         </div>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify uppercase tracking-widest font-black border border-slate-700">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300 text-justify uppercase tracking-widest font-black text-left">
+            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm text-justify uppercase tracking-widest font-black border border-slate-100">
 .
-├── src/main.cpp       # (必修) 需補全 JSON 封裝中的 seq 注入與指令 ACK 邏輯
-├── src/UIController.js# (前端) 學員需在此刪除樂觀更新，並實作訂閱制刷新
-└── README.md          # 壓力報告：紀錄在高丟包環境下，指令完成同步的平均延遲
+├── src/main.cpp       # (必修) seq 注入與 ACK 邏輯
+├── src/UIController.js# (前端) 訂閱制刷新
+└── README.md          # 壓力報告
             </pre>
         </div>
 
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
+        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify uppercase tracking-widest font-black">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-center text-justify font-black text-left">
+            <table class="w-full text-left border-collapse border border-slate-100 text-justify font-black">
                 <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    <tr class="bg-slate-100 border border-slate-100 text-justify font-black">
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">教師/平台引導</th>
                     </tr>
                 </thead>
-                <tbody class="text-sm text-slate-600">
+                <tbody class="text-sm text-slate-600 border border-slate-100 text-justify font-black">
                     <tr>
-                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
-                        <td class="p-4 border-b">觀看「網路延遲如何毀掉你的外科手術機器人？」案例分析影片，預習 Race Condition。</td>
-                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員能否識別出「UI 閃回 (Flicker)」背後的通訊一致性缺陷。</td>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5 text-justify">觀看案例影片並預習 Race Condition。</td>
+                        <td class="px-6 py-5 text-justify border border-slate-100"><strong>Dashboard:</strong> 測試識別 UI 閃回缺陷。</td>
                     </tr>
                     <tr>
-                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
-                        <td class="p-4 border-b">領取作業 (Repo)，在刻意加入隨機延遲的模擬通訊環境下，開發具備防禦性的同步協議層。</td>
-                        <td class="p-4 border-b"><strong>助教引導:</strong> 協助演示如何透過瀏覽器 Console 工具攔截並分析「過時序號」封包。</td>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify border border-slate-100 text-left">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify text-left">領取 Repo，開發協議層。</td>
+                        <td class="px-6 py-5 text-left text-justify border border-slate-100 font-black"><strong>助教引導:</strong> 協助分析過時序號。</td>
                     </tr>
                     <tr>
-                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
-                        <td class="p-4">將具備指數退避重傳的通訊框架封裝為獨立類庫並 Push PR。</td>
-                        <td class="p-4"><strong>Feedback PR:</strong> 點評對「數據持久性 (Consistency)」與「通訊可用性 (Availability)」平衡的設計水準。</td>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
+                        <td class="px-6 py-5 text-justify text-left text-justify font-black">將通訊框架封裝提交。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評數據持久性平衡。</td>
                     </tr>
                 </tbody>
             </table>

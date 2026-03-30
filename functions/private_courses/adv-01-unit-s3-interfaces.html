@@ -263,7 +263,7 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">影像實驗室：ESP32-S3 硬體架構與 PSRAM 優化</h2>
+        <h2>影像實驗室：ESP32-S3 硬體架構與 PSRAM 優化</h2>
 
         <div class="assignment-quest">
             <h3 class="quest-title">任務 1：PSRAM 初始化與壓力測試 (Memory Stress Test)</h3>
@@ -343,9 +343,9 @@
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <h2>GitHub Classroom 詳細操作指南</h2>
 
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
+        <div class="classroom-guide">
             <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：開啟「硬體開發者的眼」。讓學生理解 S3 不只是一顆晶片，而是一個具備記憶體分層架構的小型電腦。</p>
             <ol class="space-y-4 text-slate-600">
                 <li><strong class="text-indigo-600">重點 1：記憶體分工思維</strong> - 在 1-1 中，強調 SRAM 是「金錢」，PSRAM 是「倉庫」。學會把頻繁訪問的數據留在金錢區。</li>
@@ -354,7 +354,7 @@
             </ol>
         </div>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
         <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
             <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
             <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
@@ -365,35 +365,33 @@
             </pre>
         </div>
 
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #334155;">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課前預習</td>
-                        <td class="px-6 py-5">觀看「ESP32-S3 雙緩衝與 DMA 原理」短片。理解數據搬運不佔 CPU 的重要性。</td>
-                        <td class="px-6 py-5"><strong>Dashboard:</strong> 測試學員是否能預估 VGA RGB565 影像的內存佔用。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900">領取作業 (Repo)，執行 PSRAM 分配與 ROI 提取。觀察並解決指針偏移導致的當機。</td>
-                        <td class="px-6 py-5"><strong>技術教練:</strong> 現場示範如何透過 VSYNC 中斷來同步緩衝區。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
-                        <td class="px-6 py-5">提交包含硬體競爭分析的最終專案。閱讀導師對「OPI 相位延遲」在高頻 PSRAM 下的補充。</td>
-                        <td class="px-6 py-5"><strong>Feedback PR:</strong> 點評對「內存映射 (MMU)」概念的理解度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <h2>教學實施策略 (Flipped Workflow)
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台引導</th>
+                </tr>
+            </thead>
+            <tbody style="color: #4b5563;">
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前預習</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看「ESP32-S3 雙緩衝與 DMA 原理」短片。理解數據搬運不佔 CPU 的重要性。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard:</strong> 測試學員是否能預估 VGA RGB565 影像的內存佔用。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中實作</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業 (Repo)，執行 PSRAM 分配與 ROI 提取。觀察並解決指針偏移導致的當機。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>技術教練:</strong> 現場示範如何透過 VSYNC 中斷來同步緩衝區。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後精進</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">提交包含硬體競爭分析的最終專案。閱讀導師對「OPI 相位延遲」在高頻 PSRAM 下的補充。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR:</strong> 點評對「內存映射 (MMU)」概念的理解度。</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 
     <script>

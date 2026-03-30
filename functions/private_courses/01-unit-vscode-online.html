@@ -406,6 +406,7 @@
 
     function createSparkles() {
         const btn = document.querySelector('.key-hint');
+        if (!btn) return;
         const rect = btn.getBoundingClientRect();
         for (let i = 0; i < 8; i++) {
             const sparkle = document.createElement('div');
@@ -426,22 +427,20 @@
             document.body.appendChild(sparkle);
         }
     }
-
-    // Trigger Animations on Scroll - Moved to course-shared.js
     </script>
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>雲端開發環境 (VS Code Online)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">雲端開發環境：VS Code Online 與 Codespaces 實戰</h2>
 
         <div class="assignment-quest">
-            <h3 class="quest-title">任務 1：Web Serial 硬體讀取測試</h3>
+            <h3 class="quest-title text-justify">任務 1：Web Serial 硬體讀取測試 (Web Serial Connectivity Lab)</h3>
             <div class="quest-meta">
                 <span>角色扮演：遠端除錯員</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
                     <li><strong>開啟環境</strong>：在瀏覽器開啟任一 GitHub 倉庫。</li>
                     <li><strong>核心指令</strong>：按下鍵盤的 <code>.</code> 進入 <code>vscode.dev</code> 網頁環境。</li>
@@ -460,13 +459,13 @@
         </div>
 
         <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 2：Codespaces 雲端編譯實戰</h3>
+            <h3 class="quest-title text-justify">任務 2：Codespaces 雲端編譯實戰 (Cloud Container Build Lab)</h3>
             <div class="quest-meta">
                 <span>角色扮演：雲端架構師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
                     <li><strong>啟動容器</strong>：在 GitHub 專案頁面點選 "Code" -> "Codespaces" 建立雲端虛擬機。</li>
                     <li><strong>指令操作</strong>：開啟雲端終端機 (Terminal) 並執行 <code>npm install</code> 或 <code>npm --version</code>。</li>
@@ -485,13 +484,13 @@
         </div>
 
         <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 3：跨裝置同步除錯挑戰</h3>
+            <h3 class="quest-title text-justify">任務 3：跨裝置同步除錯挑戰 (Cross-Device Sync Challenge)</h3>
             <div class="quest-meta">
                 <span>角色扮演：敏捷開發者</span> | <span>難度：⭐️</span> | <span>估計時長：30 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
                     <li><strong>電腦端修改</strong>：在主要裝置（電腦）修改程式碼並更新文件。</li>
                     <li><strong>行動端接力</strong>：使用手機或平板登入 GitHub 並進入編輯模式（按下 <code>.</code>）。</li>
@@ -510,50 +509,59 @@
         </div>
     </section>
 
-        <!-- Instructor Guide (Hidden) -->
-        <section id="instructor-guide" style="display: none;">
-            <h2>GitHub Classroom 詳細操作指南</h2>
-            <div class="classroom-guide">
-                <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-                <ol>
-                    <li>包含 <code>.devcontainer</code> 設定，確保學生開啟 Codespace 時工具已就位。</li>
-                    <li>勾選 <strong>"Template repository"</strong>。</li>
-                </ol>
+    <!-- Instructor Guide (Hidden) -->
+    <section id="instructor-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：打造「隨處皆可開發」的能力。引導學生理解雲端容器化環境與 Web Serial 在硬體開發中的革命性作用。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：環境不再是阻礙</strong> - 透過 Codespaces，讓學生體會「即開即用」的 Linux 容器環境，解決本地安裝失敗的痛點。</li>
+                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：瀏覽器即 IDE</strong> - 掌握網頁版 VS Code 的限制與優勢，理解 GitHub 如何成為現代開發的作業系統。</li>
+                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：硬體通訊新範式</strong> - 介紹 Web Serial API，讓學生理解瀏覽器如何安全地與實體硬體進行直接握手。</li>
+            </ol>
+        </div>
 
-                <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-                <ol>
-                    <li>在 Classroom 設定中連結此位範本倉庫。</li>
-                    <li><strong>重點設定：</strong>勾選 <strong>"Enable feedback pull requests"</strong> 以便進行代碼審查。</li>
-                </ol>
-
-                <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-                <ol>
-                    <li>學生按下 <strong>"."</strong> 進入 Web VS Code 或啟動 <strong>Codespaces</strong>。</li>
-                    <li>修改程式碼後 <strong>Push 代碼</strong>。</li>
-                </ol>
-
-                <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-                <ol>
-                    <li>檢查學生 PR 中的 Commit 時序，確認其理解跨裝置同步的邏輯。</li>
-                </ol>
-            </div>
-
-            <h2>在 GitHub Classroom 的實戰部署建議</h2>
-            <p>此單元建議搭配 <strong>"Cloud Development Challenge"</strong> 作業，建議範本倉庫設置如下：</p>
-
-            <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-            <pre><code>.
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
 ├── .devcontainer/   # (核心) 讓學生一進入 Codespace 就有自動配置好的環境
 ├── src/             # 存放學生的練習程式碼
-└── cloud-test.js    # 一個簡單的小程式供學生運行</code></pre>
+└── cloud-test.js    # 一個簡單的小程式供學生運行
+            </pre>
+        </div>
 
-            <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-            <p><strong>.devcontainer/devcontainer.json (自動環境配置)</strong></p>
-            <pre><code>{
-    "name": "Node.js & PlatformIO",
-    "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
-    "features": {
-        "ghcr.io/devcontainers/features/common-utils:1": {}
+        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台角色</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5 text-justify">完成互動模擬器的「變身」體驗，理解按下 "." 的底層邏輯。</td>
+                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 檢查學生的互動參與度，確認其對雲端環境的基本認知。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black">啟動 Codespace，執行 npm 指令並在 README 記錄雲端環境與本機環境的差異。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 引導學生排除 Codespace 啟動時的網路延遲問題，並解釋開發容器的概念。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
+                        <td class="px-6 py-5 text-left text-justify font-black text-justify">挑戰跨端接力 Commit，在電腦與手機間完成一次連貫的代碼修復任務。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評學生的同步紀錄 (Commit Timeline) 與對雲端 IDE 限制的理解程度。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>ntainers/features/common-utils:1": {}
     },
     "postCreateCommand": "npm install -g platformio"
 }</code></pre>
