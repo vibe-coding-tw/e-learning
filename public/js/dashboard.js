@@ -855,51 +855,49 @@ function renderAdminDashboard(data, filterUnitId = null) {
             return html;
         }).join('');
 
-        // Build registration time string
+        // 1. Build identity row (fallback to uid if name/email missing)
+        const displayName = s.name || s.email || `UID_${s.uid.slice(0,6)}`;
+        const displaySub = s.name ? s.email : '';
+        
+        // 2. Build registration time string
         const regTime = s.createdAt
             ? (s.createdAt._seconds ? new Date(s.createdAt._seconds * 1000) : new Date(s.createdAt))
             : null;
         const regStr = regTime && !isNaN(regTime) ? regTime.toLocaleDateString('zh-TW', { year:'numeric', month:'2-digit', day:'2-digit' }) : '–';
 
-        // Build status badge
-        const isPaid = s.accountStatus === 'paid';
-        const baseBadge = isPaid
-            ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">💳 付費</span>`
-            : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500">🆓 免費</span>`;
-
-        // [NEW] Trial Status Check (30 days for started courses)
+        // 3. Build Status & Permissions (The "Bundle")
         const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
         const now = Date.now();
         const diff = now - (regTime ? regTime.getTime() : 0);
-        const daysRemaining = Math.max(0, Math.ceil((THIRTY_DAYS_MS - diff) / (24 * 60 * 60 * 1000)));
         const isTrialActive = regTime && diff < THIRTY_DAYS_MS;
+        const trialExpiry = regTime ? new Date(regTime.getTime() + THIRTY_DAYS_MS) : null;
+        const trialExpiryStr = trialExpiry ? trialExpiry.toLocaleDateString('zh-TW', { year:'numeric', month:'2-digit', day:'2-digit' }) : '';
+        
+        let statusHtml = '';
+        
+        // 3A. Trial Badge
+        if (isTrialActive) {
+            statusHtml += `<div class="mb-1"><span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-600 border border-blue-200">✨ 入門試用 (至 ${trialExpiryStr})</span></div>`;
+        }
 
-        const trialBadge = isTrialActive
-            ? `<div class="mt-1"><span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-600 border border-blue-200">✨ 體驗中 (剩 ${daysRemaining} 天)</span></div>`
-            : (regTime ? `<div class="mt-1 text-[9px] text-gray-300">體驗已過期</div>` : '');
-
-        const statusHtml = `<div class="flex flex-col items-center">${baseBadge}${trialBadge}</div>`;
-
-        // Build paid units list
+        // 3B. Paid Courses with Expiry
         const orderRecords = s.orderRecords || [];
-        let paidUnitsHtml = '–';
         if (orderRecords.length > 0) {
-            const tags = orderRecords.flatMap(rec => {
-                const orderDate = rec.createdAt
-                    ? (rec.createdAt._seconds ? new Date(rec.createdAt._seconds * 1000) : new Date(rec.createdAt))
+            const courseBadges = orderRecords.flatMap(rec => {
+                const expiryDate = rec.expiryDate
+                    ? (rec.expiryDate._seconds ? new Date(rec.expiryDate._seconds * 1000) : new Date(rec.expiryDate))
                     : null;
-                const dateStr = orderDate && !isNaN(orderDate) ? orderDate.toLocaleDateString('zh-TW', { month:'2-digit', day:'2-digit' }) : '';
+                const expStr = expiryDate && !isNaN(expiryDate) ? ` (至 ${expiryDate.toLocaleDateString('zh-TW', { month:'2-digit', day:'2-digit' })})` : '';
+
                 return Object.keys(rec.items || {}).map(cid => {
                     const title = lessonsMap[cid] || cid;
-                    return `<span class="inline-block px-1.5 py-0.5 mr-1 mb-0.5 rounded text-[9px] bg-blue-50 text-blue-700 border border-blue-100" title="${escapeHtml(title)}">${escapeHtml((title || cid).slice(0,10))}${dateStr ? ' ('+dateStr+')' : ''}</span>`;
+                    const cleanTitle = (title || cid).replace('course-', '').replace('unit-', '').slice(0,10);
+                    return `<span class="inline-block px-1.5 py-0.5 mr-1 mb-1 rounded text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-100" title="${escapeHtml(title)}">💳 ${escapeHtml(cleanTitle)}${expStr}</span>`;
                 });
             }).join('');
-            paidUnitsHtml = tags || '–';
-        } else if (s.orders && s.orders.length > 0) {
-            paidUnitsHtml = s.orders.map(cid => {
-                const title = lessonsMap[cid] || cid;
-                return `<span class="inline-block px-1.5 py-0.5 mr-1 mb-0.5 rounded text-[9px] bg-blue-50 text-blue-700 border border-blue-100">${escapeHtml((title || cid).slice(0,10))}</span>`;
-            }).join('');
+            statusHtml += `<div class="flex flex-wrap">${courseBadges}</div>`;
+        } else if (!isTrialActive) {
+            statusHtml += `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500">🆓 免費</span>`;
         }
 
         return `
@@ -908,18 +906,17 @@ function renderAdminDashboard(data, filterUnitId = null) {
                 <div class="flex items-center gap-1 md:gap-2">
                     <span id="icon-${s.uid}" class="text-gray-400 w-3 md:w-4 inline-block transform transition-transform shrink-0">▶</span>
                     <div>
-                        <div class="truncate max-w-[140px] md:max-w-xs">${escapeHtml(s.name || s.email)}</div>
-                        <div class="text-[10px] text-gray-400 font-normal">${s.name ? escapeHtml(s.email) : ''}</div>
+                        <div class="truncate max-w-[140px] md:max-w-xs text-blue-600">${escapeHtml(displayName)}</div>
+                        <div class="text-[10px] text-gray-400 font-normal">${escapeHtml(displaySub)}</div>
                         <div class="text-[10px] text-gray-400 font-normal">🗓 ${regStr}</div>
                     </div>
                 </div>
             </td>
-            <td class="py-2 px-1 sm:py-3 sm:px-2 text-center">${statusHtml}</td>
-            <td class="py-2 px-1 sm:py-3 sm:px-2 text-right font-mono text-blue-600">${(displayTotal / 3600).toFixed(1)}h</td>
-            <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-600 hidden sm:table-cell">${paidUnitsHtml}</td>
+            <td class="py-2 px-1 sm:py-3 sm:px-2 text-left">${statusHtml}</td>
+            <td class="py-2 px-1 sm:py-3 sm:px-2 text-right font-mono text-blue-600 font-bold">${(displayTotal / 3600).toFixed(1)}h</td>
         </tr>
         <tbody id="detail-${s.uid}" class="hidden border-b border-gray-200">
-            ${courseRows.length ? courseRows : '<tr><td colspan="4" class="py-2 text-center text-xs text-gray-400">No specific course activity</td></tr>'}
+            ${courseRows.length ? courseRows : '<tr><td colspan="3" class="py-2 text-center text-xs text-gray-400">No specific course activity</td></tr>'}
         </tbody>
         `;
     }).join('');

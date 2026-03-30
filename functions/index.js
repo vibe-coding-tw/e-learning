@@ -2027,6 +2027,8 @@ exports.getDashboardData = onCall(async (request) => {
                         if (!studentStats[sid].orderRecords) studentStats[sid].orderRecords = [];
                         studentStats[sid].orderRecords.push({
                             createdAt: order.createdAt || null,
+                            paymentDate: order.paymentDate || null,
+                            expiryDate: order.expiryDate || null,
                             items: order.items
                         });
                         Object.keys(order.items).forEach(originalCid => {
