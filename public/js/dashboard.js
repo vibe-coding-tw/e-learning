@@ -744,8 +744,15 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
     // Table with Expansion (Sorted by Registration Date: Newest First)
     const sortedStudents = (data.students || []).sort((a, b) => {
-        const getTime = (c) => c ? (c._seconds ? c._seconds * 1000 : (typeof c === 'number' ? c : new Date(c).getTime())) : 0;
-        return getTime(b.createdAt) - getTime(a.createdAt);
+        const getTs = (c) => {
+            if (!c) return 0;
+            if (c._seconds) return c._seconds * 1000; // Firestore Timestamp
+            if (typeof c === 'number') return c;      // Raw ms timestamp
+            return new Date(c).getTime() || 0;        // ISO string or other
+        };
+        const timeA = getTs(a.createdAt);
+        const timeB = getTs(b.createdAt);
+        return timeB - timeA; // Descending: Newest first
     });
 
     const tbody = document.getElementById('student-table-body');
