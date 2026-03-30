@@ -264,115 +264,139 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">數據傳輸實驗室：分段傳輸與數據完整性</h2>
 
-        <h3>作業 3-1：電梯拆解工：手動分段發送器</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 通訊底層工程師。</li>
-            <li><strong>執行方式：</strong> 撰寫 `fragmentData(text, size)` 函式，將長 JSON 字串依據邊界（如 20 Bytes）切分，並定時發送片段。</li>
-            <li><strong>評分重點：</strong> 能否正確處理字串長度非倍數時的最後一個片段。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：「電梯拆解工」：手動分段發送器 (MTU Fragmenter Lab)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：通訊底層工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
 
-        <h3>作業 3-2：拼圖高手：緩衝區重組器</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 前端系統整合員。</li>
-            <li><strong>執行方式：</strong> 在接收端建立緩衝區 (`buffer`)，持續累加片段，並在偵測到結尾符（如 `\n`）時觸發解析。</li>
-            <li><strong>評分重點：</strong> 代碼是否有防錯機制，防止在數據殘缺時解析 JSON 導致崩潰。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>實作分段</strong>：撰寫 <code>fragmentData(text, size)</code> 函式，將長 JSON 字串依據 MTU 限制（如 20 Bytes）進行切分。</li>
+                    <li><strong>邊界驗證</strong>：測試當字串長度非倍數時，最後一個片段是否被正確發送。</li>
+                    <li><strong>Push Final</strong>：提交具備「手動分段能力」且能穩定發送長數據的通訊專案。</li>
+                </ol>
+            </div>
 
-        <h3>作業 3-3：效能分析大賽：MTU 請求實驗</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 效能優化專家。</li>
-            <li><strong>執行方式：</strong> 嘗試提升 MTU 權限，對比「連續小包」與「單一長包」的耗時。</li>
-            <li><strong>評分重點：</strong> 實驗報告是否能清楚闡述硬體限制對 MTU 提升的影響。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>片段完整性</strong>：最後一個片段是否被遺漏或截斷？</li>
+                    <li>[ ] <strong>時序穩定性</strong>：片段間是否加入了適當延遲以防止發送端 Buffer 溢位？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：「拼圖高手」：緩衝區重組器 (Puzzle Reassembler)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：前端系統整合員</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>緩衝機制</strong>：在接收端建立臨時累加 Buffer，持續接收並存儲零散片段。</li>
+                    <li><strong>終止符偵測</strong>：實作對 <code>\n</code> 或自定義結束符號的自動掃描。</li>
+                    <li><strong>原子解析</strong>：確保僅在收到完整終止符後，才觸發 <code>JSON.parse()</code> 以防止崩潰。</li>
+                    <li><strong>Push Final</strong>：提交具備「抗殘缺、防崩潰」能力的重組引擎。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>魯棒性測試</strong>：當接收到不完整 JSON 時，代碼是否能有效捕獲錯誤而非導致程式鎖死？</li>
+                    <li>[ ] <strong>內存管理</strong>：Buffer 是否在每次成功解析後正確清空，避免數據疊加污染？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：MTU 請求與效能分析 (MTU Request & Analysis)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：效能優化專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>權限提升</strong>：嘗試在連線後調用 <code>requestMTU(247)</code> 並紀錄系統響應。</li>
+                    <li><strong>效率對比</strong>：紀錄並對比「多小包」與「單一大包」在同一段長數據下的傳輸總耗時。</li>
+                    <li><strong>差異化分析</strong>：在 README 中紀錄不同手機系統對 MTU 請求的成功率與行為差異。</li>
+                    <li><strong>Push Final</strong>：提交包含「MTU 效能權衡報告」的最終優化方案。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>實驗嚴謹度</strong>：報告中是否針對多次實驗結果取平均值，並標註測試環境？</li>
+                    <li>[ ] <strong>理論理解</strong>：能否原理解釋為何增加 MTU 能降低傳輸負擔 (Protocol Overhead)？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
-                <!-- Instructor Guide (Hidden) -->
-                <section id="instructor-guide" style="display: none;">
-                    <h2>GitHub Classroom 詳細操作指南</h2>
-                    <div class="classroom-guide">
-                        <p><strong>第一步：準備範本專案</strong></p>
-                        <ol>
-                            <li>提供能模擬 BLE MTU 限制的瀏覽器測試環境。</li>
-                            <li>設定為 Template repository。</li>
-                        </ol>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：數據流的「原子性」與「邊界感」。理解硬體層限制如何影響上層協議設計。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-blue-600">重點 1：實體層的脆弱性</strong> - 讓學生體驗「大數據」在小型嵌入式設備上被撕裂的挫折感，進而引發對分段傳輸的需求。</li>
+                <li><strong class="text-blue-600">重點 2：協議的必要性</strong> - 理解終止符 (Delimiter) 不是裝飾，而是將「串流 (Stream)」轉化為「訊息 (Message)」的唯一依據。</li>
+                <li><strong class="text-blue-600">重點 3：容錯思維</strong> - 強調前端在解析 <code>JSON.parse()</code> 前必須具備的 Try-Catch 或 Buffer 完整度檢查。</li>
+            </ol>
+        </div>
 
-                        <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-                        <ol>
-                            <li>設定「大負載壓力測試」腳本，自動檢查字串完整性。</li>
-                        </ol>
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-blue-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── src/fragmenter.js    # 核心：待填寫數據分割邏輯
+├── src/assembler.js     # 核心：待填寫 Buffer 重組與終止符檢查
+├── tests/mtu_stress.js  # 工具：自動發送不同長度數據的壓力測試測試腳本
+└── README.md            # 引導：要求學生紀錄 MTU 提升後的 FPS 變化報告
+            </pre>
+        </div>
 
-                        <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-                        <ol>
-                            <li>完成自研「終止符協議」實作。</li>
-                            <li>提交 PR 紀錄 MTU 提升實驗數據。</li>
-                        </ol>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5">觀看「BLE MTU 物理邊界」影片。理解電梯限重比喻與 JSON 撕裂現象。</td>
+                        <td class="px-6 py-5"><strong>Dashboard:</strong> 測試學員是否能計算出特定 JSON 傳輸所需的 Packets 數量。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900">領取作業 (Repo)，挑戰在高頻發送下達成「無損數據重組」。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 協助除錯為何 JSON 解析報錯（通常是 Buffer 未清空或終止符位置偏移）。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
+                        <td class="px-6 py-5">提交 MTU 調校報告。閱讀導師對「GATT 長度延遲與穩定性」的進階補充。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評分段邏輯的邊界檢查是否嚴密。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 
-                        <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-                        <ol>
-                            <li>針對 Buffer 溢位或傳輸超時的防護邏輯予以回饋。</li>
-                        </ol>
-                    </div>
-
-                    <h2>在 GitHub Classroom 的實戰部署建議</h2>
-                    <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-                    <pre><code>.
-├── src/
-│   ├── fragment_logic.js  # 實現手動分段 logic
-│   └── reassembler.js     # 實現緩衝區重組
-├── examples/
-│   └── large_payload.json # 測試用的超大型 JSON
-└── README.md             # 記錄：MTU 限制測試報告</code></pre>
-
-                    <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-                    <p><strong>手動分段邏輯 (Conceptual)</strong></p>
-                    <pre><code>for (let i = 0; i < data.length; i += size) send(data.substring(i, i + size));</code></pre>
-
-                    <h3>C. 自動評估 (Autograding) 的設計</h3>
-                    <ul>
-                        <li><strong>片段完整性測試：</strong> 模擬傳送 500 Bytes 數據，檢查學生重組出的字串與原文是否一致。</li>
-                        <li><strong>時序穩定性檢查：</strong> 檢查重組代碼是否能處理亂序的情況。</li>
-                    </ul>
-
-                    <h2>翻轉教室的實施策略</h2>
-                    <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-                        <thead>
-                            <tr style="background-color: #f8fafc;">
-                                <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                                <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git
-                                    Workflow)</th>
-                                <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                                <td style="padding: 12px; border: 1px solid #e2e8f0;">理解 BLE 物理層的 MTU 物理限制。</td>
-                                <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                                    <strong>Dashboard：</strong>觀察「封包切片流程圖」。</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                                <td style="padding: 12px; border: 1px solid #e2e8f0;">領取作業，實現穩定的大數據回傳系統。</td>
-                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>實體協助：</strong>探討提升 MTU
-                                    的穩定性考量。</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                                <td style="padding: 12px; border: 1px solid #e2e8f0;">撰寫效能對比文檔並 Push。</td>
-                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>PR Review：</strong>思考自定義協議
-                                    (ACK 機制) 的價值。</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </section>
 
                 <script src="/js/course-shared-v4.js"></script>
 </body>

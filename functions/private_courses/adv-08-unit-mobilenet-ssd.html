@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
 <body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
@@ -29,7 +31,7 @@
             <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">深度學習模型：<br><span class="text-emerald-400">MobileNet 與 SSD 簡介</span>
             </h1>
             <p class="text-xl md:text-2xl text-emerald-100 max-w-2xl mx-auto font-light leading-relaxed">
-                認識輕量化模型如何在嵌入式設備（如手機或 ESP32-S3）上實施辨識，理解「精準度」與「速度」的權衡之道。
+                認識輕量化模型如何在嵌入式設備上實施辨識，理解「精準度」與「速度」的權衡之道。
             </p>
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
@@ -50,194 +52,172 @@
     <!-- Main Content -->
     <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
-        <!-- Section 1: MobileNet -->
-        <section class="mb-12">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        <!-- Module 1: MobileNet -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
                         <span class="text-4xl">🧬</span> 1. MobileNet：神經網路的瘦身專家 (30 min)
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
-                            <ul class="space-y-4">
-                                <li class="flex gap-3">
-                                    <span class="text-emerald-500 font-bold">●</span>
-                                    <span><strong>核心創新：</strong>深度可分離卷積 (Depthwise Separable Convolution)。</span>
-                                </li>
-                                <li class="flex gap-3">
-                                    <span class="text-emerald-500 font-bold">●</span>
-                                    <span><strong>傳統 vs. MobileNet：</strong>傳統卷積像是一次處理所有顏色的濾鏡；MobileNet
-                                        將步驟拆成「單色過濾」+「顏色融合」，運算量可縮減至 1/8 ~ 1/9。</span>
-                                </li>
-                                <li class="flex gap-3">
-                                    <span class="text-emerald-500 font-bold">●</span>
-                                    <span><strong>乘數效應：</strong>透過寬度與解析度乘數，犧牲微小精準度，換取在 ESP32 上極速運行的能力。</span>
-                                </li>
-                            </ul>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                MobileNet 透過「深度可分離卷積 (Depthwise Separable Convolution)」將運算量縮減至傳統卷積的 1/8。它是嵌入式 AI（如 ESP32-S3）實現即時分類的核心架構。
+                            </p>
                             <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
-                                <h4 class="font-bold text-emerald-900 mb-2 flex items-center gap-2">
-                                    <span>🧩</span> 學習任務
-                                </h4>
-                                <p class="text-sm text-gray-700 leading-relaxed">
-                                    觀看「深度可分離卷積」的動畫演示，理解它如何減少參數數量並加速運算。
-                                </p>
+                                <h4 class="font-bold text-emerald-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed">Structural Efficiency</h4>
+                                <ul class="text-[9px] text-slate-500 space-y-2 font-light text-justify">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span> <div><strong>通道拆解</strong>：將一次性的 3D 卷積拆分為 2D 空間過濾與 1D 通道融合。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span> <div><strong>精準度權衡</strong>：透過 Width Multiplier 調整模型寬度，平衡記憶體佔用與辨識質量。</div></li>
+                                </ul>
                             </div>
                         </div>
-                        <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100">
-                            <img src="https://images.unsplash.com/photo-1507413245164-6160d8298b31?q=80&w=1000&auto=format&fit=crop"
-                                alt="MobileNet Architecture Concept" class="w-full h-auto">
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors"></div>
+                           <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10">Neural Compression</h4>
+                           <div class="relative z-10 space-y-2">
+                               <div class="w-full h-1 bg-emerald-500/20 rounded">
+                                   <div class="w-1/4 h-full bg-emerald-500"></div>
+                               </div>
+                               <div class="text-[8px] text-emerald-400 font-mono">PARAMETERS: 4.2M vs 25M</div>
+                           </div>
+                           <p class="text-[9px] text-slate-500 mt-6 font-mono tracking-widest uppercase italic">Lightweight Backbone Architecture</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 2: SSD -->
-        <section class="mb-12">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        <!-- Module 2: SSD -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl">👁️</span> 2. SSD (Single Shot MultiBox Detector)：一眼看穿全局 (30 min)
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">👁️</span> 2. SSD：一眼看穿全局 (30 min)
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 order-2 md:order-1">
-                            <img src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=1000&auto=format&fit=crop"
-                                alt="Object Detection Visualization" class="w-full h-auto">
-                        </div>
-                        <div class="space-y-6 order-1 md:order-2 text-lg text-gray-600 leading-relaxed">
-                            <ul class="space-y-4">
-                                <li class="flex gap-3">
-                                    <span class="text-blue-500 font-bold">●</span>
-                                    <span><strong>單次偵測：</strong>相對於需要多次掃描的 R-CNN，SSD 影像經過一次運算就能同時預測物體位置與類別。</span>
-                                </li>
-                                <li class="flex gap-3">
-                                    <span class="text-blue-500 font-bold">●</span>
-                                    <span><strong>錨點框 (Anchor Boxes)：</strong>在圖片上預設成千上萬個參考框，讓模型進行微調。</span>
-                                </li>
-                                <li class="flex gap-3">
-                                    <span class="text-blue-500 font-bold">●</span>
-                                    <span><strong>多尺度特徵圖：</strong>理解 SSD 如何在不同層級捕捉不同大小（大近景 vs 小遠景）的物體。</span>
-                                </li>
-                            </ul>
-                            <div class="bg-slate-900 p-6 rounded-2xl border border-blue-500/30">
-                                <h4 class="font-bold text-blue-400 mb-2 flex items-center gap-2">
-                                    <span>🧠</span> 學習任務
-                                </h4>
-                                <p class="text-sm text-blue-100 leading-relaxed font-light">
-                                    觀察 SSD 模型架構，辨識它如何在不同解析度的特徵圖上輸出偵測結果。
-                                </p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify">
+                                SSD (Single Shot MultiBox Detector) 跳過了區域提議步騶，直接在特徵圖上預測物體座標與類別。這讓「物件偵測」的速度足以滿足自動駕駛的即時需求。
+                            </p>
+                            <div class="bg-blue-50 p-8 rounded-3xl border border-blue-100 text-center">
+                                <h4 class="text-blue-900 font-bold mb-4 text-xs uppercase tracking-widest">Detection Pipeline</h4>
+                                <div class="flex justify-center gap-4 text-[10px] text-slate-500 font-mono">
+                                    <div class="px-2 py-1 bg-white rounded shadow-sm border">Backbone</div>
+                                    <span class="mt-1">➔</span>
+                                    <div class="px-2 py-1 bg-white rounded shadow-sm border">Anchor Boxes</div>
+                                    <span class="mt-1">➔</span>
+                                    <div class="px-2 py-1 bg-blue-500 text-white rounded shadow-sm">NMS Filter</div>
+                                </div>
                             </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-blue-500/5"></div>
+                           <h4 class="text-blue-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10">Bounding Box Output</h4>
+                           <div class="w-full space-y-2 px-10 relative z-10 font-mono text-[9px] text-slate-400">
+                               <div class="text-emerald-500">// Prediction Result</div>
+                               <div>{ label: "Person", conf: 0.98, box: [100, 50, 200, 350] }</div>
+                               <div class="text-blue-500 mt-2">NMS logic: Suppressing redundant frames</div>
+                           </div>
+                           <p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest uppercase italic text-center">One-Stage Detection Strategy</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 3: Performance Trade-offs -->
-        <section class="mb-12">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-orange-500 to-red-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl">⚖️</span> 3. 權衡之美：FPS 與 mAP (20 min)
+        <!-- Module 3: Performance Trade-offs -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-orange-400">
+                        <span class="p-2 bg-orange-500/20 rounded-lg text-orange-400 text-2xl">⚖️</span> 3. 權衡之美：FPS 與 mAP
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
-                            <p><strong>效能指標：</strong> 理解 FPS (每秒幀數 - 速度) 與 mAP (平均精準度 - 質量) 之間的「拔河」。</p>
-                            <p><strong>Bounding Box：</strong> 學習目標偵測的核心數據格式 <code>[x, y, w, h]</code>。</p>
-                            <div class="bg-orange-50 p-6 rounded-2xl border border-orange-100">
-                                <h4 class="font-bold text-orange-900 mb-2 flex items-center gap-2">
-                                    <span>💡</span> 預習任務
-                                </h4>
-                                <p class="text-sm text-gray-700 leading-relaxed">
-                                    思考為什麼在無人車自動導航中，FPS (反應速度) 的重要性往往高於極致的精準度？
-                                </p>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg text-justify">
+                                在自動導航中，FPS (反應速度) 往往比 mAP (精準度) 更重要。毫秒級的延遲可能導致避障失效。我們必須學會如何調配硬體加速與模型複雜度。
+                            </p>
+                            <div class="bg-orange-500/10 p-8 rounded-3xl border border-orange-500/20 shadow-inner">
+                                <h4 class="font-bold text-orange-400 mb-4 text-xs uppercase tracking-widest text-center">Engineering Metrics</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light text-justify">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-orange-500 rounded-full mt-1"></span><div><strong class="text-white">信心門檻 (Confidence)</strong>：過高導致漏失目標，過低引發誤判抖動。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-orange-500 rounded-full mt-1"></span><div><strong class="text-white">WebGL 加速</strong>：利用 GPU 並行計算大幅提升推演 (Inference) 效率。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-orange-500 rounded-full mt-1"></span><div><strong class="text-white">資料清洗</strong>：處理 <code>[x, y, w, h]</code> 數據流，實現從對象到距離的空間理解。</div></li>
+                                </ul>
                             </div>
                         </div>
-                        <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100">
-                            <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1000&auto=format&fit=crop"
-                                alt="Hardware Performance Illustration" class="w-full h-auto">
+                        <div class="lg:w-80 bg-orange-600/10 p-10 rounded-3xl border border-orange-500/20 text-center relative overflow-hidden group">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-orange-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-orange-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center">Optimization Dial</h4>
+                           <div class="text-4xl font-extrabold text-white mb-2">30 FPS</div>
+                           <p class="text-[11px] text-slate-500 mt-8 leading-relaxed font-light italic text-center text-justify">
+                               "AI 的價值不在於模型多大，而在於它能在何種約束下做出正確反應。"
+                           </p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 4: Assignments -->
-        <section>
+        <!-- Homework Section -->
+        <section class="module-section">
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：深度學習與決策邏輯</h2>
-            <p class="text-center text-gray-500 mb-12">採用 <b>Git Workflow</b>：領取 GitHub Classroom 任務，實作 AI 識別邏輯並提交 PR。
-            </p>
+            <p class="text-center text-gray-500 mb-12">透過 Git Workflow 實作輕量化模型應用。學習如何從 AI 模型的回傳數據中提取關鍵特徵，並驅動無人車的行為決策。</p>
 
-            <div class="grid md:grid-cols-3 gap-8">
+            <div class="grid md:grid-cols-3 gap-6">
                 <!-- Task 4-1 -->
-                <div onclick="openSubmissionModal('adv-08-mobilenet-bench', '【作業 8-4-1】「模型效能診斷」：MobileNet 分類測試')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                <div onclick="openSubmissionModal('adv-08-mobilenet-bench', '【作業 4-1】「模型效能診斷」：MobileNet 分類測試 (MobileNet Performance Benchmarking)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-emerald-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🔬</span>
-                            <span class="bg-emerald-50 text-emerald-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
+                    <div class="p-8 flex-grow text-justify">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-emerald-500 group-hover:scale-110 transition-transform">🔬</span>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase text-justify">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-emerald-600 transition">【作業
-                            4-1】效能診斷</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>利用 TensorFlow.js 加載 MobileNet，測試不同物體的識別率。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>實測分析：拿取教室常見物品，記錄置信度 (Confidence)</li>
-                                <li>效能對比：比較「WebGL 硬體加速」與「CPU」的辨識耗時</li>
-                                <li>目標：體驗輕量化模型在瀏覽器端的執行效率</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業 4-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 ">「效能診斷報告」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            利用 TensorFlow.js 加載 MobileNet。測試不同物體的識別率，比較「WebGL 加速」與「CPU 純算」的耗時差異。記錄信心分數 (Confidence Score) 的變化。
+                        </p>
                     </div>
                 </div>
 
                 <!-- Task 4-2 -->
-                <div onclick="openSubmissionModal('adv-08-ssd-filter', '【作業 8-4-2】SSD 物體偵測與「邊框過濾」')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                <div onclick="openSubmissionModal('adv-08-ssd-filter', '【作業 4-2】SSD 物體偵測與「邊框過濾」邏輯 (SSD Object Detection & Filtering)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
                     <div class="bg-blue-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🧹</span>
-                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-bold">60
-                                min</span>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-blue-500 group-hover:rotate-12 transition-transform">🧹</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-600 transition">【作業
-                            4-2】邊框過濾</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>實作基於 SSD 的即時偵測系統，並處理模型回傳的大量數據。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>NMS 模擬：多個重疊框只保留信心分數最高的一個</li>
-                                <li>ROI 定義：設定「虛擬警戒線」，進入特定區域才觸發警報</li>
-                                <li>目標：掌握偵測後的數據清洗與邏輯判定</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 4-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「精準區域偵測」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
+                            實作基於 SSD 的偵測系統。處理重疊框與多對象輸出。設定「虛擬警戒 ROI 區域」，唯有當特定類別對象進入該區域時才觸發警報邏輯。
+                        </p>
                     </div>
                 </div>
 
                 <!-- Task 4-3 -->
-                <div onclick="openSubmissionModal('adv-08-ai-navigation', '【作業 8-4-3】無人車自動避障模擬')"
-                    class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-2xl transition-all hover:-translate-y-2">
+                <div onclick="openSubmissionModal('adv-08-ai-navigation', '【作業 4-3】AI 無人車自動避障模擬 (AI Autonomous Navigation Simulation)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
                     <div class="bg-teal-500 h-2"></div>
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <span class="text-4xl">🚗</span>
-                            <span class="bg-teal-50 text-teal-700 text-xs px-3 py-1 rounded-full font-bold">45
-                                min</span>
+                    <div class="p-8 flex-grow text-justify">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-teal-500 group-hover:translate-x-1 transition-transform">🚗</span>
+                            <span class="bg-teal-100 text-teal-700 text-xs px-2 py-1 rounded font-bold uppercase text-justify">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-900 mb-4 group-hover:text-teal-600 transition">【作業
-                            4-3】避障模擬</h3>
-                        <div class="text-sm text-gray-600 space-y-3">
-                            <p><strong>任務內容：</strong>將 SSD 的偵測座標轉換為無人車的轉向指令。</p>
-                            <ul class="list-disc list-inside space-y-1 text-gray-500 text-xs">
-                                <li>空間映射：將 X 座標偏移量轉換為 P-Control 誤差</li>
-                                <li>動態優先權：賦予「行人」比「障礙物」更高的避讓權重</li>
-                                <li>目標：實作「感知 -> 理解 -> 決策」的完整控制鏈</li>
-                            </ul>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-teal-600 transition">【作業 4-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「避障決策引擎」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            將 SSD 推論結果與控制鏈對接。實作「行人優先避讓」權重系統。根據物體在畫面中的 $X$ 座標與 $W$ 寬度，量化出車體的轉向補償與制動指令。
+                        </p>
                     </div>
                 </div>
             </div>
@@ -249,232 +229,149 @@
     <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
         <div class="container mx-auto px-4 text-center">
             <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
-            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
-                <span>進階課程 8 - 單元 4</span>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 進階 8 - AI 模型</span>
                 <span class="hidden md:inline">|</span>
-                <span>深度學習模型與視覺導航決策</span>
+                <span>講師：Antigravity Assistant</span>
             </div>
         </div>
     </footer>
 
+    <script src="/js/course-shared-v4.js"></script>
+
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <div class="guide-header mb-12 border-b-2 border-indigo-200 pb-6">
-            <h2 class="text-4xl font-black text-indigo-900 mb-2">作業指引 (Assignment Guide)</h2>
-            <p class="text-indigo-600 font-bold uppercase tracking-widest text-sm">進階 8 - AI 模型應用</p>
-        </div>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">AI 實驗室：輕量化模型部屬與數據驅動決策</h2>
 
-        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                <span
-                    class="flex items-center justify-center w-10 h-10 bg-indigo-600 text-white rounded-xl text-lg">4-1</span>
-                「模型效能診斷」：MobileNet 分類測試
-            </h3>
-            <div class="space-y-4 text-gray-700">
-                <p><strong>角色扮演：</strong> AI 模型評測員。</p>
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 text-justify">
-                    <p class="font-bold mb-2 text-indigo-900">執行步驟：</p>
-                    <ol class="list-decimal list-inside space-y-1 text-sm text-justify">
-                        <li>利用 TensorFlow.js 加載 MobileNet 模型。</li>
-                        <li>拿取教室內常見的 5 種物品進行辨識。</li>
-                        <li>記錄並分析每個物品的置信度 (Confidence Score)。</li>
-                    </ol>
-                </div>
-                <p class="text-sm"><strong>評分重點：</strong> 能否寫出觀察結論，解釋為什麼某些背景下模型會產生誤判，以及「硬體加速」對辨識速度的影響。</p>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：MobileNet 效能診斷 (Inference Benchmarking Lab)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：AI 優化工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>環境預熱 (Warming-up)</strong>：載入 TensorFlow.js，並先進行一次空推論以喚醒 GPU。</li>
+                    <li><strong>信心閾值分析</strong>：測試至少 5 種日常物品。記錄信心分數。在剖析報告中說明「背景雜訊」如何影響 Top-1 分類正確率。</li>
+                    <li><strong>提交報告</strong>：在 README 中彙整 WebGL vs CPU 在同一個物體辨識下的延遲 (Latency) 數據對比。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>效能理解度</strong>：學員是否能正確辨識出硬體加速帶來的效能提升量級？</li>
+                    <li>[ ] <strong>判斷嚴謹性</strong>：針對誤判 (False Positive) 案例是否提出了合理的視覺環境解釋？</li>
+                </ul>
             </div>
         </div>
 
-        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3 font-black">
-                <span
-                    class="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-xl text-lg">4-2</span>
-                SSD 物體偵測與「區域警戒 (ROI)」過濾
-            </h3>
-            <div class="space-y-4 text-gray-700">
-                <p><strong>角色扮演：</strong> 安全監控工程師。</p>
-                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-justify">
-                    <p class="font-bold mb-2 text-blue-900">執行步驟：</p>
-                    <ul class="list-disc list-inside space-y-1 text-sm text-justify">
-                        <li>實作 SSD 偵測模組。</li>
-                        <li>在影像畫面上手動劃定一個「紅色警戒區」。</li>
-                        <li>當偵測到「人 (Person)」進入該區域時，觸發網頁警報聲。</li>
-                    </ul>
-                </div>
-                <p class="text-sm"><strong>評分重點：</strong> 數據清洗能力，即如何從 SSD 回傳的多個 Bounding Boxes
-                    中取出特定類別（Label）並判斷其座標是否在警戒區內。</p>
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：SSD 數據過濾器 (Detection ROI Filter)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：視覺邏輯開發者</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>數據清洗</strong>：實作一個過濾函式，剔除信心門檻低於 0.6 的雜訊框。</li>
+                    <li><strong>ROI (Region of Interest)</strong>：在 Canvas 中心繪製一個矩形警戒區。</li>
+                    <li><strong>幾何碰撞檢測</strong>：計算 SSD 回傳的 Bounding Box 中心點是否位於 ROI 矩形內部。</li>
+                    <li><strong>Push Final</strong>：提交具備「目標鎖定」與「入域警報」功能的偵測框架。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>數據處理力</strong>：學員是否展現了處理 Array 數據流（多個偵測框）的高效邏輯？</li>
+                    <li>[ ] <strong>座標轉換精準度</strong>：Bounding Box 的幾何計算是否正確地對應了畫面的像素座標？</li>
+                </ul>
             </div>
         </div>
 
-        <div class="guide-item mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-justify">
-            <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3 font-black">
-                <span
-                    class="flex items-center justify-center w-10 h-10 bg-emerald-600 text-white rounded-xl text-lg">4-3</span>
-                AI 無人車自動避障決策
-            </h3>
-            <div class="space-y-4 text-gray-700">
-                <p><strong>角色扮演：</strong> 自動駕駛演算法工程師。</p>
-                <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100 text-justify">
-                    <p class="font-bold mb-2 text-emerald-900">執行步驟：</p>
-                    <ul class="list-disc list-inside space-y-1 text-sm text-justify">
-                        <li>將 SSD 的輸出座標轉換為無人車的轉向誤差。</li>
-                        <li>實作「行人」避讓優先級邏輯。</li>
-                        <li>偵測到大型障礙物時執行「緊急停止」。</li>
-                    </ul>
-                </div>
-                <p class="text-sm"><strong>評分重點：</strong> 「感知到決策」的邏輯完整性。即如何利用 Bounding Box
-                    的數據來量化目標的「距離」與「偏移」，並給出合理的馬達指令。</p>
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：導航行為樹預演 (Behavior Decision Logic)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：系統決策工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>狀態機設計</strong>：根據偵測標籤（Person, Obstacle, Empty）定義無人車的三種狀態。</li>
+                    <li><strong>誤差映射</strong>：將 <code>box.x_center</code> 映射為轉向修正 $X_e$。將 <code>box.width</code> 映射為距離預估 $d$。</li>
+                    <li><strong>應急停擋實作</strong>：當偵測到「Person」且 $d$ 小於閾值時，強制馬達輸出 0（停止）。</li>
+                    <li><strong>Push Final</strong>：提交具備安全優先權的 AI 避障邏輯。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>決策穩定性</strong>：當模型快速閃爍 (Flicker) 時，控制邏輯是否有防止車體頻繁抖動的平滑技術？</li>
+                    <li>[ ] <strong>優先級賦予</strong>：是否正確實作了「行人絕對優先」的避讓規則？</li>
+                </ul>
             </div>
         </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <div class="guide-header mb-12 border-b-2 border-emerald-200 pb-6">
-            <h2 class="text-4xl font-black text-emerald-900 mb-2">講師指引 (Instructor Guide)</h2>
-            <p class="text-emerald-600 font-bold uppercase tracking-widest text-sm text-justify">GitHub Classroom &
-                Flipped Teaching</p>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：讓學生跨越「影像處理」進入「人工智慧推論」。強調模型不是魔法，而是機率與統計的疊加結果。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-emerald-600">重點 1：速度是關鍵</strong> - 無論模型多準，如果推論需要 2 秒，在移動中的車端就是不可用的。必須強調 30 FPS 的實戰意義。</li>
+                <li><strong class="text-emerald-600">重點 2：數據的質感</strong> - 教導學員如何解析 <code>[x, y, w, h]</code> 陣列。物件偵測回傳的是空間資訊，而非單純的類別。</li>
+                <li><strong class="text-emerald-600">重點 3：決策邊界</strong> - 信心分數 0.5 跟 0.9 的差別在哪？引導學員建立自己的過濾原則。</li>
+            </ol>
         </div>
 
-        <!-- Practical Deployment Recommendations -->
-        <div
-            class="guide-section mb-10 p-8 bg-blue-50 border border-blue-100 rounded-3xl shadow-inner text-justify text-left">
-            <h3 class="text-2xl font-bold text-blue-900 mb-6 flex items-center gap-3">
-                <span class="text-3xl font-black">🚀</span> 在 GitHub Classroom 的實戰部署
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-4 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full text-justify text-left font-black"></span>
-                        A. 範本倉庫 (Template Repo) 結構
-                    </h4>
-                    <pre
-                        class="bg-gray-900 text-gray-100 p-6 rounded-2xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700 text-justify text-left">
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-emerald-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
 .
-├── js/
-│   ├── model_loader.js  # 模型載入與預熱
-│   └── tracker_ssd.js   # 偵測與 Bounding Box 繪製
-├── tests/
-│   └── inference.test.js # 測試：驗證決策邏輯
-└── README.md              # 信心門檻調校與誤判分析紀錄</pre>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-4 flex items-center gap-2 font-black text-justify">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full font-black"></span>
-                        B. 自動評估 (Autograding) 的設計
-                    </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-blue-100 space-y-4">
-                        <div class="flex gap-4">
-                            <span class="text-2xl">⏱️</span>
-                            <p class="text-sm text-gray-700 text-justify"><strong>推理速度監測：</strong> 檢查執行頻率，若低於 1 FPS
-                                則提示檢查硬體加速。</p>
-                        </div>
-                        <div class="flex gap-4 text-justify">
-                            <span class="text-2xl">🧠</span>
-                            <p class="text-sm text-gray-700 text-justify font-bold"><strong>決策邏輯測試：</strong>
-                                提供模擬數據，檢查能否正確給出導航指令。</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+├── models/             # 存放：MobileNet-SSD 的靜態權重與配置 JSON
+├── js/inference_core.js# 處理：模型的 Load 與 Run 基本呼叫
+└── js/decision_node.js # 提供：空函式待學員填入物體避讓判斷邏輯
+            </pre>
         </div>
 
-        <!-- Detailed operations guide -->
-        <div class="guide-section mb-10 p-8 bg-white border border-gray-200 rounded-3xl text-justify text-left">
-            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <span class="text-3xl font-black">🛠️</span> GitHub Classroom 詳細操作指南
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-justify text-left">
-                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify text-left">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full font-black text-justify text-left">STEP
-                        1</span>
-                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify text-left font-black">
-                        準備範本專案</p>
-                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify text-left">提供已引入
-                        TensorFlow.js 與 MobileNet-SSD 權重載入邏輯的基礎樣板。</p>
-                </div>
-                <div
-                    class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify text-left font-black">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full font-black">STEP
-                        2</span>
-                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify font-black">建立
-                        Classroom 作業</p>
-                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify font-black">
-                        設定「邏輯判定」評分標準。指導如何開啟 WebGL 確保執行效能。</p>
-                </div>
-                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify font-black">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full text-justify font-black text-left">STEP
-                        3</span>
-                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify font-black text-left">
-                        學生端作業 (Flipped)</p>
-                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify font-black text-left">
-                        進行模型對抗測試（如測試香蕉誤判）。紀錄誤判原因並 Push 至 Repo。</p>
-                </div>
-                <div
-                    class="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative text-justify font-black text-left">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full text-justify font-black">STEP
-                        4</span>
-                    <p class="font-bold text-slate-800 text-sm mb-2 mt-2 text-center text-justify font-black text-left">
-                        教師代碼審閱 (Review)</p>
-                    <p class="text-xs text-slate-600 leading-relaxed text-left text-justify font-black text-left">
-                        針對「機率」應用，以及信心門檻設計合理性予以回饋。</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Flipped classroom strategy table -->
-        <div class="guide-section p-8 bg-blue-50/50 border border-blue-100 rounded-3xl text-justify text-left">
-            <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <span class="text-3xl font-black text-justify text-left">🔄</span> 翻轉教室的實施策略
-            </h3>
-            <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg text-justify text-left">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
-                        <tr>
-                            <th class="px-6 py-4">階段</th>
-                            <th class="px-6 py-4 text-justify text-left">學生行動 (Git Workflow)</th>
-                            <th class="px-6 py-4 text-justify text-left">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600 text-justify text-left">
-                        <tr>
-                            <td
-                                class="px-6 py-5 font-black text-slate-800 bg-slate-50/50 w-32 text-center uppercase tracking-tighter">
-                                Pre-class<br><span class="text-[10px] font-normal text-slate-400">課前</span></td>
-                            <td class="px-6 py-5">觀看影片，理解「影像分類」與「物件偵測」的本質差異。</td>
-                            <td class="px-6 py-5 text-xs text-justify text-left">檢查 Dashboard 進度，提供「神經網路如何看世界」導讀。</td>
-                        </tr>
-                        <tr>
-                            <td
-                                class="px-6 py-5 font-black text-blue-800 bg-blue-50/30 w-32 text-center uppercase tracking-tighter font-black">
-                                In-class<br><span class="text-[10px] font-normal text-blue-400 font-black">課中</span>
-                            </td>
-                            <td
-                                class="px-6 py-5 font-medium text-slate-900 text-justify text-left text-justify text-left">
-                                領取 Classroom 作業，實測信心門檻對系統穩定性的影響。</td>
-                            <td class="px-6 py-5 text-xs text-blue-700 text-justify text-left text-justify text-left">
-                                即時排除阻礙，解答關於「偵測框框頻繁閃爍」的濾波原理。</td>
-                        </tr>
-                        <tr>
-                            <td
-                                class="px-6 py-5 font-black text-slate-800 bg-slate-50/50 w-32 text-center uppercase tracking-tighter text-justify text-left">
-                                Post-class<br><span
-                                    class="text-[10px] font-normal text-slate-400 font-black text-justify text-left">課後</span>
-                            </td>
-                            <td class="px-6 py-5 text-justify text-left">完成「特定物件過濾」導航邏輯並 Push，閱讀教師回覆 PR。</td>
-                            <td class="px-6 py-5 text-xs text-justify text-left text-justify text-left">
-                                核發評量，評估平衡精度與延遲的綜合決策能力。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5 text-justify">觀看「卷積神經網路 (CNN) 基礎」概念短片。理解特徵提取的概念。</td>
+                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能區分「影像分類」與「物件定位」的輸出差異。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter">領取作業 (Repo)，執行 GPU 壓力測試。實作 ROI 過濾與狀態機導航邏輯。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>AI 教練:</strong> 指導如何解讀「置信度」分佈，並調整 NMS 參數優化視覺流。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
+                        <td class="px-6 py-5 text-justify">上傳針對極端角度下物體誤判的分析報告並 Push。閱讀教師對「邊緣運算優化」的回饋。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「決策代價」的思考，表揚能主動為系統添加「容錯機制」的學員。</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </section>
-
-    <script src="/js/course-shared-v4.js"></script>
 </body>
 
 </html>

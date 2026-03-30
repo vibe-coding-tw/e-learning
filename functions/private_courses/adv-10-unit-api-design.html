@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
 <body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
@@ -21,28 +23,28 @@
         </div>
         <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
 
-        <div class="container mx-auto px-4 relative z-10 text-center">
+        <div class="container mx-auto px-4 relative z-10 text-center text-justify">
             <span
-                class="inline-block py-1 px-3 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                class="badge-header inline-block py-1.5 px-4 rounded-full bg-white/10 border border-white/20 text-white/90 text-sm font-medium mb-6 tracking-wide uppercase backdrop-blur-sm font-[Outfit]">
                 進階 10 - 單元 2
             </span>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">從幾何到代碼：<br><span class="text-purple-400">API 封裝設計</span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit] text-center">從幾何到代碼：<br><span class="text-purple-400">API 封裝設計</span>
             </h1>
-            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed text-center">
                 釋放運動控制的潛能。將複雜的 ICC 數學封裝為易用的 API，打造直覺且健壯的控制介面。
             </p>
 
-            <div class="mt-8 flex flex-wrap justify-center gap-4">
+            <div class="mt-8 flex flex-wrap justify-center gap-4 text-center">
                 <button
-                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/CLiN8r_NwuY')"
-                    class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-red-900/20">
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/CLiN8r_NwuY?autoplay=1')"
+                    class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105">
                     <span class="text-xl group-hover:animate-pulse">📺</span>
                     <span>觀看教學影片</span>
                 </button>
                 <button
                     onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vTw8aOvc-paBdQ9PNzBQ1Eer9ipXxHyLKj7oHWEe5rd_tHqxuCtJWzUp_-suvSl1oYysV5d11n9wxpz/pub?embedded=true')"
-                    class="group flex items-center gap-3 bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-purple-900/20">
-                    <span class="text-xl group-hover:bounce">📄</span>
+                    class="group flex items-center gap-3 bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105">
+                    <span class="text-xl">📄</span>
                     <span>閱讀課程講義</span>
                 </button>
             </div>
@@ -52,250 +54,169 @@
     <!-- Main Content -->
     <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
-        <!-- Section 1: Why Encapsulate? -->
-        <section class="mb-12">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        <!-- Module 1: Why Encapsulate -->
+        <section class="module-section mb-16 text-justify">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl">📦</span> 1. 為什麼要封裝 API？ (15 min)
+                <div class="p-8 md:p-14 text-justify">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-justify text-left">📦</span> 1. 為什麼要封裝 API？ (15 min)
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div class="space-y-6">
-                            <p class="text-lg text-gray-600 leading-relaxed">
-                                好的 API 就像駕駛座的方向盤，駕駛者不需要知道引擎內部的閥門如何開合，只需要轉動方向盤即可。
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 text-justify">
+                        <div class="space-y-6 text-justify">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify">
+                                好的 API 就像駕駛座的方向盤，駕駛者不需要知道引擎內部的閥門如何開合，只需要轉動方向盤即可。這就是資訊隱藏的力量。
                             </p>
-                            <ul class="space-y-4 text-gray-700">
-                                <li class="flex gap-3">
-                                    <span class="text-purple-500 font-bold text-xl">•</span>
-                                    <div>
-                                        <strong class="text-gray-900 block mb-1">隱藏複雜度 (Abstraction)</strong>
-                                        <span class="text-sm">使用者只需要呼叫 <code>move(radius, speed)</code>，不需要知道底層的三角函數或
-                                            ICC 運算細節。</span>
-                                    </div>
-                                </li>
-                                <li class="flex gap-3">
-                                    <span class="text-purple-500 font-bold text-xl">•</span>
-                                    <div>
-                                        <strong class="text-gray-900 block mb-1">低耦合 (Low Coupling)</strong>
-                                        <span class="text-sm">若更換了不同輪徑的馬達，只需修改 API 內部的係數，而無需改動上層的邏輯程式碼。</span>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="bg-purple-50 p-6 rounded-2xl border border-purple-100 flex flex-col justify-center">
-                            <h4 class="font-bold text-purple-900 mb-4 flex items-center gap-2">
-                                <span>🛡️</span> 防呆機制 (Fail-safe)
-                            </h4>
-                            <p class="text-gray-700 leading-relaxed mb-4">
-                                在 API 內部攔截不合理的參數，保護硬體與程式邏輯。
-                            </p>
-                            <div
-                                class="bg-white p-4 rounded-xl border border-purple-200 font-mono text-sm text-gray-600">
-                                <span class="text-purple-600">// 例如：防止轉向半徑小於物理極限</span><br>
-                                if (radius < MIN_RADIUS) {<br>
-                                    &nbsp;&nbsp;radius = MIN_RADIUS;<br>
-                                    &nbsp;&nbsp;log("Warning: Radius clamped");<br>
-                                    }
+                            <div class="bg-purple-50 p-6 rounded-2xl border border-purple-100">
+                                <h4 class="font-bold text-purple-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed">Abstraction Layer</h4>
+                                <ul class="text-[9px] text-slate-500 space-y-2 font-light text-justify text-justify">
+                                    <li class="flex items-start gap-2 text-justify"><span class="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1 text-justify"></span> <div><strong>解譯複雜度</strong>：呼叫 <code>move(radius, speed)</code> 而非處理三角函數。</div></li>
+                                    <li class="flex items-start gap-2 text-justify"><span class="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1 text-justify"></span> <div><strong>解耦硬體</strong>：更換馬達只需修改 API 內部，上層邏輯無需變動。</div></li>
+                                </ul>
                             </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group text-justify">
+                           <div class="absolute inset-0 bg-purple-500/5 group-hover:bg-purple-500/10 transition-colors"></div>
+                           <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10 text-justify">Safety Intercept</h4>
+                           <div class="relative z-10 font-mono text-[9px] text-left text-slate-400 space-y-1">
+                               <div>if (radius < MIN_LIMIT) {</div>
+                               <div class="text-purple-400 ml-4">radius = MIN_LIMIT; // Auto-Clamp</div>
+                               <div>}</div>
+                           </div>
+                           <p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest uppercase italic text-center">Shielding Hardware Limits</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 2: Designing Interfaces -->
-        <section class="mb-12">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-blue-600 to-cyan-600"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl">🎛️</span> 2. 設計良好的控制接口 (20 min)
+        <!-- Module 2: Interface Design -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-600 to-cyan-600 text-justify"></div>
+                <div class="p-8 md:p-14 text-justify">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-justify text-left">🎛️</span> 2. 設計良好的控制接口 (20 min)
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div class="space-y-6">
-                            <h3 class="font-bold text-lg text-gray-800">輸入參數的選取</h3>
-                            <div class="grid grid-cols-1 gap-4">
-                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                    <div class="text-blue-700 font-bold mb-1">幾何層級</div>
-                                    <p class="text-sm text-blue-900">轉向半徑 ($R$)、中心速度 ($V$)。適合路徑規劃。</p>
-                                </div>
-                                <div class="bg-cyan-50 p-4 rounded-xl border border-cyan-100">
-                                    <div class="text-cyan-700 font-bold mb-1">時間層級</div>
-                                    <p class="text-sm text-cyan-900">目標轉向角度 ($\theta$)、角速度 ($\omega$)。適合精確動作。</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 text-justify">
+                        <div class="space-y-8 text-justify">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify">
+                                設計介面時應考慮「語法層級」。是讓機器人執行幾何圓弧？還是旋轉特定角度？命名的一致性決定了代碼的自癒能力。
+                            </p>
+                            <div class="bg-blue-50 p-8 rounded-3xl border border-blue-100 text-center text-justify">
+                                <h4 class="text-blue-900 font-bold mb-4 text-xs uppercase tracking-widest text-justify">Parametric Hierarchy</h4>
+                                <div class="grid grid-cols-2 gap-2 text-[10px] text-slate-600 font-mono text-justify">
+                                    <div class="p-2 bg-white rounded border text-justify">Geometric (R, V)</div>
+                                    <div class="p-2 bg-white rounded border text-justify">Temporal (θ, ω)</div>
                                 </div>
                             </div>
                         </div>
-                        <div class="space-y-6">
-                            <h3 class="font-bold text-lg text-gray-800">命名規範 (Naming)</h3>
-                            <p class="text-gray-600">
-                                學習使用動詞開頭的命名法，讓程式碼讀起來像是在說故事。
-                            </p>
-                            <ul class="space-y-2 font-mono text-sm text-gray-700 bg-gray-50 p-4 rounded-xl">
-                                <li class="flex items-center gap-2"><span class="text-green-500">✓</span> driveArc()
-                                </li>
-                                <li class="flex items-center gap-2"><span class="text-green-500">✓</span>
-                                    rotateInPlace()</li>
-                                <li class="flex items-center gap-2"><span class="text-green-500">✓</span>
-                                    stopGradually()</li>
-                                <li class="flex items-center gap-2 opacity-50"><span class="text-red-500">✗</span> go()
-                                    <span class="text-xs text-gray-400 ml-2">// 太模糊</span>
-                                </li>
-                            </ul>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group text-justify">
+                           <div class="absolute inset-0 bg-blue-500/5 text-justify"></div>
+                           <h4 class="text-blue-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10 text-justify">Naming Semantics</h4>
+                           <ul class="w-full text-[9px] font-mono text-slate-400 space-y-1 px-4 relative z-10 text-justify">
+                               <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> driveArc()</li>
+                               <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> stopGradually()</li>
+                               <li class="flex items-center gap-2 text-slate-600 italic"><span class="text-red-500">✗</span> go() // Vague</li>
+                           </ul>
+                           <p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest uppercase italic text-center text-justify">Fluent Control Interface Patterns</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 3: Data Structures -->
-        <section class="mb-12">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-emerald-600 to-green-600"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl">🏗️</span> 3. 數據結構與返回類型 (25 min)
+        <!-- Module 3: Data Structures -->
+        <section class="module-section mb-16 text-justify">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700 text-justify">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-emerald-400">
+                        <span class="p-2 bg-emerald-500/20 rounded-lg text-emerald-400 text-2xl text-justify text-left">🏗️</span> 3. 數據結構與返回類型
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div class="space-y-6">
-                            <p class="text-gray-600 leading-relaxed">
-                                API 不應只是執行動作，還應負責資料的打包與狀態回報。
+                    <div class="flex flex-col lg:flex-row gap-16 items-center text-justify">
+                        <div class="flex-1 space-y-6 text-justify">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg text-justify text-justify">
+                                API 不應只是執行動作，還應負責資料的打包與狀態回報。透過自定義結構體，我們可以同步回傳左右馬達的實際物理速率，供上層進行 PID 閉環。
                             </p>
-                            <div class="bg-slate-900 p-6 rounded-xl text-white font-mono text-sm">
-                                <span class="text-purple-400">struct</span> WheelSpeeds {<br>
-                                &nbsp;&nbsp;<span class="text-blue-400">float</span> left_m_s;<br>
-                                &nbsp;&nbsp;<span class="text-blue-400">float</span> right_m_s;<br>
-                                };
+                            <div class="bg-emerald-500/10 p-8 rounded-3xl border border-emerald-500/20 shadow-inner">
+                                <h4 class="font-bold text-emerald-400 mb-4 text-xs uppercase tracking-widest text-center text-justify">Return Objects</h4>
+                                <div class="font-mono text-[10px] text-slate-300 space-y-1 bg-black/30 p-4 rounded text-justify">
+                                    <div>struct WheelSpeeds {</div>
+                                    <div class="ml-4">float left_m_s;</div>
+                                    <div class="ml-4">float right_m_s;</div>
+                                    <div>}</div>
+                                </div>
                             </div>
-                            <p class="text-sm text-gray-500">
-                                <strong class="text-emerald-600">狀態回報：</strong>API 應回傳執行結果（成功、參數錯誤、硬體異常），而非單純 Void。
-                            </p>
                         </div>
-                        <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
-                            <h4 class="font-bold text-emerald-900 mb-4 flex items-center gap-2">
-                                <span>📚</span> 學習任務：Arduino Library 規範
-                            </h4>
-                            <p class="text-gray-700 text-sm leading-relaxed mb-6">
-                                查閱 Arduino 官方或第三方函式庫設計，思考為什麼大多數都使用 <code>begin()</code>、<code>set()</code> 與
-                                <code>get()</code> 前綴？
-                            </p>
-                            <div class="bg-white p-4 rounded-xl border border-emerald-200">
-                                <h5 class="text-xs font-bold text-emerald-600 uppercase mb-2">關鍵概念：抽象化層級</h5>
-                                <p class="text-xs text-gray-600">
-                                    設計一個 <code>move(linear, angular)</code> 函式，而不是傳統且依賴硬體的
-                                    <code>setMotor(pwmL, pwmR)</code>。
-                                </p>
-                            </div>
+                        <div class="lg:w-80 bg-emerald-600/10 p-10 rounded-3xl border border-emerald-500/20 text-center relative overflow-hidden group">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-emerald-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-emerald-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center">API Contract</h4>
+                           <div class="text-2xl font-extrabold text-white mb-2">IO Standard</div>
+                           <p class="text-[11px] text-slate-500 mt-8 leading-relaxed font-light italic text-center text-justify text-left">
+                               "封裝不只是隱藏，而是為了建立更高維度的對話。"
+                           </p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 4: Assignments -->
-        <section id="assignments" class="mb-20">
-            <div class="text-center mb-12">
-                <span
-                    class="px-4 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-bold tracking-widest uppercase">Practical
-                    Lab</span>
-                <h2 class="text-4xl font-black text-gray-900 mt-4 mb-4 font-[Outfit]">核心實驗室：API 工廠</h2>
-                <p class="text-gray-600 max-w-2xl mx-auto">從公式推導到健壯的程式碼封裝。</p>
-            </div>
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：API 工廠</h2>
+            <p class="text-center text-gray-500 mb-12">從公式推導到健壯的程式碼封裝。透過 Git Workflow 建立可複用的機器人運動函式庫。</p>
 
-            <div class="grid md:grid-cols-3 gap-8">
+            <div class="grid md:grid-cols-3 gap-6">
                 <!-- Task 2-1 -->
-                <div onclick="window.courseShared.openSubmissionModal('adv-10-api-encapsulation', '【作業 2-1】封裝你的運動大腦')"
-                    class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-purple-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-purple-200/50 cursor-pointer">
-                    <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <span class="text-6xl font-black">01</span>
-                    </div>
-                    <div class="p-8">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div
-                                class="w-12 h-12 bg-purple-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-purple-200 group-hover:scale-110 transition-transform duration-500">
-                                🧠</div>
-                            <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git Branch:
-                                <span class="text-purple-600">feature/api-base</span></span>
+                <div onclick="openSubmissionModal('adv-10-api-encapsulation', '【作業 2-1】封裝「運動大腦」：Kinematics 類別設計 (API Abstraction Lab)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8 flex-grow text-justify text-justify">
+                        <div class="flex justify-between items-start mb-4 text-justify">
+                            <span class="text-4xl text-purple-500 group-hover:scale-110 transition-transform">🧠</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase uppercase font-black text-justify uppercase tracking-widest">60 min</span>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-4 group-hover:text-purple-600 transition-colors">
-                            【作業 2-1】封裝運動大腦</h3>
-                        <p class="text-gray-600 text-sm leading-relaxed mb-6">將 ICC 公式封裝進 C++ 類別或函式集。</p>
-                        <div class="space-y-3 border-t border-slate-50 pt-6">
-                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
-                                <span
-                                    class="w-5 h-5 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center font-bold">1</span>
-                                定義結構：KinematicsResult
-                            </div>
-                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
-                                <span
-                                    class="w-5 h-5 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center font-bold">2</span>
-                                處理 R=0 與 R=Inf 的特殊情況
-                            </div>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition text-justify uppercase tracking-tighter text-justify">【作業 2-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「運動大腦」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            將 ICC 公式封裝進 C++ 類別。實作 <code>calculateIK(radius, speed)</code>，並處理 $R=\infty$ (直線) 與 $R \to 0$ (自轉) 的邊界數學情境。
+                        </p>
                     </div>
                 </div>
 
                 <!-- Task 2-2 -->
-                <div onclick="window.courseShared.openSubmissionModal('adv-10-api-figure8', '【作業 2-2】API 調用挑戰：畫出 8 字形')"
-                    class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-indigo-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-indigo-200/50 cursor-pointer">
-                    <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <span class="text-6xl font-black">02</span>
-                    </div>
-                    <div class="p-8">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div
-                                class="w-12 h-12 bg-indigo-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform duration-500">
-                                ♾️</div>
-                            <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git Branch:
-                                <span class="text-indigo-600">feature/api-figure8</span></span>
+                <div onclick="openSubmissionModal('adv-10-api-figure8', '【作業 2-2】API 調用挑戰：畫出「8 字形」軌跡 (API Sequence Challenge)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow text-justify">
+                        <div class="flex justify-between items-start mb-4 text-justify">
+                            <span class="text-4xl text-blue-500 group-hover:rotate-12 transition-transform text-justify">♾️</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-tighter uppercase tracking-widest text-justify">60 min</span>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-4 group-hover:text-indigo-600 transition-colors">
-                            【作業 2-2】畫出 8 字形</h3>
-                        <p class="text-gray-600 text-sm leading-relaxed mb-6">使用你定義的 API 讓車子跑出 8 字形。</p>
-                        <div class="space-y-3 border-t border-slate-50 pt-6">
-                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
-                                <span
-                                    class="w-5 h-5 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-bold">1</span>
-                                嚴禁直接操作 PWM，僅能呼叫 API
-                            </div>
-                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
-                                <span
-                                    class="w-5 h-5 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-bold">2</span>
-                                組合 driveArc() 指令
-                            </div>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition text-justify text-justify">【作業 2-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「8 字型執法官」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
+                            嚴禁操作 PWM！僅限調用自研 API 組合指令。由左轉半圓與右轉半圓交替，挑戰回到初始座標的精準度，檢驗 API 的穩定度。
+                        </p>
                     </div>
                 </div>
 
                 <!-- Task 2-3 -->
-                <div onclick="window.courseShared.openSubmissionModal('adv-10-api-angle', '【作業 2-3】擴充 API：目標角度控制')"
-                    class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-cyan-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-cyan-200/50 cursor-pointer">
-                    <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <span class="text-6xl font-black">03</span>
-                    </div>
-                    <div class="p-8">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div
-                                class="w-12 h-12 bg-cyan-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-cyan-200 group-hover:scale-110 transition-transform duration-500">
-                                📐</div>
-                            <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git Branch:
-                                <span class="text-cyan-600">feature/api-angle</span></span>
+                <div onclick="openSubmissionModal('adv-10-api-angle', '【作業 2-3】擴充 API：目標角度轉向控制 (VUI-FSM Architecture)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
+                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="p-8 flex-grow text-justify">
+                        <div class="flex justify-between items-start mb-4 text-justify">
+                            <span class="text-4xl text-emerald-500 group-hover:translate-x-1 transition-transform text-justify text-justify text-left">📐</span>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest">45 min</span>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-4 group-hover:text-cyan-600 transition-colors">【作業
-                            2-3】目標角度控制</h3>
-                        <p class="text-gray-600 text-sm leading-relaxed mb-6">升級 API 以支持「轉向特定角度後停止」。</p>
-                        <div class="space-y-3 border-t border-slate-50 pt-6">
-                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
-                                <span
-                                    class="w-5 h-5 bg-cyan-50 text-cyan-600 rounded-full flex items-center justify-center font-bold">1</span>
-                                實作 turnAngle(degree, speed)
-                            </div>
-                            <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
-                                <span
-                                    class="w-5 h-5 bg-cyan-50 text-cyan-600 rounded-full flex items-center justify-center font-bold">2</span>
-                                嘗試非阻塞設計 (Non-blocking)
-                            </div>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition text-justify uppercase tracking-tighter text-justify">【作業 2-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「角度精確接口」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
+                            結合時間與角速度。實作 <code>turnAngle(degree, speed)</code>。讓車子能精準轉向 90 度後主動停止，嘗試導入「非阻塞式」計時設計。
+                        </p>
                     </div>
                 </div>
             </div>
@@ -304,168 +225,150 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
-        <div class="container mx-auto px-4 text-center">
-            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
-            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
-                <span>進階課程 10 - 單元 2</span>
-                <span class="hidden md:inline">|</span>
-                <span>從幾何到代碼：API 封裝設計</span>
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto text-justify">
+        <div class="container mx-auto px-4 text-center text-justify">
+            <p class="text-slate-500 text-sm mb-4 text-justify">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400 text-justify">
+                <span>單元課程 進階 10 - API 封裝</span>
+                <span class="hidden md:inline text-justify">|</span>
+                <span>講師：Antigravity Assistant</span>
             </div>
         </div>
     </footer>
 
+    <script src="/js/course-shared-v4.js"></script>
+
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">API 實驗室：從幾何公式到產業級封裝</h2>
 
-        <h3>作業 2-1：封裝運動大腦：Kinematics 類別設計</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 軟體架構師。</li>
-            <li><strong>執行方式：</strong> 建立一個 `DifferentialDrive` 類別。實作 `calculateIK(radius, speed)` 函式，並封裝 `L` (輪距)
-                等硬體常數。</li>
-            <li><strong>評分重點：</strong> 代碼的結構化程度與可讀性。是否正確處理了 \(R\) 為 `Infinity`（直線走）的情境。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title text-justify">任務 1：Kinematics 類別設計 (Abstraction Lab)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：軟體架構師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
 
-        <h3>作業 2-2：API 調用挑戰：畫出 8 字形</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 測試工程師。</li>
-            <li><strong>執行方式：</strong> 禁止直接寫 PWM 數值，僅能透過呼叫自定義 API 組合出「右轉半圓」與「左轉半圓」的指令。</li>
-            <li><strong>評分重點：</strong> 代碼的簡潔度，以及 8 字形軌跡的對稱性與回到原點的精準度。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>成員保護</strong>：將輪距 $L$、輪徑等設定為 `private`，透過 `constructor` 初始化。</li>
+                    <li><strong>異常處理</strong>：在 API 內部偵測除以零（$R=0$）的非法運算，並自動映射到自轉模式。</li>
+                    <li><strong>README 紀錄</strong>：說明為何使用 `float` 而非 `int` 來建立運動學結構體。</li>
+                </ol>
+            </div>
 
-        <h3>作業 2-3：擴充 API：目標角度轉向控制 (turnAngle)</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 韌體工程師.</li>
-            <li><strong>執行方式：</strong> 結合 `delay()` 或非阻塞計時器，實作 `turnAngle(degrees, speed)`。讓車子能精準轉向 90 度後停下。</li>
-            <li><strong>評分重點：</strong> 時間與角速度的轉換邏輯是否正確，以及在 README 中記錄轉向的累積誤差。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>結構對稱性</strong>：API 是否正確區分了 $V_{left}$ 與 $V_{right}$ 的計算分支？</li>
+                    <li>[ ] <strong>封裝完整度</strong>：主程式 (`main.ino`) 是否完全沒有出現顯式的 PWM 操作？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：軌跡調用挑戰 (Traj Mapping Lab)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：測試工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>指令鏈路設計</strong>：利用 <code>driveArc(R, V)</code> 指令，將一個圓弧軌跡拆解為兩個半圓組合。</li>
+                    <li><strong>累積誤差分析</strong>：在 README 錄製運行影片，觀察物理上的 8 字圓心是否逐漸偏移，並探討原因。</li>
+                    <li><strong>Push Final</strong>：提交具備高度可讀性的 API 調用語法範例。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>代碼簡潔度</strong>：描述 8 字動作的代碼是否控制在 10 行以內？</li>
+                    <li>[ ] <strong>行為一致性</strong>：API 是否能處理 $R$ 為負值（代表左轉）的判讀邏輯？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：目標轉向接口 (Angle Command Engine)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：韌體工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>時間換空間</strong>：實作 $\Delta t = \text{Target\_Angle} / \omega$ 的換算公式。</li>
+                    <li><strong>回報機制</strong>：讓 <code>turnAngle</code> 回傳一個狀態碼，標示任務已完成或正在執行中。</li>
+                    <li><strong>Push Final</strong>：提交具備「回饋意識」的高階擴充 API。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>邏輯嚴謹度</strong>：轉向角度與時間的線性關係推導是否正確？</li>
+                    <li>[ ] <strong>介面友善性</strong>：TurnAngle 的參數是否讓初學者也能一眼看懂（例如使用 Degree 而非 Radian）？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        A. 範本倉庫 (Template Repo) 結構
-                    </h4>
-                    <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：讓學生掌握「資訊隱藏 (Information Hiding)」的軟體工程核心。從單純寫 Code 轉向「設計介面」。</p>
+            <ol class="space-y-4 text-slate-600 text-justify">
+                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：封裝的心理邊界</strong> - 要求學生思考：如果我的馬達換了，API 使用者需要被通知嗎？答案應是否定的。</li>
+                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：防呆的必要性</strong> - 在 API 層級攔截除以零或溢位，比在全域攔截更容易除錯。</li>
+                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：介面的自癒性</strong> - 講解為什麼 `driveArc(30, 100)` 比 `setMotor(128, 64)` 更具「自述性 (Self-documenting)」。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
 .
-├── include/
-│   └── DriveSystem.h     # 類別定義與介面
-├── src/
-│   └── DriveSystem.cpp   # API 內部演算法實作
-├── tests/
-│   └── api.test.js      # 測試：驗證介面與邏輯
-└── README.md             # API 調用圖與誤差報告紀錄</pre>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        B. 自動評估 (Autograding) 的設計
-                    </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🧱</span>
-                            <p class="text-sm text-gray-700"><strong>結構檢查：</strong> 檢查是否將「幾何計算」與「底層 IO」分離，體現封裝精髓。</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🧪</span>
-                            <p class="text-sm text-gray-700"><strong>單元測試：</strong> 自動驗證回傳的運動學結構體 (R, V) 數值是否符合數學模型。</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+├── include/DriveSystem.h # 介面：定義 KinematicsResult 與 API 原型
+├── src/DriveSystem.cpp   # 實作：待學生寫入 ICC 到馬達轉速的映射
+└── tests/api.test.js     # 測試：驗證介面調用是否符合 16-bit 傳輸規範
+            </pre>
         </div>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供 API 基礎類型頭文件與 KinematicsResult 結構體樣板。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「代碼風格」評分。引導使用 private 成員保護硬體參數。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，測試 API 通用性。提交 UML 圖與調用關係 PR。執行 Git Push。
-                    </p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對命名、健壯性，以及「非阻塞式控制」實作穩健度點評。</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
-            </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
-                        <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">複習 C++ 類別概念，思考 API 介面設計直覺性。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「API 封裝心法」導讀。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，體會封裝後代碼簡潔度，並調校參數。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，點撥關於「結構體傳值與指標」優化重點。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">完成狀態回報功能並 Push，閱讀回覆 PR 以最佳化代碼。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，引導思考「介面與實作分離」的重要性。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5 text-justify">觀看「API 命名學」短片。理解 Private 與 Public 的存取控制。</td>
+                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能區分「全域變數」與「類別屬性」的生命週期差異。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black">領取作業 (Repo)，封裝 Kinematics 並調試 8 字形軌跡。實作異常參數攔截器。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 指導如何使用「結構體回傳」而非複數全域變數來傳遞马達指令。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
+                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify font-black">提交具備「狀態回報」的最終版代碼。閱讀教師對「非阻塞式回調」的架構建議。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「硬體抽象化層 (HAL)」概念的實作深度。</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </section>
-
-    <script src="/js/course-shared-v4.js"></script>
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/CLiN8r_NwuY?autoplay=1",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vTw8aOvc-paBdQ9PNzBQ1Eer9ipXxHyLKj7oHWEe5rd_tHqxuCtJWzUp_-suvSl1oYysV5d11n9wxpz/pub?embedded=true"
-        };
-    </script>
 </body>
 
 </html>

@@ -9,37 +9,41 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
 <body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
 
     <!-- Hero Section -->
     <header
-        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden text-justify">
         <div
             class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
         </div>
-        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16 text-justify"></div>
 
-        <div class="container mx-auto px-4 relative z-10 text-center">
+        <div class="container mx-auto px-4 relative z-10 text-center text-justify text-justify">
             <span
-                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
-                進階 15 - 單元 3
+                class="badge-header inline-block py-1.5 px-4 rounded-full bg-white/10 border border-white/20 text-white/90 text-sm font-medium mb-6 tracking-wide uppercase backdrop-blur-sm font-[Outfit] text-justify text-justify">
+                進階 15 - 控制理論
             </span>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">PID 演算法<br><span class="text-cyan-400">視覺化模擬</span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit] text-center text-justify text-justify">PID 演算法<br><span class="text-cyan-400">視覺化模擬與調校</span>
             </h1>
-            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
-                將看不見的數學邏輯轉化為直覺的動態曲線。掌握精準控制的藝術，設計穩定收斂的自動化系統。
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed text-center text-justify text-justify">
+                將抽象的數學邏輯轉化為直覺的動態曲線。掌握現代控制工程的藝術，設計具備極致穩定度的自動化機器人。
             </p>
 
-            <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
-                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
-                    <span>📺</span> 觀看教學影片
+            <div class="mt-8 flex flex-wrap justify-center gap-4 text-center text-justify text-justify">
+                <button onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/m1Mpa4X8ESc?autoplay=1')"
+                    class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 text-justify">
+                    <span class="text-xl group-hover:animate-pulse">📺</span>
+                    <span>觀看教學影片</span>
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
-                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
-                    <span>📄</span> 閱讀課程講義
+                <button onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vQSXa-bz3cyVOpFeKD3ievTtDWFcQ2LtfJgr2CA0FrTylOZyUSxy-oB9OnBbqlBLOj17-umUHfzazY0/pub?embedded=true')"
+                    class="group flex items-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 text-justify">
+                    <span class="text-xl text-justify text-left text-justify text-justify text-justify">📄</span>
+                    <span>閱讀課程講義</span>
                 </button>
             </div>
         </div>
@@ -49,36 +53,36 @@
     <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
         <!-- Module 1: The Three Control Souls -->
-        <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
-                <div class="p-8 md:p-14">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl text-blue-500">🧠</span> 1. 拆解 PID：三個控制靈魂
+        <section class="module-section mb-16 text-justify">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 text-justify">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-justify"></div>
+                <div class="p-8 md:p-14 text-justify">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3 text-justify text-justify">
+                        <span class="text-4xl text-blue-500 text-justify text-left">🧠</span> 1. 拆解 PID：三大控制靈魂
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
-                        <div class="space-y-6">
-                            <p class="text-lg text-gray-600 leading-relaxed font-light">
-                                PID 參數調整常被視為「玄學」，但透過即時分析，我們能清晰看到 P 的反應、I 的補償與 D 的煞車效果。將數學公式轉化為物理直覺。
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 text-justify">
+                        <div class="space-y-6 text-justify text-justify">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify text-justify">
+                                PID 參數調校常被視為工程界的「玄學」，但透過即時模擬分析，我們能清晰透視 P 的反應、I 的補償與 D 的預測效果。將冷冰冰的數學公式轉化為動態的物理直覺。
                             </p>
-                            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
-                                <h4 class="font-bold text-blue-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed">Controller Components</h4>
-                                <ul class="text-[9px] text-slate-500 space-y-2 font-light">
-                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1"></span> <div><strong>P (比例)</strong>：當前的力量。反應偏離當下的修正力，但也最容易引起震盪。</div></li>
-                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1"></span> <div><strong>I (積分)</strong>：過去的累積。消除靜態誤差，負責對抗持續性的阻力（如重力）。</div></li>
-                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1"></span> <div><strong>D (微分)</strong>：未來的預測。抑制震盪的煞車，負責提升系統的動態穩定度。</div></li>
+                            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 text-justify">
+                                <h4 class="font-bold text-blue-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed text-center text-justify">Controller Functional Components</h4>
+                                <ul class="text-[9px] text-slate-500 space-y-2 font-light text-justify text-justify">
+                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1 text-justify"></span> <div><strong class="text-justify text-left text-justify">P (比例 - Present)</strong>：當前的修正力量。比例越大反應越快，但也最容易引發劇烈震盪。</div></li>
+                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1 text-justify"></span> <div><strong class="text-justify">I (積分 - Integral)</strong>：過去的累積。專門消除靜態殘差，負責對抗持續性的外部阻力。</div></li>
+                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1 text-justify"></span> <div><strong class="text-justify">D (微分 - Derivative)</strong>：未來的預測。抑制震盪的智慧型煞車，負責提升系統的動態阻尼與穩定度。</div></li>
                                 </ul>
                             </div>
                         </div>
 
-                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group">
-                           <div class="absolute inset-0 bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors"></div>
-                           <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10">Control Loop Logic</h4>
-                           <div class="relative z-10 space-y-1">
-                               <div class="text-[9px] font-mono p-2 border border-slate-800 rounded">Error = Target - Measured</div>
-                               <div class="text-[9px] font-mono p-2 border border-indigo-500/30 bg-indigo-500/5 rounded text-indigo-400">Output = (Kp*E) + (Ki*∫E) + (Kd*dE/dt)</div>
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group text-justify">
+                           <div class="absolute inset-0 bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors text-justify"></div>
+                           <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10 text-center text-justify">Closed-Loop Control Logic</h4>
+                           <div class="relative z-10 space-y-2 text-justify">
+                               <div class="text-[9px] font-mono p-3 border border-slate-800 rounded bg-slate-950/50 text-justify">Error(t) = Setpoint - MeasuredValue</div>
+                               <div class="text-[9px] font-mono p-3 border border-indigo-500/30 bg-indigo-500/10 rounded text-indigo-400 text-justify">ControlValue = \( K_p \cdot e(t) + K_i \int e(t)dt + K_d \frac{de}{dt} \)</div>
                            </div>
-                           <p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest uppercase">Real-time Computation Active</p>
+                           <p class="text-[9px] text-slate-600 mt-10 font-mono tracking-widest uppercase text-center text-justify font-black">Iterative Computation: ACTIVE</p>
                         </div>
                     </div>
                 </div>
@@ -86,40 +90,40 @@
         </section>
 
         <!-- Module 2: Visual Real-time Analytics -->
-        <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
-                <div class="p-8 md:p-14">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl text-cyan-500">📈</span> 2. 數據視覺化：望塵莫及的北極星
+        <section class="module-section mb-16 text-justify">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 text-justify">
+                <div class="p-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-justify"></div>
+                <div class="p-8 md:p-14 text-justify">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3 text-justify text-justify">
+                        <span class="text-4xl text-cyan-500 text-justify text-left">📈</span> 2. 數據視覺化：望塵莫及的北極星
                     </h2>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
-                        <div class="space-y-8">
-                            <p class="text-lg text-gray-600 leading-relaxed font-light">
-                                透過動態波形圖，即時觀測目標值 (Setpoint) 與實際測量值 (Measured) 的追隨狀況。學會解讀「過衝 (Overshoot)」與「穩態時間」。
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 text-justify">
+                        <div class="space-y-8 text-justify">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify">
+                                透過動態波形圖，即時觀測目標值 (Setpoint) 與實際測量值 (Measured) 的追隨狀態。學會從波形特徵中解讀「過衝 (Overshoot)」與「穩態到達時間 (Settling Time)」。
                             </p>
-                            <div class="bg-cyan-50 p-8 rounded-3xl border border-cyan-100 text-center">
-                                <h4 class="text-cyan-900 font-bold mb-4 text-xs uppercase tracking-widest">Waveform Analysis</h4>
-                                <div class="h-32 bg-white rounded-xl shadow-inner relative overflow-hidden">
-                                   <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-red-400/50 dashed"></div></div>
-                                   <div class="absolute inset-x-0 bottom-1/4 h-1/2 flex items-center">
-                                       <svg class="w-full h-full"><path d="M0 40 Q 50 10, 100 45 T 200 40 T 300 40" fill="none" stroke="#3b82f6" stroke-width="2" class="animate-[dash_5s_infinite_linear]" /></svg>
+                            <div class="bg-cyan-50 p-8 rounded-3xl border border-cyan-100 text-center text-justify">
+                                <h4 class="text-cyan-900 font-bold mb-4 text-xs uppercase tracking-widest text-center text-justify text-justify text-justify">Control Response Waveform</h4>
+                                <div class="h-32 bg-white rounded-2xl shadow-inner relative overflow-hidden text-justify">
+                                   <div class="absolute inset-0 flex items-center text-justify"><div class="w-full border-t border-red-400/50 border-dashed text-justify"></div></div>
+                                   <div class="absolute inset-x-0 bottom-1/4 h-1/2 flex items-center text-justify">
+                                       <svg class="w-full h-full text-justify"><path d="M0 40 Q 50 5, 100 45 T 200 40 T 300 40" fill="none" stroke="#3b82f6" stroke-width="2.5" class="animate-[dash_6s_infinite_linear] text-justify" /></svg>
                                    </div>
                                 </div>
-                                <p class="text-[10px] text-slate-400 mt-4 italic font-light">藍色線追隨紅色虛線，代表系統正在收斂</p>
+                                <p class="text-[10px] text-slate-400 mt-6 italic font-light text-center text-justify">藍色回授線正動態趨近日紅色目標線，代表系統正在穩定收斂</p>
                             </div>
                         </div>
 
-                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group">
-                           <div class="absolute inset-0 bg-cyan-500/5"></div>
-                           <h4 class="text-cyan-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10">Stability Metrics</h4>
-                           <div class="w-full space-y-4 px-10 relative z-10">
-                               <div class="flex justify-between text-[8px] text-slate-400"><span>Overshoot %</span> <span>3.2% (Good)</span></div>
-                               <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden"><div class="bg-blue-500 h-full w-[35%]"></div></div>
-                               <div class="flex justify-between text-[8px] text-slate-400"><span>Settling Time</span> <span>1.2s (Fast)</span></div>
-                               <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden"><div class="bg-green-500 h-full w-[20%]"></div></div>
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group text-justify">
+                           <div class="absolute inset-0 bg-cyan-500/5 text-justify"></div>
+                           <h4 class="text-cyan-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10 text-center text-justify">Stability Metric Tracking</h4>
+                           <div class="w-full space-y-4 px-10 relative z-10 text-justify">
+                               <div class="flex justify-between text-[8px] text-slate-400 text-justify"><span>Overshoot Peak</span> <span>2.8% (Target: < 5%)</span></div>
+                               <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden text-justify"><div class="bg-blue-500 h-full w-[30%] text-justify"></div></div>
+                               <div class="flex justify-between text-[8px] text-slate-400 text-justify"><span>Settling Success</span> <span>1.18s (ULTRA FAST)</span></div>
+                               <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden text-justify"><div class="bg-emerald-500 h-full w-[85%] text-justify"></div></div>
                            </div>
-                           <p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest uppercase">Target Acquisition Active</p>
+                           <p class="text-[9px] text-slate-600 mt-10 font-mono tracking-widest uppercase text-center text-justify italic font-black">High-Precision Acquisition Active</p>
                         </div>
                     </div>
                 </div>
@@ -127,33 +131,33 @@
         </section>
 
         <!-- Module 3: Tuning & Safety Policies -->
-        <section class="module-section mb-16">
-            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
-                <div class="p-8 md:p-14">
-                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-cyan-400">
-                        <span class="p-2 bg-cyan-500/20 rounded-lg text-cyan-400 text-2xl">🛠️</span> 3. 調校策略與安全極限
+        <section class="module-section mb-16 text-justify">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-xl overflow-hidden text-white border border-slate-700 text-justify text-justify">
+                <div class="p-8 md:p-14 text-justify">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-cyan-400 text-justify text-justify text-justify">
+                        <span class="p-2 bg-cyan-500/20 rounded-lg text-cyan-400 text-2xl text-justify text-left">🛡️</span> 3. 調校策略與硬體安全邊界
                     </h2>
-                    <div class="flex flex-col lg:flex-row gap-16 items-center">
-                        <div class="flex-1 space-y-6">
-                            <p class="text-slate-400 font-light leading-relaxed text-lg">
-                                除錯不靠盲猜。學習經典的齊格勒-尼科爾斯法則。同時實作「積分飽和抑制 (Anti-windup)」與限幅邏輯，確保系統在任何極端情境下都不會由於計算溢位而爆衝。
+                    <div class="flex flex-col lg:flex-row gap-16 items-center text-justify text-justify text-justify">
+                        <div class="flex-1 space-y-6 text-justify text-justify">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg text-justify text-justify">
+                                頂尖工程師絕不盲目微調。學習經典的齊格勒-尼科爾斯 (Ziegler-Nichols) 啟發式綜合法。同時實作「積分飽和抑制 (Anti-windup)」與限幅邏輯，確保系統在任何物理負載下絕不產生計算溢位或爆衝。
                             </p>
-                            <div class="bg-cyan-500/10 p-8 rounded-3xl border border-cyan-500/20 shadow-inner">
-                                <h4 class="font-bold text-cyan-400 mb-4 text-xs uppercase tracking-widest text-center">Safety Implementation</h4>
-                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
-                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1"></span><div><strong class="text-white">積分抑制 (Anti-windup)</strong>：防止在馬達卡住時，控制量無限堆積導致恢復後失控。</div></li>
-                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1"></span><div><strong class="text-white">輸出限幅 (Clamping)</strong>：確保最終 PWM 值嚴格鎖定在 0-255，保護電子零件。</div></li>
-                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1"></span><div><strong class="text-white">死區補償 (Deadband)</strong>：忽略微小的無意義震盪，延長機械壽命。</div></li>
+                            <div class="bg-cyan-500/10 p-8 rounded-3xl border border-cyan-500/20 shadow-inner text-justify text-justify">
+                                <h4 class="font-bold text-cyan-400 mb-4 text-xs uppercase tracking-widest text-center text-justify text-left text-justify">Safety Implementation Rules</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light text-justify text-left text-justify">
+                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1 text-justify"></span><div><strong class="text-white text-justify">積芬抑制 (Anti-windup)</strong>：馬達遇阻時自動凍結積分累計，防止恢復後發生毀滅性超調。</div></li>
+                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1 text-justify"></span><div><strong class="text-white text-justify">軟體限幅 (Clamping)</strong>：強制鎖定控制量輸出範圍至 [0, 255]，保護底層 ESC 驅動管。</div></li>
+                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1 text-justify"></span><div><strong class="text-white text-justify">靜態補償 (Static Bias)</strong>：補償機械摩擦阻力，提升起始點的靈敏度與穩態準確性。</div></li>
                                 </ul>
                             </div>
                         </div>
-                        <div class="lg:w-80 bg-cyan-600/10 p-10 rounded-3xl border border-cyan-500/20 text-center relative overflow-hidden group">
-                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-cyan-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
-                           <h4 class="text-cyan-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center">Clamping Active</h4>
-                           <div class="text-5xl font-bold text-white mb-2">MAX</div>
-                           <div class="text-[10px] text-cyan-400 uppercase tracking-widest">Output Saturated</div>
-                           <p class="text-[11px] text-slate-500 mt-8 leading-relaxed font-light italic text-center">
-                               "優雅的控制來自於對邊界的嚴格掌握。"
+                        <div class="lg:w-80 bg-cyan-600/10 p-10 rounded-3xl border border-cyan-500/20 text-center relative overflow-hidden group text-justify">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-cyan-500/5 rounded-full group-hover:scale-150 transition-transform duration-700 text-justify"></div>
+                           <h4 class="text-cyan-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center text-justify">Safety Constraint Alert</h4>
+                           <div class="text-5xl font-bold text-white mb-2 text-justify tracking-tighter uppercase font-black">CLAMP</div>
+                           <div class="text-[10px] text-cyan-400 uppercase tracking-widest text-justify">Output Limit Saturated</div>
+                           <p class="text-[11px] text-slate-500 mt-10 leading-relaxed font-light italic text-center text-justify text-left text-justify">
+                               "極致的控制來自於對物理邊界的絕對掌控。"
                            </p>
                         </div>
                     </div>
@@ -162,58 +166,58 @@
         </section>
 
         <!-- Homework Section -->
-        <section class="module-section">
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：PID 調控終端</h2>
-            <p class="text-center text-gray-500 mb-12">透過直覺的儀表板與調整工具，掌握精準控制的藝術。讓你的演算備具備工業級的穩定與安全。</p>
+        <section class="module-section text-justify">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit] text-justify text-justify">核心任務：PID 演算法實驗室</h2>
+            <p class="text-center text-gray-500 mb-12 text-justify text-justify text-left text-center">透過直覺的高性能儀表板與調參工具，掌握精準控制算法。讓你的自動化系統具備工業級的穩定性。透過 Git Workflow 建立數據驅動的調校日誌。</p>
 
-            <div class="grid md:grid-cols-3 gap-6">
+            <div class="grid md:grid-cols-3 gap-6 text-justify text-justify">
                 <!-- Task 15-1 -->
-                <div onclick="openSubmissionModal('adv-15-pid-dashboard', '【作業 15-1】實作 PID 動態儀表板 (Building PID Dashboard)')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
-                    <div class="bg-blue-500 h-2"></div>
-                    <div class="p-8 flex-grow">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform">📊</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
+                <div onclick="openSubmissionModal('adv-15-pid-dashboard', '【作業 15-1】實例化 PID 動態監測儀表板 (Building Real-time PID Dashboard Lab)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
+                    <div class="bg-blue-500 h-2 text-justify"></div>
+                    <div class="p-8 flex-grow text-justify text-justify">
+                        <div class="flex justify-between items-start mb-4 text-justify">
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform text-justify">📊</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest text-justify">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 15-1】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「動態監測畫布」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">
-                            利用 Chart.js 實作即時波形圖。將接收到的目標值與測量值映射至畫布，實現對控制過程的「視覺透視」。建立 Kp/Ki/Kd 即時調參介面。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition text-justify uppercase tracking-tighter">【作業 15-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「即時監測畫布」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify text-justify">
+                            利用 Chart.js 實作 15Hz 高頻波形圖。將來自 BLE 的 \(Setpoint\) 與 \(Measured\) 映射至動態繪圖區，達成控制過程的「視覺透視」。建立包含 Kp/Ki/Kd 滑動條的即時參數映射介面。
                         </p>
                     </div>
                 </div>
 
                 <!-- Task 15-2 -->
-                <div onclick="openSubmissionModal('adv-15-pid-challenge', '【作業 15-2】「極限平衡」調參挑戰 (The Ultimate Tuning Challenge)')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                <div onclick="openSubmissionModal('adv-15-pid-challenge', '【作業 15-2】「收斂至極」Z-N 調參挑戰 (The PID Stability & Tuning Challenge)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
                     <div class="bg-cyan-500 h-2"></div>
-                    <div class="p-8 flex-grow">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl text-cyan-500 group-hover:rotate-12 transition-transform">⚖️</span>
-                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
+                    <div class="p-8 flex-grow text-justify text-justify">
+                        <div class="flex justify-between items-start mb-4 text-justify text-left">
+                            <span class="text-4xl text-cyan-500 group-hover:rotate-12 transition-transform text-justify">⚖️</span>
+                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest text-justify text-left">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition">【作業 15-2】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「精準收斂挑戰」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">
-                            實施 Z-N 調校策略。挑戰在 1.5 秒內讓系統從靜止達到完全穩定狀態。提交你的調校日誌，證明你對「過衝控制」的極致追求。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition text-justify uppercase tracking-tighter text-justify">【作業 15-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「最佳參數攻堅」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
+                            實施 Z-N 法找尋等幅震盪點。挑戰在 1.2 秒內讓系統從靜止完全收斂至 2% 誤差帶。在 README 中詳列調校前、後的性能數據對比，證明你對「無過衝穩態」的極致追求。
                         </p>
                     </div>
                 </div>
 
                 <!-- Task 15-3 -->
-                <div onclick="openSubmissionModal('adv-15-pid-safety', '【作業 15-3】PID 安全限制器 (Safe PID Implementation)')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                <div onclick="openSubmissionModal('adv-15-pid-safety', '【作業 15-3】PID 工業級安全防護重構 (Advanced PID Safety Reconstruction Lab)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
                     <div class="bg-indigo-500 h-2"></div>
-                    <div class="p-8 flex-grow">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl text-indigo-500 group-hover:translate-x-1 transition-transform">🛡️</span>
-                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
+                    <div class="p-8 flex-grow text-justify text-justify">
+                        <div class="flex justify-between items-start mb-4 text-justify text-left text-justify">
+                            <span class="text-4xl text-indigo-500 group-hover:translate-x-1 transition-transform text-justify">🛡️</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest text-justify">45 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition">【作業 15-3】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「工業自癒防禦」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">
-                            重構 PID 核心，實作積分飽和抑制與輸出 Clamping 機制。當電機卡死或目標值劇跳時，保護系統不產生無效的能量累積與硬體損毀。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition text-justify uppercase tracking-tighter">【作業 15-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「高魯棒性自癒開發」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
+                            重構核心 PID 類別，實作內置的積分飽和抑制與輸出 Clamping。手動模擬「目標值巨跳」與「物理死區」情境，確保系統不產生無效的積分能量累積，展現零爆衝的工業安全等級。
                         </p>
                     </div>
                 </div>
@@ -223,153 +227,147 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
-        <div class="container mx-auto px-4 text-center">
-            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
-            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto text-justify">
+        <div class="container mx-auto px-4 text-center text-justify text-justify text-justify text-justify">
+            <p class="text-slate-500 text-sm mb-4 text-justify">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400 text-justify text-justify">
                 <span>單元課程 進階 15 - PID 模擬</span>
-                <span class="hidden md:inline">|</span>
+                <span class="hidden md:inline text-justify">|</span>
                 <span>講師：Antigravity Assistant</span>
             </div>
         </div>
     </footer>
 
-    <script>
-        // Define Resources
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/m1Mpa4X8ESc",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vQSXa-bz3cyVOpFeKD3ievTtDWFcQ2LtfJgr2CA0FrTylOZyUSxy-oB9OnBbqlBLOj17-umUHfzazY0/pub?embedded=true"
-        };
-    </script>
     <script src="/js/course-shared-v4.js"></script>
+
     <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">控制實驗室：PID 視覺化除錯與安全加固</h2>
+    <section id="assignment-guide" style="display: none text-justify;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">控制實驗室：PID 演算法視覺化診斷與工業級加固</h2>
 
         <div class="assignment-quest">
-            <h3 class="quest-title">任務 1：實作 PID 動態儀表板 (Building PID Dashboard)</h3>
+            <h3 class="quest-title text-justify">任務 1：高效 PID 動態遙測儀表板 (High-Frequency PID Telemetry Lab)</h3>
             <div class="quest-meta">
-                <span>角色扮演：控制系統工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+                <span>角色扮演：控制系統 UI 開發者</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
                     <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
-                    <li><strong>波形矩陣實作</strong>：利用 Chart.js 在前端頁面建立 <code>PIDMonitor</code> 畫布。設定 10Hz 的更新頻率。</li>
-                    <li><strong>數據流綁定</strong>：將 BLE 接收到的數據物件（Target, Current, Output）映射至對應的曲線 Dataset 中。</li>
-                    <li><strong>即時參數控制區</strong>：實作一個調參 Sidebar，確保按下「套用」時，新參數能封裝為 JSON 推送至 ESP32。</li>
+                    <li><strong>波形繪圖矩陣建立</strong>：在 <code>dashboard.js</code> 整合 Chart.js 並鎖定 60fps 渲染。</li>
+                    <li><strong>參數閉迴路實施</strong>：實作一個 WebSocket 或 BLE 推送頻道。確保網頁端微調 Kp 數值時，車輛端能瞬時同步更新演算權重。</li>
+                    <li><strong>Push Final</strong>：提交具備即時互動能力的調參儀表板原始碼。</li>
                 </ol>
             </div>
 
             <div class="tutor-benchmark">
                 <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
-                    <li>[ ] <strong>觀測即時性</strong>：波形圖是否能流暢顯示（無斷點），並能正確反映系統的階躍響應 (Step Response)？</li>
-                    <li>[ ] <strong>UI 交互合理性</strong>：調參滑動條是否具備數值回顯，且步進解析度 (Step) 是否足以進行細微微調？</li>
+                    <li>[ ] <strong>監測流暢度</strong>：當調整參數時，視覺波形是否能立即反映出系統穩定度的變化（如：更明顯的震盪）？</li>
+                    <li>[ ] <strong>同步一致性</strong>：參數滑軌的數值與下方顯示的 Log 是否嚴格對應？</li>
                 </ul>
             </div>
         </div>
 
         <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 2：「極限平衡」調參挑戰 (The Ultimate Tuning Challenge)</h3>
+            <h3 class="quest-title text-justify">任務 2：基於 Z-N 法的極致收斂性能調校 (Optimal Tuning via Ziegler-Nichols Lab)</h3>
             <div class="quest-meta">
-                <span>角色扮演：調校專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+                <span>角色扮演：演算法調優專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-tighter font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
-                    <li><strong>穩定基準量測</strong>：在 README 中詳細紀錄原始參數下的「超調量 %」與「到達 5% 誤差帶所需時間」。</li>
-                    <li><strong>Z-N 調校實踐</strong>：執行齊格勒-尼科爾斯法。逐步增加 Kp 找尋等幅震盪點，並推導出推薦的 PID 組合。</li>
-                    <li><strong>性能極限驗證</strong>：在 1.5s 內完成系統收斂。產出調校後的「黃金參數組」。</li>
-                    <li><strong>數據 Push</strong>：將調校前後的波形截圖上傳至 GitHub，完成 PR。</li>
+                    <li><strong>基準性能審計</strong>：記錄原始參數下的階躍響應截圖。標註 Overshoot 值。</li>
+                    <li><strong>臨界增益尋找</strong>：僅開啟 Kp 並逐步加壓，直到波形呈現完美的連續等幅震盪。</li>
+                    <li><strong>最終參數合成</strong>：代入 Z-N 公式推算出 \(K_p, K_i, K_d\) 終極比例。</li>
+                    <li><strong>Push Final</strong>：發起 PR，內容包含「調校日誌報告」與最終達成的最速收斂波形圖。</li>
                 </ol>
             </div>
 
             <div class="tutor-benchmark">
                 <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
-                    <li>[ ] <strong>調校科學性</strong>：報告中是否包含對 Ku (臨界增益) 與 Tu (震盪週期) 的觀測數據？</li>
-                    <li>[ ] <strong>結果優越度</strong>：調校後的收斂速度是否明顯優於原始參數？過衝是否壓制在 5% 以內？</li>
+                    <li>[ ] <strong>調校科學力</strong>：報告中是否包含對 \(K_u\) (臨界增益) 與 \(T_u\) (震盪週期) 的實驗量測數值？</li>
+                    <li>[ ] <strong>指標達成度</strong>：收斂後的穩定系統是否已完全消除了目視可見的殘差 (Steady-state error)？</li>
                 </ul>
             </div>
         </div>
 
         <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 3：PID 安全限制器 (Safe PID Implementation)</h3>
+            <h3 class="quest-title text-justify">任務 3：具備 Anti-windup 能力的加固型控制器 (Hardened Controller Lab)</h3>
             <div class="quest-meta">
-                <span>角色扮演：系統防禦工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+                <span>角色扮演：魯棒性架構師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
-                    <li><strong>飽和抑制重構</strong>：修改 PID 演算邏輯。當輸出值達到飽和點 (255) 時，自動暫停 I 項（積分）的累加，防止 Windup 效應。</li>
-                    <li><strong>Clamping 邏輯實作</strong>：確保最終輸出透過 <code>constrain()</code> 函式鎖定在安全範圍內，防止運算溢位導致的控制量反轉。</li>
-                    <li><strong>魯棒性驗證</strong>：手動模擬「目標值巨變」場景。檢查輸出量是否平滑飽和而非產生隨機亂跳。</li>
-                    <li><strong>Push Final</strong>：提交具備防禦性邏輯的最終版 PID 代碼。</li>
+                    <li><strong>核心演算重寫</strong>：在 <code>ControlSystem.cpp</code> 中實作條件積分保護。當輸出達飽和時暫停 I 項累加。</li>
+                    <li><strong>安全限幅層佈建</strong>：部署 <code>clamp</code> 函式對最終出力進行範圍縮減。</li>
+                    <li><strong>暴力測試模擬</strong>：人為卡死馬達 3 秒後釋放。觀察具備 Anti-windup 的系統是否能立即回歸準線，而非爆衝。</li>
+                    <li><strong>Push Final</strong>：推送具備「工業級安全防範」的最終控制組件代碼。</li>
                 </ol>
             </div>
 
             <div class="tutor-benchmark">
                 <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
-                    <li>[ ] <strong>防護有效性檢核</strong>：在積分飽和情境下，控制器是否能比「無抑制版本」更快找回控制平準？</li>
-                    <li>[ ] <strong>代碼穩健度</strong>：Clamping 邏輯是否涵蓋了負向輸出值的處理（如有倒車需求）？</li>
+                    <li>[ ] <strong>加固邏輯確證</strong>：代碼中是否顯現了對溢位 (Overflow) 與積分飽和的明確防禦判斷？</li>
+                    <li>[ ] <strong>代碼架構力</strong>：控制器類別設計是否模組化，易於橫向移植到不同的自動化載體上？</li>
                 </ul>
             </div>
         </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
-    <section id="instructor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
-            <p class="font-bold text-slate-700 mb-4">本單元教學重點：將「數學模型」轉化為「物理直覺」。讓學員學會像診斷波形一樣診斷系統性能，並建立工業級的安全防護意識。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-blue-600">重點 1：看見誤差</strong> - 強調「誤差 (Error)」才是控制系統的驅動力。透過波形圖讓學員理解 P、I、D 各項是如何分攤這份驅動力的。</li>
-                <li><strong class="text-blue-600">重點 2：從感覺到量化</strong> - 拒絕「我覺得穩多了」這種描述。要求學員使用 Overshoot % 與 Settling Time 等專業學術術語進行匯報。</li>
-                <li><strong class="text-blue-600">重點 3：不完美世界的對策</strong> - 介紹積分飽和 (Windup) 與噪訊對 D 項的影響，讓學員體悟到真實工程中的極限限制。</li>
+    <section id="instructor-guide" style="display: none text-justify;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify text-left">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：將抽象的「控制理論」轉化為學生可感知的動態回饋。引導學員建立工業級的安全性保護意識。</p>
+            <ol class="space-y-4 text-slate-600 text-justify text-left">
+                <li><strong class="text-blue-600 font-bold uppercase tracking-widest text-justify">重點 1：誤差是控制的靈魂</strong> - 強化學員對「誤差 (Error)」數值的敏感度。透過看見波形，讓他們理解 P, I, D 各項是如何對誤差進行分割處理的。</li>
+                <li><strong class="text-blue-600 font-bold text-justify uppercase tracking-widest">重點 2：從玄學調校到科學實驗</strong> - 拒絕「感覺比較穩」的描述。強制要求產出 Overshoot % 與 Settling Time 等量化報告，建立標準化工程術語。</li>
+                <li><strong class="text-blue-600 font-bold text-justify uppercase tracking-tighter text-justify">重點 3：不完美機械系統的防禦設計</strong> - 重點介紹「積分飽和」與「輸出限幅」。這是讓業餘愛好者與專業控制工程師產生區隔的關鍵細節。</li>
             </ol>
         </div>
 
         <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300 text-justify">
             <h3 class="text-blue-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
             <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
 .
-├── src/pid_engine.cpp    # 核心：待加固的 PID 演算法模組
-├── public/debug_panel/   # 前端：具備 Chart.js 觀測能力的儀表板
-└── docs/TuningManual.md  # 筆記：記錄調校策略與最佳參數組
+├── src/core_pid.cpp      # 診斷對象：一個需要加強防範、純數學實作的控制器
+├── public/control_lab/    # 實驗室：具備波形對比功能的前端介面
+└── docs/Stability_Lab.md # 實驗日誌：記錄關鍵參數點與性能增益分析
             </pre>
         </div>
 
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
+        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
+            <table class="w-full text-left border-collapse border-justify">
                 <thead>
                     <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify text-left">教師/平台引導</th>
                     </tr>
                 </thead>
                 <tbody class="text-sm text-slate-600">
                     <tr>
-                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
-                        <td class="p-4 border-b">觀看「PID 三劍客的內心世界」動畫。預習 Z-N 調校法的手動計算流程。</td>
-                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員能否分析 P 值過大會導致什麼類型的震盪波形。</td>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5 text-justify">觀看「PID 三劍客的博弈：比例、積分、微分的視覺化解釋」影片。預習 Z-N 調校的基本算式。</td>
+                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員能否分析一段波形中是否存在「積分項過度堆積」產生的特徵。</td>
                     </tr>
                     <tr>
-                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
-                        <td class="p-4 border-b">領取作業 (Repo)，執行「極限調校」挑戰賽。同步在 Classroom 頁面觀察同儕的波形表現。</td>
-                        <td class="p-4 border-b"><strong>控制顧問:</strong> 協助學員分析為什麼增加 I 項後系統反而變得遲鈍。引導討論積分飽和的危害。</td>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify text-justify">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify">領取作業 (Repo)，挑戰實作「零殘差、低過衝」控制組件。同步在 GitHub PR 頁面分享自己的最佳波形曲線。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>控制導師:</strong> 指導學員解讀「臨界震盪」。扮演「干擾源」，引導學員觀察系統如何在中斷後依靠 I 項找回精準度。</td>
                     </tr>
                     <tr>
-                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
-                        <td class="p-4">將具備 Anti-windup 保護的最終代碼與波形報告推送至 GitHub。閱讀並學習別人的安全防護實作。</td>
-                        <td class="p-4"><strong>Feedback PR:</strong> 點評對「系統穩定性」與「魯棒性」的理解深度。表揚調校結果最完美、保護機制最嚴密的學員案例。</td>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
+                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify text-justify">提交具備 Anti-windup 保護的演算法代碼。更新 README 建立你的系統性能承諾邊界。</td>
+                        <td class="px-6 py-5 text-left text-justify font-black text-justify"><strong>Feedback PR:</strong> 點評對「系統安全防護」的思維深度。表揚調校結果最精湛且論證嚴密的「控制專家」。</td>
                     </tr>
                 </tbody>
             </table>

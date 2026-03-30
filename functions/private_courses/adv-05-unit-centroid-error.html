@@ -250,21 +250,6 @@
                                 <h4 class="font-bold text-gray-700 mb-2">「質心提取器」</h4>
                                 <p class="text-sm text-gray-500">編寫 JS 程式，遍歷二值化後的影像並標註中心。</p>
                             </div>
-
-                            <!-- Task 2-2 -->
-                            <div onclick="openSubmissionModal('adv-05-error-dashboard', '【作業 2-2】誤差量化與動態儀表板')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition">作業
-                                        2-2</h3>
-                                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">誤差動態儀表板</h4>
-                                <p class="text-sm text-gray-500">建立一個即時顯示誤差數值的視覺化監控介面。</p>
-                            </div>
-
-                            <!-- Task 2-3 -->
                             <div onclick="openSubmissionModal('adv-05-noise-robustness', '【作業 2-3】環境干擾下的誤差修正測試')"
                                 class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
                                 <div class="flex justify-between items-start mb-4">
@@ -298,101 +283,137 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">視覺感知實驗室：質心運算與導航誤差量化</h2>
 
-        <h3>作業 2-1：實作「質心提取器」函數</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 影像處理工程師。</li>
-            <li><strong>執行方式：</strong> 撰寫一個 JS 函式遍歷二值化後的像素矩陣，統計所有目標點的 $X$ 與 $Y$ 座標總和與總點數 $N$。</li>
-            <li><strong>評分重點：</strong> 能否正確處理 $N=0$（無目標）的例外狀況，避免程式崩潰。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：「質心提取器」：從像素到座標 (Centroid Extractor Lab)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：影像處理工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
 
-        <h3>作業 2-2：誤差量化與動態儀表板</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> UI/UX 數據工程師。</li>
-            <li><strong>執行方式：</strong> 實作偏差值計算 $Error = \bar{x} - 160$。</li>
-            <li><strong>評分重點：</strong> 儀表板的即時反饋是否流暢，且偏差方向（左負右正）定義是否正確。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>演算法實作</strong>：在 <code>centroid.js</code> 中撰寫遍歷邏輯，統計目標像素的 $X, Y$ 分佈與總點數 $N$。</li>
+                    <li><strong>除零保護</strong>：特別實作針對 $N=0$（無目標）情境的保護邏輯，確保程式在空視野下不會發生崩潰。</li>
+                    <li><strong>Push Final</strong>：提交具備「高度精確」且運作穩定的質心提取模組。</li>
+                </ol>
+            </div>
 
-        <h3>作業 2-3：環境干擾下的誤差修正測試</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 系統魯棒性測試員。</li>
-            <li><strong>執行方式：</strong> 在畫面中刻意加入小的雜訊點，觀察質心如何被「向外拉扯」。</li>
-            <li><strong>評分重點：</strong> 能否有效降低環境背景光影對導航誤差的影響。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>座標換算精度</strong>：輸出的 $(\bar{x}, \bar{y})$ 是否能隨物體移動即時更新且無明顯殘影？</li>
+                    <li>[ ] <strong>程式魯棒性</strong>：面對「斷線」或「物體消失」情境時，後端代碼是否能平穩處理例外？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：誤差量化與動態儀表板 (Visual Error Dashboard)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：UI/UX 數據工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>誤差定義</strong>：實作偏差值公式 $Error = \bar{x} - Center_{image}$，並完成 $[-1, 1]$ 區間的正規化。</li>
+                    <li><strong>儀表板開發</strong>：建立具備即時指針或進度條的監控頁面，將偏差量轉化為直觀的視覺反饋。</li>
+                    <li><strong>死區設計</strong>：加入軟體死區 (Deadzone) 邏輯，減少物體在中心微小晃動時引發的過度修正。</li>
+                    <li><strong>Push Final</strong>：提交具備「極低時延」且具備直觀反饋的誤差監控介面。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>正規化準確度</strong>：當物體位於影像最右緣時，輸出的 Error 是否穩定顯示為 $1.0$？</li>
+                    <li>[ ] <strong>回應平滑度</strong>：視覺化組件是否能流暢呈現誤差變化，且標識出正確的轉向修正方向？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：環境干擾下的抗性測試 (Noise Robustness Challenge)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：系統魯棒性測試員</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>雜訊注入</strong>：在測試環境中刻意加入隨機的小亮點雜訊，觀察其對質心計算的干擾規律。</li>
+                    <li><strong>閾值過濾</strong>：實作基於「連通點數」或「區域權重」的過濾方案，剔除無意義的環境背景噪聲。</li>
+                    <li><strong>實驗報告</strong>：在 README 中對比過濾前後的誤差值穩定度，並分析不同雜訊強度下的失效臨界點。</li>
+                    <li><strong>Push Final</strong>：提交具備「環境適應能力」且抗干擾的高階質心測量方案。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>抗干擾成效</strong>：在背景存在雜訊點的情境下，質心輸出是否仍能穩定鎖定在主體目標上？</li>
+                    <li>[ ] <strong>邏輯分區思考</strong>：是否考慮到了將影像切割為不同 ROI（關注區域）來降低非必要區域的噪音影響？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本專案</strong></p>
-            <ol>
-                <li>提供預設好的 $160 \times 120$ 模擬像素流環境，設定為 Template repository。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>設定「視覺化組件驗證」。</li>
-                <li>教導學員利用 <code>console.table()</code> 觀察數據。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>領取作業進展示「死區」理由，並截圖十字準星鎖定畫面。執行 Git Push。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>針對學員對「數據正規化」的理解與誤差邏輯的適配度予以回饋。</li>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：從「看見」到「量化」。理解質心的數學物理本質，並掌握導航誤差的正交化定義。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-indigo-600">重點 1：座標系與參考點</strong> - 讓學生體會「中心點」作為相對參考的重要性，這是閉迴路控制的核心起點。</li>
+                <li><strong class="text-indigo-600">重點 2：正規化的價值</strong> - 強調將像素距離轉換為 $[-1, 1]$ 比例，是為了實現跨解析度的通用控制器邏輯。</li>
+                <li><strong class="text-indigo-600">重點 3：除以零的災難與預防</strong> - 透過 2-1 任務中的空視野情境，培養學生在寫入物理感測代碼時必須具備的例外處理思維。</li>
             </ol>
         </div>
 
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── js/
-│   ├── centroid.js       # 核心質心計算邏輯
-│   └── dashboard.js      # 誤差視覺化組件
-├── test/
-│   └── math.test.js      # 測試質心公式正確性
-└── README.md              # 精度測試與門檻紀錄</code></pre>
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── js/vision_core.js    # 核心：待填寫質心與正規化誤差計算邏輯
+├── js/dashboard.js      # 視覺化：誤差儀表板組件
+├── tests/centroid.test.js# 自動化：檢查輸出的座標與預期 math result 吻合度
+└── README.md            # 指引：要求記錄針對雜訊點的「抗拉扯」門檻設定
+            </pre>
+        </div>
 
-        <h3>B. 自動評估 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>數值精確度檢查：</strong> 模擬傳入固定矩陣，自動比對回傳的質心座標。</li>
-            <li><strong>防禦性編程校驗：</strong> 模擬無目標情境，檢查是否會引發除以零錯誤。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">完成手寫任務中的 L 型物體質心計算與預習。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>檢查進度，提供「槓桿原理與質心」影片。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，實測在不同解析度下誤差條的動態變化。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>實體協助：</strong>解答偏差與座標系定義的疑問。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">設計影像切段與多段質心計算功能並 Push。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>PR
-                            Review：</strong>核發評量，檢核針對「抗雜訊門檻」設定的依據。</td>
-                </tr>
-            </tbody>
-        </table>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5">觀看「槓桿原理與影像中心」比喻。完成手寫 4x4 矩陣質心計算預習單。</td>
+                        <td class="px-6 py-5"><strong>Dashboard:</strong> 觀察學員對「(0,0) 位置定義（左上角）」的認知是否正確。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900">領取作業 (Repo)，挑戰在「目標突然消失」與「多個目標並存」情境下的誤差平滑處理。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 協助學員調試誤差儀表板的 FPS 瓶頸，解釋 DOM 與 Canvas 渲染效率。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
+                        <td class="px-6 py-5">提交包含「區域加權」算法的質心提取代碼並 Push，閱讀 PR 回饋。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價對「資料邊緣剔除」與「高頻震動抑制」策略的有效性。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 
     <script src="/js/course-shared-v4.js"></script>

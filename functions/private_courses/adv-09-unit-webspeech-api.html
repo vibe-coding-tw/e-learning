@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
 <body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
@@ -34,16 +36,14 @@
 
             <div class="mt-8 flex flex-wrap justify-center gap-4">
                 <button
-                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/4PDB_LF0wt8')"
-                    class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-red-900/20">
-                    <span class="text-xl group-hover:animate-pulse">📺</span>
-                    <span>觀看教學影片</span>
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/4PDB_LF0wt8?autoplay=1')"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
                 </button>
                 <button
                     onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vR-n5S783GICTPTe7YFqmi85R13soE6bX26narP8b4C9P6maXJ6nm_YM6vMeEoW_PEUwm6fH6UrwrQf/pub?embedded=true')"
-                    class="group flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-blue-900/20">
-                    <span class="text-xl group-hover:bounce">📄</span>
-                    <span>閱讀課程講義</span>
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
                 </button>
             </div>
         </div>
@@ -52,436 +52,323 @@
     <!-- Main Content -->
     <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
-        <!-- Section 1: Pillars -->
-        <section class="mb-12">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        <!-- Module 1: Pillars -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <div class="p-8 md:p-14 text-justify">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
                         <span class="text-4xl">🏛️</span> 1. Web Speech API 的兩大支柱 (30 min)
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
-                            <div class="space-y-4">
-                                <div class="bg-blue-50/50 p-6 rounded-2xl border border-blue-100">
-                                    <h4 class="font-bold text-blue-900 mb-2">SpeechRecognition (語音辨識)</h4>
-                                    <p class="text-sm">將聲音轉化為文字（Speech-to-Text）。</p>
-                                    <ul class="mt-2 space-y-1 text-xs list-disc list-inside text-gray-500">
-                                        <li><strong>原理：</strong>擷取音訊後傳送到伺服器（如 Google 雲端）分析。</li>
-                                        <li><strong>限制：</strong>高度依賴網路，且不同瀏覽器支援度差異大。</li>
-                                    </ul>
-                                </div>
-                                <div class="bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100">
-                                    <h4 class="font-bold text-indigo-900 mb-2">SpeechSynthesis (語音合成)</h4>
-                                    <p class="text-sm">將文字轉化為聲音（Text-to-Speech）。</p>
-                                    <ul class="mt-2 space-y-1 text-xs list-disc list-inside text-gray-500">
-                                        <li><strong>原理：</strong>利用作業系統內建語音引擎，不一定需要網路。</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="bg-slate-900 p-6 rounded-2xl border border-blue-500/30">
-                                <h4 class="font-bold text-blue-400 mb-2 flex items-center gap-2">
-                                    <span>🧩</span> 學習任務
-                                </h4>
-                                <p class="text-sm text-blue-100 leading-relaxed font-light">
-                                    在瀏覽器控制台 (Console) 嘗試簡單的 <code>window.speechSynthesis.speak()</code> 指令，讓電腦開口說話。
-                                </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                現代瀏覽器內建了處理人類自然語言的能力。我們可以透過 <code>SpeechRecognition</code> 讓網頁跟機器人「聽」指令，並利用 <code>SpeechSynthesis</code> 讓它開口說話。
+                            </p>
+                            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+                                <h4 class="font-bold text-blue-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed">System Architecture</h4>
+                                <ul class="text-[9px] text-slate-500 space-y-2 font-light text-justify">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1"></span> <div><strong>SpeechRecognition</strong>：STT (音轉文)。通常需要雲端引擎支援，具備語義語法分析。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1"></span> <div><strong>SpeechSynthesis</strong>：TTS (文轉音)。利用端點裝置內建語音包，反應速度極快。</div></li>
+                                </ul>
                             </div>
                         </div>
-                        <div
-                            class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 flex items-center justify-center bg-gray-50 p-8">
-                            <div class="text-center space-y-4">
-                                <div
-                                    class="w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                                    <span class="text-6xl">🎙️</span>
-                                </div>
-                                <p class="text-gray-400 text-sm italic">👂 Listening... ⮕ 🖹 "Hello World"</p>
-                                <div class="w-full bg-gray-200 h-1 rounded-full overflow-hidden">
-                                    <div class="bg-blue-500 h-full w-1/2 animate-pulse"></div>
-                                </div>
-                            </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors"></div>
+                           <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10">Vocal Waveform</h4>
+                           <div class="relative z-10 flex justify-center items-end gap-1 h-12">
+                               <div class="w-1 bg-blue-500 h-1/2 animate-bounce"></div>
+                               <div class="w-1 bg-blue-400 h-full animate-bounce" style="animation-delay: 0.1s"></div>
+                               <div class="w-1 bg-blue-300 h-3/4 animate-bounce" style="animation-delay: 0.2s"></div>
+                               <div class="w-1 bg-blue-500 h-1/4 animate-bounce" style="animation-delay: 0.3s"></div>
+                           </div>
+                           <p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest uppercase italic">Natural Language Interaction Mode</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 2: Lifecycle -->
-        <section class="mb-12">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        <!-- Module 2: Lifecycle -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-1 bg-gradient-to-r from-emerald-500 to-green-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <div class="p-8 md:p-14 text-justify">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
                         <span class="text-4xl">⚡</span> 2. 事件驅動與非同步生命週期 (30 min)
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div
-                            class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 order-2 md:order-1 bg-slate-800 p-6 font-mono text-sm text-emerald-400">
-                            <pre class="whitespace-pre-wrap">
-recognition.onstart = () => {
-  console.log('系統開始監聽...');
-};
-
-recognition.onresult = (event) => {
-  const result = event.results[0][0].transcript;
-  console.log('辨識結果:', result);
-};
-
-recognition.onerror = (e) => {
-  console.error('發生錯誤:', e.error);
-};
-</pre>
-                        </div>
-                        <div class="space-y-6 order-1 md:order-2 text-lg text-gray-600 leading-relaxed">
-                            <ul class="space-y-4">
-                                <li class="flex gap-3">
-                                    <span class="text-emerald-500 font-bold">●</span>
-                                    <span><strong>識別事件：</strong>理解
-                                        <code>onstart</code>、<code>onresult</code>、<code>onerror</code> 與
-                                        <code>onend</code> 的順序。</span>
-                                </li>
-                                <li class="flex gap-3">
-                                    <span class="text-emerald-500 font-bold">●</span>
-                                    <span><strong>連續識別 (Continuous)：</strong>為什麼遙控車需要開啟
-                                        <code>interimResults</code>（中間結果），以達到即時反應？</span>
-                                </li>
-                            </ul>
-                            <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
-                                <h4 class="font-bold text-emerald-900 mb-2 flex items-center gap-2">
-                                    <span>📖</span> 學習任務
-                                </h4>
-                                <p class="text-sm text-gray-700 leading-relaxed">
-                                    閱讀官方文件，理解為什麼辨識過程會因為短暫的沉默而自動關閉，以及如何透過 <code>continuous = true</code> 設定解決。
-                                </p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 text-justify">
+                        <div class="space-y-8 text-justify">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify">
+                                語音辨識是非同步且事件驅動的。理解 <code>onstart</code>、<code>onresult</code> 與 <code>onerror</code> 的狀態切換，是實作穩定「聲控系統」的基礎，特別是針對網路不穩或背景噪音。
+                            </p>
+                            <div class="bg-emerald-50 p-8 rounded-3xl border border-emerald-100 text-center text-justify">
+                                <h4 class="text-emerald-900 font-bold mb-4 text-xs uppercase tracking-widest text-justify">Async State Machine</h4>
+                                <div class="grid grid-cols-3 gap-2 text-[10px] text-slate-600 font-mono text-justify">
+                                    <div class="p-2 bg-white rounded border text-justify">IDLE</div>
+                                    <span class="mt-2 text-justify">➔</span>
+                                    <div class="p-2 bg-white rounded border text-justify">CONTINUOUS LISTENING</div>
+                                </div>
                             </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group text-justify">
+                           <div class="absolute inset-0 bg-emerald-500/5 text-justify"></div>
+                           <h4 class="text-emerald-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10 text-justify">Event Logger</h4>
+                           <div class="w-full text-[9px] font-mono text-slate-400 space-y-1 px-4 relative z-10 text-justify">
+                               <div>[0ms] recognition.start()</div>
+                               <div class="text-emerald-500">[240ms] recognition.onresult: "GO"</div>
+                               <div>[320ms] BLE.write("forward")</div>
+                           </div>
+                           <p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest uppercase italic text-center text-justify">Real-time Intent Parsing Cycle</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 3: Privacy and Security -->
-        <section class="mb-12">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-red-500 to-rose-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl">🔒</span> 3. 安全與隱私限制 (20 min)
+        <!-- Module 3: Security & Privacy -->
+        <section class="module-section mb-16 text-justify">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700 text-justify">
+                <div class="p-8 md:p-14 text-justify">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-red-400 text-justify">
+                        <span class="p-2 bg-red-500/20 rounded-lg text-red-400 text-2xl text-left">🔒</span> 3. 安全與隱私限制 (20 min)
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
-                            <ul class="space-y-4">
-                                <li class="flex gap-3">
-                                    <span class="text-red-500 font-bold">●</span>
-                                    <span><strong>HTTPS 要求：</strong>Web Speech API 必須在安全連線下運作，否則瀏覽器會拒絕權限。</span>
-                                </li>
-                                <li class="flex gap-3">
-                                    <span class="text-red-500 font-bold">●</span>
-                                    <span><strong>使用者授權：</strong>瀏覽器如何保護麥克風權限？這對「自動化」監聽系統有什麼影響？</span>
-                                </li>
-                            </ul>
-                            <div class="bg-red-50 p-6 rounded-2xl border border-red-100">
-                                <h4 class="font-bold text-red-900 mb-2 flex items-center gap-2">
-                                    <span>⚠️</span> 重點提醒
-                                </h4>
-                                <p class="text-sm text-gray-700 leading-relaxed">
-                                    理解語音識別在「連續監聽」與「關鍵字觸發」間的權衡，以及如何處理語句權重 (Weighting)。
-                                </p>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center text-justify">
+                        <div class="flex-1 space-y-6 text-justify">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg text-justify text-justify">
+                                因為麥克風涉及使用者隱私，Web Speech API 受到瀏覽器的嚴格限制。它必須在 HTTPS 環境下運作，且每一次的「持續監聽」都需要明確的使用者授權。
+                            </p>
+                            <div class="bg-red-500/10 p-8 rounded-3xl border border-red-500/20 shadow-inner text-justify">
+                                <h4 class="font-bold text-red-400 mb-4 text-xs uppercase tracking-widest text-center text-justify">Security Constraints</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light text-justify">
+                                    <li class="flex items-start gap-2 text-justify"><span class="w-1.5 h-1.5 bg-red-500 rounded-full mt-1 text-justify"></span><div><strong class="text-white text-justify">HTTPS Mandatory</strong>：非安全來源禁止訪問麥克風設備。</div></li>
+                                    <li class="flex items-start gap-2 text-justify text-left"><span class="w-1.5 h-1.5 bg-red-500 rounded-full mt-1 text-justify text-left"></span><div><strong class="text-white text-justify text-left">自動結束機制</strong>：靜默過久會自動 `onend`。如何透過手動重啟維持機器人的「長聽」狀態？</div></li>
+                                    <li class="flex items-start gap-2 text-justify text-left"><span class="w-1.5 h-1.5 bg-red-500 rounded-full mt-1 text-justify text-left"></span><div><strong class="text-white text-justify">權限持久化</strong>：理解不同作業系統下，對於網頁權限彈窗的記憶策略。</div></li>
+                                </ul>
                             </div>
                         </div>
-                        <div
-                            class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 flex items-center justify-center bg-red-50 p-8">
-                            <div class="text-center p-6 bg-white rounded-xl shadow-md border border-red-100">
-                                <span class="text-5xl block mb-4">🎤🚫</span>
-                                <p class="text-red-600 font-bold mb-2">Permission Denied</p>
-                                <p class="text-xs text-gray-500">Please serve over HTTPS and allow microphone access.
-                                </p>
-                            </div>
+                        <div class="lg:w-80 bg-red-600/10 p-10 rounded-3xl border border-red-500/20 text-center relative overflow-hidden group text-justify">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-red-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-red-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center">Privacy Guard</h4>
+                           <div class="text-5xl font-extrabold text-white mb-2">HTTPS</div>
+                           <p class="text-[11px] text-slate-500 mt-8 leading-relaxed font-light italic text-center text-justify">
+                               "保護使用者的隱私，是建立智慧應用的底線。"
+                           </p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 4: Assignments -->
-        <section>
-            <section id="assignments" class="mb-20">
-                <div class="text-center mb-12">
-                    <span
-                        class="px-4 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold tracking-widest uppercase">Practical
-                        Lab</span>
-                    <h2 class="text-4xl font-black text-gray-900 mt-4 mb-4 font-[Outfit]">核心實驗室：語音控制實戰</h2>
-                    <p class="text-gray-600 max-w-2xl mx-auto">將語音指令轉化為精確的硬體動作，打造智慧無人車。</p>
-                </div>
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：語音控制實戰</h2>
+            <p class="text-center text-gray-500 mb-12">透過 Git Workflow 建立 VUI (語音用戶介面)。學習如何處理即時音訊流，並在吵雜環境中精準提取控制指令。</p>
 
-                <div class="grid md:grid-cols-3 gap-8">
-                    <!-- Task 3-1 -->
-                    <div onclick="window.courseShared.openSubmissionModal('adv-09-voice-commands', '【作業 9-3-1】「聲控指令集」開發')"
-                        class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-blue-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-blue-200/50 cursor-pointer">
-                        <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <span class="text-6xl font-black">01</span>
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 3-1 -->
+                <div onclick="openSubmissionModal('adv-09-voice-commands', '【作業 3-1】「聲控指令集」開發與模糊匹配 (VUI Intent Parsing Lab)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
+                    <div class="bg-blue-500 h-2 text-justify"></div>
+                    <div class="p-8 flex-grow text-justify">
+                        <div class="flex justify-between items-start mb-4 text-justify">
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform text-justify">🎙️</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest">60 min</span>
                         </div>
-                        <div class="p-8">
-                            <div class="flex items-center gap-3 mb-6">
-                                <div
-                                    class="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform duration-500">
-                                    ⌨️</div>
-                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git
-                                    Branch: <span class="text-blue-600">feature/voice-commands</span></span>
-                            </div>
-                            <h3
-                                class="text-xl font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors">
-                                【作業 3-1】聲控指令集</h3>
-                            <p class="text-gray-600 text-sm leading-relaxed mb-6">在 BLE 控制介面中整合語音辨識功能。</p>
-                            <div class="space-y-3 border-t border-slate-50 pt-6">
-                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
-                                    <span
-                                        class="w-5 h-5 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold">1</span>
-                                    當結果包含「前進/左轉」時觸發函式
-                                </div>
-                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
-                                    <span
-                                        class="w-5 h-5 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold">2</span>
-                                    實作模糊匹配，識別口語中的關鍵字
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Task 3-2 -->
-                    <div onclick="window.courseShared.openSubmissionModal('adv-09-voice-noise', '【作業 9-3-2】環境噪音下的語音對抗')"
-                        class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-emerald-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-emerald-200/50 cursor-pointer">
-                        <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <span class="text-6xl font-black">02</span>
-                        </div>
-                        <div class="p-8">
-                            <div class="flex items-center gap-3 mb-6">
-                                <div
-                                    class="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform duration-500">
-                                    🔊</div>
-                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git
-                                    Branch: <span class="text-emerald-600">feature/voice-noise</span></span>
-                            </div>
-                            <h3
-                                class="text-xl font-bold text-gray-900 mb-4 group-hover:text-emerald-600 transition-colors">
-                                【作業 3-2】噪音對抗</h3>
-                            <p class="text-gray-600 text-sm leading-relaxed mb-6">優化在多人吵雜環境下的辨識成功率。</p>
-                            <div class="space-y-3 border-t border-slate-50 pt-6">
-                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
-                                    <span
-                                        class="w-5 h-5 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center font-bold">1</span>
-                                    顯示信心指標，低於 0.8 則忽略指令
-                                </div>
-                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
-                                    <span
-                                        class="w-5 h-5 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center font-bold">2</span>
-                                    透過 SpeechSynthesis 語音回饋確認
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Task 3-3 -->
-                    <div onclick="window.courseShared.openSubmissionModal('adv-09-voice-fsm', '【作業 9-3-3】語音與狀態機的深度整合')"
-                        class="group relative bg-white rounded-3xl border-2 border-slate-100 hover:border-red-500 transition-all duration-500 overflow-hidden hover:shadow-2xl hover:shadow-red-200/50 cursor-pointer">
-                        <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <span class="text-6xl font-black">03</span>
-                        </div>
-                        <div class="p-8">
-                            <div class="flex items-center gap-3 mb-6">
-                                <div
-                                    class="w-12 h-12 bg-red-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-red-200 group-hover:scale-110 transition-transform duration-500">
-                                    🔄</div>
-                                <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">Git
-                                    Branch: <span class="text-red-600">feature/voice-fsm</span></span>
-                            </div>
-                            <h3 class="text-xl font-bold text-gray-900 mb-4 group-hover:text-red-600 transition-colors">
-                                【作業 3-3】FSM 整合</h3>
-                            <p class="text-gray-600 text-sm leading-relaxed mb-6">利用語音切換無人車的工作模式。</p>
-                            <div class="space-y-3 border-t border-slate-50 pt-6">
-                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
-                                    <span
-                                        class="w-5 h-5 bg-red-50 text-red-600 rounded-full flex items-center justify-center font-bold">1</span>
-                                    說出「進入自動模式」時 UI 同步切換
-                                </div>
-                                <div class="flex items-center gap-3 text-xs font-medium text-slate-500">
-                                    <span
-                                        class="w-5 h-5 bg-red-50 text-red-600 rounded-full flex items-center justify-center font-bold">2</span>
-                                    在 <code>onend</code> 觸發時自動重啟辨識
-                                </div>
-                            </div>
-                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition text-justify tracking-tighter">【作業 3-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「意圖解析器」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            實作 <code>SpeechRecognition</code> 中間結果解析。針對「快點停下」、「請往前走」等語句進行模糊匹配，萃取出 0/1 控制碼並發送至硬體。
+                        </p>
                     </div>
                 </div>
-            </section>
+
+                <!-- Task 3-2 -->
+                <div onclick="openSubmissionModal('adv-09-voice-noise', '【作業 3-2】環境噪音下的「信心分數」過濾器 (VUI Confidence Filter)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
+                    <div class="bg-emerald-500 h-2 text-justify"></div>
+                    <div class="p-8 flex-grow text-justify">
+                        <div class="flex justify-between items-start mb-4 text-justify">
+                            <span class="text-4xl text-emerald-500 group-hover:rotate-12 transition-transform text-justify">🔊</span>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify text-justify uppercase tracking-widest">60 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition text-justify uppercase tracking-tighter">【作業 3-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「噪音對抗邏輯」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
+                            即時顯示 <code>confidence</code> 指標。實作低於 0.8 時的主動重試，並利用 <code>SpeechSynthesis</code> 語音合成功能，主動回應使用者目前的辨識狀態。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 3-3 -->
+                <div onclick="openSubmissionModal('adv-09-voice-fsm', '【作業 3-3】聲控狀態機 (Voice FSM) 深度整合 (VUI-FSM Architecture)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
+                    <div class="bg-red-500 h-2 text-justify"></div>
+                    <div class="p-8 flex-grow text-justify">
+                        <div class="flex justify-between items-start mb-4 text-justify">
+                            <span class="text-4xl text-red-500 group-hover:translate-x-1 transition-transform text-justify uppercase tracking-tighter">🔄</span>
+                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest">45 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition text-justify uppercase tracking-tighter">【作業 3-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「長效監聽整合」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            將辨識器導入 FSM 生命週期。實作 <code>onend</code> 自動重啟與 <code>continuous: true</code> 以防中斷。說出「進入極速模式」後，同步更新 UI 全域狀態。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
     </main>
 
     <!-- Footer -->
-    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
-        <div class="container mx-auto px-4 text-center">
-            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
-            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-slate-400">
-                <span>進階課程 9 - 單元 3</span>
-                <span class="hidden md:inline">|</span>
-                <span>Web Speech API 原理與限制</span>
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto text-justify">
+        <div class="container mx-auto px-4 text-center text-justify">
+            <p class="text-slate-500 text-sm mb-4 text-justify">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400 text-justify">
+                <span>單元課程 進階 9 - Web Speech</span>
+                <span class="hidden md:inline text-justify">|</span>
+                <span>講師：Antigravity Assistant</span>
             </div>
         </div>
     </footer>
 
+    <script src="/js/course-shared-v4.js"></script>
+
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">語音實驗室：STT/TTS 整合與自然語義控制</h2>
 
-        <h3>作業 3-1：「聲控指令集」開發與模糊匹配</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 介面開發工程師。</li>
-            <li><strong>執行方式：</strong> 實作 `SpeechRecognition` 功能，建立一個關鍵字字典（如："前進", "停止", "左轉"）。使用字串包含 (`includes`)
-                邏輯處理使用者的自然口語。</li>
-            <li><strong>評分重點：</strong> 能否正確處理模糊指令，例如當使用者說「請快點停下來」時，程式能否精準抓到「停」並觸發正確的馬達動作。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：模糊意圖解析 (Intent Mapping Lab)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：VUI 體驗設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
 
-        <h3>作業 3-2：環境噪音下的「信心分數」過濾器</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 語音演算法工程師。</li>
-            <li><strong>執行方式：</strong> 在網頁介面上即時顯示語音辨識的 `confidence` 分數。實作一個門檻 (Threshold) 判斷，低於 0.8 時程式會回應「聽不清楚，請再說一次」。
-            </li>
-            <li><strong>評分重點：</strong> 代碼中對 `onresult` 事件的處理是否嚴謹，以及能否透過 `SpeechSynthesis` 給予流暢的使用者回饋。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>詞典建立</strong>：在 <code>intent_parser.js</code> 定義語音與指令的映射表（包含多種同義詞）。</li>
+                    <li><strong>中間結果測試</strong>：開啟 <code>interimResults</code>，測量從開始說話到「初步辨識出指令」的反應毫秒數。</li>
+                    <li><strong>README 紀錄</strong>：列出所有可接受的口語範例，並說明如何利用字串模糊比對提高系統容錯。</li>
+                </ol>
+            </div>
 
-        <h3>作業 3-3：聲控狀態機 (Voice FSM) 整合</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 系統整合專家。</li>
-            <li><strong>執行方式：</strong> 將語音指令與無人車的 FSM 深度串接。例如：說出「進入自動模式」時，UI 與車體狀態同步切換至 `AUTO_NAV`。</li>
-            <li><strong>評分重點：</strong> 處理「連續辨識 (Continuous)」的生命週期，確保辨識器不會因為短暫沉默而中斷，並在 `onend` 時自動重啟辨識。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>語義覆蓋率</strong>：指令是否具備基本的同義詞容錯？（如：停、停止、不要動）。</li>
+                    <li>[ ] <strong>指令純淨度</strong>：是否能從複雜的句子中精準分離出關鍵動作，而不發生誤觸？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：語音對話回饋 (Two-way Feedback Lab)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：人機互動工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>狀態同步器</strong>：辨識成功後，利用 <code>window.speechSynthesis</code> 讓機器人「復誦」確認（如："收到指令，即將右轉"）。</li>
+                    <li><strong>置信度過濾</strong>：只在 Confidence > 0.85 時執行馬達寫入。</li>
+                    <li><strong>HTTPS 診斷</strong>：在本地利用 <code>mkcert</code> 或隧道工具建立 HTTPS 測試環境，解決各瀏覽器的麥克風權限封鎖問題。</li>
+                    <li><strong>Push Final</strong>：提交具備「聽/說」雙向互動能力的無人車控制面板。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>互動流暢性</strong>：語音回饋是否有與辨識衝突？（需考量回饋時是否應暫停辨識以防自說自聽）。</li>
+                    <li>[ ] <strong>環境適應力</strong>：在 README 錄製噪音環境下的辨識成功率測試結果。</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：全天候自動辨識核心 (Continuous VUI Engine)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：系統可靠度專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>自動重啟路徑</strong>：在 <code>onend</code> 事件中，監測全域控制變數，實作無縫重啟邏輯。</li>
+                    <li><strong>FSM 狀態橋接</strong>：將「語音控制中」作為 FSM 的一個子狀態。當偵測到關鍵字後，發送 <code>VOICE_EVENT</code> 事件。</li>
+                    <li><strong>Push Final</strong>：提交具備工業級「自我修復」能力的連續語音監聽代碼。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>系統續航力</strong>：在「不點擊」的情況下，系統是否能維持 1 分鐘以上的待命聽取狀態？</li>
+                    <li>[ ] <strong>穩定性分析</strong>：針對辨識器偶發的 <code>network</code> 錯誤，是否有實作指數退避式的重連策略？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
-    <!-- Instructor Guide (Hidden) -->
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        A. 範本倉庫 (Template Repo) 結構
-                    </h4>
-                    <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify text-justify">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：讓學生理解網頁端語音識別的「雲端依賴性」。理解為什麼它適合做高層指令，但不適合做低延遲急停。</p>
+            <ol class="space-y-4 text-slate-600 text-justify">
+                <li><strong class="text-emerald-600 font-bold tracking-widest uppercase text-justify">重點 1：事件與非同步</strong> - 語音辨識是長時間運行的非同步流程。必須導正學員「一次性調用」的錯誤思維，建立「長駐狀態機」的概念。</li>
+                <li><strong class="text-emerald-600 font-bold text-justify uppercase tracking-tighter">重點 2：隱私與 Sandbox</strong> - 全面說明 HTTPS 的重要性。解釋為何瀏覽器會自動關閉不活躍的麥克風連結。</li>
+                <li><strong class="text-emerald-600 font-bold text-justify tracking-widest">重點 3：意圖識別 (Intent Parsing)</strong> - 辨識結果通常是字串。如何從冗長的字串中準確撈出關鍵動作（Action）是軟體工程的核心。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-emerald-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
 .
-├── js/
-│   ├── speech_engine.js # Web Speech API 初始化
-│   └── intent_parser.js # 意圖解析與關鍵字對應
-├── tests/
-│   └── speech.test.js   # 測試：驗證關鍵字與重啟機制
-└── README.md            # 指令表、門檻與噪音報告</pre>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        B. 自動評估 (Autograding) 的設計
-                    </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🎙️</span>
-                            <p class="text-sm text-gray-700"><strong>關鍵字回呼測試：</strong> 模擬 Result 字串，檢查是否正確呼叫對應的馬達執行函式。
-                            </p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🔄</span>
-                            <p class="text-sm text-gray-700"><strong>重啟機制驗證：</strong> 確保在 <code>onend</code>
-                                事件中實作重啟，防止辨識器中斷。</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+├── js/speech_wrapper.js # 核心：包裝好的 SpeechRecognition 事件偵聽
+├── js/voice_map.js      # 配置：口語標籤與 BLE DataPakc 的映射表
+└── tests/intent.test.js # 測試：模擬 OCR 結果檢查指令匹配率
+            </pre>
         </div>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供包裝好 SpeechRecognition 與意圖解析框架的網頁專案樣板。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「隱私權授權」指南。強調 HTTPS 必要性與持久權限設定。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">在不同噪音下測試信心值變化。提交指令表與結果至 PR。執行 Git Push。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對「語音延遲」策略，以及對非同步事件衝突預防點評。</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
-            </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
-                        <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">理解 STT 與 TTS 原理，實測網頁端語音輸入。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，提供「Web Speech API 快速入門」導讀。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，體驗「語音開車」紀錄噪音下的信心值。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，解答關於「辨識自動關閉」的生命週期機制。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">整合 FSM 聲控邏輯並 Push，閱讀回覆 PR 以最佳化預防機制。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，引導思考 VUI 在 IoT 中的價值與延遲威脅。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5 text-justify">觀看「SpeechRecognition 選項」教學。理解 `continuous` 與 `interim` 的差別。</td>
+                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能指出 Speech API 在 Safari 與 Chrome 上的支援差異。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900 text-justify tracking-tighter font-black">領取作業 (Repo)，挑戰連續 5 次「複雜句式」辨識成功。實作語音回饋與 FSM 同步邏輯。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>實踐教練:</strong> 指導如何防止語音合成 (TTS) 觸發語音辨識 (STT) 的「自激」死循環問題。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
+                        <td class="px-6 py-5 text-justify text-left text-justify font-black">提交「連線超時」處理邏輯並 Push。閱讀教師對「口語互動設計」的評價。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「中間結果 (Interim Results)」解析策略的即時性優化。</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </section>
-
-    <script src="/js/course-shared-v4.js"></script>
-    <script>
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/4PDB_LF0wt8?autoplay=1",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vR-n5S783GICTPTe7YFqmi85R13soE6bX26narP8b4C9P6maXJ6nm_YM6vMeEoW_PEUwm6fH6UrwrQf/pub?embedded=true"
-        };
-    </script>
 </body>
 
 </html>

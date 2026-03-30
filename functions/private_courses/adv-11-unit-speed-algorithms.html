@@ -5,14 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>速度計算演算法 - Vibe Coding</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Outfit:wght@500;700&display=swap"
-        rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
 <body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
@@ -25,25 +23,27 @@
         </div>
         <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
 
-        <div class="container mx-auto px-4 relative z-10 text-center">
+        <div class="container mx-auto px-4 relative z-10 text-center text-justify">
             <span
-                class="inline-block py-1 px-3 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-cyan-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                class="badge-header inline-block py-1.5 px-4 rounded-full bg-white/10 border border-white/20 text-white/90 text-sm font-medium mb-6 tracking-wide uppercase backdrop-blur-sm font-[Outfit] text-justify text-justify">
                 進階 11 - 速度演算法
             </span>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">速度計算演算法<br><span class="text-cyan-400">頻率 vs. 週期</span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit] text-center text-justify text-justify">速度計算演算法<br><span class="text-cyan-400">頻率 vs. 週期</span>
             </h1>
-            <p class="text-xl md:text-2xl text-cyan-100 max-w-2xl mx-auto font-light leading-relaxed">
-                完美的閉迴路控制：在低速精準與高速穩定之間的工程平衡。
+            <p class="text-xl md:text-2xl text-cyan-100 max-w-2xl mx-auto font-light leading-relaxed text-center text-justify text-justify">
+                完美的閉迴路控制：在低速精準與高速穩定之間的工程平衡。掌握自動駕駛核心的速度感測引擎。
             </p>
 
-            <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
-                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
-                    <span>📺</span> 觀看教學影片
+            <div class="mt-8 flex flex-wrap justify-center gap-4 text-center text-justify text-justify">
+                <button onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/zibDHxB-YCw?autoplay=1')"
+                    class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105">
+                    <span class="text-xl group-hover:animate-pulse">📺</span>
+                    <span>觀看教學影片</span>
                 </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
-                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
-                    <span>📄</span> 閱讀課程講義
+                <button onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vRf8RpNoNhombgvkcimr0OC3M3AgOAwnLV4fKL0DjO6gc8MwU67-Hr3zTDaR8CYMT374KuUKB0-3VD9/pub?embedded=true')"
+                    class="group flex items-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105">
+                    <span class="text-xl text-justify text-left">📄</span>
+                    <span>閱讀課程講義</span>
                 </button>
             </div>
         </div>
@@ -53,38 +53,39 @@
     <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
 
         <!-- Module 1: M-Method -->
-        <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
-                <div class="p-8 md:p-14">
+        <section class="module-section mb-16 text-justify">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 text-justify">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-justify"></div>
+                <div class="p-8 md:p-14 text-justify">
                     <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl text-blue-500">M</span> 1. 頻率法 (M-Method)：高速穩定王
+                        <span class="text-4xl text-blue-500 text-justify text-left">M</span> 1. 頻率法 (M-Method)：高速穩定王
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
-                        <div class="space-y-6">
-                            <p class="text-lg text-gray-600 leading-relaxed font-light">
-                                固定取樣時間窗格（如 100ms），計算這段時間內「收到了幾個脈衝」。這是高速環境下最穩定的運算法。
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 text-justify">
+                        <div class="space-y-6 text-justify">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify">
+                                固定取樣時間窗格（如 100ms），計算這段時間內「收到了幾個脈衝」。這是高速環境下最穩定的運算法，能有效抵禦單一脈衝的抖動。
                             </p>
-                            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+                            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 text-justify">
                                 <h4 class="font-bold text-blue-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed">Execution Logic</h4>
-                                <ul class="text-[9px] text-slate-500 space-y-2 font-light">
-                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> <strong>原理</strong>：固定時間 \(\Delta T\)，數脈衝數 \(N\)。</li>
-                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> <strong>優點</strong>：自帶低通濾波效果，抗干擾強，高轉速極準。</li>
-                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> <strong>缺點</strong>：低速時解像力差，數值會階梯狀跳變。</li>
+                                <ul class="text-[9px] text-slate-500 space-y-2 font-light text-justify">
+                                    <li class="flex items-center gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full text-justify text-left"></span> <strong>原理</strong>：固定時間 \(\Delta T\)，數脈衝數 \(N\)。</li>
+                                    <li class="flex items-center gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full text-justify"></span> <strong>優點</strong>：抗干擾強，高轉速極準，具備數位濾波效果。</li>
+                                    <li class="flex items-center gap-2 text-justify text-left"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full text-justify"></span> <strong>缺點</strong>：低速時解像力差，數值會呈階梯狀跳變。</li>
                                 </ul>
                             </div>
                         </div>
 
-                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center">
-                            <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest text-center">Counting Pulses in Win</h4>
-                            <div class="flex items-center justify-around gap-2 mb-4">
-                                <div class="w-2 h-8 bg-blue-500"></div>
-                                <div class="w-2 h-8 bg-blue-500"></div>
-                                <div class="w-2 h-8 bg-blue-500"></div>
-                                <div class="w-2 h-8 bg-blue-500"></div>
-                                <div class="w-2 h-8 bg-blue-500/20"></div>
-                            </div>
-                            <p class="text-[9px] text-blue-400 mt-4 font-mono tracking-widest">FIXED TIME WINDOW ANALYZING...</p>
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group text-justify">
+                           <div class="absolute inset-0 bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors"></div>
+                           <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10 text-justify">Counting Pulses in Window</h4>
+                           <div class="flex items-center justify-around gap-2 mb-4 relative z-10 text-justify">
+                                <div class="w-2 h-8 bg-blue-500 text-justify text-left"></div>
+                                <div class="w-2 h-8 bg-blue-500 text-justify text-left"></div>
+                                <div class="w-2 h-8 bg-blue-500 text-justify text-left"></div>
+                                <div class="w-2 h-8 bg-blue-500 text-justify text-left text-justify"></div>
+                                <div class="w-2 h-8 bg-blue-500/20 text-justify"></div>
+                           </div>
+                           <p class="text-[9px] text-blue-400 mt-4 font-mono tracking-widest text-center text-justify">FIXED TIME WINDOW ANALYZING...</p>
                         </div>
                     </div>
                 </div>
@@ -92,36 +93,36 @@
         </section>
 
         <!-- Module 2: T-Method -->
-        <section class="module-section mb-16">
-            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
-                <div class="p-8 md:p-14">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl text-purple-500">T</span> 2. 週期法 (T-Method)：低速精準儀
+        <section class="module-section mb-16 text-justify">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 text-justify">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-justify"></div>
+                <div class="p-8 md:p-14 text-justify">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3 text-justify text-justify">
+                        <span class="text-4xl text-purple-500 text-justify text-left">T</span> 2. 週期法 (T-Method)：低速精準儀
                     </h2>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
-                        <div class="space-y-8">
-                            <p class="text-lg text-gray-600 leading-relaxed font-light">
-                                測量相鄰脈衝間隔的「微秒時間」。這是賦予機器人細膩極低速行走能力的關鍵技術。
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 text-justify">
+                        <div class="space-y-8 text-justify">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify">
+                                測量相鄰脈衝間隔的「微秒時間」。這是賦予機器人細膩低速行走與高精度位置控制能力的關鍵技術。
                             </p>
-                            <div class="bg-purple-50 p-8 rounded-3xl border border-purple-100">
-                                <h4 class="text-purple-900 font-bold mb-4 text-xs uppercase tracking-widest text-center">Time-to-Speed Mapping</h4>
-                                <div class="text-xl font-mono text-purple-600 text-center">
+                            <div class="bg-purple-50 p-8 rounded-3xl border border-purple-100 text-justify">
+                                <h4 class="text-purple-900 font-bold mb-4 text-xs uppercase tracking-widest text-center text-justify text-justify">Time-to-Speed Mapping</h4>
+                                <div class="text-xl font-mono text-purple-600 text-center text-justify text-justify">
                                    \[Speed \propto \frac{1}{\Delta t}\]
                                 </div>
-                                <p class="text-[10px] text-slate-400 mt-4 italic font-light text-center">精密計時：使用 micros() 級別解像力</p>
+                                <p class="text-[10px] text-slate-400 mt-4 italic font-light text-center text-justify text-justify">精密計時：使用 micros() 級別解像力</p>
                             </div>
                         </div>
 
-                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group text-center">
-                           <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent"></div>
-                           <h4 class="text-purple-400 font-bold mb-6 text-[10px] uppercase tracking-widest">Period Integration</h4>
-                           <div class="flex items-center gap-20">
-                                <div class="w-1 h-12 bg-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.5)]"></div>
-                                <div class="text-slate-500 font-mono text-xs animate-pulse">--- Δt ---</div>
-                                <div class="w-1 h-12 bg-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.5)]"></div>
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group text-justify">
+                           <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent text-justify"></div>
+                           <h4 class="text-purple-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10 text-justify">Period Integration</h4>
+                           <div class="flex items-center gap-20 relative z-10 text-justify">
+                                <div class="w-1 h-12 bg-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.5)] text-justify"></div>
+                                <div class="text-slate-500 font-mono text-xs animate-pulse text-justify">--- Δt ---</div>
+                                <div class="w-1 h-12 bg-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.5)] text-justify text-left"></div>
                            </div>
-                           <p class="text-[9px] text-slate-500 mt-8 font-mono tracking-tighter uppercase relative z-10">High Precision: < 1μs Error</p>
+                           <p class="text-[9px] text-slate-500 mt-8 font-mono tracking-tighter uppercase relative z-10 text-center text-justify text-justify">High Precision: < 1μs Resolution</p>
                         </div>
                     </div>
                 </div>
@@ -129,33 +130,33 @@
         </section>
 
         <!-- Module 3: M/T Hybrid -->
-        <section class="module-section mb-16">
-            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
-                <div class="p-8 md:p-14">
-                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-cyan-400">
-                        <span class="p-2 bg-cyan-500/20 rounded-lg text-cyan-400 text-2xl">⚡</span> 3. 混合測速 (M/T Method) 策略
+        <section class="module-section mb-16 text-justify">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700 text-justify">
+                <div class="p-8 md:p-14 text-justify">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-cyan-400 text-justify text-justify">
+                        <span class="p-2 bg-cyan-500/20 rounded-lg text-cyan-400 text-2xl text-justify text-left">⚡</span> 3. 混合測速 (M/T Method) 策略
                     </h2>
-                    <div class="flex flex-col lg:flex-row gap-16 items-center">
-                        <div class="flex-1 space-y-6">
-                            <p class="text-slate-400 font-light leading-relaxed text-lg">
-                                工業級控制器會根據「轉速門檻」動態切換演算法。這能結合 M 法的高速強度與 T 法的低速靈敏。
+                    <div class="flex flex-col lg:flex-row gap-16 items-center text-justify">
+                        <div class="flex-1 space-y-6 text-justify">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg text-justify text-justify">
+                                工業級控制器會根據「轉速門檻」動態切換演算法。這能完美結合 M 法的高速強度與 T 法的低速靈敏，打破物理感測的侷限。
                             </p>
-                            <div class="bg-cyan-500/10 p-8 rounded-3xl border border-cyan-500/20 shadow-inner">
-                                <h4 class="font-bold text-cyan-400 mb-4 text-xs uppercase tracking-widest text-center">M/T Crossover Strategy</h4>
-                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
-                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1"></span><div><strong class="text-white">切換閾值 (Threshold)</strong>：尋找誤差曲線的交點（通常為 50ms 左右）作為換手點。</div></li>
-                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1"></span><div><strong class="text-white">平滑過渡 (Smoothing)</strong>：利用加權平均防止切換瞬間的速度值跳變。</div></li>
-                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1"></span><div><strong class="text-white">零速判定</strong>：實作超時機制，防止週期法在馬達靜止時「卡死」在舊數據。</div></li>
+                            <div class="bg-cyan-500/10 p-8 rounded-3xl border border-cyan-500/20 shadow-inner text-justify text-justify">
+                                <h4 class="font-bold text-cyan-400 mb-4 text-xs uppercase tracking-widest text-justify text-left">M/T Crossover Strategy</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light text-justify text-justify">
+                                    <li class="flex items-start gap-2 text-justify text-justify"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1 text-justify"></span><div><strong class="text-white text-justify text-justify">切換閾值 (Threshold)</strong>：尋找誤差曲線的交點作為算法換手點。</div></li>
+                                    <li class="flex items-start gap-2 text-justify text-justify"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1 text-justify"></span><div><strong class="text-white text-justify">平滑過渡 (Smoothing)</strong>：利用濾波防止算法切換瞬間的速度跳變。</div></li>
+                                    <li class="flex items-start gap-2 text-justify text-justify"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1 text-justify text-justify"></span><div><strong class="text-white text-justify">實時魯棒性</strong>：在中斷與定時器間建立穩健的數據同步管線。</div></li>
                                 </ul>
                             </div>
                         </div>
-                        <div class="lg:w-80 bg-cyan-600/10 p-10 rounded-3xl border border-cyan-500/20 text-center relative overflow-hidden group">
-                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-cyan-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
-                           <h4 class="text-cyan-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center">Hybrid Controller</h4>
-                           <p class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic">
-                               "沒有完美的單一演算法，只有完美的工程取捨。"
+                        <div class="lg:w-80 bg-cyan-600/10 p-10 rounded-3xl border border-cyan-500/20 text-center relative overflow-hidden group text-justify">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-cyan-500/5 rounded-full group-hover:scale-150 transition-transform duration-700 text-justify"></div>
+                           <h4 class="text-cyan-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center text-justify">Hybrid Engine</h4>
+                           <p class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic text-center text-justify text-left">
+                               "沒有完美的單一演算法，只有完美的工程取舍。"
                            </p>
-                           <div class="inline-block px-8 py-3 bg-cyan-500 text-white rounded-xl font-bold text-[10px] shadow-lg cursor-pointer hover:bg-cyan-400 transition-colors">Switch M/T Mode</div>
+                           <div class="inline-block px-8 py-3 bg-cyan-500 text-white rounded-xl font-bold text-[10px] shadow-lg cursor-pointer hover:bg-cyan-400 transition-colors text-center text-justify">Switch M/T Mode</div>
                         </div>
                     </div>
                 </div>
@@ -163,58 +164,58 @@
         </section>
 
         <!-- Homework Section -->
-        <section class="module-section">
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：打造工業級測速核心</h2>
-            <p class="text-center text-gray-500 mb-12">掌握頻率法與週期法的互補特性，為自動駕駛開發全速域平滑的速度反饋系統。</p>
+        <section class="module-section text-justify">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit] text-justify">核心任務：打造工業級測速核心</h2>
+            <p class="text-center text-gray-500 mb-12 text-justify text-justify">掌握頻率法與週期法的互補特性，為自動駕駛開發全速域、高精度的速度反饋引擎。透過 Git Workflow 建立具備「算法自適應」能力的控制系統。</p>
 
-            <div class="grid md:grid-cols-3 gap-6">
+            <div class="grid md:grid-cols-3 gap-6 text-justify">
                 <!-- Task 11-1 -->
-                <div onclick="openSubmissionModal('adv-11-speed-m', '【作業 11-1】「高速穩定王」：頻率法測速 (M-Method Implementation)')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                <div onclick="openSubmissionModal('adv-11-speed-m', '【作業 11-1】「高速穩定王」：頻率法測速實作 (M-Method Performance Lab)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
                     <div class="bg-blue-500 h-2"></div>
-                    <div class="p-8 flex-grow">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform">📊</span>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
+                    <div class="p-8 flex-grow text-justify text-justify">
+                        <div class="flex justify-between items-start mb-4 text-justify">
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform text-justify">📊</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest text-justify">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 11-1】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「M 法頻率測速」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">
-                            實作每 100ms 觸發一次的視窗式計數。觀測高轉速下的穩定性，並記錄低速時數據產生階梯狀不連續的臨界點。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition text-justify uppercase tracking-tighter">【作業 11-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「M 法頻率測速」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
+                            實作 100ms 窗格計數。觀測高轉速下的穩定性，並記錄低速時數據產生「階梯跳動」的物理臨界 PWM 與轉速。
                         </p>
                     </div>
                 </div>
 
                 <!-- Task 11-2 -->
-                <div onclick="openSubmissionModal('adv-11-speed-t', '【作業 11-2】「低速精準儀」：週期法測速 (T-Method Implementation)')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                <div onclick="openSubmissionModal('adv-11-speed-t', '【作業 11-2】「低速精準儀」：週期法測速實作 (T-Method High-Precision Lab)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
                     <div class="bg-purple-500 h-2"></div>
-                    <div class="p-8 flex-grow">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl text-purple-500 group-hover:rotate-12 transition-transform">⏱️</span>
-                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
+                    <div class="p-8 flex-grow text-justify text-justify">
+                        <div class="flex justify-between items-start mb-4 text-justify">
+                            <span class="text-4xl text-purple-500 group-hover:rotate-12 transition-transform text-justify">⏱️</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest text-justify">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 11-2】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「T 法週期測速」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">
-                            量測脈衝間隔的微秒時間。實作 RPM 換算公式，並解決在馬達停止時「週期無限大」導致的速度讀取停滯難題。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition text-justify uppercase tracking-tighter text-justify">【作業 11-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「T 法週期測速」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
+                            捕捉相鄰脈衝間隔微秒（\(\mu s\)）。實作 RPM 換算，並開發「超時歸零」邏輯解決馬達停轉時的速度讀取卡死。
                         </p>
                     </div>
                 </div>
 
                 <!-- Task 11-3 -->
-                <div onclick="openSubmissionModal('adv-11-speed-hybrid', '【作業 11-3】全速域智能切換混合測速 (M/T Method Integration)')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                <div onclick="openSubmissionModal('adv-11-speed-hybrid', '【作業 11-3】全速域智能切換混合測速 (Hybrid M/T Integration Lab)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
                     <div class="bg-cyan-500 h-2"></div>
-                    <div class="p-8 flex-grow">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-4xl text-cyan-500 group-hover:translate-x-1 transition-transform">🚀</span>
-                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
+                    <div class="p-8 flex-grow text-justify text-justify">
+                        <div class="flex justify-between items-start mb-4 text-justify text-left">
+                            <span class="text-4xl text-cyan-500 group-hover:translate-x-1 transition-transform text-justify">🚀</span>
+                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest text-justify">60 min</span>
                         </div>
-                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition">【作業 11-3】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4">「全時速感知引擎」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">
-                            整合 M/T 雙模演算法。設計智能切換門檻，實現從「蠕行低速」到「狂奔高速」全程平滑的速度回饋曲線。
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition text-justify uppercase tracking-tighter text-justify">【作業 11-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「全時速感知引擎」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
+                            整合 M/T 雙模演算法。設計智能切換閾值，實現從「精密蠕行」到「極速全開」全程平滑、無跳變的速度回饋。
                         </p>
                     </div>
                 </div>
@@ -224,100 +225,94 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
-        <div class="container mx-auto px-4 text-center">
-            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
-            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto text-justify">
+        <div class="container mx-auto px-4 text-center text-justify text-justify text-justify">
+            <p class="text-slate-500 text-sm mb-4 text-justify">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400 text-justify">
                 <span>單元課程 進階 11 - 速度演算法</span>
-                <span class="hidden md:inline">|</span>
+                <span class="hidden md:inline text-justify">|</span>
                 <span>講師：Antigravity Assistant</span>
             </div>
         </div>
     </footer>
 
-    <script>
-        // Define Resources
-        window.RESOURCES = {
-            youtube: "https://www.youtube.com/embed/zibDHxB-YCw",
-            doc: "https://docs.google.com/document/d/e/2PACX-1vRf8RpNoNhombgvkcimr0OC3M3AgOAwnLV4fKL0DjO6gc8MwU67-Hr3zTDaR8CYMT374KuUKB0-3VD9/pub?embedded=true"
-        };
-    </script>
     <script src="/js/course-shared-v4.js"></script>
+
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">閉迴路測速演算法實驗室</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">閉迴路控制實驗室：測速演算法與數據整合</h2>
 
         <div class="assignment-quest">
-            <h3 class="quest-title">任務 1：「高速穩定王」：頻率法測速 (M-Method Implementation)</h3>
+            <h3 class="quest-title text-justify">任務 1：頻率法實作 (Frequency Counting Lab)</h3>
             <div class="quest-meta">
-                <span>角色扮演：速度分析師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+                <span>角色扮演：高速控制分析師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
                     <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
-                    <li><strong>定時中斷實作</strong>：設定 Ticker 或 HW Timer 達成每 100ms 觸發一次的計算任務。</li>
-                    <li><strong>頻率換算邏輯</strong>：統計視窗內的脈衝總數並換算為 RPM。注意每次計算後計數器必須歸零。</li>
-                    <li><strong>誤差曲線紀錄</strong>：在 README 中紀錄在不同 PWM 輸出下，M 法測得轉速的「階梯跳動」現象。</li>
+                    <li><strong>定時器部署</strong>：實作 100ms 定時中斷，獲取脈衝累計增量。</li>
+                    <li><strong>數值定標</strong>：寫入 RPM 換算公式，注意計數器的同步清除與變數鎖存。</li>
+                    <li><strong>Push Final</strong>：提交具備「高速背景計數」能力的穩定法程式。</li>
                 </ol>
             </div>
 
             <div class="tutor-benchmark">
                 <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
-                    <li>[ ] <strong>換算公式正確性</strong>：顯示的 RPM 是否正確對應了 PPR 與時間窗格的物理比例？</li>
-                    <li>[ ] <strong>低速解析度分析</strong>：是否能透過實驗說明為什麼 M 法不適合用於精密蠕行控制？</li>
+                    <li>[ ] <strong>換算嚴謹性</strong>：輸出的 RPM 是否隨視窗時間準確變動？</li>
+                    <li>[ ] <strong>物理直覺</strong>：README 是否記錄了低速下數據產生「階梯化」的具體 PWM 數值？</li>
                 </ul>
             </div>
         </div>
 
         <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 2：「低速精準儀」：週期法測速 (T-Method Implementation)</h3>
+            <h3 class="quest-title text-justify">任務 2：週期法標定 (Period Measurement Lab)</h3>
             <div class="quest-meta">
-                <span>角色扮演：精準測量專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+                <span>角色扮演：低速精度工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-tighter font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
-                    <li><strong>微秒計時捕捉</strong>：在中斷 ISR 中使用 <code>micros()</code> 捕捉兩次相鄰上升沿的精確時間戳。</li>
-                    <li><strong>倒數運算實作</strong>：計算 1/dt 得到頻率。注意處理 0 除或溢位等異常邊界條件。</li>
-                    <li><strong>停機邏輯開發</strong>：實作超時偵測：若超過 500ms 沒收到脈衝，強制將轉速值校準回 0。</li>
-                    <li><strong>性能分析提交</strong>：對比高速下 T 法數據的跳動幅度，分析計時誤差的影響程度。</li>
+                    <li><strong>中斷捕捉</strong>：在 ISR 中利用 <code>micros()</code> 捕捉瞬時時戳 \(\Delta t\)。</li>
+                    <li><strong>倒數演算</strong>：實作 1/\(\Delta t\) 的反比例運算，並處理分母為零的例外。</li>
+                    <li><strong>超時失效陷阱</strong>：開發 watchdog 邏輯：超時 500ms 無脈衝則強制歸零。</li>
+                    <li><strong>Push Final</strong>：提交具備「超低速細膩感知」能力的週期法專案。</li>
                 </ol>
             </div>
 
             <div class="tutor-benchmark">
                 <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
-                    <li>[ ] <strong>數據刷新動態性</strong>：在馬達啟動瞬間，T 法是否能比 M 法更快速、更細膩地反映速度攀升？</li>
-                    <li>[ ] <strong>停止邏輯穩健性</strong>：馬達停轉後，介面數據是否能在合理時間內歸零，而非卡死在舊數據？</li>
+                    <li>[ ] <strong>溢位處理</strong>：在馬達轉速極低或停止時，代碼是否會因為 \(\Delta t\) 過大而報錯？</li>
+                    <li>[ ] <strong>啟動敏捷度</strong>：T 法測得的初速是否比 M 法更接近物理真相？</li>
                 </ul>
             </div>
         </div>
 
         <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 3：全速域智能切換混合測速 (M/T Method Integration)</h3>
+            <h3 class="quest-title text-justify">任務 3：M/T 混合演算法 (Hybrid M/T Engine Lab)</h3>
             <div class="quest-meta">
-                <span>角色扮演：演算法架構師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+                <span>角色扮演：系統架構分析師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
             </div>
 
             <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
                 <ol>
-                    <li><strong>雙規並行架構</strong>：在代碼中同時計算 M 法（100ms 窗格）與 T 法（瞬時脈衝間隔）。</li>
-                    <li><strong>智能分流判定</strong>：實作切換邏輯：<code>if(dt > 50ms) use_T_method() else use_M_method()</code>。</li>
-                    <li><strong>數據平滑優化</strong>：為切換過程加入移動平均濾波 (Moving Average)，消除不同演算法間的定標誤差。</li>
-                    <li><strong>全域測試報告</strong>：將混合測速框架 Push 至 GitHub，並在 README 附上平滑的速度曲線圖。</li>
+                    <li><strong>雙規演算法集成</strong>：在一個專案中同時運作兩種算法模組。</li>
+                    <li><strong>自動換手邏輯</strong>：找出兩種算法誤差曲線的交叉點，實作動態閾值切換。</li>
+                    <li><strong>數據濾波</strong>：引入加權平均，確保切換後的控制量不發生階躍突變。</li>
+                    <li><strong>Push Final</strong>：交付「全域時速傳感中心」最終成果。</li>
                 </ol>
             </div>
 
             <div class="tutor-benchmark">
                 <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
                 <ul>
-                    <li>[ ] <strong>切換曲線平滑度</strong>：速度數據在演算法切換點（Crossover Point）是否具備足夠的連續性？</li>
-                    <li>[ ] <strong>演算法策略合理性</strong>：是否理解並能解釋為何選擇特定的時間門檻作為切換依據？</li>
+                    <li>[ ] <strong>過渡平滑度</strong>：演算法切換時，速度曲線是否保持連續（無垂直跳變）？</li>
+                    <li>[ ] <strong>架構設計感</strong>：代碼是否具備良好的模組化設計，易於移植到其他機器人平台？</li>
                 </ul>
             </div>
         </div>
@@ -325,13 +320,13 @@
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
-            <p class="font-bold text-slate-700 mb-4">本單元教學重點：在物理訊號的「間斷性」與測速需求的「連續性」之間尋找平衡。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600">重點 1：量化誤差的直覺</strong> - 讓學員親手證實 M 法在低速下「非零即大」的困局，建立對數據解析度的工程直覺。</li>
-                <li><strong class="text-indigo-600">重點 2：即時反饋的力量</strong> - 演示 T 法如何讓機器人變身「精密蠕行者」，體會微秒級計時對閉迴路控制的價值。</li>
-                <li><strong class="text-indigo-600">重點 3：演算法混血架構</strong> - 指導學員理解：工程實務往往不是選擇 A 或 B，而是如何動態結合 A 與 B 的優點。</li>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：掌握數據處理的「取捨」藝術。學會根據物理特性（轉速）選擇最佳的數據解釋框架。</p>
+            <ol class="space-y-4 text-slate-600 text-justify">
+                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：量化誤差觀測</strong> - 讓學生看到 M 法低速時的階梯狀數據，理解「數位化」帶來的離散代價。</li>
+                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：精密時序的意義</strong> - T 法能捕捉單個脈衝的微秒差，這是 PID 高精準度控制的基礎。</li>
+                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：混合決策思維</strong> - 工業級算法從不完美，但透過混合調度可以實現「工程上的接近完美」。</li>
             </ol>
         </div>
 
@@ -340,37 +335,37 @@
             <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
             <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
 .
-├── src/SpeedCalc.js   # (必修) 學員需補全 M_Method(), T_Method() 與混合決策邏輯
-├── src/Filter.js      # (加分) 需實作簡單的移動平均濾波器以平滑切換曲線
-└── README.md          # 效能對比：紀錄 M 法 vs T 法在 20% PWM 下的數據波動率
+├── src/speed_hybrid.cpp  # 核心：學員需在此實作 M 與 T 切換
+├── include/algorithms.h  # 定義：提供測速演算法的抽象介面
+└── plots/response.png    # 結果：學員需截圖展示混合算法後的 RPM 曲線圖
             </pre>
         </div>
 
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
                     </tr>
                 </thead>
                 <tbody class="text-sm text-slate-600">
                     <tr>
-                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
-                        <td class="p-4 border-b">觀看測速演算法原理影片。計算若 PPR=20 時，M 法在 100ms 下的最小有效轉速。</td>
-                        <td class="p-4 border-b"><strong>Dashboard:</strong> 測試學員能否推論出 T 法在高速下數據「抖動」的物理原因。</td>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5 text-justify">觀看「M 法 vs T 法：演算法大戰」短片。理解週期與頻率的倒數關係。</td>
+                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能預測在 PWM=10% 時哪種算法更穩定。</td>
                     </tr>
                     <tr>
-                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
-                        <td class="p-4 border-b">領取作業 (Repo)，開發全速域混合演算法，並實測兩種模式換手時的數據平滑度。</td>
-                        <td class="p-4 border-b"><strong>學術導師:</strong> 協助學員調校混合法閾值，演示如何使用 Serial Plotter 監控動態過程。</td>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black">領取作業 (Repo)，挑戰「混合測速引擎」。調教算法換手點 (Threshold)，優化數據平滑度。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 協助演示如何在 Serial Plotter 觀察兩種算法在臨界點的「無縫接軌」。</td>
                     </tr>
                     <tr>
-                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
-                        <td class="p-4">實作具備「濾波優化」的最終版測速庫並 Push PR。</td>
-                        <td class="p-4"><strong>Feedback PR:</strong> 點評對「數據定標 (Scaling)」與「算法互補設計」的掌握深度。</td>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
+                        <td class="px-6 py-5 text-justify text-left text-justify font-black">提交具備「混合自我優化」的最終版代碼。閱讀教師對「卡爾曼濾波 (Kalman Filter)」於速度估計的進階展望。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「數據動態權重」與「物理量一致性」的理解深度。</td>
                     </tr>
                 </tbody>
             </table>

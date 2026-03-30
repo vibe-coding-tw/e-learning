@@ -226,148 +226,139 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>作業指引 (Assignment Guide)</h2>
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">硬體通訊實驗室：I2C/SPI 協議深論與整合</h2>
 
-        <h3>作業 1-1：I2C 設備大掃描</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 韌體除錯工程師。</li>
-            <li><strong>執行方式：</strong> 實作一個迴圈，從 1 掃描到 127，嘗試啟動每個 I2C 地址的通訊。記錄回傳 `ACK` 的地址，並與 Datasheet 對比確認設備身份。</li>
-            <li><strong>評分重點：</strong> 能否正確找出 OLED (通常 0x3C) 與 MPU6050 (通常 0x68) 的地址。</li>
-        </ul>
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：I2C 設備大掃描 (I2C Scanner Lab)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：韌體除錯工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
 
-        <h3>作業 1-2：SPI 刷新率挑戰</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 顯示驅動開發者。</li>
-            <li><strong>執行方式：</strong> 逐步提升 SPI 時鐘頻率 (1MHz -> 10MHz -> 40MHz)，觀察 OLED 畫面的刷新速度，並紀錄在高頻通訊下是否出現影像雜訊或死機現象。
-            </li>
-            <li><strong>評分重點：</strong> 實驗報告是否能指出「佈線長度」與「訊號完整性」的關聯。</li>
-        </ul>
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>掃描實作</strong>：在 ESP32 上實作地址掃描迴圈（1-127），對每個地址發送 Start Signal。</li>
+                    <li><strong>設備對比</strong>：記錄所有回傳 ACK 的地址，並翻閱 Datasheet 確認與現有硬體（如 MPU6050, OLED）是否吻合。</li>
+                    <li><strong>Push Final</strong>：提交具備「硬體自動偵測」能力的總線掃描工具。</li>
+                </ol>
+            </div>
 
-        <h3>作業 1-3：協議翻譯官：Raw to JSON</h3>
-        <ul>
-            <li><strong>角色扮演：</strong> 嵌入式系統架構師。</li>
-            <li><strong>執行方式：</strong> 從 I2C 感測器讀取 6 Bytes 的原始二進制數據，使用物件結構 (Struct) 解析後，再利用 ArduinoJson 轉換成標準 JSON 格式發送。
-            </li>
-            <li><strong>評分重點：</strong> 數據轉換的過程是否準確，且 JSON 欄位命名是否具備語義化。</li>
-        </ul>
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>地址準確性</strong>：是否能正確識別出 OLED (0x3C) 與 MPU6050 (0x68) 的實體通訊地址？</li>
+                    <li>[ ] <strong>除錯完備度</strong>：若掃描不到設備，是否在 README 中列出了可能的硬體故障對策（如接線、上拉電阻）？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：SPI 刷新率挑戰 (SPI Speed Benchmark)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：顯示驅動開發者</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>極限壓測</strong>：步進式提升 SPI 時鐘頻率（從 1MHz 直至硬體極限），觀察 OLED 螢幕刷新動態。</li>
+                    <li><strong>異常捕捉</strong>：紀錄在高頻（如 40MHz）通訊下是否出現影像雜訊、雪花或系統不穩定的現象。</li>
+                    <li><strong>性能分析</strong>：計算不同頻率下的每一幀像素寫入時間，並繪製成對比表格。</li>
+                    <li><strong>Push Final</strong>：提交具備「極致顯示效能」且穩定的 SPI 驅動代碼。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>性能提升顯著性</strong>：最終實踐的 FPS 是否相較於預設配置有顯著提升（> 50%）？</li>
+                    <li>[ ] <strong>專業實驗報告</strong>：README 中是否解釋了「導線長度」對高頻訊號完整性的具體影響？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：協議翻譯官：Raw to JSON (Protocol Converter)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：嵌入式系統架構師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>字節流解析</strong>：從 I2C/SPI 感測器讀取 Raw Binary Data，使用位元與或結構體進行解算。</li>
+                    <li><strong>數據封裝</strong>：整合 ArduinoJson，將解算後的物理量（如加速度、角速度）轉換為標準 JSON 格式。</li>
+                    <li><strong>通訊整合</strong>：將產出的 JSON 透過串列埠或藍牙發送，實現底層硬體與高層 Web 的無縫對接。</li>
+                    <li><strong>Push Final</strong>：提交具備「跨平台數據解耦」能力的通訊橋接包。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>數據換算精確度</strong>：轉換後的數值是否與 Datasheet 給出的 LSB/unit 比例完全吻合？</li>
+                    <li>[ ] <strong>Payload 優化</strong>：生成的 JSON 結構是否簡潔高效，具備良好的開發者可讀性？</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <!-- NEW: Practical Deployment Recommendations -->
-        <div class="guide-section mb-10 p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner">
-            <h3 class="text-xl font-bold text-blue-900 border-b-2 border-blue-200 pb-3 mb-6 flex items-center gap-2">
-                <span>🚀</span> 在 GitHub Classroom 的實戰部署建議
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        A. 範本倉庫 (Template Repo) 結構
-                    </h4>
-                    <pre
-                        class="bg-gray-900 text-gray-100 p-4 rounded-xl text-xs font-mono overflow-x-auto shadow-lg border border-gray-700">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：通訊協議的「硬漢實力」。掌握 I2C/SPI 的時序物理意義與現代化數據封裝流程。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-indigo-600">重點 1：匯流排定址與專線選擇</strong> - 透過 1-1 掃描任務，強化學生對 Master-Slave 架構中設備辨識的底層認知。</li>
+                <li><strong class="text-indigo-600">重點 2：物理層的極限探索</strong> - 利用 1-2 任務探討時脈頻率對通訊質量的影響，理解數位訊號在高速下的物理變形與雜訊。</li>
+                <li><strong class="text-indigo-600">重點 3：二進制與語義化轉換</strong> - 教導學生如何將「冷冰冰的 Hex」轉換為「易懂的 JSON」，這是 IoT 全棧開發的關鍵能力。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
 .
-├── src/
-│   ├── i2c_scanner.cpp    # 掃描邏輯待補完
-│   └── spi_display.cpp    # 顯示驅動優化
-├── include/
-│   └── register_map.h     # 感測器暫存器定義
-└── README.md              # I2C 地址掃描報告</pre>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        B. 自動評估 (Autograding) 的設計
-                    </h4>
-                    <div class="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">🔍</span>
-                            <p class="text-sm text-gray-700"><strong>掃描結果驗證：</strong> 透過模擬 I2C 回應，驗證掃描程式是否正確回報裝置地址。</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="text-blue-500">📦</span>
-                            <p class="text-sm text-gray-700"><strong>數據封裝檢查：</strong> 自動檢查輸出的 JSON 字串是否符合要求的數據結構 Schema。
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+├── src/bus_scanner.cpp  # 核心：待填寫 I2C 掃描邏輯與 ACK 檢測
+├── src/json_bridge.ino  # 整合：待補完從 Raw Data 到 JSON 的轉換邏輯
+├── include/registers.h  # 配置：定義感測器暫存器映射表
+└── README.md            # 指引：要求記錄不同 SPI 頻率下的穩定度表現
+            </pre>
         </div>
 
-        <!-- NEW: Detailed operations guide -->
-        <div class="guide-section mb-10 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🛠️</span> GitHub Classroom 詳細操作指南
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        1</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">準備範本專案</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">提供包含 <code>Wire.h</code> 與 <code>SPI.h</code>
-                        初始化框架，設定為 Template repository。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        2</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">建立 Classroom 作業</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">設定「硬體通訊協議模擬器」。利用 GitHub Project 追蹤進度。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        3</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">學生端 (Flipped)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">領取作業，使用邏輯分析儀觀察波形，並將截圖上傳至 Issue。</p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 relative">
-                    <span
-                        class="absolute -top-3 left-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">STEP
-                        4</span>
-                    <p class="font-bold text-slate-800 text-xs mb-2 mt-2">教師回饋 (Review)</p>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">針對學生對「時脈偏置」與「上拉電阻」影響的解釋予以回饋。</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- NEW: Flipped classroom strategy table -->
-        <div class="guide-section p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span>🔄</span> 翻轉教室的實施策略
-            </h3>
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
-                        <tr>
-                            <th class="px-4 py-3">階段</th>
-                            <th class="px-4 py-3">學生行動 (Git Workflow)</th>
-                            <th class="px-4 py-3">教師/平台角色</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-600">
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課前</td>
-                            <td class="px-4 py-4">閱讀 I2C/SPI 時序圖，找出「開始位元」的變化特徵。</td>
-                            <td class="px-4 py-4 text-xs">檢查 Dashboard 進度，釋出「如何讀懂 Register Map」講義。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-blue-800 bg-blue-50/30 w-24 text-center">課中</td>
-                            <td class="px-4 py-4">領取 Classroom 作業，挑戰在不重疊訊號下驅動多個 I2C 設備。</td>
-                            <td class="px-4 py-4 text-xs text-blue-700">即時連線排除阻礙，分享地址衝突時的硬體解決方案。</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 font-bold text-slate-800 bg-slate-50/50 w-24 text-center">課後</td>
-                            <td class="px-4 py-4">完成協議轉換器並 Push，閱讀教師回覆 PR。</td>
-                            <td class="px-4 py-4 text-xs">核發評量，檢核代碼中對 Endianness 處理的正確性。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5">閱讀「一條大馬路 vs 多條快速道路」比喻。掌握 I2C SDA/SCL 的時序起點特徵。</td>
+                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能正確計算 SPI 四種 Mode 的極性組合。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900">領取作業 (Repo)，挑戰在同一個總線上掛載不同地址的設備，並處理地址衝突情境。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 現場示範邏輯分析儀波形抓取，解釋「上拉電阻不足」導致的訊號緩慢上升現象。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
+                        <td class="px-6 py-5">提交具備協議轉換功能的最終專案並 Push。在 PR 中說明對 Endianness（大/小端）的處理方案。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價對「數據幀原子性」與「緩衝區溢位預防」的程式魯棒性考量。</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </section>
+
 
     <script src="/js/course-shared-v4.js"></script>
 </body>
