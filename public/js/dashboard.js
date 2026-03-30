@@ -894,9 +894,9 @@ function renderAdminDashboard(data, filterUnitId = null) {
             }).join('');
         }
 
-        // 3B. Trial Tag (Supplemental if active)
+        // 3B. Starter Trial Tag (Appears after Paid Tags)
         if (isTrialActive) {
-            tagsHtml += `<span class="inline-block px-1.5 py-0.5 mr-1 mb-1 rounded text-[9px] bg-blue-50 text-blue-600 border border-blue-200">✨ 入門試用 (至 ${trialExpiryStr})</span>`;
+            tagsHtml += `<span class="inline-block px-1.5 py-0.5 mr-1 mb-1 rounded text-[9px] bg-blue-50 text-blue-600 border border-blue-200">✨ 開發環境安裝與設定 (試用至 ${trialExpiryStr})</span>`;
         }
 
         if (!tagsHtml) {
