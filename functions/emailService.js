@@ -160,13 +160,13 @@ async function sendCourseExpiringEmail(email, displayName, courseName, daysLeft)
 }
 
 /**
- * Send an email to a newly authorized teacher.
- * @param {string} email - Teacher's email address
+ * Send an email to a newly authorized tutor.
+ * @param {string} email - Tutor's email address
  * @param {string} unitName - Name of the unit
  * @param {string} unitId - The course unit ID
  * @param {string} promoCode - The unique 6-digit promo code for this unit
  */
-async function sendTeacherAuthorizationEmail(email, unitName, unitId, promoCode) {
+async function sendTutorAuthorizationEmail(email, unitName, unitId, promoCode) {
     const cleanUnitId = unitId ? unitId.replace('.html', '') : '';
     const dashboardUrl = cleanUnitId ? `https://vibe-coding.tw/dashboard.html?unitId=${cleanUnitId}&tab=assignments` : `https://vibe-coding.tw/dashboard.html`;
 
@@ -174,12 +174,12 @@ async function sendTeacherAuthorizationEmail(email, unitName, unitId, promoCode)
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
         subject: `Vibe Coding 課程單元授權通知: ${unitName}`,
-        text: `恭喜您成為 Vibe Coding 授權教師！\n\n您已獲得課程單元 "${unitName}" 的管理權限。\n\n您的專屬推薦代碼為：${promoCode}\n(學生使用此代碼購買本單元時，系統將自動計算您的分潤)\n\n請前往教師儀表板開始管理：\n${dashboardUrl}\n\nHappy Teaching!\nVibe Coding Team`,
+        text: `恭喜您成為 Vibe Coding 授權導師！\n\n您已獲得課程單元 "${unitName}" 的管理權限。\n\n您的專屬推薦代碼為：${promoCode}\n(學生使用此代碼購買本單元時，系統將自動計算您的分潤)\n\n請前往導師儀表板開始管理：\n${dashboardUrl}\n\nHappy Teaching!\nVibe Coding Team`,
         html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6;">
-                <h2 style="color: #4A90E2;">恭喜您成為 Vibe Coding 授權教師！</h2>
+                <h2 style="color: #4A90E2;">恭喜您成為 Vibe Coding 授權導師！</h2>
                 <p>Hi,</p>
-                <p>您已獲得課程單元 <strong>${unitName}</strong> 的管理授權。現在可以存取教師資源與管理功能。</p>
+                <p>您已獲得課程單元 <strong>${unitName}</strong> 的管理授權。現在可以存取導師資源與管理功能。</p>
                 
                 <div style="background: #f0f7ff; padding: 20px; border-radius: 10px; margin: 25px 0; border: 1px solid #d0e7ff;">
                     <p style="margin: 0; color: #4A90E2; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">您的專屬推薦代碼</p>
@@ -190,13 +190,13 @@ async function sendTeacherAuthorizationEmail(email, unitName, unitId, promoCode)
                 <div style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
                     <p style="margin: 0;"><strong>下一步：</strong></p>
                     <ul style="margin: 10px 0;">
-                        <li>登入教師儀表板獲取 GitHub Classroom 連結</li>
+                        <li>登入導師儀表板獲取 GitHub Classroom 連結</li>
                         <li>分享您的推薦代碼給學生</li>
                         <li>在「分潤」分頁追蹤您的推廣成效</li>
                     </ul>
                 </div>
 
-                <p><a href="${dashboardUrl}" style="display: inline-block; background: #4A90E2; color: #fff; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(74, 144, 226, 0.2);">前往教師儀表板</a></p>
+                <p><a href="${dashboardUrl}" style="display: inline-block; background: #4A90E2; color: #fff; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(74, 144, 226, 0.2);">前往導師儀表板</a></p>
                 <p style="font-size: 12px; color: #999; margin-top: 30px;">若無法點擊連結，請複製此網址：<br>${dashboardUrl}</p>
                 <p>Happy Teaching!<br>Vibe Coding Team</p>
             </div>
@@ -205,23 +205,23 @@ async function sendTeacherAuthorizationEmail(email, unitName, unitId, promoCode)
 
     try {
         const info = await transporter.sendMail(mailOptions);
-        console.log(`Teacher authorization email sent to ${email} for unit ${unitId}. MessageId: ${info.messageId}`);
+        console.log(`Tutor authorization email sent to ${email} for unit ${unitId}. MessageId: ${info.messageId}`);
     } catch (error) {
-        console.error('Error sending teacher authorization email:', error);
+        console.error('Error sending tutor authorization email:', error);
     }
 }
 
 /**
- * Send an assignment submission notification to the teacher/admin.
- * @param {string} teacherEmail - Teacher's email address
+ * Send an assignment submission notification to the tutor/admin.
+ * @param {string} tutorEmail - Tutor's email address
  * @param {string} studentName - Student's display name
  * @param {string} assignmentTitle - Title of the assignment
  * @param {string} assignmentUrl - Link to the assignment or dashboard
  */
-async function sendAssignmentNotification(teacherEmail, studentName, assignmentTitle, assignmentUrl) {
+async function sendAssignmentNotification(tutorEmail, studentName, assignmentTitle, assignmentUrl) {
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
-        to: teacherEmail,
+        to: tutorEmail,
         subject: `[作業繳交] ${studentName} 繳交了 "${assignmentTitle}"`,
         html: `
             <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
@@ -250,7 +250,7 @@ async function sendAssignmentNotification(teacherEmail, studentName, assignmentT
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Assignment notification sent to ${teacherEmail}`);
+        console.log(`Assignment notification sent to ${tutorEmail}`);
     } catch (error) {
         console.error('Error sending assignment notification:', error);
     }
@@ -262,7 +262,7 @@ async function sendAssignmentNotification(teacherEmail, studentName, assignmentT
  * @param {string} studentName - Student's name
  * @param {string} assignmentTitle - Assignment title
  * @param {number} grade - Grade received
- * @param {string} feedback - Teacher's feedback
+ * @param {string} feedback - Tutor's feedback
  */
 async function sendGradingNotification(email, studentName, assignmentTitle, grade, feedback, dashboardUrl = 'https://vibe-coding.tw/dashboard.html?tab=assignments') {
     const mailOptions = {
@@ -304,9 +304,9 @@ async function sendGradingNotification(email, studentName, assignmentTitle, grad
 }
 
 /**
- * Send an email to the student when they are assigned a teacher for a unit.
+ * Send an email to the student when they are assigned a tutor for a unit.
  */
-async function sendStudentLinkedToTeacherEmail(email, studentName, unitId, teacherEmail) {
+async function sendStudentLinkedToTutorEmail(email, studentName, unitId, tutorEmail) {
     const cleanUnitId = unitId ? unitId.replace('.html', '') : '';
     const dashboardUrl = cleanUnitId ? `https://vibe-coding.tw/dashboard.html?unitId=${cleanUnitId}&tab=assignments` : 'https://vibe-coding.tw/dashboard.html';
     const mailOptions = {
@@ -319,7 +319,7 @@ async function sendStudentLinkedToTeacherEmail(email, studentName, unitId, teach
                 <p>Hi ${studentName},</p>
                 <p>我們已為您的課程單元 <strong>${unitId}</strong> 指派了專屬指導老師：</p>
                 <div style="background-color: #f0f7ff; border-radius: 8px; padding: 15px; margin: 20px 0; border: 1px solid #d0e7ff;">
-                    <p style="margin: 0;"><strong>指導老師：</strong> ${teacherEmail}</p>
+                    <p style="margin: 0;"><strong>指導老師：</strong> ${tutorEmail}</p>
                 </div>
                 <p>在學習過程中若有任何疑問，或完成作業後需要批改，老師都會全程協助您。鼓勵您主動與老師保持聯繫，祝您學習愉快！</p>
                 <p>
@@ -338,9 +338,9 @@ async function sendStudentLinkedToTeacherEmail(email, studentName, unitId, teach
 }
 
 /**
- * Send an email to the teacher when a student is assigned to them.
+ * Send an email to the tutor when a student is assigned to them.
  */
-async function sendTeacherLinkedToStudentEmail(email, studentName, unitId) {
+async function sendTutorLinkedToStudentEmail(email, studentName, unitId) {
     const cleanUnitId = unitId ? unitId.replace('.html', '') : '';
     const dashboardUrl = cleanUnitId ? `https://vibe-coding.tw/dashboard.html?unitId=${cleanUnitId}&tab=assignments` : 'https://vibe-coding.tw/dashboard.html';
     const mailOptions = {
@@ -357,7 +357,7 @@ async function sendTeacherLinkedToStudentEmail(email, studentName, unitId) {
                     <p style="margin: 5px 0 0 0; font-size: 14px;">請隨時關注這位學生的學習進度與作業繳交狀況，並透過積極的正向回饋建立良好的教學互動關係。</p>
                 </div>
                 <p>
-                    <a href="${dashboardUrl}" style="background-color: #4A90E2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">開啟教師後台</a>
+                    <a href="${dashboardUrl}" style="background-color: #4A90E2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">開啟導師後台</a>
                 </p>
                 <br>
                 <p>Vibe Coding 教務系統</p>
@@ -367,12 +367,12 @@ async function sendTeacherLinkedToStudentEmail(email, studentName, unitId) {
     try {
         await transporter.sendMail(mailOptions);
     } catch (error) {
-        console.error('Error sending teacher relationship email:', error);
+        console.error('Error sending tutor relationship email:', error);
     }
 }
 
 /**
- * Send an email to the admin when a new teacher application is submitted.
+ * Send an email to the admin when a new tutor application is submitted.
  */
 async function sendAdminNewApplicationEmail(adminEmail, userEmail, unitId) {
     const cleanUnitId = unitId ? unitId.replace('.html', '') : '';
@@ -380,12 +380,12 @@ async function sendAdminNewApplicationEmail(adminEmail, userEmail, unitId) {
     const mailOptions = {
         from: '"Vibe Coding System" <info@vibe-coding.tw>',
         to: adminEmail,
-        subject: `[新申請] 合格教師資格申請: ${userEmail}`,
+        subject: `[新申請] 合格導師資格申請: ${userEmail}`,
         html: `
             <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                <h2 style="color: #E67E22;">收到新的合格教師申請</h2>
+                <h2 style="color: #E67E22;">收到新的合格導師申請</h2>
                 <p>管理員您好，</p>
-                <p>使用者 <strong>${userEmail}</strong> 提交了針對單元 <strong>${unitId}</strong> 的合格教師資格申請。</p>
+                <p>使用者 <strong>${userEmail}</strong> 提交了針對單元 <strong>${unitId}</strong> 的合格導師資格申請。</p>
                 <p>請前往 Admin Console 進行審核與授權。</p>
                 <p>
                     <a href="${dashboardUrl}" style="background-color: #E67E22; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">開啟管理控制台</a>
@@ -403,11 +403,11 @@ async function sendAdminNewApplicationEmail(adminEmail, userEmail, unitId) {
 }
 
 /**
- * Send an email to the user when their teacher application has been resolved.
+ * Send an email to the user when their tutor application has been resolved.
  */
 async function sendApplicationResultEmail(email, unitId, status, message = "") {
     const isApproved = status === 'approved';
-    const subject = isApproved ? `[申請通過] 恭喜您成為 "${unitId}" 的合格教師` : `[申請結果] 您的 "${unitId}" 合格教師申請未通過`;
+    const subject = isApproved ? `[申請通過] 恭喜您成為 "${unitId}" 的合格導師` : `[申請結果] 您的 "${unitId}" 合格導師申請未通過`;
     const titleColor = isApproved ? '#2ECC71' : '#E74C3C';
     const resultText = isApproved ? '恭喜！您的申請已獲批准。' : '很遺憾，您的申請目前未獲批准。';
     const cleanUnitId = unitId ? unitId.replace('.html', '') : '';
@@ -420,7 +420,7 @@ async function sendApplicationResultEmail(email, unitId, status, message = "") {
         html: `
             <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; line-height: 1.6;">
                 <h2 style="color: ${titleColor};">${resultText}</h2>
-                <p>關於您對單元 <strong>${unitId}</strong> 的合格教師進階權限申請，管理員已完成審查。</p>
+                <p>關於您對單元 <strong>${unitId}</strong> 的合格導師進階權限申請，管理員已完成審查。</p>
                 
                 <div style="background-color: #f9f9f9; border-radius: 8px; padding: 15px; margin: 20px 0; border: 1px solid #eee;">
                     <p><strong>狀態：</strong> ${isApproved ? '已通過 (Approved)' : '未通過 (Rejected)'}</p>
@@ -491,10 +491,10 @@ module.exports = {
     sendTrialExpiringEmail,
     sendCourseExpiringEmail,
     sendAssignmentNotification,
-    sendTeacherAuthorizationEmail,
+    sendTutorAuthorizationEmail,
     sendGradingNotification,
-    sendStudentLinkedToTeacherEmail,
-    sendTeacherLinkedToStudentEmail,
+    sendStudentLinkedToTutorEmail,
+    sendTutorLinkedToStudentEmail,
     sendAdminAssignmentReminder,
     sendAdminNewApplicationEmail,
     sendApplicationResultEmail

@@ -67,7 +67,7 @@ let allLessons = [];
 let currentGradingAssignment = null;
 let currentDashboardPermissions = {
     isAdmin: false,
-    isQualifiedTeacher: false,
+    isQualifiedTutor: false,
     isPaidStudent: false,
     canViewAssignments: false
 };
@@ -180,11 +180,11 @@ async function loadDashboard() {
         const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
         const hasUnitContext = !!filterUnitId;
         const isAdmin = myRole === 'admin';
-        const isQualifiedTeacher = hasQualifiedTeacherAccessForUnit(filterUnitId, filterCourseId, myEmail);
+        const isQualifiedTutor = hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, myEmail);
         const isPaidStudent = myRole === 'student' && hasUnitContext
             ? await hasPaidStudentAccessForUnit(filterCourseId, filterUnitId)
             : false;
-        updateCurrentDashboardPermissions({ isAdmin, isQualifiedTeacher, isPaidStudent });
+        updateCurrentDashboardPermissions({ isAdmin, isQualifiedTutor, isPaidStudent });
         const requestedTab = getRequestedTabFromUrl();
 
         if (!hasUnitContext && !isAdmin) {
@@ -192,8 +192,8 @@ async function loadDashboard() {
             return;
         }
 
-        if (isAdmin || isQualifiedTeacher) {
-            // Admin/Teacher View (Management)
+        if (isAdmin || isQualifiedTutor) {
+            // Admin/Tutor View (Management)
             setupAdminFeatures();
             setupGradingFunctions();
             setupSettingsFeature();
@@ -253,7 +253,7 @@ function showAccessDenied(errorType = "") {
     } else {
         // Show Access Denied (Logged in but no permission)
         if (deniedTitle) deniedTitle.innerText = "⛔ 權限不足";
-        if (deniedMsg) deniedMsg.innerText = "只有管理員、該單元合格教師，或該單元已付款學生可以存取此頁面。";
+        if (deniedMsg) deniedMsg.innerText = "只有管理員、該單元合格導師，或該單元已付款學生可以存取此頁面。";
         if (guestView) guestView.classList.add('hidden');
         if (adminSetupNote) adminSetupNote.classList.remove('hidden');
 
@@ -272,12 +272,12 @@ function showAccessDenied(errorType = "") {
     }
 }
 
-function updateCurrentDashboardPermissions({ isAdmin = false, isQualifiedTeacher = false, isPaidStudent = false } = {}) {
+function updateCurrentDashboardPermissions({ isAdmin = false, isQualifiedTutor = false, isPaidStudent = false } = {}) {
     currentDashboardPermissions = {
         isAdmin,
-        isQualifiedTeacher,
+        isQualifiedTutor,
         isPaidStudent,
-        canViewAssignments: isQualifiedTeacher || isPaidStudent || (isAdmin && adminSuperMode)
+        canViewAssignments: isQualifiedTutor || isPaidStudent || (isAdmin && adminSuperMode)
     };
 }
 
@@ -286,7 +286,7 @@ function canCurrentUserViewAssignmentsTab() {
 }
 
 function getPreferredDashboardTab(filterUnitId = null) {
-    if (filterUnitId && (myRole === 'admin' || myRole === 'teacher')) return 'admin';
+    if (filterUnitId && (myRole === 'admin' || myRole === 'tutor')) return 'admin';
     if (filterUnitId && canCurrentUserViewAssignmentsTab()) return 'assignments';
     if (myRole === 'admin') return 'admin';
     if (document.getElementById('tab-btn-settings') && !document.getElementById('tab-btn-settings').classList.contains('hidden')) {
@@ -382,7 +382,7 @@ function getPreferredUnitId(unitId, courseUnits = [], extraKeys = []) {
         unitId;
 }
 
-function normalizeTeacherIdentifier(value) {
+function normalizeTutorIdentifier(value) {
     if (!value || typeof value !== 'string') return '';
     return value.replace(/_DOT_/g, '.').trim();
 }
@@ -405,7 +405,7 @@ function getRequestedTabFromUrl() {
     return allowedTabs.has(requestedTab) ? requestedTab : '';
 }
 
-function hasQualifiedTeacherAccessForUnit(fileName, courseId, email) {
+function hasQualifiedTutorAccessForUnit(fileName, courseId, email) {
     if (!email || !fileName || !courseId) return false;
     
     const courseConfig = dashboardData?.courseConfigs?.[courseId] || {};
@@ -415,12 +415,12 @@ function hasQualifiedTeacherAccessForUnit(fileName, courseId, email) {
         .map(id => dashboardData?.unitToDocId?.[id] || id)
         .find(id => dashboardData?.courseConfigs?.[id]) || fileName;
     const unitDocConfig = dashboardData?.courseConfigs?.[targetDocId] || {};
-    const unitTeachersArr = Array.isArray(unitDocConfig.authorizedTeachers) ? unitDocConfig.authorizedTeachers : [];
-    const legacyTeachers = candidateIds.flatMap(id =>
+    const unitTutorsArr = Array.isArray(unitDocConfig.authorizedTutors) ? unitDocConfig.authorizedTutors : [];
+    const legacyTutors = candidateIds.flatMap(id =>
         (unitConfigs[id] && typeof unitConfigs[id] === 'object') ? Object.keys(unitConfigs[id]) : []
-    ).map(normalizeTeacherIdentifier).filter(Boolean);
+    ).map(normalizeTutorIdentifier).filter(Boolean);
 
-    return new Set([...unitTeachersArr, ...legacyTeachers]).has(email);
+    return new Set([...unitTutorsArr, ...legacyTutors]).has(email);
 }
 
 async function hasPaidStudentAccessForUnit(courseId, unitId) {
@@ -455,15 +455,15 @@ function configureStudentTabsForUnitAccess() {
 
 function filterAssignmentsForCurrentView(assignments = []) {
     const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
-    const isQualifiedTeacher = hasQualifiedTeacherAccessForUnit(filterUnitId, filterCourseId, myEmail);
+    const isQualifiedTutor = hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, myEmail);
     const normalizeEmail = (value = '') => String(value || '').trim().toLowerCase();
     const isOwnAssignment = (assignment) =>
         (assignment.userId || assignment.uid) === myUid ||
         normalizeEmail(assignment.studentEmail || assignment.userEmail) === normalizeEmail(myEmail);
 
-    if (isQualifiedTeacher) {
+    if (isQualifiedTutor) {
         return assignments.filter(a =>
-            normalizeEmail(a.assignedTeacherEmail) === normalizeEmail(myEmail) &&
+            normalizeEmail(a.assignedTutorEmail) === normalizeEmail(myEmail) &&
             !isOwnAssignment(a)
         );
     }
@@ -576,8 +576,8 @@ function renderStudentDashboard(data, filterUnitId = null) {
                                     </span>
                                 </td>
                                 <td class="py-3 px-2 text-right font-bold text-blue-600">${a.grade !== null ? a.grade : '-'}</td>
-                                <td class="py-3 px-2 text-right text-gray-500 max-w-xs truncate" title="${escapeHtml(a.teacherFeedback)}">
-                                    ${a.teacherFeedback ? escapeHtml(a.teacherFeedback) : '-'}
+                                <td class="py-3 px-2 text-right text-gray-500 max-w-xs truncate" title="${escapeHtml(a.tutorFeedback)}">
+                                    ${a.tutorFeedback ? escapeHtml(a.tutorFeedback) : '-'}
                                 </td>
                             </tr>
                         `).join('') : '<tr><td colspan="5" class="py-4 text-center text-gray-500">此課程尚無繳交作業</td></tr>'}
@@ -675,16 +675,16 @@ function renderAdminDashboard(data, filterUnitId = null) {
     if (!filterCourseId && filterUnitId) {
         filterCourseId = findParentCourseIdByUnit(filterUnitId);
     }
-    const showQualifiedTeacherTabs =
+    const showQualifiedTutorTabs =
         !!filterUnitId &&
         !filterUnitId.includes('-master-') &&
-        hasQualifiedTeacherAccessForUnit(filterUnitId, filterCourseId, currentUserEmail);
+        hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, currentUserEmail);
 
     if (settingsTabBtn) {
-        settingsTabBtn.classList.toggle('hidden', !showQualifiedTeacherTabs);
+        settingsTabBtn.classList.toggle('hidden', !showQualifiedTutorTabs);
     }
     if (earningsTabBtn) {
-        earningsTabBtn.classList.toggle('hidden', !showQualifiedTeacherTabs);
+        earningsTabBtn.classList.toggle('hidden', !showQualifiedTutorTabs);
     }
 
     // Stats (Base on filtered students if unit is selected)
@@ -1050,7 +1050,7 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
         return;
     }
 
-    if (myRole === 'admin' || myRole === 'teacher') {
+    if (myRole === 'admin' || myRole === 'tutor') {
         const cfg = (dashboardData && dashboardData.courseConfigs) ? dashboardData.courseConfigs[courseId] : null;
         const inviteLink = cfg && cfg.githubClassroomUrls ? cfg.githubClassroomUrls[unitId] : null;
 
@@ -1080,7 +1080,7 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
                 return;
             }
 
-            if (access.requiresTeacherAssignment && !access.assignedTeacherEmail) {
+            if (access.requiresTutorAssignment && !access.assignedTutorEmail) {
                 alert("此單元尚未完成老師指派，作業入口會在老師指派完成後開放。");
                 return;
             }
@@ -1100,7 +1100,7 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
 
 function renderAssignments(assignments, guideContent = "") {
     const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
-    const canManageAssignments = hasQualifiedTeacherAccessForUnit(filterUnitId, filterCourseId, myEmail);
+    const canManageAssignments = hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, myEmail);
     const thAction = document.getElementById('assignment-th-action');
     if (thAction) thAction.classList.toggle('hidden', !canManageAssignments);
 
@@ -1354,7 +1354,7 @@ function renderAdminConsole() {
             <div class="mb-10 bg-orange-50 border border-orange-100 rounded-2xl overflow-hidden shadow-sm">
                 <div class="px-6 py-4 border-b border-orange-100 flex items-center justify-between">
                     <h4 class="text-sm font-black text-orange-900 flex items-center gap-2">
-                        <span class="animate-pulse">🔔</span> 待處理教師申請 (${pendingApps.length})
+                        <span class="animate-pulse">🔔</span> 待處理導師申請 (${pendingApps.length})
                     </h4>
                 </div>
                 <div class="p-6 space-y-4">
@@ -1365,7 +1365,7 @@ function renderAdminConsole() {
                                 <div>
                                     <div class="text-sm font-black text-gray-800">${escapeHtml(app.userEmail)}</div>
                                     <div class="text-[10px] font-mono text-gray-400 mt-0.5">${escapeHtml(app.unitId)}</div>
-                                    ${app.source === 'teacher_recommendation' ? `<div class="text-[10px] text-orange-500 mt-0.5">由老師推薦：${escapeHtml(app.recommendedByEmail || 'unknown')}</div>` : ''}
+                                    ${app.source === 'tutor_recommendation' ? `<div class="text-[10px] text-orange-500 mt-0.5">由老師推薦：${escapeHtml(app.recommendedByEmail || 'unknown')}</div>` : ''}
                                     <div class="text-[10px] text-gray-400 mt-0.5">${new Date(app.appliedAt?._seconds * 1000).toLocaleString()}</div>
                                 </div>
                             </div>
@@ -1448,14 +1448,14 @@ function renderAdminConsole() {
                         .find(id => dashboardData?.courseConfigs?.[id]) || lesson.courseId;
                     const unitDocConfig = dashboardData?.courseConfigs?.[targetDocId] || {};
                     
-                    const unitTeachersArr = Array.isArray(unitDocConfig.authorizedTeachers) ? unitDocConfig.authorizedTeachers : [];
-                    const legacyTeachers = ((unitConfigs[unitFile] && typeof unitConfigs[unitFile] === 'object') ? Object.keys(unitConfigs[unitFile]) : [])
-                        .map(normalizeTeacherIdentifier)
+                    const unitTutorsArr = Array.isArray(unitDocConfig.authorizedTutors) ? unitDocConfig.authorizedTutors : [];
+                    const legacyTutors = ((unitConfigs[unitFile] && typeof unitConfigs[unitFile] === 'object') ? Object.keys(unitConfigs[unitFile]) : [])
+                        .map(normalizeTutorIdentifier)
                         .filter(Boolean);
-                    const teacherDetailsEmails = Object.values(unitDocConfig.teacherDetails || {})
+                    const tutorDetailsEmails = Object.values(unitDocConfig.tutorDetails || {})
                         .map(entry => entry?.email)
                         .filter(Boolean);
-                    const unitTeachers = Array.from(new Set([...unitTeachersArr, ...legacyTeachers, ...teacherDetailsEmails]))
+                    const unitTutors = Array.from(new Set([...unitTutorsArr, ...legacyTutors, ...tutorDetailsEmails]))
                         .filter(t => t && t !== 'default');
                     const unitName = formatUnitName(unitFile) || unitFile;
 
@@ -1473,9 +1473,9 @@ function renderAdminConsole() {
                                 <div class="text-xs text-gray-400 font-mono mt-1.5 opacity-80">${escapeHtml(unitFile)}</div>
                             </div>
 
-                            <!-- Section 2: Teacher Management -->
+                            <!-- Section 2: Tutor Management -->
                             <div>
-                                <div class="text-[11px] text-orange-400 font-black uppercase mb-3.5 tracking-widest">合格教師 / Teachers</div>
+                                <div class="text-[11px] text-orange-400 font-black uppercase mb-3.5 tracking-widest">合格導師 / Tutors</div>
                                 <div class="bg-white rounded-xl border border-orange-100 overflow-hidden mb-5">
                                     <table class="w-full text-left border-collapse text-[11px]">
                                         <thead>
@@ -1487,9 +1487,9 @@ function renderAdminConsole() {
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-orange-50">
-                                            ${unitTeachers.length > 0
-                                ? unitTeachers.map(email => {
-                                    const details = unitDocConfig.teacherDetails?.[email] || {};
+                                            ${unitTutors.length > 0
+                                ? unitTutors.map(email => {
+                                    const details = unitDocConfig.tutorDetails?.[email] || {};
                                     const displayEmail = email.includes('@') ? email : (details.email || email);
                                     const name = details.name || displayEmail.split('@')[0];
                                     const time = details.qualifiedAt
@@ -1502,7 +1502,7 @@ function renderAdminConsole() {
                                                 <td class="py-2.5 px-4 font-mono text-gray-500">${escapeHtml(displayEmail)}</td>
                                                 <td class="py-2.5 px-4 text-gray-400">${escapeHtml(time)}</td>
                                                 <td class="py-2.5 px-4 text-right">
-                                                    <button onclick="handleUnitTeacherAuth('${lesson.courseId}', '${unitFile}', '${displayEmail}', 'remove', '${lesson.courseId}')" 
+                                                    <button onclick="handleUnitTutorAuth('${lesson.courseId}', '${unitFile}', '${displayEmail}', 'remove', '${lesson.courseId}')" 
                                                         class="text-red-500 hover:text-red-700 transition-colors p-1 font-bold">
                                                         移除 ✕
                                                     </button>
@@ -1510,15 +1510,15 @@ function renderAdminConsole() {
                                             </tr>
                                         `;
                                 }).join('')
-                                : '<tr><td colspan="4" class="py-8 text-center text-gray-300 italic">目前無核心授權教師</td></tr>'
+                                : '<tr><td colspan="4" class="py-8 text-center text-gray-300 italic">目前無核心授權導師</td></tr>'
                             }
                                         </tbody>
                                     </table>
                                 </div>
 
-                                <!-- [REMOVED] New manual teacher addition UI -->
+                                <!-- [REMOVED] New manual tutor addition UI -->
                                 <div class="p-3 bg-gray-50 border border-gray-100 rounded-xl text-[10px] text-gray-400 italic">
-                                    💡 註：系統現已改用「申請與審核」機制。教師需從此單元儀表板提交申請，管理員方可於控制台頂部進行審核。
+                                    💡 註：系統現已改用「申請與審核」機制。導師需從此單元儀表板提交申請，管理員方可於控制台頂部進行審核。
                                 </div>
                             </div>
 
@@ -1537,7 +1537,7 @@ function renderAdminConsole() {
                                             <tr class="bg-gray-100/50 text-gray-500 border-b border-gray-100 uppercase tracking-tighter font-black">
                                                 <th class="py-2.5 px-4">姓名 / Name</th>
                                                 <th class="py-2.5 px-4">學生 Email</th>
-                                                <th class="py-2.5 px-4">目前指派教師</th>
+                                                <th class="py-2.5 px-4">目前指派導師</th>
                                                 <th class="py-2.5 px-4 text-right">變更指派</th>
                                             </tr>
                                         </thead>
@@ -1553,7 +1553,7 @@ function renderAdminConsole() {
                             if (unitStudents.length === 0) return '<tr><td colspan="3" class="py-4 text-center text-gray-400 italic">無授權學生</td></tr>';
 
                             return unitStudents.map(s => {
-                                const unitAssignedTeacher = (s.unitAssignments && s.unitAssignments[unitFile]) ? s.unitAssignments[unitFile] : null;
+                                const unitAssignedTutor = (s.unitAssignments && s.unitAssignments[unitFile]) ? s.unitAssignments[unitFile] : null;
 
                                 return `
                                             <tr class="hover:bg-orange-50/10 transition-colors">
@@ -1561,14 +1561,14 @@ function renderAdminConsole() {
                                                 <td class="py-2 px-4 font-mono text-gray-500">${escapeHtml(s.email)}</td>
                                                 <td class="py-2 px-4">
                                                     <span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md font-bold">
-                                                        ${unitAssignedTeacher ? escapeHtml(unitAssignedTeacher) : '尚未指派'}
+                                                        ${unitAssignedTutor ? escapeHtml(unitAssignedTutor) : '尚未指派'}
                                                     </span>
                                                 </td>
                                                 <td class="py-2 px-4 text-right">
-                                                    <select onchange="handleAssignTeacher('${s.uid}', '${unitFile}', this.value)" 
+                                                    <select onchange="handleAssignTutor('${s.uid}', '${unitFile}', this.value)" 
                                                         class="bg-white border border-gray-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-orange-200 text-[10px] font-bold text-gray-600">
-                                                        <option value="">-- 指派教師 --</option>
-                                                        ${unitTeachers.map(t => `<option value="${t}" ${unitAssignedTeacher === t ? 'selected' : ''}>${escapeHtml(t)}</option>`).join('')}
+                                                        <option value="">-- 指派導師 --</option>
+                                                        ${unitTutors.map(t => `<option value="${t}" ${unitAssignedTutor === t ? 'selected' : ''}>${escapeHtml(t)}</option>`).join('')}
                                                         <option value="none">移除指派</option>
                                                     </select>
                                                 </td>
@@ -1607,18 +1607,18 @@ function renderAdminConsole() {
     adminPanel.innerHTML = html;
 }
 
-window.handleUnitTeacherAuth = async function (courseId, unitFile, teacherEmail, action, parentCourseId = null) {
-    if (!teacherEmail) return alert("請輸入 Email");
+window.handleUnitTutorAuth = async function (courseId, unitFile, tutorEmail, action, parentCourseId = null) {
+    if (!tutorEmail) return alert("請輸入 Email");
     const msg = document.getElementById('admin-msg');
 
     try {
         if (msg) msg.textContent = action === 'add' ? "正在新增單元授權..." : "正在移除單元授權...";
 
         // [MODIFIED] Use both unitFile (as specific courseId) and parentCourseId (for legacy cleanup)
-        const authFunc = httpsCallable(functions, 'authorizeTeacherForCourse');
+        const authFunc = httpsCallable(functions, 'authorizeTutorForCourse');
         await authFunc({ 
             courseId: unitFile, 
-            teacherEmail, 
+            tutorEmail, 
             action,
             parentCourseId: parentCourseId || courseId // Use courseId as fallback if specifically passed
         });
@@ -1657,21 +1657,21 @@ window.toggleAdminSuperMode = function (enabled) {
     renderAdminConsole();
 };
 
-window.handleAssignTeacher = async function (studentUid, unitId, teacherEmail) {
+window.handleAssignTutor = async function (studentUid, unitId, tutorEmail) {
     if (!studentUid || !unitId) {
         alert(`Missing data: studentUid=${studentUid}, unitId=${unitId}`);
         return;
     }
     const msg = document.getElementById('admin-msg');
-    const finalTeacher = (teacherEmail === 'none' || !teacherEmail) ? "" : teacherEmail;
+    const finalTutor = (tutorEmail === 'none' || !tutorEmail) ? "" : tutorEmail;
 
-    // alert(`Sending: studentUid=${studentUid}, unitId=${unitId}, teacherEmail=${finalTeacher}`);
+    // alert(`Sending: studentUid=${studentUid}, unitId=${unitId}, tutorEmail=${finalTutor}`);
 
     try {
-        if (msg) msg.textContent = "正在更新教師指派...";
+        if (msg) msg.textContent = "正在更新導師指派...";
 
-        const assignFunc = httpsCallable(functions, 'assignStudentToTeacher');
-        await assignFunc({ studentUid, unitId, teacherEmail: finalTeacher });
+        const assignFunc = httpsCallable(functions, 'assignStudentToTutor');
+        await assignFunc({ studentUid, unitId, tutorEmail: finalTutor });
 
         // Refresh the whole dashboard to get fresh data from server
         await loadDashboard();
@@ -1693,12 +1693,12 @@ function setupGradingFunctions() {
     const feedbackInput = document.getElementById('grade-feedback');
     const submitBtn = document.getElementById('btn-submit-grade');
     const historyContainer = document.getElementById('assignment-history');
-    const recommendationBox = document.getElementById('teacher-recommendation-box');
-    const recommendationDesc = document.getElementById('teacher-recommendation-desc');
-    const recommendationStatus = document.getElementById('teacher-recommendation-status');
+    const recommendationBox = document.getElementById('tutor-recommendation-box');
+    const recommendationDesc = document.getElementById('tutor-recommendation-desc');
+    const recommendationStatus = document.getElementById('tutor-recommendation-status');
     const recommendationBtn = document.getElementById('btn-submit-recommendation');
 
-    function setTeacherRecommendationState({
+    function setTutorRecommendationState({
         visible,
         message = '',
         messageClass = 'text-orange-700',
@@ -1716,17 +1716,17 @@ function setupGradingFunctions() {
         recommendationBtn.classList.toggle('cursor-not-allowed', buttonDisabled);
     }
 
-    function refreshTeacherRecommendationUI(assignment) {
+    function refreshTutorRecommendationUI(assignment) {
         if (!recommendationBox || !recommendationDesc) return;
 
         if (!assignment) {
-            setTeacherRecommendationState({ visible: false });
+            setTutorRecommendationState({ visible: false });
             return;
         }
 
         const canonicalUnitId = resolveCanonicalUnitId(assignment.unitId);
         const unitConfig = dashboardData?.courseConfigs?.[canonicalUnitId] || {};
-        const authorizedTeachers = Array.isArray(unitConfig.authorizedTeachers) ? unitConfig.authorizedTeachers : [];
+        const authorizedTutors = Array.isArray(unitConfig.authorizedTutors) ? unitConfig.authorizedTutors : [];
         const pendingApps = dashboardData?.pendingApplications || [];
         const studentEmail = assignment.studentEmail || assignment.userEmail || '';
         const hasPendingRecommendation = pendingApps.some(app =>
@@ -1737,10 +1737,10 @@ function setupGradingFunctions() {
 
         recommendationDesc.textContent = `若 ${studentEmail || '該學生'} 在此單元表現成熟，可由授課老師直接送出推薦，交由管理員審核。`;
 
-        if (authorizedTeachers.includes(studentEmail)) {
-            setTeacherRecommendationState({
+        if (authorizedTutors.includes(studentEmail)) {
+            setTutorRecommendationState({
                 visible: true,
-                message: '此學生已是本單元合格教師。',
+                message: '此學生已是本單元合格導師。',
                 messageClass: 'text-green-700',
                 buttonLabel: '已具資格',
                 buttonDisabled: true
@@ -1749,7 +1749,7 @@ function setupGradingFunctions() {
         }
 
         if (hasPendingRecommendation) {
-            setTeacherRecommendationState({
+            setTutorRecommendationState({
                 visible: true,
                 message: '此學生已有待審推薦，等待管理員審核中。',
                 messageClass: 'text-orange-700',
@@ -1759,7 +1759,7 @@ function setupGradingFunctions() {
             return;
         }
 
-        setTeacherRecommendationState({
+        setTutorRecommendationState({
             visible: true,
             message: '推薦送出後，管理員控制台會出現待審申請卡片。',
             messageClass: 'text-orange-700',
@@ -1775,7 +1775,7 @@ function setupGradingFunctions() {
 
         idInput.value = id;
         scoreInput.value = assignment.grade || '';
-        feedbackInput.value = assignment.teacherFeedback || '';
+        feedbackInput.value = assignment.tutorFeedback || '';
 
         // Render History
         const historyMap = (assignment.submissionHistory || []).map(h => {
@@ -1794,13 +1794,13 @@ function setupGradingFunctions() {
                     </div>
                     <div class="mt-1 text-gray-800 break-all whitespace-pre-wrap">${escapeHtml(h.content || h.url)}</div>
                     ${h.note ? `<div class="text-xs text-gray-400 italic">Note: ${escapeHtml(h.note)}</div>` : ''}
-                    ${h.grader ? `<div class="text-xs text-orange-600 mt-1">Graded by Teacher</div>` : ''}
+                    ${h.grader ? `<div class="text-xs text-orange-600 mt-1">Graded by Tutor</div>` : ''}
                 </div>
         `;
         }).join('');
 
         historyContainer.innerHTML = historyMap || '<p class="text-gray-400 text-center">No history</p>';
-        refreshTeacherRecommendationUI(assignment);
+        refreshTutorRecommendationUI(assignment);
 
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -1850,7 +1850,7 @@ function setupGradingFunctions() {
         }
     };
 
-    window.submitTeacherRecommendation = async function () {
+    window.submitTutorRecommendation = async function () {
         if (!currentGradingAssignment || !recommendationBtn) return;
 
         recommendationBtn.disabled = true;
@@ -1861,10 +1861,10 @@ function setupGradingFunctions() {
         }
 
         try {
-            const recommendTeacherForUnit = httpsCallable(functions, 'recommendTeacherForUnit');
-            const result = await recommendTeacherForUnit({ assignmentId: currentGradingAssignment.id });
+            const recommendTutorForUnit = httpsCallable(functions, 'recommendTutorForUnit');
+            const result = await recommendTutorForUnit({ assignmentId: currentGradingAssignment.id });
 
-            setTeacherRecommendationState({
+            setTutorRecommendationState({
                 visible: true,
                 message: '已成功送出老師推薦，等待管理員審核。',
                 messageClass: 'text-green-700',
@@ -1881,19 +1881,19 @@ function setupGradingFunctions() {
                 status: 'pending'
             });
         } catch (e) {
-            console.error('Teacher recommendation failed:', e);
+            console.error('Tutor recommendation failed:', e);
             const msg = e?.message || '';
 
-            if (msg.includes('already a qualified teacher')) {
-                setTeacherRecommendationState({
+            if (msg.includes('already a qualified tutor')) {
+                setTutorRecommendationState({
                     visible: true,
-                    message: '此學生已是本單元合格教師。',
+                    message: '此學生已是本單元合格導師。',
                     messageClass: 'text-green-700',
                     buttonLabel: '已具資格',
                     buttonDisabled: true
                 });
             } else if (msg.includes('pending application')) {
-                setTeacherRecommendationState({
+                setTutorRecommendationState({
                     visible: true,
                     message: '此學生已有待審推薦，等待管理員審核中。',
                     messageClass: 'text-orange-700',
@@ -1901,7 +1901,7 @@ function setupGradingFunctions() {
                     buttonDisabled: true
                 });
             } else {
-                setTeacherRecommendationState({
+                setTutorRecommendationState({
                     visible: true,
                     message: `推薦失敗：${msg}`,
                     messageClass: 'text-red-600',
@@ -2051,8 +2051,8 @@ function setupSettingsFeature() {
 }
 
 /**
- * Checks if a user is explicitly authorized as a teacher for a specific unit.
- * Logic matches renderAdminConsole: unit-level authorizedTeachers OR legacy classroom URL keys.
+ * Checks if a user is explicitly authorized as a tutor for a specific unit.
+ * Logic matches renderAdminConsole: unit-level authorizedTutors OR legacy classroom URL keys.
  */
 function isUserAuthorizedForUnit(fileName, courseId, email) {
     if (!email) return false;
@@ -2068,16 +2068,16 @@ function isUserAuthorizedForUnit(fileName, courseId, email) {
         .map(id => dashboardData?.unitToDocId?.[id] || id)
         .find(id => dashboardData?.courseConfigs?.[id]) || fileName;
 
-    // 1. Check unit-specific document for authorizedTeachers array
+    // 1. Check unit-specific document for authorizedTutors array
     const unitDocConfig = dashboardData?.courseConfigs?.[targetDocId] || {};
-    const unitTeachersArr = Array.isArray(unitDocConfig.authorizedTeachers) ? unitDocConfig.authorizedTeachers : [];
+    const unitTutorsArr = Array.isArray(unitDocConfig.authorizedTutors) ? unitDocConfig.authorizedTutors : [];
 
-    // 2. Legacy/Fallback: Teachers specifically authorized for THIS unit in course-level doc
-    const legacyTeachers = candidateIds.flatMap(id =>
+    // 2. Legacy/Fallback: Tutors specifically authorized for THIS unit in course-level doc
+    const legacyTutors = candidateIds.flatMap(id =>
         (unitConfigs[id] && typeof unitConfigs[id] === 'object') ? Object.keys(unitConfigs[id]) : []
-    ).map(normalizeTeacherIdentifier).filter(Boolean);
+    ).map(normalizeTutorIdentifier).filter(Boolean);
 
-    const allAuthorized = new Set([...unitTeachersArr, ...legacyTeachers]);
+    const allAuthorized = new Set([...unitTutorsArr, ...legacyTutors]);
     return allAuthorized.has(email);
 }
 
@@ -2104,7 +2104,7 @@ async function renderSettingsTab(filterUnitId = null) {
         }
 
         // [MODIFIED] Wait for data if it's somehow missing but being called
-        if (!dashboardData && (myRole === 'admin' || myRole === 'teacher')) {
+        if (!dashboardData && (myRole === 'admin' || myRole === 'tutor')) {
             console.warn("[Settings] dashboardData missing, possibly still loading...");
             return; // Exit and wait for loadDashboard to call us again
         }
@@ -2138,7 +2138,7 @@ async function renderSettingsTab(filterUnitId = null) {
 
         if (authorizedLessons.length === 0) {
             console.warn("[Settings] No authorized lessons found for user.");
-            const msg = `<div class="text-center py-20 text-gray-400">目前尚無獲准管理的課程（需為單元合格教師）。</div>`;
+            const msg = `<div class="text-center py-20 text-gray-400">目前尚無獲准管理的課程（需為單元合格導師）。</div>`;
             assignmentContainer.innerHTML = msg;
             guideContainer.innerHTML = msg;
             return;
@@ -2222,9 +2222,9 @@ async function renderSettingsTab(filterUnitId = null) {
     }
 }
 
-function renderAssignmentConfigRow(courseId, fileName, teacherMap = {}, courseTitle = "", isAuthorized) {
+function renderAssignmentConfigRow(courseId, fileName, tutorMap = {}, courseTitle = "", isAuthorized) {
     const userEmail = auth.currentUser?.email;
-    let entries = Object.entries(teacherMap || {}).filter(([teacher]) => teacher === userEmail);
+    let entries = Object.entries(tutorMap || {}).filter(([tutor]) => tutor === userEmail);
     if (entries.length === 0 && userEmail) entries.push([userEmail, '']);
 
     const unitName = formatUnitName(fileName);
@@ -2242,9 +2242,9 @@ function renderAssignmentConfigRow(courseId, fileName, teacherMap = {}, courseTi
                 <div class="flex-grow max-w-2xl">
                     ${isAuthorized ? `
                         <div class="text-[10px] text-blue-400 font-black uppercase mb-2 tracking-widest">作業連結 / Link</div>
-                        ${entries.map(([teacher, url]) => `
+                        ${entries.map(([tutor, url]) => `
                             <div class="flex gap-2 assignment-link-row">
-                                <input type="hidden" class="assignment-id-input" value="${escapeHtml(teacher)}">
+                                <input type="hidden" class="assignment-id-input" value="${escapeHtml(tutor)}">
                                 <input type="url" placeholder="GitHub Classroom 連結" value="${escapeHtml(url)}" 
                                     class="assignment-url-input flex-grow px-4 py-2 text-xs border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-50/50 bg-gray-50/30 transition-all font-mono">
                                 <button onclick="saveAllSettings(this)"
@@ -2272,7 +2272,7 @@ function renderGuideRow(courseId, fileName, tutorSegment, courseTitle, isAuthori
                     <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
                     ${escapeHtml(courseTitle)} / ${escapeHtml(fileName)}
                 </div>
-                <div class="text-sm text-gray-400 italic">🔒 僅限該單元之「合格教師」閱讀完整教學指引。</div>
+                <div class="text-sm text-gray-400 italic">🔒 僅限該單元之「合格導師」閱讀完整教學指引。</div>
             `}
         </div>
     `;
@@ -2351,17 +2351,17 @@ window.saveAllSettings = async function (clickedBtn = null) {
 
         if (!configsByCourse[cid]) configsByCourse[cid] = {};
 
-        const teacherMap = {};
+        const tutorMap = {};
         card.querySelectorAll('.assignment-link-row').forEach(row => {
             const tid = row.querySelector('.assignment-id-input').value.trim();
             const url = row.querySelector('.assignment-url-input').value.trim();
             if (tid && url) {
-                teacherMap[tid] = url;
+                tutorMap[tid] = url;
             }
         });
 
-        if (Object.keys(teacherMap).length > 0) {
-            configsByCourse[cid][fname] = teacherMap;
+        if (Object.keys(tutorMap).length > 0) {
+            configsByCourse[cid][fname] = tutorMap;
         }
     });
 
@@ -2480,7 +2480,7 @@ window.handleDecideApplication = async function (applicationId, status) {
     });
 
     try {
-        const decideFunc = httpsCallable(functions, 'decideTeacherApplication');
+        const decideFunc = httpsCallable(functions, 'decideTutorApplication');
         const result = await decideFunc({ applicationId, status, adminMessage });
         
         if (result.data.success) {

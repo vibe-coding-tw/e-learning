@@ -772,7 +772,7 @@ window.openSubmissionModal = async function (assignmentId, title) {
                 return;
             }
 
-            if (assignmentAccess?.requiresTeacherAssignment && !assignmentAccess?.assignedTeacherEmail) {
+            if (assignmentAccess?.requiresTutorAssignment && !assignmentAccess?.assignedTutorEmail) {
                 alert("此單元尚未完成老師指派，作業入口會在老師指派完成後開放。");
                 return;
             }
@@ -876,7 +876,7 @@ window.openSubmissionModal = async function (assignmentId, title) {
 };
 
 /**
- * Helper to pick the right URL based on teacher map
+ * Helper to pick the right URL based on tutor map
  */
 function resolveClassroomUrl(urlConfig) {
     if (typeof urlConfig === 'string') return urlConfig;

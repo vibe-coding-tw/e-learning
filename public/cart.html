@@ -325,7 +325,7 @@
         const verifyPromoBtn = document.getElementById('verify-promo-btn');
         const promoStatus = document.getElementById('promo-status');
         const DEFAULT_MENTOR = 'info@vibe-coding.tw';
-        let verifiedMentor = DEFAULT_MENTOR;
+        let verifiedTutor = DEFAULT_MENTOR;
 
         verifyPromoBtn.addEventListener('click', async () => {
             const code = promoInput.value.trim().toUpperCase();
@@ -340,8 +340,8 @@
                 const result = await verifyPromoCode({ promoCode: code });
                 
                 if (result.data && result.data.success) {
-                    verifiedMentor = result.data.mentor;
-                    promoStatus.textContent = `✅ 已套用：${result.data.mentorName || verifiedMentor} 的推薦`;
+                    verifiedTutor = result.data.tutor;
+                    promoStatus.textContent = `✅ 已套用：${result.data.tutorName || verifiedTutor} 的推薦`;
                     promoStatus.className = 'mt-2 text-sm text-green-600 font-bold';
                     promoInput.readOnly = true;
                     verifyPromoBtn.classList.add('hidden');
@@ -351,7 +351,7 @@
             } catch (err) {
                 promoStatus.textContent = `❌ ${err.message}`;
                 promoStatus.className = 'mt-2 text-sm text-red-600';
-                verifiedMentor = DEFAULT_MENTOR; // FALLBACK
+                verifiedTutor = DEFAULT_MENTOR; // FALLBACK
             } finally {
                 promoStatus.classList.remove('hidden');
                 verifyPromoBtn.disabled = false;
@@ -456,7 +456,7 @@
                     cartDetails: cartItems,
                     logistics: logisticsInfo,
                     promoCode: promoInput.value.trim().toUpperCase(), // [NEW] Pass promo code
-                    referralMentor: verifiedMentor, // [NEW] Pass verified mentor email
+                    referralTutor: verifiedTutor, // [NEW] Pass verified tutor email
                     // 設定交易完成後的返回網址
                     returnUrl: window.location.origin + '/payment-return.html'
                 });
