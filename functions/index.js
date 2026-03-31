@@ -2135,45 +2135,54 @@ exports.getDashboardData = onCall(async (request) => {
     }
 });
 
-// [TEMP] ONE-OFF CLEANUP: Delete all PAGE_VIEW logs
-exports.cleanupPageViews = onCall(async (request) => {
+// [TEMP] ONE-OFF SYNC: Sync all Auth users to Firestore roles
+exports.syncAuthUsersToFirestore = onCall(async (request) => {
     const { auth } = request;
+    // Only rover.k.chen@gmail.com or admin can run this
     if (!auth || (auth.token.role !== 'admin' && auth.token.email !== 'rover.k.chen@gmail.com')) {
-        throw new HttpsError('permission-denied', 'Only admin can run cleanup.');
+        throw new HttpsError('permission-denied', 'Only admin can run sync.');
     }
 
     const db = admin.firestore();
-    const batchSize = 400;
-    let totalDeleted = 0;
-
-    async function deleteBatch() {
-        const snapshot = await db.collection('activity_logs')
-            .where('action', '==', 'PAGE_VIEW')
-            .limit(batchSize)
-            .get();
-
-        if (snapshot.empty) return 0;
-
-        const batch = db.batch();
-        snapshot.docs.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-
-        console.log(`[Cleanup] Deleted ${snapshot.size} PAGE_VIEW logs.`);
-        return snapshot.size;
-    }
-
+    let totalSynced = 0;
+    
     try {
-        let deletedCount;
+        let nextPageToken;
         do {
-            deletedCount = await deleteBatch();
-            totalDeleted += deletedCount;
-            // Add a small delay between batches to avoid overloading
-            if (deletedCount > 0) await new Promise(r => setTimeout(r, 200));
-        } while (deletedCount > 0);
+            const listUsersResult = await admin.auth().listUsers(1000, nextPageToken);
+            const authUsers = listUsersResult.users;
+            
+            const batch = db.batch();
+            let batchCount = 0;
 
-        return { success: true, totalDeleted };
+            for (const au of authUsers) {
+                const userRef = db.collection('users').doc(au.uid);
+                // Use { merge: true } to preserve existing assignments but update basic info
+                batch.set(userRef, {
+                    email: au.email || "",
+                    name: au.displayName || (au.email ? au.email.split('@')[0] : "New User"),
+                    // Default role for current users
+                    role: (au.email === 'rover.k.chen@gmail.com') ? 'admin' : 'student',
+                    // CRITICAL: Preserve original registration date
+                    createdAt: au.metadata.creationTime ? new Date(au.metadata.creationTime) : admin.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                
+                batchCount++;
+                totalSynced++;
+            }
+
+            if (batchCount > 0) {
+                await batch.commit();
+                console.log(`[Sync] Committed batch of ${batchCount} users.`);
+            }
+
+            nextPageToken = listUsersResult.pageToken;
+        } while (nextPageToken);
+
+        return { success: true, totalSynced };
     } catch (err) {
-        console.error("[Cleanup] Error:", err);
+        console.error("[Sync] Error:", err);
         throw new HttpsError('internal', err.message);
     }
 });
