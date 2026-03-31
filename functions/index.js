@@ -98,27 +98,22 @@ function extractHiddenSectionContent(html, sectionId) {
     if (!openMatch) return "";
 
     const sectionStart = openMatch.index;
-    let cursor = sectionStart;
-    let depth = 0;
+    const tagContentStart = sectionStart + openMatch[0].length;
+    
+    let depth = 1;
     const sectionTagRegex = /<\/?section\b[^>]*>/gi;
+    sectionTagRegex.lastIndex = tagContentStart; 
+
     let match;
-
-    while ((match = sectionTagRegex.exec(html.slice(cursor))) !== null) {
+    while ((match = sectionTagRegex.exec(html)) !== null) {
         const tag = match[0];
-        const absoluteIndex = cursor + match.index;
-        const isClosingTag = /^<\//.test(tag);
-
-        if (!isClosingTag) {
-            depth += 1;
-            if (depth === 1) {
-                cursor = absoluteIndex + tag.length;
-            }
+        if (!tag.startsWith('</')) {
+            depth++;
         } else {
-            depth -= 1;
+            depth--;
             if (depth === 0) {
-                return html.slice(cursor, absoluteIndex).trim();
+                return html.slice(tagContentStart, match.index).trim();
             }
-            if (depth < 0) break;
         }
     }
 
@@ -1774,29 +1769,21 @@ exports.getDashboardData = onCall(async (request) => {
 
                             const html = fs.readFileSync(filePath, 'utf8');
 
-                            const guideContent = extractHiddenSectionContent(html, 'instructor-guide');
+                            const guideContent = extractHiddenSectionContent(html, 'tutor-guide');
                             const assignContent = extractHiddenSectionContent(html, 'assignment-guide');
 
                             if (guideContent) {
-                                if (guideContent) {
-                                    if (!aggregatedGuides.instructor) aggregatedGuides.instructor = {};
-                                    aggregatedGuides.instructor[file] = guideContent;
-                                    console.log(`[getDashboardData] ✅ Found Instructor Guide for ${file} in ${cid}`);
-                                } else {
-                                    console.log(`[getDashboardData] ⚠️ Instructor Guide for ${file} in ${cid} is EMPTY`);
-                                }
+                                if (!aggregatedGuides.tutor) aggregatedGuides.tutor = {};
+                                aggregatedGuides.tutor[file] = guideContent;
+                                console.log(`[getDashboardData] ✅ Found Tutor Guide for ${file} in ${cid}`);
                             } else {
-                                console.log(`[getDashboardData] ❌ No Instructor Guide match for ${file} in ${cid}`);
+                                console.log(`[getDashboardData] ❌ No Tutor Guide match for ${file} in ${cid}`);
                             }
 
                             if (assignContent) {
-                                if (assignContent) {
-                                    if (!aggregatedGuides.assignment) aggregatedGuides.assignment = {};
-                                    aggregatedGuides.assignment[file] = assignContent;
-                                    console.log(`[getDashboardData] ✅ Found Assignment Guide for ${file} in ${cid}`);
-                                } else {
-                                    console.log(`[getDashboardData] ⚠️ Assignment Guide for ${file} in ${cid} is EMPTY`);
-                                }
+                                if (!aggregatedGuides.assignment) aggregatedGuides.assignment = {};
+                                aggregatedGuides.assignment[file] = assignContent;
+                                console.log(`[getDashboardData] ✅ Found Assignment Guide for ${file} in ${cid}`);
                             } else {
                                 console.log(`[getDashboardData] ❌ No Assignment Guide match for ${file} in ${cid}`);
                             }
@@ -1805,8 +1792,8 @@ exports.getDashboardData = onCall(async (request) => {
                         if (Object.keys(aggregatedGuides).length > 0) {
                             if (!courseConfigs[cid]) courseConfigs[cid] = {};
                             // [MERGE] Use Object.assign to preserve existing properties from Firestore
-                            if (aggregatedGuides.instructor) {
-                                courseConfigs[cid].instructorGuide = Object.assign({}, courseConfigs[cid].instructorGuide || {}, aggregatedGuides.instructor);
+                            if (aggregatedGuides.tutor) {
+                                courseConfigs[cid].tutorGuide = Object.assign({}, courseConfigs[cid].tutorGuide || {}, aggregatedGuides.tutor);
                             }
                             if (aggregatedGuides.assignment) {
                                 courseConfigs[cid].assignmentGuide = Object.assign({}, courseConfigs[cid].assignmentGuide || {}, aggregatedGuides.assignment);

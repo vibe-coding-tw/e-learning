@@ -704,15 +704,13 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
     // [NEW] Hide Overview tab if viewing a specific unit
     const overviewTabBtn = document.getElementById('tab-btn-overview');
-    const overviewTabContent = document.getElementById('tab-overview');
+    const overviewTabContent = document.getElementById('view-overview');
     if (overviewTabBtn) {
         if (filterUnitId) { 
             overviewTabBtn.classList.add('hidden');
             if (overviewTabContent) overviewTabContent.classList.add('hidden');
         } else {
             overviewTabBtn.classList.remove('hidden');
-            // Content visibility should be managed by switchTab, 
-            // but we ensure it's not permanently hidden.
         }
     }
 
@@ -957,7 +955,7 @@ function resolveAssignmentGuide(data, filterCourseId, filterUnitId) {
     filterUnitId = resolveCanonicalUnitId(filterUnitId);
 
     try {
-        const rawInstructor = (data.courseConfigs && data.courseConfigs[filterCourseId]) ? data.courseConfigs[filterCourseId].instructorGuide : null;
+        const rawInstructor = (data.courseConfigs && data.courseConfigs[filterCourseId]) ? data.courseConfigs[filterCourseId].tutorGuide : null;
         const rawAssignment = (data.courseConfigs && data.courseConfigs[filterCourseId]) ? data.courseConfigs[filterCourseId].assignmentGuide : null;
 
         const guideData = robustExtractGuideSegments(rawInstructor, rawAssignment);
@@ -1166,15 +1164,15 @@ function renderAssignments(assignments, guideContent = "") {
                 <tr class="lg:hover:bg-blue-50/50 transition border-b border-gray-100 cursor-pointer group text-xs md:text-sm" 
                     onclick="handleAssignmentClick('${a.courseId}', '${a.unitId}', ${isStudent && a.submissionUrl ? `'${a.submissionUrl}'` : 'null'})">
                     <td class="py-2 px-1 sm:py-3 sm:px-2 text-gray-800">
-                        <div class="font-medium group-hover:text-blue-600 transition-colors truncate max-w-[100px] md:max-w-none">${escapeHtml(a.studentEmail || a.userEmail)}</div>
+                        <div class="font-medium group-hover:text-blue-600 transition-colors truncate max-w-[150px] md:max-w-none">${escapeHtml(a.studentEmail || a.userEmail)}</div>
                     </td>
                     <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] md:text-sm text-gray-600">
-                        <div class="font-bold text-[10px] md:text-xs text-gray-700 truncate max-w-[80px] md:max-w-none">${escapeHtml(title)}</div>
+                        <div class="font-bold text-[10px] md:text-xs text-gray-700 truncate max-w-[120px] md:max-w-none">${escapeHtml(title)}</div>
                         <div class="text-[10px] text-gray-500 capitalize">${escapeHtml(displayUnit)}</div>
                     </td>
-                    <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-500">${submittedDate}</td>
-                    <td class="py-2 px-1 sm:py-3 sm:px-2">${badge}</td>
-                    <td class="py-2 px-1 sm:py-3 sm:px-2 font-bold text-gray-700">${a.grade !== null && a.grade !== undefined ? a.grade : '-'}</td>
+                    <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-500 text-center">${submittedDate}</td>
+                    <td class="py-2 px-1 sm:py-3 sm:px-2 text-center">${badge}</td>
+                    <td class="py-2 px-1 sm:py-3 sm:px-2 font-bold text-gray-700 text-center">${a.grade !== null && a.grade !== undefined ? a.grade : '-'}</td>
                     <td class="py-2 px-1 sm:py-3 sm:px-2 text-right ${!canManageAssignments ? 'hidden' : ''}">
                         ${actionButton}
                     </td>
@@ -1187,7 +1185,7 @@ function renderAssignments(assignments, guideContent = "") {
     if (guideContent) {
         const guideHtml = `
             <div class="mt-8 p-4 md:p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner overflow-x-auto">
-                <div class="instructor-guide-content text-sm md:text-base text-blue-900/90 leading-relaxed prose prose-blue max-w-none">
+                <div class="tutor-guide-content text-sm md:text-base text-blue-900/90 leading-relaxed prose prose-blue max-w-none">
                     ${guideContent}
                 </div>
             </div>
@@ -1298,7 +1296,7 @@ window.switchTab = function (tabName) {
         let assignmentGuide = "";
         if (filterCourseId && filterUnitId) {
             try {
-                const rawInstructor = (dashboardData.courseConfigs && dashboardData.courseConfigs[filterCourseId]) ? dashboardData.courseConfigs[filterCourseId].instructorGuide : null;
+                const rawInstructor = (dashboardData.courseConfigs && dashboardData.courseConfigs[filterCourseId]) ? dashboardData.courseConfigs[filterCourseId].tutorGuide : null;
                 const rawAssignment = (dashboardData.courseConfigs && dashboardData.courseConfigs[filterCourseId]) ? dashboardData.courseConfigs[filterCourseId].assignmentGuide : null;
 
                 const guideData = robustExtractGuideSegments(rawInstructor, rawAssignment);
@@ -2160,7 +2158,7 @@ async function renderSettingsTab(filterUnitId = null) {
                 units.unshift(masterFile);
             }
 
-            const rawInstructor = courseConfigs[course.courseId]?.instructorGuide;
+            const rawInstructor = courseConfigs[course.courseId]?.tutorGuide;
             const rawAssignment = courseConfigs[course.courseId]?.assignmentGuide;
             const guideData = robustExtractGuideSegments(rawInstructor, rawAssignment);
 
@@ -2191,11 +2189,11 @@ async function renderSettingsTab(filterUnitId = null) {
                 const realUnitsOnly = units.filter(u => !u.includes('-master-'));
                 const unitIdx = realUnitsOnly.indexOf(fileName);
                 const unitNum = unitIdx !== -1 ? unitIdx + 1 : null;
-                const instructorSegment = guideData.segments[fileName] || (unitNum ? guideData.segments[unitNum] : "") || "";
+                const tutorSegment = guideData.segments[fileName] || (unitNum ? guideData.segments[unitNum] : "") || "";
 
-                if (!instructorSegment) return "";
+                if (!tutorSegment) return "";
                 const isAuthorized = isUserAuthorizedForUnit(fileName, course.courseId, userEmail);
-                return renderGuideRow(course.courseId, fileName, instructorSegment, course.title, isAuthorized);
+                return renderGuideRow(course.courseId, fileName, tutorSegment, course.title, isAuthorized);
             }).filter(h => !!h).join('');
 
             if (assignmentRows) {
@@ -2262,12 +2260,12 @@ function renderAssignmentConfigRow(courseId, fileName, teacherMap = {}, courseTi
     `;
 }
 
-function renderGuideRow(courseId, fileName, instructorSegment, courseTitle, isAuthorized) {
+function renderGuideRow(courseId, fileName, tutorSegment, courseTitle, isAuthorized) {
     return `
         <div class="unit-guide-row bg-white rounded-3xl border border-gray-100 p-10 shadow-sm transition-all hover:shadow-md">
             ${isAuthorized ? `
-                <div class="instructor-guide-content text-gray-800 leading-relaxed">
-                    ${instructorSegment}
+                <div class="tutor-guide-content text-gray-800 leading-relaxed">
+                    ${tutorSegment}
                 </div>
             ` : `
                 <div class="text-[10px] text-blue-500 font-bold uppercase mb-2 tracking-widest flex items-center gap-2">
@@ -2281,16 +2279,16 @@ function renderGuideRow(courseId, fileName, instructorSegment, courseTitle, isAu
 }
 
 // Helper to split instructor guide into parts
-function robustExtractGuideSegments(instructorInput, assignmentInput = null) {
+function robustExtractGuideSegments(tutorInput, assignmentInput = null) {
     console.log("[Debug] robustExtractGuideSegments init.",
-        "Instructor type:", typeof instructorInput,
+        "Instructor type:", typeof tutorInput,
         "Assignment type:", typeof assignmentInput);
 
     const result = { header: '', segments: {}, footer: '', assignmentGuides: {} };
 
     // 1. Process Instructor Guides (Main segments)
-    if (instructorInput && typeof instructorInput === 'object' && !Array.isArray(instructorInput)) {
-        Object.entries(instructorInput).forEach(([fileName, content]) => {
+    if (tutorInput && typeof tutorInput === 'object' && !Array.isArray(tutorInput)) {
+        Object.entries(tutorInput).forEach(([fileName, content]) => {
             if (typeof content !== 'string') return;
             if (fileName.includes('-master-')) {
                 result.footer += (result.footer ? "<hr>" : "") + content;
@@ -2299,9 +2297,9 @@ function robustExtractGuideSegments(instructorInput, assignmentInput = null) {
                 result.segments[fileName] = content;
             }
         });
-    } else if (typeof instructorInput === 'string') {
+    } else if (typeof tutorInput === 'string') {
         // [MODIFIED] Simplified fallback: treat as footer/header total if raw string
-        result.footer = instructorInput;
+        result.footer = tutorInput;
     }
 
     // 2. Process Dedicated Assignment Guides
