@@ -702,10 +702,10 @@ function renderAdminDashboard(data, filterUnitId = null) {
     if (stats.hours) stats.hours.textContent = summaryHours.toFixed(1);
 
 
-    // [NEW] Management users (Admin/Teacher) should ALWAYS see Overview. Students only see it globally.
+    // [NEW] Hide Overview tab if viewing a specific unit
     const overviewTabBtn = document.getElementById('tab-btn-overview');
     if (overviewTabBtn) {
-        if (filterUnitId && !isManagementView) { 
+        if (filterUnitId) { 
             overviewTabBtn.classList.add('hidden');
         } else {
             overviewTabBtn.classList.remove('hidden');
