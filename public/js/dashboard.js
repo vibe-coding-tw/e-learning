@@ -1948,13 +1948,20 @@ function formatUnitName(fileName) {
 function aggregateData(data) {
     if (!data.students) return;
 
+    const MENU_PAGES = new Set([
+        'index.html', 'about.html', 'advanced.html', 'basic.html', 
+        'started.html', 'prepare.html', 'auth.html', 'dashboard.html', 
+        'cart.html', 'faq.html', 'payment-return.html', 'collaboration.html'
+    ]);
+
     data.students.forEach(student => {
         const rawProgress = student.courseProgress || {};
         const aggregated = {};
 
-        // console.log("Processing student:", student.email);
-
         Object.entries(rawProgress).forEach(([key, stats]) => {
+            // Skip Menu Pages
+            if (MENU_PAGES.has(key)) return;
+
             const realId = findCourseId(key);
             // console.log(`Mapping ${ key } -> ${ realId } `);
 
@@ -1975,6 +1982,11 @@ function aggregateData(data) {
                 aggregated[realId].logs = aggregated[realId].logs.concat(stats.logs);
             }
         });
+
+        // Recalculate totals based on filtered courses
+        student.totalTime = Object.values(aggregated).reduce((acc, c) => acc + (c.total || 0), 0);
+        student.videoTime = Object.values(aggregated).reduce((acc, c) => acc + (c.video || 0), 0);
+        student.docTime = Object.values(aggregated).reduce((acc, c) => acc + (c.doc || 0), 0);
 
         student.courseProgress = aggregated;
     });
