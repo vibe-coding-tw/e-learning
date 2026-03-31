@@ -867,13 +867,12 @@ function renderAdminDashboard(data, filterUnitId = null) {
                             <div class="text-[9px] md:text-[10px]">${statusLabel}</div>
                         </div>
                     </td>
-                    <td class="py-2 text-right">
-                         <div class="flex items-center justify-end gap-2 text-[9px] text-gray-400 font-normal">
+                    <td class="py-2 text-right pr-2" colspan="2">
+                         <div class="flex items-center justify-end gap-4 text-[9px] text-gray-400 font-normal">
                             <span title="影片觀看時數">🎬 ${Math.round((progress.video || 0) / 60)}m</span>
                             <span title="文件閱讀時數">📄 ${Math.round((progress.doc || 0) / 60)}m</span>
                         </div>
                     </td>
-                    <td class="text-right py-2 pr-2 ${progress.total > 0 ? 'text-blue-500 font-bold' : 'text-gray-300'}">${Math.round((progress.total || 0) / 60)}m</td>
                 </tr>
             `;
         }).join('');
