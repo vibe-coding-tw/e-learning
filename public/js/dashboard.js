@@ -816,6 +816,13 @@ function renderAdminDashboard(data, filterUnitId = null) {
             'start-04-master-touch-events',
             'start-05-master-joystick-lab'
         ];
+        const starterTitles = {
+            'start-01-master-web-app': 'Web App 遙控器設計',
+            'start-02-master-web-ble': 'Web BLE 整合實務',
+            'start-03-master-remote-control': '遠端控制邏輯',
+            'start-04-master-touch-events': '觸控事件處理',
+            'start-05-master-joystick-lab': '搖桿控制實務'
+        };
 
         // 2. Definition of "Prepare" units (課前準備)
         const prepareCids = [
@@ -824,6 +831,12 @@ function renderAdminDashboard(data, filterUnitId = null) {
             'ai-agents-vibe',
             'cvhofqxc'              // WiFi & Motor
         ];
+        const prepareTitles = {
+            '72uyaadl': '開發環境安裝與設定',
+            'github-classroom-free': 'GitHub Classroom & Vibe Coding 實務',
+            'ai-agents-vibe': 'AI 代理人與 Vibe Coding 實務',
+            'cvhofqxc': 'WiFi 與馬達組態設定'
+        };
         
         // Combine into "Always Show" list
         const showAlways = new Set([...starterMasters, ...prepareCids]);
@@ -832,7 +845,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
         const courseRows = Array.from(allCourseIds).map(cid => {
             const progress = courses[cid] || { total: 0, video: 0, doc: 0 };
-            const courseTitle = lessonsMap[cid] || cid;
+            const courseTitle = starterTitles[cid] || prepareTitles[cid] || lessonsMap[cid] || cid;
             const cleanTitle = courseTitle.replace('course-', '').replace('unit-', '');
             
             let statusLabel = '';
@@ -843,7 +856,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
                 statusLabel = `<span class="text-emerald-600 font-semibold ml-2">繳費至：${orderItemMap[cid]}</span>`;
             } else if (isStarter) {
                 if (isTrialActive) {
-                    statusLabel = `<span class="text-blue-600 font-semibold ml-2">免費至：${trialExpiryStr}</span>`;
+                    statusLabel = `<span class="text-blue-600 font-semibold ml-2">免費試用(至${trialExpiryStr})</span>`;
                 } else {
                     statusLabel = `<span class="text-gray-400 ml-2 italic">試用已過期</span>`;
                 }
