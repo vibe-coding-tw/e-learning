@@ -808,10 +808,10 @@ function renderAdminDashboard(data, filterUnitId = null) {
         });
 
         // Generate Course Detail Rows
-        // Include both active courses and trial-eligible courses
+        // Always include the Starter Course, plus any other courses with progress
         const starterCid = '72uyaadl';
         const allCourseIds = new Set(Object.keys(courses));
-        if (isTrialActive) allCourseIds.add(starterCid);
+        allCourseIds.add(starterCid); // Ensure Starter is ALWAYS shown
 
         const courseRows = Array.from(allCourseIds).map(cid => {
             const progress = courses[cid] || { total: 0, video: 0, doc: 0 };
@@ -819,15 +819,21 @@ function renderAdminDashboard(data, filterUnitId = null) {
             const cleanTitle = courseTitle.replace('course-', '').replace('unit-', '');
             
             let statusLabel = '';
-            if (cid === starterCid && isTrialActive) {
-                statusLabel = `<span class="text-blue-600 font-semibold ml-2">免費至：${trialExpiryStr}</span>`;
-            } else if (orderItemMap[cid]) {
+            const isStarter = cid === starterCid;
+            
+            if (orderItemMap[cid]) {
                 statusLabel = `<span class="text-emerald-600 font-semibold ml-2">繳費至：${orderItemMap[cid]}</span>`;
+            } else if (isStarter) {
+                if (isTrialActive) {
+                    statusLabel = `<span class="text-blue-600 font-semibold ml-2">免費至：${trialExpiryStr}</span>`;
+                } else {
+                    statusLabel = `<span class="text-gray-400 ml-2 italic">試用已過期</span>`;
+                }
             } else {
                 statusLabel = `<span class="text-gray-400 ml-2">尚未開通</span>`;
             }
 
-            const usageStr = `Usage(Video: ${Math.round(progress.video / 60)}m, Doc: ${Math.round(progress.doc / 60)}m)`;
+            const usageStr = `Usage(Video: ${Math.round((progress.video || 0) / 60)}m, Doc: ${Math.round((progress.doc || 0) / 60)}m)`;
             const isMatch = filterCourseId && cid === filterCourseId;
             const bgClass = isMatch ? "bg-blue-50" : "bg-white";
 
@@ -835,12 +841,12 @@ function renderAdminDashboard(data, filterUnitId = null) {
                 <tr class="${bgClass} text-[10px] md:text-xs border-b border-gray-50">
                     <td class="pl-8 md:pl-12 py-2 text-gray-700" colspan="2">
                         <div class="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
-                            <div class="font-bold">${escapeHtml(cleanTitle)}</div>
+                            <div class="font-bold cursor-help" title="${escapeHtml(courseTitle)}">${escapeHtml(cleanTitle)}</div>
                             <div class="text-[9px] md:text-[10px]">${statusLabel}</div>
                             <div class="text-[9px] text-gray-400 font-mono">${usageStr}</div>
                         </div>
                     </td>
-                    <td class="text-right py-2 pr-2 text-blue-500 font-bold">${Math.round(progress.total / 60)}m</td>
+                    <td class="text-right py-2 pr-2 ${progress.total > 0 ? 'text-blue-500 font-bold' : 'text-gray-300'}">${Math.round((progress.total || 0) / 60)}m</td>
                 </tr>
             `;
         }).join('');
