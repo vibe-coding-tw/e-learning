@@ -666,43 +666,11 @@ function renderAdminDashboard(data, filterUnitId = null) {
     }
 
     // Stats (Base on filtered students if unit is selected)
-    let summaryStudents = data.summary?.totalStudents || 0;
-    let summaryHours = data.summary?.totalHours || 0;
-
-    if (filterUnitId) {
-        // [USER_REQUEST] Overview stats should reflect currently filtered list
-        const unitStudents = (data?.students || []).filter(s => {
-            const orders = s.orders || [];
-            const parentCourseId = findParentCourseIdByUnit(filterUnitId);
-            return parentCourseId && orders.includes(parentCourseId);
-        });
-        summaryStudents = unitStudents.length;
-        summaryHours = unitStudents.reduce((acc, curr) => {
-            const up = curr.courseProgress?.[filterUnitId] || {}; // This is not quite right because filterUnitId is unit name? 
-            // In dashboard.js, unitFile is used for progress mapping. 
-            // Let's find unitFile for filterUnitId.
-            return acc + (curr.totalTime || 0); // Placeholder until I verify the time mapping
-        }, 0) / 3600;
-
-        // Let's refine the time calculation to be more accurate for the filtered view
-        if (unitStudents.length > 0) {
-            summaryHours = unitStudents.reduce((acc, curr) => {
-                const progress = curr.courseProgress || {};
-                // If we filter to a course, sum up all units in that course for this student
-                // If we filter to a unit, just that unit.
-                let studentFilteredTime = 0;
-                if (filterUnitId) {
-                    // Try to find the progress for this specific unit
-                    // Note: curr.courseProgress keys are usually courseIds, but unit-level data is nested
-                    // I need to check the data structure again. 
-                }
-                return acc + (curr.totalTime || 0); // Default to total if unit-specific sum is complex
-            }, 0) / 3600;
-        }
-    }
+    const allInList = data.students || [];
+    let summaryStudents = allInList.length;
+    let summaryHours = allInList.reduce((acc, s) => acc + (s.totalTime || 0), 0) / 3600;
 
     // Show total registered vs paid (Unified with the table list)
-    const allInList = data.students || [];
     const totalRegistered = allInList.length;
     const totalPaid = allInList.filter(s => (s.orderRecords || []).length > 0).length;
     
