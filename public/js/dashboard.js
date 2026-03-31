@@ -808,12 +808,27 @@ function renderAdminDashboard(data, filterUnitId = null) {
         });
 
         // Generate Course Detail Rows
-        // Automatically include both "Started" and "Prepare" category courses for every user
-        const starterCids = (allLessons || []).filter(l => l.category === 'started' || l.category === 'prepare').map(l => l.courseId || l.id);
-        if (starterCids.length === 0) starterCids.push('72uyaadl'); // Failsafe
+        // 1. Definition of "Starter Course" (入門課程) - 5 units
+        const starterMasters = [
+            'start-01-master-web-app',
+            'start-02-master-web-ble',
+            'start-03-master-remote-control',
+            'start-04-master-touch-events',
+            'start-05-master-joystick-lab'
+        ];
+
+        // 2. Definition of "Prepare" units (課前準備)
+        const prepareCids = [
+            '72uyaadl',             // 開發環境安裝與設定
+            'github-classroom-free',
+            'ai-agents-vibe',
+            'cvhofqxc'              // WiFi & Motor
+        ];
         
+        // Combine into "Always Show" list
+        const showAlways = new Set([...starterMasters, ...prepareCids]);
         const allCourseIds = new Set(Object.keys(courses));
-        starterCids.forEach(cid => allCourseIds.add(cid));
+        showAlways.forEach(cid => allCourseIds.add(cid));
 
         const courseRows = Array.from(allCourseIds).map(cid => {
             const progress = courses[cid] || { total: 0, video: 0, doc: 0 };
@@ -821,7 +836,8 @@ function renderAdminDashboard(data, filterUnitId = null) {
             const cleanTitle = courseTitle.replace('course-', '').replace('unit-', '');
             
             let statusLabel = '';
-            const isStarter = starterCids.includes(cid);
+            const isStarter = starterMasters.includes(cid);
+            const isPrepare = prepareCids.includes(cid);
             
             if (orderItemMap[cid]) {
                 statusLabel = `<span class="text-emerald-600 font-semibold ml-2">繳費至：${orderItemMap[cid]}</span>`;
@@ -831,6 +847,8 @@ function renderAdminDashboard(data, filterUnitId = null) {
                 } else {
                     statusLabel = `<span class="text-gray-400 ml-2 italic">試用已過期</span>`;
                 }
+            } else if (isPrepare) {
+                statusLabel = `<span class="text-emerald-500 ml-2">免費課程</span>`;
             } else {
                 statusLabel = `<span class="text-gray-400 ml-2">尚未開通</span>`;
             }
