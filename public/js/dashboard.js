@@ -808,10 +808,12 @@ function renderAdminDashboard(data, filterUnitId = null) {
         });
 
         // Generate Course Detail Rows
-        // Always include the Starter Course, plus any other courses with progress
-        const starterCid = '72uyaadl';
+        // Automatically include all "Starter" category courses for every user
+        const starterCids = (allLessons || []).filter(l => l.category === 'started').map(l => l.courseId || l.id);
+        if (starterCids.length === 0) starterCids.push('72uyaadl'); // Failsafe
+        
         const allCourseIds = new Set(Object.keys(courses));
-        allCourseIds.add(starterCid); // Ensure Starter is ALWAYS shown
+        starterCids.forEach(cid => allCourseIds.add(cid));
 
         const courseRows = Array.from(allCourseIds).map(cid => {
             const progress = courses[cid] || { total: 0, video: 0, doc: 0 };
@@ -819,7 +821,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
             const cleanTitle = courseTitle.replace('course-', '').replace('unit-', '');
             
             let statusLabel = '';
-            const isStarter = cid === starterCid;
+            const isStarter = starterCids.includes(cid);
             
             if (orderItemMap[cid]) {
                 statusLabel = `<span class="text-emerald-600 font-semibold ml-2">繳費至：${orderItemMap[cid]}</span>`;
