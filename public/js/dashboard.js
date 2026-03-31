@@ -24,15 +24,22 @@ const dashboardContent = document.getElementById('dashboard-content');
 const accessDenied = document.getElementById('access-denied');
 
 window.toggleRow = function(uid) {
-    const detailsRows = document.querySelectorAll(`.detail-row-${uid}`);
+    console.log("[Dashboard] Toggling row for UID:", uid);
+    // Use data attribute instead of class to be safer with special characters
+    const detailsRows = document.querySelectorAll(`tr[data-parent-uid="${uid}"]`);
     const icon = document.getElementById(`icon-${uid}`);
     
+    if (detailsRows.length === 0) {
+        console.warn("[Dashboard] No details rows found for UID:", uid);
+        return;
+    }
+
     detailsRows.forEach(row => {
         row.classList.toggle('hidden');
     });
     
     if (icon) {
-        const isCollapsed = detailsRows.length > 0 && detailsRows[0].classList.contains('hidden');
+        const isCollapsed = detailsRows[0].classList.contains('hidden');
         icon.style.transform = isCollapsed ? 'rotate(0deg)' : 'rotate(90deg)';
     }
 };
@@ -853,7 +860,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
             const bgClass = isMatch ? "bg-blue-50" : "bg-gray-50/30";
 
             return `
-                <tr class="${bgClass} text-[10px] md:text-xs border-b border-gray-50 detail-row-${s.uid} hidden">
+                <tr class="${bgClass} text-[10px] md:text-xs border-b border-gray-50 hidden" data-parent-uid="${s.uid}">
                     <td class="pl-8 md:pl-12 py-2 text-gray-700">
                         <div class="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
                             <div class="font-bold cursor-help" title="${escapeHtml(courseTitle)}">${escapeHtml(cleanTitle)}</div>
