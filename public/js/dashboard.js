@@ -1951,7 +1951,8 @@ function aggregateData(data) {
     const MENU_PAGES = new Set([
         'index.html', 'about.html', 'advanced.html', 'basic.html', 
         'started.html', 'prepare.html', 'auth.html', 'dashboard.html', 
-        'cart.html', 'faq.html', 'payment-return.html', 'collaboration.html'
+        'cart.html', 'faq.html', 'payment-return.html', 'collaboration.html',
+        'index', 'about', 'advanced', 'basic', 'started', 'prepare', 'auth', 'dashboard', 'cart', 'faq'
     ]);
 
     data.students.forEach(student => {
@@ -1959,8 +1960,9 @@ function aggregateData(data) {
         const aggregated = {};
 
         Object.entries(rawProgress).forEach(([key, stats]) => {
-            // Skip Menu Pages
-            if (MENU_PAGES.has(key)) return;
+            const lowKey = key.toLowerCase();
+            // Skip Menu Pages OR 00-* intro pages
+            if (MENU_PAGES.has(lowKey) || lowKey.startsWith('00-')) return;
 
             const realId = findCourseId(key);
             // console.log(`Mapping ${ key } -> ${ realId } `);
