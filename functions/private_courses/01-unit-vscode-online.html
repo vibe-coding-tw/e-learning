@@ -511,104 +511,92 @@
 
     <!-- Instructor Guide (Hidden) -->
     <section id="instructor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：打造「隨處皆可開發」的能力。引導學生理解雲端容器化環境與 Web Serial 在硬體開發中的革命性作用。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：環境不再是阻礙</strong> - 透過 Codespaces，讓學生體會「即開即用」的 Linux 容器環境，解決本地安裝失敗的痛點。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：瀏覽器即 IDE</strong> - 掌握網頁版 VS Code 的限制與優勢，理解 GitHub 如何成為現代開發的作業系統。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：硬體通訊新範式</strong> - 介紹 Web Serial API，讓學生理解瀏覽器如何安全地與實體硬體進行直接握手。</li>
-            </ol>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 實戰部署指南</h2>
+        
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-slate-900 rounded-xl p-6 text-slate-300 shadow-2xl">
+                <h3 class="text-indigo-400 font-bold mb-3 flex items-center gap-2">
+                    <span class="text-xl">📂</span> 範本倉庫 (Template Repo) 結構
+                </h3>
+                <pre class="bg-black/50 p-4 rounded-lg font-mono text-xs leading-relaxed">
 .
-├── .devcontainer/   # (核心) 讓學生一進入 Codespace 就有自動配置好的環境
-├── src/             # 存放學生的練習程式碼
-└── cloud-test.js    # 一個簡單的小程式供學生運行
-            </pre>
+├── .devcontainer/   # (核心) 自動配置 Codespace 環境
+├── src/             # 學生練習原始碼
+└── cloud-test.js    # 雲端運行檢驗程式
+                </pre>
+            </div>
+            <div class="bg-slate-900 rounded-xl p-6 text-slate-300 shadow-2xl">
+                <h3 class="text-emerald-400 font-bold mb-3 flex items-center gap-2">
+                    <span class="text-xl">⚙️</span> codespace.json 配置參考
+                </h3>
+                <pre class="bg-black/50 p-4 rounded-lg font-mono text-xs leading-relaxed">
+{
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:1": {}
+  },
+  "postCreateCommand": "npm install -g platformio"
+}</pre>
+            </div>
         </div>
 
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台角色</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">完成互動模擬器的「變身」體驗，理解按下 "." 的底層邏輯。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 檢查學生的互動參與度，確認其對雲端環境的基本認知。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black">啟動 Codespace，執行 npm 指令並在 README 記錄雲端環境與本機環境的差異。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 引導學生排除 Codespace 啟動時的網路延遲問題，並解釋開發容器的概念。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-left text-justify font-black text-justify">挑戰跨端接力 Commit，在電腦與手機間完成一次連貫的代碼修復任務。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評學生的同步紀錄 (Commit Timeline) 與對雲端 IDE 限制的理解程度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>ntainers/features/common-utils:1": {}
-    },
-    "postCreateCommand": "npm install -g platformio"
-}</code></pre>
-
-            <p><strong>cloud-test.js (雲端運行測試)</strong></p>
-            <pre><code>console.log("🚀 雲端開發環境運行成功！");
+        <div class="glass-card bg-white rounded-xl border border-slate-200 p-8 mb-8 shadow-lg">
+            <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <span class="text-2xl">⚡</span> 雲端運行測試 (cloud-test.js)
+            </h3>
+            <pre class="bg-slate-50 p-5 rounded-lg border border-slate-100 font-mono text-sm text-indigo-900 shadow-inner"><code>console.log("🚀 雲端開發環境運行成功！");
 console.log("當前時間：", new Date().toLocaleString());
 console.log("Node 版本：", process.version);</code></pre>
+        </div>
 
-            <h3>C. 自動評分 (Autograding) 的設計</h3>
-            <ul>
-                <li><strong>Codespace 啟動檢查：：</strong> 雖然難以自動偵測是否「在雲端跑」，但可點評 <code>cloud-test.js</code> 的執行結果截圖。</li>
-                <li><strong>Commit 紀錄檢查：</strong> 透過 GitHub API 或 Dashboard 檢查學生是否有「.」變身後的 Commit 紀錄。</li>
-            </ul>
+        <h3 class="text-xl font-bold text-slate-800 mb-4">C. 自動評分 (Autograding) 的設計</h3>
+        <div class="grid md:grid-cols-2 gap-6 mb-12">
+            <div class="p-6 bg-orange-50 border-l-8 border-orange-400 rounded-lg shadow-md transition hover:scale-105">
+                <strong class="text-orange-900 text-lg block mb-2 font-bold flex items-center gap-2">
+                    <span>🔍</span> Codespace 啟動檢查
+                </strong>
+                <p class="text-orange-700 leading-relaxed">雖然難以自動偵測是否「在雲端跑」，但可點評 <code>cloud-test.js</code> 的執行結果截圖，確認其運行環境為 Linux 終端。
+                </p>
+            </div>
+            <div class="p-6 bg-blue-50 border-l-8 border-blue-400 rounded-lg shadow-md transition hover:scale-105">
+                <strong class="text-blue-900 text-lg block mb-2 font-bold flex items-center gap-2">
+                    <span>📑</span> Commit 紀錄檢查
+                </strong>
+                <p class="text-blue-700 leading-relaxed">透過 GitHub API 或 Dashboard 檢查學生是否有「.」變身後的 Commit 紀錄，驗證其是否掌握 Web IDE 的調試流程。
+                </p>
+            </div>
+        </div>
 
-            <h2>翻轉教室的實施策略</h2>
-            <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 flex items-center gap-3">
+            <span class="text-4xl text-purple-600">🎭</span> 翻轉教室的實施策略
+        </h2>
+        <div class="overflow-hidden rounded-2xl border border-slate-200 shadow-2xl mb-16">
+            <table class="w-full text-left border-collapse bg-white">
                 <thead>
-                    <tr style="background-color: #f8fafc;">
-                        <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                        <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                        <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                    <tr class="bg-slate-900 text-white">
+                        <th class="p-5 font-bold uppercase tracking-wider w-1/4">階段</th>
+                        <th class="p-5 font-bold uppercase tracking-wider w-2/5">學生行動 (Git Workflow)</th>
+                        <th class="p-5 font-bold uppercase tracking-wider">教師/平台角色</th>
                     </tr>
                 </thead>
-                <tbody style="color: #4b5563;">
-                    <tr>
-                        <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                        <td style="padding: 12px; border: 1px solid #e2e8f0;">使用互動模擬器體驗按下 <code>.</code>
-                            的變身效果，理解雲端與本機差異。</td>
-                        <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>檢查學生預習紀錄。</td>
+                <tbody class="text-base text-gray-700">
+                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                        <td class="p-6 font-bold text-slate-900 bg-slate-50/50">課前 (預習)</td>
+                        <td class="p-6 leading-relaxed">完成互動模擬器的「變身」體驗，理解按下 <code class="bg-gray-200 px-2 rounded-md font-bold">.</code> 的底層邏輯。</td>
+                        <td class="p-6"><strong>Dashboard:</strong> 抽查學生的參與度，確認基礎概念認知。</td>
                     </tr>
-                    <tr>
-                        <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                        <td style="padding: 12px; border: 1px solid #e2e8f0;">開啟自己的 Repo 並建立 Codespace，測試 3-1 與 3-2。
-                        </td>
-                        <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>助教角色：</strong>引導學生區分 Web 版 VS Code
-                            的限制（無法上傳程式碼）。</td>
+                    <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+                        <td class="p-6 font-bold text-slate-900 bg-blue-50/30">課中 (實作)</td>
+                        <td class="p-6 leading-relaxed font-semibold">實際啟動 Codespace，執行 <code>npm</code> 指令並在主機端與雲端間同步代碼。</td>
+                        <td class="p-6"><strong>助教角色:</strong> 引導學生排除環境啟動延遲，解釋開發容器 (Container) 的隔離性。</td>
                     </tr>
-                    <tr>
-                        <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                        <td style="padding: 12px; border: 1px solid #e2e8f0;">回家用不同裝置（如平板）進行 3-3 跨端 Commit 挑戰。</td>
-                        <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>檢視 Commit
-                            紀錄，確認其跨裝置操作連貫性。</td>
+                    <tr class="hover:bg-purple-50 transition">
+                        <td class="p-6 font-bold text-slate-900 bg-purple-50/30">課後 (精進)</td>
+                        <td class="p-6 leading-relaxed">挑戰跨端接力 Commit，在電腦與移動裝置間完成一次連貫的代碼維修閉環。</td>
+                        <td class="p-6"><strong>Feedback PR:</strong> 點評同步紀錄與對雲端 IDE 限制的具體理解。</td>
                     </tr>
                 </tbody>
             </table>
-        </section>
+        </div>
+    </section>
 </body>
-
 </html>
