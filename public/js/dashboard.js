@@ -286,7 +286,7 @@ function canCurrentUserViewAssignmentsTab() {
 }
 
 function getPreferredDashboardTab(filterUnitId = null) {
-    if (filterUnitId && (myRole === 'admin' || myRole === 'teacher')) return 'overview';
+    if (filterUnitId && (myRole === 'admin' || myRole === 'teacher')) return 'admin';
     if (filterUnitId && canCurrentUserViewAssignmentsTab()) return 'assignments';
     if (myRole === 'admin') return 'admin';
     if (document.getElementById('tab-btn-settings') && !document.getElementById('tab-btn-settings').classList.contains('hidden')) {
@@ -704,11 +704,15 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
     // [NEW] Hide Overview tab if viewing a specific unit
     const overviewTabBtn = document.getElementById('tab-btn-overview');
+    const overviewTabContent = document.getElementById('tab-overview');
     if (overviewTabBtn) {
         if (filterUnitId) { 
             overviewTabBtn.classList.add('hidden');
+            if (overviewTabContent) overviewTabContent.classList.add('hidden');
         } else {
             overviewTabBtn.classList.remove('hidden');
+            // Content visibility should be managed by switchTab, 
+            // but we ensure it's not permanently hidden.
         }
     }
 
