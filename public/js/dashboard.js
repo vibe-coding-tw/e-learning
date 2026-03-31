@@ -1042,17 +1042,6 @@ window.toggleUnitLogs = function (id, event) {
     }
 };
 
-window.toggleRow = function (uid) {
-    const detail = document.getElementById(`detail-${uid}`);
-    const icon = document.getElementById(`icon-${uid}`);
-    if (detail.classList.contains('hidden')) {
-        detail.classList.remove('hidden');
-        icon.textContent = '▼';
-    } else {
-        detail.classList.add('hidden');
-        icon.textContent = '▶';
-    }
-};
 
 window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null) {
     if (submissionUrl) {
