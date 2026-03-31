@@ -808,8 +808,8 @@ function renderAdminDashboard(data, filterUnitId = null) {
         });
 
         // Generate Course Detail Rows
-        // Automatically include all "Starter" category courses for every user
-        const starterCids = (allLessons || []).filter(l => l.category === 'started').map(l => l.courseId || l.id);
+        // Automatically include both "Started" and "Prepare" category courses for every user
+        const starterCids = (allLessons || []).filter(l => l.category === 'started' || l.category === 'prepare').map(l => l.courseId || l.id);
         if (starterCids.length === 0) starterCids.push('72uyaadl'); // Failsafe
         
         const allCourseIds = new Set(Object.keys(courses));
