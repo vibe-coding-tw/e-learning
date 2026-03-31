@@ -22,6 +22,21 @@ const functions = getFunctions(app, 'asia-east1');
 const loadingState = document.getElementById('loading-state');
 const dashboardContent = document.getElementById('dashboard-content');
 const accessDenied = document.getElementById('access-denied');
+
+window.toggleRow = function(uid) {
+    const detailsRows = document.querySelectorAll(`.detail-row-${uid}`);
+    const icon = document.getElementById(`icon-${uid}`);
+    
+    detailsRows.forEach(row => {
+        row.classList.toggle('hidden');
+    });
+    
+    if (icon) {
+        const isCollapsed = detailsRows.length > 0 && detailsRows[0].classList.contains('hidden');
+        icon.style.transform = isCollapsed ? 'rotate(0deg)' : 'rotate(90deg)';
+    }
+};
+
 const userDisplay = document.getElementById('user-display');
 const userUidDisplay = document.getElementById('user-uid-display');
 const stats = {
@@ -834,17 +849,21 @@ function renderAdminDashboard(data, filterUnitId = null) {
                 statusLabel = `<span class="text-gray-400 ml-2">尚未開通</span>`;
             }
 
-            const usageStr = `Usage(Video: ${Math.round((progress.video || 0) / 60)}m, Doc: ${Math.round((progress.doc || 0) / 60)}m)`;
             const isMatch = filterCourseId && cid === filterCourseId;
-            const bgClass = isMatch ? "bg-blue-50" : "bg-white";
+            const bgClass = isMatch ? "bg-blue-50" : "bg-gray-50/30";
 
             return `
-                <tr class="${bgClass} text-[10px] md:text-xs border-b border-gray-50">
-                    <td class="pl-8 md:pl-12 py-2 text-gray-700" colspan="2">
+                <tr class="${bgClass} text-[10px] md:text-xs border-b border-gray-50 detail-row-${s.uid} hidden">
+                    <td class="pl-8 md:pl-12 py-2 text-gray-700">
                         <div class="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
                             <div class="font-bold cursor-help" title="${escapeHtml(courseTitle)}">${escapeHtml(cleanTitle)}</div>
                             <div class="text-[9px] md:text-[10px]">${statusLabel}</div>
-                            <div class="text-[9px] text-gray-400 font-mono">${usageStr}</div>
+                        </div>
+                    </td>
+                    <td class="py-2 text-right">
+                         <div class="flex items-center justify-end gap-2 text-[9px] text-gray-400 font-normal">
+                            <span title="影片觀看時數">🎬 ${Math.round((progress.video || 0) / 60)}m</span>
+                            <span title="文件閱讀時數">📄 ${Math.round((progress.doc || 0) / 60)}m</span>
                         </div>
                     </td>
                     <td class="text-right py-2 pr-2 ${progress.total > 0 ? 'text-blue-500 font-bold' : 'text-gray-300'}">${Math.round((progress.total || 0) / 60)}m</td>
@@ -860,7 +879,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
         const regHeaderStr = regTime && !isNaN(regTime) ? regTime.toLocaleDateString('zh-TW', { year:'numeric', month:'numeric', day:'numeric' }) : '–';
 
         return `
-        <tr class="hover:bg-gray-50 transition border-b border-gray-100 cursor-pointer text-xs md:text-sm" onclick="toggleRow('${s.uid}')">
+        <tr class="hover:bg-gray-50 transition border-b border-gray-100 cursor-pointer text-xs md:text-sm student-header-row" onclick="toggleRow('${s.uid}')">
             <td class="py-3 px-2 font-medium text-gray-800" colspan="2">
                 <div class="flex items-center gap-2">
                     <span id="icon-${s.uid}" class="text-gray-400 w-4 inline-block transform transition-transform shrink-0">▶</span>
@@ -874,16 +893,14 @@ function renderAdminDashboard(data, filterUnitId = null) {
             <td class="py-3 px-2 text-right">
                 <div class="flex flex-col items-end">
                     <div class="font-mono text-blue-600 font-bold text-base">${(displayTotal / 3600).toFixed(1)}h</div>
-                    <div class="flex gap-2 text-[9px] text-gray-400 font-normal">
+                    <div class="flex gap-4 text-[9px] text-gray-400 font-normal">
                         <span title="影片觀看時數">🎬 ${Math.round((s.videoTime || 0) / 60)}m</span>
                         <span title="文件閱讀時數">📄 ${Math.round((s.docTime || 0) / 60)}m</span>
                     </div>
                 </div>
             </td>
         </tr>
-        <tbody id="detail-${s.uid}" class="hidden border-b border-gray-200">
-            ${courseRows.length ? courseRows : '<tr><td colspan="3" class="py-2 text-center text-xs text-gray-400 italic">尚未有具體單元操作紀錄</td></tr>'}
-        </tbody>
+        ${courseRows}
         `;
     }).join('');
 
