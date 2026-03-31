@@ -2135,66 +2135,6 @@ exports.getDashboardData = onCall(async (request) => {
     }
 });
 
-// [TEMP] ONE-OFF MIGRATION: Rename teacher/mentor to tutor in Firestore
-exports.migrateTeacherToTutor = onRequest(async (req, res) => {
-    console.log("[Migration] Starting Teacher -> Tutor migration...");
-    const db = admin.firestore();
-    let stats = {
-        appsMoved: 0,
-        configsUpdated: 0,
-        promoUpdated: 0,
-        usersUpdated: 0
-    };
-
-    try {
-        // 1. Migrate teacher_applications to tutor_applications
-        const appsSnap = await db.collection('teacher_applications').get();
-        for (const doc of appsSnap.docs) {
-            await db.collection('tutor_applications').doc(doc.id).set(doc.data());
-            await doc.ref.delete();
-            stats.appsMoved++;
-        }
-
-        // 2. Update course_configs: authorizedTeachers -> authorizedTutors
-        const configsSnap = await db.collection('course_configs').get();
-        for (const doc of configsSnap.docs) {
-            const data = doc.data();
-            if (data.authorizedTeachers) {
-                await doc.ref.update({
-                    authorizedTutors: data.authorizedTeachers,
-                    authorizedTeachers: admin.firestore.FieldValue.delete()
-                });
-                stats.configsUpdated++;
-            }
-        }
-
-        // 3. Update promo_codes: mentorEmail -> tutorEmail
-        const promoSnap = await db.collection('promo_codes').get();
-        for (const doc of promoSnap.docs) {
-            const data = doc.data();
-            if (data.mentorEmail) {
-                await doc.ref.update({
-                    tutorEmail: data.mentorEmail,
-                    mentorEmail: admin.firestore.FieldValue.delete()
-                });
-                stats.promoUpdated++;
-            }
-        }
-
-        // 4. Update users: role: 'teacher' -> role: 'tutor'
-        const usersSnap = await db.collection('users').where('role', '==', 'teacher').get();
-        for (const doc of usersSnap.docs) {
-            await doc.ref.update({ role: 'tutor' });
-            stats.usersUpdated++;
-        }
-
-        res.status(200).json({ success: true, stats });
-    } catch (err) {
-        console.error("[Migration] Error:", err);
-        res.status(500).json({ error: err.message });
-    }
-});
-
 // 8.0 指派學生給老師 (Admin/Tutor)
 exports.assignStudentToTutor = onCall(async (request) => {
     const { data, auth } = request;
