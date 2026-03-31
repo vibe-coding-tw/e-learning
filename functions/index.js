@@ -1871,17 +1871,17 @@ exports.getDashboardData = onCall(async (request) => {
                     let syncCount = 0;
                     
                     for (const au of authUsers) {
-                        if (!existingUids.includes(au.uid)) {
-                            const userRef = db.collection('users').doc(au.uid);
-                            batch.set(userRef, {
-                                email: au.email || "",
-                                name: au.displayName || (au.email ? au.email.split('@')[0] : "New User"),
-                                role: (au.email === 'rover.k.chen@gmail.com') ? 'admin' : 'student',
-                                createdAt: au.metadata.creationTime ? new Date(au.metadata.creationTime) : admin.firestore.FieldValue.serverTimestamp(),
-                                updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                            }, { merge: true });
-                            syncCount++;
-                        }
+                        const userRef = db.collection('users').doc(au.uid);
+                        // [MODIFIED] Always upsert basic info (preserve createdAt)
+                        batch.set(userRef, {
+                            email: au.email || "",
+                            name: au.displayName || (au.email ? au.email.split('@')[0] : "New User"),
+                            role: (au.email === 'rover.k.chen@gmail.com') ? 'admin' : 'student',
+                            // Handle potential missing field in existing Firestore docs
+                            createdAt: au.metadata.creationTime ? new Date(au.metadata.creationTime) : admin.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true });
+                        syncCount++;
                     }
                     if (syncCount > 0) {
                         console.log(`[getDashboardData] Syncing ${syncCount} missing Auth users...`);
@@ -2135,57 +2135,6 @@ exports.getDashboardData = onCall(async (request) => {
     }
 });
 
-// [TEMP] ONE-OFF SYNC: Sync all Auth users to Firestore roles
-exports.syncAuthUsersToFirestore = onCall(async (request) => {
-    const { auth } = request;
-    // Only rover.k.chen@gmail.com or admin can run this
-    if (!auth || (auth.token.role !== 'admin' && auth.token.email !== 'rover.k.chen@gmail.com')) {
-        throw new HttpsError('permission-denied', 'Only admin can run sync.');
-    }
-
-    const db = admin.firestore();
-    let totalSynced = 0;
-    
-    try {
-        let nextPageToken;
-        do {
-            const listUsersResult = await admin.auth().listUsers(1000, nextPageToken);
-            const authUsers = listUsersResult.users;
-            
-            const batch = db.batch();
-            let batchCount = 0;
-
-            for (const au of authUsers) {
-                const userRef = db.collection('users').doc(au.uid);
-                // Use { merge: true } to preserve existing assignments but update basic info
-                batch.set(userRef, {
-                    email: au.email || "",
-                    name: au.displayName || (au.email ? au.email.split('@')[0] : "New User"),
-                    // Default role for current users
-                    role: (au.email === 'rover.k.chen@gmail.com') ? 'admin' : 'student',
-                    // CRITICAL: Preserve original registration date
-                    createdAt: au.metadata.creationTime ? new Date(au.metadata.creationTime) : admin.firestore.FieldValue.serverTimestamp(),
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-                
-                batchCount++;
-                totalSynced++;
-            }
-
-            if (batchCount > 0) {
-                await batch.commit();
-                console.log(`[Sync] Committed batch of ${batchCount} users.`);
-            }
-
-            nextPageToken = listUsersResult.pageToken;
-        } while (nextPageToken);
-
-        return { success: true, totalSynced };
-    } catch (err) {
-        console.error("[Sync] Error:", err);
-        throw new HttpsError('internal', err.message);
-    }
-});
 
 // 8.0 指派學生給老師 (Admin/Teacher)
 exports.assignStudentToTeacher = onCall(async (request) => {
