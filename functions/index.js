@@ -1196,10 +1196,11 @@ exports.getCourseConfigs = onCall(async (request) => {
         const db = admin.firestore();
         
         // [V12.0.3] Refactored to fetch data from User-Centric model
+        // [V12.0.5] Fix: Use FieldPath to handle IDs with dots (e.g., .html)
         if (courseId) {
-            // Find all authorized tutors for this unit
+            const fieldPath = new admin.firestore.FieldPath('tutorConfigs', courseId, 'authorized');
             const tutorsSnap = await db.collection('users')
-                .where(`tutorConfigs.${courseId}.authorized`, '==', true)
+                .where(fieldPath, '==', true)
                 .get();
             
             const authorizedTutors = [];
@@ -1390,17 +1391,24 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
             // Authorization is strictly handled at the course_configs unit level.
 
         } else if (action === 'remove') {
-            const doc = await docRef.get();
-            const existingUnitConfig = doc.exists ? doc.data() : {};
-            const nextTutorDetails = { ...(existingUnitConfig.tutorDetails || {}) };
-            delete nextTutorDetails[tutorEmail];
+            // [V12.0.2] Removed legacy writes. All logic now syncs to User Document (below).
 
-            // 1. Clean up Unit-level Config
-            await docRef.update({
-                authorizedTutors: admin.firestore.FieldValue.arrayRemove(tutorEmail),
-                tutorDetails: nextTutorDetails,
-                updatedAt: admin.firestore.FieldValue.serverTimestamp()
-            });
+            // [NEW v12.0.0] Synchronize with User Document (Remove Authorization)
+            try {
+                const userRecord = await admin.auth().getUserByEmail(tutorEmail);
+                const tutorUid = userRecord.uid;
+                await db.collection('users').doc(tutorUid).set({
+                    tutorConfigs: {
+                        [courseId]: {
+                            authorized: false,
+                            updatedAt: new Date().toISOString()
+                        }
+                    }
+                }, { merge: true });
+                console.log(`[Role] Successfully removed auth for ${tutorEmail} from user doc.`);
+            } catch (authSyncErr) {
+                console.warn(`[Role] Failed to sync user doc removal for ${tutorEmail}: ${authSyncErr.message}`);
+            }
 
             // [V12.0.2] Legacy Parent-level cleanup skipped. 
             // All data is now managed in User Documents.
