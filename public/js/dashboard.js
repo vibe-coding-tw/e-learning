@@ -1514,10 +1514,6 @@ function renderAdminConsole() {
                                     </table>
                                 </div>
 
-                                <!-- [REMOVED] New manual tutor addition UI -->
-                                <div class="p-3 bg-gray-50 border border-gray-100 rounded-xl text-[10px] text-gray-400 italic">
-                                    💡 註：系統現已改用「申請與審核」機制。導師需從此單元儀表板提交申請，管理員方可於控制台頂部進行審核。
-                                </div>
                             </div>
 
                              <!-- Section 3: Student Management -->
