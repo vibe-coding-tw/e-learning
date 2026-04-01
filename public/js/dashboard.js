@@ -73,7 +73,8 @@ let currentDashboardPermissions = {
 };
 
 // [NEW] Admin Super Mode state
-let adminSuperMode = localStorage.getItem('adminSuperMode') === 'true';
+// [NEW] Admin Tutor Mode state (formerly Super Mode)
+let adminTutorMode = localStorage.getItem('adminTutorMode') === 'true'; 
 
 // [REMOVED] MASTER_UNIT_MAPPING is now standardized in lessons.json
 
@@ -180,10 +181,15 @@ async function loadDashboard() {
         const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
         const hasUnitContext = !!filterUnitId;
         const isAdmin = myRole === 'admin';
-        const isQualifiedTutor = hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, myEmail);
+        
+        // [FIX] Admin Tutor Mode: If Admin and Tutor Mode is OFF, ignore their own qualification
+        const rawIsQualifiedTutor = hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, myEmail);
+        const isQualifiedTutor = isAdmin ? (adminTutorMode && rawIsQualifiedTutor) : rawIsQualifiedTutor;
+        
         const isPaidStudent = myRole === 'student' && hasUnitContext
             ? await hasPaidStudentAccessForUnit(filterCourseId, filterUnitId)
             : false;
+            
         updateCurrentDashboardPermissions({ isAdmin, isQualifiedTutor, isPaidStudent });
         const requestedTab = getRequestedTabFromUrl();
 
@@ -277,7 +283,7 @@ function updateCurrentDashboardPermissions({ isAdmin = false, isQualifiedTutor =
         isAdmin,
         isQualifiedTutor,
         isPaidStudent,
-        canViewAssignments: isQualifiedTutor || isPaidStudent || (isAdmin && adminSuperMode)
+        canViewAssignments: isQualifiedTutor || isPaidStudent || (isAdmin && adminTutorMode)
     };
 }
 
@@ -468,7 +474,7 @@ function filterAssignmentsForCurrentView(assignments = []) {
         );
     }
 
-    if (myRole === 'student' || (currentDashboardPermissions.isAdmin && adminSuperMode)) {
+    if (myRole === 'student' || (currentDashboardPermissions.isAdmin && adminTutorMode)) {
         return assignments.filter(isOwnAssignment);
     }
 
@@ -675,10 +681,15 @@ function renderAdminDashboard(data, filterUnitId = null) {
     if (!filterCourseId && filterUnitId) {
         filterCourseId = findParentCourseIdByUnit(filterUnitId);
     }
-    const showQualifiedTutorTabs =
-        !!filterUnitId &&
-        !filterUnitId.includes('-master-') &&
-        hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, currentUserEmail);
+
+    // [RESTORE] If Admin and Tutor Mode is ON, they see these tabs
+    // If Tutor, they see these if they have qualified access for CURRENT view
+    let showQualifiedTutorTabs = false;
+    if (myRole === 'admin') {
+        showQualifiedTutorTabs = adminTutorMode;
+    } else {
+        showQualifiedTutorTabs = !!filterUnitId && hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, currentUserEmail);
+    }
 
     if (settingsTabBtn) {
         settingsTabBtn.classList.toggle('hidden', !showQualifiedTutorTabs);
@@ -1373,7 +1384,7 @@ function renderAdminConsole() {
                                     拒絕 Reject
                                 </button>
                                 <button onclick="handleDecideApplication('${app.id}', 'approved')"
-                                    class="flex-grow sm:flex-none px-8 py-2 bg-orange-500 text-white rounded-lg text-xs font-black hover:bg-orange-600 shadow-sm transition-all active:scale-95">
+                                    class="flex-grow sm:flex-none px-8 py-2 bg-blue-500 text-white rounded-lg text-xs font-black hover:bg-orange-600 shadow-sm transition-all active:scale-95">
                                     批准 Approve ✅
                                 </button>
                             </div>
@@ -1394,10 +1405,10 @@ function renderAdminConsole() {
             
             <div class="flex items-center gap-3">
                 <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm">
-                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">超級模式 / Super Mode</span>
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">導師模式 / Tutor Mode</span>
                     <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" value="" class="sr-only peer" ${adminSuperMode ? 'checked' : ''} onchange="toggleAdminSuperMode(this.checked)">
-                        <div class="w-10 h-5 bg-gray-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
+                        <input type="checkbox" value="" class="sr-only peer" ${adminTutorMode ? 'checked' : ''} onchange="toggleAdminTutorMode(this.checked)">
+                        <div class="w-10 h-5 bg-gray-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
                     </label>
                 </div>
             </div>
@@ -1626,9 +1637,9 @@ window.handleUnitTutorAuth = async function (courseId, unitFile, tutorEmail, act
     }
 };
 
-window.toggleAdminSuperMode = function (enabled) {
-    adminSuperMode = enabled;
-    localStorage.setItem('adminSuperMode', enabled);
+window.toggleAdminTutorMode = function (enabled) {
+    adminTutorMode = enabled;
+    localStorage.setItem('adminTutorMode', enabled);
 
     updateCurrentDashboardPermissions(currentDashboardPermissions);
 
@@ -2051,8 +2062,13 @@ function setupSettingsFeature() {
 function isUserAuthorizedForUnit(fileName, courseId, email) {
     if (!email) return false;
 
-    // [NEW] Super Mode or Admin account override for teaching guides/settings
-    if (myRole === 'admin' || adminSuperMode) return true;
+    // [MODIFIED] Admin Check: Admin Override is now controlled by 'Tutor Mode'
+    if (myRole === 'admin') {
+        // Fall back to actual qualification if Admin wants to ignore their privilege? 
+        // No, user said: "Disable 時，會讓 Admin 忽略 合格教師資格。"
+        // This implies if OFF, they return false for tutor-specific features.
+        return adminTutorMode;
+    }
 
     const courseConfig = dashboardData?.courseConfigs?.[courseId] || {};
     const unitConfigs = courseConfig.githubClassroomUrls || {};
@@ -2109,7 +2125,7 @@ async function renderSettingsTab(filterUnitId = null) {
 
         // 1. Render Course List
         let authorizedLessons = lessonsToProcess.filter(course => {
-            if (myRole === 'admin' || adminSuperMode) return true;
+            if (myRole === 'admin' || adminTutorMode) return true;
 
             const courseConfig = courseConfigs[course.courseId] || {};
             const unitConfigs = courseConfig.githubClassroomUrls || {};
