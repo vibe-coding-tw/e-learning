@@ -713,6 +713,35 @@ exports.checkPaymentAuthorization = onRequest(async (req, res) => {
                 return false;
             });
 
+            // [NEW v11.3.12] Admin Auto-Auth & Seeding
+            // If the user is the Admin, but not yet explicitly authorized for this unit,
+            // we auto-authorize them and perform the background seeding.
+            if (userEmail === 'rover.k.chen@gmail.com') {
+                if (!isExplicitlyAuthorized) {
+                    console.log(`[checkPaymentAuthorization] Auto-authorizing Admin ${userEmail} for ${effectiveCourseId}`);
+                    try {
+                        const db = admin.firestore();
+                        const docRef = db.collection('course_configs').doc(effectiveCourseId);
+                        const tutorData = { email: userEmail, name: 'Rover Chen', qualifiedAt: new Date().toISOString() };
+                        
+                        await docRef.set({
+                            authorizedTutors: admin.firestore.FieldValue.arrayUnion(userEmail),
+                            tutorDetails: { [userEmail]: tutorData },
+                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true });
+
+                        // Ensure Promo Code exists in background
+                        internalGetOrCreatePromoCode(db, userEmail, effectiveCourseId, 'Rover Chen')
+                            .catch(e => console.error("[Auto-Auth] Promo generation failed:", e));
+
+                    } catch (seedErr) {
+                        console.error("[checkPaymentAuthorization] Auto-auth seeding failed:", seedErr);
+                    }
+                }
+                const token = generateToken(effectiveCourseId, effectiveCourseId);
+                return res.status(200).json({ result: { authorized: true, token: token, role: userRole } });
+            }
+
             if (isExplicitlyAuthorized) {
                 console.log(`[checkPaymentAuthorization] ${userRole} ${userEmail} authorized for ${effectiveCourseId} via explicit check`);
                 const token = generateToken(effectiveCourseId, effectiveCourseId);
