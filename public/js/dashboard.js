@@ -293,14 +293,10 @@ function canCurrentUserViewAssignmentsTab() {
 }
 
 function getPreferredDashboardTab(filterUnitId = null) {
-    if (filterUnitId && (myRole === 'admin')) return 'admin';
-    if (filterUnitId && canCurrentUserViewAssignmentsTab()) return 'assignments';
+    if (filterUnitId && (myRole === 'admin' || canCurrentUserViewAssignmentsTab())) return 'assignments';
     if (myRole === 'admin') return 'admin';
     if (document.getElementById('tab-btn-settings') && !document.getElementById('tab-btn-settings').classList.contains('hidden')) {
         return 'settings';
-    }
-    if (document.getElementById('tab-btn-overview') && !document.getElementById('tab-btn-overview').classList.contains('hidden')) {
-        return 'overview';
     }
     return 'assignments';
 }
@@ -468,14 +464,17 @@ function filterAssignmentsForCurrentView(assignments = []) {
         (assignment.userId || assignment.uid) === myUid ||
         normalizeEmail(assignment.studentEmail || assignment.userEmail) === normalizeEmail(myEmail);
 
-    if (isQualifiedTutor) {
+    // [MODIFIED] Assignments filtering:
+    // 1. If Qualified Tutor (or Admin in Tutor Mode): Only see students assigned to THEM.
+    if (currentDashboardPermissions.isQualifiedTutor) {
         return assignments.filter(a =>
             normalizeEmail(a.assignedTutorEmail) === normalizeEmail(myEmail) &&
             !isOwnAssignment(a)
         );
     }
 
-    if (myRole === 'student' || (currentDashboardPermissions.isAdmin && adminTutorMode)) {
+    // 2. If Student (or Admin in Student Mode): Only see their own assignments.
+    if (myRole === 'student' || currentDashboardPermissions.isPaidStudent || (currentDashboardPermissions.isAdmin && !adminTutorMode)) {
         return assignments.filter(isOwnAssignment);
     }
 
@@ -715,17 +714,11 @@ function renderAdminDashboard(data, filterUnitId = null) {
     if (stats.hours) stats.hours.textContent = summaryHours.toFixed(1);
 
 
-    // [NEW] Hide Overview tab if viewing a specific unit
+    // [MODIFIED] Overview tab is now HIDDEN for everyone.
     const overviewTabBtn = document.getElementById('tab-btn-overview');
     const overviewTabContent = document.getElementById('view-overview');
-    if (overviewTabBtn) {
-        if (filterUnitId) { 
-            overviewTabBtn.classList.add('hidden');
-            if (overviewTabContent) overviewTabContent.classList.add('hidden');
-        } else {
-            overviewTabBtn.classList.remove('hidden');
-        }
-    }
+    if (overviewTabBtn) overviewTabBtn.classList.add('hidden');
+    if (overviewTabContent) overviewTabContent.classList.add('hidden');
 
     // [NEW] Unit Context Header
     if (filterUnitId || filterCourseId) {
