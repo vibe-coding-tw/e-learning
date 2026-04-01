@@ -1853,7 +1853,7 @@ exports.getDashboardData = onCall(async (request) => {
         console.log(`[getDashboardData] Total files found: ${allFiles.length}. First 5: ${JSON.stringify(allFiles.slice(0, 5))}`);
 
         // [MODIFIED] If admin or global tutor, ensure ALL courses from lessons.json are considered for guide aggregation
-        if (requesterRole === 'admin' || requesterRole === 'tutor') {
+        if (requesterRole === 'admin') {
             lessons.forEach(l => {
                 if (!authorizedCourseIds.includes(l.courseId)) {
                     authorizedCourseIds.push(l.courseId);
@@ -1931,7 +1931,7 @@ exports.getDashboardData = onCall(async (request) => {
 
 
         // Determine if this user has any management access (Global Admin/Tutor or Course-Specific Tutor)
-        const isManagementView = requesterRole === 'admin' || requesterRole === 'tutor' || authorizedCourseIds.length > 0;
+        const isManagementView = requesterRole === 'admin' || authorizedCourseIds.length > 0;
 
         let result = {
             role: requesterRole,
@@ -2058,7 +2058,7 @@ exports.getDashboardData = onCall(async (request) => {
             // - It's my own log
             // - I'm a global admin/tutor
             // - I'm an authorized tutor for this specific course
-            const isAuthorizedForLog = (sid === uid) || (requesterRole === 'admin' || requesterRole === 'tutor') || authorizedCourseIds.includes(cid);
+            const isAuthorizedForLog = (sid === uid) || (requesterRole === 'admin') || authorizedCourseIds.includes(cid);
 
             if (isAuthorizedForLog && usersMap[sid]) {
                 if (!studentStats[sid]) {
@@ -2231,7 +2231,7 @@ exports.getDashboardData = onCall(async (request) => {
                                           (requesterRole === 'admin') || 
                                           (requesterRole === 'tutor' && (assignmentTutor === requesterEmail || authorizedCourseIds.includes(mappedCid)));
 
-            if (isAuthorizedForAssign && (requesterRole === 'admin' || requesterRole === 'tutor' || usersMap[targetUid])) {
+            if (isAuthorizedForAssign && (requesterRole === 'admin' || usersMap[targetUid])) {
                 result.assignments.push({
                     id: doc.id,
                     ...data,

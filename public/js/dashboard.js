@@ -292,7 +292,7 @@ function canCurrentUserViewAssignmentsTab() {
 }
 
 function getPreferredDashboardTab(filterUnitId = null) {
-    if (filterUnitId && (myRole === 'admin' || myRole === 'tutor')) return 'admin';
+    if (filterUnitId && (myRole === 'admin')) return 'admin';
     if (filterUnitId && canCurrentUserViewAssignmentsTab()) return 'assignments';
     if (myRole === 'admin') return 'admin';
     if (document.getElementById('tab-btn-settings') && !document.getElementById('tab-btn-settings').classList.contains('hidden')) {
@@ -1059,7 +1059,7 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
         return;
     }
 
-    if (myRole === 'admin' || myRole === 'tutor') {
+    if (myRole === 'admin') {
         const cfg = (dashboardData && dashboardData.courseConfigs) ? dashboardData.courseConfigs[courseId] : null;
         const inviteLink = cfg && cfg.githubClassroomUrls ? cfg.githubClassroomUrls[unitId] : null;
 
@@ -2114,7 +2114,7 @@ async function renderSettingsTab(filterUnitId = null) {
         }
 
         // [MODIFIED] Wait for data if it's somehow missing but being called
-        if (!dashboardData && (myRole === 'admin' || myRole === 'tutor')) {
+        if (!dashboardData && (myRole === 'admin')) {
             console.warn("[Settings] dashboardData missing, possibly still loading...");
             return; // Exit and wait for loadDashboard to call us again
         }
