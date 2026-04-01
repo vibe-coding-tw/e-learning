@@ -691,59 +691,64 @@ exports.checkPaymentAuthorization = onRequest(async (req, res) => {
                 authSources.push(...course.courseUnits); // Source B: Unit-level
             }
 
-            // Parallel check all sources in Firestore
-            const authSnapshots = await Promise.all(
-                authSources.map(docId => admin.firestore().collection('course_configs').doc(docId).get())
-            );
+            // ---------------------------------------------------------
+            // [NEW v12.0.0] User-Centric Authorization Check
+            // ---------------------------------------------------------
+            const userDoc = await admin.firestore().collection('users').doc(uid).get();
+            const userData = userDoc.exists ? userDoc.data() : {};
+            const tutorConfigs = userData.tutorConfigs || {};
 
-            const isExplicitlyAuthorized = authSnapshots.some(snap => {
-                if (!snap.exists) return false;
-                const data = snap.data();
-
-                // [DEBUG v11.3.11] Trace for specific user
-                if (userEmail === 'rover.k.chen@gmail.com') {
-                    console.log(`[checkPaymentAuthorization] DEBUG for ${userEmail} on ${snap.id}: authorizedTutors=${JSON.stringify(data.authorizedTutors || [])}`);
-                }
-
-                if (data.authorizedTutors && data.authorizedTutors.includes(userEmail)) return true;
-                const unitUrls = data.githubClassroomUrls || {};
-                for (const linkMap of Object.values(unitUrls)) {
-                    if (linkMap && typeof linkMap === 'object' && linkMap[userEmail]) return true;
-                }
-                return false;
-            });
-
-            // [NEW v11.3.12] Admin Auto-Auth & Seeding
-            // If the user is the Admin, but not yet explicitly authorized for this unit,
-            // we auto-authorize them and perform the background seeding.
+            // Check if current user is the Admin (Rover)
+            // If Admin, auto-inject into their own tutorConfigs if not present
             if (userEmail === 'rover.k.chen@gmail.com') {
-                if (!isExplicitlyAuthorized) {
-                    console.log(`[checkPaymentAuthorization] Auto-authorizing Admin ${userEmail} for ${effectiveCourseId}`);
-                    try {
-                        const db = admin.firestore();
-                        const docRef = db.collection('course_configs').doc(effectiveCourseId);
-                        const tutorData = { email: userEmail, name: 'Rover Chen', qualifiedAt: new Date().toISOString() };
-                        
-                        await docRef.set({
-                            authorizedTutors: admin.firestore.FieldValue.arrayUnion(userEmail),
-                            tutorDetails: { [userEmail]: tutorData },
-                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                        }, { merge: true });
-
-                        // Ensure Promo Code exists in background
-                        internalGetOrCreatePromoCode(db, userEmail, effectiveCourseId, 'Rover Chen')
-                            .catch(e => console.error("[Auto-Auth] Promo generation failed:", e));
-
-                    } catch (seedErr) {
-                        console.error("[checkPaymentAuthorization] Auto-auth seeding failed:", seedErr);
-                    }
+                console.log(`[checkPaymentAuthorization] Admin ${userEmail} accessing ${effectiveCourseId}. Ensuring auth in user doc.`);
+                
+                if (!tutorConfigs[effectiveCourseId] || !tutorConfigs[effectiveCourseId].authorized) {
+                    const tutorData = { 
+                        authorized: true, 
+                        email: userEmail, 
+                        name: 'Rover Chen', 
+                        qualifiedAt: new Date().toISOString(),
+                        githubClassroomUrl: "authorized"
+                    };
+                    await admin.firestore().collection('users').doc(uid).set({
+                        tutorConfigs: { [effectiveCourseId]: tutorData }
+                    }, { merge: true });
+                    
+                    // Background promo code seeding
+                    internalGetOrCreatePromoCode(admin.firestore(), userEmail, effectiveCourseId, 'Rover Chen')
+                        .catch(e => console.error("[Auto-Auth] Promo failed:", e));
                 }
+
                 const token = generateToken(effectiveCourseId, effectiveCourseId);
                 return res.status(200).json({ result: { authorized: true, token: token, role: userRole } });
             }
 
-            if (isExplicitlyAuthorized) {
-                console.log(`[checkPaymentAuthorization] ${userRole} ${userEmail} authorized for ${effectiveCourseId} via explicit check`);
+            // For non-admin users, check if they are authorized for ANY of the possible source IDs
+            const isAuthorized = authSources.some(sourceId => {
+                const config = tutorConfigs[sourceId];
+                return config && config.authorized === true;
+            });
+
+            if (isAuthorized) {
+                console.log(`[checkPaymentAuthorization] ${userRole} ${userEmail} authorized for ${effectiveCourseId} via User-Centric check`);
+                const token = generateToken(effectiveCourseId, effectiveCourseId);
+                return res.status(200).json({ result: { authorized: true, token: token, role: userRole } });
+            }
+
+            // [LOGIC v12.0.1] Legacy Fallback (Check course_configs during transition)
+            const authSnapshots = await Promise.all(
+                authSources.map(docId => admin.firestore().collection('course_configs').doc(docId).get())
+            );
+            const isLegacyAuthorized = authSnapshots.some(snap => {
+                if (!snap.exists) return false;
+                const data = snap.data();
+                if (data.authorizedTutors && data.authorizedTutors.includes(userEmail)) return true;
+                return false;
+            });
+
+            if (isLegacyAuthorized) {
+                console.log(`[checkPaymentAuthorization] ${userRole} ${userEmail} authorized for ${effectiveCourseId} via LEGACY check`);
                 const token = generateToken(effectiveCourseId, effectiveCourseId);
                 return res.status(200).json({ result: { authorized: true, token: token, role: userRole } });
             }
@@ -1166,6 +1171,33 @@ exports.saveCourseConfigs = onCall(async (request) => {
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             updatedBy: uid
         }, { merge: true });
+
+        // [NEW v12.0.0] Propagate githubClassroomUrls to User Documents
+        if (configs.githubClassroomUrls) {
+            console.log(`[saveCourseConfigs] Propagating URLs for course ${courseId}...`);
+            const db = admin.firestore();
+            for (const [unitId, tutorsMap] of Object.entries(configs.githubClassroomUrls)) {
+                for (const [tEmail, url] of Object.entries(tutorsMap)) {
+                    try {
+                        const userRecord = await admin.auth().getUserByEmail(tEmail);
+                        const tutorUid = userRecord.uid;
+                        await db.collection('users').doc(tutorUid).set({
+                            tutorConfigs: {
+                                [unitId]: {
+                                    githubClassroomUrl: url,
+                                    authorized: true,
+                                    email: tEmail,
+                                    updatedAt: new Date().toISOString()
+                                }
+                            }
+                        }, { merge: true });
+                    } catch (err) {
+                        console.warn(`[saveCourseConfigs] Failed to sync ${tEmail} for ${unitId}: ${err.message}`);
+                    }
+                }
+            }
+        }
+
         return { success: true, message: 'Configuration saved successfully.' };
     } catch (e) {
         console.error("Save Config Error:", e);
@@ -1300,6 +1332,25 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
                 });
             }
 
+            // [NEW v12.0.0] Synchronize with User Document
+            try {
+                const userRecord = await admin.auth().getUserByEmail(tutorEmail);
+                const tutorUid = userRecord.uid;
+                await db.collection('users').doc(tutorUid).set({
+                    tutorConfigs: {
+                        [courseId]: {
+                            authorized: true,
+                            email: tutorEmail,
+                            name: tutorName,
+                            qualifiedAt: new Date().toISOString()
+                        }
+                    }
+                }, { merge: true });
+                console.log(`[Role] Successfully synched auth for ${tutorEmail} into user doc.`);
+            } catch (authSyncErr) {
+                console.warn(`[Role] Failed to sync user doc for ${tutorEmail}: ${authSyncErr.message}`);
+            }
+
             // [NEW] Also update parent legacy map if provided (use dot-notation to avoid overwrite)
             if (parentDocRef) {
                 const parentDoc = await parentDocRef.get();
@@ -1396,43 +1447,46 @@ exports.applyForTutorRole = onCall(async (request) => {
     const lessons = await getLessons();
     const canonicalUnitId = resolveCanonicalUnitId(unitId, lessons);
 
+    // 1. Update User Document (Internal Applications & Auto-Checking)
+    const userRef = db.collection('users').doc(uid);
+    const userDoc = await userRef.get();
+    const userData = userDoc.exists ? userDoc.data() : {};
+    
     // Check if user is already authorized
-    const docRef = db.collection('course_configs').doc(canonicalUnitId);
-    const doc = await docRef.get();
-    if (doc.exists) {
-        const authTutors = doc.data().authorizedTutors || [];
-        if (authTutors.includes(email)) {
-            throw new HttpsError('already-exists', 'You are already a qualified tutor for this unit.');
-        }
+    const tutorConfigs = userData.tutorConfigs || {};
+    if (tutorConfigs[canonicalUnitId] && tutorConfigs[canonicalUnitId].authorized) {
+        throw new HttpsError('already-exists', 'You are already a qualified tutor for this unit.');
     }
 
-    // Check for existing pending application
-    const appSnapshot = await db.collection('tutor_applications')
-        .where('userId', '==', uid)
-        .where('unitId', '==', canonicalUnitId)
-        .where('status', '==', 'pending')
-        .get();
-    
-    if (!appSnapshot.empty) {
+    // Check for existing pending application in the user's own document
+    const applications = userData.tutorApplications || [];
+    const hasPending = applications.some(app => app.unitId === canonicalUnitId && app.status === 'pending');
+    if (hasPending) {
         throw new HttpsError('already-exists', 'You have a pending application for this unit.');
     }
 
-    // Create application
+    // Create application object
     const application = {
+        applicationId: `app_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
         userId: uid,
         userEmail: email,
         unitId: canonicalUnitId,
         status: 'pending',
-        appliedAt: admin.firestore.FieldValue.serverTimestamp()
+        appliedAt: new Date().toISOString()
     };
 
-    const newAppRef = await db.collection('tutor_applications').add(application);
+    // Update User Document
+    await userRef.set({
+        tutorApplications: admin.firestore.FieldValue.arrayUnion(application),
+        hasPendingApplication: true,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
 
     // Notify Admin via Email
     const adminEmail = process.env.ADMIN_EMAIL || 'rover.k.chen@gmail.com';
     await sendAdminNewApplicationEmail(adminEmail, email, canonicalUnitId);
 
-    return { success: true, applicationId: newAppRef.id };
+    return { success: true, applicationId: application.applicationId };
 });
 
 exports.recommendTutorForUnit = onCall(async (request) => {
@@ -1465,19 +1519,24 @@ exports.recommendTutorForUnit = onCall(async (request) => {
         throw new HttpsError('failed-precondition', 'Assignment must be graded before recommendation.');
     }
 
-    const unitDocRef = db.collection('course_configs').doc(canonicalUnitId);
-    const unitDoc = await unitDocRef.get();
-    const unitConfig = unitDoc.exists ? unitDoc.data() : {};
-    const authorizedTutors = Array.isArray(unitConfig.authorizedTutors) ? unitConfig.authorizedTutors : [];
+    // Check permissions of the requester in their own user document
+    const requesterDoc = await db.collection('users').doc(auth.uid).get();
+    const requesterData = requesterDoc.exists ? requesterDoc.data() : {};
+    const requesterTutorConfigs = requesterData.tutorConfigs || {};
+    const isAuthorizedForThisUnit = requesterTutorConfigs[canonicalUnitId] && requesterTutorConfigs[canonicalUnitId].authorized;
 
-    if (requesterRole !== 'admin' && !authorizedTutors.includes(auth.token.email)) {
+    if (requesterRole !== 'admin' && !isAuthorizedForThisUnit) {
         throw new HttpsError('permission-denied', 'Only the qualified tutor for this unit can recommend students.');
     }
     if (requesterRole !== 'admin' && assignment.assignedTutorEmail !== auth.token.email) {
         throw new HttpsError('permission-denied', 'Only the assigned tutor can recommend this student.');
     }
 
-    if (authorizedTutors.includes(candidateEmail)) {
+    // Check if candidate is already qualified
+    const candidateDoc = await db.collection('users').doc(candidateUid).get();
+    const candidateData = candidateDoc.exists ? candidateDoc.data() : {};
+    const candidateTutorConfigs = candidateData.tutorConfigs || {};
+    if (candidateTutorConfigs[canonicalUnitId] && candidateTutorConfigs[canonicalUnitId].authorized) {
         throw new HttpsError('already-exists', 'Student is already a qualified tutor for this unit.');
     }
 
@@ -1527,87 +1586,79 @@ exports.decideTutorApplication = onCall(async (request) => {
     }
 
     const db = admin.firestore();
-    const appRef = db.collection('tutor_applications').doc(applicationId);
-    const appDoc = await appRef.get();
+    
+    // [NEW v12.0.0] Find User by Application ID using Collection Query
+    // Since we now store applications inside the user document, we need to find which user owns this application.
+    const usersSnapshot = await db.collection('users')
+        .where('hasPendingApplication', '==', true)
+        .get();
+    
+    let targetUserDoc = null;
+    let applications = [];
+    let appIndex = -1;
 
-    if (!appDoc.exists) throw new HttpsError('not-found', 'Application not found');
-    const appData = appDoc.data();
-    if (appData.status !== 'pending') throw new HttpsError('failed-precondition', 'Application already resolved');
+    for (const doc of usersSnapshot.docs) {
+        const data = doc.data();
+        const apps = data.tutorApplications || [];
+        const idx = apps.findIndex(a => a.applicationId === applicationId && a.status === 'pending');
+        if (idx !== -1) {
+            targetUserDoc = doc;
+            applications = apps;
+            appIndex = idx;
+            break;
+        }
+    }
+
+    if (!targetUserDoc) throw new HttpsError('not-found', 'Pending application not found.');
+
+    const userData = targetUserDoc.data();
+    const appData = applications[appIndex];
+    const { userEmail, unitId, userId } = appData;
 
     const lessons = await getLessons();
-    const { userEmail, unitId } = appData;
     const canonicalUnitId = resolveCanonicalUnitId(unitId, lessons);
     const parentCourseId = findParentCourseIdByUnit(canonicalUnitId, lessons);
 
-    // Update application
-    await appRef.update({
-        status: status,
-        adminMessage: adminMessage || "",
-        resolvedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
+    // Update application status locally in the array
+    applications[appIndex].status = status;
+    applications[appIndex].adminMessage = adminMessage || "";
+    applications[appIndex].resolvedAt = new Date().toISOString();
 
-        if (status === 'approved') {
-        // reuse existing logic or call it
-        // For simplicity, we directly implement the authorization here
-        const docRef = db.collection('course_configs').doc(canonicalUnitId);
+    // Determine if user still has pending applications
+    const stillHasPending = applications.some(a => a.status === 'pending');
+
+    const updateData = {
+        tutorApplications: applications,
+        hasPendingApplication: stillHasPending,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (status === 'approved') {
         let tutorName = userEmail.split('@')[0];
-        try {
-            const userRecord = await admin.auth().getUserByEmail(userEmail);
-            const userDoc = await db.collection('users').doc(userRecord.uid).get();
-            if (userDoc.exists && userDoc.data().name) {
-                tutorName = userDoc.data().name;
-            } else if (userRecord.displayName) {
-                tutorName = userRecord.displayName;
-            }
-        } catch (err) {
-            console.log(`[Approve] Metadata skip for ${userEmail}: ${err.message}`);
+        if (userData.name || userData.displayName) {
+            tutorName = userData.name || userData.displayName;
         }
 
-        const tutorData = { email: userEmail, name: tutorName, qualifiedAt: new Date().toISOString() };
-
-        const unitDoc = await docRef.get();
-        const existingUnitConfig = unitDoc.exists ? unitDoc.data() : {};
-        const nextTutorDetails = {
-            ...(existingUnitConfig.tutorDetails || {}),
-            [userEmail]: tutorData
+        const tutorData = { 
+            authorized: true,
+            email: userEmail, 
+            name: tutorName, 
+            qualifiedAt: new Date().toISOString(),
+            githubClassroomUrl: "authorized" // Initial placeholder
         };
-        if (!unitDoc.exists) {
-            await docRef.set({
-                authorizedTutors: [userEmail],
-                tutorDetails: nextTutorDetails,
-                updatedAt: admin.firestore.FieldValue.serverTimestamp()
-            });
-        } else {
-            await docRef.update({
-                authorizedTutors: admin.firestore.FieldValue.arrayUnion(userEmail),
-                tutorDetails: nextTutorDetails,
-                updatedAt: admin.firestore.FieldValue.serverTimestamp()
-            });
-        }
 
-        if (parentCourseId) {
-            const parentDocRef = db.collection('course_configs').doc(parentCourseId);
-            const parentDoc = await parentDocRef.get();
-            const parentData = parentDoc.exists ? parentDoc.data() : {};
-            const githubClassroomUrls = { ...(parentData.githubClassroomUrls || {}) };
-            githubClassroomUrls[canonicalUnitId] = {
-                ...(githubClassroomUrls[canonicalUnitId] || {}),
-                [userEmail]: "authorized"
-            };
-            await parentDocRef.set({
-                githubClassroomUrls,
-                updatedAt: admin.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
-        }
+        updateData[`tutorConfigs.${canonicalUnitId}`] = tutorData;
 
-        // Generate Promo Code
+        // Generate Promo Code in background
         try {
-            const promoCode = await internalGetOrCreatePromoCode(db, userEmail, canonicalUnitId, tutorName);
-            // send result email (Success) is handled below
+            await internalGetOrCreatePromoCode(db, userEmail, canonicalUnitId, tutorName);
         } catch (authExtraErr) {
             console.error("[Approve] Failed to generate promo code:", authExtraErr);
         }
     }
+
+    // Save all updates to the User Document
+    await targetUserDoc.ref.update(updateData);
 
     // Notify User via Email
     await sendApplicationResultEmail(userEmail, canonicalUnitId, status, adminMessage);
@@ -1649,18 +1700,22 @@ exports.getDashboardData = onCall(async (request) => {
         // 0. Fetch Course Authorization Data
         const authorizedCourseIds = [];
         const courseConfigs = {};
-        const unitToDocId = {}; // [NEW] Map unit filename -> Firestore docId
-        // [NEW] Fetch Tutor Application Status for THIS user
+        const unitToDocId = {}; // [LEGACY] Map unit filename -> Firestore docId
+        // [NEW v12.0.0] Fetch Tutor Application Status for THIS user from their own document
         const myApplicationsMapping = {};
-        const myAppsSnapshot = await db.collection('tutor_applications')
-            .where('userId', '==', uid)
-            .get();
-        myAppsSnapshot.forEach(doc => {
-            const d = doc.data();
-            myApplicationsMapping[d.unitId] = { status: d.status, appliedAt: d.appliedAt };
+        const userDoc = await db.collection('users').doc(uid).get();
+        const userData = userDoc.exists ? userDoc.data() : {};
+        
+        const myApps = userData.tutorApplications || [];
+        myApps.forEach(app => {
+            myApplicationsMapping[app.unitId] = { status: app.status, appliedAt: app.appliedAt };
         });
 
-        // [NEW] Fetch Global Tutor Terms (Rights & Obligations)
+        // [NEW v12.0.1] Tutor Authorization Summary for Frontend
+        // We can just return the tutorConfigs directly if needed, or map it.
+        const myTutorConfigs = userData.tutorConfigs || {};
+
+        // [NEW] Fetch Global Tutor Terms
         let tutorTerms = "";
         try {
             const termsDoc = await db.collection('metadata_settings').doc('tutor_terms').get();
@@ -1669,19 +1724,21 @@ exports.getDashboardData = onCall(async (request) => {
             console.warn("[getDashboardData] Failed to fetch tutor terms:", e);
         }
 
-        // [NEW] (Admin Only) Fetch all PENDING applications
+        // [NEW v12.0.2] (Admin Only) Fetch all PENDING applications from the users collection
         let allPendingApplications = [];
         if (requesterRole === 'admin') {
-            const pendingSnapshot = await db.collection('tutor_applications')
-                .where('status', '==', 'pending')
+            const pendingUsersSnapshot = await db.collection('users')
+                .where('hasPendingApplication', '==', true)
                 .get();
             
-            allPendingApplications = pendingSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            pendingUsersSnapshot.forEach(doc => {
+                const uData = doc.data();
+                const apps = uData.tutorApplications || [];
+                const pendingApps = apps.filter(a => a.status === 'pending');
+                allPendingApplications.push(...pendingApps);
+            });
 
-            // Sort in-memory to avoid index requirement for now
+            // Sort in-memory
             allPendingApplications.sort((a, b) => {
                 const timeA = a.appliedAt?.toMillis ? a.appliedAt.toMillis() : 0;
                 const timeB = b.appliedAt?.toMillis ? b.appliedAt.toMillis() : 0;
