@@ -818,13 +818,11 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
         // 2. Definition of "Prepare" units (課前準備)
         const prepareCids = [
-            '72uyaadl',             // 開發環境安裝與設定
             'github-classroom-free',
             'ai-agents-vibe',
             'cvhofqxc'              // WiFi & Motor
         ];
         const prepareTitles = {
-            '72uyaadl': '開發環境安裝與設定',
             'github-classroom-free': 'GitHub Classroom & Vibe Coding 實務',
             'ai-agents-vibe': 'AI 代理人與 Vibe Coding 實務',
             'cvhofqxc': 'WiFi 與馬達組態設定'
