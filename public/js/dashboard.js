@@ -182,7 +182,8 @@ async function loadDashboard() {
         const hasUnitContext = !!filterUnitId;
         const isAdmin = myRole === 'admin';
         
-        // [FIX] Admin Tutor Mode: If Admin and Tutor Mode is OFF, ignore their own qualification
+        // [FIX] Admin Tutor Mode: If Admin and Tutor Mode is OFF, ignore their own qualification.
+        // Even if ON, they now only see tutor features IF they are authorized for that unit.
         const rawIsQualifiedTutor = hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, myEmail);
         const isQualifiedTutor = isAdmin ? (adminTutorMode && rawIsQualifiedTutor) : rawIsQualifiedTutor;
         
@@ -682,13 +683,14 @@ function renderAdminDashboard(data, filterUnitId = null) {
         filterCourseId = findParentCourseIdByUnit(filterUnitId);
     }
 
-    // [RESTORE] If Admin and Tutor Mode is ON, they see these tabs
+    // [RESTORE] If Admin and Tutor Mode is ON, they see these tabs ONLY if authorized
     // If Tutor, they see these if they have qualified access for CURRENT view
     let showQualifiedTutorTabs = false;
+    const isAuthorized = !!filterUnitId && hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, currentUserEmail);
     if (myRole === 'admin') {
-        showQualifiedTutorTabs = adminTutorMode;
+        showQualifiedTutorTabs = adminTutorMode && isAuthorized;
     } else {
-        showQualifiedTutorTabs = !!filterUnitId && hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, currentUserEmail);
+        showQualifiedTutorTabs = isAuthorized;
     }
 
     if (settingsTabBtn) {
@@ -2063,11 +2065,10 @@ function isUserAuthorizedForUnit(fileName, courseId, email) {
     if (!email) return false;
 
     // [MODIFIED] Admin Check: Admin Override is now controlled by 'Tutor Mode'
+    // BUT! Admin must also be qualified for the specific unit to see tutor-only features.
     if (myRole === 'admin') {
-        // Fall back to actual qualification if Admin wants to ignore their privilege? 
-        // No, user said: "Disable 時，會讓 Admin 忽略 合格教師資格。"
-        // This implies if OFF, they return false for tutor-specific features.
-        return adminTutorMode;
+        if (!adminTutorMode) return false;
+        // If ON, proceed to actual qualification check below
     }
 
     const courseConfig = dashboardData?.courseConfigs?.[courseId] || {};
