@@ -736,22 +736,9 @@ exports.checkPaymentAuthorization = onRequest(async (req, res) => {
                 return res.status(200).json({ result: { authorized: true, token: token, role: userRole } });
             }
 
-            // [LOGIC v12.0.1] Legacy Fallback (Check course_configs during transition)
-            const authSnapshots = await Promise.all(
-                authSources.map(docId => admin.firestore().collection('course_configs').doc(docId).get())
-            );
-            const isLegacyAuthorized = authSnapshots.some(snap => {
-                if (!snap.exists) return false;
-                const data = snap.data();
-                if (data.authorizedTutors && data.authorizedTutors.includes(userEmail)) return true;
-                return false;
-            });
-
-            if (isLegacyAuthorized) {
-                console.log(`[checkPaymentAuthorization] ${userRole} ${userEmail} authorized for ${effectiveCourseId} via LEGACY check`);
-                const token = generateToken(effectiveCourseId, effectiveCourseId);
-                return res.status(200).json({ result: { authorized: true, token: token, role: userRole } });
-            }
+            // [V12.0.2] Complete removal of course_configs. 
+            // All authorization must now exist in the users collection.
+            return res.status(200).json({ result: { authorized: false, role: userRole } });
         } catch (authErr) {
             console.error("[checkPaymentAuthorization] Explicit authorization check failed:", authErr);
         }
@@ -1166,11 +1153,8 @@ exports.saveCourseConfigs = onCall(async (request) => {
             }
         }
 
-        await docRef.set({
-            ...configs,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-            updatedBy: uid
-        }, { merge: true });
+        // [V12.0.2] Removed write to legacy course_configs. 
+        // We now exclusively propagate URLs to User Documents.
 
         // [NEW v12.0.0] Propagate githubClassroomUrls to User Documents
         if (configs.githubClassroomUrls) {
@@ -1210,13 +1194,55 @@ exports.getCourseConfigs = onCall(async (request) => {
     const { courseId } = data;
     try {
         const db = admin.firestore();
+        
+        // [V12.0.3] Refactored to fetch data from User-Centric model
         if (courseId) {
-            const doc = await db.collection('course_configs').doc(courseId).get();
-            return { [courseId]: doc.exists ? doc.data() : null };
+            // Find all authorized tutors for this unit
+            const tutorsSnap = await db.collection('users')
+                .where(`tutorConfigs.${courseId}.authorized`, '==', true)
+                .get();
+            
+            const authorizedTutors = [];
+            const tutorDetails = {};
+            const githubClassroomUrls = { [courseId]: {} };
+
+            tutorsSnap.forEach(tDoc => {
+                const tData = tDoc.data();
+                const config = tData.tutorConfigs[courseId];
+                authorizedTutors.push(config.email);
+                tutorDetails[config.email] = config;
+                if (config.githubClassroomUrl) {
+                    githubClassroomUrls[courseId][config.email] = config.githubClassroomUrl;
+                }
+            });
+
+            return { 
+                [courseId]: {
+                    authorizedTutors,
+                    tutorDetails,
+                    githubClassroomUrls
+                } 
+            };
         } else {
-            const snapshot = await db.collection('course_configs').get();
+            // Bulk fetch for all units (Heavy, but matches legacy behavior)
             const allConfigs = {};
-            snapshot.forEach(doc => allConfigs[doc.id] = doc.data());
+            const usersSnap = await db.collection('users').get();
+            
+            usersSnap.forEach(uDoc => {
+                const uData = uDoc.data();
+                const tutorConfigs = uData.tutorConfigs || {};
+                for (const [uId, config] of Object.entries(tutorConfigs)) {
+                    if (!config.authorized) continue;
+                    if (!allConfigs[uId]) {
+                        allConfigs[uId] = { authorizedTutors: [], tutorDetails: {}, githubClassroomUrls: { [uId]: {} } };
+                    }
+                    allConfigs[uId].authorizedTutors.push(config.email);
+                    allConfigs[uId].tutorDetails[config.email] = config;
+                    if (config.githubClassroomUrl) {
+                        allConfigs[uId].githubClassroomUrls[uId][config.email] = config.githubClassroomUrl;
+                    }
+                }
+            });
             return allConfigs;
         }
     } catch (e) {
@@ -1249,18 +1275,27 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
         };
     }
 
-    const parentDoc = effectiveCourseId ? await db.collection('course_configs').doc(effectiveCourseId).get() : null;
-    const unitDoc = canonicalUnitId ? await db.collection('course_configs').doc(canonicalUnitId).get() : null;
-    const candidateConfigs = [parentDoc?.data() || {}, unitDoc?.data() || {}];
-
+    // [V12.0.4] Fetch Tutor-specific classroom URL from the Tutor's User document
     let classroomUrl = null;
-    for (const cfg of candidateConfigs) {
-        if (cfg.githubClassroomUrls && cfg.githubClassroomUrls[canonicalUnitId]) {
-            classroomUrl = resolveClassroomUrlForTutor(cfg.githubClassroomUrls[canonicalUnitId], assignedTutorEmail);
+    if (assignedTutorEmail) {
+        try {
+            const tutorRecord = await admin.auth().getUserByEmail(assignedTutorEmail);
+            const tutorDoc = await db.collection('users').doc(tutorRecord.uid).get();
+            const tutorData = tutorDoc.exists ? tutorDoc.data() : {};
+            const unitConfig = (tutorData.tutorConfigs || {})[canonicalUnitId] || {};
+            classroomUrl = unitConfig.githubClassroomUrl || null;
+            
+            // Fallback to course-level if not unit-level (optional, depending on structure)
+            if (!classroomUrl && effectiveCourseId) {
+                const courseConfig = (tutorData.tutorConfigs || {})[effectiveCourseId] || {};
+                classroomUrl = courseConfig.githubClassroomUrl || null;
+            }
+        } catch (tutorErr) {
+            console.warn(`[resolveAssignmentAccess] Failed to fetch tutor ${assignedTutorEmail} config:`, tutorErr.message);
         }
-        if (classroomUrl) break;
     }
 
+    // Secondary Fallback: Check metadata_lessons (lessons) for default URLs
     if (!classroomUrl) {
         const course = lessons.find(l => l.courseId === effectiveCourseId);
         if (course?.githubClassroomUrls?.[canonicalUnitId]) {
@@ -1312,25 +1347,7 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
 
             const tutorData = { email: tutorEmail, name: tutorName, qualifiedAt: new Date().toISOString() };
 
-            const doc = await docRef.get();
-            const existingUnitConfig = doc.exists ? doc.data() : {};
-            const nextTutorDetails = {
-                ...(existingUnitConfig.tutorDetails || {}),
-                [tutorEmail]: tutorData
-            };
-            if (!doc.exists) {
-                await docRef.set({
-                    authorizedTutors: [tutorEmail],
-                    tutorDetails: nextTutorDetails,
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                });
-            } else {
-                await docRef.update({
-                    authorizedTutors: admin.firestore.FieldValue.arrayUnion(tutorEmail),
-                    tutorDetails: nextTutorDetails,
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                });
-            }
+            // [V12.0.2] Removed legacy writes. All logic now syncs to User Document (below).
 
             // [NEW v12.0.0] Synchronize with User Document
             try {
@@ -1351,20 +1368,8 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
                 console.warn(`[Role] Failed to sync user doc for ${tutorEmail}: ${authSyncErr.message}`);
             }
 
-            // [NEW] Also update parent legacy map if provided (use dot-notation to avoid overwrite)
-            if (parentDocRef) {
-                const parentDoc = await parentDocRef.get();
-                const parentData = parentDoc.exists ? parentDoc.data() : {};
-                const githubClassroomUrls = { ...(parentData.githubClassroomUrls || {}) };
-                githubClassroomUrls[courseId] = {
-                    ...(githubClassroomUrls[courseId] || {}),
-                    [tutorEmail]: "authorized"
-                };
-                await parentDocRef.set({
-                    githubClassroomUrls,
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-            }
+            // [V12.0.2] Removed writes to legacy course_configs.
+            // parentDocRef logic is now handled during propagate-on-save in user documents.
 
             // [NEW] Unit-Specific Promo Code & Email Notification
             try {
@@ -1397,27 +1402,9 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
             });
 
-            // 2. [REFINED] Clean up Legacy Parent-level Config (githubClassroomUrls) in ALL docs
-            const allConfigs = await db.collection('course_configs').get();
-            const batch = db.batch();
-            let parentFound = false;
-
-            allConfigs.forEach(configDoc => {
-                const data = configDoc.data();
-                if (data.githubClassroomUrls && data.githubClassroomUrls[courseId]) {
-                    const nextGithubClassroomUrls = { ...(data.githubClassroomUrls || {}) };
-                    const unitConfig = { ...(nextGithubClassroomUrls[courseId] || {}) };
-                    if (unitConfig[tutorEmail]) {
-                        delete unitConfig[tutorEmail];
-                        nextGithubClassroomUrls[courseId] = unitConfig;
-                        batch.update(configDoc.ref, {
-                            githubClassroomUrls: nextGithubClassroomUrls,
-                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                        });
-                        parentFound = true;
-                    }
-                }
-            });
+            // [V12.0.2] Legacy Parent-level cleanup skipped. 
+            // All data is now managed in User Documents.
+            return { success: true };
 
             if (parentFound) {
                 await batch.commit();
