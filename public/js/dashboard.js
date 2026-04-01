@@ -1053,8 +1053,13 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
         window.open(submissionUrl, '_blank');
         return;
     }
+    // [MOD v12.0.7] Dynamic Permission Check (Context-Aware)
+    // 1. Admin with Tutor Mode ON: Direct authorization (Master Key)
+    // 2. Qualified Tutor for THIS unit (Status): Direct authorization (Status-based)
+    const isAuthorizedTutor = hasQualifiedTutorAccessForUnit(unitId, courseId, myEmail);
+    const useMasterBypass = (myRole === 'admin' && adminTutorMode);
 
-    if (myRole === 'admin') {
+    if (useMasterBypass || isAuthorizedTutor) {
         const cfg = (dashboardData && dashboardData.courseConfigs) ? dashboardData.courseConfigs[courseId] : null;
         const inviteLink = cfg && cfg.githubClassroomUrls ? cfg.githubClassroomUrls[unitId] : null;
 
@@ -1076,7 +1081,11 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
     (async () => {
         try {
             const resolveAssignmentAccess = httpsCallable(functions, 'resolveAssignmentAccess');
-            const result = await resolveAssignmentAccess({ courseId, unitId });
+            const result = await resolveAssignmentAccess({ 
+                courseId, 
+                unitId,
+                tutorMode: adminTutorMode 
+            });
             const access = result.data || {};
 
             if (!access.authorized) {

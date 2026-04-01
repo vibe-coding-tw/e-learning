@@ -536,7 +536,7 @@ async function upsertStudentUnitAssignment(db, studentUid, unitId, tutorEmail, a
     return { previousTutor, changed: previousTutor !== (tutorEmail || null) };
 }
 
-async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons = []) {
+async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons = [], tutorMode = false) {
     const canonicalUnitId = resolveCanonicalUnitId(unitId, lessons);
     const course = findCourseByPageOrUnit(courseId, canonicalUnitId, lessons) || findCourseByPageOrUnit(courseId, unitId, lessons);
     const effectiveCourseId = course ? course.courseId : (courseId || findParentCourseIdByUnit(canonicalUnitId, lessons));
@@ -554,6 +554,31 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
     const userDoc = await db.collection('users').doc(uid).get();
     const userData = userDoc.exists ? (userDoc.data() || {}) : {};
     const assignedTutorEmail = userData.unitAssignments?.[canonicalUnitId] || null;
+
+    // [MOD v12.0.7] Master Bypass (Tutor Mode)
+    if (tutorMode && userData.role === 'admin') {
+        return {
+            authorized: true,
+            canonicalUnitId,
+            effectiveCourseId,
+            assignedTutorEmail,
+            requiresTutorAssignment: false,
+            course
+        };
+    }
+
+    // [MOD v12.0.6] Status-based Authorization: Qualified Tutors are always authorized for their specific units
+    const isQualifiedTutorForThisUnit = !!(userData.tutorConfigs && userData.tutorConfigs[canonicalUnitId] && userData.tutorConfigs[canonicalUnitId].authorized);
+    if (isQualifiedTutorForThisUnit) {
+        return {
+            authorized: true,
+            canonicalUnitId,
+            effectiveCourseId,
+            assignedTutorEmail,
+            requiresTutorAssignment: false,
+            course
+        };
+    }
 
     if (isFreeCourse || isTrialCourse) {
         return {
@@ -658,17 +683,14 @@ exports.checkPaymentAuthorization = onRequest(async (req, res) => {
 
         if (!uid) return res.status(200).json({ result: { authorized: false, message: "User not logged in" } });
 
-        // [NEW] Admin Super Mode Bypass
-        if (superMode === true) {
-            try {
-                const userRole = await getRole(uid);
-                if (userRole === 'admin') {
-                    console.log(`[checkPaymentAuthorization] Super Mode Bypass granted for Admin: ${uid}`);
-                    const token = generateToken(effectiveCourseId, fileName);
-                    return res.status(200).json({ result: { authorized: true, token: token, superModeActive: true } });
-                }
-            } catch (roleErr) {
-                console.error("[checkPaymentAuthorization] Super Mode role check failed:", roleErr);
+        // [MOD v12.0.8] Master Bypass (Tutor Mode)
+        const tutorModeHeader = req.query.tutorMode === 'true' || req.body.tutorMode === 'true' || req.body.data?.tutorMode === 'true';
+        if (tutorModeHeader) {
+            const currentRole = await getRole(uid);
+            if (currentRole === 'admin') {
+                console.log(`[checkPaymentAuthorization] Admin Tutor Mode Bypass granted: ${uid}`);
+                const token = generateToken(effectiveCourseId, fileName);
+                return res.status(200).json({ result: { authorized: true, token: token, role: 'admin', tutorModeActive: true } });
             }
         }
 
@@ -692,43 +714,22 @@ exports.checkPaymentAuthorization = onRequest(async (req, res) => {
             }
 
             // ---------------------------------------------------------
-            // [NEW v12.0.0] User-Centric Authorization Check
+            // [NEW v12.0.0] User-Centric Authorization Check: Check if status-based tutor
             // ---------------------------------------------------------
             const userDoc = await admin.firestore().collection('users').doc(uid).get();
             const userData = userDoc.exists ? userDoc.data() : {};
             const tutorConfigs = userData.tutorConfigs || {};
 
-            // Check if current user is the Admin (Rover)
-            // If Admin, auto-inject into their own tutorConfigs if not present
-            if (userEmail === 'rover.k.chen@gmail.com') {
-                console.log(`[checkPaymentAuthorization] Admin ${userEmail} accessing ${effectiveCourseId}. Ensuring auth in user doc.`);
-                
-                if (!tutorConfigs[effectiveCourseId] || !tutorConfigs[effectiveCourseId].authorized) {
-                    const tutorData = { 
-                        authorized: true, 
-                        email: userEmail, 
-                        name: 'Rover Chen', 
-                        qualifiedAt: new Date().toISOString(),
-                        githubClassroomUrl: "authorized"
-                    };
-                    await admin.firestore().collection('users').doc(uid).set({
-                        tutorConfigs: { [effectiveCourseId]: tutorData }
-                    }, { merge: true });
-                    
-                    // Background promo code seeding
-                    internalGetOrCreatePromoCode(admin.firestore(), userEmail, effectiveCourseId, 'Rover Chen')
-                        .catch(e => console.error("[Auto-Auth] Promo failed:", e));
-                }
-
-                const token = generateToken(effectiveCourseId, effectiveCourseId);
-                return res.status(200).json({ result: { authorized: true, token: token, role: userRole } });
-            }
-
-            // For non-admin users, check if they are authorized for ANY of the possible source IDs
-            const isAuthorized = authSources.some(sourceId => {
+            const isAuthorizedTutor = authSources.some(sourceId => {
                 const config = tutorConfigs[sourceId];
                 return config && config.authorized === true;
             });
+
+            if (isAuthorizedTutor) {
+                console.log(`[checkPaymentAuthorization] Status-based Authorization granted for ${userEmail}`);
+                const token = generateToken(effectiveCourseId, fileName);
+                return res.status(200).json({ result: { authorized: true, token: token, role: userRole } });
+            }
 
             if (isAuthorized) {
                 console.log(`[checkPaymentAuthorization] ${userRole} ${userEmail} authorized for ${effectiveCourseId} via User-Centric check`);
@@ -1012,14 +1013,6 @@ const getRole = async (uid) => {
     try {
         const userDoc = await admin.firestore().collection('users').doc(uid).get();
         if (userDoc.exists) return userDoc.data().role;
-
-        // [SELF-HEALING] Fallback for bootstrapping or if Firestore doc is missing
-        const userRecord = await admin.auth().getUser(uid);
-        const adminEmail = process.env.ADMIN_EMAIL || 'rover.k.chen@gmail.com';
-        if (userRecord.email && userRecord.email.toLowerCase() === adminEmail.toLowerCase()) {
-            console.log(`[Role] Self-healing: Granting admin to ${userRecord.email}`);
-            return 'admin';
-        }
     } catch (e) {
         console.error("[Role] Error in getRole:", e);
     }
@@ -1153,8 +1146,12 @@ exports.saveCourseConfigs = onCall(async (request) => {
             }
         }
 
-        // [V12.0.2] Removed write to legacy course_configs. 
-        // We now exclusively propagate URLs to User Documents.
+        // [FIXED v12.0.2] Restore write to course_configs to ensure it's visible in dashboard
+        await docRef.set({
+            ...configs,
+            lastModifiedBy: email,
+            lastModifiedAt: new Date().toISOString()
+        }, { merge: true });
 
         // [NEW v12.0.0] Propagate githubClassroomUrls to User Documents
         if (configs.githubClassroomUrls) {
@@ -1256,12 +1253,12 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
     const { data, auth } = request;
     if (!auth) throw new HttpsError('unauthenticated', '請先登入');
 
-    const { unitId, courseId } = data || {};
+    const { unitId, courseId, tutorMode } = data || {};
     if (!unitId) throw new HttpsError('invalid-argument', '缺少單元 ID');
 
     const db = admin.firestore();
     const lessons = await getLessons();
-    const access = await resolveStudentAssignmentAccess(db, auth.uid, courseId, unitId, lessons);
+    const access = await resolveStudentAssignmentAccess(db, auth.uid, courseId, unitId, lessons, tutorMode === true);
     if (!access.authorized) return { authorized: false, reason: access.reason || 'forbidden' };
 
     const { canonicalUnitId, effectiveCourseId, assignedTutorEmail, requiresTutorAssignment } = access;

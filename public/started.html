@@ -254,15 +254,15 @@
                 return;
             }
 
-            // [NEW] Super Mode override
-            if (localStorage.getItem('adminSuperMode') === 'true') {
-                updateCardAction(cardElement, 'AUTHORIZED');
-                return;
-            }
+            // [NEW] Tutor Mode override logic
+            const tutorModeActive = localStorage.getItem('adminTutorMode') === 'true';
 
             try {
-                // 傳送 pageId 而非 courseId (對齊後端)
-                const result = await checkAuthFunction({ pageId: courseId });
+                // 傳送 pageId 與 tutorMode 狀態
+                const result = await checkAuthFunction({ 
+                    pageId: courseId,
+                    tutorMode: tutorModeActive
+                });
 
                 // 根據回傳的 authorized (boolean) 判斷狀態
                 if (result.data && result.data.authorized) {
