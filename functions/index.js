@@ -1760,12 +1760,31 @@ exports.getDashboardData = onCall(async (request) => {
             });
         }
 
-        const configsSnapshot = await db.collection('course_configs').get();
-        configsSnapshot.forEach(doc => {
-            const docId = doc.id; // [FIX 11.3.18] Define docId early for scope availability
+        // [V12.0.7] Ultimate Migration Fix: Rebuild courseConfigs from users collection instead of the deleted course_configs collection.
+        const usersSnapshot = await db.collection('users').get();
+        const synthesizedConfigs = {};
+
+        usersSnapshot.forEach(doc => {
+            const uData = doc.data();
+            const tutorConfigs = uData.tutorConfigs || {};
+            for (const [unitId, config] of Object.entries(tutorConfigs)) {
+                if (!config.authorized) continue;
+                if (!synthesizedConfigs[unitId]) {
+                    synthesizedConfigs[unitId] = { authorizedTutors: [], tutorDetails: {}, githubClassroomUrls: { [unitId]: {} } };
+                }
+                synthesizedConfigs[unitId].authorizedTutors.push(config.email);
+                synthesizedConfigs[unitId].tutorDetails[config.email] = config;
+                if (config.githubClassroomUrl) {
+                    synthesizedConfigs[unitId].githubClassroomUrls[unitId][config.email] = config.githubClassroomUrl;
+                }
+            }
+        });
+
+        Object.keys(synthesizedConfigs).forEach(docId => {
             try {
-                const cfg = doc.data();
+                const cfg = synthesizedConfigs[docId];
                 const isAuthorized = requesterRole === 'admin' || (Array.isArray(cfg.authorizedTutors) && cfg.authorizedTutors.includes(email));
+                const mappedId = legacyMap[docId] || docId;
 
                 if (cfg.githubClassroomUrls) {
                     Object.keys(cfg.githubClassroomUrls).forEach(unitId => {
@@ -1795,8 +1814,6 @@ exports.getDashboardData = onCall(async (request) => {
                 }
 
                 if (isAuthorized) {
-                    const mappedId = legacyMap[docId] || docId;
-
                     if (docId.includes('.html')) {
                         // [FIX] Normalize ID to handle start- prefix mismatch
                         const normalizedId = mappedId.replace('start-', '');
@@ -1818,7 +1835,7 @@ exports.getDashboardData = onCall(async (request) => {
                     }
                 }
             } catch (err) {
-                console.error(`Error processing config for course ${doc.id}:`, err);
+                console.error(`Error processing config for course ${docId}:`, err);
             }
         });
 
