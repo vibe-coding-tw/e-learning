@@ -1661,7 +1661,7 @@ exports.decideTutorApplication = onCall(async (request) => {
             githubClassroomUrl: "authorized" // Initial placeholder
         };
 
-        updateData[`tutorConfigs.${canonicalUnitId}`] = tutorData;
+        updateData[new admin.firestore.FieldPath('tutorConfigs', canonicalUnitId)] = tutorData;
 
         // Generate Promo Code in background
         try {
@@ -1767,7 +1767,13 @@ exports.getDashboardData = onCall(async (request) => {
         usersSnapshot.forEach(doc => {
             const uData = doc.data();
             const tutorConfigs = uData.tutorConfigs || {};
-            for (const [unitId, config] of Object.entries(tutorConfigs)) {
+            for (let [unitId, config] of Object.entries(tutorConfigs)) {
+                // [FIX] Fallback for broken dot-in-key records: un-nest if 'html' sub-object exists
+                if (config && !config.authorized && config.html && config.html.authorized) {
+                    config = config.html;
+                    if (!unitId.endsWith('.html')) unitId += '.html';
+                }
+
                 if (!config.authorized) continue;
                 if (!synthesizedConfigs[unitId]) {
                     synthesizedConfigs[unitId] = { authorizedTutors: [], tutorDetails: {}, githubClassroomUrls: { [unitId]: {} } };
