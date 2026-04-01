@@ -1195,13 +1195,9 @@ exports.getCourseConfigs = onCall(async (request) => {
     try {
         const db = admin.firestore();
         
-        // [V12.0.3] Refactored to fetch data from User-Centric model
-        // [V12.0.5] Fix: Use FieldPath to handle IDs with dots (e.g., .html)
+        // [V12.0.6] Ultimate Reliability: Fetch all users and filter in memory to avoid dot-ambiguity issues in Firestore queries.
         if (courseId) {
-            const fieldPath = new admin.firestore.FieldPath('tutorConfigs', courseId, 'authorized');
-            const tutorsSnap = await db.collection('users')
-                .where(fieldPath, '==', true)
-                .get();
+            const tutorsSnap = await db.collection('users').get();
             
             const authorizedTutors = [];
             const tutorDetails = {};
@@ -1209,11 +1205,16 @@ exports.getCourseConfigs = onCall(async (request) => {
 
             tutorsSnap.forEach(tDoc => {
                 const tData = tDoc.data();
-                const config = tData.tutorConfigs[courseId];
-                authorizedTutors.push(config.email);
-                tutorDetails[config.email] = config;
-                if (config.githubClassroomUrl) {
-                    githubClassroomUrls[courseId][config.email] = config.githubClassroomUrl;
+                const tutorConfigs = tData.tutorConfigs || {};
+                
+                // Directly match the key string (immune to dots)
+                const config = tutorConfigs[courseId];
+                if (config && config.authorized === true) {
+                    authorizedTutors.push(config.email);
+                    tutorDetails[config.email] = config;
+                    if (config.githubClassroomUrl) {
+                        githubClassroomUrls[courseId][config.email] = config.githubClassroomUrl;
+                    }
                 }
             });
 
@@ -1482,6 +1483,24 @@ exports.applyForTutorRole = onCall(async (request) => {
     await sendAdminNewApplicationEmail(adminEmail, email, canonicalUnitId);
 
     return { success: true, applicationId: application.applicationId };
+});
+
+// [DEBUG TOOL] 偵錯專用：查看目前教師屬性結構
+exports.debugTutorAuth = onRequest(async (req, res) => {
+    const email = req.query.email || 'rover.k.chen@gmail.com';
+    const db = admin.firestore();
+    try {
+        const usersSnap = await db.collection('users').where('email', '==', email).get();
+        if (usersSnap.empty) return res.status(404).send("User document not found.");
+        const data = usersSnap.docs[0].data();
+        return res.status(200).json({ 
+            email: email,
+            tutorConfigs: data.tutorConfigs || {},
+            fullDoc: data
+        });
+    } catch (err) {
+        return res.status(500).send(err.message);
+    }
 });
 
 exports.recommendTutorForUnit = onCall(async (request) => {
