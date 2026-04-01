@@ -1109,7 +1109,7 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
 
 function renderAssignments(assignments, guideContent = "") {
     const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
-    const canManageAssignments = hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, myEmail);
+    const canManageAssignments = isUserAuthorizedForUnit(filterUnitId, filterCourseId, myEmail);
     const thAction = document.getElementById('assignment-th-action');
     if (thAction) thAction.classList.toggle('hidden', !canManageAssignments);
 
