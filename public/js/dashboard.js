@@ -1089,7 +1089,8 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
             const access = result.data || {};
 
             if (!access.authorized) {
-                alert("尚未完成此課程付款授權，暫時無法開啟作業入口。");
+                // [REMOVED] Silent fail or separate UI handling for unauthorized access
+                console.warn("[Dashboard] Assignment access unauthorized.");
                 return;
             }
 
