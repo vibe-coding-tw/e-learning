@@ -559,11 +559,15 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
     const effectiveCourseId = course ? course.courseId : (courseId || findParentCourseIdByUnit(canonicalUnitId, lessons));
     const isPhysicalProduct = !!(course && course.isPhysical === true);
 
-    // [V13.0.22] Master Bypass (Tutor Mode Simulation)
-    // If an authorized admin toggles simulation ON, grant immediate access to DIGITAL units.
-    // Rule Enforcement (V13.6): Physical products with prices MUST show the purchase flow even for admins.
-    if (tutorMode && isAdminRole) {
-        if (!isPhysicalProduct) {
+    // [V13.6] Special Physical Product Enforcement
+    // Rule: Hardware sales ALWAYS prioritize purchase flow. No bypasses for ANYONE.
+    if (isPhysicalProduct) {
+        console.log(`[resolveAccess] ENFORCING Purchase Flow for Physical Product: ${effectiveCourseId}`);
+        // Skip all bypasses and jump directly to Order Check (below)
+    } else {
+        // [V13.0.22] Master Bypass (Tutor Mode Simulation)
+        // If an authorized admin toggles simulation ON, grant immediate access to DIGITAL units.
+        if (tutorMode && isAdminRole) {
             console.log(`[resolveAccess] SUCCESS: Admin Simulation Bypass for ${uid}`);
             return { 
                 authorized: true, 
@@ -572,37 +576,34 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
                 effectiveCourseId: effectiveCourseId,
                 assignedTutorEmail: assignedTutorEmail
             };
-        } else {
-            console.log(`[resolveAccess] RESTRICTED: Admin bypass denied for PHYSICAL product ${effectiveCourseId}`);
+        }
+
+        // Status-based Authorization: Qualified Tutors for their units (Digital Only)
+        const isQualifiedTutorForThisUnit = !!(userData.tutorConfigs && userData.tutorConfigs[canonicalUnitId] && userData.tutorConfigs[canonicalUnitId].authorized);
+        if (isQualifiedTutorForThisUnit) {
+            return { authorized: true, canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
+        }
+
+        // FREE COURSE (NT$ 0) (Digital Only)
+        const lessonPrice = course ? course.price : (lessons.find(l => l.courseId === effectiveCourseId)?.price || 9999);
+        const isFreeCourse = !!(course && parseInt(lessonPrice) === 0);
+        if (isFreeCourse) {
+            return { authorized: true, canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
+        }
+
+        // Trial Course (Started category, within 30 days) (Digital Only)
+        const now = Date.now();
+        const userRecord = await admin.auth().getUser(uid);
+        const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+        const isTrialCourse = !!(course && course.category === 'started' && ((now - new Date(userRecord.metadata.creationTime).getTime()) < THIRTY_DAYS_MS));
+        if (isTrialCourse) {
+            return { authorized: true, canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
         }
     }
 
     if (!effectiveCourseId || !canonicalUnitId) {
         console.warn(`[resolveAccess] FAIL: Missing context for UID:${uid} Page:${courseId} Unit:${unitId}`);
         return { authorized: false, reason: 'missing-context', canonicalUnitId, effectiveCourseId };
-    }
-
-    const userRecord = await admin.auth().getUser(uid);
-    const now = Date.now();
-    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-    const lessonPrice = course ? course.price : (lessons.find(l => l.courseId === effectiveCourseId)?.price || 9999);
-    const isFreeCourse = !!(course && parseInt(lessonPrice) === 0);
-    const isTrialCourse = !!(course && course.category === 'started' && ((now - new Date(userRecord.metadata.creationTime).getTime()) < THIRTY_DAYS_MS));
-
-    // 3. Authorization Rules
-    // Status-based Authorization: Qualified Tutors for their units
-    const isQualifiedTutorForThisUnit = !!(userData.tutorConfigs && userData.tutorConfigs[canonicalUnitId] && userData.tutorConfigs[canonicalUnitId].authorized);
-    if (isQualifiedTutorForThisUnit) {
-        return { authorized: true, canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
-    }
-
-    // FREE COURSE (NT$ 0)
-    if (isFreeCourse) {
-        return { authorized: true, canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
-    }
-    // Trial Course (Started category, within 30 days)
-    if (isTrialCourse) {
-        return { authorized: true, canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
     }
 
     const ordersSnapshot = await db.collection('orders')

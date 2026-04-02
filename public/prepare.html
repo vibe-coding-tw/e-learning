@@ -802,13 +802,15 @@
             const classroomUrl = cardElement.dataset.classroomUrl;
             const coursePrice = cardElement.dataset.coursePrice || "999"; 
             const isFreeCourse = parseInt(coursePrice, 10) === 0;
+            const isPhysical = cardElement.dataset.isPhysical === 'true';
 
             if (!user) {
                 updateCardAction(cardElement, 'NOT_LOGGED_IN');
                 return;
             }
 
-            if (isFreeCourse) {
+            // [V13.6] Rule Enforcement: PHYSICAL products NEVER bypass authorization locally
+            if (isFreeCourse && !isPhysical) {
                 updateCardAction(cardElement, 'AUTHORIZED');
                 return;
             }
