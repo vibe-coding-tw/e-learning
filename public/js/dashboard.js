@@ -159,7 +159,8 @@ async function loadDashboard() {
         const getDashboardData = httpsCallable(functions, 'getDashboardData');
         const response = await getDashboardData({ 
             unitId: filterUnitId, 
-            courseId: filterCourseId 
+            courseId: filterCourseId,
+            tutorMode: adminTutorMode // [V13.0.8] Pass simulation flag to backend
         });
         const data = response.data;
 
@@ -189,7 +190,8 @@ async function loadDashboard() {
         }
 
         const rawIsQualifiedTutor = hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, myEmail);
-        const isQualifiedTutor = isAdmin ? (adminTutorMode && rawIsQualifiedTutor) : rawIsQualifiedTutor;
+        // [V13.0.9] Rule Logic: Admin in God Mode (tutorMode: ON) is ALWAYS qualified.
+        const isQualifiedTutor = isAdmin ? (adminTutorMode ? true : rawIsQualifiedTutor) : rawIsQualifiedTutor;
         
         const isPaidStudent = myRole === 'student' && hasUnitContext
             ? await hasPaidStudentAccessForUnit(filterCourseId, filterUnitId)
@@ -441,7 +443,8 @@ async function hasPaidStudentAccessForUnit(courseId, unitId) {
         const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
         const response = await checkAuthFunction({
             pageId: courseId,
-            fileName: unitId
+            fileName: unitId,
+            tutorMode: adminTutorMode // [V13.0.10] Enforce simulation on individual unit access
         });
         return !!(response?.data?.authorized || response?.data?.result?.authorized);
     } catch (error) {
@@ -697,12 +700,14 @@ function renderAdminDashboard(data, filterUnitId = null) {
         filterCourseId = findParentCourseIdByUnit(filterUnitId);
     }
 
-    // [RESTORE] If Admin and Tutor Mode is ON, they see these tabs ONLY if authorized
+    // [RESTORE] If Admin and Tutor Mode is ON, they see these tabs (GOD MODE)
     // If Tutor, they see these if they have qualified access for CURRENT view
     let showQualifiedTutorTabs = false;
     const isAuthorized = !!filterUnitId && hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, currentUserEmail);
+    
+    // [V13.0.11] God Mode rule enforcement for tabs
     if (myRole === 'admin') {
-        showQualifiedTutorTabs = adminTutorMode && isAuthorized;
+        showQualifiedTutorTabs = adminTutorMode || isAuthorized;
     } else {
         showQualifiedTutorTabs = isAuthorized;
     }
@@ -2091,13 +2096,21 @@ function isUserAuthorizedForUnit(fileName, courseId, email) {
     // RULE 1: Admin in Tutor Mode = God Mode.
     if (isAdmin && adminTutorMode) return true;
 
-    // RULE 2: If Simulation Mode or Standard User, we check Qualification/Payment.
-    const isQual = hasQualifiedTutorAccessForUnit(fileName, courseId, email);
-
-    // [V12.4.6] FREE UNIT EXEMPTION: Intro/Prepare titles are always open.
+    // [V12.5.0] INTRO MONTH RULE: 1 month free for intro units upon registration
     const isFreeUnit = (fileName || "").toLowerCase().includes('intro') || (fileName || "").toLowerCase().includes('prepare');
     
-    if (isFreeUnit) return true;
+    if (isFreeUnit && !isPaidStudent) {
+        const regTime = dashboardData?.createdAt?.seconds ? new Date(dashboardData.createdAt.seconds * 1000) : new Date(dashboardData?.createdAt || 0);
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        
+        // If registration was less than a month ago, grant access to intro units.
+        if (regTime > oneMonthAgo) return true;
+        else return false; // Trial expired!
+    }
+
+    // RULE 2: If Simulation Mode or Standard User:
+    const isQual = hasQualifiedTutorAccessForUnit(fileName, courseId, email);
 
     // RULE 3: For Paid Units, must be Qualified OR Paid (non-expired).
     return isQual || isPaidStudent;

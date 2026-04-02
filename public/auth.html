@@ -124,11 +124,11 @@
                     return;
                 }
 
-                const isSuperMode = localStorage.getItem('adminSuperMode') === 'true';
-                const result = await checkAuthFunction({
+                const isTutorMode = localStorage.getItem('adminTutorMode') === 'true';
+                const result = await checkAuthFunction({ 
                     pageId: courseId,
                     fileName: fileName,
-                    superMode: isSuperMode
+                    tutorMode: isTutorMode
                 });
 
                 if (result.data && result.data.authorized) {

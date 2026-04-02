@@ -558,15 +558,17 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
     const userRecord = await admin.auth().getUser(uid);
     const now = Date.now();
     const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-    const isFreeCourse = !!(course && course.price === 0);
+    const lessonPrice = course ? course.price : (lessons.find(l => l.courseId === effectiveCourseId)?.price || 9999);
+    const isFreeCourse = !!(course && parseInt(lessonPrice) === 0);
     const isTrialCourse = !!(course && course.category === 'started' && ((now - new Date(userRecord.metadata.creationTime).getTime()) < THIRTY_DAYS_MS));
 
     const userDoc = await db.collection('users').doc(uid).get();
     const userData = userDoc.exists ? (userDoc.data() || {}) : {};
     const assignedTutorEmail = userData.unitAssignments?.[canonicalUnitId] || null;
 
+    const isAdminRole = userData.role === 'admin' || userRecord.email === 'rover.k.chen@gmail.com';
     // [MOD v12.0.7] Master Bypass (Tutor Mode)
-    if (tutorMode && userData.role === 'admin') {
+    if (tutorMode && isAdminRole) {
         return {
             authorized: true,
             canonicalUnitId,
@@ -590,7 +592,12 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
         };
     }
 
-    if (isFreeCourse || isTrialCourse) {
+    // [V13.0.15] Case 1: FREE COURSE (NT$ 0) -> ALWAYS AUTHORIZED
+    // Handle both string and number types
+    const isFree = !!(course && parseInt(lessonPrice) === 0);
+    const isTrial = isTrialCourse; // Already calculated
+    
+    if (isFree || isTrial) {
         return {
             authorized: true,
             canonicalUnitId,
@@ -643,27 +650,41 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
     if (!auth) return { authorized: false };
 
     try {
-        const result = await getDashboardData(auth.uid); // Reuse the central logic
-        const dashboardData = result;
-        
-        // [V12.4.8] ABSOLUTE EXPIRY CHECK
-        const userDoc = await admin.firestore().collection('users').doc(auth.uid).get();
-        const userData = userDoc.data() || {};
-        const isPaidStatus = userData.accountStatus === 'paid';
-        const orders = userData.orderRecords || [];
-        
-        const now = admin.firestore.Timestamp.now();
-        const hasValidOrder = orders.some(order => {
-            const exp = order.expiryDate;
-            if (!exp) return true; // Legacy with no expiry = persistent
-            return exp.toMillis() > now.toMillis();
-        });
+        const { pageId, fileName, tutorMode } = data;
+        const lessons = await getLessons();
+        const db = admin.firestore();
 
-        const isAuthorized = isPaidStatus && hasValidOrder;
-        return { authorized: isAuthorized };
+        // [V12.4.9] Robust Authorization Check using central logic
+        const access = await resolveStudentAssignmentAccess(
+            db, 
+            auth.uid, 
+            pageId, 
+            fileName, 
+            lessons, 
+            tutorMode === true
+        );
+
+        if (access.authorized) {
+            // [V13.0.8] Generate token for serveCourse
+            const expiry = Date.now() + 30 * 60 * 1000; // 30 mins
+            const scopePart = fileName || pageId || "UNDEFINED";
+            const raw = `${pageId || "UNDEFINED"}|${scopePart}|${expiry}`;
+            const signature = crypto.createHmac('sha256', HASH_KEY).update(raw).digest('hex');
+            const token = `${raw}|${signature}`;
+
+            return { 
+                authorized: true,
+                token: token
+            };
+        }
+
+        return { 
+            authorized: false,
+            reason: access.reason || null
+        };
     } catch (e) {
         console.error("Auth check failed:", e);
-        return { authorized: false };
+        return { authorized: false, error: e.message };
     }
 });
 
@@ -1760,8 +1781,9 @@ exports.getDashboardData = onCall(async (request) => {
         }
 
         // [NEW v12.0.2] (Admin Only) Fetch all PENDING applications from the users collection
+        // [V13.0.1] Simulation Rule: Only fetch if in Tutor Mode (God Mode)
         let allPendingApplications = [];
-        if (requesterRole === 'admin') {
+        if (requesterRole === 'admin' && data.tutorMode !== false) {
             const pendingUsersSnapshot = await db.collection('users')
                 .where('hasPendingApplication', '==', true)
                 .get();
@@ -1832,7 +1854,9 @@ exports.getDashboardData = onCall(async (request) => {
         Object.keys(synthesizedConfigs).forEach(docId => {
             try {
                 const cfg = synthesizedConfigs[docId];
-                const isAuthorized = requesterRole === 'admin' || (Array.isArray(cfg.authorizedTutors) && cfg.authorizedTutors.includes(email));
+                // [V13.0.2] Simulation Rule: Admin God Mode check
+                const isGodMode = requesterRole === 'admin' && data.tutorMode !== false;
+                const isAuthorized = isGodMode || (Array.isArray(cfg.authorizedTutors) && cfg.authorizedTutors.includes(email));
                 const mappedId = legacyMap[docId] || docId;
 
                 if (cfg.githubClassroomUrls) {
@@ -1896,7 +1920,8 @@ exports.getDashboardData = onCall(async (request) => {
         console.log(`[getDashboardData] Total files found: ${allFiles.length}. First 5: ${JSON.stringify(allFiles.slice(0, 5))}`);
 
         // [MODIFIED] If admin or global tutor, ensure ALL courses from lessons.json are considered for guide aggregation
-        if (requesterRole === 'admin') {
+        // [V13.0.3] Simulation Rule: Admin God Mode check for global aggregation
+        if (requesterRole === 'admin' && data.tutorMode !== false) {
             lessons.forEach(l => {
                 if (!authorizedCourseIds.includes(l.courseId)) {
                     authorizedCourseIds.push(l.courseId);
@@ -1983,7 +2008,8 @@ exports.getDashboardData = onCall(async (request) => {
 
 
         // Determine if this user has any management access (Global Admin/Tutor or Course-Specific Tutor)
-        const isManagementView = requesterRole === 'admin' || authorizedCourseIds.length > 0;
+        // [V13.0.4] Simulation Rule: isManagementView depends on Tutor Mode for admins
+        const isManagementView = (requesterRole === 'admin' && data.tutorMode !== false) || authorizedCourseIds.length > 0;
 
         let result = {
             role: requesterRole,
@@ -2036,7 +2062,8 @@ exports.getDashboardData = onCall(async (request) => {
             let usersSnapshot = await db.collection('users').get();
             
             // [NEW] Maintenance Sync: For admins, ensure EVERY Auth user has a Firestore document.
-            if (requesterRole === 'admin') {
+            // [V13.0.5] Simulation Rule: Maintenance only in God Mode
+            if (requesterRole === 'admin' && data.tutorMode !== false) {
                 try {
                     const listUsersResult = await admin.auth().listUsers(1000);
                     const authUsers = listUsersResult.users;
@@ -2072,7 +2099,9 @@ exports.getDashboardData = onCall(async (request) => {
             usersSnapshot.forEach(doc => {
                 const userData = doc.data();
                 const role = userData.role || 'student';
-                if (requesterRole === 'admin' || role === 'student') {
+                // [V13.0.6] Simulation Rule: Admin visibility restricted in simulated mode
+                const isAdminPrivileged = requesterRole === 'admin' && data.tutorMode !== false;
+                if (isAdminPrivileged || role === 'student') {
                     usersMap[doc.id] = { ...userData, role: role, _id: doc.id };
                 }
             });
