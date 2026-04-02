@@ -1155,10 +1155,19 @@ function renderAssignments(assignments = [], guideContent = "") {
     const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
     const isAdmin = myRole === 'admin';
     const canManageAssignments = isUserAuthorizedForUnit(filterUnitId, filterCourseId, myEmail) || (isAdmin && !filterUnitId);
-    
+
+    // [Cleanup] Remove old guides from all possible containers before rendering new one
+    const possibleContainers = [
+        document.getElementById('view-assignments'),
+        document.getElementById('assignments-container')
+    ];
+    possibleContainers.forEach(container => {
+        if (!container) return;
+        const oldGuides = container.querySelectorAll('.integrated-tutor-guide, .bg-blue-50');
+        oldGuides.forEach(g => g.remove());
+    });
+
     // [MODIFIED] If Admin and NO unit filter, we show a GLOBAL FEED of all assignments
-    // If Admin and NO unit filter and NO assignments, then show students status? 
-    // Re-evaluating: Admin wants to see all assignments sorted by date.
     if (isAdmin && !filterUnitId) {
         console.log("[Assignments] Rendering GLOBAL feed for Admin.");
         const sortedAll = [...assignments].sort((a, b) => {
@@ -1220,18 +1229,7 @@ function renderAssignments(assignments = [], guideContent = "") {
         renderAssignmentsTable(assignments, canManageAssignments);
     }
 
-    // [NEW] Assignment Guide rendering removed as per user request
-    const possibleContainers = [
-        document.getElementById('view-assignments'),
-        document.getElementById('assignments-container')
-    ];
-
-    possibleContainers.forEach(container => {
-        if (!container) return;
-        const oldGuide = container.querySelector('.integrated-tutor-guide') || container.querySelector('.bg-blue-50');
-        if (oldGuide) oldGuide.remove();
-        // Guide appending logic removed
-    });
+    // [V13.6] Note: Cleanup of old guides moved to the TOP of the function to prevent flickering
 }
 
 /**
