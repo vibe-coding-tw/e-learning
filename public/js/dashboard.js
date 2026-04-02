@@ -673,13 +673,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
     if (assignmentsTabBtn) {
         const canViewAssignments = canCurrentUserViewAssignmentsTab();
         assignmentsTabBtn.classList.toggle('hidden', !canViewAssignments);
-        
-        // [NEW] Dynamic Labeling
-        if (myRole === 'admin' && !adminTutorMode) {
-            assignmentsTabBtn.textContent = '學生狀態 (Students)';
-        } else {
-            assignmentsTabBtn.textContent = '作業 (Assignments)';
-        }
+        assignmentsTabBtn.textContent = '作業 (Assignments)';
     }
 
     // 1. Admin Tab (Always Admin-only, always visible if myRole is admin)
@@ -969,7 +963,6 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
     renderChart(chartData);
     renderAssignments(displayAssignments, guideContent);
-    switchTab('assignments');
 }
 
 // Helper: Resolve assignment guide for a unit
@@ -1154,10 +1147,8 @@ function renderAssignments(assignments = [], guideContent = "") {
     }
 
     // Existing Student/Tutor-specific logic
-    if (myRole === 'admin' && !adminTutorMode && filterUnitId) {
-        renderPaidStudentsStatus(dashboardData.students);
-        return;
-    }
+    // [V12.2.0] RESTORED: Assignments tab always shows the list for Admin.
+    // (Previous Paid Student Status logic archived)
 
     const thAction = document.getElementById('assignment-th-action');
     if (thAction) thAction.classList.toggle('hidden', !canManageAssignments);
