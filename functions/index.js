@@ -1683,6 +1683,12 @@ exports.getDashboardData = onCall(async (request) => {
     const db = admin.firestore();
     const lessons = await getLessons(); 
     
+    // [V12.1.2] SECURITY RULE: Global dashboard (no unitId) is ADMIN ONLY.
+    if (!data.unitId && !data.courseId && requesterRole !== 'admin') {
+        console.warn(`[getDashboardData] BLOCKED: Non-admin user ${email} attempted global view.`);
+        throw new HttpsError('permission-denied', 'You must specify a unitId or courseId to view your dashboard.');
+    }
+    
     // [MIGRATION HELP] Mapping of legacy IDs to new metadata IDs
     const legacyMap = {
         '01': 'ydb63bg',

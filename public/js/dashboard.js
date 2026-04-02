@@ -152,38 +152,42 @@ async function loadLessons() {
 // --- Main Data Fetching ---
 async function loadDashboard() {
     try {
+        const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
+        const hasUnitContext = !!filterUnitId;
+        
+        // [V12.1.2] SECURITY RULE: Global dashboard (no orientation) is ADMIN ONLY.
         const getDashboardData = httpsCallable(functions, 'getDashboardData');
-        const response = await getDashboardData();
+        const response = await getDashboardData({ 
+            unitId: filterUnitId, 
+            courseId: filterCourseId 
+        });
         const data = response.data;
 
         // [FIX] Aggregate data (map filename IDs to real Course IDs)
         aggregateData(data);
-
         dashboardData = data;
 
-        // [FIX] Ensure allLessons is populated. If loadLessons() failed, use the lessons
-        // embedded in the dashboard response (if backend provides them) or re-fetch now.
+        // [FIX] Ensure allLessons is populated. 
         if (!allLessons || allLessons.length === 0) {
             if (data.lessons && data.lessons.length > 0) {
                 allLessons = data.lessons;
                 allLessons.forEach(l => { lessonsMap[l.courseId] = l.title; });
-                console.log(`[Dashboard] Populated allLessons from data.lessons: ${allLessons.length}`);
             } else if (typeof vibeFetchLessons === 'function') {
                 allLessons = await vibeFetchLessons();
                 allLessons.forEach(l => { lessonsMap[l.courseId] = l.title; });
-                console.log(`[Dashboard] Re-fetched allLessons: ${allLessons.length}`);
             }
         }
 
         myRole = data.role;
-        console.log("Role:", myRole);
-
-        const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
-        const hasUnitContext = !!filterUnitId;
         const isAdmin = myRole === 'admin';
         
-        // [FIX] Admin Tutor Mode: If Admin and Tutor Mode is OFF, ignore their own qualification.
-        // Even if ON, they now only see tutor features IF they are authorized for that unit.
+        // Final Rule enforcement: No unit context + Not Admin = Access Denied
+        if (!hasUnitContext && !isAdmin) {
+            console.warn("[Security] Non-Admin global access denied.");
+            showAccessDenied("ADMIN_ONLY_NO_UNIT");
+            return;
+        }
+
         const rawIsQualifiedTutor = hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, myEmail);
         const isQualifiedTutor = isAdmin ? (adminTutorMode && rawIsQualifiedTutor) : rawIsQualifiedTutor;
         
@@ -193,11 +197,6 @@ async function loadDashboard() {
             
         updateCurrentDashboardPermissions({ isAdmin, isQualifiedTutor, isPaidStudent });
         const requestedTab = getRequestedTabFromUrl();
-
-        if (!hasUnitContext && !isAdmin) {
-            showAccessDenied("ADMIN_ONLY_NO_UNIT");
-            return;
-        }
 
         if (isAdmin || isQualifiedTutor) {
             // Admin/Tutor View (Management)
