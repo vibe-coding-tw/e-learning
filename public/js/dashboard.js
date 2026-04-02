@@ -1074,7 +1074,7 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
             }
         }
 
-        alert("此單元尚未設定 GitHub Classroom 邀請連結，請管理員/老師至「課程設定」中設定。");
+        alert("此單元尚未設定 GitHub Classroom 邀請連結，請管理員/老師至「GitHub Classroom」中設定。");
         return;
     }
 
@@ -1103,7 +1103,7 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
                 return;
             }
 
-            alert("此單元尚未設定 GitHub Classroom 邀請連結，請管理員/老師至「課程設定」中設定。");
+            alert("此單元尚未設定 GitHub Classroom 邀請連結，請管理員/老師至「GitHub Classroom」中設定。");
         } catch (error) {
             console.error('[Dashboard] Failed to resolve assignment link:', error);
             alert("暫時無法取得作業入口，請稍後再試。");
