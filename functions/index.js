@@ -1356,8 +1356,8 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
 
     try {
         const db = admin.firestore();
-        const docRef = db.collection('course_configs').doc(courseId); // Unit-level
-        const parentDocRef = parentCourseId ? db.collection('course_configs').doc(parentCourseId) : null;
+        // [V13.0.22] All authorization data is now strictly user-centric. 
+        // No longer using centralized course_configs collection.
 
         if (action === 'add') {
             // ... [ADD Logic remains same focus on unit-level] ...
@@ -1438,13 +1438,7 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
                 console.warn(`[Role] Failed to sync user doc removal for ${tutorEmail}: ${authSyncErr.message}`);
             }
 
-            // [V12.0.2] Legacy Parent-level cleanup skipped. 
-            // All data is now managed in User Documents.
             return { success: true };
-
-            if (parentFound) {
-                await batch.commit();
-            }
         }
         return { success: true };
     } catch (e) {
