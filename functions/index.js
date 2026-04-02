@@ -2230,6 +2230,22 @@ exports.getDashboardData = onCall(async (request) => {
 
         result.students = Object.values(studentStats);
 
+        // 2.5 Fetch Tutors (Administrators and Authorized Tutors)
+        const tutorList = [];
+        Object.entries(usersMap).forEach(([uid, data]) => {
+            const role = data.role || 'student';
+            if (role === 'admin' || role === 'tutor' || (data.tutorConfigs && Object.keys(data.tutorConfigs).length > 0)) {
+                tutorList.push({
+                    uid,
+                    email: data.email || 'No Email',
+                    name: data.name || 'Anonymous',
+                    role: role,
+                    tutorConfigs: data.tutorConfigs || {}
+                });
+            }
+        });
+        result.tutors = tutorList;
+
         // 3. Fetch Assignments
         let assignQuery = db.collection('assignments');
         if (!isManagementView) {
