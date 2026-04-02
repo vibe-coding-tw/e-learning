@@ -1126,12 +1126,30 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
     })();
 };
 
-function renderAssignments(assignments, guideContent = "") {
+function renderAssignments(assignments = [], guideContent = "") {
     const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
-    const canManageAssignments = isUserAuthorizedForUnit(filterUnitId, filterCourseId, myEmail);
+    const isAdmin = myRole === 'admin';
+    const canManageAssignments = isUserAuthorizedForUnit(filterUnitId, filterCourseId, myEmail) || (isAdmin && !filterUnitId);
     
-    // [NEW] If Admin and Tutor Mode is OFF, render the Paid Students Status View
-    if (myRole === 'admin' && !adminTutorMode) {
+    // [MODIFIED] If Admin and NO unit filter, we show a GLOBAL FEED of all assignments
+    // If Admin and NO unit filter and NO assignments, then show students status? 
+    // Re-evaluating: Admin wants to see all assignments sorted by date.
+    if (isAdmin && !filterUnitId) {
+        console.log("[Assignments] Rendering GLOBAL feed for Admin.");
+        const sortedAll = [...assignments].sort((a, b) => {
+            const getTs = (item) => {
+                const ts = item.updatedAt || item.submittedAt;
+                if (!ts) return 0;
+                return ts.seconds || ts._seconds || new Date(ts).getTime() / 1000 || 0;
+            };
+            return getTs(b) - getTs(a);
+        });
+        renderAssignmentsTable(sortedAll, true); // true = force canManage for Admin
+        return;
+    }
+
+    // Existing Student/Tutor-specific logic
+    if (myRole === 'admin' && !adminTutorMode && filterUnitId) {
         renderPaidStudentsStatus(dashboardData.students);
         return;
     }
@@ -1139,112 +1157,93 @@ function renderAssignments(assignments, guideContent = "") {
     const thAction = document.getElementById('assignment-th-action');
     if (thAction) thAction.classList.toggle('hidden', !canManageAssignments);
 
-    if (assignmentTableBody) {
-        if (!assignments || assignments.length === 0) {
-            assignmentTableBody.innerHTML = `<tr><td colspan="${canManageAssignments ? 6 : 5}" class="text-center py-8 text-gray-500">尚無作業繳交紀錄</td></tr>`;
-        } else {
-            assignmentTableBody.innerHTML = assignments.map(a => {
-                // Safe date handling
-                let submittedDate = 'N/A';
-                const ts = a.updatedAt || a.submittedAt;
-                if (ts) {
-                    if (ts._seconds) submittedDate = new Date(ts._seconds * 1000).toLocaleString();
-                    else if (ts.seconds) submittedDate = new Date(ts.seconds * 1000).toLocaleString();
-                    else submittedDate = new Date(ts).toLocaleString();
-                }
-
-                const title = lessonsMap[a.courseId] || a.courseId;
-                const currentStatus = a.currentStatus || a.status || 'new'; // Fallback to 'status' field
-
-                const statusColors = {
-                    'submitted': 'bg-yellow-100 text-yellow-800',
-                    'graded': 'bg-green-100 text-green-800',
-                    'started': 'bg-blue-100 text-blue-800',
-                    'new': 'bg-gray-100 text-gray-800'
-                };
-                const statusLabel = {
-                    'submitted': '待評分',
-                    'graded': '已評分',
-                    'started': '進行中',
-                    'new': '新作業'
-                };
-                const badge = `<span class="${statusColors[currentStatus] || 'bg-gray-100'} px-2 py-0.5 rounded text-[10px] font-bold">${statusLabel[currentStatus] || currentStatus}</span>`;
-
-                // Clean up Unit ID for display
-                let displayUnit = a.unitId || '';
-                displayUnit = displayUnit.replace('.html', '').replace(/-/g, ' ');
-                const unitMatch = displayUnit.match(/unit\s+(.+)/i);
-                if (unitMatch) displayUnit = unitMatch[1]; // Try to extract meaningful part
-
-                const canGrade = canManageAssignments;
-                const isStudent = (myRole === 'student' && a.userId === myUid);
-
-                let actionButton = '';
-                if (canGrade) {
-                    actionButton = `
-                        <button onclick="event.stopPropagation(); openGradingModal('${a.id}')" 
-                            class="bg-blue-100 hover:bg-blue-600 hover:text-white text-blue-700 px-2 py-0.5 sm:px-3 sm:py-1 rounded text-[10px] sm:text-xs font-bold transition">
-                            ${currentStatus === 'graded' ? '查看/修改' : '評分'}
-                        </button>
-                    `;
-                } else if (isStudent && a.submissionUrl) {
-                    actionButton = `
-                        <a href="${a.submissionUrl}" target="_blank" onclick="event.stopPropagation()"
-                            class="bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-700 px-2 py-0.5 sm:px-3 sm:py-1 rounded text-[10px] sm:text-xs font-bold transition inline-block">
-                            ${currentStatus === 'started' ? '🚀 點此繼續' : '查看 Repo'}
-                        </a>
-                    `;
-                }
-                return `
-                <tr class="lg:hover:bg-blue-50/50 transition border-b border-gray-100 cursor-pointer group text-xs md:text-sm" 
-                    onclick="handleAssignmentClick('${a.courseId}', '${a.unitId}', ${isStudent && a.submissionUrl ? `'${a.submissionUrl}'` : 'null'})">
-                    <td class="py-2 px-1 sm:py-3 sm:px-2 text-gray-800">
-                        <div class="font-medium group-hover:text-blue-600 transition-colors truncate max-w-[150px] md:max-w-none">${escapeHtml(a.studentEmail || a.userEmail)}</div>
-                    </td>
-                    <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] md:text-sm text-gray-600">
-                        <div class="font-bold text-[10px] md:text-xs text-gray-700 truncate max-w-[120px] md:max-w-none">${escapeHtml(title)}</div>
-                        <div class="text-[10px] text-gray-500 capitalize">${escapeHtml(displayUnit)}</div>
-                    </td>
-                    <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-500 text-center">${submittedDate}</td>
-                    <td class="py-2 px-1 sm:py-3 sm:px-2 text-center">${badge}</td>
-                    <td class="py-2 px-1 sm:py-3 sm:px-2 font-bold text-gray-700 text-center">${a.grade !== null && a.grade !== undefined ? a.grade : '-'}</td>
-                    <td class="py-2 px-1 sm:py-3 sm:px-2 text-right ${!canManageAssignments ? 'hidden' : ''}">
-                        ${actionButton}
-                    </td>
-                </tr>
-            `}).join('');
-        }
+    if (isAdmin && !filterUnitId) {
+        // [V12.1.3] Global Feed: Sort all assignments by newest first
+        const sortedAll = [...assignments].sort((a, b) => {
+            const getTs = (item) => {
+                const ts = item.updatedAt || item.submittedAt;
+                if (!ts) return 0;
+                return ts.seconds || ts._seconds || new Date(ts).getTime() / 1000 || 0;
+            };
+            return getTs(b) - getTs(a);
+        });
+        renderAssignmentsTable(sortedAll, true);
+    } else {
+        renderAssignmentsTable(assignments, canManageAssignments);
     }
 
     // [NEW] Append Assignment Guide below the table
-    if (guideContent) {
-        const guideHtml = `
-            <div class="mt-8 p-4 md:p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner overflow-x-auto">
-                <div class="tutor-guide-content text-sm md:text-base text-blue-900/90 leading-relaxed prose prose-blue max-w-none">
-                    ${guideContent}
-                </div>
-            </div>
-        `;
-        // Find existing or append
-        const container = document.getElementById('view-assignments');
-        if (container) {
-            // Remove old guide if any to avoid duplicates
-            const oldGuide = container.querySelector('.bg-blue-50');
-            if (oldGuide) oldGuide.remove();
+    const container = document.getElementById('view-assignments');
+    if (container) {
+        const oldGuide = container.querySelector('.bg-blue-50');
+        if (oldGuide) oldGuide.remove();
 
+        if (guideContent) {
             const wrapper = document.createElement('div');
-            wrapper.innerHTML = guideHtml;
-            container.appendChild(wrapper.firstElementChild);
-        }
-    } else {
-        // Clear guide if none
-        const container = document.getElementById('view-assignments');
-        if (container) {
-            const oldGuide = container.querySelector('.bg-blue-50');
-            if (oldGuide) oldGuide.remove();
+            wrapper.className = "mt-8 p-4 md:p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner overflow-x-auto";
+            wrapper.innerHTML = `<div class="tutor-guide-content text-sm md:text-base text-blue-900/90 leading-relaxed prose prose-blue max-w-none">${guideContent}</div>`;
+            container.appendChild(wrapper);
         }
     }
 }
+
+/**
+ * Shared Table Renderer for Assignments
+ */
+function renderAssignmentsTable(assignments, canManageAssignments) {
+    if (!assignmentTableBody) return;
+    
+    if (!assignments || assignments.length === 0) {
+        assignmentTableBody.innerHTML = `<tr><td colspan="${canManageAssignments ? 6 : 5}" class="text-center py-8 text-gray-400">尚無作業繳交紀錄</td></tr>`;
+        return;
+    }
+
+    assignmentTableBody.innerHTML = assignments.map(a => {
+        let submittedDate = 'N/A';
+        const ts = a.updatedAt || a.submittedAt;
+        if (ts) {
+            if (ts._seconds) submittedDate = new Date(ts._seconds * 1000).toLocaleString();
+            else if (ts.seconds) submittedDate = new Date(ts.seconds * 1000).toLocaleString();
+            else submittedDate = new Date(ts).toLocaleString();
+        }
+
+        const title = lessonsMap[a.courseId] || a.courseId;
+        const currentStatus = a.currentStatus || a.status || 'new'; 
+
+        const badge = `<span class="${currentStatus === 'submitted' ? 'bg-yellow-100 text-yellow-800' : (currentStatus === 'graded' ? 'bg-green-100 text-green-800' : 'bg-gray-100')} px-2 py-0.5 rounded text-[10px] font-bold">${currentStatus === 'submitted' ? '待評分' : (currentStatus === 'graded' ? '已評分' : currentStatus)}</span>`;
+
+        let displayUnit = (a.unitId || '').replace('.html', '').replace(/-/g, ' ');
+        
+        let actionButton = '';
+        if (canManageAssignments) {
+            actionButton = `
+                <button onclick="event.stopPropagation(); openGradingModal('${a.id}')" 
+                    class="bg-blue-100 hover:bg-blue-600 hover:text-white text-blue-700 px-2 py-0.5 sm:px-3 sm:py-1 rounded text-[10px] sm:text-xs font-bold transition">
+                    ${currentStatus === 'graded' ? '查看/修改' : '評分'}
+                </button>
+            `;
+        }
+        
+        return `
+        <tr class="lg:hover:bg-blue-50/50 transition border-b border-gray-100 cursor-pointer group text-xs md:text-sm" 
+            onclick="openGradingModal('${a.id}')">
+            <td class="py-2 px-1 sm:py-3 sm:px-2 text-gray-800">
+                <div class="font-medium group-hover:text-blue-600 transition-colors truncate max-w-[150px] md:max-w-none">${escapeHtml(a.studentEmail || a.userEmail)}</div>
+            </td>
+            <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] md:text-sm text-gray-600">
+                <div class="font-bold text-[10px] md:text-xs text-gray-700 truncate max-w-[120px] md:max-w-none">${escapeHtml(title)}</div>
+                <div class="text-[10px] text-gray-400 capitalize">${escapeHtml(displayUnit)}</div>
+            </td>
+            <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-400 text-center">${submittedDate}</td>
+            <td class="py-2 px-1 sm:py-3 sm:px-2 text-center">${badge}</td>
+            <td class="py-2 px-1 sm:py-3 sm:px-2 font-bold text-gray-700 text-center">${a.grade !== null && a.grade !== undefined ? a.grade : '-'}</td>
+            <td class="py-2 px-1 sm:py-3 sm:px-2 text-right ${!canManageAssignments ? 'hidden' : ''}">
+                ${actionButton}
+            </td>
+        </tr>`;
+    }).join('');
+}
+
 
 window.renderAssignments = renderAssignments;
 
