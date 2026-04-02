@@ -12,6 +12,16 @@ const admin = require("firebase-admin");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
+
+/**
+ * [V12.0.9] HELPER: Compare two unit IDs with fallback for .html suffix
+ */
+function unitIdsMatch(idA, idB) {
+    if (!idA || !idB) return false;
+    const cleanA = idA.toString().replace('.html', '').toLowerCase();
+    const cleanB = idB.toString().replace('.html', '').toLowerCase();
+    return cleanA === cleanB;
+}
 const {
     sendWelcomeEmail, sendPaymentSuccessEmail, sendTrialExpiringEmail, sendCourseExpiringEmail,
     sendAssignmentNotification, sendTutorAuthorizationEmail, sendGradingNotification,
@@ -1117,51 +1127,28 @@ exports.saveCourseConfigs = onCall(async (request) => {
         throw new HttpsError('invalid-argument', 'Missing courseId or configs.');
     }
 
-    try {
-        const docRef = admin.firestore().collection('course_configs').doc(courseId);
-        const doc = await docRef.get();
-        const existingConfigs = doc.exists ? doc.data() : {};
+        // [V12.0.9] ULTIMATE MIGRATION: Stop writing to the deprecated course_configs collection.
+        // We now only save configurations (authorized tutors, metadata, URLs) to individual user documents.
+        // The dashboard synthesizes this data on read.
 
-        // Security Check: Caller must be admin OR an authorized tutor for this course
-        const isAuthorized = role === 'admin' || (existingConfigs.authorizedTutors && existingConfigs.authorizedTutors.includes(email));
-
-        if (!isAuthorized) {
-            throw new HttpsError('permission-denied', 'Only authorized tutors can save configs.');
-        }
-
-        // [NEW] If admin is saving, automatically add them to the authorized tutors list for recorded tracking
+        // [NEW v12.0.9] If caller is admin, ensure they have their own tutorConfigs entry for the target units
         if (role === 'admin') {
-            const currentTutors = existingConfigs.authorizedTutors || [];
-            if (!currentTutors.includes(email)) {
-                const tutorData = {
-                    email: email,
-                    name: 'Admin', // Default name for auto-auth
-                    qualifiedAt: new Date().toISOString()
-                };
-                configs.authorizedTutors = admin.firestore.FieldValue.arrayUnion(email);
-                configs.tutorDetails = {
-                    ...(existingConfigs.tutorDetails || {}),
-                    [email]: tutorData
-                };
-            }
+            console.log(`[saveCourseConfigs] Admin ${email} saving configs to users collection...`);
         }
 
-        // [FIXED v12.0.2] Restore write to course_configs to ensure it's visible in dashboard
-        await docRef.set({
-            ...configs,
-            lastModifiedBy: email,
-            lastModifiedAt: new Date().toISOString()
-        }, { merge: true });
-
-        // [NEW v12.0.0] Propagate githubClassroomUrls to User Documents
-        if (configs.githubClassroomUrls) {
-            console.log(`[saveCourseConfigs] Propagating URLs for course ${courseId}...`);
+        try {
+            // --- PHASE 1: Propagate githubClassroomUrls and Authorizations to User Documents ---
+            if (configs.githubClassroomUrls) {
+            console.log(`[saveCourseConfigs] Syncing GitHub Classroom URLs to user documents for ${courseId}...`);
             const db = admin.firestore();
+            
             for (const [unitId, tutorsMap] of Object.entries(configs.githubClassroomUrls)) {
                 for (const [tEmail, url] of Object.entries(tutorsMap)) {
                     try {
                         const userRecord = await admin.auth().getUserByEmail(tEmail);
                         const tutorUid = userRecord.uid;
+                        
+                        // 使用 FieldPath 或嵌套物件更新以避開點號問題，但在 set({merge: true}) 中直接傳遞對象是合規的
                         await db.collection('users').doc(tutorUid).set({
                             tutorConfigs: {
                                 [unitId]: {
@@ -1172,6 +1159,7 @@ exports.saveCourseConfigs = onCall(async (request) => {
                                 }
                             }
                         }, { merge: true });
+                        console.log(`[saveCourseConfigs] ✅ Synced ${unitId} for ${tEmail}`);
                     } catch (err) {
                         console.warn(`[saveCourseConfigs] Failed to sync ${tEmail} for ${unitId}: ${err.message}`);
                     }
@@ -1179,7 +1167,7 @@ exports.saveCourseConfigs = onCall(async (request) => {
             }
         }
 
-        return { success: true, message: 'Configuration saved successfully.' };
+        return { success: true, message: 'Configs saved and synced to user documents.' };
     } catch (e) {
         console.error("Save Config Error:", e);
         throw new HttpsError('internal', e.message);
@@ -1757,15 +1745,53 @@ exports.getDashboardData = onCall(async (request) => {
             });
         }
 
-        // [V12.0.8] FIX: Restore reading from course_configs as the primary source of truth
-        const courseConfigsSnapshot = await db.collection('course_configs').get();
+        // [V12.0.9] ULTIMATE FIX: Synthesize global courseConfigs from ALL users' tutorConfigs
+        const usersSnapshot = await db.collection('users').get();
         const synthesizedConfigs = {};
-        
-        courseConfigsSnapshot.forEach(doc => {
-            synthesizedConfigs[doc.id] = doc.data();
-        });
 
-        // [V12.0.8] FIXED: Removed legacy synthesis artifacts to fix syntax errors.
+        usersSnapshot.forEach(doc => {
+            const uData = doc.data();
+            const email = uData.email;
+            const tutorConfigs = uData.tutorConfigs || {};
+
+            for (let [unitId, config] of Object.entries(tutorConfigs)) {
+                // [FIX] Un-nest if dot-in-key caused nested mapping (e.g. .html)
+                if (config && !config.authorized && config.html && config.html.authorized) {
+                    config = config.html;
+                    if (!unitId.endsWith('.html')) unitId += '.html';
+                }
+
+                if (!config.authorized) continue;
+
+                // 尋找此單元所屬的課程 ID
+                const courseRecord = lessons.find(l => 
+                    (Array.isArray(l.courseUnits) && l.courseUnits.some(u => unitIdsMatch(u, unitId))) ||
+                    (l.classroomUrl && l.classroomUrl.includes(unitId))
+                );
+                const cid = courseRecord ? courseRecord.courseId : (legacyMap[unitId] || unitId);
+
+                if (!synthesizedConfigs[cid]) {
+                    synthesizedConfigs[cid] = { authorizedTutors: [], tutorDetails: {}, githubClassroomUrls: {} };
+                }
+
+                if (!synthesizedConfigs[cid].githubClassroomUrls[unitId]) {
+                    synthesizedConfigs[cid].githubClassroomUrls[unitId] = {};
+                }
+
+                if (!synthesizedConfigs[cid].authorizedTutors.includes(email)) {
+                    synthesizedConfigs[cid].authorizedTutors.push(email);
+                }
+                synthesizedConfigs[cid].tutorDetails[email] = {
+                    email,
+                    name: uData.displayName || email.split('@')[0],
+                    qualifiedAt: config.updatedAt || config.qualifiedAt
+                };
+
+                if (config.githubClassroomUrl) {
+                    synthesizedConfigs[cid].githubClassroomUrls[unitId][email] = config.githubClassroomUrl;
+                }
+            }
+        });
 
         Object.keys(synthesizedConfigs).forEach(docId => {
             try {
