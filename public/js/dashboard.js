@@ -2199,6 +2199,7 @@ async function renderSettingsTab(filterUnitId = null) {
         }
 
         let totalAssignmentHTML = "";
+        let totalGuideHTML = "";
 
         authorizedLessons.forEach(course => {
             console.log("[Settings] Rendering Course:", course.courseId);
@@ -2246,7 +2247,35 @@ async function renderSettingsTab(filterUnitId = null) {
                 return renderAssignmentConfigRow(course.courseId, fileName, configs[fileName], course.title, isAuthorized);
             }).filter(h => !!h).join('');
 
-            // Guide row rendering removed
+            const guideRows = finalUnits.map(fileName => {
+                const realUnitsOnly = units.filter(u => !u.includes('-master-'));
+                const unitIdx = realUnitsOnly.indexOf(fileName);
+                const unitNum = unitIdx !== -1 ? unitIdx + 1 : null;
+                const tutorSegment = guideData.segments[fileName] || (unitNum ? guideData.segments[unitNum] : "") || "";
+                const attachmentSegment = attachSegments[fileName] || (unitNum ? attachSegments[unitNum] : "") || "";
+
+                if (!tutorSegment && !attachmentSegment) return "";
+                const isAuthorized = isUserAuthorizedForUnit(fileName, course.courseId, userEmail);
+                
+                // [NEW] Prepend Attachment Segment if exists
+                let combinedSegment = "";
+                if (attachmentSegment) {
+                    combinedSegment += `
+                        <div class="mb-4 p-4 bg-orange-50 border border-orange-100 rounded-2xl">
+                             <div class="text-[10px] text-orange-500 font-bold uppercase mb-2 tracking-widest flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+                                附件資料 / Attachments
+                             </div>
+                             <div class="text-sm text-orange-900 leading-relaxed font-medium">
+                                ${attachmentSegment}
+                             </div>
+                        </div>
+                    `;
+                }
+                combinedSegment += tutorSegment;
+
+                return renderGuideRow(course.courseId, fileName, combinedSegment, course.title, isAuthorized);
+            }).filter(h => !!h).join('');
 
             if (assignmentRows) {
                 totalAssignmentHTML += `
@@ -2255,13 +2284,16 @@ async function renderSettingsTab(filterUnitId = null) {
                     </div>`;
             }
 
-            // Teaching Team table and Guide rendering removed
+            if (guideRows) {
+                totalGuideHTML += `<div class="w-full space-y-6">${guideRows}</div>`;
+            }
         });
 
         console.log("[Settings] Final check items. Any HTML?", !!totalAssignmentHTML);
 
         assignmentContainer.innerHTML = totalAssignmentHTML || `<div class="text-center py-20 text-gray-400">尚無作業連結設定需求。</div>`;
-        if (guideContainer) guideContainer.classList.add('hidden');
+        guideContainer.innerHTML = totalGuideHTML || `<div class="text-center py-20 text-gray-400">尚無相關教學指引。</div>`;
+        if (guideContainer) guideContainer.classList.remove('hidden');
 
     } catch (e) {
         console.error("[Settings] Critical Render Failure:", e);
