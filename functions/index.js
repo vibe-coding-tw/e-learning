@@ -1757,31 +1757,15 @@ exports.getDashboardData = onCall(async (request) => {
             });
         }
 
-        // [V12.0.7] Ultimate Migration Fix: Rebuild courseConfigs from users collection instead of the deleted course_configs collection.
-        const usersSnapshot = await db.collection('users').get();
+        // [V12.0.8] FIX: Restore reading from course_configs as the primary source of truth
+        const courseConfigsSnapshot = await db.collection('course_configs').get();
         const synthesizedConfigs = {};
-
-        usersSnapshot.forEach(doc => {
-            const uData = doc.data();
-            const tutorConfigs = uData.tutorConfigs || {};
-            for (let [unitId, config] of Object.entries(tutorConfigs)) {
-                // [FIX] Fallback for broken dot-in-key records: un-nest if 'html' sub-object exists
-                if (config && !config.authorized && config.html && config.html.authorized) {
-                    config = config.html;
-                    if (!unitId.endsWith('.html')) unitId += '.html';
-                }
-
-                if (!config.authorized) continue;
-                if (!synthesizedConfigs[unitId]) {
-                    synthesizedConfigs[unitId] = { authorizedTutors: [], tutorDetails: {}, githubClassroomUrls: { [unitId]: {} } };
-                }
-                synthesizedConfigs[unitId].authorizedTutors.push(config.email);
-                synthesizedConfigs[unitId].tutorDetails[config.email] = config;
-                if (config.githubClassroomUrl) {
-                    synthesizedConfigs[unitId].githubClassroomUrls[unitId][config.email] = config.githubClassroomUrl;
-                }
-            }
+        
+        courseConfigsSnapshot.forEach(doc => {
+            synthesizedConfigs[doc.id] = doc.data();
         });
+
+        // [V12.0.8] FIXED: Removed legacy synthesis artifacts to fix syntax errors.
 
         Object.keys(synthesizedConfigs).forEach(docId => {
             try {

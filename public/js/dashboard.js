@@ -1074,7 +1074,7 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
             }
         }
 
-        alert("此單元尚未設定 GitHub Classroom 邀請連結，請管理員/老師至「GitHub Classroom」中設定。");
+        alert("此單元尚未設定 GitHub Classroom 邀請連結，請管理員/老師至「課程設定」中設定。");
         return;
     }
 
@@ -1104,7 +1104,7 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
                 return;
             }
 
-            alert("此單元尚未設定 GitHub Classroom 邀請連結，請管理員/老師至「GitHub Classroom」中設定。");
+            alert("此單元尚未設定 GitHub Classroom 邀請連結，請管理員/老師至「課程設定」中設定。");
         } catch (error) {
             console.error('[Dashboard] Failed to resolve assignment link:', error);
             alert("暫時無法取得作業入口，請稍後再試。");
@@ -2238,7 +2238,17 @@ async function renderSettingsTab(filterUnitId = null) {
 
 function renderAssignmentConfigRow(courseId, fileName, tutorMap = {}, courseTitle = "", isAuthorized) {
     const userEmail = auth.currentUser?.email;
+    const isAdmin = adminTutorMode || myRole === 'admin';
+    
+    // 優先尋找自己的，若無則尋找該單元任何現存的連結（管理員視角）
     let entries = Object.entries(tutorMap || {}).filter(([tutor]) => tutor === userEmail);
+    if (entries.length === 0 && isAdmin) {
+        // 如果是管理員且沒自己的，就拿現有的第一個出來顯示，方便檢閱/修改
+        const anyEntry = Object.entries(tutorMap || {})[0];
+        if (anyEntry) entries.push(anyEntry);
+    }
+    
+    // 依然是空的，就給一個空的佔位符給當前帳號
     if (entries.length === 0 && userEmail) entries.push([userEmail, '']);
 
     const unitName = formatUnitName(fileName);
