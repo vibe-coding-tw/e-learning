@@ -683,6 +683,11 @@ function renderAdminDashboard(data, filterUnitId = null) {
         assignmentsTabBtn.textContent = '作業 (Assignments)';
     }
 
+    if (earningsTabBtn) {
+        // [MODIFIED] Hide standalone earnings tab (now integrated in Settings)
+        earningsTabBtn.classList.add('hidden');
+    }
+
     // 1. Admin Tab (Always Admin-only, always visible if myRole is admin)
     if (adminTabBtn) {
         if (myRole === 'admin') {
@@ -1297,6 +1302,11 @@ window.switchTab = function (tabName) {
     const urlParams = new URLSearchParams(window.location.search);
     const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
 
+    // [MODIFIED] Redirect standalone tabs to Settings in consolidated mode
+    if (tabName === 'earnings' || (tabName === 'assignments' && !canCurrentUserViewAssignmentsTab())) {
+        tabName = 'settings';
+    }
+
     if (tabName === 'assignments' && !canCurrentUserViewAssignmentsTab()) {
         tabName = getPreferredDashboardTab(filterUnitId);
         if (tabName === 'assignments' && !canCurrentUserViewAssignmentsTab()) {
@@ -1348,6 +1358,14 @@ window.switchTab = function (tabName) {
         } else {
             document.getElementById('assignments-container')?.classList.add('hidden');
         }
+
+        // 3. Render integrated earnings (for tutors/admin)
+        if (myRole === 'admin' || currentDashboardPermissions.isQualifiedTutor) {
+            document.getElementById('earnings-container')?.classList.remove('hidden');
+            renderEarningsTab(dashboardData);
+        } else {
+            document.getElementById('earnings-container')?.classList.add('hidden');
+        }
     }
     if (tabName === 'assignments') {
         const urlParams = new URLSearchParams(window.location.search);
@@ -1397,9 +1415,7 @@ window.switchTab = function (tabName) {
     if (tabName === 'admin') {
         renderAdminConsole();
     }
-    if (tabName === 'earnings') {
-        renderEarningsTab(dashboardData);
-    }
+    // Redundant switch logic removed for merged tabs.
 };
 
 // --- Admin Features ---
