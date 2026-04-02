@@ -713,11 +713,17 @@ function renderAdminDashboard(data, filterUnitId = null) {
         showQualifiedTutorTabs = isAuthorized;
     }
 
+    // [MODIFIED] Centralized Permission State for Tabs and Sub-sections
+    currentDashboardPermissions.isQualifiedTutor = showQualifiedTutorTabs;
+    currentDashboardPermissions.isAdmin = (myRole === 'admin');
+
     if (settingsTabBtn) {
         settingsTabBtn.classList.toggle('hidden', !showQualifiedTutorTabs);
     }
+    
+    // [MODIFIED] Explicitly REMOVE/HIDE the Earnings standalone tab as requested
     if (earningsTabBtn) {
-        earningsTabBtn.classList.toggle('hidden', !showQualifiedTutorTabs);
+        earningsTabBtn.classList.add('hidden');
     }
 
     // Stats (Base on filtered students if unit is selected)
