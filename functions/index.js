@@ -567,8 +567,11 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
     const assignedTutorEmail = userData.unitAssignments?.[canonicalUnitId] || null;
 
     const isAdminRole = userData.role === 'admin' || userRecord.email === 'rover.k.chen@gmail.com';
+    console.log(`[resolveAccess] UID:${uid} TutorMode:${tutorMode} IsAdmin:${isAdminRole} RoleDoc:${userData.role}`);
+
     // [MOD v12.0.7] Master Bypass (Tutor Mode)
     if (tutorMode && isAdminRole) {
+        console.log(`[resolveAccess] Master Bypass triggered for ${uid}`);
         return {
             authorized: true,
             canonicalUnitId,

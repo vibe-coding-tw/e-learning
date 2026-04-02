@@ -37,6 +37,7 @@
 
             <!-- Card 0: Environment Setup (FREE) -->
             <div class="info-card course-card group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col border border-slate-100"
+                data-course-id="master-getting-started-free" data-course-name="開發環境安裝與設定" data-course-price="0"
                 data-classroom-url="/courses/01-master-getting-started.html">
 
                 <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-400 to-cyan-500"></div>
@@ -631,7 +632,7 @@
                     <span class="hidden md:inline">|</span>
                     <span>統一編號：80187668</span>
                     <span class="hidden md:inline">|</span>
-                    <span>課程合作洽談：info@vibe-coding.tw</span>
+                    <span class="text-xs text-gray-400 font-mono">(V13.0.18.DEPLOYED)</span>
                 </div>
             </div>
         </div>
@@ -735,8 +736,8 @@
             const coursePrice = cardElement.dataset.coursePrice;
             const isPhysical = cardElement.dataset.isPhysical === 'true';
             const classroomUrl = cardElement.dataset.classroomUrl;
-            const isFreeCourse = parseInt(coursePrice, 10) === 0;
-            const priceText = `NT$ ${parseInt(coursePrice, 10).toLocaleString()}`;
+            const isFreeCourse = parseInt(coursePrice || "999", 10) === 0;
+            const priceText = isFreeCourse ? "免費" : `NT$ ${parseInt(coursePrice || "999", 10).toLocaleString()}`;
 
             btn.onclick = null;
             btn.disabled = false;
@@ -798,7 +799,8 @@
 
             const courseId = cardElement.dataset.courseId;
             const classroomUrl = cardElement.dataset.classroomUrl;
-            const isFreeCourse = parseInt(cardElement.dataset.coursePrice, 10) === 0;
+            const coursePrice = cardElement.dataset.coursePrice || "999"; 
+            const isFreeCourse = parseInt(coursePrice, 10) === 0;
 
             if (!user) {
                 updateCardAction(cardElement, 'NOT_LOGGED_IN');
@@ -810,13 +812,15 @@
                 return;
             }
 
+            // [V13.0.18] Finalized Admin Simulation Support
+            const isTutorModeActive = localStorage.getItem('adminTutorMode') === 'true';
+
             try {
-                // ★★★ 修正點 1：傳送 pageId ★★★
                 const result = await checkAuthFunction({
-                    pageId: courseId
+                    pageId: courseId,
+                    tutorMode: isTutorModeActive
                 });
 
-                // ★★★ 修正點 2：檢查 authorized (boolean) ★★★
                 if (result.data && result.data.authorized) {
                     updateCardAction(cardElement, 'AUTHORIZED');
                 } else {
