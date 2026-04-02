@@ -553,30 +553,29 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
     const isAdminRole = userData.role === 'admin';
     const assignedTutorEmail = userData.unitAssignments?.[resolveCanonicalUnitId(unitId, lessons)] || null;
 
+    // 2. Resolve Canonical Context
+    const canonicalUnitId = resolveCanonicalUnitId(unitId, lessons);
+    const course = findCourseByPageOrUnit(courseId, canonicalUnitId, lessons) || findCourseByPageOrUnit(courseId, unitId, lessons);
+    const effectiveCourseId = course ? course.courseId : (courseId || findParentCourseIdByUnit(canonicalUnitId, lessons));
+    const isPhysicalProduct = !!(course && course.isPhysical === true);
+
     // [V13.0.22] Master Bypass (Tutor Mode Simulation)
     // If an authorized admin toggles simulation ON, grant immediate access to DIGITAL units.
     // Rule Enforcement (V13.6): Physical products with prices MUST show the purchase flow even for admins.
     if (tutorMode && isAdminRole) {
-        const canonicalUnitId = resolveCanonicalUnitId(unitId, lessons);
-        const course = findCourseByPageOrUnit(courseId, canonicalUnitId, lessons);
-        const isPhysicalProduct = course && course.isPhysical === true;
-
         if (!isPhysicalProduct) {
             console.log(`[resolveAccess] SUCCESS: Admin Simulation Bypass for ${uid}`);
             return { 
                 authorized: true, 
                 simulated: true, 
                 canonicalUnitId: canonicalUnitId,
-                effectiveCourseId: courseId,
+                effectiveCourseId: effectiveCourseId,
                 assignedTutorEmail: assignedTutorEmail
             };
+        } else {
+            console.log(`[resolveAccess] RESTRICTED: Admin bypass denied for PHYSICAL product ${effectiveCourseId}`);
         }
     }
-
-    // 2. Resolve Canonical Context
-    const canonicalUnitId = resolveCanonicalUnitId(unitId, lessons);
-    const course = findCourseByPageOrUnit(courseId, canonicalUnitId, lessons) || findCourseByPageOrUnit(courseId, unitId, lessons);
-    const effectiveCourseId = course ? course.courseId : (courseId || findParentCourseIdByUnit(canonicalUnitId, lessons));
 
     if (!effectiveCourseId || !canonicalUnitId) {
         console.warn(`[resolveAccess] FAIL: Missing context for UID:${uid} Page:${courseId} Unit:${unitId}`);
