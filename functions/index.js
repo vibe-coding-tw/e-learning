@@ -554,16 +554,23 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
     const assignedTutorEmail = userData.unitAssignments?.[resolveCanonicalUnitId(unitId, lessons)] || null;
 
     // [V13.0.22] Master Bypass (Tutor Mode Simulation)
-    // If an authorized admin toggles simulation ON, grant immediate access to everything.
+    // If an authorized admin toggles simulation ON, grant immediate access to DIGITAL units.
+    // Rule Enforcement (V13.6): Physical products with prices MUST show the purchase flow even for admins.
     if (tutorMode && isAdminRole) {
-        console.log(`[resolveAccess] SUCCESS: Admin Simulation Bypass for ${uid}`);
-        return { 
-            authorized: true, 
-            simulated: true, 
-            canonicalUnitId: resolveCanonicalUnitId(unitId, lessons),
-            effectiveCourseId: courseId,
-            assignedTutorEmail: assignedTutorEmail
-        };
+        const canonicalUnitId = resolveCanonicalUnitId(unitId, lessons);
+        const course = findCourseByPageOrUnit(courseId, canonicalUnitId, lessons);
+        const isPhysicalProduct = course && course.isPhysical === true;
+
+        if (!isPhysicalProduct) {
+            console.log(`[resolveAccess] SUCCESS: Admin Simulation Bypass for ${uid}`);
+            return { 
+                authorized: true, 
+                simulated: true, 
+                canonicalUnitId: canonicalUnitId,
+                effectiveCourseId: courseId,
+                assignedTutorEmail: assignedTutorEmail
+            };
+        }
     }
 
     // 2. Resolve Canonical Context

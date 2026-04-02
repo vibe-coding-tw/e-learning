@@ -833,6 +833,29 @@
             }
         }
 
+        // [V13.6] Sync Cards with Firestore (Single Source of Truth)
+        // Rule Enforcement: Landing page metadata must match Firestore metadata_lessons.
+        vibeFetchLessons().then(lessons => {
+            console.log(`[Prepare] Synching ${lessonCards.length} cards with ${lessons.length} metadata entries...`);
+            lessonCards.forEach(card => {
+                const cid = card.dataset.courseId;
+                const meta = lessons.find(l => l.courseId === cid || l.id === cid);
+                if (meta) {
+                    card.dataset.courseName = meta.title || meta.courseName || card.dataset.courseName;
+                    card.dataset.coursePrice = meta.price !== undefined ? meta.price : card.dataset.coursePrice;
+                    card.dataset.isPhysical = meta.isPhysical !== undefined ? meta.isPhysical : (card.dataset.isPhysical === 'true');
+                    
+                    // Update UI title if exists
+                    const titleEl = card.querySelector('h2');
+                    if (titleEl && meta.title) titleEl.textContent = meta.title;
+                }
+            });
+            // Update UI after sync
+            if (auth.currentUser) {
+                lessonCards.forEach(card => checkLessonAuthorization(card, auth.currentUser));
+            }
+        }).catch(err => console.error("[Prepare] Metadata sync failed:", err));
+
         onAuthStateChanged(auth, (user) => {
             const userDisplay = document.getElementById('user-display');
             const loginBtn = document.getElementById('login-btn');

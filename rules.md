@@ -26,13 +26,17 @@
 
 ### 2-A. 全域角色 (Global Roles)
 1. **管理員 (Admin)**: 系統最高權限，可檢閱所有數據。
-    - **導師模式 (Tutor Mode: ON)**: 擁有 God Mode，可存取所有單元、指派作業、修改 GitHub classroom 連結。
+    - **導師模式 (Tutor Mode: ON)**: 擁有 God Mode，可存取所有數位單元、指派作業、修改 GitHub classroom 連結。
     - **學員視角模擬 (Tutor Mode: OFF)**: **管理員身分不具備特權 (No Override)**。其行為與權限模擬一般學員：非合格導師且未付費（或已過期）者，嚴禁存取收費單元之作業連結與設定內容。
 2. **一般使用者 (Standard User)**: `role` 欄位為空或為 `student`。存取權限僅依據購買狀態與單元合格授權。
 
 ### 2-B. 支付與過期檢核 (Paywall & Expiry)
 - **付費判定**: 系統必須即時比對 `orderRecords` 中的 `expiryDate`。
 - **規則**: **已過期 (Expired)** 或 **新用戶 (Free)** 嚴禁造訪付費單元 (Paid Units) 的任何作業 (Assignments) 指引與設定 (Settings)。
+
+### 2-C. 實體產品與課程元數據 (Physical Products & Metadata)
+- **實體產品決策**: 凡 `isPhysical` 為 `true` 且有價格的卡片（如：開發平台裝置），無論使用者是否具備管理員權限，在前台銷售頁面（Prepare, Basic, Advanced 等）必須優先顯示 **「🛒 加入購物車」** 與價格，嚴禁管理員 God Mode 自動跳轉為「進入課程」。這是為了確保銷售 UI 的正確性與購買流程的測試完整。
+- **單一資料來源**: 所有前台展示的課程標題、價格、核心內容、圖示等元數據，必須以 **Firestore 的 `metadata_lessons` 為唯一準則**，嚴禁在 HTML 中硬編碼過時的資料。
 
 ---
 
@@ -50,6 +54,10 @@
 - **進入單元 (Has UnitId)**: 優先導向 **Assignments** 指標。為了視覺專注，**Overview 標籤必須隱藏**。
 - **全站視野 (No UnitId)**: 導向 **Overview**。這是管理員的全站儀表板入口。
 - **鎖定邏輯**: 非付費/過期用戶在「學員視角」下，即便強行造訪 Assignments/Settings，系統應呈現「🔒 鎖定狀態」或「請先續費」字樣。
+
+### 3-C. Overview 數據展示規範 (V13.6)
+- **核心規則**: Overview (概覽) 作為管理員的營運中心，其數據統計（如：總註冊人數、學員清單）**不受「導師模式 (Tutor Mode)」切換的影響**。
+- **目標**: 確保管理員即便在模擬導師時，依然能掌握全站 100% 的即時營運數據（如 Firebase 中的完整 9 位學員名單）。
 
 ---
 
