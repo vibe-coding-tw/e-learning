@@ -37,24 +37,25 @@
 
 ## 3. 介面與資料過濾邏輯 (UI & Data Rules)
 
-### 3-A. Dashboard 渲染邏輯
-| 介面 / 功能 | 1. 管理員 (Tutor Mode: ON) | 2. 管理員 (Tutor Mode: OFF) | 3. 合格導師 (非管理員) |
+### 3-A. Dashboard 分頁規劃 (Tab Planning)
+| 分頁 (Tab) | 1. 管理員 (Tutor Mode: OFF) | 2. 管理員 (Tutor Mode: ON) | 3. 一般學員 (Student) |
 | :--- | :--- | :--- | :--- |
-| **作業 (Assignments)** | ✅ 僅見指派給自己的學生 | ✅ 僅見自己的作業 (無操作) | ✅ 僅見指派給自己的學生 |
-| **GitHub Classroom** | ✅ 僅限已授權單元 | ❌ 隱藏 | ✅ 僅限已授權單元 |
-| **分潤 (Earnings)** | ✅ 僅限已授權單元 | ❌ 隱藏 | ✅ 僅限已授權單元 |
-| **管理台 (Admin)** | ✅ 恆見 | ✅ 恆見 | ❌ 隱藏 |
+| **概覽 (Overview)** | ✅ 顯示 (全站概覽) | ✅ 顯示 (營運概覽) | ✅ 顯示 (個人學習進度) |
+| **學生狀態 (Assignments)** | ✅ 顯示 (已繳費學員清單) | ❌ 隱藏 (改至 Assignments) | ❌ 隱藏 |
+| **作業 (Assignments)** | ❌ 隱藏 (改至 Students) | ✅ 顯示 (待批改作業列表) | ✅ 顯示 (我的作業) |
+| **課程設定 (Settings)** | ❌ 隱藏 | ✅ 顯示 (Classroom/導師指引) | ❌ 隱藏 |
+| **分潤 (Earnings)** | ❌ 隱藏 (改至 Admin 面板) | ✅ 顯示 (個人推薦碼分潤) | ❌ 隱藏 |
 
-### 3-B. 作業列表過濾 (Data Filtering)
-- **導師權限**: 僅能見到 `assignedTutorEmail` 與目前登入 Email 匹配的作業。
-- **學生權限**: 僅能見到與目前 UID 或 Email 匹配的作業。
+### 3-B. 導航行為準則
+- **Context Based**: 若網址不帶 `unitId` (全局視角)，優先顯示 **Overview (概覽)**；若帶有 `unitId`，則優先顯示現有作業或設定。
+- **命名準則**: 「課程設定」分頁一律顯示為 **課程設定 (Settings)**。
 
 ---
 
 ## 4. 資料庫維護準則 (Maintenance)
 1. **禁止手動更改 Role**: 禁止將使用者 `role` 改為 `tutor`（導師是 Status 而非 Role）。
 2. **單元 ID 更新**: 處理包含點號（如 `.html`）的 ID 時，必須使用 `admin.firestore.FieldPath` 更新 `tutorConfigs`。
-3. **名稱一致性**: 「課程設定」分頁一律統一稱為 **GitHub Classroom**。
+3. **單一事實來源**: 所有設定資料必須透過 `users` 集合中的 `tutorConfigs` 字段存儲，`course_configs` 集合已廢棄。
 
 ---
 *最後更新日期: 2026-04-02*

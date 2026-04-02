@@ -293,12 +293,17 @@ function canCurrentUserViewAssignmentsTab() {
 }
 
 function getPreferredDashboardTab(filterUnitId = null) {
-    if (filterUnitId && (myRole === 'admin' || canCurrentUserViewAssignmentsTab())) return 'assignments';
+    // [V12.1.1] Rule: If no unit context, always prefer Overview for global perspective
+    if (!filterUnitId) return 'overview';
+
+    if (myRole === 'admin' || canCurrentUserViewAssignmentsTab()) return 'assignments';
     if (myRole === 'admin') return 'admin';
-    if (document.getElementById('tab-btn-settings') && !document.getElementById('tab-btn-settings').classList.contains('hidden')) {
+    
+    const settingsBtn = document.getElementById('tab-btn-settings');
+    if (settingsBtn && !settingsBtn.classList.contains('hidden')) {
         return 'settings';
     }
-    return 'assignments';
+    return 'overview';
 }
 
 // Helper: Resolve URL param (e.g. "basic-01") to Course UUID
@@ -722,11 +727,13 @@ function renderAdminDashboard(data, filterUnitId = null) {
     if (stats.hours) stats.hours.textContent = summaryHours.toFixed(1);
 
 
-    // [MODIFIED] Overview tab is now HIDDEN for everyone.
+    // [RESTORED] Overview tab visibility. Always show for admin/student per rules.md.
     const overviewTabBtn = document.getElementById('tab-btn-overview');
     const overviewTabContent = document.getElementById('view-overview');
-    if (overviewTabBtn) overviewTabBtn.classList.add('hidden');
-    if (overviewTabContent) overviewTabContent.classList.add('hidden');
+    const shouldShowOverview = true; // Per latest rule: Overview is always an entry point.
+
+    if (overviewTabBtn) overviewTabBtn.classList.toggle('hidden', !shouldShowOverview);
+    if (overviewTabContent) overviewTabContent.classList.toggle('hidden', !shouldShowOverview);
 
     // [NEW] Unit Context Header
     if (filterUnitId || filterCourseId) {
