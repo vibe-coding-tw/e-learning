@@ -2274,7 +2274,51 @@ exports.getDashboardData = onCall(async (request) => {
             });
         }
 
-        result.students = Object.values(studentStats);
+        // [V13.0.14] UNIFIED STUDENT FILTERING: Filter students based on authorization scope.
+        // 1. Admin Global (tutorMode !== false): All students.
+        // 2. Unit Context: Only students in that unit (assigned to the tutor).
+        // 3. Course Context: Only students in that course.
+        // 4. Tutor Global (Tutor Mode): Only students assigned to THEM.
+        
+        const filteredStudentStats = [];
+        const isGodMode = requesterRole === 'admin' && data.tutorMode !== false;
+        const targetUnitId = data.unitId ? resolveCanonicalUnitId(data.unitId, lessons) : null;
+        const targetCourseId = data.courseId || null;
+
+        Object.values(studentStats).forEach(s => {
+            // [A] Master Bypass for Global Admin
+            if (isGodMode && !targetUnitId && !targetCourseId) {
+                filteredStudentStats.push(s);
+                return;
+            }
+
+            // [B] Authorization Check: Does this learner belong in the current view?
+            let isRelevant = false;
+            
+            // 1. Assignment Check: Is the student assigned to THIS tutor for THIS unit?
+            if (targetUnitId) {
+                const assignedTutor = s.unitAssignments?.[targetUnitId];
+                if (assignedTutor === email || isGodMode) {
+                    isRelevant = true;
+                }
+            } else if (targetCourseId) {
+                // Course Check: Does the student have orders or assignments for this course?
+                const hasCourseOrder = (s.orders || []).includes(targetCourseId);
+                const assignedToAnyInCourse = Object.keys(s.unitAssignments || {}).some(uid => {
+                    const parent = findParentCourseIdByUnit(uid, lessons);
+                    return parent === targetCourseId && (s.unitAssignments[uid] === email || isGodMode);
+                });
+                if (hasCourseOrder || assignedToAnyInCourse) isRelevant = true;
+            } else {
+                // Global Tutor View (No Context): Only see students assigned to THEM at all
+                const hasAnyAssignmentToMe = Object.values(s.unitAssignments || {}).some(t => t === email);
+                if (hasAnyAssignmentToMe || isGodMode) isRelevant = true;
+            }
+
+            if (isRelevant) filteredStudentStats.push(s);
+        });
+
+        result.students = filteredStudentStats;
 
         // 2.5 Fetch Tutors (Administrators and Authorized Tutors)
         const tutorList = [];

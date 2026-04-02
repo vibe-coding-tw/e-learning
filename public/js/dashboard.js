@@ -667,6 +667,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
 }
 
 function renderAdminDashboard(data, filterUnitId = null) {
+    const requestedTab = getRequestedTabFromUrl();
     filterUnitId = resolveCanonicalUnitId(filterUnitId);
     loadingState.classList.add('hidden');
     dashboardContent.classList.remove('hidden');
