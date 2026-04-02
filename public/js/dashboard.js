@@ -679,11 +679,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
     if (assignmentsTabBtn) {
         const canViewAssignments = canCurrentUserViewAssignmentsTab();
-        const isTutorViewingUnit = !!filterUnitId && currentDashboardPermissions.isQualifiedTutor;
-        
-        // [MODIFIED] Hide standalone tab for specialized tutors (now integrated in Settings)
-        const shouldShowTab = canViewAssignments && !isTutorViewingUnit;
-        assignmentsTabBtn.classList.toggle('hidden', !shouldShowTab);
+        assignmentsTabBtn.classList.toggle('hidden', !canViewAssignments);
         assignmentsTabBtn.textContent = '作業 (Assignments)';
     }
 
@@ -1300,12 +1296,6 @@ function renderChart(students) {
 window.switchTab = function (tabName) {
     const urlParams = new URLSearchParams(window.location.search);
     const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
-    const isTutorViewingUnit = !!filterUnitId && currentDashboardPermissions.isQualifiedTutor;
-
-    // [MODIFIED] Redirect Assignments to Settings for specialized tutors
-    if (tabName === 'assignments' && isTutorViewingUnit) {
-        tabName = 'settings';
-    }
 
     if (tabName === 'assignments' && !canCurrentUserViewAssignmentsTab()) {
         tabName = getPreferredDashboardTab(filterUnitId);
@@ -1341,7 +1331,8 @@ window.switchTab = function (tabName) {
         renderSettingsTab(filterUnitId);
 
         // 2. Fetch and Render assignments inside Settings (for tutors)
-        if (isTutorViewingUnit || myRole === 'admin') {
+        const isQualifiedTutor = !!filterUnitId && currentDashboardPermissions.isQualifiedTutor;
+        if (isQualifiedTutor || myRole === 'admin') {
             document.getElementById('assignments-container')?.classList.remove('hidden');
             let displayAssignments = filterAssignmentsForCurrentView(dashboardData.assignments);
             if (filterCourseId) {
