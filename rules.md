@@ -59,4 +59,31 @@
 3. **過期檢核**: 後端 `checkPaymentAuthorization` 必須包含 `expiryDate.toMillis() > now.toMillis()` 的判定邏輯。
 
 ---
-*最後更新日期: 2026-04-02 (V13.0)*
+
+## 5. Tutor Dashboard 介面精簡規範 (V13.5 UI Consolidation)
+為了最大化教學管理效率，儀表板採取「單一任務中心」佈局。
+
+### 5-A. 「課程設定 (Settings)」標籤整合佈局
+在具備單元視角 (Unit Context) 時，Settings 分頁必須依序包含下列區塊 (不可隨意更動順序)：
+1. **Classroom Links (作業連結設定)**: URL 邀請連結設置區。
+2. **Integrated Assignments (本單元作業批改)**: 顯示該單元的學生繳交名單表格。
+3. **Financial Dashboard (分潤紀錄與推薦碼)**: 
+    - 需包含「累積總分潤」與「該單元專屬推薦碼」。
+    - 需包含「分潤明細 (Ledger)」表格。
+4. **Tutor Guides / Attachments (教學指引與附件)**:
+    - 位於分頁最底部。
+    - 僅顯示導師專用指引 (Tutor Guide) 與補充附件 (Attachments)。
+
+### 5-B. 介面元素刪減準則 (UI Exclusion Rules)
+為了維持介面清爽且專注於任務，下列元素**嚴禁顯示**：
+- **移除 「合格教師狀態 (Teaching Team)」表格**: 不再顯示管理員/導師清單。
+- **隱藏 「學生作業引導 (Assignment Guide)」**: Settings 分頁不顯示給學生的引導文字（僅保留導師批改指南）。
+- **取消 「分潤 (Earnings)」獨立分頁**: 該分頁按鈕必須隱藏/移除，所有財務數據統一整合至 Settings 分頁。
+
+### 5-C. 指引顯示規範 (Guide Rendering)
+- **Settings 分頁**: 教學指引 (Tutor Guide) 置於最底部。
+- **Assignments (作業) 分頁**: 在作業列表下方必須顯示「導師批改指南 (Tutor Benchmarks)」，作為評分參考。
+- **緩存機制**: 每次部署介面重大變更，必須更新 `dashboard.js` 的版本查詢字串 (Cache Busting) 以確保用戶即時看到正確佈局。
+
+---
+*最後更新日期: 2026-04-02 (V13.5)*
