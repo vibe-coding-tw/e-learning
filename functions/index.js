@@ -2238,11 +2238,17 @@ exports.getDashboardData = onCall(async (request) => {
         const assignSnapshot = await assignQuery.get();
         assignSnapshot.forEach(doc => {
             const data = doc.data();
-            const targetUid = data.userId || data.uid;
+            // [REPAIR] If userId/uid is missing in fields, extract from Doc ID (UID_ASSIGNMENTID)
+            let targetUid = data.userId || data.uid;
+            if (!targetUid && doc.id.includes('_')) {
+                targetUid = doc.id.split('_')[0];
+            }
+            
             const originalCid = data.courseId || 'unknown';
             const mappedCid = legacyMap[originalCid] || originalCid;
 
-            const assignmentTutor = data.assignedTutorEmail || null;
+            // [COMPATIBILITY] Map legacy 'assignedTeacherEmail' to 'assignedTutorEmail'
+            const assignmentTutor = data.assignedTutorEmail || data.assignedTeacherEmail || null;
             const requesterEmail = auth.token.email || "";
 
             // Authorization Filter for each assignment
