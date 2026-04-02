@@ -566,7 +566,11 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
     const userData = userDoc.exists ? (userDoc.data() || {}) : {};
     const assignedTutorEmail = userData.unitAssignments?.[canonicalUnitId] || null;
 
-    const isAdminRole = userData.role === 'admin' || userRecord.email === 'rover.k.chen@gmail.com';
+    const isAdminEmail = [
+        'rover.k.chen@gmail.com',
+        'roverchen@gmail.com'
+    ].includes(userRecord.email);
+    const isAdminRole = userData.role === 'admin' || isAdminEmail;
     console.log(`[resolveAccess] UID:${uid} TutorMode:${tutorMode} IsAdmin:${isAdminRole} RoleDoc:${userData.role}`);
 
     // [MOD v12.0.7] Master Bypass (Tutor Mode)
@@ -2077,11 +2081,14 @@ exports.getDashboardData = onCall(async (request) => {
                     
                     for (const au of authUsers) {
                         const userRef = db.collection('users').doc(au.uid);
+                        const admins = ['rover.k.chen@gmail.com', 'roverchen@gmail.com'];
+                        const role = admins.includes(au.email) ? 'admin' : 'student';
+
                         // [MODIFIED] Always upsert basic info (preserve createdAt)
                         batch.set(userRef, {
                             email: au.email || "",
                             name: au.displayName || (au.email ? au.email.split('@')[0] : "New User"),
-                            role: (au.email === 'rover.k.chen@gmail.com') ? 'admin' : 'student',
+                            role: role,
                             // Handle potential missing field in existing Firestore docs
                             createdAt: au.metadata.creationTime ? new Date(au.metadata.creationTime) : admin.firestore.FieldValue.serverTimestamp(),
                             updatedAt: admin.firestore.FieldValue.serverTimestamp()

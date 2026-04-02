@@ -682,8 +682,13 @@ function initFirebaseFeatures() {
 
         window.firebaseResolveAssignmentAccess = async (payload) => {
             try {
+                // [V13.0.21] Automatically inject tutorMode from browser session
+                const isTutorMode = localStorage.getItem('adminTutorMode') === 'true';
                 const resolveAssignmentAccess = httpsCallable(functions, 'resolveAssignmentAccess');
-                const result = await resolveAssignmentAccess(payload);
+                const result = await resolveAssignmentAccess({
+                    ...payload,
+                    tutorMode: isTutorMode
+                });
                 return result.data;
             } catch (e) {
                 console.error("Failed to resolve assignment access:", e);

@@ -1668,28 +1668,9 @@ window.handleUnitTutorAuth = async function (courseId, unitFile, tutorEmail, act
 };
 
 window.toggleAdminTutorMode = function (enabled) {
-    adminTutorMode = enabled;
     localStorage.setItem('adminTutorMode', enabled);
-
-    updateCurrentDashboardPermissions(currentDashboardPermissions);
-
-    if (myRole === 'admin' && dashboardData) {
-        const params = new URLSearchParams(window.location.search);
-        const filterUnitId = resolveCanonicalUnitId(params.get('unitId'));
-        renderAdminDashboard(dashboardData, filterUnitId);
-
-        const activeTab = document.querySelector('.tab-btn.text-blue-600');
-        const activeTabName = activeTab ? activeTab.id.replace('tab-btn-', '') : null;
-        const preferredTab = getPreferredDashboardTab(filterUnitId);
-
-        if (activeTabName === 'assignments' && !canCurrentUserViewAssignmentsTab()) {
-            switchTab(preferredTab);
-        } else if (!activeTabName || document.getElementById(`tab-btn-${activeTabName}`)?.classList.contains('hidden')) {
-            switchTab(preferredTab);
-        }
-    }
-
-    renderAdminConsole();
+    // [V13.0.21] Force reload to ensure ALL functions and UI respect the new simulation state
+    window.location.reload();
 };
 
 window.handleAssignTutor = async function (studentUid, unitId, tutorEmail) {
