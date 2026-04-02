@@ -31,8 +31,9 @@
 2. **一般使用者 (Standard User)**: `role` 欄位為空或為 `student`。存取權限僅依據購買狀態與單元合格授權。
 
 ### 2-B. 支付與過期檢核 (Paywall & Expiry)
-- **付費判定**: 系統必須即時比對 `orderRecords` 中的 `expiryDate`。
+- **付費判定**: 系統必須以 `orders` 集合中 `status === "SUCCESS"` 且 `expiryDate > now` 的有效訂單作為唯一付費依據。
 - **規則**: **已過期 (Expired)** 或 **新用戶 (Free)** 嚴禁造訪付費單元 (Paid Units) 的任何作業 (Assignments) 指引與設定 (Settings)。
+- **實作要求**: `checkPaymentAuthorization` 與 `resolveAssignmentAccess` 必須共用同一套有效訂單與到期判定邏輯，禁止前端自行推測繳費狀態。
 
 ### 2-C. 實體產品與課程元數據 (Physical Products & Metadata)
 - **實體產品決策**: 凡 `isPhysical` 為 `true` 且有價格的卡片（如：開發平台裝置），無論使用者是否具備管理員權限，在前台銷售頁面（Prepare, Basic, Advanced 等）必須優先顯示 **「🛒 加入購物車」** 與價格，嚴禁管理員 God Mode 自動跳轉為「進入課程」。這是為了確保銷售 UI 的正確性與購買流程的測試完整。
@@ -47,13 +48,22 @@
 | 分頁 (Tab) | 單元視角 (Unit Context) | 全局視角 (Global View) | 存取對象 (Access) |
 | :--- | :--- | :--- | :--- |
 | **概覽 (Overview)** | ❌ 隱藏 (Hide) | ✅ 顯示 (營運概覽) | Admin Only (Global) |
-| **作業 (Assignments)** | ✅ 顯示 (繳交清單) | ✅ 顯示 (全站 Feed) | Admin / Qualified Tutor / Paid Student |
-| **課程設定 (Settings)** | ✅ 顯示 (教材/設定) | ❌ 隱藏 | Admin (Tutor ON) / Qualified Tutor |
+| **管理員控制台 (Admin Console)** | ✅ 顯示 | ✅ 顯示 | Admin Only |
+| **作業 (Assignments)** | ✅ 條件顯示 | ✅ 顯示 (全站 Feed) | Qualified Tutor (Tutor Mode OFF) / Paid Student |
+| **課程設定 (Settings)** | ✅ 條件顯示 | ❌ 隱藏 | Qualified Tutor (Tutor Mode ON) |
 
 ### 3-B. 導航行為準則
 - **進入單元 (Has UnitId)**: 優先導向 **Assignments** 指標。為了視覺專注，**Overview 標籤必須隱藏**。
 - **全站視野 (No UnitId)**: 導向 **Overview**。這是管理員的全站儀表板入口。
 - **鎖定邏輯**: 非付費/過期用戶在「學員視角」下，即便強行造訪 Assignments/Settings，系統應呈現「🔒 鎖定狀態」或「請先續費」字樣。
+- **單元分頁順序**: 當 `unitId` 存在時，分頁順序必須為 `Admin Console -> Assignments -> Settings`。
+- **合格導師切換規則**: 若使用者在 `users/{uid}.tutorConfigs[unitId].authorized === true`，則 `Tutor Mode: OFF` 僅顯示 `Assignments`；`Tutor Mode: ON` 僅顯示 `Settings`。
+- **付費學生規則**: 若使用者對該單元所屬課程具有有效訂單且尚未過期，則顯示 `Assignments` 分頁。
+- **未付費/已過期規則**: 若使用者對該單元未繳費或已過期，則單元視角下不顯示 `Assignments` / `Settings` 分頁。
+- **課文作業入口規則**:
+  - 合格導師: 點擊本文作業區時，不提供 GitHub Classroom 連結，僅顯示通用繳交對話框。
+  - 已付費未到期學生: 點擊本文作業區時，必須導向其 `unitAssignments[unitId]` 對應輔導老師的 GitHub Classroom assignment URL。
+  - 未付費或已過期學生: 點擊本文作業區時，只顯示現有通用對話框，不得顯示 GitHub Classroom assignment URL。
 
 ### 3-C. Overview 與分頁展示規範 (Global View Immunity - V13.6)
 - **管理員全局豁免**: 當管理員處於「全站視野 (No UnitId)」下時，所有儀表板分頁（Overview, Assignments, Admin）必須保持顯示狀態，且內容（如學員名單、作業列表）**不受「導師模式 (Tutor Mode)」切換的影響**。
@@ -90,8 +100,8 @@
 
 ### 5-C. 指引顯示規範 (Guide Rendering)
 - **Settings 分頁**: 教學指引 (Tutor Guide) 置於最底部。
-- **Assignments (作業) 分頁**: 在作業列表下方必須顯示「導師批改指南 (Tutor Benchmarks)」，作為評分參考。
+- **Assignments (作業) 分頁**: 在作業列表下方必須顯示專業版的 `Assignment Guide` 卡片，風格需比照 `Tutor Guide`，但內容仍為學生作業執行指引。
 - **緩存機制**: 每次部署介面重大變更，必須更新 `dashboard.js` 的版本查詢字串 (Cache Busting) 以確保用戶即時看到正確佈局。
 
 ---
-*最後更新日期: 2026-04-02 (V13.6)*
+*最後更新日期: 2026-04-02 (V13.7)*

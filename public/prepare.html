@@ -13,7 +13,7 @@
 <body class="flex flex-col min-h-screen">
     <div id="nav-placeholder"></div>
     <script src="js/nav-component.js?v=4"></script>
-    <script src="js/course-shared-v4.js"></script>
+    <script src="js/course-shared.js"></script>
     <script>
         renderNav('.', { showAuth: true });
     </script>
@@ -96,7 +96,7 @@
             <!-- Card 0.1: GitHub Classroom & Vibe Coding (FREE) -->
             <div class="info-card course-card group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col border border-slate-100"
                 data-course-id="github-classroom-free" data-course-name="GitHub Classroom & Vibe Coding 實務" data-course-price="0"
-                data-classroom-url="/courses/02-master-github-classroom.html">
+                data-classroom-url="/courses/03-master-wifi-motor.html?tab=GitHub">
 
                 <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 to-cyan-500"></div>
 
@@ -386,7 +386,7 @@
                         </div>
                     </div>
                     <h2 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-orange-600 transition-colors">WiFi
-                        連線設定</h2>
+                        組態設定</h2>
                     <p class="text-slate-500 text-sm mb-4 min-h-[40px] leading-relaxed">教您如何讓開發板連上當地的無線網路，進行遠端控制。</p>
                 </div>
 
@@ -738,6 +738,7 @@
             const isPhysical = cardElement.dataset.isPhysical === 'true';
             const classroomUrl = cardElement.dataset.classroomUrl;
             const isFreeCourse = parseInt(coursePrice || "999", 10) === 0;
+            const isPricedPhysicalProduct = isPhysical && !isFreeCourse;
             const priceText = isFreeCourse ? "免費" : `NT$ ${parseInt(coursePrice || "999", 10).toLocaleString()}`;
 
             btn.onclick = null;
@@ -746,7 +747,13 @@
             // 共用按鈕樣式 (Tailwind)
             const baseBtnClass = 'action-btn w-full py-3 px-4 rounded-lg font-semibold shadow-sm transition-all duration-200 mt-auto';
 
-            if (status === 'AUTHORIZED') {
+            if (isPricedPhysicalProduct) {
+                btn.textContent = `🛒 加入購物車 (${priceText})`;
+                btn.className = `${baseBtnClass} bg-indigo-600 hover:bg-indigo-700 text-white`;
+                btn.onclick = () => {
+                    handleAddToCartConfirmation(courseId, courseName, coursePrice, isPhysical);
+                };
+            } else if (status === 'AUTHORIZED') {
                 btn.textContent = '✅ 進入課程內容';
                 btn.className = `${baseBtnClass} bg-cyan-600 hover:bg-cyan-700 text-white`;
                 btn.onclick = () => {

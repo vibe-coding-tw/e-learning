@@ -69,7 +69,8 @@ let currentDashboardPermissions = {
     isAdmin: false,
     isQualifiedTutor: false,
     isPaidStudent: false,
-    canViewAssignments: false
+    canViewAssignments: false,
+    canViewSettings: false
 };
 
 // [NEW] Admin Super Mode state
@@ -189,11 +190,9 @@ async function loadDashboard() {
             return;
         }
 
-        const rawIsQualifiedTutor = hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, myEmail);
-        // [V13.0.9] Rule Logic: Admin in God Mode (tutorMode: ON) is ALWAYS qualified.
-        const isQualifiedTutor = isAdmin ? (adminTutorMode ? true : rawIsQualifiedTutor) : rawIsQualifiedTutor;
-        
-        const isPaidStudent = myRole === 'student' && hasUnitContext
+        const isQualifiedTutor = hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, myEmail);
+
+        const isPaidStudent = hasUnitContext
             ? await hasPaidStudentAccessForUnit(filterCourseId, filterUnitId)
             : false;
             
@@ -283,13 +282,16 @@ function showAccessDenied(errorType = "") {
 function updateCurrentDashboardPermissions({ isAdmin = false, isQualifiedTutor = false, isPaidStudent = false } = {}) {
     const { filterUnitId } = getCurrentDashboardContext();
     const isGlobalAdmin = !filterUnitId && isAdmin;
-    const canView = isGlobalAdmin || (adminTutorMode ? (isAdmin || isQualifiedTutor || isPaidStudent) : (isQualifiedTutor || isPaidStudent));
+    const canViewAssignments = isGlobalAdmin ||
+        (!!filterUnitId && (isQualifiedTutor ? !adminTutorMode : isPaidStudent));
+    const canViewSettings = !!filterUnitId && isQualifiedTutor && adminTutorMode;
     
     currentDashboardPermissions = {
         isAdmin,
         isQualifiedTutor,
         isPaidStudent,
-        canViewAssignments: canView
+        canViewAssignments,
+        canViewSettings
     };
 }
 
@@ -297,17 +299,17 @@ function canCurrentUserViewAssignmentsTab() {
     return !!currentDashboardPermissions.canViewAssignments;
 }
 
+function canCurrentUserViewSettingsTab() {
+    return !!currentDashboardPermissions.canViewSettings;
+}
+
 function getPreferredDashboardTab(filterUnitId = null) {
     // [V12.1.1] Rule: If no unit context, always prefer Overview for global perspective
     if (!filterUnitId) return 'overview';
 
-    if (myRole === 'admin' || canCurrentUserViewAssignmentsTab()) return 'assignments';
+    if (canCurrentUserViewSettingsTab()) return 'settings';
+    if (canCurrentUserViewAssignmentsTab()) return 'assignments';
     if (myRole === 'admin') return 'admin';
-    
-    const settingsBtn = document.getElementById('tab-btn-settings');
-    if (settingsBtn && !settingsBtn.classList.contains('hidden')) {
-        return 'settings';
-    }
     return 'overview';
 }
 
@@ -395,6 +397,10 @@ function getPreferredUnitId(unitId, courseUnits = [], extraKeys = []) {
         unitId;
 }
 
+function isRenderableUnitFile(fileName) {
+    return typeof fileName === 'string' && fileName.endsWith('.html') && !fileName.includes('-master-');
+}
+
 function normalizeTutorIdentifier(value) {
     if (!value || typeof value !== 'string') return '';
     return value.replace(/_DOT_/g, '.').trim();
@@ -418,22 +424,40 @@ function getRequestedTabFromUrl() {
     return allowedTabs.has(requestedTab) ? requestedTab : '';
 }
 
+function getUnitTutorConfig(fileName) {
+    const candidateIds = getEquivalentUnitIds(fileName);
+    const unitConfigs = dashboardData?.unitTutorConfigs || {};
+    for (const candidateId of candidateIds) {
+        if (unitConfigs[candidateId]) return unitConfigs[candidateId];
+    }
+    return {
+        courseId: findParentCourseIdByUnit(fileName),
+        authorizedTutors: [],
+        tutorDetails: {},
+        githubClassroomUrls: {}
+    };
+}
+
+function getCourseGuideConfig(courseId) {
+    return dashboardData?.courseGuideIndex?.[courseId] || {};
+}
+
 function hasQualifiedTutorAccessForUnit(fileName, courseId, email) {
     if (!email || !fileName || !courseId) return false;
-    
-    const courseConfig = dashboardData?.courseConfigs?.[courseId] || {};
-    const unitConfigs = courseConfig.githubClassroomUrls || {};
-    const candidateIds = getEquivalentUnitIds(fileName);
-    const targetDocId = candidateIds
-        .map(id => dashboardData?.unitToDocId?.[id] || id)
-        .find(id => dashboardData?.courseConfigs?.[id]) || fileName;
-    const unitDocConfig = dashboardData?.courseConfigs?.[targetDocId] || {};
-    const unitTutorsArr = Array.isArray(unitDocConfig.authorizedTutors) ? unitDocConfig.authorizedTutors : [];
-    const legacyTutors = candidateIds.flatMap(id =>
-        (unitConfigs[id] && typeof unitConfigs[id] === 'object') ? Object.keys(unitConfigs[id]) : []
-    ).map(normalizeTutorIdentifier).filter(Boolean);
 
-    return new Set([...unitTutorsArr, ...legacyTutors]).has(email);
+    const candidateIds = getEquivalentUnitIds(fileName);
+    const normalizedEmail = normalizeTutorIdentifier(email);
+
+    if (normalizedEmail === normalizeTutorIdentifier(myEmail)) {
+        const myTutorConfigs = dashboardData?.myTutorConfigs || {};
+        if (candidateIds.some(id => myTutorConfigs[id]?.authorized === true)) {
+            return true;
+        }
+    }
+
+    const unitConfig = getUnitTutorConfig(fileName);
+    const authorizedTutors = Array.isArray(unitConfig.authorizedTutors) ? unitConfig.authorizedTutors : [];
+    return authorizedTutors.map(normalizeTutorIdentifier).includes(normalizedEmail);
 }
 
 async function hasPaidStudentAccessForUnit(courseId, unitId) {
@@ -444,7 +468,7 @@ async function hasPaidStudentAccessForUnit(courseId, unitId) {
         const response = await checkAuthFunction({
             pageId: courseId,
             fileName: unitId,
-            tutorMode: adminTutorMode // [V13.0.10] Enforce simulation on individual unit access
+            tutorMode: false
         });
         return !!(response?.data?.authorized || response?.data?.result?.authorized);
     } catch (error) {
@@ -469,7 +493,7 @@ function configureStudentTabsForUnitAccess() {
 
 function filterAssignmentsForCurrentView(assignments = []) {
     const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
-    const isQualifiedTutor = hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, myEmail);
+    const isQualifiedTutor = currentDashboardPermissions.isQualifiedTutor;
     const normalizeEmail = (value = '') => String(value || '').trim().toLowerCase();
     const isOwnAssignment = (assignment) =>
         (assignment.userId || assignment.uid) === myUid ||
@@ -706,23 +730,10 @@ function renderAdminDashboard(data, filterUnitId = null) {
     // If Tutor, they see these if they have qualified access for CURRENT view
     // [V13.0.12] Revised God Mode and Unit Context rules based on rules.md
     // Settings & Earnings are only accessible within a specific UNIT context
-    let showQualifiedTutorTabs = false;
-    const isAuthorized = !!filterUnitId && hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, currentUserEmail);
-    
-    if (!!filterUnitId) { 
-        if (myRole === 'admin') {
-            showQualifiedTutorTabs = adminTutorMode || isAuthorized;
-        } else {
-            showQualifiedTutorTabs = isAuthorized;
-        }
-    }
-
-    // [MODIFIED] Centralized Permission State for Tabs and Sub-sections
-    currentDashboardPermissions.isQualifiedTutor = showQualifiedTutorTabs;
-    currentDashboardPermissions.isAdmin = (myRole === 'admin');
+    const showSettingsTab = canCurrentUserViewSettingsTab();
 
     if (settingsTabBtn) {
-        settingsTabBtn.classList.toggle('hidden', !showQualifiedTutorTabs);
+        settingsTabBtn.classList.toggle('hidden', !showSettingsTab);
     }
     
     // [MODIFIED] Explicitly REMOVE/HIDE the Earnings standalone tab as requested
@@ -871,7 +882,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
         const prepareTitles = {
             'github-classroom-free': 'GitHub Classroom & Vibe Coding 實務',
             'ai-agents-vibe': 'AI 代理人與 Vibe Coding 實務',
-            'cvhofqxc': 'WiFi 與馬達組態設定'
+            'cvhofqxc': 'WiFi 組態設定'
         };
         
         // Combine into "Always Show" list
@@ -998,8 +1009,9 @@ function resolveAssignmentGuide(data, filterCourseId, filterUnitId) {
     filterUnitId = resolveCanonicalUnitId(filterUnitId);
 
     try {
-        const rawInstructor = (data.courseConfigs && data.courseConfigs[filterCourseId]) ? data.courseConfigs[filterCourseId].tutorGuide : null;
-        const rawAssignment = (data.courseConfigs && data.courseConfigs[filterCourseId]) ? data.courseConfigs[filterCourseId].assignmentGuide : null;
+        const guideConfig = data.courseGuideIndex?.[filterCourseId] || {};
+        const rawInstructor = guideConfig.tutorGuide || null;
+        const rawAssignment = guideConfig.assignmentGuide || null;
 
         const guideData = robustExtractGuideSegments(rawInstructor, rawAssignment);
 
@@ -1099,8 +1111,7 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
     const useMasterBypass = (myRole === 'admin' && adminTutorMode);
 
     if (useMasterBypass || isAuthorizedTutor) {
-        const cfg = (dashboardData && dashboardData.courseConfigs) ? dashboardData.courseConfigs[courseId] : null;
-        const inviteLink = cfg && cfg.githubClassroomUrls ? cfg.githubClassroomUrls[unitId] : null;
+        const inviteLink = getUnitTutorConfig(unitId).githubClassroomUrls || null;
 
         if (inviteLink) {
             let finalUrl = inviteLink;
@@ -1151,7 +1162,8 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
     })();
 };
 
-function renderAssignments(assignments = [], guideContent = "") {
+function renderAssignments(assignments = [], guideContent = "", options = {}) {
+    const { showGuide = true } = options;
     const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
     const isAdmin = myRole === 'admin';
     const canManageAssignments = isUserAuthorizedForUnit(filterUnitId, filterCourseId, myEmail) || (isAdmin && !filterUnitId);
@@ -1185,15 +1197,11 @@ function renderAssignments(assignments = [], guideContent = "") {
     // Existing Student/Tutor-specific logic
     // [V12.2.0] RESTORED: Assignments tab always shows the list for Admin.
     // [RESTORED] Tutor Benchmarks for grading reference
-    if (guideContent) {
+    if (showGuide && guideContent) {
         const guideDiv = document.createElement('div');
-        guideDiv.className = 'integrated-tutor-guide mt-8 p-6 bg-blue-50 border border-blue-100 rounded-2xl';
+        guideDiv.className = 'integrated-tutor-guide mt-8 rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden';
         guideDiv.innerHTML = `
-            <div class="text-[10px] text-blue-500 font-bold uppercase mb-2 tracking-widest flex items-center gap-2">
-                <span class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
-                導師批改指南 / Tutor Benchmarks
-            </div>
-            <div class="text-sm text-blue-900 leading-relaxed font-medium">
+            <div class="px-6 py-6 text-sm leading-7 text-slate-700 prose prose-base max-w-none prose-headings:text-slate-900 prose-headings:text-2xl prose-headings:font-black prose-strong:text-slate-900 prose-li:my-1">
                 ${guideContent}
             </div>
         `;
@@ -1333,15 +1341,20 @@ window.switchTab = function (tabName) {
     const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
 
     // [MODIFIED] Redirect standalone tabs to Settings in consolidated mode
-    if (tabName === 'earnings' || (tabName === 'assignments' && !canCurrentUserViewAssignmentsTab())) {
-        tabName = 'settings';
-    }
-
     if (tabName === 'assignments' && !canCurrentUserViewAssignmentsTab()) {
         tabName = getPreferredDashboardTab(filterUnitId);
         if (tabName === 'assignments' && !canCurrentUserViewAssignmentsTab()) {
             return;
         }
+    }
+    if (tabName === 'settings' && !canCurrentUserViewSettingsTab()) {
+        tabName = getPreferredDashboardTab(filterUnitId);
+        if (tabName === 'settings' && !canCurrentUserViewSettingsTab()) {
+            return;
+        }
+    }
+    if (tabName === 'earnings') {
+        tabName = getPreferredDashboardTab(filterUnitId);
     }
 
     // Hide all contents
@@ -1383,8 +1396,7 @@ window.switchTab = function (tabName) {
                 }
             }
             // Resolve guide for the integrated view
-            const guideContent = resolveAssignmentGuide(dashboardData, filterCourseId, filterUnitId);
-            renderAssignments(displayAssignments, guideContent);
+            renderAssignments(displayAssignments, "", { showGuide: false });
         } else {
             document.getElementById('assignments-container')?.classList.add('hidden');
         }
@@ -1415,8 +1427,9 @@ window.switchTab = function (tabName) {
         let assignmentGuide = "";
         if (filterCourseId && filterUnitId) {
             try {
-                const rawInstructor = (dashboardData.courseConfigs && dashboardData.courseConfigs[filterCourseId]) ? dashboardData.courseConfigs[filterCourseId].tutorGuide : null;
-                const rawAssignment = (dashboardData.courseConfigs && dashboardData.courseConfigs[filterCourseId]) ? dashboardData.courseConfigs[filterCourseId].assignmentGuide : null;
+                const guideConfig = dashboardData.courseGuideIndex?.[filterCourseId] || {};
+                const rawInstructor = guideConfig.tutorGuide || null;
+                const rawAssignment = guideConfig.assignmentGuide || null;
 
                 const guideData = robustExtractGuideSegments(rawInstructor, rawAssignment);
 
@@ -1531,15 +1544,14 @@ function renderAdminConsole() {
             try {
                 if (filterCourseId && lesson.courseId !== filterCourseId) return '';
 
-                const config = dashboardData?.courseConfigs?.[lesson.courseId] || {};
                 let units = lesson.courseUnits || [];
-                const unitConfigs = config.githubClassroomUrls || {};
-                const rawFiles = Array.from(new Set([...units, ...Object.keys(unitConfigs)]))
-                    .filter(f => f && !f.includes('-master-'));
+                const rawFiles = Array.from(new Set([...units, ...Object.keys(dashboardData?.unitTutorConfigs || {})]))
+                    .filter(isRenderableUnitFile);
                 const canonicalUnitMap = new Map();
 
                 rawFiles.forEach(fileName => {
-                    const preferredId = getPreferredUnitId(fileName, units, Object.keys(unitConfigs));
+                    const preferredId = getPreferredUnitId(fileName, units, Object.keys(dashboardData?.unitTutorConfigs || {}));
+                    if (!isRenderableUnitFile(preferredId)) return;
                     if (!canonicalUnitMap.has(preferredId)) {
                         canonicalUnitMap.set(preferredId, preferredId);
                     }
@@ -1548,31 +1560,28 @@ function renderAdminConsole() {
                 let allFiles = Array.from(canonicalUnitMap.values());
 
                 if (filterUnitId) {
-                    const preferredUnit = getPreferredUnitId(filterUnitId, units, Object.keys(unitConfigs));
+                    const preferredUnit = getPreferredUnitId(filterUnitId, units, Object.keys(dashboardData?.unitTutorConfigs || {}));
                     allFiles = preferredUnit ? [preferredUnit] : [];
                 }
 
                 if (allFiles.length === 0) return '';
 
                 return allFiles.map(unitFile => {
-                    const normalizedFile = getPreferredUnitId(unitFile, units, Object.keys(unitConfigs));
+                    const normalizedFile = getPreferredUnitId(unitFile, units, Object.keys(dashboardData?.unitTutorConfigs || {}));
+                    if (!isRenderableUnitFile(normalizedFile)) return '';
                     if (renderedUnits.has(normalizedFile)) return ''; 
                     renderedUnits.add(normalizedFile);
 
-                    // [FIX] Use unitToDocId map to find the correct Firestore document
-                    const targetDocId = getEquivalentUnitIds(unitFile)
-                        .map(id => dashboardData?.unitToDocId?.[id] || id)
-                        .find(id => dashboardData?.courseConfigs?.[id]) || lesson.courseId;
-                    const unitDocConfig = dashboardData?.courseConfigs?.[targetDocId] || {};
-                    
+                    const unitDocConfig = getUnitTutorConfig(unitFile);
+
                     const unitTutorsArr = Array.isArray(unitDocConfig.authorizedTutors) ? unitDocConfig.authorizedTutors : [];
-                    const legacyTutors = ((unitConfigs[unitFile] && typeof unitConfigs[unitFile] === 'object') ? Object.keys(unitConfigs[unitFile]) : [])
+                    const configEmails = Object.keys(unitDocConfig.githubClassroomUrls || {})
                         .map(normalizeTutorIdentifier)
                         .filter(Boolean);
                     const tutorDetailsEmails = Object.values(unitDocConfig.tutorDetails || {})
                         .map(entry => entry?.email)
                         .filter(Boolean);
-                    const unitTutors = Array.from(new Set([...unitTutorsArr, ...legacyTutors, ...tutorDetailsEmails]))
+                    const unitTutors = Array.from(new Set([...unitTutorsArr, ...configEmails, ...tutorDetailsEmails]))
                         .filter(t => t && t !== 'default');
                     const unitName = formatUnitName(unitFile) || unitFile;
 
@@ -1634,65 +1643,6 @@ function renderAdminConsole() {
                                 </div>
 
                             </div>
-
-                             <!-- Section 3: Student Management -->
-                             <div>
-                                 <div class="text-[11px] text-orange-400 font-black uppercase mb-3.5 tracking-widest">已付款學生 / Students</div>
-                                 <div class="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
-                                     <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white/50">
-                                         <div class="text-[10px] text-gray-500 font-bold">此清單僅顯示該單元所屬課程之成功付款學生</div>
-                                         <button onclick="exportToCSV()" class="text-[10px] bg-blue-600 text-white px-3 py-1.5 rounded-lg font-black hover:bg-blue-700 transition shadow-sm">
-                                             📊 導出清單 (CSV)
-                                         </button>
-                                     </div>
-                                     <table class="w-full text-left border-collapse text-[11px]">
-                                        <thead>
-                                            <tr class="bg-gray-100/50 text-gray-500 border-b border-gray-100 uppercase tracking-tighter font-black">
-                                                <th class="py-2.5 px-4">姓名 / Name</th>
-                                                <th class="py-2.5 px-4">學生 Email</th>
-                                                <th class="py-2.5 px-4">目前指派導師</th>
-                                                <th class="py-2.5 px-4 text-right">變更指派</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-gray-100 bg-white">
-                                            ${(() => {
-                            const unitStudents = (dashboardData?.students || []).filter(s => {
-                                const orders = s.orders || [];
-                                // Find parent course for this unit
-                                const parentCourse = (allLessons || []).find(l => l.courseUnits && l.courseUnits.includes(unitFile));
-                                return parentCourse && orders.includes(parentCourse.courseId);
-                            });
-
-                            if (unitStudents.length === 0) return '<tr><td colspan="3" class="py-4 text-center text-gray-400 italic">無授權學生</td></tr>';
-
-                            return unitStudents.map(s => {
-                                const unitAssignedTutor = (s.unitAssignments && s.unitAssignments[unitFile]) ? s.unitAssignments[unitFile] : null;
-
-                                return `
-                                            <tr class="hover:bg-orange-50/10 transition-colors">
-                                                <td class="py-2 px-4 font-bold text-gray-800">${escapeHtml(s.name || '—')}</td>
-                                                <td class="py-2 px-4 font-mono text-gray-500">${escapeHtml(s.email)}</td>
-                                                <td class="py-2 px-4">
-                                                    <span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md font-bold">
-                                                        ${unitAssignedTutor ? escapeHtml(unitAssignedTutor) : '尚未指派'}
-                                                    </span>
-                                                </td>
-                                                <td class="py-2 px-4 text-right">
-                                                    <select onchange="handleAssignTutor('${s.uid}', '${unitFile}', this.value)" 
-                                                        class="bg-white border border-gray-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-orange-200 text-[10px] font-bold text-gray-600">
-                                                        <option value="">-- 指派導師 --</option>
-                                                        ${unitTutors.map(t => `<option value="${t}" ${unitAssignedTutor === t ? 'selected' : ''}>${escapeHtml(t)}</option>`).join('')}
-                                                        <option value="none">移除指派</option>
-                                                    </select>
-                                                </td>
-                                            </tr>
-                                        `;
-                            }).join('');
-                        })()}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
                         </div>
                     `;
                 }).join('');
@@ -1718,6 +1668,25 @@ function renderAdminConsole() {
     }
 
     adminPanel.innerHTML = html;
+    stripAdminConsoleAttachmentSections(adminPanel);
+}
+
+function stripAdminConsoleAttachmentSections(rootEl) {
+    if (!rootEl) return;
+    const candidates = Array.from(rootEl.querySelectorAll('div, section, article'));
+    candidates.forEach(node => {
+        const text = (node.textContent || '').replace(/\s+/g, ' ').trim();
+        if (!text.includes('附件資料 / Attachments')) return;
+
+        const removableCard =
+            node.closest('.mb-4.p-4.bg-orange-50') ||
+            node.closest('.unit-guide-row') ||
+            node;
+
+        if (removableCard && rootEl.contains(removableCard)) {
+            removableCard.remove();
+        }
+    });
 }
 
 window.handleUnitTutorAuth = async function (courseId, unitFile, tutorEmail, action, parentCourseId = null) {
@@ -1819,7 +1788,7 @@ function setupGradingFunctions() {
         }
 
         const canonicalUnitId = resolveCanonicalUnitId(assignment.unitId);
-        const unitConfig = dashboardData?.courseConfigs?.[canonicalUnitId] || {};
+        const unitConfig = getUnitTutorConfig(canonicalUnitId);
         const authorizedTutors = Array.isArray(unitConfig.authorizedTutors) ? unitConfig.authorizedTutors : [];
         const pendingApps = dashboardData?.pendingApplications || [];
         const studentEmail = assignment.studentEmail || assignment.userEmail || '';
@@ -2138,8 +2107,6 @@ function findCourseId(key) {
 
 // --- Course Settings Feature ---
 
-let courseConfigs = {};
-
 function setupSettingsFeature() {
     // Buttons are now rendered individually in each row
 }
@@ -2203,20 +2170,15 @@ async function renderSettingsTab(filterUnitId = null) {
             return; // Exit and wait for loadDashboard to call us again
         }
 
-        const courseConfigs = dashboardData?.courseConfigs || {};
         const lessonsToProcess = Array.isArray(allLessons) ? allLessons : [];
         console.log("[Settings] Processing", lessonsToProcess.length, "lessons.");
 
         // 1. Render Course List
         let authorizedLessons = lessonsToProcess.filter(course => {
-            if (myRole === 'admin' || adminTutorMode) return true;
+            if (myRole === 'admin' && adminTutorMode) return true;
 
-            const courseConfig = courseConfigs[course.courseId] || {};
-            const unitConfigs = courseConfig.githubClassroomUrls || {};
             const units = Array.isArray(course.courseUnits) ? course.courseUnits : [];
-
-            const allFiles = Array.from(new Set([...units, ...Object.keys(unitConfigs)]))
-                .filter(f => f && !f.includes('-master-'));
+            const allFiles = Array.from(new Set(units)).filter(f => f && !f.includes('-master-'));
 
             return allFiles.some(f => isUserAuthorizedForUnit(f, course.courseId, userEmail));
         });
@@ -2243,7 +2205,6 @@ async function renderSettingsTab(filterUnitId = null) {
 
         authorizedLessons.forEach(course => {
             console.log("[Settings] Rendering Course:", course.courseId);
-            const configs = courseConfigs[course.courseId]?.githubClassroomUrls || {};
             const units = Array.isArray(course.courseUnits) ? [...course.courseUnits] : [];
             
             // [NEW] Ensure master page is also available for settings
@@ -2252,9 +2213,10 @@ async function renderSettingsTab(filterUnitId = null) {
                 units.unshift(masterFile);
             }
 
-            const rawInstructor = courseConfigs[course.courseId]?.tutorGuide;
-            const rawAssignment = courseConfigs[course.courseId]?.assignmentGuide;
-            const rawAttachment = courseConfigs[course.courseId]?.attachmentGuide;
+            const guideConfig = getCourseGuideConfig(course.courseId);
+            const rawInstructor = guideConfig.tutorGuide;
+            const rawAssignment = guideConfig.assignmentGuide;
+            const rawAttachment = guideConfig.attachmentGuide;
             const guideData = robustExtractGuideSegments(rawInstructor, rawAssignment);
             
             // [NEW] Attachment Segment Extraction
@@ -2275,7 +2237,7 @@ async function renderSettingsTab(filterUnitId = null) {
 
             const finalUnits = filterUnitId
                 ? (() => {
-                    const preferredUnit = getPreferredUnitId(filterUnitId, units, Object.keys(configs));
+                    const preferredUnit = getPreferredUnitId(filterUnitId, units, Object.keys(dashboardData?.unitTutorConfigs || {}));
                     return preferredUnit ? [preferredUnit] : [];
                 })()
                 : filteredUnits;
@@ -2284,7 +2246,7 @@ async function renderSettingsTab(filterUnitId = null) {
 
             const assignmentRows = finalUnits.map(fileName => {
                 const isAuthorized = isUserAuthorizedForUnit(fileName, course.courseId, userEmail);
-                return renderAssignmentConfigRow(course.courseId, fileName, configs[fileName], course.title, isAuthorized);
+                return renderAssignmentConfigRow(course.courseId, fileName, getUnitTutorConfig(fileName).githubClassroomUrls, course.title, isAuthorized);
             }).filter(h => !!h).join('');
 
             const guideRows = finalUnits.map(fileName => {
@@ -2346,15 +2308,11 @@ async function renderSettingsTab(filterUnitId = null) {
 
 function renderAssignmentConfigRow(courseId, fileName, tutorMap = {}, courseTitle = "", isAuthorized) {
     const userEmail = auth.currentUser?.email;
-    const isAdmin = adminTutorMode || myRole === 'admin';
+    const isAdmin = myRole === 'admin' && adminTutorMode;
     
-    // 優先尋找自己的，若無則尋找該單元任何現存的連結（管理員視角）
-    let entries = Object.entries(tutorMap || {}).filter(([tutor]) => tutor === userEmail);
-    if (entries.length === 0 && isAdmin) {
-        // 如果是管理員且沒自己的，就拿現有的第一個出來顯示，方便檢閱/修改
-        const anyEntry = Object.entries(tutorMap || {})[0];
-        if (anyEntry) entries.push(anyEntry);
-    }
+    let entries = isAdmin
+        ? Object.entries(tutorMap || {})
+        : Object.entries(tutorMap || {}).filter(([tutor]) => tutor === userEmail);
     
     // 依然是空的，就給一個空的佔位符給當前帳號
     if (entries.length === 0 && userEmail) entries.push([userEmail, '']);
@@ -2502,9 +2460,9 @@ window.saveAllSettings = async function (clickedBtn = null) {
     });
 
     try {
-        const saveCourseConfigs = httpsCallable(functions, 'saveCourseConfigs');
+        const saveTutorConfigs = httpsCallable(functions, 'saveTutorConfigs');
         const promises = Object.entries(configsByCourse).map(([cid, unitMap]) => {
-            return saveCourseConfigs({
+            return saveTutorConfigs({
                 courseId: cid,
                 configs: { githubClassroomUrls: unitMap }
             });

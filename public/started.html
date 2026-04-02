@@ -14,7 +14,7 @@
 <body id="page-started" class="flex flex-col min-h-screen">
     <div id="nav-placeholder"></div>
     <script src="js/nav-component.js?v=3"></script>
-    <script src="js/course-shared-v4.js"></script> <!-- Added Shared Logic -->
+    <script src="js/course-shared.js"></script> <!-- Added Shared Logic -->
     <script>
         renderNav('.', { showAuth: true });
     </script>
@@ -205,6 +205,7 @@
             const classroomUrl = cardElement.dataset.classroomUrl;
 
             const isFreeCourse = parseInt(coursePrice, 10) === 0;
+            const isPricedPhysicalProduct = isPhysical && !isFreeCourse;
 
             const buttonGroup = cardElement.querySelector('.button-group');
             const hasVideoButton = buttonGroup && buttonGroup.children.length > 1;
@@ -213,7 +214,11 @@
             btn.onclick = null;
             btn.disabled = false;
 
-            if (status === 'AUTHORIZED') {
+            if (isPricedPhysicalProduct) {
+                btn.textContent = `🛒 加入購物車`;
+                btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
+                btn.onclick = () => window.handleAddToCartConfirmation(courseId, courseName, coursePrice, isPhysical);
+            } else if (status === 'AUTHORIZED') {
                 btn.textContent = '✅ 進入課程內容';
                 // 藍色主題 (Blue-600)
                 btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium transition`;

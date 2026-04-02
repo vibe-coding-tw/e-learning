@@ -13,7 +13,7 @@
 <body id="page-basic" class="flex flex-col min-h-screen">
     <div id="nav-placeholder"></div>
     <script src="js/nav-component.js?v=3"></script>
-    <script src="js/course-shared-v4.js"></script> <!-- Added Shared Logic -->
+    <script src="js/course-shared.js"></script> <!-- Added Shared Logic -->
     <script>
         renderNav('.', { showAuth: true });
     </script>
@@ -210,6 +210,7 @@
             const coursePrice = cardElement.dataset.coursePrice;
             const isPhysical = cardElement.dataset.isPhysical === 'true';
             const classroomUrl = cardElement.dataset.classroomUrl;
+            const isPricedPhysicalProduct = isPhysical && parseInt(coursePrice || "0", 10) > 0;
 
             // 確保按鈕寬度邏輯正確
             const buttonGroup = cardElement.querySelector('.button-group');
@@ -219,7 +220,11 @@
             btn.onclick = null;
             btn.disabled = false;
 
-            if (status === 'AUTHORIZED') {
+            if (isPricedPhysicalProduct) {
+                btn.textContent = `🛒 加入購物車`;
+                btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition`;
+                btn.onclick = () => window.handleAddToCartConfirmation(courseId, courseName, coursePrice, isPhysical);
+            } else if (status === 'AUTHORIZED') {
                 btn.textContent = '✅ 進入課程內容';
                 btn.className = `action-btn ${widthClass} py-2 px-3 rounded-md bg-green-600 hover:bg-green-700 text-white font-medium transition`;
                 btn.onclick = () => { 

@@ -519,6 +519,14 @@ function resolveClassroomUrlForTutor(urlConfig, tutorEmail) {
     return Object.values(urlConfig).find(value => typeof value === 'string' && value.trim()) || null;
 }
 
+function hasQualifiedTutorStatus(userData = {}, unitId = '') {
+    const tutorConfigs = userData.tutorConfigs || {};
+    if (unitId) {
+        return !!(tutorConfigs[unitId] && tutorConfigs[unitId].authorized === true);
+    }
+    return Object.values(tutorConfigs).some(config => config && config.authorized === true);
+}
+
 async function upsertStudentUnitAssignment(db, studentUid, unitId, tutorEmail, assignedByUid = 'system', notify = true) {
     const userRef = db.collection('users').doc(studentUid);
     const userDoc = await userRef.get();
@@ -572,6 +580,7 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
             return { 
                 authorized: true, 
                 simulated: true, 
+                accessMode: 'admin_simulated',
                 canonicalUnitId: canonicalUnitId,
                 effectiveCourseId: effectiveCourseId,
                 assignedTutorEmail: assignedTutorEmail
@@ -581,14 +590,14 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
         // Status-based Authorization: Qualified Tutors for their units (Digital Only)
         const isQualifiedTutorForThisUnit = !!(userData.tutorConfigs && userData.tutorConfigs[canonicalUnitId] && userData.tutorConfigs[canonicalUnitId].authorized);
         if (isQualifiedTutorForThisUnit) {
-            return { authorized: true, canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
+            return { authorized: true, accessMode: 'qualified_tutor', canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
         }
 
         // FREE COURSE (NT$ 0) (Digital Only)
         const lessonPrice = course ? course.price : (lessons.find(l => l.courseId === effectiveCourseId)?.price || 9999);
         const isFreeCourse = !!(course && parseInt(lessonPrice) === 0);
         if (isFreeCourse) {
-            return { authorized: true, canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
+            return { authorized: true, accessMode: 'free_course', canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
         }
 
         // Trial Course (Started category, within 30 days) (Digital Only)
@@ -597,7 +606,7 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
         const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
         const isTrialCourse = !!(course && course.category === 'started' && ((now - new Date(userRecord.metadata.creationTime).getTime()) < THIRTY_DAYS_MS));
         if (isTrialCourse) {
-            return { authorized: true, canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
+            return { authorized: true, accessMode: 'trial_course', canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
         }
     }
 
@@ -616,6 +625,7 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
         return {
             authorized: false,
             reason: 'payment-required',
+            accessMode: 'payment_required',
             canonicalUnitId,
             effectiveCourseId,
             assignedTutorEmail: null,
@@ -625,6 +635,7 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
 
     return {
         authorized: true,
+        accessMode: 'paid_student',
         canonicalUnitId,
         effectiveCourseId,
         assignedTutorEmail,
@@ -1071,7 +1082,10 @@ exports.serveCourse = onRequest(async (req, res) => {
 const getRole = async (uid) => {
     try {
         const userDoc = await admin.firestore().collection('users').doc(uid).get();
-        if (userDoc.exists) return userDoc.data().role;
+        if (userDoc.exists) {
+            const role = userDoc.data().role;
+            return role === 'admin' ? 'admin' : 'student';
+        }
     } catch (e) {
         console.error("[Role] Error in getRole:", e);
     }
@@ -1099,7 +1113,7 @@ exports.setUserRole = onCall(async (request) => {
 
     const { email, role } = data;
 
-    if (!['student', 'tutor', 'admin'].includes(role)) {
+    if (!['student', 'admin'].includes(role)) {
         throw new HttpsError('invalid-argument', 'Invalid role.');
     }
 
@@ -1157,9 +1171,9 @@ exports.logActivity = onCall(async (request) => {
 });
 
 // ==========================================
-// 7. 課程設定管理 (saveCourseConfigs / getCourseConfigs)
+// 7. 導師設定管理 (saveTutorConfigs / getTutorConfigs)
 // ==========================================
-exports.saveCourseConfigs = onCall(async (request) => {
+const saveTutorConfigsHandler = onCall(async (request) => {
     const { data, auth } = request;
     if (!auth) {
         throw new HttpsError('unauthenticated', 'User must be logged in.');
@@ -1167,13 +1181,20 @@ exports.saveCourseConfigs = onCall(async (request) => {
     const uid = auth.uid;
     const email = auth.token.email;
     const role = await getRole(uid);
-    if (role !== 'admin' && role !== 'tutor') {
-        throw new HttpsError('permission-denied', 'Only tutors and admins can save configs.');
-    }
-
     const { courseId, configs } = data;
     if (!courseId || !configs) {
         throw new HttpsError('invalid-argument', 'Missing courseId or configs.');
+    }
+
+    const userRef = admin.firestore().collection('users').doc(uid);
+    const userDoc = await userRef.get();
+    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    const unitIds = Object.keys(configs.githubClassroomUrls || {});
+    const canManageAllUnits = role === 'admin';
+    const canManageRequestedUnits = unitIds.every(unitId => hasQualifiedTutorStatus(userData, unitId));
+
+    if (!canManageAllUnits && !canManageRequestedUnits) {
+        throw new HttpsError('permission-denied', 'Only admins or qualified tutors for these units can save configs.');
     }
 
         // [V12.0.9] ULTIMATE MIGRATION: Stop writing to the deprecated course_configs collection.
@@ -1182,13 +1203,13 @@ exports.saveCourseConfigs = onCall(async (request) => {
 
         // [NEW v12.0.9] If caller is admin, ensure they have their own tutorConfigs entry for the target units
         if (role === 'admin') {
-            console.log(`[saveCourseConfigs] Admin ${email} saving configs to users collection...`);
+            console.log(`[saveTutorConfigs] Admin ${email} saving configs to users collection...`);
         }
 
         try {
             // --- PHASE 1: Propagate githubClassroomUrls and Authorizations to User Documents ---
             if (configs.githubClassroomUrls) {
-            console.log(`[saveCourseConfigs] Syncing GitHub Classroom URLs to user documents for ${courseId}...`);
+            console.log(`[saveTutorConfigs] Syncing GitHub Classroom URLs to user documents for ${courseId}...`);
             const db = admin.firestore();
             
             for (const [unitId, tutorsMap] of Object.entries(configs.githubClassroomUrls)) {
@@ -1208,9 +1229,9 @@ exports.saveCourseConfigs = onCall(async (request) => {
                                 }
                             }
                         }, { merge: true });
-                        console.log(`[saveCourseConfigs] ✅ Synced ${unitId} for ${tEmail}`);
+                        console.log(`[saveTutorConfigs] ✅ Synced ${unitId} for ${tEmail}`);
                     } catch (err) {
-                        console.warn(`[saveCourseConfigs] Failed to sync ${tEmail} for ${unitId}: ${err.message}`);
+                        console.warn(`[saveTutorConfigs] Failed to sync ${tEmail} for ${unitId}: ${err.message}`);
                     }
                 }
             }
@@ -1223,7 +1244,7 @@ exports.saveCourseConfigs = onCall(async (request) => {
     }
 });
 
-exports.getCourseConfigs = onCall(async (request) => {
+const getTutorConfigsHandler = onCall(async (request) => {
     const { data } = request;
     const { courseId } = data;
     try {
@@ -1286,6 +1307,12 @@ exports.getCourseConfigs = onCall(async (request) => {
     }
 });
 
+exports.saveTutorConfigs = saveTutorConfigsHandler;
+exports.getTutorConfigs = getTutorConfigsHandler;
+// Backward-compatible aliases for older cached clients.
+exports.saveCourseConfigs = saveTutorConfigsHandler;
+exports.getCourseConfigs = getTutorConfigsHandler;
+
 exports.resolveAssignmentAccess = onCall(async (request) => {
     const { data, auth } = request;
     if (!auth) throw new HttpsError('unauthenticated', '請先登入');
@@ -1296,13 +1323,14 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
     const db = admin.firestore();
     const lessons = await getLessons();
     const access = await resolveStudentAssignmentAccess(db, auth.uid, courseId, unitId, lessons, tutorMode === true);
-    if (!access.authorized) return { authorized: false, reason: access.reason || 'forbidden' };
+    if (!access.authorized) return { authorized: false, reason: access.reason || 'forbidden', accessMode: access.accessMode || null };
 
-    const { canonicalUnitId, effectiveCourseId, assignedTutorEmail, requiresTutorAssignment } = access;
+    const { canonicalUnitId, effectiveCourseId, assignedTutorEmail, requiresTutorAssignment, accessMode } = access;
 
     if (requiresTutorAssignment && !assignedTutorEmail) {
         return {
             authorized: true,
+            accessMode,
             classroomUrl: null,
             assignedTutorEmail: null,
             canonicalUnitId,
@@ -1341,6 +1369,7 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
 
     return {
         authorized: true,
+        accessMode,
         classroomUrl: classroomUrl || null,
         assignedTutorEmail: assignedTutorEmail || null,
         canonicalUnitId,
@@ -1537,9 +1566,6 @@ exports.recommendTutorForUnit = onCall(async (request) => {
     if (!auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
 
     const requesterRole = await getRole(auth.uid);
-    if (!['admin', 'tutor'].includes(requesterRole)) {
-        throw new HttpsError('permission-denied', 'Only tutors can recommend candidates.');
-    }
 
     const { assignmentId } = data;
     if (!assignmentId) throw new HttpsError('invalid-argument', 'Missing assignmentId');
@@ -1748,6 +1774,7 @@ exports.getDashboardData = onCall(async (request) => {
         // 0. Fetch Course Authorization Data
         const authorizedCourseIds = [];
         const courseConfigs = {};
+        const unitTutorConfigs = {};
         const unitToDocId = {}; // [LEGACY] Map unit filename -> Firestore docId
         // [NEW v12.0.0] Fetch Tutor Application Status for THIS user from their own document
         const myApplicationsMapping = {};
@@ -1839,6 +1866,29 @@ exports.getDashboardData = onCall(async (request) => {
 
                 if (config.githubClassroomUrl) {
                     synthesizedConfigs[cid].githubClassroomUrls[unitId][email] = config.githubClassroomUrl;
+                }
+
+                if (unitId.endsWith('.html')) {
+                    if (!unitTutorConfigs[unitId]) {
+                        unitTutorConfigs[unitId] = {
+                            courseId: cid,
+                            authorizedTutors: [],
+                            tutorDetails: {},
+                            githubClassroomUrls: {}
+                        };
+                    }
+
+                    if (!unitTutorConfigs[unitId].authorizedTutors.includes(email)) {
+                        unitTutorConfigs[unitId].authorizedTutors.push(email);
+                    }
+                    unitTutorConfigs[unitId].tutorDetails[email] = {
+                        email,
+                        name: uData.displayName || email.split('@')[0],
+                        qualifiedAt: config.updatedAt || config.qualifiedAt
+                    };
+                    if (config.githubClassroomUrl) {
+                        unitTutorConfigs[unitId].githubClassroomUrls[email] = config.githubClassroomUrl;
+                    }
                 }
             }
         });
@@ -2010,7 +2060,9 @@ exports.getDashboardData = onCall(async (request) => {
             summary: {},
             students: [],
             assignments: [],
-            courseConfigs: courseConfigs,
+            courseGuideIndex: courseConfigs,
+            unitTutorConfigs: unitTutorConfigs,
+            myTutorConfigs: myTutorConfigs,
             unitToDocId: unitToDocId, 
             myPromoCode: null,
             earnings: [],
@@ -2249,17 +2301,22 @@ exports.getDashboardData = onCall(async (request) => {
             's1VCXo1mEDd9RVoVKIbxF6aZvk72': { name: '陳子展', email: 'ms0683735@gmail.com', createdAt: 1774251155821 }
         };
 
-        // [NEW] Ensure ALL students are included, along with registration time
+        // [NEW] Ensure the global admin overview includes every registered user, even with no activity.
+        const shouldIncludeAllRegisteredUsers = isManagementView && requesterRole === 'admin' && !data.unitId && !data.courseId;
+
+        // [NEW] Ensure all relevant users are included, along with registration time
         if (isManagementView) {
             Object.keys(usersMap).forEach(sid => {
                 const repair = legacyRepairMap[sid];
+                const userRole = usersMap[sid].role || 'student';
+                const shouldIncludeUser = shouldIncludeAllRegisteredUsers || userRole === 'student';
                 
-                if (!studentStats[sid] && usersMap[sid].role === 'student') {
+                if (!studentStats[sid] && shouldIncludeUser) {
                     studentStats[sid] = {
                         uid: sid,
                         email: usersMap[sid].email || (repair ? repair.email : 'Unknown'),
                         name: usersMap[sid].name || (repair ? repair.name : ''),
-                        role: usersMap[sid].role || 'student',
+                        role: userRole,
                         createdAt: usersMap[sid].createdAt || (repair ? admin.firestore.Timestamp.fromMillis(repair.createdAt) : null),
                         totalTime: 0, videoTime: 0, docTime: 0, pageTime: 0, lastActive: null,
                         courseProgress: {},
@@ -2334,7 +2391,7 @@ exports.getDashboardData = onCall(async (request) => {
         const tutorList = [];
         Object.entries(usersMap).forEach(([uid, data]) => {
             const role = data.role || 'student';
-            if (role === 'admin' || role === 'tutor' || (data.tutorConfigs && Object.keys(data.tutorConfigs).length > 0)) {
+            if (role === 'admin' || hasQualifiedTutorStatus(data)) {
                 tutorList.push({
                     uid,
                     email: data.email || 'No Email',
@@ -2371,9 +2428,10 @@ exports.getDashboardData = onCall(async (request) => {
             // 1. My own assignment (Student/Any)
             // 2. Admin can see all
             // [V12.1.4] RELAXED FILTER: Admin should see ALL records, even if usersMap entry is missing.
+            const requesterHasTutorAccess = hasQualifiedTutorStatus(userData);
             const isAuthorizedForAssign = (targetUid === uid) || 
                                           (requesterRole === 'admin') || 
-                                          (requesterRole === 'tutor' && (assignmentTutor === requesterEmail || authorizedCourseIds.includes(mappedCid)));
+                                          (requesterHasTutorAccess && (assignmentTutor === requesterEmail || authorizedCourseIds.includes(mappedCid)));
 
             if (isAuthorizedForAssign) {
                 // If admin, we allow it through even if student info is partially missing
@@ -2388,11 +2446,13 @@ exports.getDashboardData = onCall(async (request) => {
             }
         });
 
-        // Summary (Only count students with successful orders)
+        // Summary
+        const registeredUserStats = result.students;
         const paidStudentStats = result.students.filter(s => s.accountStatus === 'paid' && s.role === 'student');
 
         result.summary = {
-            totalStudents: paidStudentStats.length,
+            totalStudents: registeredUserStats.length,
+            totalPaidStudents: paidStudentStats.length,
             totalHours: paidStudentStats.reduce((acc, curr) => acc + curr.totalTime, 0) / 3600
         };
 
@@ -2545,10 +2605,6 @@ exports.gradeAssignment = onCall(async (request) => {
 
     // Check Role
     const role = await getRole(auth.uid);
-    if (role !== 'admin' && role !== 'tutor') {
-        throw new HttpsError('permission-denied', 'Only tutors can grade.');
-    }
-
     const { assignmentId, grade, feedback } = data;
     // assignmentId should include uid, e.g., "UID_COURSE_UNIT"
 
@@ -2984,11 +3040,11 @@ exports.generatePromoCode = onCall(async (request) => {
 
     try {
         const role = await getRole(uid);
-        if (role !== 'admin' && role !== 'tutor') {
-            throw new HttpsError('permission-denied', '只有老師可以生成推廣代碼');
-        }
-
         const userDoc = await db.collection('users').doc(uid).get();
+        const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+        if (role !== 'admin' && !hasQualifiedTutorStatus(userData, courseId)) {
+            throw new HttpsError('permission-denied', '只有該單元合格導師可以生成推廣代碼');
+        }
         const tutorName = userDoc.exists ? (userDoc.data().name || userDoc.data().displayName) : email;
 
         const promoCode = await internalGetOrCreatePromoCode(db, email, courseId, tutorName);
