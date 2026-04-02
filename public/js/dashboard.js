@@ -477,8 +477,13 @@ function filterAssignmentsForCurrentView(assignments = []) {
         );
     }
 
-    // 2. If Student (or Admin in Student Mode): Only see their own assignments.
-    if (myRole === 'student' || currentDashboardPermissions.isPaidStudent || (currentDashboardPermissions.isAdmin && !adminTutorMode)) {
+    // 2. If Admin in Global View (No unit context): Show ALL assignments.
+    if (currentDashboardPermissions.isAdmin && !filterUnitId) {
+        return assignments;
+    }
+
+    // 3. If Student: Only see their own.
+    if (myRole === 'student' || currentDashboardPermissions.isPaidStudent) {
         return assignments.filter(isOwnAssignment);
     }
 
