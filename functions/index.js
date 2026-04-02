@@ -1901,6 +1901,12 @@ exports.getDashboardData = onCall(async (request) => {
 
                             const guideContent = extractHiddenSectionContent(html, 'tutor-guide');
                             const assignContent = extractHiddenSectionContent(html, 'assignment-guide');
+                            const attachContent = extractHiddenSectionContent(html, 'attachment-guide');
+
+                            if (attachContent) {
+                                if (!aggregatedGuides.attachment) aggregatedGuides.attachment = {};
+                                aggregatedGuides.attachment[file] = attachContent;
+                            }
 
                             if (guideContent) {
                                 if (!aggregatedGuides.tutor) aggregatedGuides.tutor = {};
@@ -1927,6 +1933,9 @@ exports.getDashboardData = onCall(async (request) => {
                             }
                             if (aggregatedGuides.assignment) {
                                 courseConfigs[cid].assignmentGuide = Object.assign({}, courseConfigs[cid].assignmentGuide || {}, aggregatedGuides.assignment);
+                            }
+                            if (aggregatedGuides.attachment) {
+                                courseConfigs[cid].attachmentGuide = Object.assign({}, courseConfigs[cid].attachmentGuide || {}, aggregatedGuides.attachment);
                             }
                         }
                     }
