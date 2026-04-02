@@ -281,9 +281,9 @@ function showAccessDenied(errorType = "") {
 }
 
 function updateCurrentDashboardPermissions({ isAdmin = false, isQualifiedTutor = false, isPaidStudent = false } = {}) {
-    // [V12.4.2] SIMULATION RULE: If adminTutorMode is OFF, Admin is treated like a Student.
-    // They only see assignments if they are also a qualified tutor or a paid/active student.
-    const canView = adminTutorMode ? (isAdmin || isQualifiedTutor || isPaidStudent) : (isQualifiedTutor || isPaidStudent);
+    const { filterUnitId } = getCurrentDashboardContext();
+    const isGlobalAdmin = !filterUnitId && isAdmin;
+    const canView = isGlobalAdmin || (adminTutorMode ? (isAdmin || isQualifiedTutor || isPaidStudent) : (isQualifiedTutor || isPaidStudent));
     
     currentDashboardPermissions = {
         isAdmin,
