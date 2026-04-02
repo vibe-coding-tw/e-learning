@@ -2000,8 +2000,10 @@ exports.getDashboardData = onCall(async (request) => {
 
 
         // Determine if this user has any management access (Global Admin/Tutor or Course-Specific Tutor)
-        // [V13.0.4] Simulation Rule: isManagementView depends on Tutor Mode for admins
-        const isManagementView = (requesterRole === 'admin' && data.tutorMode !== false) || authorizedCourseIds.length > 0;
+        // [V13.6] Rule Enforcement: isManagementView for Admin is IMMUNE to Tutor Mode.
+        // This ensures the Overview (Global stats) always shows the full database count.
+        const isAdminGlobal = (requesterRole === 'admin');
+        const isManagementView = isAdminGlobal || authorizedCourseIds.length > 0;
 
         let result = {
             role: requesterRole,
