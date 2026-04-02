@@ -731,10 +731,10 @@ function renderAdminDashboard(data, filterUnitId = null) {
     if (stats.hours) stats.hours.textContent = summaryHours.toFixed(1);
 
 
-    // [RESTORED] Overview tab visibility. Always show for admin/student per rules.md.
+    // [V12.1.5] SECURITY & UX RULE: Overview is only for GLOBAL view (no unitId).
     const overviewTabBtn = document.getElementById('tab-btn-overview');
     const overviewTabContent = document.getElementById('view-overview');
-    const shouldShowOverview = true; // Per latest rule: Overview is always an entry point.
+    const shouldShowOverview = !filterUnitId;
 
     if (overviewTabBtn) overviewTabBtn.classList.toggle('hidden', !shouldShowOverview);
     if (overviewTabContent) overviewTabContent.classList.toggle('hidden', !shouldShowOverview);
