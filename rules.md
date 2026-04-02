@@ -26,38 +26,37 @@
 
 ### 2-A. 全域角色 (Global Roles)
 1. **管理員 (Admin)**: 系統最高權限，可檢閱所有數據。
-    - **導師模式 (Tutor Mode)**: 開啟時獲全站權限；關閉時則隱藏本身狀態，改以純管理員或學員視角操作。
-    - **全站監控規則**: 若網址不帶 `unitId` 或 `courseId` (全站數據)，**僅限管理員 (Admin) 存取**。一般學員必須明確指定單元方可讀取數據。
+    - **導師模式 (Tutor Mode: ON)**: 擁有 God Mode，可存取所有單元、指派作業、修改 GitHub classroom 連結。
+    - **學員視角模擬 (Tutor Mode: OFF)**: **管理員身分不具備特權 (No Override)**。其行為與權限模擬一般學員：非合格導師且未付費（或已過期）者，嚴禁存取收費單元之作業連結與設定內容。
 2. **一般使用者 (Standard User)**: `role` 欄位為空或為 `student`。存取權限僅依據購買狀態與單元合格授權。
 
-### 2-B. 單元授權狀態 (Unit Status)
-- **合格導師 (Qualified Status)**: 紀錄於 `users` -> `tutorConfigs` 映射內。
-- **權限範圍**: 僅限於獲得授權的單元，可查看該單元作業、教師指引、推薦碼分潤與 GitHub Classroom 設定。
+### 2-B. 支付與過期檢核 (Paywall & Expiry)
+- **付費判定**: 系統必須即時比對 `orderRecords` 中的 `expiryDate`。
+- **規則**: **已過期 (Expired)** 或 **新用戶 (Free)** 嚴禁造訪付費單元 (Paid Units) 的任何作業 (Assignments) 指引與設定 (Settings)。
 
 ---
 
-### 3-A. Dashboard 分頁規劃 (Tab Planning)
-> [!IMPORTANT]
-> **全局視角存取權限**: 若網址不帶 `unitId` (全站數據)，**僅限管理員 (Admin) 存取**。
+## 3. Dashboard 分頁規劃 (V13.0)
 
-| 分頁 (Tab) | 1. 管理員 (Tutor Mode: OFF) | 2. 管理員 (Tutor Mode: ON) | 3. 一般學員 (Student) |
+### 3-A. 分頁職能矩陣 (Functional Matrix)
+
+| 分頁 (Tab) | 單元視角 (Unit Context) | 全局視角 (Global View) | 存取對象 (Access) |
 | :--- | :--- | :--- | :--- |
-| **概覽 (Overview)** | ✅ 顯示 (全站概覽) | ✅ 顯示 (營運概覽) | ✅ 顯示 (個人學習進度) |
-| **學生狀態 (Assignments)** | ✅ 顯示 (已繳費學員清單) | ❌ 隱藏 (改至 Assignments) | ❌ 隱藏 |
-| **作業 (Assignments)** | ❌ 隱藏 (改至 Students) | ✅ 顯示 (待批改作業列表) | ✅ 顯示 (我的作業) |
-| **課程設定 (Settings)** | ❌ 隱藏 | ✅ 顯示 (Classroom/導師指引) | ❌ 隱藏 |
-| **分潤 (Earnings)** | ❌ 隱藏 (改至 Admin 面板) | ✅ 顯示 (個人推薦碼分潤) | ❌ 隱藏 |
+| **概覽 (Overview)** | ❌ 隱藏 (Hide) | ✅ 顯示 (營運概覽) | Admin Only (Global) |
+| **作業 (Assignments)** | ✅ 顯示 (繳交清單) | ✅ 顯示 (全站 Feed) | Admin / Qualified Tutor / Paid Student |
+| **課程設定 (Settings)** | ✅ 顯示 (教材/設定) | ❌ 隱藏 | Admin (Tutor ON) / Qualified Tutor |
 
 ### 3-B. 導航行為準則
-- **Context Based**: 若網址不帶 `unitId` (全局視角)，優先顯示 **Overview (概覽)**；若帶有 `unitId`，則優先顯示現有作業或設定。
-- **命名準則**: 「課程設定」分頁一律顯示為 **課程設定 (Settings)**。
+- **進入單元 (Has UnitId)**: 優先導向 **Assignments** 指標。為了視覺專注，**Overview 標籤必須隱藏**。
+- **全站視野 (No UnitId)**: 導向 **Overview**。這是管理員的全站儀表板入口。
+- **鎖定邏輯**: 非付費/過期用戶在「學員視角」下，即便強行造訪 Assignments/Settings，系統應呈現「🔒 鎖定狀態」或「請先續費」字樣。
 
 ---
 
 ## 4. 資料庫維護準則 (Maintenance)
 1. **禁止手動更改 Role**: 禁止將使用者 `role` 改為 `tutor`（導師是 Status 而非 Role）。
-2. **單元 ID 更新**: 處理包含點號（如 `.html`）的 ID 時，必須使用 `admin.firestore.FieldPath` 更新 `tutorConfigs`。
-3. **單一事實來源**: 所有設定資料必須透過 `users` 集合中的 `tutorConfigs` 字段存儲，`course_configs` 集合已廢棄。
+2. **單一事實來源**: 所有設定資料必須透過 `users` 集合中的 `tutorConfigs` 字段存儲，`course_configs` 集合已廢棄。
+3. **過期檢核**: 後端 `checkPaymentAuthorization` 必須包含 `expiryDate.toMillis() > now.toMillis()` 的判定邏輯。
 
 ---
-*最後更新日期: 2026-04-02*
+*最後更新日期: 2026-04-02 (V13.0)*

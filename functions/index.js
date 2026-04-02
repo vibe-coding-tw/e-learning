@@ -637,7 +637,37 @@ exports.getLessonsMetadata = onCall(async (request) => {
 });
 
 
-exports.checkPaymentAuthorization = onRequest(async (req, res) => {
+// [V12.4.7] ONCALL WRAPPER: For frontend's httpsCallable('checkPaymentAuthorization')
+exports.checkPaymentAuthorization = onCall(async (request) => {
+    const { data, auth } = request;
+    if (!auth) return { authorized: false };
+
+    try {
+        const result = await getDashboardData(auth.uid); // Reuse the central logic
+        const dashboardData = result;
+        
+        // [V12.4.8] ABSOLUTE EXPIRY CHECK
+        const userDoc = await admin.firestore().collection('users').doc(auth.uid).get();
+        const userData = userDoc.data() || {};
+        const isPaidStatus = userData.accountStatus === 'paid';
+        const orders = userData.orderRecords || [];
+        
+        const now = admin.firestore.Timestamp.now();
+        const hasValidOrder = orders.some(order => {
+            const exp = order.expiryDate;
+            if (!exp) return true; // Legacy with no expiry = persistent
+            return exp.toMillis() > now.toMillis();
+        });
+
+        const isAuthorized = isPaidStatus && hasValidOrder;
+        return { authorized: isAuthorized };
+    } catch (e) {
+        console.error("Auth check failed:", e);
+        return { authorized: false };
+    }
+});
+
+exports.checkPaymentAuthorization_Legacy = onRequest(async (req, res) => {
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');

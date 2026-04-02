@@ -279,11 +279,15 @@ function showAccessDenied(errorType = "") {
 }
 
 function updateCurrentDashboardPermissions({ isAdmin = false, isQualifiedTutor = false, isPaidStudent = false } = {}) {
+    // [V12.4.2] SIMULATION RULE: If adminTutorMode is OFF, Admin is treated like a Student.
+    // They only see assignments if they are also a qualified tutor or a paid/active student.
+    const canView = adminTutorMode ? (isAdmin || isQualifiedTutor || isPaidStudent) : (isQualifiedTutor || isPaidStudent);
+    
     currentDashboardPermissions = {
         isAdmin,
         isQualifiedTutor,
         isPaidStudent,
-        canViewAssignments: isQualifiedTutor || isPaidStudent || isAdmin
+        canViewAssignments: canView
     };
 }
 
@@ -2082,33 +2086,21 @@ function setupSettingsFeature() {
  */
 function isUserAuthorizedForUnit(fileName, courseId, email) {
     if (!email) return false;
+    const { isAdmin, isPaidStudent } = currentDashboardPermissions;
 
-    // [MODIFIED] Admin Check: Admin Override is now controlled by 'Tutor Mode'
-    // BUT! Admin must also be qualified for the specific unit to see tutor-only features.
-    if (myRole === 'admin') {
-        if (!adminTutorMode) return false;
-        // If ON, proceed to actual qualification check below
-    }
+    // RULE 1: Admin in Tutor Mode = God Mode.
+    if (isAdmin && adminTutorMode) return true;
 
-    const courseConfig = dashboardData?.courseConfigs?.[courseId] || {};
-    const unitConfigs = courseConfig.githubClassroomUrls || {};
+    // RULE 2: If Simulation Mode or Standard User, we check Qualification/Payment.
+    const isQual = hasQualifiedTutorAccessForUnit(fileName, courseId, email);
 
-    const candidateIds = getEquivalentUnitIds(fileName);
-    const targetDocId = candidateIds
-        .map(id => dashboardData?.unitToDocId?.[id] || id)
-        .find(id => dashboardData?.courseConfigs?.[id]) || fileName;
+    // [V12.4.6] FREE UNIT EXEMPTION: Intro/Prepare titles are always open.
+    const isFreeUnit = (fileName || "").toLowerCase().includes('intro') || (fileName || "").toLowerCase().includes('prepare');
+    
+    if (isFreeUnit) return true;
 
-    // 1. Check unit-specific document for authorizedTutors array
-    const unitDocConfig = dashboardData?.courseConfigs?.[targetDocId] || {};
-    const unitTutorsArr = Array.isArray(unitDocConfig.authorizedTutors) ? unitDocConfig.authorizedTutors : [];
-
-    // 2. Legacy/Fallback: Tutors specifically authorized for THIS unit in course-level doc
-    const legacyTutors = candidateIds.flatMap(id =>
-        (unitConfigs[id] && typeof unitConfigs[id] === 'object') ? Object.keys(unitConfigs[id]) : []
-    ).map(normalizeTutorIdentifier).filter(Boolean);
-
-    const allAuthorized = new Set([...unitTutorsArr, ...legacyTutors]);
-    return allAuthorized.has(email);
+    // RULE 3: For Paid Units, must be Qualified OR Paid (non-expired).
+    return isQual || isPaidStudent;
 }
 
 async function renderSettingsTab(filterUnitId = null) {
