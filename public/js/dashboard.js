@@ -1164,7 +1164,32 @@ function renderAssignments(assignments = [], guideContent = "") {
 
     // Existing Student/Tutor-specific logic
     // [V12.2.0] RESTORED: Assignments tab always shows the list for Admin.
-    // (Previous Paid Student Status logic archived)
+    // [RESTORED] Tutor Benchmarks for grading reference
+    if (guideContent) {
+        const guideDiv = document.createElement('div');
+        guideDiv.className = 'integrated-tutor-guide mt-8 p-6 bg-blue-50 border border-blue-100 rounded-2xl';
+        guideDiv.innerHTML = `
+            <div class="text-[10px] text-blue-500 font-bold uppercase mb-2 tracking-widest flex items-center gap-2">
+                <span class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
+                導師批改指南 / Tutor Benchmarks
+            </div>
+            <div class="text-sm text-blue-900 leading-relaxed font-medium">
+                ${guideContent}
+            </div>
+        `;
+        const possibleContainers = [
+            document.getElementById('view-assignments'),
+            document.getElementById('assignments-container')
+        ];
+        possibleContainers.forEach(container => {
+            if (container) {
+                // Ensure no duplicates
+                const existing = container.querySelector('.integrated-tutor-guide');
+                if (existing) existing.remove();
+                container.appendChild(guideDiv.cloneNode(true));
+            }
+        });
+    }
 
     const thAction = document.getElementById('assignment-th-action');
     if (thAction) thAction.classList.toggle('hidden', !canManageAssignments);
