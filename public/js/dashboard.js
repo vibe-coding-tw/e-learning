@@ -703,14 +703,17 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
     // [RESTORE] If Admin and Tutor Mode is ON, they see these tabs (GOD MODE)
     // If Tutor, they see these if they have qualified access for CURRENT view
+    // [V13.0.12] Revised God Mode and Unit Context rules based on rules.md
+    // Settings & Earnings are only accessible within a specific UNIT context
     let showQualifiedTutorTabs = false;
     const isAuthorized = !!filterUnitId && hasQualifiedTutorAccessForUnit(filterUnitId, filterCourseId, currentUserEmail);
     
-    // [V13.0.11] God Mode rule enforcement for tabs
-    if (myRole === 'admin') {
-        showQualifiedTutorTabs = adminTutorMode || isAuthorized;
-    } else {
-        showQualifiedTutorTabs = isAuthorized;
+    if (!!filterUnitId) { 
+        if (myRole === 'admin') {
+            showQualifiedTutorTabs = adminTutorMode || isAuthorized;
+        } else {
+            showQualifiedTutorTabs = isAuthorized;
+        }
     }
 
     // [MODIFIED] Centralized Permission State for Tabs and Sub-sections
@@ -744,10 +747,17 @@ function renderAdminDashboard(data, filterUnitId = null) {
     // [V12.1.5] SECURITY & UX RULE: Overview is only for GLOBAL view (no unitId).
     const overviewTabBtn = document.getElementById('tab-btn-overview');
     const overviewTabContent = document.getElementById('view-overview');
-    const shouldShowOverview = !filterUnitId;
+    const shouldShowOverview = !filterUnitId && myRole === 'admin';
 
     if (overviewTabBtn) overviewTabBtn.classList.toggle('hidden', !shouldShowOverview);
     if (overviewTabContent) overviewTabContent.classList.toggle('hidden', !shouldShowOverview);
+
+    // Default redirect if current view is hidden (e.g. Tutors in Global View)
+    if (requestedTab === 'overview' && !shouldShowOverview) {
+        console.log("[Dashboard] Redirecting from restricted Overview to Assignments.");
+        switchTab('assignments');
+        return;
+    }
 
     // [NEW] Unit Context Header
     if (filterUnitId || filterCourseId) {
