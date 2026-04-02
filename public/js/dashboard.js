@@ -2562,10 +2562,8 @@ window.handleDecideApplication = async function (applicationId, status) {
 
 };
 
-/**
- * [V12.1.0] NEW: Render a refined Student Status view for Admins (Tutor Mode: OFF)
- */
-function renderPaidStudentsStatus(students = []) {
+// [DEPRECATED] renderPaidStudentsStatus was removed.
+function renderPaidStudentsStatus_OLD(students = []) {
     const container = document.getElementById('view-assignments');
     if (!container) return;
 
