@@ -683,10 +683,6 @@ function renderAdminDashboard(data, filterUnitId = null) {
         assignmentsTabBtn.textContent = '作業 (Assignments)';
     }
 
-    if (earningsTabBtn) {
-        // [MODIFIED] Hide standalone earnings tab (now integrated in Settings)
-        earningsTabBtn.classList.add('hidden');
-    }
 
     // 1. Admin Tab (Always Admin-only, always visible if myRole is admin)
     if (adminTabBtn) {
@@ -1182,7 +1178,7 @@ function renderAssignments(assignments = [], guideContent = "") {
         renderAssignmentsTable(assignments, canManageAssignments);
     }
 
-    // [NEW] Append Assignment Guide below the table (Integrated into both Standalone and Settings Views)
+    // [NEW] Assignment Guide rendering removed as per user request
     const possibleContainers = [
         document.getElementById('view-assignments'),
         document.getElementById('assignments-container')
@@ -1192,13 +1188,7 @@ function renderAssignments(assignments = [], guideContent = "") {
         if (!container) return;
         const oldGuide = container.querySelector('.integrated-tutor-guide') || container.querySelector('.bg-blue-50');
         if (oldGuide) oldGuide.remove();
-
-        if (guideContent) {
-            const wrapper = document.createElement('div');
-            wrapper.className = "integrated-tutor-guide mt-8 p-4 md:p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner overflow-x-auto";
-            wrapper.innerHTML = `<div class="tutor-guide-content text-sm md:text-base text-blue-900/90 leading-relaxed prose prose-blue max-w-none">${guideContent}</div>`;
-            container.appendChild(wrapper);
-        }
+        // Guide appending logic removed
     });
 }
 
@@ -2209,7 +2199,6 @@ async function renderSettingsTab(filterUnitId = null) {
         }
 
         let totalAssignmentHTML = "";
-        let totalGuideHTML = "";
 
         authorizedLessons.forEach(course => {
             console.log("[Settings] Rendering Course:", course.courseId);
@@ -2257,35 +2246,7 @@ async function renderSettingsTab(filterUnitId = null) {
                 return renderAssignmentConfigRow(course.courseId, fileName, configs[fileName], course.title, isAuthorized);
             }).filter(h => !!h).join('');
 
-            const guideRows = finalUnits.map(fileName => {
-                const realUnitsOnly = units.filter(u => !u.includes('-master-'));
-                const unitIdx = realUnitsOnly.indexOf(fileName);
-                const unitNum = unitIdx !== -1 ? unitIdx + 1 : null;
-                const tutorSegment = guideData.segments[fileName] || (unitNum ? guideData.segments[unitNum] : "") || "";
-                const attachmentSegment = attachSegments[fileName] || (unitNum ? attachSegments[unitNum] : "") || "";
-
-                if (!tutorSegment && !attachmentSegment) return "";
-                const isAuthorized = isUserAuthorizedForUnit(fileName, course.courseId, userEmail);
-                
-                // [NEW] Prepend Attachment Segment if exists
-                let combinedSegment = "";
-                if (attachmentSegment) {
-                    combinedSegment += `
-                        <div class="mb-4 p-4 bg-orange-50 border border-orange-100 rounded-2xl">
-                             <div class="text-[10px] text-orange-500 font-bold uppercase mb-2 tracking-widest flex items-center gap-2">
-                                <span class="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
-                                附件資料 / Attachments
-                             </div>
-                             <div class="text-sm text-orange-900 leading-relaxed font-medium">
-                                ${attachmentSegment}
-                             </div>
-                        </div>
-                    `;
-                }
-                combinedSegment += tutorSegment;
-
-                return renderGuideRow(course.courseId, fileName, combinedSegment, course.title, isAuthorized);
-            }).filter(h => !!h).join('');
+            // Guide row rendering removed
 
             if (assignmentRows) {
                 totalAssignmentHTML += `
@@ -2294,17 +2255,13 @@ async function renderSettingsTab(filterUnitId = null) {
                     </div>`;
             }
 
-            if (guideRows) {
-                // [NEW] Before the guide, we render the Qualified Tutor List & their Assignments
-                const tutorTableHTML = renderTutorStatusTable(course.courseId, finalUnits[0], dashboardData.assignments, dashboardData.tutors);
-                totalGuideHTML += tutorTableHTML + `<div class="w-full space-y-6">${guideRows}</div>`;
-            }
+            // Teaching Team table and Guide rendering removed
         });
 
         console.log("[Settings] Final check items. Any HTML?", !!totalAssignmentHTML);
 
         assignmentContainer.innerHTML = totalAssignmentHTML || `<div class="text-center py-20 text-gray-400">尚無作業連結設定需求。</div>`;
-        guideContainer.innerHTML = totalGuideHTML || `<div class="text-center py-20 text-gray-400">尚無相關教學指引。</div>`;
+        if (guideContainer) guideContainer.classList.add('hidden');
 
     } catch (e) {
         console.error("[Settings] Critical Render Failure:", e);
@@ -2437,71 +2394,6 @@ function robustExtractGuideSegments(tutorInput, assignmentInput = null) {
 /**
  * [V12.3.5] NEW: Renders a list of qualified tutors for a unit and their assignment count
  */
-function renderTutorStatusTable(courseId, fileName, allAssignments = [], allTutors = []) {
-    // Only show for unit-specific view
-    if (!fileName) return "";
-
-    const qualifiedTutors = allTutors.filter(t => isUserAuthorizedForUnit(fileName, courseId, t.email));
-    if (qualifiedTutors.length === 0) return "";
-
-    return `
-        <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm mb-6 w-full">
-            <div class="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
-                <div>
-                    <h3 class="text-base font-black text-gray-800 tracking-tight">合格教師狀態 (Teaching Team)</h3>
-                    <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">目前共有 ${qualifiedTutors.length} 位導師獲准管理此單元</p>
-                </div>
-            </div>
-            
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-gray-50/50 text-[10px] font-bold text-blue-500/80 uppercase tracking-widest">
-                        <tr>
-                            <th class="py-4 px-8">導師資訊 / Tutor</th>
-                            <th class="py-4 px-8">負責學生作業 / Assignments</th>
-                            <th class="py-4 px-8 text-right">管理動作 / Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-50 text-sm">
-                        ${qualifiedTutors.map(t => {
-                            // Find assignments assigned to THIS tutor for THIS unit
-                            const myAssigned = allAssignments.filter(a => a.assignedTutorEmail === t.email && unitIdsMatch(a.unitId, fileName));
-                            
-                            return `
-                            <tr class="hover:bg-blue-50/30 transition-all">
-                                <td class="py-5 px-8">
-                                    <div class="font-bold text-gray-800">${escapeHtml(t.name || t.email)}</div>
-                                    <div class="text-[10px] text-gray-400 font-mono italic">${escapeHtml(t.email)}</div>
-                                </td>
-                                <td class="py-5 px-8">
-                                    <div class="flex items-center gap-3">
-                                        <span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-black border border-blue-100">
-                                            ${myAssigned.length} 名學生
-                                        </span>
-                                        <div class="flex -space-x-2">
-                                            ${myAssigned.slice(0, 5).map(a => `
-                                                <div class="w-6 h-6 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[8px] font-black text-gray-300 shadow-sm" title="${a.studentEmail}">
-                                                    ${a.studentEmail.charAt(0).toUpperCase()}
-                                                </div>
-                                            `).join('')}
-                                            ${myAssigned.length > 5 ? `<div class="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-[8px] font-bold text-gray-400 border border-gray-100">+${myAssigned.length - 5}</div>` : ''}
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="py-5 px-8 text-right">
-                                    <button onclick="switchTab('assignments')" class="px-4 py-1.5 bg-white border border-gray-200 text-gray-500 hover:text-blue-600 hover:border-blue-200 rounded-xl text-[10px] font-bold transition-all shadow-sm">
-                                        查閱清單 📋
-                                    </button>
-                                </td>
-                            </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    `;
-}
 
 
 window.saveAllSettings = async function (clickedBtn = null) {
