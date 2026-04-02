@@ -2046,50 +2046,49 @@ exports.getDashboardData = onCall(async (request) => {
             // Admins see all users. Tutors/Course-Tutors see students.
             let usersSnapshot = await db.collection('users').get();
             
-            // [NEW] Maintenance Sync: For admins, ensure EVERY Auth user has a Firestore document.
-            // [V13.0.5] Simulation Rule: Maintenance only in God Mode
-            if (requesterRole === 'admin' && data.tutorMode !== false) {
+            // [V13.0.15] Maintenance Sync: For admins, ensure EVERY Auth user has a Firestore document.
+            // Rule Enforcement: Overview & Data Sync should NOT be affected by Tutor Mode for Admins.
+            if (requesterRole === 'admin') {
                 try {
                     const listUsersResult = await admin.auth().listUsers(1000);
                     const authUsers = listUsersResult.users;
-                    
                     const existingUids = usersSnapshot.docs.map(doc => doc.id);
                     const batch = db.batch();
                     let syncCount = 0;
                     
                     for (const au of authUsers) {
                         const userRef = db.collection('users').doc(au.uid);
-                        const role = userData.role || 'student'; // Rely on existing Firestore role if available
+                        // Find existing role from snapshot if exists
+                        const existingDoc = usersSnapshot.docs.find(d => d.id === au.uid);
+                        const role = existingDoc?.data()?.role || 'student';
 
-                        // [MODIFIED] Always upsert basic info (preserve createdAt)
                         batch.set(userRef, {
                             email: au.email || "",
                             name: au.displayName || (au.email ? au.email.split('@')[0] : "New User"),
                             role: role,
-                            // Handle potential missing field in existing Firestore docs
                             createdAt: au.metadata.creationTime ? new Date(au.metadata.creationTime) : admin.firestore.FieldValue.serverTimestamp(),
                             updatedAt: admin.firestore.FieldValue.serverTimestamp()
                         }, { merge: true });
                         syncCount++;
                     }
                     if (syncCount > 0) {
-                        console.log(`[getDashboardData] Syncing ${syncCount} missing Auth users...`);
+                        console.log(`[getDashboardData] Admin Global Sync: ${syncCount} users processed.`);
                         await batch.commit();
-                        // Refresh snapshot
                         usersSnapshot = await db.collection('users').get();
                     }
                 } catch (syncErr) {
-                    console.error("[getDashboardData] Auto-sync failed:", syncErr);
+                    console.error("[getDashboardData] Internal User Sync failed:", syncErr);
                 }
             }
 
             usersSnapshot.forEach(doc => {
-                const userData = doc.data();
-                const role = userData.role || 'student';
-                // [V13.0.6] Simulation Rule: Admin visibility restricted in simulated mode
-                const isAdminPrivileged = requesterRole === 'admin' && data.tutorMode !== false;
-                if (isAdminPrivileged || role === 'student') {
-                    usersMap[doc.id] = { ...userData, role: role, _id: doc.id };
+                const uData = doc.data();
+                const role = uData.role || 'student';
+                // [V13.0.16] Visibility Rule: Admin Global View (No Context) ALWAYS shows all users.
+                // tutorMode only filters content (not people) in Global View for Admin.
+                const isAdmin = requesterRole === 'admin';
+                if (isAdmin || role === 'student') {
+                    usersMap[doc.id] = { ...uData, role: role, _id: doc.id };
                 }
             });
         } else {
@@ -2281,18 +2280,20 @@ exports.getDashboardData = onCall(async (request) => {
         // 4. Tutor Global (Tutor Mode): Only students assigned to THEM.
         
         const filteredStudentStats = [];
-        const isGodMode = requesterRole === 'admin' && data.tutorMode !== false;
+        const isAdmin = requesterRole === 'admin';
+        const isGodMode = isAdmin && data.tutorMode !== false;
         const targetUnitId = data.unitId ? resolveCanonicalUnitId(data.unitId, lessons) : null;
         const targetCourseId = data.courseId || null;
 
         Object.values(studentStats).forEach(s => {
-            // [A] Master Bypass for Global Admin
-            if (isGodMode && !targetUnitId && !targetCourseId) {
+            // [A] Master Bypass for Admin in Global View (Overview)
+            // Rule: Overview should not be affected by Tutor Mode simulation.
+            if (isAdmin && !targetUnitId && !targetCourseId) {
                 filteredStudentStats.push(s);
                 return;
             }
 
-            // [B] Authorization Check: Does this learner belong in the current view?
+            // [B] Authorization Check for Simulated or Standard Tutor
             let isRelevant = false;
             
             // 1. Assignment Check: Is the student assigned to THIS tutor for THIS unit?
