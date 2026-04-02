@@ -1,28 +1,60 @@
-# Vibe Coding: 零元帳單部署與開發規範 (GCP Zero-Cost Rules)
+# Vibe Coding: 核心開發規則與營運規範 (Project Rules)
 
-本專案致力於維持在 **Google Cloud Platform (GCP) 永久免費層級 (Always Free Tier)** 之內，請所有開發與部署工作嚴格遵守以下準則：
+本文件定義 Vibe Coding 平台的營運成本規範、權限模型與開發準則。
 
-## 1. 存儲與鏡像管理 (Stop the Artifact Leak)
-所有 Artifact Registry 與 Cloud Storage 必須設定自動清理策略，避免歷史累積費用。
-- **規則 A**：超過 24 小時的 Docker 鏡像自動刪除。
-- **規則 B**：超過 24 小時的 Cloud Functions 部署來源檔與暫存檔自動過期。
-- **維護**：定期執行 `gcloud artifacts repositories list` 監控 `asia-east1` 的鏡像存儲量，確保低於 **0.5 GB**。
+---
 
-## 2. 算力資源配置 (Cloud Functions / Run)
-雖然有 200 萬次免費調用額度，但計算時長 (GB-秒) 有限。
-- **規則 C**：所有函數 `minInstances` 必須設為 **0** (預設)。
-- **規則 D**：非計算密集型函數（如權限判斷、簡單 CRUD）記憶體配置上限為 **128MB**。
-- **規則 E**：避免在函數內進行大規模循環或長時間連線等待，所有連線超時設定應低於 10 秒。
+## 1. 零元帳單營運規範 (GCP Zero-Cost Rules)
+致力於維持在 **Google Cloud Platform (GCP) 永久免費層級 (Always Free Tier)** 之內。
 
-## 3. AI 模型調度 (Gemini API Efficiency)
-為了最大化免費額度並維持高性能，採用「Flash 優先」策略。
-- **規則 F**：任務中優先使用 **`gemini-1.5-flash`**。
-- **規則 G**：僅在需要進行「超長文本推理」或「極高邏輯複雜度」的任務中才啟用 `gemini-1.5-pro`。
-- **緩存機制**：前端或中間層必須實作重複請求緩存，避免相同的輸入重複調用 API 消耗 Token。
+### 1-A. 存儲與鏡像管理 (Storage Cleanup)
+- **規則**: 超過 24 小時的 Docker 鏡像與部署暫存檔 (gcf-sources) 必須自動刪除。
+- **目標**: 確保 Artifact Registry 存儲量低於 **0.5 GB** 免費額度。
 
-## 4. 監控與預警 (Budget Safeguards)
-- **硬警報**：專案必須設定 **$1 預算警告**。一旦帳單產生任何變動（即便是 0.01 鎂），開發者應立即收到通知並檢查是否發生資源洩漏。
-- **地區鎖定**：核心服務鎖定在 `asia-east1` (台灣)，減少跨區域傳輸費。
+### 1-B. 算力與 AI 配置 (Compute & AI)
+- **規則**: 函數 `minInstances` 恆設為 **0**，記憶體上限為 **128MB**。
+- **AI 策略**: 採用「Flash 優先」策略，所有 AI 任務優先調用 **`gemini-1.5-flash`**。
+
+### 1-C. 監控與預警 (Monitoring)
+- **警報**: 帳單必須設定 **$1 預算警告**，防止任何資源洩漏。
+- **地區**: 核心服務鎖定於 `asia-east1` (台灣)，嚴格禁止跨區域部署。
+
+---
+
+## 2. 系統權限與角色規範 (Access Control)
+採用「最小權限原則」，區分「全域角色 (Roles)」與「單元狀態 (Status)」。
+
+### 2-A. 全域角色 (Global Roles)
+1. **管理員 (Admin)**: 系統最高權限，可檢閱所有數據。
+   - **導師模式 (Tutor Mode)**: 開啟時獲全站權限；**關閉時則隱藏本身狀態，改以純管理員或學生視角操作**。
+2. **一般使用者 (Standard User)**: `role` 欄位為空或為 `student`。存取權限僅依據購買狀態與單元合格授權。
+
+### 2-B. 單元授權狀態 (Unit Status)
+- **合格導師 (Qualified Status)**: 紀錄於 `users` -> `tutorConfigs` 映射內。
+- **權限範圍**: 僅限於獲得授權的單元，可查看該單元作業、教師指引、推薦碼分潤與 GitHub Classroom 設定。
+
+---
+
+## 3. 介面與資料過濾邏輯 (UI & Data Rules)
+
+### 3-A. Dashboard 渲染邏輯
+| 介面 / 功能 | 1. 管理員 (Tutor Mode: ON) | 2. 管理員 (Tutor Mode: OFF) | 3. 合格導師 (非管理員) |
+| :--- | :--- | :--- | :--- |
+| **作業 (Assignments)** | ✅ 僅見指派給自己的學生 | ✅ 僅見自己的作業 (無操作) | ✅ 僅見指派給自己的學生 |
+| **GitHub Classroom** | ✅ 僅限已授權單元 | ❌ 隱藏 | ✅ 僅限已授權單元 |
+| **分潤 (Earnings)** | ✅ 僅限已授權單元 | ❌ 隱藏 | ✅ 僅限已授權單元 |
+| **管理台 (Admin)** | ✅ 恆見 | ✅ 恆見 | ❌ 隱藏 |
+
+### 3-B. 作業列表過濾 (Data Filtering)
+- **導師權限**: 僅能見到 `assignedTutorEmail` 與目前登入 Email 匹配的作業。
+- **學生權限**: 僅能見到與目前 UID 或 Email 匹配的作業。
+
+---
+
+## 4. 資料庫維護準則 (Maintenance)
+1. **禁止手動更改 Role**: 禁止將使用者 `role` 改為 `tutor`（導師是 Status 而非 Role）。
+2. **單元 ID 更新**: 處理包含點號（如 `.html`）的 ID 時，必須使用 `admin.firestore.FieldPath` 更新 `tutorConfigs`。
+3. **名稱一致性**: 「課程設定」分頁一律統一稱為 **GitHub Classroom**。
 
 ---
 *最後更新日期: 2026-04-02*
