@@ -547,11 +547,32 @@ async function upsertStudentUnitAssignment(db, studentUid, unitId, tutorEmail, a
 }
 
 async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons = [], tutorMode = false) {
+    // 1. Fetch User Data and Security Role
+    const userDoc = await db.collection('users').doc(uid).get();
+    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    const isAdminRole = userData.role === 'admin';
+    const assignedTutorEmail = userData.unitAssignments?.[resolveCanonicalUnitId(unitId, lessons)] || null;
+
+    // [V13.0.22] Master Bypass (Tutor Mode Simulation)
+    // If an authorized admin toggles simulation ON, grant immediate access to everything.
+    if (tutorMode && isAdminRole) {
+        console.log(`[resolveAccess] SUCCESS: Admin Simulation Bypass for ${uid}`);
+        return { 
+            authorized: true, 
+            simulated: true, 
+            canonicalUnitId: resolveCanonicalUnitId(unitId, lessons),
+            effectiveCourseId: courseId,
+            assignedTutorEmail: assignedTutorEmail
+        };
+    }
+
+    // 2. Resolve Canonical Context
     const canonicalUnitId = resolveCanonicalUnitId(unitId, lessons);
     const course = findCourseByPageOrUnit(courseId, canonicalUnitId, lessons) || findCourseByPageOrUnit(courseId, unitId, lessons);
     const effectiveCourseId = course ? course.courseId : (courseId || findParentCourseIdByUnit(canonicalUnitId, lessons));
 
     if (!effectiveCourseId || !canonicalUnitId) {
+        console.warn(`[resolveAccess] FAIL: Missing context for UID:${uid} Page:${courseId} Unit:${unitId}`);
         return { authorized: false, reason: 'missing-context', canonicalUnitId, effectiveCourseId };
     }
 
@@ -562,57 +583,20 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
     const isFreeCourse = !!(course && parseInt(lessonPrice) === 0);
     const isTrialCourse = !!(course && course.category === 'started' && ((now - new Date(userRecord.metadata.creationTime).getTime()) < THIRTY_DAYS_MS));
 
-    const userDoc = await db.collection('users').doc(uid).get();
-    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
-    const assignedTutorEmail = userData.unitAssignments?.[canonicalUnitId] || null;
-
-    const isAdminEmail = [
-        'rover.k.chen@gmail.com',
-        'roverchen@gmail.com'
-    ].includes(userRecord.email);
-    const isAdminRole = userData.role === 'admin' || isAdminEmail;
-    console.log(`[resolveAccess] UID:${uid} TutorMode:${tutorMode} IsAdmin:${isAdminRole} RoleDoc:${userData.role}`);
-
-    // [MOD v12.0.7] Master Bypass (Tutor Mode)
-    if (tutorMode && isAdminRole) {
-        console.log(`[resolveAccess] Master Bypass triggered for ${uid}`);
-        return {
-            authorized: true,
-            canonicalUnitId,
-            effectiveCourseId,
-            assignedTutorEmail,
-            requiresTutorAssignment: false,
-            course
-        };
-    }
-
-    // [MOD v12.0.6] Status-based Authorization: Qualified Tutors are always authorized for their specific units
+    // 3. Authorization Rules
+    // Status-based Authorization: Qualified Tutors for their units
     const isQualifiedTutorForThisUnit = !!(userData.tutorConfigs && userData.tutorConfigs[canonicalUnitId] && userData.tutorConfigs[canonicalUnitId].authorized);
     if (isQualifiedTutorForThisUnit) {
-        return {
-            authorized: true,
-            canonicalUnitId,
-            effectiveCourseId,
-            assignedTutorEmail,
-            requiresTutorAssignment: false,
-            course
-        };
+        return { authorized: true, canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
     }
 
-    // [V13.0.15] Case 1: FREE COURSE (NT$ 0) -> ALWAYS AUTHORIZED
-    // Handle both string and number types
-    const isFree = !!(course && parseInt(lessonPrice) === 0);
-    const isTrial = isTrialCourse; // Already calculated
-    
-    if (isFree || isTrial) {
-        return {
-            authorized: true,
-            canonicalUnitId,
-            effectiveCourseId,
-            assignedTutorEmail,
-            requiresTutorAssignment: false,
-            course
-        };
+    // FREE COURSE (NT$ 0)
+    if (isFreeCourse) {
+        return { authorized: true, canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
+    }
+    // Trial Course (Started category, within 30 days)
+    if (isTrialCourse) {
+        return { authorized: true, canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
     }
 
     const ordersSnapshot = await db.collection('orders')
@@ -1926,7 +1910,7 @@ exports.getDashboardData = onCall(async (request) => {
         const allFiles = fs.existsSync(privateCoursesDir) ? fs.readdirSync(privateCoursesDir) : [];
         console.log(`[getDashboardData] Total files found: ${allFiles.length}. First 5: ${JSON.stringify(allFiles.slice(0, 5))}`);
 
-        // [MODIFIED] If admin or global tutor, ensure ALL courses from lessons.json are considered for guide aggregation
+        // [MODIFIED] If admin or global tutor, ensure ALL courses from Firestore metadata are considered for guide aggregation
         // [V13.0.3] Simulation Rule: Admin God Mode check for global aggregation
         if (requesterRole === 'admin' && data.tutorMode !== false) {
             lessons.forEach(l => {
@@ -2081,8 +2065,7 @@ exports.getDashboardData = onCall(async (request) => {
                     
                     for (const au of authUsers) {
                         const userRef = db.collection('users').doc(au.uid);
-                        const admins = ['rover.k.chen@gmail.com', 'roverchen@gmail.com'];
-                        const role = admins.includes(au.email) ? 'admin' : 'student';
+                        const role = userData.role || 'student'; // Rely on existing Firestore role if available
 
                         // [MODIFIED] Always upsert basic info (preserve createdAt)
                         batch.set(userRef, {
@@ -2584,7 +2567,7 @@ exports.onUserCreated = functionsV1.region(REGION).auth.user().onCreate(async (u
             await userRef.set({
                 email: email || "",
                 name: displayName || "",
-                role: 'student',
+                role: 'student', // Admin roles must be set manually in Firestore or via Dashboard sync
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
