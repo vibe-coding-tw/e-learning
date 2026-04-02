@@ -51,7 +51,7 @@ const stats = {
     hours: document.getElementById('stat-hours'),
 };
 
-const assignmentTableBody = document.getElementById('assignment-table-body');
+// Removed singular assignmentTableBody in favor of plural class-based updates.
 
 // Admin UI
 //const adminPanel = document.getElementById('admin-panel');
@@ -679,7 +679,11 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
     if (assignmentsTabBtn) {
         const canViewAssignments = canCurrentUserViewAssignmentsTab();
-        assignmentsTabBtn.classList.toggle('hidden', !canViewAssignments);
+        const isTutorViewingUnit = !!filterUnitId && currentDashboardPermissions.isQualifiedTutor;
+        
+        // [MODIFIED] Hide standalone tab for specialized tutors (now integrated in Settings)
+        const shouldShowTab = canViewAssignments && !isTutorViewingUnit;
+        assignmentsTabBtn.classList.toggle('hidden', !shouldShowTab);
         assignmentsTabBtn.textContent = '作業 (Assignments)';
     }
 
@@ -1177,33 +1181,40 @@ function renderAssignments(assignments = [], guideContent = "") {
         renderAssignmentsTable(assignments, canManageAssignments);
     }
 
-    // [NEW] Append Assignment Guide below the table
-    const container = document.getElementById('view-assignments');
-    if (container) {
-        const oldGuide = container.querySelector('.bg-blue-50');
+    // [NEW] Append Assignment Guide below the table (Integrated into both Standalone and Settings Views)
+    const possibleContainers = [
+        document.getElementById('view-assignments'),
+        document.getElementById('assignments-container')
+    ];
+
+    possibleContainers.forEach(container => {
+        if (!container) return;
+        const oldGuide = container.querySelector('.integrated-tutor-guide') || container.querySelector('.bg-blue-50');
         if (oldGuide) oldGuide.remove();
 
         if (guideContent) {
             const wrapper = document.createElement('div');
-            wrapper.className = "mt-8 p-4 md:p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner overflow-x-auto";
+            wrapper.className = "integrated-tutor-guide mt-8 p-4 md:p-6 bg-blue-50 border border-blue-100 rounded-xl shadow-inner overflow-x-auto";
             wrapper.innerHTML = `<div class="tutor-guide-content text-sm md:text-base text-blue-900/90 leading-relaxed prose prose-blue max-w-none">${guideContent}</div>`;
             container.appendChild(wrapper);
         }
-    }
+    });
 }
 
 /**
  * Shared Table Renderer for Assignments
  */
 function renderAssignmentsTable(assignments, canManageAssignments) {
-    if (!assignmentTableBody) return;
+    const assignmentTableBodies = document.querySelectorAll('.assignment-table-body');
+    if (assignmentTableBodies.length === 0) return;
     
     if (!assignments || assignments.length === 0) {
-        assignmentTableBody.innerHTML = `<tr><td colspan="${canManageAssignments ? 6 : 5}" class="text-center py-8 text-gray-400">尚無作業繳交紀錄</td></tr>`;
+        const emptyMsg = `<tr><td colspan="${canManageAssignments ? 6 : 5}" class="text-center py-8 text-gray-400">尚無作業繳交紀錄</td></tr>`;
+        assignmentTableBodies.forEach(tbody => tbody.innerHTML = emptyMsg);
         return;
     }
 
-    assignmentTableBody.innerHTML = assignments.map(a => {
+    const content = assignments.map(a => {
         let submittedDate = 'N/A';
         const ts = a.updatedAt || a.submittedAt;
         if (ts) {
@@ -1247,6 +1258,8 @@ function renderAssignmentsTable(assignments, canManageAssignments) {
             </td>
         </tr>`;
     }).join('');
+
+    assignmentTableBodies.forEach(tbody => tbody.innerHTML = content);
 }
 
 
@@ -1285,8 +1298,17 @@ function renderChart(students) {
 
 // --- Tab Logic ---
 window.switchTab = function (tabName) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
+    const isTutorViewingUnit = !!filterUnitId && currentDashboardPermissions.isQualifiedTutor;
+
+    // [MODIFIED] Redirect Assignments to Settings for specialized tutors
+    if (tabName === 'assignments' && isTutorViewingUnit) {
+        tabName = 'settings';
+    }
+
     if (tabName === 'assignments' && !canCurrentUserViewAssignmentsTab()) {
-        tabName = getPreferredDashboardTab(resolveCanonicalUnitId(new URLSearchParams(window.location.search).get('unitId')));
+        tabName = getPreferredDashboardTab(filterUnitId);
         if (tabName === 'assignments' && !canCurrentUserViewAssignmentsTab()) {
             return;
         }
@@ -1310,12 +1332,31 @@ window.switchTab = function (tabName) {
         activeBtn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
     }
 
-    // [NEW] Trigger specific tab data loading
+    // [NEW] Integrated Tab Logic: Settings now includes Assignments
     if (tabName === 'settings') {
-        const urlParams = new URLSearchParams(window.location.search);
-        const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
-        console.log("[Dashboard] Rendering Settings for unitId:", filterUnitId);
+        const filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
+        console.log("[Dashboard] Rendering Settings & Assignments for unitId:", filterUnitId);
+        
+        // 1. Render unit settings (links, guides)
         renderSettingsTab(filterUnitId);
+
+        // 2. Fetch and Render assignments inside Settings (for tutors)
+        if (isTutorViewingUnit || myRole === 'admin') {
+            document.getElementById('assignments-container')?.classList.remove('hidden');
+            let displayAssignments = filterAssignmentsForCurrentView(dashboardData.assignments);
+            if (filterCourseId) {
+                if (filterUnitId) {
+                    displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId && unitIdsMatch(a.unitId, filterUnitId));
+                } else {
+                    displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
+                }
+            }
+            // Resolve guide for the integrated view
+            const guideContent = resolveAssignmentGuide(dashboardData, filterCourseId, filterUnitId);
+            renderAssignments(displayAssignments, guideContent);
+        } else {
+            document.getElementById('assignments-container')?.classList.add('hidden');
+        }
     }
     if (tabName === 'assignments') {
         const urlParams = new URLSearchParams(window.location.search);
