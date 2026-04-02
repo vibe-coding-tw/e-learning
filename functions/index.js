@@ -2254,17 +2254,20 @@ exports.getDashboardData = onCall(async (request) => {
             // Authorization Filter for each assignment
             // 1. My own assignment (Student/Any)
             // 2. Admin can see all
-            // 3. Tutor can see if assigned to them, OR if they are an authorized tutor for this specific course/unit
+            // [V12.1.4] RELAXED FILTER: Admin should see ALL records, even if usersMap entry is missing.
             const isAuthorizedForAssign = (targetUid === uid) || 
                                           (requesterRole === 'admin') || 
                                           (requesterRole === 'tutor' && (assignmentTutor === requesterEmail || authorizedCourseIds.includes(mappedCid)));
 
-            if (isAuthorizedForAssign && (requesterRole === 'admin' || usersMap[targetUid])) {
+            if (isAuthorizedForAssign) {
+                // If admin, we allow it through even if student info is partially missing
+                const studentInfo = usersMap[targetUid] || {};
                 result.assignments.push({
                     id: doc.id,
                     ...data,
-                    courseId: mappedCid, // Uniform ID
-                    studentEmail: usersMap[targetUid]?.email || data.userEmail || 'Unknown'
+                    userId: targetUid, // Ensure normalized UID is present
+                    courseId: mappedCid, 
+                    studentEmail: studentInfo.email || data.userEmail || data.studentEmail || (targetUid ? `User: ${targetUid.slice(0,8)}` : 'Unknown Student')
                 });
             }
         });
