@@ -78,6 +78,7 @@ let currentDashboardPermissions = {
 // [NEW] Admin Tutor Mode state (formerly Super Mode)
 let adminTutorMode = localStorage.getItem('adminTutorMode') === 'true'; 
 
+
 // [REMOVED] MASTER_UNIT_MAPPING is now standardized in lessons.json
 
 
@@ -361,6 +362,7 @@ function getEquivalentUnitIds(unitId) {
         variants.add(shortWithHtml);
         variants.add(shortWithoutHtml);
     }
+
 
     return Array.from(variants);
 }
@@ -2184,6 +2186,14 @@ async function renderSettingsTab(filterUnitId = null) {
             return allFiles.some(f => isUserAuthorizedForUnit(f, course.courseId, userEmail));
         });
 
+        authorizedLessons = Array.from(
+            new Map(
+                authorizedLessons
+                    .filter(course => course && course.courseId)
+                    .map(course => [course.courseId, course])
+            ).values()
+        );
+
         console.log("[Settings] Authorized lessons count:", authorizedLessons.length);
 
         // [NEW] If filtered to a specific course
@@ -2243,14 +2253,23 @@ async function renderSettingsTab(filterUnitId = null) {
                 })()
                 : filteredUnits;
 
-            console.log("[Settings] Filtered units mapping:", finalUnits);
+            const uniqueFinalUnits = Array.from(
+                new Map(
+                    finalUnits
+                        .map(fileName => getPreferredUnitId(fileName, units, Object.keys(dashboardData?.unitTutorConfigs || {})))
+                        .filter(isRenderableUnitFile)
+                        .map(fileName => [fileName, fileName])
+                ).values()
+            );
 
-            const assignmentRows = finalUnits.map(fileName => {
+            console.log("[Settings] Filtered units mapping:", uniqueFinalUnits);
+
+            const assignmentRows = uniqueFinalUnits.map(fileName => {
                 const isAuthorized = isUserAuthorizedForUnit(fileName, course.courseId, userEmail);
                 return renderAssignmentConfigRow(course.courseId, fileName, getUnitTutorConfig(fileName).githubClassroomUrls, course.title, isAuthorized);
             }).filter(h => !!h).join('');
 
-            const guideRows = finalUnits.map(fileName => {
+            const guideRows = uniqueFinalUnits.map(fileName => {
                 const realUnitsOnly = units.filter(u => !u.includes('-master-'));
                 const unitIdx = realUnitsOnly.indexOf(fileName);
                 const unitNum = unitIdx !== -1 ? unitIdx + 1 : null;
