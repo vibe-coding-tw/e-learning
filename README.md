@@ -20,7 +20,7 @@
 - **數據庫 (Firestore)**:
     - `users`: 使用者角色、UID 與權限映射。
     - `activity_logs`: 毫秒級追蹤學生觀看影片、閱讀文件的學習時數。
-    - `orders`: 支付訂單、推薦代碼 (promoCode) 與導師 (referralMentor) 綁定。
+    - `orders`: 支付訂單；推薦代碼與導師關係綁在各個 `items[itemId]` 上，而非整張訂單。
     - `profit_ledger`: 自動化產出的月度分潤清單。
 
 ## ✨ 核心特色 (Key Features)
@@ -36,7 +36,7 @@
 - **老師推薦制**: 學生不再自行申請合格教師，改由授課老師在「評分作業」對話框中推薦，交由管理員審核。
 
 ### 3. 多層級分潤與推薦 (Profit Sharing)
-- **推薦代碼 (Promotion Code)**: 學生結帳時輸入導師代碼。
+- **推薦代碼 (Promotion Code)**: 學生結帳時輸入導師代碼，代碼只會套用到對應的課程/單元 item。
 - **遞迴計算 (Recursive Sharing)**: 
     - 直接推廣者獲得 20% 分潤。
     - 其上級導師可獲得後者分潤金額的 20%，直到根結點 (Admin)。
@@ -50,11 +50,11 @@
 
 ### 0. 付款、老師指派、作業與推薦的正式流程
 1. 學生在 `cart.html` 結帳前可輸入老師的 `promo code`。
-2. 前端先呼叫 `verifyPromoCode` 驗證代碼，成功後會把 `promoCode` 與對應 `referralMentor` 一起送進 `initiatePayment`。
+2. 前端先呼叫 `verifyPromoCode` 驗證代碼，成功後會把該代碼綁到對應的購物車 item，並記錄該 item 的 `promoCode` / `referralTutor`。
 3. 綠界付款成功後，`paymentNotify` 會：
    - 將訂單標記為 `SUCCESS`
-   - 保留 `promoCode` / `referralMentor`
-   - 若該 promo code 對應到已購買的單元，系統會自動把學生指派到該單元老師 (`users/{uid}.unitAssignments[{unitId}] = teacherEmail`)
+   - 保留各 item 的 `promoCode` / `referralTutor`
+   - 逐 item 檢查 promo code 對應單元，並自動把學生指派到該單元老師 (`users/{uid}.unitAssignments[{unitId}] = teacherEmail`)
    - 自動寄出付款成功、老師指派成功的 email 通知
 4. 學生在課程頁或 Dashboard 點擊作業時，前端不再直接讀第一個 Classroom URL，而是先呼叫 `resolveAssignmentAccess`：
    - 若未付款：不開放作業入口

@@ -166,17 +166,19 @@ exports.initiatePayment = onRequest(async (req, res) => {
         const orderNumber = `VIBE${Date.now()}`;
         const tradeDate = getCurrentTime();
 
+        const lessons = await getLessons();
+        const normalizedItems = normalizeOrderItems(cartDetails || {}, promoCode, referralTutor, lessons);
+
         // 建立訂單內容記錄 (Firestore)
-        // [NEW] Store referral info, always defaulting to info@vibe-coding.tw if missing
         await admin.firestore().collection("orders").doc(orderNumber).set({
             uid: uid,
             amount: finalAmount,
             status: "PENDING",
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            items: cartDetails || {},
+            items: normalizedItems,
             logistics: logistics || null,
-            promoCode: (promoCode && promoCode.trim()) ? promoCode.trim().toUpperCase() : null,
-            referralTutor: (referralTutor && referralTutor.trim()) ? referralTutor.trim() : 'info@vibe-coding.tw',
+            promoCode: null,
+            referralTutor: null,
             orderNumber: orderNumber
         });
 
@@ -185,12 +187,13 @@ exports.initiatePayment = onRequest(async (req, res) => {
         // ClientUrl (前端)
         const clientUrl = returnUrl || "https://vibe-coding.tw";
 
-        console.log(`建立訂單: ${orderNumber} (Promo: ${promoCode || 'None'})`);
+        const appliedItemPromos = Object.values(normalizedItems).map(item => item?.promoCode).filter(Boolean);
+        console.log(`建立訂單: ${orderNumber} (Item Promos: ${appliedItemPromos.join(', ') || 'None'})`);
 
         let itemNameStr = 'Vibe Coding 線上課程';
-        if (cartDetails && Object.keys(cartDetails).length > 0) {
+        if (normalizedItems && Object.keys(normalizedItems).length > 0) {
             const names = [];
-            Object.values(cartDetails).forEach(item => {
+            Object.values(normalizedItems).forEach(item => {
                 const cleanName = (item.name || '未知課程').replace(/[#&]/g, ' ');
                 names.push(`${cleanName} x ${item.quantity || 1}`);
             });
@@ -335,16 +338,18 @@ exports.paymentNotify = onRequest(async (req, res) => {
                         await sendPaymentSuccessEmail(userEmail, orderId, orderData.amount, itemDesc);
                     }
 
-                    if (orderData.uid && orderData.uid !== 'GUEST' && orderData.promoCode) {
+                    if (orderData.uid && orderData.uid !== 'GUEST') {
                         const lessons = await getLessons();
-                        const promoDoc = await db.collection('promo_codes').doc(orderData.promoCode).get();
+                        const promoAssignments = extractPromoAssignmentsFromOrder(orderData.items || {}, lessons);
 
-                        if (promoDoc.exists && promoDoc.data()?.isActive !== false) {
+                        for (const assignment of promoAssignments) {
+                            const promoDoc = await db.collection('promo_codes').doc(assignment.promoCode).get();
+                            if (!promoDoc.exists || promoDoc.data()?.isActive === false) continue;
+
                             const promoData = promoDoc.data();
                             const targetUnitId = resolveCanonicalUnitId(promoData.courseId, lessons);
-                            const purchasedUnits = collectPurchasedUnitIds(orderData.items || {}, lessons);
 
-                            if (targetUnitId && purchasedUnits.includes(targetUnitId) && promoData.tutorEmail) {
+                            if (targetUnitId && assignment.purchasedUnits.includes(targetUnitId) && promoData.tutorEmail) {
                                 await upsertStudentUnitAssignment(
                                     db,
                                     orderData.uid,
@@ -355,7 +360,7 @@ exports.paymentNotify = onRequest(async (req, res) => {
                                 );
                                 console.log(`[paymentNotify] Auto-assigned ${orderData.uid} -> ${promoData.tutorEmail} for ${targetUnitId}`);
                             } else {
-                                console.warn(`[paymentNotify] Promo ${orderData.promoCode} did not match purchased units for order ${orderId}`);
+                                console.warn(`[paymentNotify] Promo ${assignment.promoCode} did not match purchased units for order ${orderId}`);
                             }
                         }
                     }
@@ -477,6 +482,70 @@ function collectPurchasedUnitIds(items = {}, lessons = []) {
     });
 
     return Array.from(purchasedUnits);
+}
+
+function findMatchingOrderItemIdForPromo(items = {}, promoCourseId = '', lessons = []) {
+    if (!promoCourseId) return null;
+
+    if (items[promoCourseId]) return promoCourseId;
+
+    const canonicalPromoUnitId = resolveCanonicalUnitId(promoCourseId, lessons);
+    if (items[canonicalPromoUnitId]) return canonicalPromoUnitId;
+
+    const parentCourseId = findParentCourseIdByUnit(canonicalPromoUnitId, lessons);
+    if (parentCourseId && items[parentCourseId]) return parentCourseId;
+
+    return Object.keys(items || {}).find(itemKey => {
+        if (itemKey === promoCourseId || itemKey === canonicalPromoUnitId) return true;
+        const lesson = lessons.find(l => l.courseId === itemKey);
+        return !!(lesson && Array.isArray(lesson.courseUnits) && lesson.courseUnits.includes(canonicalPromoUnitId));
+    }) || null;
+}
+
+function normalizeOrderItems(cartDetails = {}, promoCode = '', referralTutor = '', lessons = []) {
+    const items = JSON.parse(JSON.stringify(cartDetails || {}));
+    const normalizedPromoCode = (promoCode && promoCode.trim()) ? promoCode.trim().toUpperCase() : null;
+    const normalizedReferralTutor = (referralTutor && referralTutor.trim()) ? referralTutor.trim() : 'info@vibe-coding.tw';
+
+    Object.entries(items).forEach(([itemKey, itemValue]) => {
+        if (!itemValue || typeof itemValue !== 'object') items[itemKey] = {};
+        items[itemKey].promoCode = itemValue?.promoCode ? String(itemValue.promoCode).trim().toUpperCase() : null;
+        items[itemKey].referralTutor = itemValue?.referralTutor ? String(itemValue.referralTutor).trim() : 'info@vibe-coding.tw';
+    });
+
+    if (normalizedPromoCode) {
+        const targetItemId = findMatchingOrderItemIdForPromo(items, normalizedPromoCode, lessons);
+        if (targetItemId && items[targetItemId]) {
+            items[targetItemId].promoCode = normalizedPromoCode;
+            items[targetItemId].referralTutor = normalizedReferralTutor;
+        }
+    }
+
+    return items;
+}
+
+function extractPromoAssignmentsFromOrder(orderItems = {}, lessons = []) {
+    const assignments = [];
+
+    Object.entries(orderItems || {}).forEach(([itemKey, itemValue]) => {
+        const itemPromoCode = itemValue?.promoCode ? String(itemValue.promoCode).trim().toUpperCase() : null;
+        const itemTutor = itemValue?.referralTutor ? String(itemValue.referralTutor).trim() : null;
+        if (!itemPromoCode) return;
+
+        const lesson = lessons.find(l => l.courseId === itemKey);
+        const purchasedUnits = lesson
+            ? (lesson.courseUnits || []).map(unitId => resolveCanonicalUnitId(unitId, lessons))
+            : [resolveCanonicalUnitId(itemKey, lessons)];
+
+        assignments.push({
+            itemKey,
+            promoCode: itemPromoCode,
+            referralTutor: itemTutor,
+            purchasedUnits
+        });
+    });
+
+    return assignments;
 }
 
 function hasActiveOrderForCourse(ordersSnapshot, courseId) {
@@ -970,7 +1039,7 @@ exports.serveCourse = onRequest(async (req, res) => {
                     let isUnitMatch = course.courseUnits && course.courseUnits.includes(normalizedFileName);
                     
                     // Hotfix for newly merged unit
-                    if (scopePart === '03-master-wifi-motor.html' && normalizedFileName === '03-unit-vibe-classroom-intro.html') {
+                    if (scopePart === '03-master-wifi-motor.html' && normalizedFileName === '03-unit-github-classroom.html') {
                         isUnitMatch = true;
                     }
                     debugInfo = `CourseFound: ${course.courseId}, isMasterMatch: ${isMasterMatch}, isUnitMatch: ${isUnitMatch}, masterFile: ${masterFile}`;
@@ -998,7 +1067,7 @@ exports.serveCourse = onRequest(async (req, res) => {
                 let isUnitMatch = (manualFallback.courseUnits && manualFallback.courseUnits.includes(normalizedFileName));
                 
                 // Hotfix for newly merged unit
-                if (scopePart === '03-master-wifi-motor.html' && normalizedFileName === '03-unit-vibe-classroom-intro.html') {
+                if (scopePart === '03-master-wifi-motor.html' && normalizedFileName === '03-unit-github-classroom.html') {
                     isUnitMatch = true;
                 }
                 if (isMasterMatch || isUnitMatch) {
@@ -1979,9 +2048,9 @@ exports.getDashboardData = onCall(async (request) => {
                     const masterFile = (course.classroomUrl || "").split('/').pop().split('?')[0];
                     const units = Array.isArray(course.courseUnits) ? [...course.courseUnits] : [];
                     
-                    // Hotfix for new vibe unit missing in DB
-                    if (masterFile === '03-master-wifi-motor.html' && !units.includes('03-unit-vibe-classroom-intro.html')) {
-                        units.push('03-unit-vibe-classroom-intro.html');
+                    // Hotfix for new classroom unit missing in DB
+                    if (masterFile === '03-master-wifi-motor.html' && !units.includes('03-unit-github-classroom.html')) {
+                        units.push('03-unit-github-classroom.html');
                     }
 
                     const relatedFiles = [masterFile, ...units].filter(f => f && allFiles.includes(f));
@@ -2959,7 +3028,8 @@ exports.verifyPromoCode = onCall(async (request) => {
         return { 
             success: true, 
             tutor: promoData.tutorEmail,
-            tutorName: promoData.tutorName || promoData.tutorEmail
+            tutorName: promoData.tutorName || promoData.tutorEmail,
+            courseId: promoData.courseId || ''
         };
     } catch (e) {
         throw new HttpsError('internal', e.message);
@@ -3083,49 +3153,53 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
 
         for (const orderDoc of ordersSnapshot.docs) {
             const order = orderDoc.data();
-            // [MOD] Default to admin if no tutor is provided
-            const initialTutor = (order.referralTutor && order.referralTutor.trim()) ? order.referralTutor.trim() : "info@vibe-coding.tw";
-
-            const amount = order.amount;
             const orderId = orderDoc.id;
             const studentUid = order.uid;
+            const items = order.items || {};
 
-            // Recursive Chain Calculation
-            let currentTutorEmail = initialTutor;
-            let currentShare = amount * 0.2; // First level: 20%
-            let level = 1;
+            for (const [itemKey, itemValue] of Object.entries(items)) {
+                const quantity = parseInt(itemValue?.quantity || 1, 10) || 1;
+                const itemPrice = parseFloat(itemValue?.price || 0) || 0;
+                const lineAmount = itemPrice * quantity;
+                const initialTutor = (itemValue?.referralTutor && itemValue.referralTutor.trim()) ? itemValue.referralTutor.trim() : "info@vibe-coding.tw";
+                const itemPromoCode = itemValue?.promoCode ? String(itemValue.promoCode).trim().toUpperCase() : null;
 
-            while (currentTutorEmail && currentShare >= 0.01) {
-                // Record Share
-                const ledgerRef = db.collection('profit_ledger').doc();
-                const shareRecord = {
-                    tutorEmail: currentTutorEmail,
-                    studentUid: studentUid,
-                    orderId: orderId,
-                    orderAmount: amount,
-                    shareAmount: Math.round(currentShare * 100) / 100, // Round to 2 decimals
-                    level: level,
-                    calculatedAt: admin.firestore.FieldValue.serverTimestamp(),
-                    period: `${lastMonth.getFullYear()}-${(lastMonth.getMonth() + 1).toString().padStart(2, '0')}`
-                };
-                await ledgerRef.set(shareRecord);
-                auditTrail.push(shareRecord);
+                if (lineAmount <= 0) continue;
 
-                // Stop if we hit the root admin
-                if (currentTutorEmail === "info@vibe-coding.tw") break;
+                let currentTutorEmail = initialTutor;
+                let currentShare = lineAmount * 0.2; // First level: 20%
+                let level = 1;
 
-                // Move up the chain
-                const tutorUserSnapshot = await db.collection('users').where('email', '==', currentTutorEmail).limit(1).get();
-                if (!tutorUserSnapshot.empty) {
-                    const tutorData = tutorUserSnapshot.docs[0].data();
-                    currentTutorEmail = tutorData.tutorEmail || "info@vibe-coding.tw"; // Fallback to admin
-                    currentShare = currentShare * 0.2; // Next level: 20% of previous share
-                    level++;
-                } else {
-                    // Tutor not found in users collection, fallback to admin
-                    currentTutorEmail = "info@vibe-coding.tw";
-                    currentShare = currentShare * 0.2;
-                    level++;
+                while (currentTutorEmail && currentShare >= 0.01) {
+                    const ledgerRef = db.collection('profit_ledger').doc();
+                    const shareRecord = {
+                        tutorEmail: currentTutorEmail,
+                        studentUid: studentUid,
+                        orderId: orderId,
+                        orderItemId: itemKey,
+                        orderAmount: lineAmount,
+                        shareAmount: Math.round(currentShare * 100) / 100,
+                        level: level,
+                        promoCode: itemPromoCode,
+                        calculatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                        period: `${lastMonth.getFullYear()}-${(lastMonth.getMonth() + 1).toString().padStart(2, '0')}`
+                    };
+                    await ledgerRef.set(shareRecord);
+                    auditTrail.push(shareRecord);
+
+                    if (currentTutorEmail === "info@vibe-coding.tw") break;
+
+                    const tutorUserSnapshot = await db.collection('users').where('email', '==', currentTutorEmail).limit(1).get();
+                    if (!tutorUserSnapshot.empty) {
+                        const tutorData = tutorUserSnapshot.docs[0].data();
+                        currentTutorEmail = tutorData.tutorEmail || "info@vibe-coding.tw";
+                        currentShare = currentShare * 0.2;
+                        level++;
+                    } else {
+                        currentTutorEmail = "info@vibe-coding.tw";
+                        currentShare = currentShare * 0.2;
+                        level++;
+                    }
                 }
             }
         }

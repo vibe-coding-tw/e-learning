@@ -26,6 +26,8 @@
                 <p id="error-details">您的登入嘗試失敗，原因可能為瀏覽器阻擋。我們已切換到「頁面重新導向」方式，請重新點擊登入。</p>
             </div>
 
+            <div id="cart-prefill-status" class="hidden rounded-lg border px-4 py-3 mb-4 text-sm"></div>
+
             <div id="unpaid-items" class="space-y-4">
             </div>
             <p id="empty-cart-msg" class="text-gray-500 italic text-center pt-4">購物車是空的！請回到課程頁面選購。</p>
@@ -80,21 +82,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- [NEW] Promotion Code Section -->
-                <div class="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                    <h3 class="text-lg font-bold text-gray-800 mb-3">🎟️ 優惠代碼 (或指導老師代碼)</h3>
-                    <div class="flex gap-2">
-                        <input type="text" id="promo-code"
-                            class="flex-1 border-gray-300 rounded-md shadow-sm p-2 uppercase"
-                            placeholder="請輸入代碼">
-                        <button id="verify-promo-btn"
-                            class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition">
-                            驗證
-                        </button>
-                    </div>
-                    <p id="promo-status" class="mt-2 text-sm hidden"></p>
                 </div>
 
                 <button id="checkout-btn"
@@ -153,6 +140,8 @@
 
         // 修改為通用的付款請求 Function (後端需配合修改)
         const initiatePayment = httpsCallable(functions, 'initiatePayment');
+        const getLessonsMetadata = httpsCallable(functions, 'getLessonsMetadata');
+        let lessonsCache = null;
 
         // 您的商店代號 (公開資訊可放在前端)
         const MERCHANT_ID = "3271550";
@@ -167,12 +156,78 @@
         const cartTotalElement = document.getElementById('cart-total');
         const checkoutBtn = document.getElementById('checkout-btn');
         const paymentFormContainer = document.getElementById('payment-form-container');
+        const cartPrefillStatus = document.getElementById('cart-prefill-status');
 
         function removeFromCart(productId) {
             let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
             delete cart[productId];
             localStorage.setItem('vibeCodingCart', JSON.stringify(cart));
             renderCartItems();
+        }
+
+        function findCartItemIdForPromo(cart, targetCourseId = '', targetUnitId = '') {
+            if (!cart || typeof cart !== 'object') return null;
+            if (targetCourseId && cart[targetCourseId]) return targetCourseId;
+
+            const normalizedUnitId = (targetUnitId || '').trim();
+            return Object.keys(cart).find(itemId => {
+                const item = cart[itemId] || {};
+                return item.unitId === normalizedUnitId || item.sourceUnitId === normalizedUnitId;
+            }) || null;
+        }
+
+        async function getLessonsList() {
+            if (Array.isArray(lessonsCache)) return lessonsCache;
+            const response = await getLessonsMetadata({});
+            lessonsCache = response.data?.lessons || [];
+            return lessonsCache;
+        }
+
+        async function resolvePromoTargetItemId(cart, promoCourseId = '') {
+            let targetItemId = findCartItemIdForPromo(cart, promoCourseId, promoCourseId);
+            if (targetItemId) return targetItemId;
+
+            const lessons = await getLessonsList();
+            const parentCourse = lessons.find(lesson =>
+                Array.isArray(lesson.courseUnits) && lesson.courseUnits.includes(promoCourseId)
+            );
+
+            if (parentCourse?.courseId && cart[parentCourse.courseId]) {
+                return parentCourse.courseId;
+            }
+
+            return null;
+        }
+
+        function addCartItem(productId, productName, productPrice, isPhysical, options = {}) {
+            let cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
+            if (cart[productId]) return false;
+
+            cart[productId] = {
+                name: productName,
+                price: parseInt(productPrice, 10) || 0,
+                quantity: 1,
+                isPhysical: !!isPhysical,
+                unitId: options.unitId || null,
+                sourceUnitId: options.sourceUnitId || null,
+                promoCode: options.promoCode || null,
+                referralTutor: options.referralTutor || null,
+                referralTutorName: options.referralTutorName || null
+            };
+            localStorage.setItem('vibeCodingCart', JSON.stringify(cart));
+            return true;
+        }
+
+        function setPrefillStatus(message, tone = 'info') {
+            if (!cartPrefillStatus) return;
+            const toneClass = tone === 'success'
+                ? 'bg-green-50 border-green-200 text-green-700'
+                : tone === 'error'
+                    ? 'bg-red-50 border-red-200 text-red-700'
+                    : 'bg-blue-50 border-blue-200 text-blue-700';
+            cartPrefillStatus.className = `rounded-lg border px-4 py-3 mb-4 text-sm ${toneClass}`;
+            cartPrefillStatus.textContent = message;
+            cartPrefillStatus.classList.remove('hidden');
         }
 
         function renderCartItems() {
@@ -197,15 +252,51 @@
                 total += itemTotal;
 
                 const itemDiv = document.createElement('div');
-                itemDiv.className = 'flex justify-between items-center bg-gray-50 p-3 rounded-md border';
+                itemDiv.className = 'bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm';
+                const promoBadge = item.promoCode
+                    ? `
+                        <div class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+                            <p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">已套用的推薦碼</p>
+                            <p class="mt-1 text-sm font-bold text-emerald-700">${item.promoCode}</p>
+                            <p class="text-xs text-emerald-700">${item.referralTutorName || item.referralTutor || '老師推薦'}</p>
+                        </div>
+                    `
+                    : `
+                        <div class="mt-3 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2">
+                            <p class="text-xs font-semibold uppercase tracking-wide text-purple-700">此課程可獨立套用推薦碼</p>
+                            <p class="mt-1 text-xs text-purple-700">每個待結帳課程都可以綁定不同老師的推薦碼。</p>
+                        </div>
+                    `;
                 itemDiv.innerHTML = `
-                    <div>
-                        <p class="font-semibold text-gray-800">${item.name}</p>
-                        <p class="text-xs text-gray-500">產品代號: ${id}</p>
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="min-w-0 flex-1">
+                            <p class="font-semibold text-gray-800">${item.name}</p>
+                            <p class="text-xs text-gray-500">產品代號: ${id}</p>
+                            ${promoBadge}
+                        </div>
+                        <div class="text-right shrink-0">
+                             <p class="font-bold text-indigo-600">${itemTotal.toLocaleString()} 元</p>
+                             <button class="remove-cart-item-btn text-sm text-rose-500 hover:text-rose-600 mt-2" data-product-id="${id}">移除</button>
+                        </div>
                     </div>
-                    <div class="text-right">
-                         <p class="font-bold text-indigo-600">${itemTotal.toLocaleString()} 元</p>
-                         <button class="remove-cart-item-btn" data-product-id="${id}">移除</button>
+                    <div class="mt-4 rounded-lg border border-purple-200 bg-white px-3 py-3">
+                        <div class="flex items-center justify-between gap-3 mb-2">
+                            <h3 class="text-sm font-bold text-gray-800">🎟️ 這個課程的推薦碼 / Promo Code</h3>
+                            ${item.promoCode ? `<button class="clear-item-promo-btn text-xs font-semibold text-gray-500 hover:text-gray-700" data-product-id="${id}">清除代碼</button>` : ''}
+                        </div>
+                        <div class="flex flex-col gap-2 sm:flex-row">
+                            <input type="text"
+                                class="item-promo-input flex-1 border-gray-300 rounded-md shadow-sm p-2 uppercase"
+                                data-product-id="${id}"
+                                value="${item.promoCode || ''}"
+                                placeholder="請輸入此課程對應的老師推薦碼">
+                            <button
+                                class="apply-item-promo-btn bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition"
+                                data-product-id="${id}">
+                                ${item.promoCode ? '更新代碼' : '套用代碼'}
+                            </button>
+                        </div>
+                        <p class="item-promo-status mt-2 text-sm hidden" data-product-id="${id}"></p>
                     </div>
                 `;
                 unpaidItemsContainer.appendChild(itemDiv);
@@ -217,6 +308,35 @@
             document.querySelectorAll('.remove-cart-item-btn').forEach(button => {
                 button.addEventListener('click', (event) => {
                     removeFromCart(event.currentTarget.dataset.productId);
+                });
+            });
+
+            document.querySelectorAll('.apply-item-promo-btn').forEach(button => {
+                button.addEventListener('click', async (event) => {
+                    const itemId = event.currentTarget.dataset.productId;
+                    const input = document.querySelector(`.item-promo-input[data-product-id="${itemId}"]`);
+                    const status = document.querySelector(`.item-promo-status[data-product-id="${itemId}"]`);
+                    const code = input?.value?.trim().toUpperCase() || '';
+                    if (!code) {
+                        if (status) {
+                            status.textContent = '請先輸入推薦碼。';
+                            status.className = 'item-promo-status mt-2 text-sm text-amber-600';
+                            status.classList.remove('hidden');
+                        }
+                        return;
+                    }
+                    await applyPromoCode(code, {
+                        targetItemId: itemId,
+                        inputElement: input,
+                        statusElement: status,
+                        buttonElement: event.currentTarget
+                    });
+                });
+            });
+
+            document.querySelectorAll('.clear-item-promo-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    clearItemPromo(event.currentTarget.dataset.productId);
                 });
             });
         }
@@ -321,43 +441,158 @@
         // ===============================================
         // B-2. 優惠券 / 推薦代碼邏輯 (新增)
         // ===============================================
-        const promoInput = document.getElementById('promo-code');
-        const verifyPromoBtn = document.getElementById('verify-promo-btn');
-        const promoStatus = document.getElementById('promo-status');
         const DEFAULT_MENTOR = 'info@vibe-coding.tw';
-        let verifiedTutor = DEFAULT_MENTOR;
 
-        verifyPromoBtn.addEventListener('click', async () => {
-            const code = promoInput.value.trim().toUpperCase();
-            if (!code) return;
+        function clearItemPromo(itemId) {
+            const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
+            if (!cart[itemId]) return;
+            cart[itemId] = {
+                ...cart[itemId],
+                promoCode: null,
+                referralTutor: null,
+                referralTutorName: null
+            };
+            localStorage.setItem('vibeCodingCart', JSON.stringify(cart));
+            renderCartItems();
+        }
 
-            verifyPromoBtn.disabled = true;
-            verifyPromoBtn.textContent = '驗證中...';
-            promoStatus.classList.add('hidden');
+        async function applyPromoCode(code, options = {}) {
+            const normalizedCode = (code || '').trim().toUpperCase();
+            const {
+                silent = false,
+                keepEditable = false,
+                targetItemId = null,
+                inputElement = null,
+                statusElement = null,
+                buttonElement = null
+            } = options;
+            if (!normalizedCode) return { success: false, message: '缺少代碼' };
+
+            if (inputElement) inputElement.value = normalizedCode;
+            if (buttonElement) {
+                buttonElement.disabled = true;
+                buttonElement.textContent = '驗證中...';
+            }
+            if (statusElement) statusElement.classList.add('hidden');
 
             try {
                 const verifyPromoCode = httpsCallable(functions, 'verifyPromoCode');
-                const result = await verifyPromoCode({ promoCode: code });
+                const result = await verifyPromoCode({ promoCode: normalizedCode });
                 
                 if (result.data && result.data.success) {
-                    verifiedTutor = result.data.tutor;
-                    promoStatus.textContent = `✅ 已套用：${result.data.tutorName || verifiedTutor} 的推薦`;
-                    promoStatus.className = 'mt-2 text-sm text-green-600 font-bold';
-                    promoInput.readOnly = true;
-                    verifyPromoBtn.classList.add('hidden');
+                    const cart = JSON.parse(localStorage.getItem('vibeCodingCart') || '{}');
+                    const resolvedItemId = await resolvePromoTargetItemId(cart, result.data.courseId);
+                    if (!resolvedItemId) {
+                        throw new Error('此代碼對應的課程/單元不在目前購物車中');
+                    }
+                    if (targetItemId && resolvedItemId !== targetItemId) {
+                        throw new Error('此推薦碼不屬於目前這個課程項目');
+                    }
+
+                    const finalItemId = targetItemId || resolvedItemId;
+
+                    const existingItem = cart[finalItemId] || {};
+                    cart[finalItemId] = {
+                        ...existingItem,
+                        promoCode: normalizedCode,
+                        referralTutor: result.data.tutor,
+                        referralTutorName: result.data.tutorName || result.data.tutor,
+                        sourceUnitId: existingItem.sourceUnitId || result.data.courseId || null
+                    };
+                    localStorage.setItem('vibeCodingCart', JSON.stringify(cart));
+                    renderCartItems();
+
+                    if (statusElement) {
+                        statusElement.textContent = `✅ 已套用：${result.data.tutorName || result.data.tutor}`;
+                        statusElement.className = 'item-promo-status mt-2 text-sm text-green-600 font-bold';
+                    }
+                    return {
+                        success: true,
+                        tutor: result.data.tutor,
+                        tutorName: result.data.tutorName || result.data.tutor,
+                        courseId: result.data.courseId || '',
+                        itemId: finalItemId
+                    };
                 } else {
                     throw new Error(result.data.message || '無效的代碼');
                 }
             } catch (err) {
-                promoStatus.textContent = `❌ ${err.message}`;
-                promoStatus.className = 'mt-2 text-sm text-red-600';
-                verifiedTutor = DEFAULT_MENTOR; // FALLBACK
+                if (statusElement) {
+                    statusElement.textContent = `❌ ${err.message}`;
+                    statusElement.className = 'item-promo-status mt-2 text-sm text-red-600';
+                }
+                return { success: false, message: err.message };
             } finally {
-                promoStatus.classList.remove('hidden');
-                verifyPromoBtn.disabled = false;
-                verifyPromoBtn.textContent = '驗證代碼';
+                if (statusElement && (!silent || statusElement.textContent)) {
+                    statusElement.classList.remove('hidden');
+                }
+                if (buttonElement) {
+                    buttonElement.disabled = false;
+                    buttonElement.textContent = '套用代碼';
+                }
             }
-        });
+        }
+
+        async function hydrateCartFromInviteLink() {
+            const url = new URL(window.location.href);
+            const params = url.searchParams;
+            if (params.get('action') !== 'addInviteItem') return;
+
+            const courseId = params.get('courseId');
+            const unitId = params.get('unitId') || courseId;
+            const promoCode = (params.get('promoCode') || '').trim().toUpperCase();
+            const fallbackName = params.get('courseName') || courseId;
+            const fallbackPrice = parseInt(params.get('coursePrice') || '0', 10) || 0;
+            const fallbackPhysical = params.get('isPhysical') === 'true';
+
+            if (!courseId) {
+                setPrefillStatus('推薦連結缺少課程資訊，無法自動加入購物車。', 'error');
+                return;
+            }
+
+            let courseMeta = null;
+            try {
+                const lessonsResponse = await getLessonsMetadata({});
+                const lessons = lessonsResponse.data?.lessons || [];
+                courseMeta = lessons.find(lesson => lesson.courseId === courseId) ||
+                    lessons.find(lesson => Array.isArray(lesson.courseUnits) && lesson.courseUnits.includes(unitId)) ||
+                    null;
+            } catch (error) {
+                console.warn('Failed to fetch lessons metadata for invite link:', error);
+            }
+
+            const productName = courseMeta?.title || courseMeta?.courseName || fallbackName;
+            const productPrice = parseInt(courseMeta?.price ?? fallbackPrice, 10) || 0;
+            const isPhysical = courseMeta?.isPhysical === true || fallbackPhysical;
+            const itemAdded = addCartItem(courseId, productName, productPrice, isPhysical, {
+                unitId,
+                sourceUnitId: unitId
+            });
+
+            renderCartItems();
+            checkPhysicalItems();
+
+            let statusMessage = itemAdded
+                ? `已將「${productName}」加入購物車，您可以直接前往結帳。`
+                : `「${productName}」原本已在購物車中，已保留現有品項。`;
+
+            if (promoCode) {
+                const promoResult = await applyPromoCode(promoCode, { silent: false, keepEditable: false });
+                if (promoResult.success) {
+                    statusMessage += ` 已自動套用老師推薦代碼 ${promoCode}。`;
+                } else {
+                    statusMessage += ` 但推薦代碼 ${promoCode} 驗證失敗。`;
+                }
+            }
+
+            setPrefillStatus(statusMessage, 'success');
+
+            [
+                'action', 'courseId', 'unitId', 'promoCode',
+                'courseName', 'coursePrice', 'isPhysical'
+            ].forEach(key => params.delete(key));
+            history.replaceState({}, '', `${url.pathname}${params.toString() ? `?${params.toString()}` : ''}`);
+        }
 
         // ===============================================
         // B. 身份驗證邏輯
@@ -391,6 +626,8 @@
                 loginBtn.onclick = handleLogin;
             }
         });
+
+        hydrateCartFromInviteLink();
 
         // ===============================================
         // C. 付款按鈕邏輯 (已針對新金流修正)
@@ -455,8 +692,8 @@
                     userId: user.uid,
                     cartDetails: cartItems,
                     logistics: logisticsInfo,
-                    promoCode: promoInput.value.trim().toUpperCase(), // [NEW] Pass promo code
-                    referralTutor: verifiedTutor, // [NEW] Pass verified tutor email
+                    promoCode: null,
+                    referralTutor: DEFAULT_MENTOR,
                     // 設定交易完成後的返回網址
                     returnUrl: window.location.origin + '/payment-return.html'
                 });

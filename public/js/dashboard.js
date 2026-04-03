@@ -17,6 +17,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const functions = getFunctions(app, 'asia-east1');
+const PUBLIC_SITE_URL = 'https://vibe-coding.tw';
 
 // DOM Elements
 const loadingState = document.getElementById('loading-state');
@@ -2504,12 +2505,14 @@ function renderEarningsTab(data) {
     const totalEarningsEl = document.getElementById('stat-total-earnings');
     const promoCodeEl = document.getElementById('display-promo-code');
     const tableBody = document.getElementById('earnings-table-body');
+    const inviteKitEl = document.getElementById('promo-invite-kit');
 
-    if (!totalEarningsEl || !promoCodeEl || !tableBody) return;
+    if (!totalEarningsEl || !promoCodeEl || !tableBody || !inviteKitEl) return;
 
     // 1. Display Promo Code (Unit-Specific)
     const urlParams = new URLSearchParams(window.location.search);
-    const filterUnitId = urlParams.get('unitId');
+    const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
+    const inviteKit = buildPromoInviteKit(filterUnitId, data.myPromoCode);
 
     if (!filterUnitId) {
         promoCodeEl.innerHTML = `
@@ -2528,6 +2531,64 @@ function renderEarningsTab(data) {
                 <span class="text-[10px] text-gray-400 mt-1 uppercase tracking-tighter">此單元專屬推薦碼 / Unit Code</span>
             </div>
         `;
+    }
+
+    if (!inviteKit.ready) {
+        inviteKitEl.innerHTML = `
+            <div class="text-center py-10 text-gray-400">
+                ${escapeHtml(inviteKit.message)}
+            </div>
+        `;
+    } else {
+        inviteKitEl.innerHTML = `
+            <div class="flex flex-col lg:flex-row gap-8">
+                <div class="flex-1 space-y-4">
+                    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div class="px-5 py-4 border-b border-slate-100">
+                            <p class="text-xs font-black uppercase tracking-[0.24em] text-indigo-500">通知書 / Invite Notice</p>
+                            <h4 class="text-xl font-black text-slate-900 mt-2">寄給學生的報名通知書</h4>
+                        </div>
+                        <div class="p-5">
+                            <pre class="promo-invite-letter whitespace-pre-wrap break-words text-sm leading-7 text-slate-700 font-sans bg-slate-50 rounded-2xl p-4 border border-slate-100">${escapeHtml(inviteKit.letterText)}</pre>
+                        </div>
+                        <div class="px-5 pb-5 flex flex-col sm:flex-row gap-3">
+                            <button type="button" class="promo-copy-letter inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800 transition">複製通知書</button>
+                            <button type="button" class="promo-copy-qr inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition">複製 QR 連結</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:w-72 flex-shrink-0 space-y-4">
+                    <div>
+                        <p class="text-xs font-black uppercase tracking-[0.24em] text-amber-500">招生 QR / Invite QR</p>
+                        <h3 class="text-2xl font-black text-gray-900 mt-2">推薦報名工具包</h3>
+                        <p class="text-sm text-gray-500 mt-2 leading-relaxed">學生掃描 QR Code 或點擊專屬連結後，系統會自動將課程加入購物車並套用您的推薦代碼。</p>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col items-center">
+                        <img src="${escapeHtml(inviteKit.qrUrl)}" alt="Promo invite QR code" class="w-52 h-52 rounded-xl border border-slate-200 bg-white p-3">
+                        <p class="text-[11px] text-gray-400 mt-3 text-center break-all font-mono">${escapeHtml(inviteKit.inviteUrl)}</p>
+                    </div>
+                    <div class="grid grid-cols-1 gap-3">
+                        <button type="button" class="promo-copy-link inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-700 transition">複製專屬連結</button>
+                        <a href="${escapeHtml(inviteKit.mailtoUrl)}" class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-700 transition">開啟通知信</a>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const copyLinkBtn = inviteKitEl.querySelector('.promo-copy-link');
+        const copyLetterBtn = inviteKitEl.querySelector('.promo-copy-letter');
+        const copyQrBtn = inviteKitEl.querySelector('.promo-copy-qr');
+
+        if (copyLinkBtn) {
+            copyLinkBtn.addEventListener('click', () => copyTextToClipboard(inviteKit.inviteUrl, '已複製專屬報名連結'));
+        }
+        if (copyLetterBtn) {
+            copyLetterBtn.addEventListener('click', () => copyTextToClipboard(inviteKit.letterText, '已複製通知書內容'));
+        }
+        if (copyQrBtn) {
+            copyQrBtn.addEventListener('click', () => copyTextToClipboard(inviteKit.qrUrl, '已複製 QR Code 圖片連結'));
+        }
     }
 
     // 2. Display Earnings Ledger
@@ -2552,6 +2613,85 @@ function renderEarningsTab(data) {
     }
 
     totalEarningsEl.innerText = total.toLocaleString();
+}
+
+function buildPromoInviteKit(unitId, promoCode) {
+    if (!unitId) {
+        return { ready: false, message: '請先切換到特定課程單元，才能生成專屬招生邀請工具。' };
+    }
+
+    if (!promoCode) {
+        return { ready: false, message: '此單元尚未配置推薦代碼，請先確認導師授權或聯繫管理員。' };
+    }
+
+    const canonicalUnitId = resolveCanonicalUnitId(unitId);
+    const parentCourseId = findParentCourseIdByUnit(canonicalUnitId) || canonicalUnitId;
+    const lesson = (allLessons || []).find(item => item.courseId === parentCourseId) ||
+        (allLessons || []).find(item => Array.isArray(item.courseUnits) && item.courseUnits.includes(canonicalUnitId)) ||
+        null;
+
+    const courseId = lesson?.courseId || parentCourseId;
+    const courseName = lesson?.title || lesson?.courseName || formatUnitName(parentCourseId);
+    const unitName = formatUnitName(canonicalUnitId);
+    const coursePrice = parseInt(lesson?.price ?? 0, 10) || 0;
+    const isPhysical = lesson?.isPhysical === true;
+    const tutorName = auth.currentUser?.displayName || myEmail || '授課老師';
+
+    const inviteParams = new URLSearchParams({
+        action: 'addInviteItem',
+        courseId,
+        unitId: canonicalUnitId,
+        promoCode,
+        courseName,
+        coursePrice: String(coursePrice),
+        isPhysical: String(isPhysical)
+    });
+    const inviteUrl = `${PUBLIC_SITE_URL}/cart.html?${inviteParams.toString()}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=12&data=${encodeURIComponent(inviteUrl)}`;
+
+    const letterText =
+`親愛的同學您好：
+
+歡迎加入 Vibe Coding 的「${courseName}」課程學習。
+本次推薦學習單元為：${unitName}
+
+請直接點擊下方專屬報名連結，系統會自動：
+1. 在 Shopping Cart 加入此課程項目
+2. 套用我的推薦代碼 ${promoCode}
+3. 引導您完成登入與結帳
+
+專屬報名連結：
+${inviteUrl}
+
+若您使用手機，也可以直接掃描我提供的 QR Code。
+
+完成付款後，系統會立即開通課程，並自動建立您與授課老師的輔導關係，之後作業批改與 GitHub Classroom assignment 也會依此關係運作。
+
+如有任何問題，歡迎直接回覆我。
+
+${tutorName}
+Vibe Coding`;
+
+    const mailtoSubject = `Vibe Coding 課程報名通知｜${courseName}`;
+    const mailtoUrl = `mailto:?subject=${encodeURIComponent(mailtoSubject)}&body=${encodeURIComponent(letterText)}`;
+
+    return {
+        ready: true,
+        inviteUrl,
+        qrUrl,
+        letterText,
+        mailtoUrl
+    };
+}
+
+async function copyTextToClipboard(text, successMessage = '已複製') {
+    try {
+        await navigator.clipboard.writeText(text);
+        alert(successMessage);
+    } catch (error) {
+        console.error('Clipboard copy failed:', error);
+        alert('複製失敗，請手動複製內容。');
+    }
 }
 
 window.handleDecideApplication = async function (applicationId, status) {
