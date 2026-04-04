@@ -2561,22 +2561,6 @@ function renderEarningsTab(data) {
     } else {
         inviteKitEl.innerHTML = `
             <div class="flex flex-col lg:flex-row gap-8">
-                <div class="flex-1 space-y-4">
-                    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div class="px-5 py-4 border-b border-slate-100">
-                            <p class="text-xs font-black uppercase tracking-[0.24em] text-indigo-500">通知書 / Invite Notice</p>
-                            <h4 class="text-xl font-black text-slate-900 mt-2">寄給學生的報名通知書</h4>
-                        </div>
-                        <div class="p-5">
-                            <pre class="promo-invite-letter whitespace-pre-wrap break-words text-sm leading-7 text-slate-700 font-sans bg-slate-50 rounded-2xl p-4 border border-slate-100">${escapeHtml(inviteKit.letterText)}</pre>
-                        </div>
-                        <div class="px-5 pb-5 flex flex-col sm:flex-row gap-3">
-                            <button type="button" class="promo-copy-letter inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800 transition">複製通知書</button>
-                            <button type="button" class="promo-copy-qr inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition">複製 QR 連結</button>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="lg:w-72 flex-shrink-0 space-y-4">
                     <div>
                         <p class="text-xs font-black uppercase tracking-[0.24em] text-amber-500">招生 QR / Invite QR</p>
@@ -2590,6 +2574,22 @@ function renderEarningsTab(data) {
                     <div class="grid grid-cols-1 gap-3">
                         <button type="button" class="promo-copy-link inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-700 transition">複製專屬連結</button>
                         <a href="${escapeHtml(inviteKit.mailtoUrl)}" class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-700 transition">開啟通知信</a>
+                    </div>
+                </div>
+
+                <div class="flex-1 space-y-4">
+                    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div class="px-5 py-4 border-b border-slate-100">
+                            <p class="text-xs font-black uppercase tracking-[0.24em] text-indigo-500">通知書 / Invite Notice</p>
+                            <h4 class="text-xl font-black text-slate-900 mt-2">寄給學生的報名通知書</h4>
+                        </div>
+                        <div class="p-5">
+                            <pre class="promo-invite-letter whitespace-pre-wrap break-words text-sm leading-7 text-slate-700 font-sans bg-slate-50 rounded-2xl p-4 border border-slate-100">${escapeHtml(inviteKit.letterText)}</pre>
+                        </div>
+                        <div class="px-5 pb-5 flex flex-col sm:flex-row gap-3">
+                            <button type="button" class="promo-copy-letter inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800 transition">複製通知書</button>
+                            <button type="button" class="promo-copy-qr inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition">複製 QR 連結</button>
+                        </div>
                     </div>
                 </div>
             </div>

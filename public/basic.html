@@ -13,7 +13,7 @@
 <body id="page-basic" class="flex flex-col min-h-screen">
     <div id="nav-placeholder"></div>
     <script src="js/nav-component.js?v=3"></script>
-    <script src="js/course-shared.js"></script> <!-- Added Shared Logic -->
+    <script src="js/course-shared.js?v=20260404REV"></script> <!-- Added Shared Logic -->
     <script>
         renderNav('.', { showAuth: true });
     </script>
@@ -27,7 +27,7 @@
         <div id="lesson-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
         </div>
 
-        <!-- #video-overlay removed (handled by course-shared.js) -->
+        <!-- #video-overlay removed (handled by course-shared.js?v=20260404REV) -->
     </div>
 
     <footer class="bg-gray-800 py-8 border-t border-gray-700 mt-10">
@@ -88,7 +88,7 @@
                     ? '免費'
                     : `NT$ ${parseInt(lesson.price).toLocaleString()}`;
 
-                // Use enterMediaMode from course-shared.js
+                // Use enterMediaMode from course-shared.js?v=20260404REV
                 const videoButtonHtml = lesson.videoId ? `
                     <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/${lesson.videoId}?autoplay=1&enablejsapi=1')" 
                         class="flex-1 py-2 px-3 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
@@ -170,7 +170,7 @@
         const auth = getAuth(app);
         const functions = getFunctions(app, 'asia-east1');
 
-        // Expose to window for course-shared.js vibeFetchLessons
+        // Expose to window for course-shared.js?v=20260404REV vibeFetchLessons
         window.vibeApp = app;
         window.getFunctions = getFunctions;
         window.httpsCallable = httpsCallable;
