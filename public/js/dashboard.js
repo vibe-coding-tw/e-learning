@@ -1003,7 +1003,26 @@ function renderAdminDashboard(data, filterUnitId = null) {
     const guideContent = resolveAssignmentGuide(data, filterCourseId, filterUnitId);
 
     renderChart(chartData);
-    renderAssignments(displayAssignments, guideContent);
+    (async () => {
+  const unitId = getCurrentUnitId();
+  if (!unitId) return;
+
+  // Try to read a meta tag that provides the markdown URL for this unit
+  const meta = document.querySelector(`meta[name=\"markdown-url\"][data-unit-id=\"${unitId}\"]`);
+  if (!meta) return; // No markdown link → do not render anything
+
+  // Use the URL from the meta tag; fallback to a local README if needed
+  const mdPath = meta.getAttribute('content') || `/private_courses/${unitId}/README.md`;
+
+  const markdownHtml = await loadMarkdown(mdPath);
+  const mdContainer = document.createElement('div');
+  mdContainer.className = 'markdown-embed p-4 mt-4 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-auto';
+  mdContainer.innerHTML = markdownHtml;
+
+  const assignmentsSection = document.getElementById('assignments-section');
+  if (assignmentsSection) assignmentsSection.appendChild(mdContainer);
+})();
+renderAssignments(displayAssignments, guideContent);
 }
 
 // Helper: Resolve assignment guide for a unit
@@ -1239,7 +1258,6 @@ function renderAssignments(assignments = [], guideContent = "", options = {}) {
     } else {
         renderAssignmentsTable(assignments, canManageAssignments);
     }
-
     // [V13.6] Note: Cleanup of old guides moved to the TOP of the function to prevent flickering
 }
 
