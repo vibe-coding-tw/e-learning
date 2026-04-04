@@ -1,3 +1,22 @@
+
+/** [VIBE_CORE_INIT] Emergency Injection for DASHBOARD FAB **/
+window.injectEmergencyDashboardFAB = function() {
+    if (document.getElementById("dashboard-fab")) return;
+    if (window.top !== window) return;
+    console.log("[VibeEmergency] FORCED FAB INJECTION STARTING...");
+    const btn = document.createElement("button");
+    btn.id = "dashboard-fab";
+    btn.className = "fixed bottom-8 right-8 w-16 h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group z-[10000]";
+    btn.style.zIndex = "10000";
+    btn.innerHTML = "<span style=\"font-size: 2rem;\">📊</span>";
+    btn.onclick = () => {
+        const url = "https://vibe-coding-dashboard.web.app/?courseId=" + (window.location.pathname.split("/").pop() || "index.html").split("-")[0] + "-master";
+        window.open(url, "_blank");
+    };
+    document.body.appendChild(btn);
+    console.log("[VibeEmergency] FAB INJECTED SUCCESSFULLY!");
+};
+if (document.body) { window.injectEmergencyDashboardFAB(); } else { document.addEventListener("DOMContentLoaded", window.injectEmergencyDashboardFAB); }
 /**
  * course-shared.js
  * Shared logic for Vibe Coding Course Units
