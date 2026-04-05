@@ -1008,24 +1008,25 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
     renderChart(chartData);
     (async () => {
-  const unitId = filterUnitId;
-  if (!unitId) return;
+        const unitId = filterUnitId;
+        if (!unitId) return;
 
-  // Try to read a meta tag that provides the markdown URL for this unit
-  const meta = document.querySelector(`meta[name=\"markdown-url\"][data-unit-id=\"${unitId}\"]`);
-  if (!meta) return; // No markdown link → do not render anything
+        // Derive the GitHub repo name from unitId (e.g. "01-unit-developer-identity.html" → "01-unit-developer-identity")
+        const repoName = unitId.replace(/\.html$/, '');
+        const GITHUB_ORG = 'vibe-coding-classroom';
+        const rawUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${repoName}/main/README.md`;
 
-  // Use the URL from the meta tag; fallback to a local README if needed
-  const mdPath = meta.getAttribute('content') || `/private_courses/${unitId}/README.md`;
+        console.log(`[Markdown] Loading README from: ${rawUrl}`);
+        const markdownHtml = await loadMarkdown(rawUrl);
+        if (!markdownHtml) return;
 
-  const markdownHtml = await loadMarkdown(mdPath);
-  const mdContainer = document.createElement('div');
-  mdContainer.className = 'markdown-embed p-4 mt-4 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-auto shadow-inner';
-  mdContainer.innerHTML = markdownHtml;
+        const mdContainer = document.createElement('div');
+        mdContainer.className = 'markdown-embed p-4 mt-4 bg-gray-50 rounded-lg overflow-auto shadow-inner';
+        mdContainer.innerHTML = markdownHtml;
 
-  const assignmentsSection = document.getElementById('assignments-section');
-  if (assignmentsSection) assignmentsSection.appendChild(mdContainer);
-})();
+        const assignmentsSection = document.getElementById('assignments-section');
+        if (assignmentsSection) assignmentsSection.appendChild(mdContainer);
+    })();
 
 /**
  * [NEW] Fetches and parses Markdown content from a URL
