@@ -153,27 +153,33 @@ window.renderNav = function (rootPath = '.', options = {}) {
             }
         });
 
-        // Dashboard Injector
+        // Dashboard Injector (Always show unless on specific excluded pages)
         const path = window.location.pathname;
-        if (path.includes('/courses/') || path.includes('master-') || path.includes('unit-')) {
-            const pathInfo = decodeURIComponent(path);
-            const filename = pathInfo.split('/').pop();
+        const filename = path.split('/').pop() || 'index.html';
+        const excludedPages = ['auth.html', 'cart.html', 'login.html'];
+        
+        if (!excludedPages.includes(filename)) {
             let courseId = filename.match(/^([a-zA-Z0-9]+-\d+|\d+)-/)?.[1] || '';
             if (!courseId) {
-                if (filename.includes('01-')) courseId = '01';
-                else if (filename.includes('02-')) courseId = '02';
-                else if (filename.includes('03-')) courseId = '03';
+                if (filename.includes('01-') || filename.includes('started')) courseId = '01';
+                else if (filename.includes('02-') || filename.includes('basic')) courseId = '02';
+                else if (filename.includes('03-') || filename.includes('advanced')) courseId = '03';
+                else if (filename.includes('04-')) courseId = '04';
             }
+
             if (!document.getElementById('dashboard-fab')) {
                 const fab = document.createElement('button');
                 fab.id = 'dashboard-fab';
-                fab.className = 'fixed bottom-8 right-8 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center z-50';
+                fab.className = 'fixed bottom-8 right-8 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center z-50 hover:bg-blue-700 transition-all hover:scale-110 active:scale-95 cursor-pointer';
                 fab.innerHTML = `<span class="text-3xl">📊</span>`;
-                fab.onclick = () => window.location.href = `/dashboard.html?courseId=${courseId}`;
+                fab.onclick = () => {
+                    const targetUrl = courseId ? `/dashboard.html?courseId=${courseId}` : '/dashboard.html';
+                    window.location.href = targetUrl;
+                };
                 document.body.appendChild(fab);
             }
         }
     } catch (e) {
-        console.error("[VibeNav] SDK failed to load, UI should still be active.", e);
+        console.error("[VibeNav] SDK failed to load, UI should still be active.", (e.message || e));
     }
 })();
