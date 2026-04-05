@@ -1,4 +1,4 @@
-console.log("Dashboard Script v2026.04.05.FINAL_V8.2_STABLE Loaded");
+console.log("Dashboard Script v2026.04.05.FINAL_V8.3_STABLE Loaded");
 // alert("Dashboard Script v6 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -1009,32 +1009,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
     renderChart(chartData);
     // [V8.1] GitHub README loading moved to renderAssignments for better container management
 
-/**
- * [NEW] Fetches and parses Markdown content from a URL
- * Uses marked.js (included in dashboard.html)
- */
-async function loadMarkdown(url) {
-    try {
-        console.log("[Markdown] Fetching from:", url);
-        const resp = await fetch(url);
-        if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
-        const text = await resp.text();
-        
-        if (typeof marked !== 'undefined') {
-            // Using marked.parse() for safer rendering
-            return marked.parse(text);
-        } else {
-            console.warn("[Markdown] marked.js not loaded, returning raw text.");
-            return `<pre class="whitespace-pre-wrap">${text}</pre>`;
-        }
-    } catch (e) {
-        console.error("[Markdown] Error loading or parsing:", e);
-        return `<div class="p-4 bg-red-50 border border-red-100 rounded-lg text-red-600 text-sm">
-            <h4 class="font-bold mb-1">無法讀取 GitHub README</h4>
-            <p class="opacity-75">${e.message}</p>
-        </div>`;
-    }
-}
+    // [V8.1] GitHub README loading moved to renderAssignments for better container management
 renderAssignments(displayAssignments, guideContent);
 }
 
@@ -2818,3 +2793,30 @@ window.handleDecideApplication = async function (applicationId, status) {
 
 
 // [CLEANUP] Deprecated legacy status renderers removed.
+
+/**
+ * [NEW] [V8.1] Fetches and parses Markdown content from a URL
+ * Uses marked.js (included in dashboard.html)
+ */
+async function loadMarkdown(url) {
+    try {
+        console.log("[Markdown] Fetching from GitHub Raw:", url);
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
+        const text = await resp.text();
+        
+        if (typeof marked !== 'undefined') {
+            // Using marked.parse() for safer rendering
+            return marked.parse(text);
+        } else {
+            console.warn("[Markdown] marked.js not loaded, returning raw text.");
+            return `<pre class="whitespace-pre-wrap">${text}</pre>`;
+        }
+    } catch (e) {
+        console.error("[Markdown] Error loading or parsing:", e);
+        return `<div class="p-4 bg-red-50 border border-red-100 rounded-lg text-red-600 text-sm">
+            <h4 class="font-bold mb-1">無法讀取 GitHub README</h4>
+            <p class="opacity-75">${e.message}</p>
+        </div>`;
+    }
+}
