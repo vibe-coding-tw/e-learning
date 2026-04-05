@@ -16,6 +16,7 @@ function init() {
     injectMediaOverlay();
     initAnimations();
     initFirebaseFeatures(); // [NEW] Start Firebase (Tracking + Assignments)
+    initGithubReadme(); // [V8.2] Fetch and render GitHub README if applicable
 }
 
 // Robust Initialization Logic
@@ -973,6 +974,64 @@ window.submitAssignmentAction = async function () {
 /**
  * Robustly find parent courseId for a given unit fileName
  */
+/**
+ * [V8.2] Initialize GitHub README rendering within the unit page.
+ * Finds #assignment-guide and injects README above it.
+ */
+async function initGithubReadme() {
+    const target = document.getElementById('assignment-guide');
+    if (!target) return;
+
+    // 1. Identify Unit ID
+    let unitId = "";
+    const meta = document.querySelector('meta[name="markdown-url"]');
+    if (meta) {
+        unitId = meta.getAttribute('data-unit-id') || "";
+    }
+    if (!unitId) {
+        // Fallback: Use filename
+        const path = window.location.pathname;
+        unitId = path.substring(path.lastIndexOf('/') + 1).replace('.html', '');
+    }
+
+    if (!unitId) return;
+
+    // 2. Load marked.js dynamically if not present
+    if (typeof window.marked === 'undefined') {
+        console.log("[CourseShared] Loading marked.js dynamically...");
+        const script = document.createElement('script');
+        script.src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
+        document.head.appendChild(script);
+        await new Promise((resolve) => {
+            script.onload = resolve;
+        });
+    }
+
+    // 3. Fetch README
+    const GITHUB_ORG = 'vibe-coding-classroom';
+    const rawUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${unitId}/main/README.md`;
+
+    try {
+        console.log("[CourseShared] Fetching README from Github Raw...");
+        const resp = await fetch(rawUrl);
+        if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
+        const text = await resp.text();
+        const html = window.marked.parse(text);
+
+        // 4. Inject
+        const mdContainer = document.createElement('div');
+        mdContainer.className = 'markdown-embed p-6 mt-12 mb-12 rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden';
+        mdContainer.innerHTML = html;
+        
+        // Ensure section is visible if it was hidden
+        target.style.display = 'block';
+        target.parentNode.insertBefore(mdContainer, target);
+        console.log("[CourseShared] GitHub README injected successfully.");
+    } catch (e) {
+        console.warn("[CourseShared] Failed to load GitHub README:", e);
+    }
+}
+
 async function findCourseIdByUnit(fileName) {
     console.log(`[CourseShared] Resolving CourseId for: ${fileName}`);
     try {
