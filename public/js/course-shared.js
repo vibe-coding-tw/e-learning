@@ -1,8 +1,14 @@
 /**
- * course-shared.js
+ * course-shared.js?v=2026.04.05.FINAL_V8_STABLE
  * Shared logic for Vibe Coding Course Units
  * Handles: Media Overlay (Video/Doc), Fullscreen, Mobile Zoom, and Animations
  */
+
+// Guard: Only execute once per window context
+if (window.__courseSharedLoaded) {
+    console.log("[CourseShared] Already loaded, skipping.");
+} else {
+window.__courseSharedLoaded = true;
 
 // Initializer
 function init() {
@@ -326,7 +332,7 @@ function closeModal() {
 
 // --- Event Listeners ---
 
-const handleEscKey = (e) => {
+var handleEscKey = function(e) {
     if (e.key === "Escape") {
         const overlay = document.getElementById('media-overlay');
         if (overlay && !overlay.classList.contains('hidden')) {
@@ -995,3 +1001,4 @@ async function findCourseIdByUnit(fileName) {
     console.log(`[CourseShared] Fallback resolution for ${fileName} -> ${fallbackId}`);
     return fallbackId;
 }
+} // end window.__courseSharedLoaded guard
