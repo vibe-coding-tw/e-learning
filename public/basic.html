@@ -189,6 +189,63 @@
             });
         }
 
+        vibeFetchLessons().then(lessons => {
+            const container = document.getElementById('lesson-container');
+            if (!container) return;
+
+            const pageId = document.body.id.replace('page-', ''); // started, basic, advanced
+            const courseLessons = lessons.filter(l => l.category === pageId);
+            
+            if (courseLessons.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center text-gray-400 py-12">課程內容準備中...</div>';
+                return;
+            }
+
+            const html = courseLessons.map(lesson => {
+                const isFree = lesson.price === 0;
+                const priceDisplay = isFree ? "免費" : `NT$ ${lesson.price.toLocaleString()}`;
+                const loadButtonClass = isFree ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-400";
+
+                const videoButtonHtml = lesson.videoUrl ? `
+                    <button onclick="window.enterMediaMode('video', '${lesson.videoUrl}')" class="flex items-center justify-center bg-red-50 text-red-600 p-2 rounded-md hover:bg-red-100 transition">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"/></svg>
+                    </button>
+                ` : '';
+
+                return `
+                    <div class="lesson-card bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300" 
+                         data-course-id="${lesson.id || lesson.courseId}" 
+                         data-course-name="${lesson.title || lesson.courseName}" 
+                         data-course-price="${lesson.price}" 
+                         data-classroom-url="${lesson.classroomUrl || ''}"
+                         data-is-physical="${!!lesson.isPhysical}">
+                        
+                        <div class="p-5">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">${lesson.title || lesson.courseName}</h3>
+                            <p class="text-sm text-gray-500 mb-4 line-clamp-2">${lesson.description || ''}</p>
+                            
+                            <div class="mt-4 pt-2 border-t border-gray-100 text-center">
+                                <span class="text-2xl font-bold text-blue-600 tracking-tight">${priceDisplay}</span>
+                            </div>
+
+                            <div class="flex gap-2 mt-3 button-group">
+                                ${videoButtonHtml}
+                                <button class="action-btn ${loadButtonClass} py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>
+                                    載入中...
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+
+            if (typeof window.updateAuthUI === 'function') {
+                window.updateAuthUI();
+            }
+        }).catch(err => console.error("[CoursePage] Lesson sync failed:", err));
+
         onAuthStateChanged(auth, (user) => {
             window.updateAuthUI();
         });
