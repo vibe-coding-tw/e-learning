@@ -17,6 +17,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const functions = getFunctions(app, 'asia-east1');
+const vibeFetchLessons = httpsCallable(functions, 'vibeFetchLessons');
 const PUBLIC_SITE_URL = 'https://vibe-coding.tw';
 
 // DOM Elements
