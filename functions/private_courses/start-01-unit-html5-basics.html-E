@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web App 開發環境與 HTML5 基礎 - Vibe Coding</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+</head>
+
+<body class="bg-gray-50 font-[Inter] text-gray-800">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                Web App 開發環境與<br>HTML5 基礎
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
+                從零打造你的第一個物聯網控制介面，掌握現代 Web 開發核心工作流。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Intuitive Lab -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-400"></div>
+                <div class="p-8 md:p-12">
+                    <div class="section-header-left border-l-4 border-blue-500 pl-6 mb-10">
+                        <span class="text-blue-600 font-bold tracking-wider uppercase text-sm">Module 1: Intuitive
+                            Lab</span>
+                        <h2 class="text-3xl font-bold text-gray-900 mt-2">直觀實驗室：所見即所得的開發體驗</h2>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-12 items-center">
+                        <div class="bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
+                            <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                                <span
+                                    class="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-lg">1</span>
+                                VS Code + Live Server
+                            </h3>
+                            <p class="text-gray-600 mb-6 leading-relaxed">
+                                在傳統開發中，每次修改 HTML 都需要手動重新整理瀏覽器。但在現代 Web 開發，我們使用 <strong>Live Server</strong> 來建立即時的同步通道。
+                            </p>
+
+                            <div class="space-y-4">
+                                <div class="flex gap-4 items-start p-4 bg-blue-50 rounded-lg">
+                                    <div class="text-2xl">🔌</div>
+                                    <div>
+                                        <h4 class="font-bold text-blue-900">本地伺服器 (Local Server)</h4>
+                                        <p class="text-sm text-blue-800 mt-1">模擬真實網站運作環境，讓你的電腦變成一台小型伺服器。</p>
+                                    </div>
+                                </div>
+                                <div class="flex gap-4 items-start p-4 bg-green-50 rounded-lg">
+                                    <div class="text-2xl">🔄</div>
+                                    <div>
+                                        <h4 class="font-bold text-green-900">熱重載 (Hot Reload)</h4>
+                                        <p class="text-sm text-green-800 mt-1">存檔的瞬間，瀏覽器自動更新畫面，無需手動 F5。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="relative">
+                            <!-- Setup Checklist -->
+                            <div class="bg-gray-900 rounded-xl overflow-hidden shadow-2xl">
+                                <div class="bg-gray-800 px-4 py-2 flex items-center gap-2 border-b border-gray-700">
+                                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                    <span class="text-gray-400 text-xs ml-2 font-mono">setup.task</span>
+                                </div>
+                                <div class="p-6 font-mono text-sm leading-8">
+                                    <div class="flex items-center gap-3 text-green-400">
+                                        <span class="opacity-50">1.</span>
+                                        <span>安裝 VS Code 擴充功能: Live Server</span>
+                                        <span
+                                            class="bg-green-900/50 text-green-300 px-2 py-0.5 rounded text-xs ml-auto">Done</span>
+                                    </div>
+                                    <div class="flex items-center gap-3 text-blue-300 mt-2">
+                                        <span class="opacity-50">2.</span>
+                                        <span>右鍵點擊 HTML 檔案 -> "Open with Live Server"</span>
+                                    </div>
+                                    <div class="flex items-center gap-3 text-purple-300 mt-2">
+                                        <span class="opacity-50">3.</span>
+                                        <span>尋找本機 IP (cmd: ipconfig / mac: ifconfig)</span>
+                                    </div>
+                                    <div class="flex items-center gap-3 text-yellow-300 mt-2">
+                                        <span class="opacity-50">4.</span>
+                                        <span>手機開啟: http://[電腦IP]:5500</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Floating Badge -->
+                            <div
+                                class="absolute -bottom-6 -right-6 bg-white p-4 rounded-xl shadow-lg border border-gray-100 flex items-center gap-3 animate-bounce-slow">
+                                <div
+                                    class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-2xl">
+                                    📱
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-500 font-bold uppercase">Goal</div>
+                                    <div class="font-bold text-indigo-900">手機同步預覽</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Core Principles -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-400"></div>
+                <div class="p-8 md:p-12">
+                    <div class="section-header-left border-l-4 border-indigo-500 pl-6 mb-10">
+                        <span class="text-indigo-600 font-bold tracking-wider uppercase text-sm">Module 2: Core
+                            Principles</span>
+                        <h2 class="text-3xl font-bold text-gray-900 mt-2">HTML5 骨架與行動優先設計</h2>
+                    </div>
+
+                    <div class="grid lg:grid-cols-2 gap-16">
+                        <!-- Concept 1: Semantic HTML -->
+                        <div>
+                            <h3 class="text-2xl font-bold mb-6 text-gray-800">無人車控制面板的構造 (HTML Structure)</h3>
+                            <p class="text-gray-600 mb-6">HTML5 就像房子的鋼骨結構。為了讓機器人（無人車）能被理解，我們使用具有意義的標籤。</p>
+
+                            <div class="space-y-6">
+                                <div class="group cursor-pointer">
+                                    <h4 class="font-bold text-lg mb-2 flex items-center gap-2 text-indigo-700">
+                                        <span
+                                            class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-sm">&lt;&gt;</span>
+                                        &lt;header&gt; 標題區
+                                    </h4>
+                                    <p
+                                        class="text-sm text-gray-500 pl-10 border-l-2 border-dashed border-indigo-200 ml-4 pb-2">
+                                        放置 Logo、連線狀態指示燈。告訴使用者「我在控制哪一台車」。</p>
+                                </div>
+
+                                <div class="group cursor-pointer">
+                                    <h4 class="font-bold text-lg mb-2 flex items-center gap-2 text-indigo-700">
+                                        <span
+                                            class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-sm">&lt;&gt;</span>
+                                        &lt;main&gt; 核心操作區
+                                    </h4>
+                                    <div
+                                        class="pl-10 text-sm text-gray-600 border-l-2 border-dashed border-indigo-200 ml-4 pb-2 space-y-2">
+                                        <div class="flex items-center gap-2"><span
+                                                class="font-mono bg-gray-100 px-2 rounded text-pink-600">&lt;video&gt;</span>
+                                            ESP32-CAM 即時串流影像</div>
+                                        <div class="flex items-center gap-2"><span
+                                                class="font-mono bg-gray-100 px-2 rounded text-pink-600">&lt;button&gt;</span>
+                                            前進、後退、轉彎控制</div>
+                                        <div class="flex items-center gap-2"><span
+                                                class="font-mono bg-gray-100 px-2 rounded text-pink-600">&lt;input
+                                                type="range"&gt;</span> 速度控制拉桿</div>
+                                    </div>
+                                </div>
+
+                                <div class="group cursor-pointer">
+                                    <h4 class="font-bold text-lg mb-2 flex items-center gap-2 text-indigo-700">
+                                        <span
+                                            class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-sm">&lt;&gt;</span>
+                                        &lt;footer&gt; 狀態資訊
+                                    </h4>
+                                    <p
+                                        class="text-sm text-gray-500 pl-10 border-l-2 border-dashed border-indigo-200 ml-4 pb-2">
+                                        顯示 IP 位址、版權宣告、除錯訊息。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Concept 2: Mobile First -->
+                        <div class="bg-gray-50 rounded-2xl p-8 border border-gray-100">
+                            <h3 class="text-2xl font-bold mb-6 text-gray-800">行動優先 (Mobile First) 的關鍵</h3>
+                            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                                <p class="font-bold text-yellow-800">為什麼手機網頁字這麼小？</p>
+                                <p class="text-sm text-yellow-700 mt-1">預設情況下，手機會假裝自己是 980px 寬的電腦螢幕，然後縮小顯示。這對操控遙控車是致命的。
+                                </p>
+                            </div>
+
+                            <div class="bg-gray-900 rounded-lg p-4 font-mono text-sm shadow-inner mb-4">
+                                <span class="text-gray-500">&lt;head&gt;</span><br>
+                                <span class="pl-4 text-purple-400">&lt;meta</span> <span
+                                    class="text-sky-300">name</span>=<span class="text-orange-300">"viewport"</span><br>
+                                <span class="pl-8 text-sky-300">content</span>=<span
+                                    class="text-orange-300">"width=device-width, initial-scale=1.0"</span><span
+                                    class="text-purple-400">&gt;</span><br>
+                                <span class="text-gray-500">&lt;/head&gt;</span>
+                            </div>
+
+                            <ul class="space-y-3 text-sm">
+                                <li class="flex items-center gap-2 text-gray-700">
+                                    <span class="text-green-500">✔</span>
+                                    <strong>width=device-width</strong>: 強制網頁寬度等於手機螢幕寬度 (1:1)。
+                                </li>
+                                <li class="flex items-center gap-2 text-gray-700">
+                                    <span class="text-green-500">✔</span>
+                                    <strong>initial-scale=1.0</strong>: 初始縮放比例為 100%。
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Practical Challenge -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-400"></div>
+                <div class="p-8 md:p-12">
+                    <div class="section-header-left border-l-4 border-pink-500 pl-6 mb-10">
+                        <span class="text-pink-600 font-bold tracking-wider uppercase text-sm">Module 3: Practical
+                            Challenge</span>
+                        <h2 class="text-3xl font-bold text-gray-900 mt-2">實戰挑戰：打造你的駕駛艙</h2>
+                    </div>
+
+                    <!-- Git Base Station Metaphor -->
+                    <div
+                        class="bg-slate-900 rounded-xl p-6 mb-12 text-blue-300 font-mono text-sm border-l-4 border-blue-500">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="text-2xl">📡</span>
+                            <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
+                        </div>
+                        <p class="mb-4 text-slate-400">在任務中，GitHub 是你的「基地台」。請確保每完成一個里程碑，就將數據回傳。</p>
+                        <ul class="space-y-2">
+                            <li class="flex items-center gap-2">
+                                <span class="text-blue-500">Step 1.</span>
+                                <span>接受 GitHub Classroom 邀請，複製 (Clone) 專屬任務倉庫。</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-blue-500">Step 2.</span>
+                                <span>完成代碼撰寫後，執行 <code
+                                        class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code>
+                                    將進度上傳。</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-blue-500">Step 3.</span>
+                                <span>自動化助理會即時在 PR (Pull Request) 中回饋評分結果。</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <!-- Task 1 -->
+                        <div onclick="openSubmissionModal('html5-basics-task-1', '作業 1-1: 實機部署與跨裝置連線')"
+                            class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col">
+                            <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-2"></div>
+                            <div class="p-6 flex-grow">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-xl text-gray-800 group-hover:text-blue-600 transition">作業
+                                        1-1</h3>
+                                    <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">45
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">實機部署與跨裝置連線</h4>
+                                <p class="text-sm text-gray-500 mb-4">目標：讓你的手機連上電腦的 Live Server。完成後請截圖存放在 <code
+                                        class="text-blue-600">README.md</code> 回報。</p>
+
+                                <div class="mt-4 pt-4 border-t border-gray-100">
+                                    <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Troubleshooting</h5>
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-[10px] text-gray-600 border-collapse">
+                                            <thead>
+                                                <tr class="bg-gray-50">
+                                                    <th class="border p-1 text-left">徵兆</th>
+                                                    <th class="border p-1 text-left">對策</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="border p-1">找不到網頁</td>
+                                                    <td class="border p-1">確認手機與電腦是否在同一個 WiFi</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="border p-1">連線被拒絕</td>
+                                                    <td class="border p-1">檢查電腦防火牆是否允許 VS Code</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Click Hint Overlay -->
+                            <div
+                                class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span
+                                    class="bg-white text-blue-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                                    📤 點擊繳交作業
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Task 2 -->
+                        <div onclick="openSubmissionModal('html5-basics-task-2', '作業 1-2: 觸控友善性優化')"
+                            class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col">
+                            <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 h-2"></div>
+                            <div class="p-6 flex-grow">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-xl text-gray-800 group-hover:text-indigo-600 transition">
+                                        作業 1-2
+                                    </h3>
+                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">60
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">觸控友善性優化</h4>
+                                <p class="text-sm text-gray-500 mb-4">目標：解決點擊延遲與誤觸。讓按鈕適合大拇指操作。</p>
+
+                                <div class="mt-4 pt-4 border-t border-gray-100">
+                                    <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Key CSS</h5>
+                                    <code class="block bg-gray-900 text-green-400 p-2 rounded text-xs font-mono">
+                                user-select: none;<br>
+                                touch-action: manipulation;
+                            </code>
+                                    <p class="text-xs text-gray-500 mt-2">防止長按選取文字與雙擊縮放。</p>
+                                </div>
+                            </div>
+                            <!-- Click Hint Overlay -->
+                            <div
+                                class="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span
+                                    class="bg-white text-indigo-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                                    📤 點擊繳交作業
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Task 3 -->
+                        <div onclick="openSubmissionModal('html5-basics-task-3', '作業 1-3: FPV 影像容器佈局')"
+                            class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col">
+                            <div class="bg-gradient-to-r from-pink-500 to-pink-600 h-2"></div>
+                            <div class="p-6 flex-grow">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-xl text-gray-800 group-hover:text-pink-600 transition">作業
+                                        1-3</h3>
+                                    <span class="bg-pink-100 text-pink-700 text-xs px-2 py-1 rounded font-bold">45
+                                        min</span>
+                                </div>
+                                <h4 class="font-bold text-gray-700 mb-2">FPV 影像容器佈局</h4>
+                                <p class="text-sm text-gray-500 mb-4">目標：實作滿版影像容器，解決 16:9 vs 21:9 比例問題。</p>
+
+                                <div class="mt-4 pt-4 border-t border-gray-100">
+                                    <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Visual Feedback</h5>
+                                    <p class="text-sm text-gray-600 mb-2">使用 CSS <code
+                                            class="text-pink-600 font-mono">object-fit: cover</code> 確保影像不變形。</p>
+                                    <p class="text-[10px] text-gray-500 italic">💡 進階任務：建立多個 Branch (如 feature/ios,
+                                        feature/android) 測試不同比例顯示效果。</p>
+                                </div>
+                            </div>
+                            <!-- Click Hint Overlay -->
+                            <div
+                                class="absolute inset-0 bg-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span
+                                    class="bg-white text-pink-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                                    📤 點擊繳交作業
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-900 text-white py-12 border-t border-gray-800">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500">© 2024 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Media Overlay injected by course-shared.js?v=20260404REV -->
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/Vyn9KVCsvb0?autoplay=1",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vTCF7RjZXdhW4uyPmKkCcXUGr0ejVJUjU6ixDYAuB7bF2UNadtNI6m34jz813rAE1iViYS2d3p4Q8G7/pub?embedded=true"
+        };
+    </script>
+    <script src="/js/course-shared.js?v=20260404REV"></script>
+
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>HTML5 基礎與行動裝置預覽</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：實機部署與跨裝置連線</h3>
+            <div class="quest-meta">
+                <span>角色扮演：部署工程師</span> | <span>難度：⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>啟動預覽</strong>：以 VS Code Live Server 或等效本地伺服器啟動專案首頁。</li>
+                    <li><strong>查找網址</strong>：確認電腦的區域網路 IP，整理成手機可直接輸入的網址。</li>
+                    <li><strong>跨裝置測試</strong>：讓手機與電腦連上同一 Wi-Fi，成功從手機打開頁面並完成操作預覽。</li>
+                    <li><strong>提交證據</strong>：將手機成功連線的截圖與測試心得貼進 <code>README.md</code> 後提交。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>部署成功</strong>：學生是否真的完成手機連入本機頁面，而不是只停留在桌面截圖？</li>
+                    <li>[ ] <strong>問題排查</strong>：是否能說明同網段、埠號、防火牆等基本排錯步驟？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：觸控友善性優化</h3>
+            <div class="quest-meta">
+                <span>角色扮演：介面工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>檢查互動區</strong>：盤點頁面中需要點擊或拖曳的按鈕、卡片與控制區塊。</li>
+                    <li><strong>撰寫 CSS</strong>：在 <code>style.css</code> 補上 <code>touch-action</code>、<code>user-select</code> 與足夠的點擊熱區。</li>
+                    <li><strong>行動裝置驗證</strong>：以手機或 DevTools 裝置模擬確認沒有雙擊縮放、文字被誤選取或按鈕過小問題。</li>
+                    <li><strong>提交說明</strong>：在 README 紀錄你調整了哪些 CSS 屬性，以及它們改善了哪一種誤觸情境。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>觸控可用性</strong>：是否明確使用 <code>touch-action: manipulation</code>、<code>user-select: none</code> 或等效策略？</li>
+                    <li>[ ] <strong>設計合理性</strong>：按鈕尺寸、間距與可點擊區域是否符合手機拇指操作情境？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：FPV 影像容器佈局</h3>
+            <div class="quest-meta">
+                <span>角色扮演：前端開發者</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立容器</strong>：為影像區建立穩定的寬高與背景，避免載入前後跳版。</li>
+                    <li><strong>處理比例</strong>：使用 <code>object-fit</code> 或等效策略測試 16:9、4:3 等不同影像來源。</li>
+                    <li><strong>比較效果</strong>：確認畫面在桌機、手機直式與手機橫式下都不會拉伸變形。</li>
+                    <li><strong>提交成果</strong>：在 README 附上至少一張完成畫面與你選擇 <code>contain</code> / <code>cover</code> 的原因。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>畫面品質</strong>：影像是否保持比例、沒有明顯拉伸，且容器在不同螢幕尺寸下仍穩定？</li>
+                    <li>[ ] <strong>選型說明</strong>：學生是否能說明 <code>object-fit</code> 選擇與裁切取捨？</li>
+                </ul>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- Tutor Guide (Hidden) -->
+    <section id="tutor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>在 GitHub 建立新 Repo（名為 <code>html5-basics-template</code>）。</li>
+                <li>上傳基礎結構。</li>
+                <li>在 Repo 設定中勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>進入 GitHub Classroom 建立新作業。</li>
+                <li>選擇「Individual Assignment」，並連結上述的範本倉庫。</li>
+                <li><strong>重點設定：</strong>勾選 <strong>"Enable feedback pull requests"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生點擊作業連結，獲得個人專屬 Repo。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR 的 <strong>Files Changed</strong>。</li>
+                <li>針對學生的 CSS 優化細節給予專業建議。</li>
+            </ol>
+        </div>
+
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>建議範本倉庫設置如下：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html       # 基礎 HTML 結構（含 meta viewport）
+├── style.css        # 學生需在此填寫觸控優化 CSS
+├── assets/          # 預置的 ESP32-CAM 測試影像
+└── README.md        # 供學生貼上手機連線截圖</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>index.html (基礎結構)</strong></p>
+        <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;link rel="stylesheet" href="style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="video-container"&gt;
+        &lt;img src="assets/esp32-stream.jpg" id="live-feed"&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+        <p><strong>style.css (觸控優化)</strong></p>
+        <pre><code>.video-container {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #000;
+}
+#live-feed {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* 確保不變形 */
+}</code></pre>
+
+        <p><strong>README.md (作業報告樣板)</strong></p>
+        <pre><code># HTML5 基礎實作：ESP32-CAM 監控介面
+- 姓名：[您的名字]
+- 學號：[您的學號]
+
+## 實作截圖
+![手機連線截圖](assets/my-result.jpg)
+> 請將您的手機瀏覽截圖命名為 my-result.jpg 並放入 assets 檔案夾。
+
+## 心得反饋
+- 遇到的挑戰：[例如：object-fit 的比例調整...]
+- 如何解決：[例如：查閱 MDN 文件...]</code></pre>
+
+        <p><strong>assets/ (資源目錄)</strong></p>
+        <ul>
+            <li>請預放一張名為 <code>esp32-stream.jpg</code> 的測試圖片供 <code>index.html</code> 預設顯示。</li>
+            <li>提醒學生將測試截圖存入此目錄。</li>
+        </ul>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>關鍵字檢查：</strong> 掃描 <code>style.css</code> 是否包含 <code>width=device-width</code> (雖然常在
+                HTML，但練習中可要求 CSS 註解或特定屬性)。</li>
+            <li><strong>README 檢查：</strong> 確認 <code>README.md</code> 中的圖片鏈接是否已更新（非預設占位圖）。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看環境架設影片，Clone 倉庫並完成 1-1 截圖。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>檢查誰還沒成功建立本地環境。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">分組測試不同手機的反饋，完成 1-2 優化並 Push。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>PR Review：</strong>在代碼中點評 CSS 屬性的正確性。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">挑戰 1-3 的 FPV 佈局，解決不同裝置的比例問題。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>核發最終評語，確認理解「行動優先」概念。</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+</body>

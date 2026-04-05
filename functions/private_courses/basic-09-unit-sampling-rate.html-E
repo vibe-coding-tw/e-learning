@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數據流與取樣率 (Sampling Rate) - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1551288049-bbbda546697a?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 9 - 數據通訊
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit] uppercase tracking-tighter">
+                數據、速度與控制：<br><span class="text-pink-400">數據流與取樣率</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
+                理解高頻更新與瓶頸平衡。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Sampling Rate Definition -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-blue-500 text-justify">📡</span> 1. 什麼是取樣率 (Sampling Rate)？
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 text-justify">
+                        <div class="space-y-6 text-justify">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify uppercase tracking-tight">
+                                每秒讀取次數 (Hz)。衡量控制精準度的核心。
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-justify uppercase tracking-widest leading-relaxed">
+                                <div class="p-4 rounded-xl border border-slate-100 shadow-sm bg-slate-50 text-justify">
+                                    <p class="text-slate-800 font-bold mb-1 text-[10px] text-justify">1 Hz</p>
+                                    <p class="text-red-500 italic text-[9px] text-justify">頓挫嚴重。無法穩定。</p>
+                                </div>
+                                <div class="p-4 rounded-xl border border-blue-100 shadow-sm bg-blue-50 text-justify">
+                                    <p class="text-blue-800 font-bold mb-1 text-[10px] text-justify">20 Hz</p>
+                                    <p class="text-blue-500 italic text-[9px] text-justify">基本遙控感。低速巡航。</p>
+                                </div>
+                                <div class="p-4 rounded-xl border border-emerald-100 shadow-sm bg-emerald-50 text-justify">
+                                    <p class="text-emerald-800 font-bold mb-1 text-[10px] text-justify">50+ Hz</p>
+                                    <p class="text-emerald-500 italic text-[9px] text-justify">專業響應。絲般順滑。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-8 rounded-3xl shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center bg-slate-900 text-justify uppercase tracking-widest font-black">
+                            <h4 class="font-bold text-slate-500 mb-6 uppercase tracking-widest text-[10px] text-justify">Discrete Control Theory</h4>
+                            <p class="text-slate-400 font-light mb-4 text-[11px] text-justify uppercase tracking-widest font-black">"頻率越高，修正越及時。"</p>
+                            <div class="w-full h-1.5 rounded-full overflow-hidden bg-slate-800 text-justify">
+                                <div class="w-4/5 h-full bg-blue-500 animate-[pulse_1s_infinite] text-justify"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Bottlenecks & Bandwidth -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-orange-500 to-amber-500"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-orange-500 text-justify">⚠️</span> 2. 瓶頸：頻寬與延遲
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 text-justify uppercase tracking-widest">
+                        <div class="space-y-8 text-justify">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify uppercase tracking-tighter">
+                                取樣率受限於硬體（藍牙 MTU、解析 JSON 時間）。
+                            </p>
+                            <div class="p-8 rounded-3xl border border-amber-100 text-center bg-amber-50 text-justify uppercase tracking-widest font-black">
+                                <h4 class="text-amber-900 font-bold mb-4 text-xs uppercase tracking-widest text-justify">Golden Rule</h4>
+                                <div class="text-xl font-mono text-amber-600 text-justify uppercase tracking-widest font-black text-center">
+                                   \[Hz \times PacketSize < Bandwidth\]
+                                </div>
+                                <p class="text-slate-400 mt-4 italic font-light text-[10px] text-justify uppercase tracking-tighter">優化：壓縮 JSON Key 名稱。</p>
+                            </div>
+                        </div>
+
+                        <div class="p-8 rounded-3xl shadow-2xl border border-slate-700 flex items-center justify-center bg-slate-900 text-justify uppercase tracking-widest font-black text-left">
+                           <div class="mermaid text-justify">
+                                graph TD
+                                A[App Cmd] -->|Hz| B{BT Channel}
+                                B -->|BW Limit| C[ESP32 Buffer]
+                                C -->|Parse| D[Motor Execution]
+                                style B fill:#451a03,stroke:#9a3412,color:#fff
+                                style D fill:#064e3b,stroke:#059669,color:#fff
+                           </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Nyquist & Smoothing -->
+        <section class="module-section mb-16">
+            <div class="glass-card rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700 bg-slate-900">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-pink-400 text-justify uppercase tracking-widest font-black">
+                        <span class="p-2 bg-pink-500/20 rounded-lg text-pink-400 text-2xl text-justify font-black">🌀</span> 3. 滑動濾波與節流
+                    </h2>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center text-justify">
+                        <div class="flex-1 space-y-6 text-justify">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg text-justify uppercase tracking-tighter">
+                                取樣頻率需與物理動作匹配。使用「滑動平均」平滑噪聲。
+                            </p>
+                            <div class="p-8 rounded-3xl border border-pink-500/20 shadow-inner bg-pink-500/10 text-justify uppercase tracking-widest font-black">
+                                <h4 class="font-bold text-pink-400 mb-4 text-xs uppercase tracking-widest text-justify">Signal Processing</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light text-justify uppercase tracking-widest">
+                                    <li class="flex items-start gap-2 text-justify"><span class="w-1.5 h-1.5 bg-pink-500 rounded-full mt-1"></span><div><strong class="text-white text-justify">混疊 (Aliasing)</strong>：取樣太慢導致方向轉向誤判。</div></li>
+                                    <li class="flex items-start gap-2 text-justify"><span class="w-1.5 h-1.5 bg-pink-500 rounded-full mt-1"></span><div><strong class="text-white text-justify">滑動平均 (SMA)</strong>：利用 Buffer 取均值，消除毛刺噪聲。</div></li>
+                                    <li class="flex items-start gap-2 text-justify"><span class="w-1.5 h-1.5 bg-pink-500 rounded-full mt-1"></span><div><strong class="text-white text-justify">節流 (Throttling)</strong>：確保發送頻率封頂，防止緩衝區溢位。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="lg:w-80 p-10 rounded-3xl border border-pink-500/20 text-center relative overflow-hidden group bg-pink-600/10 text-justify">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-pink-500/5 rounded-full group-hover:scale-150 transition-transform duration-700 text-justify"></div>
+                           <h4 class="text-pink-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-justify uppercase tracking-widest font-black">Bandwidth Optimization</h4>
+                           <p class="text-slate-500 leading-relaxed font-light mb-8 italic text-[11px] text-justify uppercase tracking-tighter font-black">
+                                "發送適量資訊，賦予最大執行價值。"
+                           </p>
+                           <div class="inline-block px-8 py-3 bg-pink-500 text-white rounded-xl font-bold text-[10px] shadow-lg text-justify uppercase tracking-widest font-black">Start Stream Lab</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：數據流管理與優化</h2>
+            <p class="text-center text-gray-500 mb-12">提升系統即時性與韌性。</p>
+
+            <div class="grid md:grid-cols-3 gap-6 text-justify uppercase tracking-widest">
+                <!-- Task 9-1 -->
+                <div onclick="openSubmissionModal('basic-09-sampling-1', '【作業 9-1】抖動測試：取樣頻率與手感 (Jitter & Control Feel)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify text-left uppercase tracking-widest">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform text-justify">🕹️</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase text-justify">60 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition text-justify font-black">【作業 9-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify font-black uppercase tracking-widest">「能量與響應實測」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            實作頻率控制。量化分析頻率對「操縱延時感」的物理貢獻。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 9-2 -->
+                <div onclick="openSubmissionModal('basic-09-sampling-2', '【作業 9-2】感測器數據降噪：滑動平均濾波 (Moving Average)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify uppercase tracking-tighter">
+                    <div class="bg-amber-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-amber-500 group-hover:rotate-12 transition-transform text-justify">📈</span>
+                            <span class="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded font-bold uppercase text-justify">60 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-amber-600 transition text-justify font-black uppercase tracking-widest text-left">【作業 9-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify uppercase tracking-widest font-black">「數據平滑架構」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            實作 FIFO Buffer。權衡過濾品質與響應延遲間的拉鋸。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 9-3 -->
+                <div onclick="openSubmissionModal('basic-09-sampling-3', '【作業 9-3】通訊節流與協定優化 (Throttling & Protocol)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify uppercase tracking-widest font-black text-left">
+                    <div class="bg-pink-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-pink-500 group-hover:translate-x-1 transition-transform text-justify">🛡️</span>
+                            <span class="bg-pink-100 text-pink-700 text-xs px-2 py-1 rounded font-bold uppercase text-justify">45 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-pink-600 transition text-justify font-black uppercase tracking-widest text-left">【作業 9-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-left text-justify font-black uppercase tracking-tighter">「節流保護」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            實行 Throttling 防止擁塞。優化 JSON 達成高頻穩定通訊。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700 text-center">
+        <div class="container mx-auto px-4 text-center text-center">
+            <p class="text-gray-500 text-sm mb-4 text-center">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400 text-center uppercase tracking-widest font-black border border-slate-700">
+                <span>課程單元 基礎 9 - 數據通訊</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/pGw6b-owQEQ",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vRoNkB1atBGt4pIMazI4QH0Z6RFPyNqnfTgC6eJ1tgzf2GBXwpoobcVIvLI3MFgP3hGgXTRJ5MyZgfP/pub?embedded=true"
+        };
+    </script>
+    <script src="/js/course-shared.js?v=20260404REV"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">數據流與信號處理實驗室：取樣率、數據瓶頸與滑動濾波實戰</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title text-justify">任務 1：抖動測試：取樣頻率與手感 (Jitter & Control Feel)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：調校工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫。</li>
+                    <li><strong>控制器實作</strong>：在 App 加入滑桿動態切換頻率。</li>
+                    <li><strong>手感對比</strong>：記錄 5Hz 與 50Hz 操控差異。</li>
+                    <li><strong>探究邊界</strong>：記錄丟失封包臨界值。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>對比數據完整</strong>：README 量化展示影響？</li>
+                    <li>[ ] <strong>結論具體</strong>：得出「黃金頻率」值？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title text-justify">任務 2：感測器數據降噪：滑動平均濾波 (Moving Average Filter)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：數據專員</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>噪雜觀察</strong>：量化數據抖動範圍。</li>
+                    <li><strong>FIFO 實作</strong>：建立長度 8-16 循環 Buffer。</li>
+                    <li><strong>均值演算</strong>：對比處理前後信號平滑度。</li>
+                    <li><strong>延遲分析</strong>：權衡消噪與遲滯。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>濾波品質</strong>：成功消除 80% 以上隨機噪聲？</li>
+                    <li>[ ] <strong>邏輯抽像</strong>：索引環繞處理妥當？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title text-justify">任務 3：通訊節流與協定優化 (Throttling & Protocol Optimization)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：優化專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>壓力測試</strong>：觀察寫入過快是否當機。</li>
+                    <li><strong>節流機制</strong>：間隔不低於 20ms。</li>
+                    <li><strong>協定壓縮</strong>：重寫 JSON 壓縮 Key 名稱。</li>
+                    <li><strong>提交成果</strong>：推送具保護邏輯代碼。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>穩定性提升</strong>：操控頻率下保持不掉線？</li>
+                    <li>[ ] <strong>指標對比</strong>：展示瘦身對響應性的貢獻？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tutor Guide (Hidden) -->
+    <section id="tutor-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify text-left">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：轉化「原始數據」為「控制流」。</p>
+            <ol class="space-y-4 text-slate-600 text-justify text-left">
+                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：奈奎斯特</strong> - 匹配物理動作頻率。</li>
+                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：平滑與延遲</strong> - 鼓勵找出環境最優解。</li>
+                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：協定効能與節流</strong> - 管理有限頻寬。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify uppercase tracking-widest font-black border border-slate-700">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300 text-justify uppercase tracking-widest font-black text-left">
+            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm text-justify uppercase tracking-widest font-black border border-slate-100">
+.
+├── src/DataHandler.js# (必修) Throttling 實作
+├── src/main.cpp      # (硬體) 緩衝區實作
+└── README.md         # 實驗報告
+            </pre>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify uppercase tracking-widest font-black">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-center text-justify font-black">
+            <table class="w-full text-left border-collapse border border-slate-100 text-justify font-black">
+                <thead>
+                    <tr class="bg-slate-100 border border-slate-100 text-justify font-black">
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600 border border-slate-100 text-justify font-black">
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5 text-justify">觀看奈奎斯特科普影片。</td>
+                        <td class="px-6 py-5 text-justify border border-slate-100"><strong>Dashboard:</strong> 測試識別混疊現象。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify border border-slate-100 text-left">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify text-left">領取 Repo，調整頻率測試手感。</td>
+                        <td class="px-6 py-5 text-left text-justify border border-slate-100 font-black"><strong>助教引導:</strong> 演示 DevTools 查看推送間隔。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
+                        <td class="px-6 py-5 text-justify text-left text-justify font-black">將自適應機制整合至控制庫。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價綜合平衡深度。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</body>
+
+</html>

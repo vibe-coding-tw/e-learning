@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI/UX 設計規範：從視覺到體驗 - Vibe Coding</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Noto+Sans+TC:wght@400;500;700&display=swap"
+        rel="stylesheet">
+
+
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=2940&auto=format&fit=crop')] opacity-10 bg-cover bg-center mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                UI/UX 設計規範：<br>從視覺到體驗
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
+                不只是好看，更要好用。學習如何利用「翻轉教室」的概念，設計出直覺、高效且符合人體工學的 FPV 遙控介面。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 max-w-6xl flex-grow pb-20 -mt-20 relative z-20">
+
+        <!-- Module 1: Thumb Zone & Ergonomics -->
+        <section class="mb-20">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="h-1 bg-gradient-to-r from-teal-500 to-emerald-400"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <!-- Concept -->
+                        <div class="flex-1 space-y-6">
+                            <div class="border-l-4 border-teal-500 pl-6">
+                                <span class="text-teal-600 font-bold tracking-wider uppercase text-sm">Module 1: Thumb
+                                    Zone</span>
+                                <h2 class="text-3xl font-bold text-gray-900 mt-2">拇指操作區與人體工學</h2>
+                            </div>
+
+                            <p class="text-gray-600 leading-relaxed">
+                                在設計手機遙控介面時，**Thumb Zone（拇指熱區）**
+                                是最關鍵的概念。了解雙手持握時，拇指能輕鬆觸及的範圍，決定了核心按鈕的佈局。
+                            </p>
+
+                            <div class="bg-teal-50 p-6 rounded-xl border border-teal-100">
+                                <h3 class="font-bold text-teal-800 mb-3 flex items-center gap-2">
+                                    <span class="text-lg">💡</span> 關鍵思考
+                                </h3>
+                                <ul class="space-y-3 text-sm font-mono text-gray-700">
+                                    <li class="flex items-start gap-3">
+                                        <span class="mt-1 text-teal-500">➜</span>
+                                        <span>為什麼「緊急停止」必須放在兩側下方最容易按到的地方？</span>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <span class="mt-1 text-teal-500">➜</span>
+                                        <span>為什麼「設定選單」通常放在螢幕中央或上方較難觸及的區域？</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Phone Mockup -->
+                        <div
+                            class="flex-1 flex flex-col items-center justify-center bg-slate-50 rounded-2xl p-8 border border-slate-100">
+                            <div
+                                class="phone-mockup relative bg-white border-4 border-gray-200 rounded-[2rem] shadow-xl overflow-hidden w-[280px] h-[400px] flex items-center justify-center">
+                                <div class="absolute inset-x-0 bottom-0 h-full w-full opacity-50">
+                                    <div class="thumb-zone zone-hard absolute inset-0 bg-red-100/30"></div>
+                                    <div
+                                        class="thumb-zone zone-ok absolute bottom-0 left-0 right-0 h-2/3 bg-yellow-100/30 rounded-t-full transform scale-125">
+                                    </div>
+                                    <div
+                                        class="thumb-zone zone-easy absolute bottom-0 left-0 right-0 h-1/2 bg-green-100/30 rounded-t-full transform scale-90">
+                                    </div>
+                                </div>
+
+                                <!-- Buttons placed in zones -->
+                                <div class="absolute bottom-8 left-6 right-6 flex justify-between z-10">
+                                    <button
+                                        class="w-14 h-14 rounded-full bg-[#E76F51] shadow-lg text-white font-bold text-[10px] flex items-center justify-center transition hover:scale-110 active:scale-95 animate-pulse ring-2 ring-white/50">STOP</button>
+                                    <button
+                                        class="w-14 h-14 rounded-full bg-[#2A9D8F] shadow-lg text-white font-bold text-[10px] flex items-center justify-center transition hover:scale-110 active:scale-95 ring-2 ring-white/50">GO</button>
+                                </div>
+
+                                <div class="absolute top-12 right-6 z-10">
+                                    <button
+                                        class="w-8 h-8 rounded bg-gray-400/80 shadow text-white flex items-center justify-center text-[10px] backdrop-blur-sm">≡</button>
+                                </div>
+
+                                <div class="z-20 text-center pointer-events-none space-y-8 mt-[-40px]">
+                                    <span
+                                        class="text-[10px] font-bold text-red-400 bg-white/90 px-2 py-1 rounded shadow-sm">Hard</span>
+                                    <span
+                                        class="text-[10px] font-bold text-yellow-500 bg-white/90 px-2 py-1 rounded shadow-sm">Stretch</span>
+                                    <span
+                                        class="text-[10px] font-bold text-green-600 bg-white/90 px-2 py-1 rounded shadow-sm">Natural</span>
+                                </div>
+                            </div>
+                            <p class="text-center text-xs text-gray-500 mt-6 font-mono">Interactive: Try clicking the
+                                buttons</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-gray-200 my-16">
+
+        <!-- Module 2: Visual Hierarchy -->
+        <section class="mb-20">
+            <div class="flex items-center gap-3 mb-8 justify-center">
+                <span
+                    class="bg-[#E76F51] text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl">2</span>
+                <h2 class="text-3xl font-bold text-gray-800">視覺階層與認知負荷</h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 mb-12">
+                <!-- Concept Card 1 -->
+                <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition border-t-4 border-[#E76F51]">
+                    <div
+                        class="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center text-red-600 mb-4 text-2xl">
+                        ⚠️</div>
+                    <h3 class="font-bold text-xl mb-3">色彩編碼</h3>
+                    <p class="text-gray-600 text-sm mb-4">顏色傳遞訊息，不需文字。紅色與黃色能瞬間抓住注意力，綠色則給人安全感。</p>
+                    <div class="flex gap-2">
+                        <span class="w-6 h-6 rounded-full bg-red-500 shadow-sm" title="Stop/Danger"></span>
+                        <span class="w-6 h-6 rounded-full bg-yellow-400 shadow-sm" title="Warning"></span>
+                        <span class="w-6 h-6 rounded-full bg-green-500 shadow-sm" title="Connect/Go"></span>
+                    </div>
+                </div>
+
+                <!-- Concept Card 2 -->
+                <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition border-t-4 border-[#2A9D8F]">
+                    <div
+                        class="h-12 w-12 bg-teal-100 rounded-lg flex items-center justify-center text-teal-600 mb-4 text-2xl">
+                        📏</div>
+                    <h3 class="font-bold text-xl mb-3">大小差異</h3>
+                    <p class="text-gray-600 text-sm mb-4">最重要的功能應該最大。根據 Fitts's Law，目標越大、距離越近，操作所需時間越短。</p>
+                    <div class="flex items-center gap-4 mt-2">
+                        <div class="w-8 h-8 rounded bg-gray-300"></div>
+                        <div
+                            class="w-16 h-16 rounded-full bg-[#1D3557] shadow-md flex items-center justify-center text-white text-xs">
+                            Primary</div>
+                    </div>
+                </div>
+
+                <!-- Concept Card 3 -->
+                <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition border-t-4 border-[#457B9D]">
+                    <div
+                        class="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4 text-2xl">
+                        🧠</div>
+                    <h3 class="font-bold text-xl mb-3">資訊降噪</h3>
+                    <p class="text-gray-600 text-sm">FPV 競速時，駕駛者沒有時間閱讀。只顯示當下必要的數據，隱藏次要資訊，降低認知負荷。</p>
+                </div>
+            </div>
+
+            <div class="bg-[#1D3557] rounded-2xl p-8 text-white text-center">
+                <h3 class="text-2xl font-bold mb-4">🎯 學習目標</h3>
+                <p class="opacity-90 max-w-2xl mx-auto">
+                    預習如何減少操作者的認知負擔，讓使用者在高速飛行時不需要「思考」按鈕在哪裡，而是憑「直覺」操作。
+                </p>
+            </div>
+        </section>
+
+        <hr class="border-gray-200 my-16">
+
+        <!-- Module 3: Feedback Loops -->
+        <section class="mb-20 grid md:grid-cols-2 gap-12">
+            <div class="order-2 md:order-1 bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+                <h3 class="text-xl font-bold mb-6 text-gray-800 text-center">按鈕狀態實驗室</h3>
+                <div class="space-y-8">
+                    <!-- Default/Hover/Active Demo -->
+                    <div class="flex flex-col items-center gap-4">
+                        <span class="text-sm font-bold text-gray-400 uppercase tracking-widest">Normal State</span>
+                        <div class="flex gap-6">
+                            <button id="btn-demo-1"
+                                class="demo-btn px-6 py-3 bg-[#E76F51] text-white rounded-lg font-bold shadow-md hover:bg-[#d65f41] hover:shadow-lg focus:ring-4 focus:ring-[#E76F51]/30">
+                                自訂按鈕
+                            </button>
+                            <button class="px-6 py-3 bg-gray-200 text-gray-400 rounded-lg font-bold cursor-not-allowed">
+                                禁用 (Disabled)
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">試著 Hover 與點擊左側按鈕，觀察顏色與陰影變化。</p>
+                    </div>
+
+                    <div class="w-full h-px bg-gray-100"></div>
+
+                    <!-- Feedback Message Demo -->
+                    <div class="text-center">
+                        <span class="text-sm font-bold text-gray-400 uppercase tracking-widest block mb-4">System
+                            Feedback</span>
+                        <button onclick="showToast()"
+                            class="px-8 py-3 border-2 border-[#457B9D] text-[#457B9D] rounded-full font-bold hover:bg-[#457B9D] hover:text-white transition">
+                            模擬連線成功
+                        </button>
+                        <div id="toast-container" class="mt-6 min-h-[40px]"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="order-1 md:order-2 space-y-6">
+                <div class="flex items-center gap-3 mb-2">
+                    <span
+                        class="bg-[#F4A261] text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl">3</span>
+                    <h2 class="text-3xl font-bold text-gray-800">回饋設計 Loop</h2>
+                </div>
+                <p class="text-lg text-gray-600 leading-relaxed">
+                    操作不只是單向的「輸入」。系統如何回應使用者的操作，決定了體驗的流暢度。
+                </p>
+                <div class="space-y-4">
+                    <div class="flex gap-4">
+                        <div
+                            class="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 flex-shrink-0 text-xl">
+                            👀</div>
+                        <div>
+                            <h4 class="font-bold text-gray-800">視覺回饋</h4>
+                            <p class="text-sm text-gray-600">按下按鈕時的顏色變化、壓下效果，讓使用者確認「我有按到」。</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div
+                            class="w-12 h-12 rounded-lg bg-purple-50 flex items-center justify-center text-purple-500 flex-shrink-0 text-xl">
+                            📳</div>
+                        <div>
+                            <h4 class="font-bold text-gray-800">觸覺回饋 (Haptics)</h4>
+                            <p class="text-sm text-gray-600">手機震動是最直接的確認。在無法看螢幕的盲操情境下尤為重要。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assignments Section -->
+        <section class="bg-[#1D3557] rounded-[40px] p-8 md:p-16 text-white overflow-hidden relative">
+            <div
+                class="absolute top-0 right-0 w-64 h-64 bg-[#E76F51] rounded-full blur-[100px] opacity-20 transform translate-x-1/2 -translate-y-1/2">
+            </div>
+
+            <h2 class="text-3xl font-bold mb-8 text-center text-white relative z-10">實作任務 Challenge</h2>
+
+            <!-- Git Base Station Metaphor -->
+            <div
+                class="bg-white/5 backdrop-blur-md rounded-2xl p-6 mb-12 text-orange-100 font-mono text-sm border border-white/10 max-w-3xl mx-auto">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-2xl">🛰️</span>
+                    <h3 class="text-white font-bold text-lg">同步進度：優化體驗回報</h3>
+                </div>
+                <p class="mb-4 opacity-70">最後階段！將你的 UI/UX 優化方案同步至專屬 Branch，並在 PR 中留下你的設計思考。</p>
+                <div class="flex items-center gap-2 bg-black/20 p-2 rounded text-orange-200">
+                    <code>git push origin feature/ux-optimization</code>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 relative z-10">
+                <!-- Task 1 -->
+                <div onclick="openSubmissionModal('ui-ux-task-1', '作業 3-1: 「盲操」佈局挑戰')"
+                    class="bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/20 transition group cursor-pointer relative">
+                    <div class="bg-[#E76F51] w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 3-1</div>
+                    <h3 class="text-xl font-bold mb-3">「盲操」佈局挑戰</h3>
+                    <p class="text-sm opacity-80 mb-6 min-h-[80px]">將設計好的 UI 部署到手機，請同學嘗試在不看螢幕的情況下進行操作。測試按鈕是否夠大？間距是否足夠？
+                    </p>
+                    <div class="border-t border-white/10 pt-4 mt-auto">
+                        <div class="flex items-center gap-2 text-sm font-bold text-[#F4A261] w-full">
+                            <span>⏱ 45 min</span>
+                        </div>
+                    </div>
+                    <!-- Click Hint Overlay -->
+                    <div
+                        class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
+                        <span
+                            class="bg-[#E76F51] text-white px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                            📤 點擊繳交作業
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Task 2 -->
+                <div onclick="openSubmissionModal('ui-ux-task-2', '作業 3-2: FPV HUD 抬頭顯示器')"
+                    class="bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/20 transition group cursor-pointer relative">
+                    <div class="bg-[#2A9D8F] w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 3-2</div>
+                    <h3 class="text-xl font-bold mb-3">FPV HUD 抬頭顯示器</h3>
+                    <p class="text-sm opacity-80 mb-6 min-h-[80px]">將電池電量、連線延遲 (Ping)、車速等數據疊加在即時影像上。確保 UI 半透明且不遮擋中央視線。
+                    </p>
+                    <div class="border-t border-white/10 pt-4 mt-auto">
+                        <div class="flex items-center gap-2 text-sm font-bold text-[#2A9D8F] w-full">
+                            <span>⏱ 60 min</span>
+                        </div>
+                    </div>
+                    <!-- Click Hint Overlay -->
+                    <div
+                        class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
+                        <span
+                            class="bg-[#2A9D8F] text-white px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                            📤 點擊繳交作業
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Task 3 -->
+                <div onclick="openSubmissionModal('ui-ux-task-3', '作業 3-3: 異常狀態 UX 處理')"
+                    class="bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/20 transition group cursor-pointer relative">
+                    <div class="bg-[#457B9D] w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 3-3</div>
+                    <h3 class="text-xl font-bold mb-3">異常狀態 UX 處理</h3>
+                    <p class="text-sm opacity-80 mb-6 min-h-[80px]">設計斷線或低電量時的警告機制。當 Wi-Fi 訊號微弱時，如何透過閃爍動畫提醒使用者？</p>
+                    <div class="border-t border-white/10 pt-4 mt-auto">
+                        <div class="flex items-center gap-2 text-sm font-bold text-[#A8DADC] w-full">
+                            <span>⏱ 30 min</span>
+                        </div>
+                    </div>
+                    <!-- Click Hint Overlay -->
+                    <div
+                        class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
+                        <span
+                            class="bg-[#457B9D] text-white px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                            📤 點擊繳交作業
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-12 text-center">
+                <a href="#"
+                    class="inline-flex items-center justify-center gap-2 bg-white text-[#1D3557] px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition shadow-lg">
+                    <span>📄</span> 下載設計草圖模板 (PDF)
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-[#1D3557] text-white py-8 text-center border-t border-white/10">
+        <p class="opacity-60 text-sm">© 2026 Vibe Coding. All rights reserved.</p>
+    </footer>
+
+    <script>
+        function showToast() {
+            const container = document.getElementById('toast-container');
+            // Clear previous toast
+            container.innerHTML = '';
+
+            // Create new toast
+            const toast = document.createElement('div');
+            toast.className = 'inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-lg font-bold shadow-sm animate-bounce';
+            toast.innerHTML = '<span>✅</span> 連線成功！ (Connection Established)';
+
+            container.appendChild(toast);
+
+            // Remove after 2 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+    </script>
+    <!-- Media Overlay injected by course-shared.js?v=20260404REV -->
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/VeOwKnWLCN8?autoplay=1",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vQbhALfnxDYjHlpWoJ2uqgEVA6vh-USrIWShsry4C9nigfsWQuX4kAW4SyNMDqE5s7JG0f5_OKlALeA/pub?embedded=true"
+        };
+    </script>
+    <script src="/js/course-shared.js?v=20260404REV"></script>
+
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>遙控介面 UI / UX 標準</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：盲操佈局挑戰</h3>
+            <div class="quest-meta">
+                <span>角色扮演：可用性分析師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>規劃 Thumb Zone</strong>：先標出拇指最容易到達的 Natural Zone 與較危險的 Hard Zone。</li>
+                    <li><strong>配置按鈕</strong>：將停止、前進、轉向等核心操作安排在高優先觸控區域。</li>
+                    <li><strong>盲操測試</strong>：模擬使用者不盯著畫面操作，記錄誤觸率與操作成功率。</li>
+                    <li><strong>提交結論</strong>：在 README 整理按鈕位置調整前後的差異與你採納的理由。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>可用性布局</strong>：核心按鈕是否落在合理的拇指操作範圍，而非平均分配但難以操作？</li>
+                    <li>[ ] <strong>測試證據</strong>：是否有誤觸率、成功率或具體觀察支撐版面決策？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：FPV HUD 抬頭顯示器</h3>
+            <div class="quest-meta">
+                <span>角色扮演：視覺設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>整理資訊層級</strong>：決定電量、延遲、車速、方向等資訊的優先順序。</li>
+                    <li><strong>建立 HUD</strong>：在影像容器上疊加半透明資訊卡、狀態徽章與必要的對比色。</li>
+                    <li><strong>檢查遮擋</strong>：確保中央視野保留給操作關鍵畫面，不被 HUD 元件覆蓋。</li>
+                    <li><strong>提交設計說明</strong>：於 README 說明你的層級安排、透明度選擇與視覺取捨。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>層級清晰</strong>：重要資訊是否能被快速辨識，且沒有和背景影像互相打架？</li>
+                    <li>[ ] <strong>視野保護</strong>：HUD 是否避免遮擋中央 50% 左右的關鍵操作視線？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：異常狀態 UX 處理</h3>
+            <div class="quest-meta">
+                <span>角色扮演：使用者體驗官</span> | <span>難度：⭐️</span> | <span>估計時長：30 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>定義情境</strong>：至少涵蓋 Wi-Fi 斷線、低電量與高延遲三種異常狀態。</li>
+                    <li><strong>設計回饋</strong>：以顏色、文案、閃爍或動畫建立可立即辨識的警告機制。</li>
+                    <li><strong>驗證節奏</strong>：確認提示不會過度打擾操作，但能在關鍵時刻快速吸引注意。</li>
+                    <li><strong>提交說明</strong>：在 README 寫下每一種異常狀態對應的視覺規則與觸發時機。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>警示直覺</strong>：顏色、動畫與文案是否一眼就能理解狀態嚴重性？</li>
+                    <li>[ ] <strong>即時反饋</strong>：異常提示是否足夠即時，且不會與正常 HUD 資訊混淆？</li>
+                </ul>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- Tutor Guide (Hidden) -->
+    <section id="tutor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>上傳框架與基礎樣式（含預置的模擬串流圖片）並勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>連結範本倉庫並勾選 <strong>"Enable feedback pull requests"</strong> 以便進行設計點評。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，實作 HUD 疊加層與視覺降噪邏輯。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>在 Feedback PR 的代碼行旁點評，給予視覺一致性、資訊層級與反應速度方面的建議。</li>
+            </ol>
+        </div>
+
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>建議搭配 <strong>"HUD Design Challenge"</strong> 作業，引導學生實作專業的視覺層級，建議範本倉庫設置如下：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html       # 遙控介面主結構
+├── style.css        # (重點) 實作 z-index 與透明度 CSS
+├── assets/          # 預置的圖標與模擬串流數據 (stream.jpg)
+└── README.md        # 紀錄可用性測試的數據 (盲操成功率)</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>index.html (HUD 結構)</strong></p>
+        <pre><code>&lt;!-- FPV 影像容器 --&gt;
+&lt;div class="video-container"&gt;
+    &lt;img src="assets/stream.jpg"&gt;
+    &lt;!-- HUD 疊加層 --&gt;
+    &lt;div class="hud-overlay"&gt;
+        &lt;div class="telemetry"&gt;Ping: 20ms&lt;/div&gt;
+        &lt;div class="warning"&gt;LOW BATTERY&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+        <p><strong>style.css (視覺層級)</strong></p>
+        <pre><code>.hud-overlay {
+    position: absolute;
+    top: 5%;
+    left: 5%;
+    z-index: 100; /* 確保在影像上方 */
+    background: rgba(0, 0, 0, 0.4); /* 半透明背景增加對比 */
+    color: #00ff00; /* 高飽和度螢光色 */
+    padding: 10px;
+    border-radius: 5px;
+}
+.warning {
+    animation: blink 1s infinite;
+    color: #ff4d4d;
+    font-weight: bold;
+}
+@keyframes blink {
+    50% { opacity: 0; }
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>層級檢查：</strong> 掃描 <code>style.css</code> 確認是否使用了 <code>opacity</code> 或 <code>rgba</code> 屬性。
+            </li>
+            <li><strong>佈局檢查：</strong> 檢查 <code>.hud-overlay</code> 的 <code>z-index</code> 是否大於影像層的
+                <code>z-index</code>。
+            </li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody style="color: #4b5563;">
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看 UI/UX 規範影片，完成 3-1 的初步佈局。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>觀察學生對按鈕大小與間距的預設偏好。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實機操作遙控車，測試 3-2 的 HUD 辨識度並修改代碼。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>PR Review：</strong>點評 UI
+                        是否符合「高速操作」下的直覺與安全性。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">完成 3-3 的異常提示動畫，撰寫設計心得於 PR。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>根據「資訊降噪」原則核發最終評語。
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    </section>
+
+</body>
+
+</html>

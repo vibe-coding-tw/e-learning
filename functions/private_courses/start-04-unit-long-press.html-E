@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>長按邏輯的實現：定時器的妙用 - Vibe Coding</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+</head>
+
+<body class="bg-gray-50 font-[Inter] text-gray-800 overscroll-none">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white pt-24 pb-44 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] opacity-20">
+        </div>
+
+        <!-- Decorative background elements -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+            <div
+                class="absolute top-20 left-10 w-72 h-72 bg-purple-500 rounded-full mix-blend-overlay filter blur-3xl animate-pulse opacity-30">
+            </div>
+            <div class="absolute bottom-10 right-10 w-96 h-96 bg-blue-500 rounded-full mix-blend-overlay filter blur-3xl animate-pulse opacity-30"
+                style="animation-delay: 2s"></div>
+        </div>
+
+        <div class="container mx-auto px-4 relative z-30 pt-10 pb-10 text-center">
+            <div
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 backdrop-blur-sm mb-8 text-sm font-semibold tracking-wide uppercase">
+                <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                Timer Logic & Safety
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight">
+                長按邏輯的實現：<br class="hidden md:block" />定時器的妙用與安全機制
+            </h1>
+            <p class="text-xl text-indigo-100 max-w-2xl mx-auto leading-relaxed mb-10">
+                掌握 setInterval 與 clearInterval 的核心運作，學會如何設計安全、流暢且防抖動的長按控制邏輯，讓你的無人車乖乖聽話。
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/U1A_b2SCAQY')"
+                    class="bg-indigo-500 hover:bg-indigo-400 text-white px-8 py-4 rounded-full flex items-center gap-3 shadow-lg shadow-indigo-500/30 font-bold transition-all transform hover:-translate-y-1">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button
+                    onclick="enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vT71TVYUiMQVH69DkFUvBUFcJ1w7Z9vs0Y25Km3NFZxOSMLlUhDUEVWYuVH4QqMABJENFo57pIXJDFE/pub?embedded=true')"
+                    class="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-8 py-4 rounded-full flex items-center gap-3 backdrop-blur-sm font-bold transition-all">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 -mt-24 relative z-10 pb-20">
+
+        <!-- Module 1: Intuitive Lab -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <!-- Concept -->
+                        <div class="flex-1 space-y-6">
+                            <div class="border-l-4 border-indigo-500 pl-6">
+                                <span class="text-indigo-600 font-bold tracking-wider uppercase text-sm">Module 1:
+                                    Intuitive Lab</span>
+                                <h2 class="text-3xl font-bold text-gray-900 mt-2">JS 的心跳：定時器實驗</h2>
+                            </div>
+
+                            <p class="text-gray-600 leading-relaxed">
+                                <code>setInterval</code> 就像一個永不疲倦的節拍器，每隔固定時間就會執行一次任務。而 <code>clearInterval</code>
+                                則是讓它停下來的唯一開關。
+                                試著操作右側的實驗裝置，觀察數字的變化與節奏。
+                            </p>
+
+                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                                <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                    <span class="text-lg">🔑</span> 核心語法
+                                </h3>
+                                <div class="space-y-3 font-mono text-sm">
+                                    <div class="bg-white p-3 rounded border border-slate-200 text-slate-600">
+                                        <span class="text-purple-600">const</span> timer = <span
+                                            class="text-blue-600">setInterval</span>(fn, <span
+                                            class="text-orange-600">1000</span>);
+                                        <div class="text-xs text-slate-400 mt-1">// 每 1000ms 執行一次 fn</div>
+                                    </div>
+                                    <div class="bg-white p-3 rounded border border-slate-200 text-slate-600">
+                                        <span class="text-blue-600">clearInterval</span>(timer);
+                                        <div class="text-xs text-slate-400 mt-1">// 停止指定的 timer ID</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Demo -->
+                        <div
+                            class="flex-1 bg-slate-900 rounded-2xl p-8 shadow-inner flex flex-col items-center justify-center relative overflow-hidden">
+                            <!-- Background Pulse -->
+                            <div id="pulse-bg"
+                                class="absolute inset-0 bg-indigo-500/0 transition-colors duration-100 pointer-events-none">
+                            </div>
+
+                            <div class="text-6xl font-mono font-bold text-white mb-8 z-10 tabular-nums"
+                                id="counter-display">0</div>
+
+                            <div class="flex gap-4 z-10">
+                                <button id="btn-start"
+                                    class="bg-green-500 hover:bg-green-400 text-green-900 font-bold py-3 px-8 rounded-full transition shadow-lg shadow-green-500/20 active:scale-95">
+                                    開始計數 (Start)
+                                </button>
+                                <button id="btn-stop"
+                                    class="bg-red-500 hover:bg-red-400 text-white font-bold py-3 px-8 rounded-full transition shadow-lg shadow-red-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    停止 (Stop)
+                                </button>
+                            </div>
+
+                            <div class="mt-8 font-mono text-xs text-slate-500 text-center z-10">
+                                Timer ID: <span id="timer-id-display" class="text-yellow-400">null</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Core Principles -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="border-l-4 border-purple-500 pl-6 mb-10">
+                        <span class="text-purple-600 font-bold tracking-wider uppercase text-sm">Module 2: Core
+                            Principles</span>
+                        <h2 class="text-3xl font-bold text-gray-900 mt-2">長按邏輯的「三部曲」架構</h2>
+                    </div>
+
+                    <div class="grid lg:grid-cols-2 gap-10">
+                        <div class="space-y-8">
+                            <!-- Step 1 -->
+                            <div class="flex gap-4">
+                                <div
+                                    class="flex-shrink-0 w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xl">
+                                    1</div>
+                                <div>
+                                    <h3 class="font-bold text-lg text-gray-800">Start (按下瞬間)</h3>
+                                    <p class="text-gray-600 text-sm mt-1">
+                                        監聽 <code>touchstart</code> 或 <code>mousedown</code> 事件。
+                                        在這裡啟動 <code>setInterval</code>，開始不斷發送指令。
+                                    </p>
+                                </div>
+                            </div>
+                            <!-- Step 2 -->
+                            <div class="flex gap-4">
+                                <div
+                                    class="flex-shrink-0 w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-xl">
+                                    2</div>
+                                <div>
+                                    <h3 class="font-bold text-lg text-gray-800">Loop (持續長按)</h3>
+                                    <p class="text-gray-600 text-sm mt-1">
+                                        定時器每隔一段時間 (例如 50ms) 執行一次 callback，向 ESP32 發送「前進」指令。
+                                    </p>
+                                </div>
+                            </div>
+                            <!-- Step 3 -->
+                            <div class="flex gap-4">
+                                <div
+                                    class="flex-shrink-0 w-12 h-12 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center font-bold text-xl">
+                                    3</div>
+                                <div>
+                                    <h3 class="font-bold text-lg text-gray-800">Stop (放開手指)</h3>
+                                    <p class="text-gray-600 text-sm mt-1">
+                                        監聽 <code>touchend</code> 或 <code>mouseup</code> 事件。
+                                        <strong class="text-red-500">清除定時器</strong> 並發送最後一次「停止」指令。
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-5">
+                                <h4 class="font-bold text-yellow-800 text-sm mb-2 flex items-center gap-2">⚠️ 危險：Timer
+                                    Stacking (定時器疊加)</h4>
+                                <p class="text-sm text-yellow-800 leading-relaxed">
+                                    如果使用者狂點按鈕，可能會連續觸發多次 Start 而來不及 Stop，導致產生多個「停不下來」的幽靈定時器。
+                                    <br><br>
+                                    <strong>解法：</strong> 在每次 <code>setInterval</code> 之前，先執行一次
+                                    <code>clearInterval</code>。
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Code Example -->
+                        <div class="bg-[#1e293b] rounded-xl overflow-hidden shadow-2xl flex flex-col h-full">
+                            <div
+                                class="bg-[#0f172a] px-4 py-2 flex items-center justify-between border-b border-gray-700">
+                                <span class="text-xs font-mono text-gray-400">long-press.js</span>
+                                <div class="flex gap-1.5">
+                                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                </div>
+                            </div>
+                            <div class="p-6 overflow-auto code-preview flex-grow">
+                                <pre class="font-mono text-sm leading-relaxed text-gray-300">
+<span class="text-purple-400">let</span> timer = <span class="text-blue-400">null</span>;
+
+<span class="text-gray-500">// 1. Start</span>
+<span class="text-blue-400">function</span> <span class="text-yellow-300">startMove</span>() {
+  <span class="text-gray-500">// 防呆：先清除舊的，避免疊加</span>
+  <span class="text-blue-400">if</span> (timer) <span class="text-blue-400">clearInterval</span>(timer);
+
+  console.<span class="text-blue-400">log</span>(<span class="text-green-300">'Move Forward'</span>); <span class="text-gray-500">// 立即執行第一次</span>
+  
+  <span class="text-gray-500">// 2. Loop</span>
+  timer = <span class="text-blue-400">setInterval</span>(() => {
+    console.<span class="text-blue-400">log</span>(<span class="text-green-300">'Move Forward...'</span>);
+    <span class="text-gray-500">// sendCommand('F');</span>
+  }, <span class="text-orange-400">50</span>);
+}
+
+<span class="text-gray-500">// 3. Stop</span>
+<span class="text-blue-400">function</span> <span class="text-yellow-300">stopMove</span>() {
+  <span class="text-blue-400">if</span> (timer) {
+    <span class="text-blue-400">clearInterval</span>(timer);
+    timer = <span class="text-blue-400">null</span>;
+  }
+  console.<span class="text-blue-400">log</span>(<span class="text-red-400">'STOP'</span>);
+  <span class="text-gray-500">// sendCommand('S');</span>
+}
+
+btn.<span class="text-blue-400">addEventListener</span>(<span class="text-green-300">'touchstart'</span>, startMove);
+btn.<span class="text-blue-400">addEventListener</span>(<span class="text-green-300">'touchend'</span>, stopMove);
+</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Practical Challenge -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="h-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+                <div class="p-8 md:p-12">
+                    <div class="border-l-4 border-red-500 pl-6 mb-10">
+                        <span class="text-red-600 font-bold tracking-wider uppercase text-sm">Module 3: Classroom
+                            Battles</span>
+                        <h2 class="text-3xl font-bold text-gray-900 mt-2">教室實戰挑戰</h2>
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <!-- Challenge 1 -->
+                        <div onclick="openSubmissionModal('long-press-task-1', '作業 2-1: 甜蜜頻率尋找賽')"
+                            class="group bg-slate-50 hover:bg-white rounded-xl p-6 border border-slate-200 hover:border-indigo-300 hover:shadow-lg transition-all duration-300 cursor-pointer relative">
+                            <div class="flex justify-between items-start mb-4">
+                                <div
+                                    class="bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded text-xs uppercase">
+                                    HW 2-1</div>
+                                <span class="text-slate-400 text-xs font-mono">45 min</span>
+                            </div>
+                            <h3
+                                class="text-lg font-bold text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors">
+                                甜蜜頻率尋找賽</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                                實測不同 setInterval 毫秒數 (10ms ~ 500ms) 對無人車反應的影響。找出一個不卡頓也不會讓 ESP32 當機的「甜蜜點」。
+                            </p>
+                            <div class="text-xs text-indigo-500 font-bold">👉 目標：20ms - 100ms</div>
+                            <!-- Hover Overlay -->
+                            <div
+                                class="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                                <span
+                                    class="bg-white text-indigo-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                    📤 點擊繳交作業
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Challenge 2 -->
+                        <div onclick="openSubmissionModal('long-press-task-2', '作業 2-2: 雙重保險機制')"
+                            class="group bg-slate-50 hover:bg-white rounded-xl p-6 border border-slate-200 hover:border-purple-300 hover:shadow-lg transition-all duration-300 cursor-pointer relative">
+                            <div class="flex justify-between items-start mb-4">
+                                <div
+                                    class="bg-purple-100 text-purple-700 font-bold px-3 py-1 rounded text-xs uppercase">
+                                    HW 2-2</div>
+                                <span class="text-slate-400 text-xs font-mono">60 min</span>
+                            </div>
+                            <h3
+                                class="text-lg font-bold text-slate-800 mb-2 group-hover:text-purple-600 transition-colors">
+                                雙重保險機制</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                                為了防止瀏覽器當機導致車子暴衝，實作安全保護：
+                                1. 前端限時 5 秒自動停止。
+                                2. 斷線偵測 (navigator.onLine)。
+                            </p>
+                            <div class="text-xs text-purple-500 font-bold">👉 目標：極端狀況也能煞車</div>
+                            <!-- Hover Overlay -->
+                            <div
+                                class="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                                <span
+                                    class="bg-white text-purple-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                    📤 點擊繳交作業
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Challenge 3 -->
+                        <div onclick="openSubmissionModal('long-press-task-3', '作業 2-3: 多按鈕並行邏輯')"
+                            class="group bg-slate-50 hover:bg-white rounded-xl p-6 border border-slate-200 hover:border-pink-300 hover:shadow-lg transition-all duration-300 cursor-pointer relative">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="bg-pink-100 text-pink-700 font-bold px-3 py-1 rounded text-xs uppercase">HW
+                                    2-3</div>
+                                <span class="text-slate-400 text-xs font-mono">60 min</span>
+                            </div>
+                            <h3
+                                class="text-lg font-bold text-slate-800 mb-2 group-hover:text-pink-600 transition-colors">
+                                多按鈕並行邏輯</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                                當右手按「前進」，左手按「左轉」時，如何不打架？
+                                練習將指令打包成 JSON：<code>{F:1, L:1}</code> 統一發送。
+                            </p>
+                            <div class="text-xs text-pink-500 font-bold">👉 目標：多工協同運作</div>
+                            <!-- Hover Overlay -->
+                            <div
+                                class="absolute inset-0 bg-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                                <span
+                                    class="bg-white text-pink-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                    📤 點擊繳交作業
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2024 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Media Overlay injected by course-shared.js?v=20260404REV -->
+
+    <!-- Scripts -->
+    <script>
+        // --- Lab Logic ---
+        const counterDisplay = document.getElementById('counter-display');
+        const timerIdDisplay = document.getElementById('timer-id-display');
+        const pulseBg = document.getElementById('pulse-bg');
+        let count = 0;
+        let labTimer = null;
+
+        document.getElementById('btn-start').addEventListener('click', () => {
+            if (labTimer) clearInterval(labTimer); // Safety clear
+
+            labTimer = setInterval(() => {
+                count++;
+                counterDisplay.innerText = count;
+
+                // Visual Pulse
+                pulseBg.classList.remove('bg-indigo-500/0');
+                pulseBg.classList.add('bg-indigo-500/20');
+                setTimeout(() => {
+                    pulseBg.classList.remove('bg-indigo-500/20');
+                    pulseBg.classList.add('bg-indigo-500/0');
+                }, 100);
+
+            }, 1000); // 1 sec interval
+
+            timerIdDisplay.innerText = labTimer;
+            document.getElementById('btn-start').disabled = true;
+            document.getElementById('btn-stop').disabled = false;
+        });
+
+        document.getElementById('btn-stop').addEventListener('click', () => {
+            if (labTimer) {
+                clearInterval(labTimer);
+                labTimer = null;
+                timerIdDisplay.innerText = 'null';
+            }
+            document.getElementById('btn-start').disabled = false;
+            document.getElementById('btn-stop').disabled = true;
+        });
+
+        // --- Standard Media Overlay Logic ---
+        // Injected by course-shared.js?v=20260404REV
+
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/U1A_b2SCAQY",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vT71TVYUiMQVH69DkFUvBUFcJ1w7Z9vs0Y25Km3NFZxOSMLlUhDUEVWYuVH4QqMABJENFo57pIXJDFE/pub?embedded=true"
+        };
+    </script>
+    <script src="/js/course-shared.js?v=20260404REV"></script>
+    <script>
+    </script>
+
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>長按控制守門員</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：做出穩定的長按連發流程 (Press and Hold Loop)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：互動邏輯工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：40 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>接受作業</strong>：從 GitHub Classroom 建立專屬倉庫並打開長按控制範本。</li>
+                    <li><strong>建立三段流程</strong>：分別實作 start、loop、stop 三個階段，讓按住時持續送指令、放開時立即停止。</li>
+                    <li><strong>防止 timer 疊加</strong>：在重新啟動前先清掉舊定時器，避免產生多個幽靈迴圈。</li>
+                    <li><strong>版本同步</strong>：將控制流程與測試結果整理後推送到 GitHub。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>流程正確</strong>：是否具備按下開始、持續連發、放開停止的完整生命週期？</li>
+                    <li>[ ] <strong>Timer 管理</strong>：是否有效避免重複長按造成定時器堆疊？</li>
+                    <li>[ ] <strong>停止可靠</strong>：放開按鈕後是否能立刻停止控制輸出？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：加上雙重保險的安全熔斷 (Safety Mechanisms)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：韌體安全工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：35 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>加入超時保護</strong>：當長按超過 5 秒時，自動停止指令發送並切回安全狀態。</li>
+                    <li><strong>監看異常條件</strong>：額外處理網路不穩、連線中斷或畫面失焦時的故障保護。</li>
+                    <li><strong>驗證熔斷</strong>：模擬極端情況，確認系統會主動停機而不是一直送命令。</li>
+                    <li><strong>提交報告</strong>：在 README 記錄保護條件、觸發門檻與測試結果。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>保護邏輯</strong>：是否同時處理時間過長與異常中斷兩種風險？</li>
+                    <li>[ ] <strong>故障反應</strong>：出現異常時是否能自動停止，而不是依賴使用者手動處理？</li>
+                    <li>[ ] <strong>測試可信度</strong>：是否真的模擬了危險情境，而不是只停留在程式碼表面？</li>
+                </ul>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- Tutor Guide (Hidden) -->
+    <section id="tutor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>上傳框架代碼（含 <code>timer.js</code> 註解框架）到 Repo 並勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>建立作業並連結範本，建議開啟 <strong>Feedback Pull Requests</strong> 選項以檢查計時器洩漏邏輯。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，實作計時器生命週期管理（含 <code>setInterval</code> 與 <code>clearInterval</code>）。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR，針對學生「計時器堆疊（Timer Stacking）」預防措施與安全熔斷邏輯給予具體回饋。</li>
+            </ol>
+        </div>
+
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元引導學生理解計時器 (Timer) 的生命週期，並實作安全的「長按連發」與「自動熔斷」機制，建議範本倉庫設置如下：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html       # 包含控制按鈕與日誌區
+├── js/timer.js      # (重點) 需加入計時器管理與熔斷邏輯
+└── README.md        # 計時器堆疊風險分析與熔斷門檻設定</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>timer.js (安全連發機制)</strong></p>
+        <pre><code>let moveTimer = null;
+
+function startMove() {
+  // 1. 防呆：先清除舊的，避免定時器堆疊 (Timer Stacking)
+  if (moveTimer) clearInterval(moveTimer);
+
+  // 2. 啟動新定時器
+  moveTimer = setInterval(() => {
+    sendCommand('FORWARD');
+  }, 100);
+
+  // 3. 自動熔斷 (Task 2-2)：5 秒後強制停止
+  setTimeout(() => {
+    if (moveTimer) stopMove();
+    console.warn("Safety Timeout Triggered");
+  }, 5000);
+}
+
+function stopMove() {
+  if (moveTimer) {
+      clearInterval(moveTimer);
+      moveTimer = null;
+  }
+  sendCommand('STOP');
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>邏輯檢查：</strong> 使用 Actions 檢查 <code>timer.js</code> 是否在 <code>setInterval</code> 前調用了
+                <code>clearInterval</code>。</li>
+            <li><strong>超時驗證：</strong> 模擬長按事件，驗證 5 秒後是否產出了正確的停止日誌或狀態變更。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody style="color: #4b5563;">
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">研讀關於計時器堆疊（Timer Stacking）引發的安全風險。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>Dashboard：</strong>確認學生已體驗過「指令暴衝」的模擬場景。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作長按指令流 (2-1) 並開發雙重保險機制 (2-2) 後提交。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
+                        <strong>助教角色：</strong>引導學生模擬不同故障場景（如斷線或視窗失去焦點）測試熔斷效果。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">挑戰多按鈕並行邏輯且互不干擾 (2-3) 並完成最後一個 Commit。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核安全熔斷代碼的嚴謹度與資源釋放
+                        (Clean-up) 邏輯。
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+</body>
+
+</html>

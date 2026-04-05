@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>進階 15: 系統架構全覽與數據流分析 - Vibe Coding</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+</head>
+
+<body id="page-advanced" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+
+    <!-- Navigation (Shared) -->
+    <div id="nav-placeholder" data-root="/" data-show-auth="false"></div>
+    <script type="module" src="/js/nav-component.js?v=2026.04.05.FINAL_V3"></script>
+    
+
+    <!-- Tab Navigation Bar -->
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('data-flow')" id="tab-data-flow" class="unit-tab-btn active">
+                    <span>1️⃣</span>數據流向與架構分析
+                </button>
+                <button onclick="switchTab('ble-async')" id="tab-ble-async" class="unit-tab-btn">
+                    <span>2️⃣</span>非同步 BLE 連線
+                </button>
+                <button onclick="switchTab('pid-simulation')" id="tab-pid-simulation" class="unit-tab-btn">
+                    <span>3️⃣</span>PID 視覺化模擬
+                </button>
+                <button onclick="switchTab('image-dma')" id="tab-image-dma" class="unit-tab-btn">
+                    <span>4️⃣</span>影像處理與 DMA
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Area (Iframe) -->
+    <div class="flex-grow w-full relative">
+        <iframe id="content-frame" src=""
+            class="w-full h-full border-0 absolute inset-0 bg-gray-50 transition-opacity duration-300"
+            style="opacity: 0;" onload="this.style.opacity = '1'"></iframe>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('content-frame');
+        const tabs = {
+            'data-flow': document.getElementById('tab-data-flow'),
+            'ble-async': document.getElementById('tab-ble-async'),
+            'pid-simulation': document.getElementById('tab-pid-simulation'),
+            'image-dma': document.getElementById('tab-image-dma')
+        };
+
+        const files = {
+            'data-flow': 'adv-15-unit-data-flow.html',
+            'ble-async': 'adv-15-unit-ble-async.html',
+            'pid-simulation': 'adv-15-unit-pid-simulation.html',
+            'image-dma': 'adv-15-unit-image-dma.html'
+        };
+
+        // Initial Load
+        loadFromHash();
+
+        function loadFromHash() {
+            const hash = window.location.hash.substring(1);
+            if (files[hash]) {
+                switchTab(hash);
+            } else {
+                switchTab('data-flow');
+            }
+        }
+
+        function switchTab(tabId) {
+            // Reset all tabs
+            Object.values(tabs).forEach(tab => {
+                if (tab) tab.classList.remove('active');
+            });
+
+            // Set active tab
+            if (tabs[tabId]) {
+                tabs[tabId].classList.add('active');
+            }
+
+            loadContent(files[tabId]);
+            window.location.hash = tabId;
+        }
+
+        function loadContent(url) {
+            if (!url) return;
+            iframe.style.opacity = '0';
+            setTimeout(() => {
+                const separator = url.includes('?') ? '&' : '?';
+                const query = window.location.search.substring(1);
+                iframe.src = query ? `${url}${separator}${query}` : url;
+            }, 300);
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>進階 4: 外部感測器整合 - Vibe Coding</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+</head>
+
+<body id="page-advanced" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+
+    <!-- Navigation (Shared) -->
+    <div id="nav-placeholder" data-root="/" data-show-auth="false"></div>
+    <script type="module" src="/js/nav-component.js?v=2026.04.05.FINAL_V3"></script>
+    
+
+    <!-- Tab Navigation Bar -->
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('i2c-spi-basics')" id="tab-i2c-spi-basics" class="unit-tab-btn active">
+                    <span>1️⃣</span>I2C, SPI 與硬體實戰
+                </button>
+                <button onclick="switchTab('filter-algorithms')" id="tab-filter-algorithms" class="unit-tab-btn">
+                    <span>2️⃣</span>數據抖動與濾波演算法
+                </button>
+                <button onclick="switchTab('json-rest')" id="tab-json-rest" class="unit-tab-btn">
+                    <span>3️⃣</span>JSON 數據打包與 RESTful 回傳
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Area (Iframe) -->
+    <div class="flex-grow w-full relative">
+        <iframe id="content-frame" src=""
+            class="w-full h-full border-0 absolute inset-0 bg-gray-50 transition-opacity duration-300"
+            style="opacity: 0;" onload="this.style.opacity = '1'"></iframe>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('content-frame');
+        const tabBasics = document.getElementById('tab-i2c-spi-basics');
+        const tabJsonRest = document.getElementById('tab-json-rest');
+        const tabFilter = document.getElementById('tab-filter-algorithms');
+
+        // Initial Load
+        loadFromHash();
+
+        function loadFromHash() {
+            const hash = window.location.hash.substring(1);
+            if (hash === 'json-rest') {
+                switchTab('json-rest');
+            } else if (hash === 'filter-algorithms') {
+                switchTab('filter-algorithms');
+            } else {
+                switchTab('i2c-spi-basics');
+            }
+        }
+
+        function switchTab(tab) {
+            // Reset all tabs
+            [tabBasics, tabJsonRest, tabFilter].forEach(t => {
+                if (t) t.classList.remove('active');
+            });
+
+            if (tab === 'i2c-spi-basics') {
+                tabBasics.classList.add('active');
+                loadContent('adv-04-unit-i2c-spi.html');
+                window.location.hash = 'i2c-spi-basics';
+            } else if (tab === 'json-rest') {
+                tabJsonRest.classList.add('active');
+                loadContent('adv-04-unit-json-rest.html');
+                window.location.hash = 'json-rest';
+            } else if (tab === 'filter-algorithms') {
+                tabFilter.classList.add('active');
+                loadContent('adv-04-unit-filter-algorithms.html');
+                window.location.hash = 'filter-algorithms';
+            }
+        }
+
+        function loadContent(url) {
+            iframe.style.opacity = '0';
+            setTimeout(() => {
+                const separator = url.includes('?') ? '&' : '?';
+                const query = window.location.search.substring(1);
+                iframe.src = query ? `${url}${separator}${query}` : url;
+            }, 300);
+        }
+    </script>
+
+</body>
+
+</html>

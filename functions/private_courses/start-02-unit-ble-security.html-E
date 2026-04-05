@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web BLE 安全機制與權限規範 - Vibe Coding</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+</head>
+
+<body class="bg-gray-50 font-[Inter] text-gray-800">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <div
+                class="badge-header inline-block px-4 py-1 rounded-full bg-purple-500/20 text-purple-200 border border-purple-400/30 backdrop-blur-sm mb-6 text-xs font-semibold tracking-wide uppercase font-[Outfit]">
+                Web Bluetooth Security
+            </div>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                Web BLE 安全機制與<br>權限規範
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
+                深入理解 Web Bluetooth API 的安全沙箱機制，掌握 HTTPS、User Gesture 與設備過濾的黃金法則。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto max-w-6xl px-4 py-12">
+
+        <!-- Module 1: Intuitive Lab -->
+        <section class="content-block mb-24">
+            <div class="section-header-left border-l-4 border-purple-500 pl-6 mb-10">
+                <span class="text-purple-600 font-bold tracking-wider uppercase text-sm">Module 1: Intuitive Lab</span>
+                <h2 class="text-3xl font-bold text-gray-900 mt-2">安全沙箱：為什麼我的連線按鈕沒反應？</h2>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
+                    <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                        <span
+                            class="bg-purple-100 text-purple-600 w-10 h-10 rounded-full flex items-center justify-center text-lg">1</span>
+                        安全上下文 (Secure Context)
+                    </h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        Web Bluetooth 是一個強大的 API，它允許網頁直接控制實體設備。為了防止惡意網站偷偷連線你的設備，瀏覽器強制要求網站必須在 <strong>HTTPS</strong>
+                        環境下才能執行。
+                    </p>
+
+                    <div class="space-y-4">
+                        <div class="flex gap-4 items-center p-4 bg-red-50 rounded-lg border border-red-100 opacity-50">
+                            <div class="text-2xl">🔓</div>
+                            <div>
+                                <h4 class="font-bold text-red-900">HTTP (不安全)</h4>
+                                <p class="text-sm text-red-800 mt-1">navigator.bluetooth 為 undefined</p>
+                            </div>
+                        </div>
+                        <div
+                            class="flex gap-4 items-center p-4 bg-green-50 rounded-lg border border-green-200 shadow-md transform scale-105">
+                            <div class="text-2xl">🔒</div>
+                            <div>
+                                <h4 class="font-bold text-green-900">HTTPS (安全)</h4>
+                                <p class="text-sm text-green-800 mt-1">navigator.bluetooth 可正常呼叫</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <!-- Simulation Display -->
+                    <div class="bg-gray-900 rounded-xl overflow-hidden shadow-2xl">
+                        <div class="bg-gray-800 px-4 py-2 flex items-center gap-2 border-b border-gray-700">
+                            <span class="text-gray-400 text-xs font-mono">console</span>
+                        </div>
+                        <div class="p-6 font-mono text-sm leading-8">
+                            <div class="text-gray-400">// 在 http://localhost 執行時</div>
+                            <div class="text-red-400 mt-2">
+                                Uncaught TypeError: Cannot read properties of undefined (reading 'requestDevice')
+                            </div>
+                            <div class="text-gray-500 mt-1 ml-4">
+                                at connectBtn.onclick (main.js:12)
+                            </div>
+
+                            <div class="text-gray-400 mt-6">// 在 https://mysite.com 執行時</div>
+                            <div class="text-green-400 mt-2">
+                                > scanning for devices...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Floating Badge -->
+                    <div
+                        class="absolute -bottom-6 -right-6 bg-white p-4 rounded-xl shadow-lg border border-gray-100 flex items-center gap-3 animate-bounce-slow">
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-2xl">🛡️
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-500 font-bold uppercase">Rule #1</div>
+                            <div class="font-bold text-purple-900">必須是 HTTPS</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Core Principles -->
+        <section class="content-block mb-24">
+            <div class="section-header-left border-l-4 border-indigo-500 pl-6 mb-10">
+                <span class="text-indigo-600 font-bold tracking-wider uppercase text-sm">Module 2: Core
+                    Principles</span>
+                <h2 class="text-3xl font-bold text-gray-900 mt-2">Web BLE 三大安全鐵律</h2>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Principle 1 -->
+                <div
+                    class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-2xl mb-4">🔐
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">1. 環境限制</h3>
+                    <p class="text-gray-600 mb-4 text-sm">除了 localhost 用於開發測試外，所有上線的 Web App 必須部署在具備 SSL 憑證 (HTTPS)
+                        的伺服器上。</p>
+                    <ul class="text-sm text-gray-500 space-y-2 bg-gray-50 p-4 rounded-lg">
+                        <li class="flex items-center gap-2"><span class="text-green-500">✔</span> localhost</li>
+                        <li class="flex items-center gap-2"><span class="text-green-500">✔</span> 127.0.0.1</li>
+                        <li class="flex items-center gap-2"><span class="text-green-500">✔</span> https://...</li>
+                        <li class="flex items-center gap-2"><span class="text-red-500">✘</span> http://192.168.x.x</li>
+                    </ul>
+                </div>
+
+                <!-- Principle 2 -->
+                <div
+                    class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+                    <div class="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center text-2xl mb-4">👆
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">2. 使用者手動觸發</h3>
+                    <p class="text-gray-600 mb-4 text-sm">瀏覽器禁止網頁在背景「自動」掃描。所有的連線請求必須由使用者明確的點擊 (User Gesture) 觸發。</p>
+                    <div class="bg-gray-900 p-3 rounded-lg text-xs font-mono text-gray-300">
+                        <span class="text-purple-400">btn</span>.addEventListener(<span
+                            class="text-green-300">'click'</span>, <span class="text-blue-300">function</span>() {<br>
+                        &nbsp;&nbsp;<span class="text-gray-500">// 必須在這裡呼叫</span><br>
+                        &nbsp;&nbsp;navigator.bluetooth.requestDevice(...)<br>
+                        });
+                    </div>
+                </div>
+
+                <!-- Principle 3 -->
+                <div
+                    class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-2xl mb-4">🔎
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">3. 設備過濾與隱私</h3>
+                    <p class="text-gray-600 mb-4 text-sm">網頁不能掃描「所有」設備。必須明確宣告要存取的 <code>filters</code> 或
+                        <code>optionalServices</code>，否則瀏覽器會拒絕執行。
+                    </p>
+                    <div class="bg-yellow-50 p-3 rounded-lg text-xs text-yellow-800 border border-yellow-200">
+                        <strong>隱私保護：</strong><br>這防止了廣告商透過掃描你身邊的藍牙設備 (如智慧手環) 來追蹤你的位置。
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Practical Challenge -->
+        <section class="content-block">
+            <div class="section-header-left border-l-4 border-pink-500 pl-6 mb-10">
+                <span class="text-pink-600 font-bold tracking-wider uppercase text-sm">Module 3: Practical
+                    Challenge</span>
+                <h2 class="text-3xl font-bold text-gray-900 mt-2">教室實戰：打造穩固的連線流程</h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Task 1 -->
+                <div onclick="openSubmissionModal('ble-security-task-1', '作業 1-1: 「授權失敗」模擬與排除')"
+                    class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-2"></div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-bold text-xl text-gray-800 group-hover:text-blue-600 transition">作業 1-1</h3>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold">45 min</span>
+                        </div>
+                        <h4 class="font-bold text-gray-700 mb-2">「授權失敗」模擬與排除</h4>
+                        <p class="text-sm text-gray-500 mb-4">目標：實作 try-catch 機制，當使用者在配對視窗按「取消」時，優雅地顯示提示，而不是報錯。</p>
+
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Key Object</h5>
+                            <code
+                                class="block bg-gray-50 text-gray-700 p-2 rounded text-xs font-mono border border-gray-200">
+                                catch (error) {<br>
+                                &nbsp;&nbsp;if (error.name === 'NotFoundError') ...<br>
+                                }
+                            </code>
+                        </div>
+                    </div>
+                    <!-- Click Hint Overlay -->
+                    <div
+                        class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-blue-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                            📤 點擊繳交作業
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Task 2 -->
+                <div onclick="openSubmissionModal('ble-security-task-2', '作業 1-2: 多裝置環境下的「精準過濾」')"
+                    class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative">
+                    <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 h-2"></div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-bold text-xl text-gray-800 group-hover:text-indigo-600 transition">作業 1-2
+                            </h3>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">60
+                                min</span>
+                        </div>
+                        <h4 class="font-bold text-gray-700 mb-2">多裝置環境下的「精準過濾」</h4>
+                        <p class="text-sm text-gray-500 mb-4">目標：全班 20 台車同時開啟時，透過 <code>namePrefix</code> 或
+                            <code>services</code> 讓你的列表只顯示你自己的車。
+                        </p>
+
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Challenge</h5>
+                            <p class="text-sm text-gray-600">
+                                嘗試修改 ESP32 的藍牙名稱 (如: Car-01)，只搜尋特定名稱。
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Click Hint Overlay -->
+                    <div
+                        class="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-indigo-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                            📤 點擊繳交作業
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Task 3 -->
+                <div onclick="openSubmissionModal('ble-security-task-3', '作業 1-3: 跨平台權限大調查')"
+                    class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative">
+                    <div class="bg-gradient-to-r from-pink-500 to-pink-600 h-2"></div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-bold text-xl text-gray-800 group-hover:text-pink-600 transition">作業 1-3</h3>
+                            <span class="bg-pink-100 text-pink-700 text-xs px-2 py-1 rounded font-bold">30 min</span>
+                        </div>
+                        <h4 class="font-bold text-gray-700 mb-2">跨平台權限大調查</h4>
+                        <p class="text-sm text-gray-500 mb-4">目標：比較 Android Chrome, Mac Chrome 與 iOS (Bluefy/WebBLE)
+                            的配對介面差異。</p>
+
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Compatibility</h5>
+                            <p class="text-xs text-red-500 bg-red-50 p-2 rounded">
+                                ⚠️ iOS Safari 目前尚未原生支援 Web BLE，需使用專用 App。
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Click Hint Overlay -->
+                    <div
+                        class="absolute inset-0 bg-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span
+                            class="bg-white text-pink-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                            📤 點擊繳交作業
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-900 text-white py-12 border-t border-gray-800">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500">© 2024 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Media Overlay injected by course-shared.js?v=20260404REV -->
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/GIMfXJZ74hM",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vSKmbfX9VidYdzQ32wzbbXJeKZ6kVS9vaIFhiMjiZffWtAXAkYbTDk_GNaxKGVr-0WCyDekwJo8JnQ4/pub?embedded=true"
+        };
+    </script>
+    <script src="/js/course-shared.js?v=20260404REV"></script>
+
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>BLE 安全守門員</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：建造不會爆炸的連線按鈕 (Permission Guard)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：異常處理工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：35 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>接受作業</strong>：從老師提供的 GitHub Classroom 連結建立專屬作業倉庫。</li>
+                    <li><strong>加入安全防線</strong>：在 <code>requestDevice()</code> 外層加上 <code>try...catch</code>，針對 <code>NotFoundError</code> 與權限拒絕情境顯示友善提示。</li>
+                    <li><strong>重現錯誤</strong>：實際操作一次「按下連線後取消配對」，並確認頁面不會只剩 Console 紅字。</li>
+                    <li><strong>提交成果</strong>：將修正後的互動畫面與錯誤說明寫入 README，再 <code>commit</code> / <code>push</code>。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>錯誤攔截</strong>：是否能正確區分 <code>NotFoundError</code>、權限拒絕與其他未知錯誤？</li>
+                    <li>[ ] <strong>介面回饋</strong>：取消授權後是否有清楚的 UI 訊息，而不是只留在 Console？</li>
+                    <li>[ ] <strong>流程完整</strong>：README 是否交代重現步驟與修正前後差異？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：在多人教室中精準鎖定自己的設備 (Safe Filter)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：安全通訊專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>分析需求</strong>：先列出目前教室內可能同時出現的裝置名稱與服務 UUID。</li>
+                    <li><strong>設計過濾器</strong>：在 <code>requestDevice</code> 中加入 <code>filters</code>、<code>namePrefix</code> 或 <code>services</code>，讓清單縮小到自己的設備。</li>
+                    <li><strong>實地測試</strong>：至少在多裝置同時開啟的情境下驗證一次，觀察是否還會掃到鄰座裝置。</li>
+                    <li><strong>版本提交</strong>：把過濾策略與原因整理到 README 或註解中，再推送到 GitHub。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>過濾精度</strong>：是否真的能在多裝置環境下只顯示目標設備？</li>
+                    <li>[ ] <strong>安全意識</strong>：是否理解瀏覽器要求 <code>filters</code> 的隱私保護目的？</li>
+                    <li>[ ] <strong>代碼清晰度</strong>：過濾條件是否易讀、易調整，而不是硬塞魔法字串？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：完成跨平台權限觀察報告 (Browser Audit)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：跨平台相容性測試員</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：30 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>選擇測試環境</strong>：至少使用兩種瀏覽器或裝置，例如 Android Chrome 與 iOS Bluefy。</li>
+                    <li><strong>紀錄差異</strong>：截圖保存權限彈窗、失敗提示與 HTTPS 限制畫面。</li>
+                    <li><strong>整理觀察</strong>：在 README 新增一段表格或條列，比較各平台在 BLE 權限流程上的差異。</li>
+                    <li><strong>提交報告</strong>：將截圖放入倉庫後提交，方便老師在 Feedback PR 中點評。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>測試覆蓋</strong>：是否至少完成兩個平台或瀏覽器的比較？</li>
+                    <li>[ ] <strong>觀察品質</strong>：是否清楚指出權限 UI、限制條件與錯誤訊息差異？</li>
+                    <li>[ ] <strong>文件整理</strong>：截圖命名、說明文字與 README 結構是否容易閱讀？</li>
+                </ul>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- Tutor Guide (Hidden) -->
+    <section id="tutor-guide" style="display: none;">
+        <h2>GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>上傳基礎連線框架並勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>連結範本倉庫並勾選 <strong>"Enable feedback pull requests"</strong> 以便進行設計點評與跨平台對比回饋。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，實作 <code>requestDevice</code> 過濾器與安全沙箱例外處理。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR 查看 <code>screenshots/</code> 的跨平台對比，並針對錯誤處理邏輯、HTTPS 限制理解度給予回饋。</li>
+            </ol>
+        </div>
+
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元著重於 <strong>"BLE Security Implementation"</strong>，引導學生實作正確的設備過濾與錯誤處理，建議範本倉庫設置如下：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html       # 附帶 GitHub Pages 部署設定
+├── app.js           # 留空讓學生填寫 requestDevice filters
+├── screenshots/     # 存放作業 1-3 要求的跨平台對比圖
+└── README.md        # 撰寫對 HTTPS 與 User Gesture 安全特性的心得</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>app.js (精準設備過濾)</strong></p>
+        <pre><code>async function requestMyDevice() {
+  const options = {
+    filters: [{ namePrefix: 'VibeCar-' }], // 班級前綴，避免掃到鄰座
+    optionalServices: ['heart_rate']
+  };
+  const device = await navigator.bluetooth.requestDevice(options);
+  // ... 連線邏輯
+}</code></pre>
+
+        <p><strong>error-handling.js (授權異常處理)</strong></p>
+        <pre><code>try {
+  await requestMyDevice();
+} catch (error) {
+  if (error.name === 'NotFoundError') {
+    alert("❌ 未選擇設備或藍牙已關閉");
+  } else if (error.name === 'SecurityError') {
+    alert("❌ 必須點擊按鈕才能觸發藍牙視窗 (User Gesture)");
+  }
+}</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>關鍵字檢查：</strong> 檢查 <code>app.js</code> 是否包含 <code>filters</code> 或 <code>namePrefix</code>。</li>
+            <li><strong>例外處理：</strong> 驗證是否包含 <code>try...catch</code> 或對 <code>device.gatt.connect()</code> 的超時判定。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody style="color: #4b5563;">
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">閱讀本頁的安全三鐵律，理解 HTTPS 與 User Gesture 的重要性。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學生已初步理解安全沙箱概念。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">進行現場「大亂鬥連線」，修正過濾條件 (1-2) 並 Push 觸發部署。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>現場演示：</strong>對比沒寫 try...catch (1-1)
+                        導致 UI 崩潰的慘狀。</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">彙整 cross-platform 測試結果 (1-3) 寫入 README 並提交最後一次
+                        Commit。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
+                            PR：</strong>評點截圖完整度與對安全機制理解的深度。</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+</body>
+
+</html>

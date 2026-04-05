@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>馬達 Ramping 組態設定 | Vibe Coding</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .step-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-group label {
+            @apply text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block;
+        }
+
+        .input-group input {
+            @apply w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition font-mono text-sm;
+        }
+    </style>
+</head>
+
+<body class="text-gray-800 pb-20">
+
+    <!-- Hero Section -->
+    <header class="bg-gradient-to-r from-purple-800 to-indigo-900 text-white py-12">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold mb-4">⚙️ 馬達 Ramping 組態設定</h1>
+            <p class="text-purple-200 max-w-2xl mx-auto">
+                調校馬達出力曲線，解決抖動與反應遲鈍問題。透過 BLE 直接與 ESP32 的結構體 (Struct) 進行二進位通訊。
+            </p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-5xl">
+
+        <!-- BLE Connection Panel -->
+        <div class="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden mb-12">
+            <div
+                class="p-6 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">
+                        <i class="fa-brands fa-bluetooth text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">裝置連線</h2>
+                        <p class="text-xs text-slate-500">Service UUID: <span class="font-mono">4fafc201...</span></p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="statusBadge"
+                        class="px-3 py-1 bg-slate-200 text-slate-600 rounded-full text-sm font-medium flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-slate-400"></span> 未連線
+                    </span>
+                    <button id="connectBtn"
+                        class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg font-medium shadow-md transition flex items-center gap-2">
+                        <i class="fa-solid fa-link"></i> 連線 BLE
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6 md:p-8 grid md:grid-cols-2 gap-8 opacity-50 pointer-events-none transition-all duration-300"
+                id="mainPanel">
+                <!-- Throttle Config -->
+                <div>
+                    <h3 class="flex items-center gap-2 text-indigo-600 font-bold mb-4">
+                        <i class="fa-solid fa-gauge-high"></i> Throttle (油門/直線)
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="input-group">
+                            <label>PWM Effective Limit (0-255)</label>
+                            <input type="number" id="pwmEffectiveLimitT" min="0" max="255">
+                            <p class="text-[10px] text-slate-400 mt-1">PWM 最大輸出限制</p>
+                        </div>
+                        <div class="input-group">
+                            <label>Ramp Accel Step</label>
+                            <input type="number" id="rampAccelStepT" min="1" max="100">
+                            <p class="text-[10px] text-slate-400 mt-1">每 10ms 增加的 PWM 數值 (加速度)</p>
+                        </div>
+                        <div class="input-group">
+                            <label>PWM Start Kick</label>
+                            <input type="number" id="pwmStartKickT" min="0" max="255">
+                            <p class="text-[10px] text-slate-400 mt-1">起步最小 PWM (克服靜摩擦力)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Steering Config -->
+                <div class="md:border-l md:border-slate-100 md:pl-8">
+                    <h3 class="flex items-center gap-2 text-emerald-600 font-bold mb-4">
+                        <i class="fa-solid fa-arrows-left-right"></i> Steering (轉向/差速)
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="input-group">
+                            <label>PWM Effective Limit (0-255)</label>
+                            <input type="number" id="pwmEffectiveLimitS" min="0" max="255">
+                        </div>
+                        <div class="input-group">
+                            <label>Ramp Accel Step</label>
+                            <input type="number" id="rampAccelStepS" min="1" max="100">
+                        </div>
+                        <div class="input-group">
+                            <label>PWM Start Kick</label>
+                            <input type="number" id="pwmStartKickS" min="0" max="255">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Common & Actions -->
+                <div class="md:col-span-2 pt-6 border-t border-slate-100 flex flex-col items-center gap-4">
+                    <div class="w-full max-w-xs">
+                        <label
+                            class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 text-center">Control
+                            Timeout (ms)</label>
+                        <input type="number" id="controlTimeoutMs"
+                            class="w-full text-center px-3 py-2 border rounded-md" min="100" max="5000">
+                    </div>
+
+                    <button id="saveBtn"
+                        class="w-full md:w-auto px-8 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold shadow-lg transition flex items-center justify-center gap-2">
+                        <i class="fa-regular fa-floppy-disk"></i> 傳送設定至裝置 (Binary 28 Bytes)
+                    </button>
+                    <p id="msgLabel" class="text-sm text-slate-400 min-h-[20px]"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructional Content -->
+        <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+            Ramping 原理示意
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-8 mb-16">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 class="font-bold text-lg mb-4 text-slate-700">為什麼需要 Ramping？</h3>
+                <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                    當您在操控無人車時，若直接將 PWM 從 0 瞬間拉到 255，會發生以下問題：
+                </p>
+                <ul class="list-disc list-inside text-sm text-slate-600 space-y-2">
+                    <li><strong>電流突波</strong>：瞬間大電流可能導致 ESP32 重啟。</li>
+                    <li><strong>機械應力</strong>：齒輪箱承受瞬間撞擊，容易損壞。</li>
+                    <li><strong>打滑失控</strong>：輪胎失去抓地力，導致車輛打轉。</li>
+                </ul>
+                <div class="mt-4 p-4 bg-purple-50 rounded-lg text-xs text-purple-700">
+                    <strong>rampAccelStep</strong> 就像是「虛擬彈簧」，數值越小，彈簧越軟（加速越平滑）；數值越大，反應越直接。
+                </div>
+            </div>
+            <!-- Placeholder for Visual -->
+            <div class="bg-indigo-50 rounded-xl p-8 flex items-center justify-center border border-indigo-100">
+                <div class="text-center">
+                    <i class="fa-solid fa-chart-line text-4xl text-indigo-300 mb-2"></i>
+                    <p class="text-indigo-400 text-sm">PWM Ramping Curve Visualization</p>
+                    <div class="mt-4 h-24 flex items-end gap-1 justify-center opacity-50">
+                        <div class="w-4 bg-indigo-400 h-1/6 rounded-t"></div>
+                        <div class="w-4 bg-indigo-400 h-2/6 rounded-t"></div>
+                        <div class="w-4 bg-indigo-400 h-3/6 rounded-t"></div>
+                        <div class="w-4 bg-indigo-400 h-4/6 rounded-t"></div>
+                        <div class="w-4 bg-indigo-400 h-5/6 rounded-t"></div>
+                        <div class="w-4 bg-indigo-400 h-full rounded-t"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Developer Section -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6">🛠️ 技術開發細節 (For Developer)</h2>
+
+            <div class="bg-slate-900 rounded-xl overflow-hidden text-slate-300 font-mono text-sm shadow-xl">
+                <div class="bg-slate-800 px-6 py-3 border-b border-slate-700 flex justify-between items-center">
+                    <span class="font-bold text-white">C++ Struct Definition</span>
+                    <span class="text-xs px-2 py-1 bg-slate-700 rounded">Total: 28 Bytes</span>
+                </div>
+                <div class="p-6 overflow-x-auto">
+                    <pre class="whitespace-pre"><span class="text-pink-400">struct</span> <span class="text-yellow-300">MotorConfig_t</span> {
+  <span class="text-blue-400">uint32_t</span> controlTimeoutMs;   <span class="text-slate-500">// Offset 0  (4 bytes)</span>
+  <span class="text-blue-400">int32_t</span>  pwmEffectiveLimitT; <span class="text-slate-500">// Offset 4  (4 bytes)</span>
+  <span class="text-blue-400">int32_t</span>  rampAccelStepT;     <span class="text-slate-500">// Offset 8  (4 bytes)</span>
+  <span class="text-blue-400">int32_t</span>  pwmStartKickT;      <span class="text-slate-500">// Offset 12 (4 bytes)</span>
+  <span class="text-blue-400">int32_t</span>  pwmEffectiveLimitS; <span class="text-slate-500">// Offset 16 (4 bytes)</span>
+  <span class="text-blue-400">int32_t</span>  rampAccelStepS;     <span class="text-slate-500">// Offset 20 (4 bytes)</span>
+  <span class="text-blue-400">int32_t</span>  pwmStartKickS;      <span class="text-slate-500">// Offset 24 (4 bytes)</span>
+};</pre>
+                </div>
+                <div class="bg-indigo-900/30 p-4 border-t border-indigo-900/50">
+                    <h4 class="text-indigo-300 font-bold mb-2 text-xs uppercase">為什麼使用二進位傳輸？</h4>
+                    <p class="mb-2">1. <strong>極致效能</strong>：28 Bytes vs JSON 字串 (~150 Bytes)。</p>
+                    <p>2. <strong>零解析開銷</strong>：嵌入式端只需 <code>memcpy</code>，無需 JSON Parser。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Troubleshooting -->
+        <section class="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-16">
+            <h2 class="text-lg font-bold text-amber-800 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation"></i> 錯誤排查
+            </h2>
+            <div class="grid md:grid-cols-3 gap-6 text-sm text-amber-900/80">
+                <div>
+                    <strong class="block text-amber-900 mb-1">❌ 無法掃描到裝置</strong>
+                    <p>請重新插拔 ESP32 電源，並確認藍牙權限已開啟。</p>
+                </div>
+                <div>
+                    <strong class="block text-amber-900 mb-1">⚠️ 數據長度錯誤</strong>
+                    <p>若讀取時發生 Error，代表網頁端定義的 28 Bytes 與韌體端不一致，請檢查 Struct 對齊。</p>
+                </div>
+                <div>
+                    <strong class="block text-amber-900 mb-1">❌ 寫入後沒反應</strong>
+                    <p>請確認數值是否為整數 (Integer)。DataView 對型別非常敏感。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework -->
+        <h2 class="text-2xl font-bold text-slate-800 text-center mb-8">🛠️ 課後練習與挑戰</h2>
+        <div class="grid md:grid-cols-3 gap-6 mb-12">
+            <!-- HW 2-1 -->
+            <div onclick="openSubmissionModal('motor-ramping-task-1', '作業 2-1: UI 容錯機制')"
+                class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 cursor-pointer relative group hover:shadow-lg transition-all">
+                <div
+                    class="w-12 h-12 bg-blue-100/50 rounded-full flex items-center justify-center text-blue-600 text-xl font-bold mb-4">
+                    2-1</div>
+                <h3 class="font-bold text-lg mb-2">UI 容錯機制</h3>
+                <p class="text-sm text-slate-600 mb-4">防止使用者輸入極端數值導致馬達燒毀。</p>
+                <ul class="text-sm text-slate-500 list-disc list-inside mb-4">
+                    <li>為每個 Input 加入 min/max 屬性。</li>
+                    <li>JS 實作：輸入紅框警告。</li>
+                    <li>空值保護：禁止傳送。</li>
+                </ul>
+                <!-- Hover Overlay -->
+                <div
+                    class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                    <span
+                        class="bg-white text-blue-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                        📤 點擊繳交作業
+                    </span>
+                </div>
+            </div>
+
+            <!-- HW 2-2 -->
+            <div onclick="openSubmissionModal('motor-ramping-task-2', '作業 2-2: 二進位逆向工程')"
+                class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 cursor-pointer relative group hover:shadow-lg transition-all">
+                <div
+                    class="w-12 h-12 bg-purple-100/50 rounded-full flex items-center justify-center text-purple-600 text-xl font-bold mb-4">
+                    2-2</div>
+                <h3 class="font-bold text-lg mb-2">二進位逆向工程</h3>
+                <p class="text-sm text-slate-600 mb-4">實驗 DataView 與 Little-Endian。</p>
+                <ul class="text-sm text-slate-500 list-disc list-inside mb-4">
+                    <li>手動建立 ArrayBuffer 測試解析。</li>
+                    <li>將 LittleEndian 改為 false 觀察變化。</li>
+                    <li>思考 Alignment 問題。</li>
+                </ul>
+                <!-- Hover Overlay -->
+                <div
+                    class="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                    <span
+                        class="bg-white text-purple-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                        📤 點擊繳交作業
+                    </span>
+                </div>
+            </div>
+
+            <!-- HW 2-3 -->
+            <div onclick="openSubmissionModal('motor-ramping-task-3', '作業 2-3: 斷電保護驗證')"
+                class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 cursor-pointer relative group hover:shadow-lg transition-all">
+                <div
+                    class="w-12 h-12 bg-emerald-100/50 rounded-full flex items-center justify-center text-emerald-600 text-xl font-bold mb-4">
+                    2-3</div>
+                <h3 class="font-bold text-lg mb-2">斷電保護驗證</h3>
+                <p class="text-sm text-slate-600 mb-4">測試系統穩定性。</p>
+                <ul class="text-sm text-slate-500 list-disc list-inside mb-4">
+                    <li>心跳包：500ms 超時自動停車。</li>
+                    <li>斷電後參數是否從 EEPROM 回復？</li>
+                    <li>手感調校：極限操駕測試。</li>
+                </ul>
+                <!-- Hover Overlay -->
+                <div
+                    class="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                    <span
+                        class="bg-white text-emerald-600 px-4 py-2 rounded-full font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                        📤 點擊繳交作業
+                    </span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Logic Script -->
+    <script src="/js/course-shared.js?v=20260404REV"></script>
+    <script>
+        // DOM Elements
+        const connectBtn = document.getElementById('connectBtn');
+        const statusBadge = document.getElementById('statusBadge');
+        const mainPanel = document.getElementById('mainPanel');
+        const saveBtn = document.getElementById('saveBtn');
+        const msgLabel = document.getElementById('msgLabel');
+
+        // Inputs
+        const inputIds = [
+            'controlTimeoutMs',
+            'pwmEffectiveLimitT', 'rampAccelStepT', 'pwmStartKickT',
+            'pwmEffectiveLimitS', 'rampAccelStepS', 'pwmStartKickS'
+        ];
+
+        const inputs = {};
+        inputIds.forEach(id => inputs[id] = document.getElementById(id));
+
+        // BLE Constants
+        const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c0ffee00dead';
+        const CHAR_CONFIG_UUID = '4fafc203-1fb5-459e-8fcc-c0ffee02dead';
+
+        let bleDevice;
+        let configChar;
+
+        // --- Connection Logic ---
+        connectBtn.addEventListener('click', async () => {
+            try {
+                // 1. Request Device
+                bleDevice = await navigator.bluetooth.requestDevice({
+                    filters: [{ namePrefix: 'esp32' }],
+                    optionalServices: [SERVICE_UUID]
+                });
+
+                updateStatus('connecting');
+
+                // 2. Connect GATT
+                const server = await bleDevice.gatt.connect();
+                const service = await server.getPrimaryService(SERVICE_UUID);
+                configChar = await service.getCharacteristic(CHAR_CONFIG_UUID);
+
+                // 3. Read Initial Config
+                await readConfig(configChar);
+
+                // 4. Update UI
+                updateStatus('connected');
+                mainPanel.classList.remove('opacity-50', 'pointer-events-none');
+
+                // Handle Disconnect
+                bleDevice.addEventListener('gattserverdisconnected', onDisconnect);
+
+            } catch (err) {
+                console.error(err);
+                alert('連線失敗: ' + err.message);
+                updateStatus('disconnected');
+            }
+        });
+
+        // --- Read Configuration (Binary Unpacking) ---
+        async function readConfig(characteristic) {
+            console.log('Reading config...');
+            const value = await characteristic.readValue(); // DataView
+
+            if (value.byteLength !== 28) {
+                alert(`⚠️ 警告: 裝置回傳長度 (${value.byteLength}) 與預期 (28) 不符！`);
+            }
+
+            // Little-Endian Unpacking
+            // Offset 0: controlTimeoutMs (Uint32)
+            inputs.controlTimeoutMs.value = value.getUint32(0, true);
+
+            // Offset 4: pwmEffectiveLimitT (Int32)
+            inputs.pwmEffectiveLimitT.value = value.getInt32(4, true);
+            // Offset 8: rampAccelStepT
+            inputs.rampAccelStepT.value = value.getInt32(8, true);
+            // Offset 12: pwmStartKickT
+            inputs.pwmStartKickT.value = value.getInt32(12, true);
+
+            // Offset 16: pwmEffectiveLimitS
+            inputs.pwmEffectiveLimitS.value = value.getInt32(16, true);
+            // Offset 20: rampAccelStepS
+            inputs.rampAccelStepS.value = value.getInt32(20, true);
+            // Offset 24: pwmStartKickS
+            inputs.pwmStartKickS.value = value.getInt32(24, true);
+
+            msgLabel.textContent = "✅ 已從裝置讀取最新設定";
+            msgLabel.className = "text-green-600 font-bold text-sm mt-2";
+        }
+
+        // --- Save Configuration (Binary Packing) ---
+        saveBtn.addEventListener('click', async () => {
+            if (!configChar) return;
+
+            // Validation (Basic)
+            for (const id of inputIds) {
+                if (!inputs[id].value) {
+                    alert('❌ 所有欄位皆必填！');
+                    return;
+                }
+            }
+
+            try {
+                const buffer = new ArrayBuffer(28);
+                const view = new DataView(buffer);
+
+                // Pack Data (Little-Endian)
+                view.setUint32(0, parseInt(inputs.controlTimeoutMs.value), true);
+
+                view.setInt32(4, parseInt(inputs.pwmEffectiveLimitT.value), true);
+                view.setInt32(8, parseInt(inputs.rampAccelStepT.value), true);
+                view.setInt32(12, parseInt(inputs.pwmStartKickT.value), true);
+
+                view.setInt32(16, parseInt(inputs.pwmEffectiveLimitS.value), true);
+                view.setInt32(20, parseInt(inputs.rampAccelStepS.value), true);
+                view.setInt32(24, parseInt(inputs.pwmStartKickS.value), true);
+
+                console.log('Sending bytes:', buffer);
+
+                await configChar.writeValue(buffer);
+
+                msgLabel.textContent = "✅ 設定已成功傳送! (28 Bytes)";
+                msgLabel.className = "text-green-600 font-bold text-sm mt-2";
+
+                // Flash success visual
+                saveBtn.classList.add('bg-green-600');
+                setTimeout(() => saveBtn.classList.remove('bg-green-600'), 1000);
+
+            } catch (err) {
+                console.error(err);
+                alert('寫入失敗: ' + err.message);
+            }
+        });
+
+        // --- Helpers ---
+        function updateStatus(state) {
+            const badgeSpan = statusBadge.querySelector('span');
+            if (state === 'connected') {
+                statusBadge.className = 'px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium flex items-center gap-2';
+                badgeSpan.className = 'w-2 h-2 rounded-full bg-green-500';
+                statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span> ${bleDevice.name} 已連線`;
+                connectBtn.classList.add('hidden');
+            } else if (state === 'connecting') {
+                badgeSpan.className = 'w-2 h-2 rounded-full bg-amber-500 animate-pulse';
+                statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> 連線中...`;
+            } else {
+                statusBadge.className = 'px-3 py-1 bg-slate-200 text-slate-600 rounded-full text-sm font-medium flex items-center gap-2';
+                connectBtn.classList.remove('hidden');
+                statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-400"></span> 未連線`;
+                mainPanel.classList.add('opacity-50', 'pointer-events-none');
+            }
+        }
+
+        function onDisconnect() {
+            updateStatus('disconnected');
+            alert('裝置已斷線');
+        }
+    </script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>馬達 Ramping 組態設定</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：軟體保險絲 - UI 安全限流與驗證</h3>
+            <div class="quest-meta">
+                <span>角色扮演：嵌入式系統測試員</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：30 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立防呆</strong>：在網頁前端 Input 加入 <code>min/max</code> 屬性限制（例如：PWM 不可超過 255）。</li>
+                    <li><strong>實作警告</strong>：使用 JavaScript 實作：當輸入無效數值時，輸入框變紅並禁止按下「傳送」按鈕。</li>
+                    <li><strong>邊界測試</strong>：測試輸入極端值（如 -1 或 999），確保系統能正確攔截。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>安全性</strong>：是否能有效防止使用者因誤輸入而導致馬達燒毀？</li>
+                    <li>[ ] <strong>使用者排錯</strong>：前端是否有提供直觀的錯誤提示？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：二進位橋樑 - 資料結構映射 (DataView)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：韌體驅動開發者</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>定義結構</strong>：在 JavaScript 中根據 C++ <code>struct</code> 的定義建立 <code>ArrayBuffer</code> 與 <code>DataView</code>。</li>
+                    <li><strong>封裝位元組</strong>：確保使用 <strong>Little-Endian</strong> 格式正確寫入 28 Bytes 的二進位數值。</li>
+                    <li><strong>逆向驗證</strong>：實作從裝置讀取 (Read) 二進位資料並正確解析回網頁 Input 的邏輯。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>對齊正確性</strong>：Offset (偏移量) 是否與 C++ 的 28 Bytes 結構體完全一致？</li>
+                    <li>[ ] <strong>通訊效率</strong>：是否能成功透過二進位通訊完成雙向資料同步？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：失聯保護 - 心跳包與故障安全 (Fail-Safe)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：硬體安全專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：40 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>設定超時</strong>：調整 <code>controlTimeoutMs</code> 並測試藍牙斷線後，馬達是否能在指定時間內自動停車。</li>
+                    <li><strong>EEPROM 回復</strong>：測試裝置斷電重啟後，設定的 Ramping 參數是否能從 NVS (Flash) 中正確載入。</li>
+                    <li><strong>穩定性測試</strong>：在馬達運作期間連續傳送不同參數，觀察裝置是否發生 Crash 或數值位移。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>故障排除能力</strong>：當連線中斷時，系統是否展現出預期的安全性行為？</li>
+                    <li>[ ] <strong>數據持久性</strong>：是否能正確驗證 NVS 的讀寫邏輯？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tutor Guide (Hidden) -->
+    <section id="tutor-guide" style="display: none;">
+        <h2>馬達控制教學引導指南</h2>
+        <div class="classroom-guide text-sm space-y-4">
+            <p><strong>教學重點：</strong></p>
+            <p>本單元結合了「物理安全」與「二進位協議」。教師應強調為什麼使用 Binary 而非 JSON（效能、記憶體），並引導學生處理 C/C++ 結構體對齊 (Memory Alignment) 帶來的位移挑戰。</p>
+        </div>
+    </section>
+
+    <script src="/js/course-shared.js?v=20260404REV"></script>
+
+</body>
+
+</html>
+</body>
+
+</html>

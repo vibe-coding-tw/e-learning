@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Coding 實戰 - AI 代理人專題 | Vibe Coding</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0c111d; color: #f8fafc; }
+        .glass-card-dark { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .accent-glow { box-shadow: 0 0 50px rgba(79, 70, 229, 0.15); }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .float-anim { animation: float 6s ease-in-out infinite; }
+    </style>
+</head>
+
+<body class="leading-relaxed">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950 text-white pt-24 pb-32 overflow-hidden text-center">
+        <div
+            class="header-overlay absolute inset-0 bg-gradient-to-r from-indigo-900/90 to-purple-800/90 mix-blend-multiply">
+        </div>
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=3000&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <div
+                class="badge-header inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/20 text-indigo-100 border border-indigo-400/30 backdrop-blur-sm mb-6 text-sm font-semibold tracking-wide uppercase">
+                <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                The Vibe Frontier
+            </div>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                主流 Vibe Coding<br>工具旗艦店
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed mb-10">
+                2026 年是 Vibe Coding 爆發的一年，開發者的角色已從「寫字的人」轉向 <span class="text-white font-bold underline decoration-indigo-500 font-[Outfit]">「下令的人」</span>。
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-4 mb-8">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="resource-btn bg-red-600 hover:bg-red-500 text-white px-8 py-4 rounded-full flex items-center gap-3 shadow-lg shadow-red-500/30 font-bold transition-all">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="resource-btn bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-full flex items-center gap-3 shadow-lg shadow-indigo-500/30 font-bold transition-all">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- 1. Vibe Coding Tools Grid -->
+        <div class="glass-card-dark rounded-3xl p-10 border border-white/5 shadow-2xl mb-16 accent-glow">
+            <h2 class="text-3xl font-bold mb-12 text-center text-white font-[Outfit]">主流 Vibe Coding 工具旗艦店</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+                <!-- Replit -->
+                <div class="bg-white/5 p-6 rounded-2xl hover:border-indigo-400 border border-white/5 transition-all group">
+                    <div class="w-12 h-12 bg-indigo-500/20 text-indigo-400 mx-auto rounded-2xl flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-rocket"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2 text-white font-[Outfit]">Replit Agent</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">最強一條龍：自動建立資料庫、後端與部署，連環境都不用看。</p>
+                </div>
+                <!-- Lovable -->
+                <div class="bg-white/5 p-6 rounded-2xl hover:border-pink-400 border border-white/5 transition-all group">
+                    <div class="w-12 h-12 bg-pink-500/20 text-pink-400 mx-auto rounded-2xl flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-heart"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2 text-white font-[Outfit]">Lovable.dev</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">審美天花板：UI 極其精緻，擅長處理複雜前端交互與 Supabase 整合。</p>
+                </div>
+                <!-- Cursor -->
+                <div class="bg-white/5 p-6 rounded-2xl hover:border-blue-400 border border-white/5 transition-all group">
+                    <div class="w-12 h-12 bg-blue-500/20 text-blue-400 mx-auto rounded-2xl flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-code"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2 text-white font-[Outfit]">Cursor / Windsurf</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">本地 IDE 王者：理解整個 Repo 的架構，處理複雜邏輯重構的標竿。</p>
+                </div>
+                <!-- Claude Code -->
+                <div class="bg-white/5 p-6 rounded-2xl hover:border-amber-400 border border-white/5 transition-all group">
+                    <div class="w-12 h-12 bg-amber-500/20 text-amber-400 mx-auto rounded-2xl flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-terminal"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2 text-white font-[Outfit]">Claude Code</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">終端機極速 Agent：直接在 CLI 運行，自主掃描修復 Bug 並提交 Commit。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Antigravity Section -->
+        <div class="glass-card-dark bg-slate-900 rounded-3xl p-10 border border-indigo-500/20 mb-16 shadow-2xl relative overflow-hidden group">
+            <div class="absolute -top-24 -right-24 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl group-hover:bg-indigo-600/20 transition-all"></div>
+            <div class="flex flex-col md:flex-row gap-12 items-center relative z-10">
+                <div class="md:w-1/2">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full text-xs font-bold mb-6 uppercase tracking-widest border border-indigo-400/20">
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                        Orchestration
+                    </div>
+                    <h2 class="text-4xl font-extrabold mb-6 tracking-tight text-white font-[Outfit]">Antigravity：指揮多位 Agent</h2>
+                    <p class="text-slate-400 mb-8 font-light leading-relaxed text-lg">
+                        在 Antigravity 中，管理多個 Agent 的核心在於利用其獨特的<strong>任務導向架構</strong>。你可以同時讓 Agent A 重構後端，Agent B 設計前端，並在統一視窗進行核准。
+                    </p>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 hover:border-indigo-500/50 transition-colors">
+                            <i class="fa-solid fa-check-circle text-indigo-400 text-xl"></i>
+                            <span class="text-slate-300">任務指揮中心 (Task Boundary) 批次核准</span>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 hover:border-indigo-500/50 transition-colors">
+                            <i class="fa-solid fa-check-circle text-indigo-400 text-xl"></i>
+                            <span class="text-slate-300">rules.md 定義「協作 DNA」防止檔案衝突</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="md:w-1/2 bg-black/50 backdrop-blur-xl rounded-2xl p-8 border border-white/10 font-mono text-sm shadow-inner overflow-hidden">
+                    <div class="flex items-center gap-2 mb-6 border-b border-white/10 pb-4">
+                        <div class="flex gap-1.5">
+                            <div class="w-3 h-3 rounded-full bg-red-500/50"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500/50"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500/50"></div>
+                        </div>
+                        <span class="text-slate-500 text-xs ml-2">.antigravity/rules.md</span>
+                    </div>
+                    <div class="space-y-3">
+                        <p class="text-indigo-400 font-bold">@Architect { role: "Planning" }</p>
+                        <p class="text-emerald-400 font-bold">@Coder { role: "Implementation" }</p>
+                        <div class="mt-4 pt-4 border-t border-white/5 space-y-2">
+                            <p class="text-slate-500"># 所有 API 必須定義 TS Interface</p>
+                            <p class="text-slate-500"># 修改前必須讀取當前 Git 狀態</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Deployment & CI/CD -->
+        <div class="grid md:grid-cols-2 gap-8 mb-16">
+            <div class="glass-card-dark p-8 rounded-3xl border border-red-500/20 shadow-xl">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 bg-red-600/20 text-red-500 rounded-2xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold tracking-tight text-white font-[Outfit]">為什麼 Agent 無法部署？</h2>
+                </div>
+                <p class="text-sm text-slate-400 font-light leading-relaxed">
+                    部署涉及基礎設施權限與敏感密鑰 (API Keys)。為確保安全，Agent 運行在隔離環境，無權直接存取你的正式伺服器。
+                </p>
+            </div>
+            <div class="glass-card-dark p-8 rounded-3xl border border-emerald-500/20 shadow-xl">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 bg-emerald-600/20 text-emerald-500 rounded-2xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-rocket"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold tracking-tight text-white font-[Outfit]">最佳實踐：CI/CD 部署</h2>
+                </div>
+                <p class="text-sm text-slate-400 font-light leading-relaxed">
+                    讓 Agent 撰寫 <strong>GitHub Actions YAML</strong> 腳本。你審核並合併 PR 後，由自動化流水線完成部署，這才是最專業的流程。
+                </p>
+            </div>
+        </div>
+
+        <!-- Assignments Section -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-12 text-white font-[Outfit]">🛠️ 課後練習與挑戰</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- HW 3-1 -->
+                <div onclick="openSubmissionModal('ai-agent-task-3-1', '作業 3-1: v0 / Lovable 視覺實戰')"
+                    class="glass-card-dark p-8 rounded-2xl cursor-pointer relative group hover:shadow-2xl transition-all duration-300 flex flex-col h-full border border-white/5">
+                    <div class="w-12 h-12 bg-pink-500/20 text-pink-400 rounded-2xl flex items-center justify-center text-xl font-bold mb-6">3-1</div>
+                    <h3 class="font-bold text-xl mb-3 text-white font-[Outfit]">v0 / Lovable 視覺實戰</h3>
+                    <p class="text-sm text-slate-400 mb-6 leading-relaxed flex-grow">使用 v0.dev 或 Lovable 產生一個精美的儀表板組件，並描述 Vibe 過程。</p>
+                    <div class="absolute inset-0 bg-pink-600/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
+                        <span class="bg-white text-pink-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">📤 點擊繳交作業</span>
+                    </div>
+                </div>
+
+                <!-- HW 3-2 -->
+                <div onclick="openSubmissionModal('ai-agent-task-3-2', '作業 3-2: Replit Agent 全棧開發')"
+                    class="glass-card-dark p-8 rounded-2xl cursor-pointer relative group hover:shadow-2xl transition-all duration-300 flex flex-col h-full border border-indigo-500/30">
+                    <div class="w-12 h-12 bg-indigo-500/20 text-indigo-400 rounded-2xl flex items-center justify-center text-xl font-bold mb-6">3-2</div>
+                    <h3 class="font-bold text-xl mb-3 text-white font-[Outfit]">Replit Agent 全棧開發</h3>
+                    <p class="text-sm text-slate-400 mb-6 leading-relaxed flex-grow">利用 Replit Agent 在 10 分鐘內建立並部署一個含資料庫的待辦清單應用。</p>
+                    <div class="absolute inset-0 bg-indigo-600/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
+                        <span class="bg-white text-indigo-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">📤 點擊繳交作業</span>
+                    </div>
+                </div>
+
+                <!-- HW 3-3 -->
+                <div onclick="openSubmissionModal('ai-agent-task-3-3', '作業 3-3: Claude Code 終端機除錯')"
+                    class="glass-card-dark p-8 rounded-2xl cursor-pointer relative group hover:shadow-2xl transition-all duration-300 flex flex-col h-full border border-white/5">
+                    <div class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center text-xl font-bold mb-6">3-3</div>
+                    <h3 class="font-bold text-xl mb-3 text-white font-[Outfit]">Claude Code 終端機除錯</h3>
+                    <p class="text-sm text-slate-400 mb-6 leading-relaxed flex-grow">在本地專案執行 `claude` 指令，讓 Agent 掃描並修復三個潛在的安全漏洞。</p>
+                    <div class="absolute inset-0 bg-amber-600/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
+                        <span class="bg-white text-amber-600 px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">📤 點擊繳交作業</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white py-12 border-t border-gray-100">
+        <div class="container mx-auto px-4 text-center">
+            <div class="text-xl font-bold text-slate-800 mb-2">🚀 Vibe Coding</div>
+            <p class="text-gray-400 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6 text-sm text-gray-400">
+                <span>Vibe Coding 實戰課</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Resources & Script -->
+    <script>
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/XLAFCheIzaU?autoplay=1",
+            doc: "https://docs.google.com/document/d/1EQD6vX-E8z1T3j_o7L9L1_v_Uv0_O_D_X_P_S_K_Y/edit"
+        };
+    </script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-2xl font-bold mb-4 font-[Outfit]">Vibe Coding 實戰 - AI 代理人專題</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：審美天花板 - UI/UX 視覺實戰</h3>
+            <div class="quest-meta">
+                <span>角色扮演：資深前端工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：30 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>選擇工具</strong>：進入 <strong>v0.dev</strong> 或 <strong>Lovable.dev</strong> 平台。</li>
+                    <li><strong>定義 Vibe</strong>：輸入一段「Cyberpunk 風格、含有毛玻璃質感與霓虹燈效」的控制面板描述。</li>
+                    <li><strong>迭代優化</strong>：針對產出的 UI 進行至少 3 次的細節微調 (Prompt Tuning)。</li>
+                    <li><strong>紀錄與繳交</strong>：將成果截圖與最終 Prompt 分享至你的 Repository。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>視覺達成度</strong>：是否能讓 AI 精確呈現指定的視覺風格？</li>
+                    <li>[ ] <strong>對話深度</strong>：是否展現出透過迭代優化 UI 細節的能力？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：10 分鐘全棧挑戰 (Replit Agent)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：全端開發者</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：20 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>開啟 Agent</strong>：在 Replit 中啟動 Agent 模式。</li>
+                    <li><strong>下達指令</strong>：要求 Agent 在 10 分鐘內建立「含資料庫、後端 API 與前端頁面」的待辦清單 (Todo app)。</li>
+                    <li><strong>即時部署</strong>：點擊 Deploy 並獲得一個可公開訪問的連結。</li>
+                    <li><strong>驗證邏輯</strong>：測試資料新增、刪除是否在重新整理後依然存在。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>功能完整性</strong>：資料庫是否正確連接？CRUD 功能是否齊全？</li>
+                    <li>[ ] <strong>速度與效率</strong>：是否能有效管理 Agent 的規劃與執行過程？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：CLI 掃描與安全修復 (Claude Code)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：安全工程師 (SecOps)</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：40 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>終端連動</strong>：在你的本機專案目錄中執行 <code>claude</code>。</li>
+                    <li><strong>下達任務</strong>：要求 Agent：「掃描此專案中的潛在安全性風險，並自主進行修復」。</li>
+                    <li><strong>審核變動</strong>：逐一核准 Agent 提出的檔案修改計畫。</li>
+                    <li><strong>同步提交</strong>：執行 <code>git push</code> 同步 Agent 產出的安全性補丁。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>風險辨識</strong>：是否能引導 Agent 找出常見的 Vulnerability？</li>
+                    <li>[ ] <strong>自主性</strong>：是否學會如何對 CLI Agent 下達高級指令進行批次處理？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tutor Guide (Hidden) -->
+    <section id="tutor-guide" style="display: none;">
+        <h2 class="text-2xl font-bold mb-4 font-[Outfit]">Vibe Coding 實戰教學指南</h2>
+        <div class="classroom-guide">
+            <p>本單元是「工具合奏」的巔峰。重點不在於語法，而在於學生是否能從中體會到「工程效率」的維度跳躍。導師應多觀察學生對不同工具特長的理解程度（例如：Lovable 強於審美，Cursor 強於架構）。</p>
+        </div>
+    </section>
+
+    <script src="/js/course-shared.js?v=20260404REV"></script>
+
+</body>
+
+</html>

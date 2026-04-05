@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>虛擬搖桿實驗室：從觸控原理到數學實現 - Vibe Coding</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+
+</head>
+
+<body id="page-started" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+
+    <!-- Navigation (Shared) -->
+    <div id="nav-placeholder" data-root="/" data-show-auth="false"></div>
+    <script type="module" src="/js/nav-component.js?v=2026.04.05.FINAL_V3"></script>
+    
+
+    <!-- Tab Navigation Bar -->
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('touch')" id="tab-touch" class="unit-tab-btn active">
+                    <span>1️⃣</span> 觸控事件 (Touch Events)
+                </button>
+                <button onclick="switchTab('canvas')" id="tab-canvas" class="unit-tab-btn">
+                    <span>2️⃣</span> 虛擬搖桿 (Joystick UI)
+                </button>
+                <button onclick="switchTab('math')" id="tab-math" class="unit-tab-btn">
+                    <span>3️⃣</span> 數學極限 (Math Logic)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Area (Iframe) -->
+    <div class="flex-grow w-full relative bg-gray-100">
+        <iframe id="content-frame" src="" class="w-full h-full border-0 absolute inset-0"></iframe>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('content-frame');
+        const tabTouch = document.getElementById('tab-touch');
+        const tabCanvas = document.getElementById('tab-canvas');
+        const tabMath = document.getElementById('tab-math');
+
+        // Initial Load
+        loadContent('start-05-unit-touch-vs-mouse.html');
+
+        function switchTab(tab) {
+            // Helper to reset all tabs
+            [tabTouch, tabCanvas, tabMath].forEach(t => {
+                t.classList.remove('active');
+            });
+
+            // Activate current tab
+            let currentTabBtn;
+            let url;
+
+            if (tab === 'touch') {
+                currentTabBtn = tabTouch;
+                url = 'start-05-unit-touch-vs-mouse.html';
+            } else if (tab === 'canvas') {
+                currentTabBtn = tabCanvas;
+                url = 'start-05-unit-canvas-joystick.html';
+            } else if (tab === 'math') {
+                currentTabBtn = tabMath;
+                url = 'start-05-unit-joystick-math.html';
+            }
+
+            if (currentTabBtn) {
+                currentTabBtn.classList.add('active');
+                loadContent(url);
+            }
+        }
+
+        function loadContent(url) {
+            // Pass current query parameters to children (e.g., ?token=xyz)
+            const separator = url.includes('?') ? '&' : '?';
+            const query = window.location.search.substring(1);
+
+            iframe.src = query ? `${url}${separator}${query}` : url;
+        }
+
+        // Handle browser back/forward if needed or deep linking hash
+        // Simple implementation for now
+    </script>
+
+</body>
+
+</html>

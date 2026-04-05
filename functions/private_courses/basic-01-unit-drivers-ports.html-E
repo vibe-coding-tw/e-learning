@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>驅動程式與通訊埠原理 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 1 - 硬體連線
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">
+                驅動程式與通訊埠原理
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
+                打通橋樑：理解 USB-to-UART、COM Port 與 Baud Rate。建立穩定的硬體開發基石。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: USB-to-UART -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-cyan-400"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">🔌</span> 1. 數位翻譯官：USB-to-UART 橋接晶片
+                    </h2>
+                    <div class="space-y-8 text-gray-600 text-lg">
+                        <div class="bg-blue-50 rounded-xl p-6 border border-blue-100 shadow-sm">
+                            <h3 class="text-xl font-bold text-blue-800 mb-3 underline decoration-blue-200">通訊協定的衝突</h3>
+                            <p class="leading-relaxed text-justify">
+                                電腦說的是 <strong>USB 語言</strong>（高速）；而 ESP32 說的是 <strong>UART 語言</strong>（序列）。兩者直接對話是無法溝通的。
+                            </p>
+                            <div class="mt-6 flex items-center justify-center gap-4 text-sm font-mono text-blue-900 bg-white/50 p-4 rounded-lg border border-blue-100 italic">
+                                💻 USB <span class="text-blue-300">↔️</span> <span class="bg-white px-3 py-1 rounded shadow-sm border border-blue-200 font-bold text-justify">橋接晶片</span> <span class="text-blue-300">↔️</span> 🤖 UART
+                            </div>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div class="p-6 bg-slate-50 rounded-xl border border-slate-200 transition hover:shadow-md">
+                                <h3 class="text-lg font-bold text-slate-800 mb-3 text-justify">橋接晶片的角色</h3>
+                                <p class="text-gray-600 text-sm leading-relaxed text-justify">
+                                    常見型號如 CP2102, CH340。負責將 USB 包還原為序列信號。
+                                </p>
+                            </div>
+                            <div class="p-6 bg-slate-50 rounded-xl border border-slate-200 transition hover:shadow-md">
+                                <h3 class="text-lg font-bold text-slate-800 mb-3 text-justify">驅動程式的本質</h3>
+                                <p class="text-gray-600 text-sm leading-relaxed text-justify">
+                                    給作業系統看的「說明書」。不安裝，系統就不知道如何操作橋接晶片。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: COM Port -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-purple-500 to-pink-400"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl text-justify">🚪</span> 2. 什麼是通訊埠 (COM Port)？
+                    </h2>
+                    <div class="flex flex-col md:flex-row gap-8 items-center">
+                        <div class="flex-1 space-y-6">
+                            <div class="bg-purple-50 p-6 rounded-xl border border-purple-100 shadow-sm">
+                                <h4 class="font-bold text-purple-800 mb-2">邏輯抽象化</h4>
+                                <p class="text-gray-600 leading-relaxed text-base text-justify">
+                                    安裝後，系統會將晶片「虛擬化」為一個 COM 埠。這就像為裝置開了一個專屬的「門牌號碼」。
+                                </p>
+                            </div>
+                            <div class="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-r-xl">
+                                <h4 class="font-bold text-amber-800 mb-1 flex items-center gap-2"><span>⚠️</span> 唯一性與衝突</h4>
+                                <p class="text-amber-700 text-sm leading-relaxed text-left text-justify">
+                                    編號衝突或找不到門牌是失敗最常見原因。
+                                </p>
+                            </div>
+                        </div>
+                        <div class="w-full md:w-1/3 text-justify">
+                            <div class="bg-slate-900 text-green-400 font-mono p-6 rounded-2xl shadow-2xl text-xs md:text-sm leading-relaxed border border-slate-700">
+                                <span class="text-gray-500">// Terminal Check</span><br>
+                                &gt; ls /dev/tty.*<br>
+                                <span class="text-gray-600">/dev/tty.Bluetooth-In</span><br>
+                                <span class="text-yellow-400 font-bold">/dev/tty.usbserial-0001</span><br>
+                                <span class="text-gray-600">/dev/tty.wlan-debug</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Baud Rate -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-green-500 to-teal-400"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="text-4xl">⏱️</span> 3. 序列通訊的核心參數：Baud Rate
+                    </h2>
+                    <div class="grid md:grid-cols-2 gap-12">
+                        <div class="space-y-6 text-gray-600 text-lg">
+                            <p class="text-justify"><strong>波特率 (Baud Rate)：</strong>定義每秒傳輸 bit。雙方必須遵守的「溝通語速」。</p>
+                            <div class="grid grid-cols-1 gap-4">
+                                <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200 shadow-sm text-justify">
+                                    <span class="text-slate-400 font-mono font-bold w-16">9600</span>
+                                    <span class="text-sm">傳統速率。</span>
+                                </div>
+                                <div class="flex items-center gap-4 bg-emerald-50 p-4 rounded-lg border border-emerald-200 shadow-sm text-justify">
+                                    <span class="text-emerald-600 font-mono font-bold w-16">115200</span>
+                                    <span class="text-sm text-emerald-800 font-medium text-justify">ESP32 標準速率。</span>
+                                </div>
+                                <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200 shadow-sm text-justify">
+                                    <span class="text-slate-400 font-mono font-bold w-16 text-justify">921600</span>
+                                    <span class="text-sm">極速燒錄。</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-red-50 rounded-2xl p-8 border border-red-100 shadow-inner flex flex-col justify-center text-center">
+                            <h3 class="text-xl font-bold text-red-800 mb-4">🚫 為何看見亂碼？</h3>
+                            <p class="text-red-700 text-base leading-relaxed mb-6 italic text-justify">
+                                「語速不一，數據就會在解碼時崩潰，形成亂碼。」
+                            </p>
+                            <div class="text-3xl bg-white/50 p-4 rounded-xl border border-red-200 font-mono text-red-400 select-none">
+                                ▒▓▒░▒▓▒░
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">實戰任務：通訊鏈路診斷</h2>
+            <p class="text-center text-gray-500 mb-12">確保開發工具與硬體端完美對話。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 1-1 -->
+                <div onclick="openSubmissionModal('basic-01-driver-1', '【作業 1-1】驅動與硬體偵錯')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform">🔌</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition text-justify">【作業 1-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「環境通聯與偵錯」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            辨識 COM 埠。貼上偵測圖，標記橋接晶片型號。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 1-2 -->
+                <div onclick="openSubmissionModal('basic-01-driver-2', '【作業 1-2】Baud Rate 匹配實驗')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-green-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-emerald-500 group-hover:rotate-12 transition-transform">⏱️</span>
+                            <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded font-bold uppercase text-justify">45 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-green-600 transition text-justify">【作業 1-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「亂碼解密實驗」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            設置錯誤速率，記錄現象。理解速率同步重要性。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 1-3 -->
+                <div onclick="openSubmissionModal('basic-01-driver-3', '【作業 1-3】Loopback 自我對話測試')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-purple-500 group-hover:rotate-180 transition-all duration-700">🔄</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase text-justify">60 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition text-justify">【作業 1-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「硬體環回測試」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify text-left">
+                            短路 TX/RX，測試回音。學會判斷硬體是否損壞。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm mb-4 text-center">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>課程單元 基礎 1-3</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/_kXXn3cQ4Kc",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vS_-5BVlzkphyBEsUJBE_OB831OTqHm7czgpwLElHWLpqyrKkLsq9n885BnDiYxsCLPA378xSfnFywP/pub?embedded=true"
+        };
+    </script>
+    <script src="/js/course-shared.js?v=20260404REV"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">硬體通訊鏈路實驗室：驅動偵錯、速率同步與 Loopback 實戰</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title text-justify">任務 1：驅動與硬體偵錯 (Driver & Hardware Debugging)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：部署工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>身份識別</strong>：在 README 貼上系統偵測到 ESP32 COM 埠的圖。</li>
+                    <li><strong>晶片型號標註</strong>：標記橋接晶片型號（如 CP2102），並搜尋對應驅動。</li>
+                    <li><strong>排障筆記</strong>：若連線失敗，記錄更換線材（數據線）結果。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>環境穩健性</strong>：是否已消除找不到通訊埠的錯誤？</li>
+                    <li>[ ] <strong>排障意識</strong>：是否能區分線材損壞與驅動異常？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title text-justify">任務 2：Baud Rate 匹配實驗 (Baud Rate Synchronization)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：通訊協定測試員</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>語速約定</strong>：代碼中使用 <code>Serial.begin(115200)</code>。</li>
+                    <li><strong>故意失步</strong>：修改 <code>platformio.ini</code> 的 <code>monitor_speed</code> 為 9600。</li>
+                    <li><strong>亂碼截圖</strong>：擷取輸出亂碼畫面，存入 <code>assets</code>。</li>
+                    <li><strong>同步修復</strong>：調回 115200。解釋同步通訊重要性。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>邏輯完整性</strong>：代碼與配置文件速率是否達成一致？</li>
+                    <li>[ ] <strong>文檔敘述</strong>：是否能在 README 說明錯誤為何導致解碼崩潰？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title text-justify">任務 3：Loopback 自我對話測試 (Hardware Loopback Test)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：硬體診斷工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>物理環回連接</strong>：使用杜邦線短路板上的 <code>TX</code> 與 <code>RX</code>。</li>
+                    <li><strong>回音測試</strong>：啟動 Monitor 輸入字符，驗證數據反射。</li>
+                    <li><strong>診斷結論撰寫</strong>：判斷 USB 轉串口鏈路是否健康。</li>
+                    <li><strong>最終 Commit</strong>：整理實驗圖片並 Push。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>環回概念理解</strong>：是否能透過實驗理解全雙工特性？</li>
+                    <li>[ ] <strong>專業除錯技巧</strong>：掌握用「短路法」快速定位故障點的技能。</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tutor Guide (Hidden) -->
+    <section id="tutor-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：克服硬體開發第一道高牆——「連不上電腦」。</p>
+            <ol class="space-y-4 text-slate-600 text-justify text-left">
+                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：基礎設施建設</strong> - 建立物理連結。</li>
+                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：對抗盲目除錯</strong> - 學會「隔離問題」專業方法。</li>
+                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：標準化配置</strong> - 養成在 <code>platformio.ini</code> 標註速率好習慣。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
+.
+├── platformio.ini   # (練習點) 故意遺漏 monitor_speed 設定供補全
+├── src/main.cpp      # 基礎 Hello World loop
+└── README.md         # 診斷報告：紀錄 COM 埠與 Loopback 結果
+            </pre>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
+            <table class="w-full text-left border-collapse border border-slate-100">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5 text-justify">下載驅動並掌握 Baud Rate 認知測試。</td>
+                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 追蹤是否完成驅動包認知測試。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify">領取作業 (Repo)，完成診斷並通過 Loopback 自檢。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>即時救援:</strong> 協助處理線材具不數據功能異狀。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
+                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify">除錯流程整理進 <code>docs/debug.md</code> 並 Push。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評估對「診斷邏輯鏈」的掌握度。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</body>
+
+</html>

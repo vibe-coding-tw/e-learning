@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基礎 8: 搖桿數據與數學轉換 - Vibe Coding</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+</head>
+
+<body id="page-basic" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
+
+    <!-- Navigation (Shared) -->
+    <div id="nav-placeholder" data-root="/" data-show-auth="false"></div>
+    <script type="module" src="/js/nav-component.js?v=2026.04.05.FINAL_V3"></script>
+    
+
+    <!-- Tab Navigation Bar -->
+    <div class="unit-tabs-wrapper">
+        <div class="unit-tabs-container">
+            <div class="unit-tabs-flex" id="course-tabs-container">
+                <button onclick="switchTab('joystick-mapping')" id="tab-joystick-mapping" class="unit-tab-btn active">
+                    <span>1️⃣</span>搖桿數據：歸一化、映射與死區
+                </button>
+                <button onclick="switchTab('unicycle-model')" id="tab-unicycle-model" class="unit-tab-btn">
+                    <span>2️⃣</span>差速轉換數學：Unicycle Model
+                </button>
+                <button onclick="switchTab('response-curves')" id="tab-response-curves" class="unit-tab-btn">
+                    <span>3️⃣</span>曲線優化：線性 vs. 指數響應
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Area (Iframe) -->
+    <div class="flex-grow w-full relative">
+        <iframe id="content-frame" src=""
+            class="w-full h-full border-0 absolute inset-0 bg-gray-50 transition-opacity duration-300"
+            style="opacity: 0;" onload="this.style.opacity = '1'"></iframe>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('content-frame');
+        const tabJoystick = document.getElementById('tab-joystick-mapping');
+        const tabUnicycle = document.getElementById('tab-unicycle-model');
+        const tabResponse = document.getElementById('tab-response-curves');
+
+        // Initial Load
+        loadContent('basic-08-unit-joystick-mapping.html');
+
+        function switchTab(tab) {
+            // Reset all tabs
+            [tabJoystick, tabUnicycle, tabResponse].forEach(t => {
+                t.classList.remove('active');
+            });
+
+            if (tab === 'joystick-mapping') {
+                tabJoystick.classList.add('active');
+                loadContent('basic-08-unit-joystick-mapping.html');
+            } else if (tab === 'unicycle-model') {
+                tabUnicycle.classList.add('active');
+                loadContent('basic-08-unit-unicycle-model.html');
+            } else if (tab === 'response-curves') {
+                tabResponse.classList.add('active');
+                loadContent('basic-08-unit-response-curves.html');
+            }
+        }
+
+        function loadContent(url) {
+            iframe.style.opacity = '0';
+            setTimeout(() => {
+                const separator = url.includes('?') ? '&' : '?';
+                const query = window.location.search.substring(1);
+                iframe.src = query ? `${url}${separator}${query}` : url;
+            }, 300);
+        }
+    </script>
+
+</body>
+
+</html>

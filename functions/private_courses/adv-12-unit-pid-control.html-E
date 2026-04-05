@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>為什麼需要 PID？ - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-blue-900 to-cyan-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="badge-header inline-block py-1.5 px-4 rounded-full bg-white/10 border border-white/20 text-white/90 text-sm font-medium mb-6 tracking-wide uppercase backdrop-blur-sm font-[Outfit]">
+                進階 12 - 控制原理
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit] text-center">為什麼需要 PID？<br><span class="text-cyan-400">Open vs. Closed Loop</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-cyan-100 max-w-2xl mx-auto font-light leading-relaxed text-center">
+                從盲目預測到精確修正：掌握自動駕駛最核心的反饋控制邏輯。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4 text-center">
+                <button onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/z9eX61iST0k?autoplay=1')"
+                    class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105">
+                    <span class="text-xl group-hover:animate-pulse">📺</span>
+                    <span>觀看教學影片</span>
+                </button>
+                <button onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vTQOeZStAJUwGm1JlEo2r6vGVx20USevDP69swtB7BSJY33Jq9A5dYSQiey6nFjXs1IL3D6ibH5UySB/pub?embedded=true')"
+                    class="group flex items-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105">
+                    <span class="text-xl text-left">📄</span>
+                    <span>閱讀課程講義</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Open-Loop Control -->
+        <section class="module-section mb-16 text-justify">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 text-justify">
+                <div class="p-1 bg-gradient-to-r from-slate-400 to-slate-600 text-justify"></div>
+                <div class="p-8 md:p-14 text-justify">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3 text-justify text-justify">
+                        <span class="text-4xl text-slate-500 text-justify text-left">🙈</span> 1. 開迴路控制：盲目的信任
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 text-justify">
+                        <div class="space-y-6 text-justify">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify">
+                                系統僅根據事先設定的指令做事，完全不觀察輸出的結果。就像蒙著眼睛走路。雖然簡單，但在物理環境變動時（如路面摩擦、電壓波動）極易失控。
+                            </p>
+                            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-justify">
+                                <h4 class="font-bold text-slate-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed">System Characteristics</h4>
+                                <ul class="text-[9px] text-slate-500 space-y-2 font-light text-justify">
+                                    <li class="flex items-center gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-slate-500 rounded-full text-justify text-left"></span> <strong>無反饋 (No Feedback)</strong>：輸出不影響輸入，僅憑時序控制。</li>
+                                    <li class="flex items-center gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-slate-500 rounded-full text-justify text-left text-justify"></span> <strong>抗干擾力弱</strong>：電壓下降、摩擦力增加會直接導致任務偏差。</li>
+                                    <li class="flex items-center gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-slate-500 rounded-full text-justify text-left"></span> <strong>常見範例</strong>：舊式微波爐定時器、傳統洗衣機、無感測馬達驅動。</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group text-justify">
+                           <div class="absolute inset-0 bg-slate-500/5 group-hover:bg-slate-500/10 transition-colors"></div>
+                           <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10 text-justify">Blind Command Path</h4>
+                           <div class="relative z-10 flex items-center justify-center gap-4 text-justify">
+                               <div class="px-3 py-1 bg-slate-700 rounded text-[10px] border border-slate-600 text-justify text-left">INPUT PWM (Fixed)</div>
+                               <div class="text-slate-500 text-justify">➡️</div>
+                               <div class="px-3 py-1 bg-slate-800 rounded text-[10px] border border-slate-700 italic text-slate-500 text-justify text-left">UNKNOWN RESULT</div>
+                           </div>
+                           <p class="text-[9px] text-slate-500 mt-6 font-mono tracking-widest text-center text-justify">STATE ERROR IS NOT CALCULATED...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Closed-Loop Control -->
+        <section class="module-section mb-16 text-justify">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 text-justify">
+                <div class="p-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-justify"></div>
+                <div class="p-8 md:p-14 text-justify">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3 text-justify text-justify">
+                        <span class="text-4xl text-cyan-500 text-justify text-left text-justify">👁️</span> 2. 閉迴路控制：觀察與修正的智慧
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 text-justify">
+                        <div class="space-y-8 text-justify">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify">
+                                系統具備感測器，能將目前的輸出（如速度、位置）反饋回來與目標值對比，算出「誤差 (Error)」，並隨時調整出力以導正軌跡。
+                            </p>
+                            <div class="bg-cyan-50 p-8 rounded-3xl border border-cyan-100 text-justify">
+                                <h4 class="text-cyan-900 font-bold mb-4 text-xs uppercase tracking-widest text-center text-justify text-justify">The Core Equation</h4>
+                                <div class="text-xl font-mono text-cyan-600 text-center text-justify text-justify">
+                                   \[Error = Target - Measured\]
+                                </div>
+                                <p class="text-[10px] text-slate-400 mt-4 italic font-light text-center text-justify text-justify">自動化控制的核心：依據誤差進行負回饋修正 (Negative Feedback)</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group text-justify">
+                           <div class="absolute inset-0 bg-cyan-500/5 text-justify"></div>
+                           <h4 class="text-cyan-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10 text-center text-justify">Real-time Correction Flow</h4>
+                           <div class="w-full h-1 bg-slate-800 relative z-10 mb-6 text-justify">
+                                <div class="absolute left-0 top-0 h-full bg-cyan-500 w-2/3 shadow-[0_0_15px_rgba(6,182,212,0.5)] text-justify"></div>
+                           </div>
+                           <div class="flex justify-between w-full text-[9px] font-mono text-slate-500 relative z-10 text-justify">
+                                <span class="text-justify text-left">TARGET: 100cm</span>
+                                <span class="text-cyan-400 animate-pulse font-bold text-justify">CURRENT: 68cm</span>
+                           </div>
+                           <p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest uppercase italic text-center text-justify">Error Sensitivity Engagement</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: PID Logic -->
+        <section class="module-section mb-16 text-justify">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700 text-justify">
+                <div class="p-8 md:p-14 text-justify">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-blue-400 text-justify text-justify">
+                        <span class="p-2 bg-blue-500/20 rounded-lg text-blue-400 text-2xl text-justify text-left">🎛️</span> 3. 進化：為什麼需要 PID？
+                    </h2>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center text-justify">
+                        <div class="flex-1 space-y-6 text-justify">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg text-justify text-justify">
+                                單純的比例修正 (P) 常因物理阻力無法到達精確點。PID 結合成熟的歷史累積 (I) 與未來預測 (D)，達成全自動且絲滑的運動路徑。
+                            </p>
+                            <div class="bg-blue-500/10 p-8 rounded-3xl border border-blue-500/20 shadow-inner text-justify text-justify">
+                                <h4 class="font-bold text-blue-400 mb-4 text-xs uppercase tracking-widest text-center text-justify text-left">Control Evolution</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light text-justify text-justify">
+                                    <li class="flex items-start gap-2 text-justify text-justify"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1 text-justify"></span><div><strong class="text-white text-justify">P (Proportional)</strong>：當下的衝勁。誤差越大出力越猛。</div></li>
+                                    <li class="flex items-start gap-2 text-justify"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1 text-justify"></span><div><strong class="text-white text-justify text-justify">I (Integral)</strong>：過去的記性。剷除累積的殘留誤差與阻力。</div></li>
+                                    <li class="flex items-start gap-2 text-justify"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1 text-justify"></span><div><strong class="text-white text-justify text-justify">D (Derivative)</strong>：未來的預感。提前減速防止慣性衝過頭。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="lg:w-80 bg-blue-600/10 p-10 rounded-3xl border border-blue-500/20 text-center relative overflow-hidden group text-justify">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-blue-500/5 rounded-full group-hover:scale-150 transition-transform duration-700 text-justify"></div>
+                           <h4 class="text-blue-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center text-justify">Full Autonomy</h4>
+                           <p class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic text-center text-justify text-left">
+                               "讓機器人具備像人類淋浴調溫般的感知與修正能力，是控制工程的最高境界。"
+                           </p>
+                           <div class="inline-block px-8 py-3 bg-blue-500 text-white rounded-xl font-bold text-[10px] shadow-lg cursor-pointer hover:bg-blue-400 transition-colors text-center text-justify">Start Analysis</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section text-justify">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit] text-justify text-justify">控制實驗室：從盲目到精確的感知之路</h2>
+            <p class="text-center text-gray-500 mb-12 text-justify text-justify">親手部署並對比開迴路與閉迴路控制。透過 Git Workflow 記錄不同路面下的控制偏差，證明反饋系統在真實物理環境下的不可替代性。</p>
+
+            <div class="grid md:grid-cols-3 gap-6 text-justify">
+                <!-- Task 12-1 -->
+                <div onclick="openSubmissionModal('adv-12-open-loop', '【作業 12-1】「盲人領航」：開迴路極限實驗 (Open-Loop Limitation Lab)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
+                    <div class="bg-slate-500 h-2"></div>
+                    <div class="p-8 flex-grow text-justify text-justify">
+                        <div class="flex justify-between items-start mb-4 text-justify text-left">
+                            <span class="text-4xl text-slate-500 group-hover:scale-110 transition-transform">🙈</span>
+                            <span class="bg-slate-100 text-slate-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest text-justify">40 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-slate-600 transition text-justify uppercase tracking-tighter">【作業 12-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「盲測工程師」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
+                            禁用感測器，僅用固定 PWM 嘗試停在 1.5 公尺。在磁磚與地毯上分別測試，紀錄開迴路控制在物理摩擦力變動下的慘痛誤差。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 12-2 -->
+                <div onclick="openSubmissionModal('adv-12-p-control', '【作業 12-2】「比例修正的力量」：首個 P 控制器設計 (P-Regulator Implementation Lab)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
+                    <div class="bg-cyan-500 h-2"></div>
+                    <div class="p-8 flex-grow text-justify">
+                        <div class="flex justify-between items-start mb-4 text-justify text-left">
+                            <span class="text-4xl text-cyan-500 group-hover:rotate-12 transition-transform">👁️</span>
+                            <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest">60 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition text-justify uppercase tracking-tighter text-justify">【作業 12-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「比例神經網路」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
+                            恢復感測器。實作 <code>Error</code> 計算與 \(K_p\) 比例映射。觀測機器人在不同 \(K_p\) 下的反應速度，並記錄產生「蛇行」震盪的臨界點。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 12-3 -->
+                <div onclick="openSubmissionModal('adv-12-i-control', '【作業 12-3】「靜態誤差之役」：分析阻力死區 (Steady-State Error Analysis Lab)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow text-justify text-justify">
+                        <div class="flex justify-between items-start mb-4 text-justify text-left text-justify">
+                            <span class="text-4xl text-blue-500 group-hover:translate-x-1 transition-transform">🪜</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest text-justify">50 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition text-justify uppercase tracking-tighter text-justify">【作業 12-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「死區抗爭者」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
+                            在機器人上增加重物，觀察 P 控制為何永遠停在目標前方的某一點。分析定標誤差與靜摩擦力的平衡邏輯，並提出改進構想。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto text-center">
+        <div class="container mx-auto px-4 text-center text-center text-center text-center">
+            <p class="text-slate-500 text-sm mb-4 text-center">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400 text-center">
+                <span>單元課程 進階 12 - 控制原理</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/course-shared.js?v=20260404REV"></script>
+
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">感知控制實驗室：開迴路 vs. 閉迴路</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title text-justify">任務 1：開迴路盲測實驗 (Blind Open-Loop Task)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：系統可靠性檢測員</span> | <span>難度：⭐️</span> | <span>估計時長：40 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>盲目指令</strong>：在代碼中移除編碼器呼叫，僅憑 <code>delay(2000)</code> 控制行進。</li>
+                    <li><strong>物理擾動測試</strong>：在不同摩擦力的路面上執行同一次任務。</li>
+                    <li><strong>誤差紀錄</strong>：量化並在 README 記錄兩種環境下的「停車位置差距」。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>原理描述</strong>：能否準確分析「為什麼路面變平滑後誤差會急遽增大」的物理原因？</li>
+                    <li>[ ] <strong>數據完整性</strong>：README 中是否包含至少 3 組以上的實驗誤差對比。</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title text-justify">任務 2：P 比例控制器實作 (Proportional Feedback Design)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：初級控制工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-tighter font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>反饋實作</strong>：在主迴圈內持續監測 <code>Error = Target - CurrentPos</code>。</li>
+                    <li><strong>線性映射</strong>：實作 <code>Output = Kp * Error</code>。</li>
+                    <li><strong>極限調校</strong>：挑戰將 \(K_p\) 加到極致而不產生持續震盪。</li>
+                    <li><strong>Push Final</strong>：提交具備「誤差感應」能力的閉迴路代碼。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>邏輯自洽性</strong>：當 Error 接近零時，馬達 PWM 是否隨之平滑下降？</li>
+                    <li>[ ] <strong>關鍵參數標註</strong>：README 中是否標註了系統進入震盪狀態的臨界 \(K_p\) 值？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title text-justify">任務 3：靜態誤差與阻力分析 (Static Error Case Study)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：誤差診斷專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：50 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>障礙重現</strong>：在負重或小坡度環境下執行任務 2 的控制器。</li>
+                    <li><strong>現象監測</strong>：記錄機器人最終「差一公分停下」的靜態誤差狀態。</li>
+                    <li><strong>瓶頸分析</strong>：寫下為何純 P 控制在出力低於「啟動電壓」後無法自動修正的理論分析。</li>
+                    <li><strong>Push Final</strong>：提交具備「物理瓶頸洞察」的控制優化提案報告。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>物理死區理解</strong>：學員是否能理解馬達靜摩擦力與比例出力之間的平衡關係？</li>
+                    <li>[ ] <strong>未來對策</strong>：是否能在報告中正確引導出「需要將時間累加 (I)」的需求背景？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tutor Guide (Hidden) -->
+    <section id="tutor-guide" style="display: none text-justify;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：從「程式時序控制」進化到「物理結果控制」。學會如何量化誤差並進行負回饋修正。</p>
+            <ol class="space-y-4 text-slate-600 text-justify">
+                <li><strong class="text-cyan-600 font-bold uppercase tracking-widest text-justify">重點 1：信任是危險的</strong> - 透過開迴路盲測，打破學員「代碼正確 = 物理正確」的迷思。</li>
+                <li><strong class="text-cyan-600 font-bold text-justify uppercase tracking-widest">重點 2：負回饋的簡單美</strong> - 帶領學員理解 \(Error \rightarrow Output\) 的線性魔法。</li>
+                <li><strong class="text-cyan-600 font-bold text-justify uppercase tracking-tighter">重點 3：殘留誤差的挫折感</strong> - 故意讓學員感受到純 P 控制的不足，這是導入後續 PID 課程最強的動機。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-cyan-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
+.
+├── src/blind_run.ino      # 開迴路版本：僅用 time-based 指令
+├── src/p_control.ino      # 閉迴路版本：學員需在此實作負回饋邏輯
+└── docs/error_log.md      # 日誌：紀錄不同地表下的偏差數據
+            </pre>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5 text-justify">觀看「冷氣機為什麼能恆溫」影片。理解感測器與反饋的關係。</td>
+                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員能否指出：為什麼吹風機是開迴路，而冷氣機是閉迴路。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black">領取作業 (Repo)，挑戰不同路面下的「自動停車」。第一次在代碼中實作負回饋增益。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 指導如何觀察 Serial Plotter 中 Error 值隨時間下墜的斜率變化。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
+                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify">提交具備「地表適應能力」的 P 控制代碼。分析紀錄中的震盪頻率變化。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「系統穩定性」與「物理死區」的深度反思。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</body>
+
+</html>

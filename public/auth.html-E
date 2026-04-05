@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+        <link rel="icon" type="image/png" href="favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>課程授權驗證中...</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 h-screen flex flex-col items-center justify-center">
+
+    <div id="loading-ui" class="text-center">
+        <div class="loader mx-auto mb-4"></div>
+        <h2 class="text-xl font-bold text-gray-700">正在驗證學員身份...</h2>
+        <p class="text-gray-500 mt-2">請稍候，我們正在為您開啟課程內容。</p>
+    </div>
+
+    <div id="error-ui" class="hidden text-center max-w-md p-6 bg-white rounded-lg shadow-lg">
+        <div class="text-red-500 text-5xl mb-4">⚠️</div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">無法存取課程</h2>
+        <p id="error-msg" class="text-gray-600 mb-6">您尚未購買此課程，或權限已過期。</p>
+        <a href="index.html"
+            class="bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 transition">返回首頁</a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
+            authDomain: "e-learning-942f7.firebaseapp.com",
+            projectId: "e-learning-942f7",
+            storageBucket: "e-learning-942f7.firebasestorage.app",
+            messagingSenderId: "878397058574",
+            appId: "1:878397058574:web:28aaa07a291ee3baab165f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const functions = getFunctions(app, 'asia-east1');
+        const checkAuthFunction = httpsCallable(functions, 'checkPaymentAuthorization');
+
+        function showError(message) {
+            document.getElementById('loading-ui').classList.add('hidden');
+            document.getElementById('error-ui').classList.remove('hidden');
+            if (message) document.getElementById('error-msg').textContent = message;
+        }
+
+        async function verifyAndRedirect(user) {
+            // 1. 解析網址參數
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetUrl = urlParams.get('url'); // 真實課程網址 (Google Classroom / YouTube)
+            const courseId = urlParams.get('id');   // 課程 ID
+            const price = urlParams.get('price');   // 價格 (判斷是否為免費課)
+
+            console.log("[Auth] Verifying params:", { targetUrl, courseId, price });
+            
+            // [MODIFIED] Legacy/Cache Fallback: If URLSearchParams fails (e.g. because of multiple ?)
+            if (!targetUrl || !courseId) {
+                console.warn("[Auth] Standard parsing failed, trying manual fallback...");
+                const fullSearch = window.location.search + window.location.hash;
+                const matchUrl = fullSearch.match(/[?&]url=([^&]*)/);
+                const matchId = fullSearch.match(/[?&]id=([^&]*)/);
+                const matchPrice = fullSearch.match(/[?&]price=([^&]*)/);
+                
+                const fallbackUrl = matchUrl ? decodeURIComponent(matchUrl[1]) : null;
+                const fallbackId = matchId ? matchId[1] : null;
+                const fallbackPrice = matchPrice ? matchPrice[1] : null;
+                
+                console.log("[Auth] Fallback results:", { fallbackUrl, fallbackId, fallbackPrice });
+                
+                if (fallbackUrl && fallbackId) {
+                    // Use fallbacks
+                    proceedWithVerification(fallbackUrl, fallbackId, fallbackPrice, user);
+                    return;
+                }
+            }
+
+            if (!targetUrl || !courseId || targetUrl === 'undefined') {
+                console.warn("[Auth] Missing URL or ID, redirecting to index.html");
+                window.location.replace("index.html");
+                return;
+            }
+            // If we have them, proceed with the main flow
+            proceedWithVerification(targetUrl, courseId, price, user);
+        }
+
+        // Refactored flow to allow fallbacks
+        async function proceedWithVerification(targetUrl, courseId, price, user) {
+            // 2. 付費與免費課程皆需透過後端取得 Token，以通過 serveCourse 的安全檢查
+            try {
+                let fileName = "";
+                if (targetUrl) {
+                    const parts = targetUrl.split('/');
+                    fileName = parts[parts.length - 1].split('?')[0];
+                }
+
+                if (!fileName) {
+                    alert("錯誤：無法解析檔案名稱 (Filename missing)");
+                    showError("無法解析課程檔案路徑");
+                    return;
+                }
+
+                const isTutorMode = localStorage.getItem('adminTutorMode') === 'true';
+                const result = await checkAuthFunction({ 
+                    pageId: courseId,
+                    fileName: fileName,
+                    tutorMode: isTutorMode
+                });
+
+                if (result.data && result.data.authorized) {
+                    // 驗證成功！
+                    const token = result.data.token;
+                    let finalUrl = decodeURIComponent(targetUrl);
+
+                    // Append token
+                    if (finalUrl.includes('?')) {
+                        finalUrl += `&token=${token}`;
+                    } else {
+                        finalUrl += `?token=${token}`;
+                    }
+
+                    window.location.replace(finalUrl);
+                } else {
+                    showError("系統查無您的購買紀錄，請確認是否已登入正確帳號。");
+                }
+            } catch (error) {
+                console.error(error);
+                showError("伺服器連線錯誤，請稍後再試。");
+            }
+        }
+
+        // 監聽登入狀態
+        onAuthStateChanged(auth, (user) => {
+            console.log("[Auth] State changed. User:", user ? user.email : "null");
+            if (user) {
+                verifyAndRedirect(user);
+            } else {
+                console.log("[Auth] No user detected. Waiting for 3s before redirect...");
+                // 如果沒登入，保留一點時間讓 Firebase 嘗試自動登入
+                setTimeout(() => {
+                    if (!auth.currentUser) {
+                        console.warn("[Auth] Still no user after 3s. Redirecting to index.html");
+                        // Only alert if we really have no user and no params? 
+                        // Actually, if they was sent here, they SHOULD be logged in.
+                        alert("請先登入會員 (Login Required)");
+                        window.location.href = "index.html";
+                    } else {
+                        console.log("[Auth] User detected after delay. Resuming...");
+                    }
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+
+</html>

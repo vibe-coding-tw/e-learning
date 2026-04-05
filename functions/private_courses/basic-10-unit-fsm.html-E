@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>有限狀態機 (FSM) 入門 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518433278988-2b0616010064?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 10 - 邏輯架構
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit] uppercase tracking-tighter">
+                <span class="text-blue-400">有限狀態機 (FSM)</span><br>日常裝置秘密邏輯
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
+                擺脫混亂的 if-else 嵌套。用「狀態」思維優化架構。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: FSM Essence -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-blue-500 text-justify">🤖</span> 1. 什麼是 FSM (有限狀態機)？
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 text-justify">
+                        <div class="space-y-6 text-justify">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify uppercase tracking-tight">
+                                系統在任何時間點處於「有限狀態」中。行為變得「可預測」。
+                            </p>
+                            <div class="grid grid-cols-2 gap-4 text-justify uppercase tracking-widest leading-relaxed">
+                                <div class="p-4 rounded-xl border border-blue-100 shadow-sm bg-blue-50 text-justify">
+                                    <h4 class="font-bold text-blue-800 mb-1 text-[10px] text-justify">State</h4>
+                                    <p class="text-slate-500 text-[9px] text-justify uppercase tracking-tighter">「正在做什麼」。如：待機、急停。</p>
+                                </div>
+                                <div class="p-4 rounded-xl border border-purple-100 shadow-sm bg-purple-50 text-justify">
+                                    <h4 class="font-bold text-purple-800 mb-1 text-[10px] text-justify">Event</h4>
+                                    <p class="text-slate-500 text-[9px] text-justify uppercase tracking-widest">「發生了什麼」。如：按下按鈕。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-8 rounded-3xl shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center bg-slate-900 text-justify uppercase tracking-widest font-black">
+                            <h4 class="font-bold text-slate-500 mb-4 uppercase tracking-widest text-[10px] text-justify">Deterministic Architecture</h4>
+                            <div class="flex items-center justify-around gap-2 text-justify">
+                                <div class="w-16 h-16 rounded-full border-2 border-dashed border-blue-400 p-2 flex items-center justify-center text-[8px] text-justify">IDLE</div>
+                                <div class="text-blue-400 animate-pulse text-justify">→</div>
+                                <div class="w-16 h-16 rounded-full border-2 border-blue-500 p-2 flex items-center justify-center text-[8px] bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.5)] text-justify">DRIVING</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: State Diagram -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-emerald-500 text-justify">🎨</span> 2. 狀態轉移圖
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 text-justify">
+                        <div class="space-y-8 text-justify">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify uppercase tracking-tighter">
+                                圓圈代表狀態，箭頭代表條件。圖面是你編寫邏輯的「戰略地圖」。
+                            </p>
+                            <div class="p-8 rounded-3xl border border-emerald-100 bg-emerald-50 text-justify uppercase tracking-widest font-black">
+                                <h4 class="text-emerald-900 font-bold mb-4 text-xs uppercase tracking-widest text-justify">Traffic Light Example</h4>
+                                <div class="flex items-center gap-2 overflow-x-auto py-4 text-justify">
+                                     <div class="px-4 py-2 bg-red-500 rounded-full text-white text-[9px] font-bold text-justify">RED</div>
+                                     <div class="text-slate-300 text-justify">→</div>
+                                     <div class="px-4 py-2 bg-green-500 rounded-full text-white text-[9px] font-bold text-justify">GREEN</div>
+                                     <div class="text-slate-300 text-justify">→</div>
+                                     <div class="px-4 py-2 bg-yellow-500 rounded-full text-white text-[9px] font-bold text-justify">YELLOW</div>
+                                </div>
+                                <p class="text-slate-400 mt-4 italic font-light text-[10px] text-justify uppercase tracking-tighter">"邊界條件均導向合理狀態。"</p>
+                            </div>
+                        </div>
+
+                        <div class="p-10 rounded-3xl shadow-2xl border border-slate-700 text-center relative overflow-hidden group bg-slate-900 text-justify">
+                           <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent text-justify"></div>
+                           <h4 class="text-emerald-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-justify uppercase tracking-widest font-black">Design Thinking</h4>
+                           <p class="text-slate-500 leading-relaxed font-light mb-8 italic text-[11px] text-justify uppercase tracking-widest font-black">
+                                "好的邏輯是畫出來的。狀態圖讓 Bug 在動筆前無所遁形。"
+                           </p>
+                           <div class="inline-block px-8 py-3 bg-emerald-500 text-white rounded-xl font-bold text-[10px] shadow-lg text-justify uppercase tracking-widest font-black">Start Logic Drawing</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Implementation -->
+        <section class="module-section mb-16">
+            <div class="glass-card rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700 bg-slate-900">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-indigo-400 text-justify uppercase tracking-widest font-black">
+                        <span class="p-2 bg-indigo-500/20 rounded-lg text-indigo-400 text-2xl text-justify font-black">💻</span> 3. switch...case 與 enum
+                    </h2>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center text-justify">
+                        <div class="flex-1 space-y-6 text-justify">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg text-justify uppercase tracking-tighter">
+                                擺脫魔術數字。使用 <code>enum</code> 定義語義。
+                            </p>
+                            <div class="p-8 rounded-3xl border border-indigo-500/20 shadow-inner bg-indigo-500/10 text-justify uppercase tracking-widest font-black">
+                                <h4 class="font-bold text-indigo-400 mb-4 text-xs uppercase tracking-widest text-justify">Clean Architecture</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light text-justify uppercase tracking-widest">
+                                    <li class="flex items-start gap-2 text-justify"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1"></span><div><strong class="text-white text-justify">消滅 Magic Numbers</strong>：用 <code>IDLE</code> 代替 <code>0</code>。</div></li>
+                                    <li class="flex items-start gap-2 text-justify"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1"></span><div><strong class="text-white text-justify">高擴充性</strong>：新增模式只需在 switch 增加 case。</div></li>
+                                    <li class="flex items-start gap-2 text-justify"><span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1"></span><div><strong class="text-white text-justify">事件驅動</strong>：由條件觸發轉移。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="lg:w-96 text-justify uppercase tracking-widest font-black">
+                            <div class="p-6 rounded-2xl border border-slate-800 shadow-inner font-mono text-[10px] text-blue-300 bg-slate-950 text-justify uppercase tracking-widest font-black text-left">
+                                <span class="text-purple-400 text-justify uppercase tracking-widest">enum</span> State { IDLE, AUTO };<br>
+                                State s = IDLE;<br><br>
+                                <span class="text-purple-400 text-justify uppercase tracking-widest">switch</span>(s) {<br>
+                                &nbsp;&nbsp;<span class="text-purple-400 text-justify uppercase tracking-widest">case</span> IDLE:<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400 text-justify uppercase tracking-widest">if</span>(btn) s = AUTO;<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400 text-justify uppercase tracking-widest">break</span>;<br>
+                                &nbsp;&nbsp;<span class="text-purple-400 text-justify uppercase tracking-widest">case</span> AUTO:<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;motorOn();<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400 text-justify uppercase tracking-widest">break</span>;<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：設計機器人智慧大腦</h2>
+            <p class="text-center text-gray-500 mb-12">賦予機器人在複雜環境間冷靜切換能力。</p>
+
+            <div class="grid md:grid-cols-3 gap-6 text-justify uppercase tracking-widest">
+                <!-- Task 10-1 -->
+                <div onclick="openSubmissionModal('basic-10-fsm-1', '【作業 10-1】基礎控制狀態機 (Core FSM Architecture)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify text-left uppercase tracking-widest">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform text-justify">🕹️</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase text-justify">60 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition text-justify font-black">【作業 10-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify font-black uppercase tracking-widest leading-relaxed">「三模切換骨幹」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify uppercase tracking-tighter">
+                            實作 IDLE、REMOTE、AUTO。按鈕有序切換，並以 RGB LED 呈現模式。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 10-2 -->
+                <div onclick="openSubmissionModal('basic-10-fsm-2', '【作業 10-2】避障邏輯狀態機 (Obstacle Sub-FSM)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify uppercase tracking-tighter">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-purple-500 group-hover:rotate-12 transition-transform text-justify">🛡️</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase text-justify">60 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition text-justify font-black uppercase tracking-widest text-left">【作業 10-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify uppercase tracking-widest font-black leading-relaxed">「行為原子化」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            實作有序子狀態機。結合 millis() 實現非阻塞時間窗口管理。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 10-3 -->
+                <div onclick="openSubmissionModal('basic-10-fsm-3', '【作業 10-3】異常救援模式：最高優先權 (Emergency Failsafe)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify uppercase tracking-widest font-black text-left">
+                    <div class="bg-red-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-red-500 group-hover:translate-x-1 transition-transform text-justify">🆘</span>
+                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase text-justify">45 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition text-justify font-black uppercase tracking-widest">【作業 10-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-left text-justify font-black uppercase tracking-tighter leading-relaxed">「搶佔式防線」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            新增 EMERGENCY。偵測斷線時瞬間轉移，並設計嚴謹解鎖機制。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700 text-center">
+        <div class="container mx-auto px-4 text-center text-center">
+            <p class="text-gray-500 text-sm mb-4 text-center">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400 text-center uppercase tracking-widest font-black border border-slate-700">
+                <span>課程單元 基礎 10 - 邏輯架構</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/EWhVv31pgXI",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vTjtzK4C3WTl5q5KSS7JEMBxabcYaImnoRFkDmyjrp3Zpqy9Ky1pQJ4er_P63-ighJWA1trHeisbMjP/pub?embedded=true"
+        };
+    </script>
+    <script src="/js/course-shared.js?v=20260404REV"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">有限狀態機基礎實驗室：enum 狀態管理、子狀態轉移與安全救援實戰</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title text-justify">任務 1：基礎控制狀態機 (Core FSM Architecture)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：架構工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫。</li>
+                    <li><strong>定義</strong>：使用 <code>enum</code> 定義三模式。</li>
+                    <li><strong>核心實作</strong>：構建 <code>switch...case</code> 判定。</li>
+                    <li><strong>視覺反饋</strong>：根據狀態控制 RGB LED。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>命名規範</strong>：捨棄魔術數字，改採 <code>enum</code>？</li>
+                    <li>[ ] <strong>邏輯一致</strong>：硬體動作與燈號同步？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title text-justify">任務 2：避障邏輯狀態機 (Obstacle Logic Sub-FSM)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：演算法工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>細分</strong>：細化為 SEARCH 到 TURN。</li>
+                    <li><strong>非阻塞計時</strong>：利用 <code>millis()</code> 設定轉場。</li>
+                    <li><strong>攤平重構</strong>：移除嵌套 if-else。</li>
+                    <li><strong>閉環實測</strong>：驗證閃避動作閉環。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>計時精準</strong>：延遲準確執行且未對主循環造成阻塞？</li>
+                    <li>[ ] <strong>覆蓋率</strong>：考慮周全，不存在死鎖？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title text-justify">任務 3：異常救援模式：最高優先權 (Emergency Recovery & Failsafe)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：安全工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>救援接入</strong>：新增 <code>EMERGENCY_STOP</code>。</li>
+                    <li><strong>失效轉移</strong>：偵測異常立即強行鎖死。</li>
+                    <li><strong>解鎖設計</strong>：實作防誤觸解鎖。</li>
+                    <li><strong>報告提交</strong>：評估緊急狀態響應時間。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>搶佔時效</strong>：緊急觸發是否能瞬間（<20ms）接管？</li>
+                    <li>[ ] <strong>安全嚴密</strong>：解鎖機制能否防止故障未排除時意外啟動？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tutor Guide (Hidden) -->
+    <section id="tutor-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify text-left">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：從功能導向進化至「狀態」導向建模。</p>
+            <ol class="space-y-4 text-slate-600 text-justify text-left">
+                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：可視化</strong> - 繪製轉移圖。</li>
+                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：switch-case 優雅性</strong> - 解決麵條代碼。</li>
+                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：救援機制</strong> - 異常時進入穩定狀態。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify uppercase tracking-widest font-black border border-slate-700">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300 text-justify uppercase tracking-widest font-black text-left">
+            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm text-justify uppercase tracking-widest font-black border border-slate-100">
+.
+├── src/main.cpp       # (必修) 調度 switch-case 核心
+├── docs/state_map.md  # 邏輯圖
+└── README.md          # 報告：響應時耗分析
+            </pre>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify uppercase tracking-widest font-black">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-center text-justify font-black">
+            <table class="w-full text-left border-collapse border border-slate-100 text-justify font-black">
+                <thead>
+                    <tr class="bg-slate-100 border border-slate-100 text-justify font-black">
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600 border border-slate-100 text-justify font-black">
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5 text-justify">觀看設計靈魂動畫並畫出販賣機邏輯。</td>
+                        <td class="px-6 py-5 text-justify border border-slate-100"><strong>Dashboard:</strong> 測試區分狀態與事件。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify border border-slate-100 text-left">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify text-left">領取 Repo，對應圖面邏輯至語法。</td>
+                        <td class="px-6 py-5 text-left text-justify border border-slate-100 font-black"><strong>巡場引導:</strong> 演示利用打印狀態標籤除錯。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
+                        <td class="px-6 py-5 text-justify text-left text-justify font-black">實作記憶恢復擴充。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價狀態窮舉性。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</body>
+
+</html>

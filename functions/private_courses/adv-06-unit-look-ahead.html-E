@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>預覽控制 (Look-ahead Control) 觀念 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1555664424-778a1e5e1b48?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <div
+                class="badge-header inline-flex items-center gap-2 px-4 py-1 rounded-full bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 backdrop-blur-sm mb-6 text-xs font-semibold tracking-wide uppercase font-[Outfit]">
+                進階 6 - 單元 4
+            </div>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">流暢自駕的秘密：<br>預覽控制 (Look-ahead)
+            </h1>
+            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed">
+                為何機器人必須向前看？學習如何透過預覽遠方目標點，實現平滑且高速的自動導航。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/z0hYhCD8FX4')"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vQDUVkSG6I19Bd2jWKA3nTgtq6-0j39lTggI0i1QTupl23HOrmH540FJcoePFEUZzTkRTtkvxsX7Mlz/pub?embedded=true')"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Why Look Ahead? -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">🔭</span> 1. 為什麼要「往遠處看」？ (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                感測器擷取、AI 計算到馬達轉向都有延遲。如果只看車頭正下方，高速時會衝出彎道。預覽遠方可以讓轉向動作更提早、更柔和。
+                            </p>
+                            <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
+                                <h4 class="font-bold text-emerald-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed">Control Benefits</h4>
+                                <ul class="text-[9px] text-slate-500 space-y-2 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span> <div><strong>震盪抑制</strong>：解決蛇行震盪問題。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span> <div><strong>預判過彎</strong>：在入彎前就開始切換轉向舵角。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors"></div>
+                           <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10">Look-ahead Visualization</h4>
+                           <div class="relative z-10 flex flex-col items-center gap-4">
+                               <div class="w-48 h-32 border border-slate-700 rounded-lg relative bg-slate-800/50">
+                                   <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-4 h-6 bg-emerald-500 rounded-sm"></div>
+                                   <div class="absolute top-10 left-1/2 -translate-x-1/2 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.8)]"></div>
+                                   <div class="absolute bottom-10 left-1/2 -translate-x-1/2 w-px h-12 bg-emerald-500/30 border-dashed border-l"></div>
+                               </div>
+                               <div class="text-[8px] text-emerald-400 font-mono">TARGET POINT: (160, 80)</div>
+                           </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Mathematical Selection -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl">📐</span> 2. 預覽點 (Look-ahead Point) 的數學選取 (25 min)
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                選取影像中上方（如 $Y=80$）作為導航參考。這意味著我們是在「模擬未來的軌跡」。
+                            </p>
+                            <div class="bg-blue-50 p-8 rounded-3xl border border-blue-100 text-center">
+                                <h4 class="text-blue-900 font-bold mb-4 text-xs uppercase tracking-widest">Adaptive Strategy</h4>
+                                <div class="grid grid-cols-2 gap-4 text-[9px]">
+                                    <div class="p-3 border rounded-xl border-blue-200 bg-white"><strong>低速情境</strong><br>近處預覽，精度高</div>
+                                    <div class="p-3 border rounded-xl border-blue-200 bg-white shadow-sm"><strong>高速情境</strong><br>遠處預覽，平滑度高</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-blue-500/5"></div>
+                           <h4 class="text-blue-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10">Scan Line Analysis</h4>
+                           <div class="w-full space-y-3 px-10 relative z-10">
+                               <div class="flex justify-between text-[7px] text-slate-500"><span>Y=200 (NEAR)</span> <span>High Precision</span></div>
+                               <div class="w-full h-px bg-slate-700"></div>
+                               <div class="flex justify-between text-[7px] text-blue-400"><span>Y=120 (MID)</span> <span>Optimal Balance</span></div>
+                               <div class="w-full h-px bg-blue-500/50"></div>
+                               <div class="flex justify-between text-[7px] text-slate-500"><span>Y=40 (FAR)</span> <span>Curve Predict</span></div>
+                               <div class="w-full h-px bg-slate-700"></div>
+                           </div>
+                           <p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest uppercase">Dynamic ROI Selection</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Pure Pursuit -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-emerald-400">
+                        <span class="p-2 bg-emerald-500/20 rounded-lg text-emerald-400 text-2xl">🔄</span> 3. 純追蹤 (Pure Pursuit) 概念與切彎問題
+                    </h2>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg">
+                                預覽過遠會導致「截彎取直 (Cutting Corners)」現象。學習如何控制預覽長度，在「過早轉彎」與「來不及轉彎」之間取得平衡。
+                            </p>
+                            <div class="bg-emerald-500/10 p-8 rounded-3xl border border-emerald-500/20 shadow-inner">
+                                <h4 class="font-bold text-emerald-400 mb-4 text-xs uppercase tracking-widest text-center">Path Geometry Control</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span><div><strong class="text-white">切西瓜問題</strong>：視線過遠，車輛會提早切入彎道內側。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span><div><strong class="text-white">追蹤延遲</strong>：視線過近，高速下會產生嚴重的超調 (Overshoot)。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1"></span><div><strong class="text-white">幾何補償</strong>：透過 $K_p$ 係數與 Y 軸高度的連動優化。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="lg:w-80 bg-emerald-600/10 p-10 rounded-3xl border border-emerald-500/20 text-center relative overflow-hidden group">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-emerald-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-emerald-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center">Steering Correction</h4>
+                           <div class="text-4xl font-mono text-white mb-2">$\delta = \arctan(\frac{2L \sin \alpha}{l_d})$</div>
+                           <p class="text-[11px] text-slate-500 mt-8 leading-relaxed font-light italic text-center">
+                               "預防勝於治療：看遠方就是為了提早應對。"
+                           </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：預覽控制實戰</h2>
+            <p class="text-center text-gray-500 mb-12">透過 Git Workflow 提交導航實驗報告。實踐自動駕駛中的預測性控制思維。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 4-1 -->
+                <div onclick="openSubmissionModal('adv-06-multilevel-roi', '【作業 4-1】實作「多層次 ROI」檢測器 (Multi-level ROI Detector)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-emerald-500 group-hover:scale-110 transition-transform">📡</span>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition">【作業 4-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「多層次 ROI」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            在 Canvas 上實作三條不同高度的掃描線。對比進、中、遠三處質心的偏差時序，並以視覺化標註驗證「視線點」的隨彎道漂移特性。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 4-2 -->
+                <div onclick="openSubmissionModal('adv-06-adaptive-lookahead', '【作業 4-2】自適應預覽距離 (Adaptive Look-ahead Setup)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-blue-500 group-hover:rotate-12 transition-transform">⚡</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase">60 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition">【作業 4-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「自適應預覽」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            撰寫動態高度函式 $Y_{target} = f(Speed)$。速度愈快，掃描線愈往上移（看愈遠）。測試此機制對高速直線路徑震盪的抑制效果。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 4-3 -->
+                <div onclick="openSubmissionModal('adv-06-lookahead-debug', '【作業 4-3】預覽點與 P-Control 整合除錯 (Look-ahead Integration Bugfix)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="bg-purple-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-purple-500 group-hover:translate-x-1 transition-transform">🔧</span>
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold uppercase">45 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-purple-600 transition">【作業 4-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4">「預覽整合除錯」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            解決「截彎取直」問題。調校比例增益與預覽高度，繪製車頭中心與預覽點的連線，優化出具備專業自駕質感的入彎軌跡。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-slate-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
+                <span>單元課程 進階 6 - 預覽控制</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/course-shared.js?v=20260404REV"></script>
+
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">實體實驗室：預覽控制系統調校</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title text-justify">任務 1：實作「多層次 ROI」檢測器 (Multi-level ROI Detector)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：自駕視覺工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>掃描線開發</strong>：在 <code>Tracker.js</code> 中定義三個掃描高度（如 Y=200, 150, 80）。</li>
+                    <li><strong>視覺化回饋</strong>：在 Canvas 渲染器中，用不同顏色畫出這三層的質心 Target 標註，觀測入彎時「遠處先偏、近處後偏」的物理特性。</li>
+                    <li><strong>數據擷取</strong>：紀錄一組入彎過程中的三點 X 座標變動，作為後續控制補償的依據。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>標註準確度</strong>：三層掃描點是否皆能正確對齊賽道中心線？</li>
+                    <li>[ ] <strong>渲染層次感</strong>：Canvas 上是否具備清晰的輔助虛線，輔助工程師除錯預覽行為？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title text-justify">任務 2：自適應預覽距離 (Adaptive Look-ahead)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：控制系統優化師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>適應性算法實作</strong>：撰寫 <code>getDynamicLookHeight(speed)</code> 函式。確保在 Speed 增加時，Y 座標線性（或非線性）減小（影像座標系中減小代表往上看）。</li>
+                    <li><strong>穩定性測試</strong>：在直道測試高速行駛下，適應性預覽是否能平滑微小的像素震盪。</li>
+                    <li><strong>分析報告</strong>：在 README 中記錄對比「固定低位」、「固定高位」與「動態位」下的循跡震盪頻率分析。</li>
+                    <li><strong>Push PR</strong>：提交具備動態適應能力的導航引擎。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>控制流暢度</strong>：系統在大範圍提速時，轉向動作是否依然能維持柔和而不產生突發性抖動？</li>
+                    <li>[ ] <strong>邊界數值合理性</strong>：預覽高度是否設定在合理範圍（不至於看天空、也不至於只看車頭皮）？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title text-justify">任務 3：預覽點與 P-Control 整合除錯 (Look-ahead Integration)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：系統整合專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>Error 鏈路串接</strong>：將遠方預覽點的偏差 $E_{dist} = \bar{x}_{far} - 160$ 作為 P-Control 的主要輸入。</li>
+                    <li><strong>截彎取直修正</strong>：觀察車輛是否太早入彎。調整 $K_p$ 係數與「預覽寬度放大倍率」，直到循跡中心能完美貼合賽道弧度。</li>
+                    <li><strong>完整路徑錄影</strong>：錄製一段從直線平穩加速進入 90 度彎道並平穩出彎的完整過程，證明預覽控制的優越性。</li>
+                    <li><strong>Push Final</strong>：提交具備專業自駕感的最終代碼專案。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>物理路徑優雅度</strong>：無人車過彎時的圓弧是否自然？是否具備「提早進彎、平順修正」的特徵？</li>
+                    <li>[ ] <strong>系统響應可靠性</strong>：控制指令發送頻率是否能穩定維持在 15Hz 以上？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tutor Guide (Hidden) -->
+    <section id="tutor-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+            <p class="font-bold text-slate-700 mb-4">本單元教學重點：破解「循跡震盪」的魔咒。讓學生理解預測性控制 (Predictive Control) 的核心價值。</p>
+            <ol class="space-y-4 text-slate-600">
+                <li><strong class="text-emerald-600">重點 1：空間換時間</strong> - 預覽控制本質上是用「空間上的遠方數據」來換取「處理上的時間餘裕」。</li>
+                <li><strong class="text-emerald-600">重點 2：動態權衡力</strong> - 引導學員思考看太遠的副作用（截彎取直）與看太近的缺點（超調），培養工程權衡思維。</li>
+                <li><strong class="text-emerald-600">重點 3：視覺化除錯</strong> - 強調 Canvas 標註的重要性。看不見預覽點，就無法除錯導航行為。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-emerald-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
+.
+├── js/vision_roi.js    # 多層次 ROI：待學員撰寫多高度質心邏輯
+├── js/pure_pursuit.js  # 導航：待學員實作 Error 映射與係數調校
+└── docs/TrackReport.md # 實驗日誌：需錄製近看 vs 遠看的循跡差別
+            </pre>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5">觀看「專業車手 vs 業餘車手視覺熱點圖」影片。思考為什麼車手入彎前視線就在彎心。</td>
+                        <td class="px-6 py-5"><strong>Dashboard:</strong> 測試學員是否能理解延遲對高速系統的致命性。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900">領取作業 (Repo)，在 Canvas 上繪製動態導航線。測試並修正截彎取直問題。</td>
+                        <td class="px-6 py-5"><strong>技術導航員:</strong> 巡場指導如何用滑桿動態調整掃描高度以尋找最優解。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
+                        <td class="px-6 py-5">撰寫關於「視線距離與系統穩定度」的定量分析並 Push。</td>
+                        <td class="px-6 py-5"><strong>Feedback PR:</strong> 點評對「自適應預覽」公式設計的優雅度，表揚具備路徑可視化除錯能力的學員。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</body>
+
+</html>

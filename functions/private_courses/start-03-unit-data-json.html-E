@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數據格式化：從物件到 JSON | Vibe Coding</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+</head>
+
+<body class="flex flex-col min-h-screen bg-slate-50 font-sans">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white pt-24 pb-32 overflow-hidden">
+        <div class="header-overlay absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-90"></div>
+        <div class="container mx-auto px-4 relative z-10 pt-20 pb-20 text-center text-white">
+            <div
+                class="badge-header bg-white/20 text-white border border-white/30 backdrop-blur-sm inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 tracking-wide uppercase">
+                Learning 2
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight leading-tight">
+                數據格式化：<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-200 to-purple-200">從物件到
+                    JSON</span>
+            </h1>
+            <p class="text-xl text-purple-100 max-w-2xl mx-auto leading-relaxed mb-10">
+                為什麼我們需要 JSON？學習如何將搖桿座標與按鈕狀態，轉換為 ESP32 能聽懂的通用語言。
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', 'https://www.youtube.com/embed/KnuXXUo87f0')"
+                    class="resource-btn bg-pink-500 hover:bg-pink-400 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-lg font-bold transition">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button
+                    onclick="enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vSVkD7iQ2vDjZNg6IzhSnvWfRBNC2T4brsYjTaQ42juKnTAuF4dsts06YoU7nW2Vc5M0BwczuQURKoG/pub?embedded=true')"
+                    class="resource-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-3 rounded-full flex items-center gap-2 backdrop-blur-sm font-bold transition">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8 flex-grow max-w-5xl">
+        <!-- Old Header Removed -->
+
+        <!-- 1. 直覺實驗室 -->
+        <div class="section-card bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center text-xl">🧪
+                </div>
+                1. 課前體驗：為什麼是 JSON？
+            </h2>
+            <div class="grid md:grid-cols-2 gap-10">
+                <div>
+                    <p class="text-slate-600 mb-4 leading-relaxed">
+                        想像你要傳送「向左轉，速度 100」給無人車。如果只是單純拼接字串，接收端會很難解析。
+                        JSON 因應而生，它像是一個標準化的包裹，讓發送端 (Web) 與接收端 (ESP32) 都能精準理解。
+                    </p>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4">
+                        <h3 class="font-bold text-slate-700 mb-2 text-sm">⛔ 如果用字串拼接...</h3>
+                        <div class="font-mono text-sm text-slate-500 bg-white p-2 rounded border border-slate-200">
+                            "L-100-MOVE" <span class="text-red-400">← 順序錯了就完了！</span>
+                        </div>
+                    </div>
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                        <h3 class="font-bold text-indigo-800 mb-2 text-sm">✅ 使用 JSON 標準格式</h3>
+                        <div class="font-mono text-sm text-indigo-600 bg-white p-2 rounded border border-indigo-100">
+                            {"dir": "L", "speed": 100} <span class="text-green-600 text-xs ml-2">← 清晰明確</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive: JSON Handwriting -->
+                <div class="bg-slate-800 rounded-xl p-5 text-white shadow-lg relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">📝</div>
+                    <h3 class="font-bold text-emerald-400 mb-1 flex justify-between items-center">
+                        <span>線上任務：手寫 JSON</span>
+                        <span id="lab-score"
+                            class="text-xs bg-emerald-900 text-emerald-300 px-2 py-1 rounded">0/1</span>
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-4">請觀察目標物件，手寫出正確的 JSON 字串 (注意雙引號！)</p>
+
+                    <div class="mb-3">
+                        <div class="text-xs text-slate-500 mb-1">目標物件 (Object):</div>
+                        <div class="font-mono text-sm text-yellow-300 bg-slate-900 p-2 rounded border border-slate-700">
+                            { x: 50, y: -20, cmd: "LOCK" }
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-xs text-slate-500 mb-1">你的 JSON (String):</div>
+                        <input type="text" id="json-input" placeholder='{"x": 50...}'
+                            class="w-full bg-slate-700 border border-slate-600 rounded p-2 text-sm font-mono text-white placeholder-slate-500 focus:outline-none focus:border-pink-500 transition">
+                        <div id="json-feedback" class="h-6 mt-1 text-xs font-bold transition-all duration-300"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 核心原理 -->
+        <div class="section-card bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl">🧠
+                </div>
+                2. 核心原理：JSON.stringify 與 ESP32 解析
+            </h2>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-8">
+                <!-- JS Side -->
+                <div>
+                    <h3 class="text-lg font-bold text-slate-700 mb-3 border-l-4 border-yellow-400 pl-3">JavaScript 端：序列化
+                    </h3>
+                    <p class="text-slate-600 text-sm mb-4">
+                        <code class="bg-slate-100 px-1 rounded text-pink-600 font-mono">JSON.stringify()</code>
+                        是我們最強大的助手。但要注意，它會<b>過濾</b>掉它不認識的東西！
+                    </p>
+
+                    <div class="bg-slate-900 rounded-lg overflow-hidden text-sm font-mono leading-relaxed shadow-lg">
+                        <div
+                            class="bg-slate-800 px-4 py-2 text-slate-400 text-xs border-b border-slate-700 flex justify-between">
+                            <span>console.js</span>
+                            <span>🔴 Live Demo</span>
+                        </div>
+                        <div class="p-4">
+                            <div class="text-purple-400">const</div>
+                            <div class="text-blue-300 inline">data</div> = {<br>
+                            &nbsp;&nbsp;speed: <span class="text-orange-400">100</span>,<br>
+                            &nbsp;&nbsp;func: <span class="text-purple-400">() => {}</span>, <span
+                                class="text-slate-500">// 🙈 會消失</span><br>
+                            &nbsp;&nbsp;val: <span class="text-purple-400">undefined</span> <span
+                                class="text-slate-500">// 🙈 會消失</span><br>
+                            };<br><br>
+                            <div class="text-yellow-300">JSON.stringify(data)</div><br>
+                            <span class="text-green-400">↳ "{"speed":100}"</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ESP32 Side -->
+                <div>
+                    <h3 class="text-lg font-bold text-slate-700 mb-3 border-l-4 border-blue-400 pl-3">ESP32
+                        端：ArduinoJson</h3>
+                    <p class="text-slate-600 text-sm mb-4">
+                        微控制器沒有無限的記憶體。使用 <code
+                            class="bg-slate-100 px-1 rounded text-blue-600 font-mono">StaticJsonDocument</code>
+                        來預先配置固定的記憶體空間，避免記憶體碎片化。
+                    </p>
+
+                    <div class="bg-blue-50 rounded-xl p-4 border border-blue-100 relative">
+                        <div class="absolute -top-3 left-6 px-2 bg-blue-100 text-blue-700 text-xs font-bold rounded">C++
+                            / Arduino</div>
+                        <div class="mt-2 space-y-3">
+                            <div class="flex items-center gap-2 text-sm text-slate-700">
+                                <span
+                                    class="p-1.5 bg-white border border-slate-200 rounded font-mono text-xs shadow-sm">String
+                                    input</span>
+                                <span class="text-slate-400">➔</span>
+                                <span class="font-mono text-xs text-orange-600">"{\"cmd\":\"move\"}"</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm text-slate-700">
+                                <span
+                                    class="p-1.5 bg-white border border-slate-200 rounded font-mono text-xs shadow-sm">Deserialization</span>
+                                <span class="text-slate-400">➔</span>
+                                <div class="bg-slate-800 text-white text-xs p-2 rounded font-mono w-full">
+                                    StaticJsonDocument&lt;200&gt; doc;<br>
+                                    deserializeJson(doc, input);<br>
+                                    <span class="text-purple-300">const char*</span> cmd = doc["cmd"];
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+                <h4 class="font-bold text-yellow-800 text-sm flex items-center gap-2 mb-2">
+                    <span>💡 key-Value 設計思維</span>
+                </h4>
+                <p class="text-slate-700 text-sm">
+                    為什麼不直接傳送 "前進"？因為中文編碼複雜且佔用頻寬。使用
+                    <code
+                        class="bg-white px-1 border rounded text-slate-600 font-mono">{"cmd": "move", "val": 255}</code>
+                    能兼顧<b>人類可讀性</b>與<b>機器解析效率</b>。
+                </p>
+            </div>
+        </div>
+
+        <!-- 3. 實戰挑戰 -->
+        <div class="section-card bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                <div
+                    class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl">
+                    🚀</div>
+                3. 實戰挑戰：封包瘦身與動態組合
+            </h2>
+
+            <div class="mb-6">
+                <div class="flex gap-2 border-b border-slate-200" id="challenge-tabs">
+                    <button
+                        class="px-4 py-2 text-sm font-bold text-purple-600 border-b-2 border-purple-600 focus:outline-none"
+                        data-tab="c1">
+                        挑戰 1: 基礎封裝
+                    </button>
+                    <button
+                        class="px-4 py-2 text-sm font-medium text-slate-500 hover:text-purple-600 focus:outline-none"
+                        data-tab="c2">
+                        挑戰 2: 封包瘦身
+                    </button>
+                    <button
+                        class="px-4 py-2 text-sm font-medium text-slate-500 hover:text-purple-600 focus:outline-none"
+                        data-tab="c3">
+                        挑戰 3: 狀態機組合
+                    </button>
+                </div>
+            </div>
+
+            <!-- Challenge 1 -->
+            <div id="content-c1" class="challenge-content">
+                <p class="text-slate-600 mb-4 text-sm">
+                    <b>目標：</b> 撰寫一個函式 <code class="font-mono text-pink-600">createPacket(id)</code>，
+                    接收按鈕 ID，回傳一個包含 <code class="font-mono">timestamp</code> (當下時間戳記) 的 JSON 字串。
+                </p>
+                <div class="bg-slate-900 rounded-lg p-4 font-mono text-sm shadow-inner relative group">
+                    <textarea id="code-c1"
+                        class="w-full h-32 bg-transparent text-slate-300 focus:outline-none resize-none"
+                        spellcheck="false">
+function createPacket(btnId) {
+    const data = {
+        // 在此實作物件內容
+        
+    };
+    return JSON.stringify(data);
+}</textarea>
+                    <button onclick="checkC1()"
+                        class="absolute bottom-4 right-4 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-xs font-bold shadow transition">
+                        提交執行 ▶
+                    </button>
+                </div>
+                <div id="result-c1" class="mt-2 text-sm font-mono h-6 transition-all transform"></div>
+            </div>
+
+            <!-- Challenge 2 -->
+            <div id="content-c2" class="challenge-content hidden">
+                <p class="text-slate-600 mb-4 text-sm">
+                    <b>目標：</b> 原始封包太大了！請將 Key Name 簡化以減少字元數。<br>
+                    <span class="text-xs text-slate-400">規則：command -> c, velocity -> v</span>
+                </p>
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="flex-1 bg-red-50 p-3 rounded border border-red-100 opacity-60">
+                        <div class="text-xs text-red-500 font-bold mb-1">原始 (Original)</div>
+                        <div class="font-mono text-xs text-slate-600">{"command":"move_forward","velocity":255}</div>
+                        <div class="text-xs text-slate-400 mt-1">Length: 40</div>
+                    </div>
+                    <div class="text-slate-300">➡</div>
+                    <div class="flex-1 bg-green-50 p-3 rounded border border-green-100">
+                        <div class="text-xs text-green-600 font-bold mb-1">目標 (Optimized)</div>
+                        <div class="font-mono text-xs text-slate-600">{"c":"f","v":255}</div>
+                        <div class="text-xs text-slate-400 mt-1">Length: 15 (節省 ~60%!)</div>
+                    </div>
+                </div>
+                <div class="bg-slate-900 rounded-lg p-4 font-mono text-sm shadow-inner relative">
+                    <textarea id="code-c2"
+                        class="w-full h-24 bg-transparent text-slate-300 focus:outline-none resize-none"
+                        spellcheck="false">
+const packet = { 
+    c: "f", 
+    v: 255 
+};
+return JSON.stringify(packet);</textarea>
+                    <button onclick="checkC2()"
+                        class="absolute bottom-4 right-4 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-xs font-bold shadow transition">
+                        計算大小 ▶
+                    </button>
+                </div>
+                <div id="result-c2" class="mt-2 text-sm font-mono h-6 transition-all text-emerald-600 font-bold"></div>
+            </div>
+
+            <!-- Challenge 3 -->
+            <div id="content-c3" class="challenge-content hidden">
+                <p class="text-slate-600 mb-4 text-sm">
+                    <b>目標：</b> 實作巢狀物件。同時包含搖桿座標 (joy) 與按鈕狀態 (btn)。
+                </p>
+                <div class="bg-slate-50 p-3 border border-slate-200 rounded text-xs font-mono text-slate-500 mb-3">
+                    Ref format: {"joy":{"x":10,"y":-5},"btn":{"a":1}}
+                </div>
+                <div class="bg-slate-900 rounded-lg p-4 font-mono text-sm shadow-inner relative">
+                    <textarea id="code-c3"
+                        class="w-full h-32 bg-transparent text-slate-300 focus:outline-none resize-none"
+                        spellcheck="false">
+const complexData = {
+    // 實作 joy (x:10, y:-5) 和 btn (a:1)
+    
+};
+return JSON.stringify(complexData);</textarea>
+                    <button onclick="checkC3()"
+                        class="absolute bottom-4 right-4 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-xs font-bold shadow transition">
+                        驗證結構 ▶
+                    </button>
+                </div>
+                <div id="result-c3" class="mt-2 text-sm font-mono h-6 transition-all text-emerald-600 font-bold"></div>
+            </div>
+            <!-- Submission Section -->
+            <div class="mt-12 border-t border-slate-200 pt-8">
+                <h3 class="text-xl font-bold text-slate-800 mb-6 text-center">📤 繳交挑戰成果</h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <!-- Task 1 -->
+                    <div onclick="openSubmissionModal('data-json-task-1', '挑戰 1: 基礎封裝')"
+                        class="bg-slate-50 rounded-xl border border-slate-200 p-5 cursor-pointer relative group hover:bg-white hover:shadow-lg transition-all">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div
+                                class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-sm">
+                                1</div>
+                            <h4 class="font-bold text-slate-700">基礎封裝</h4>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-3">提交 createPacket 的程式碼或截圖。</p>
+                        <!-- Hover Overlay -->
+                        <div
+                            class="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-white text-purple-600 px-3 py-1 rounded-full font-bold shadow text-xs">
+                                點擊繳交
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 2 -->
+                    <div onclick="openSubmissionModal('data-json-task-2', '挑戰 2: 封包瘦身')"
+                        class="bg-slate-50 rounded-xl border border-slate-200 p-5 cursor-pointer relative group hover:bg-white hover:shadow-lg transition-all">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div
+                                class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-sm">
+                                2</div>
+                            <h4 class="font-bold text-slate-700">封包瘦身</h4>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-3">提交優化後的 Key-Value 設計。</p>
+                        <!-- Hover Overlay -->
+                        <div
+                            class="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-white text-purple-600 px-3 py-1 rounded-full font-bold shadow text-xs">
+                                點擊繳交
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 3 -->
+                    <div onclick="openSubmissionModal('data-json-task-3', '挑戰 3: 狀態機組合')"
+                        class="bg-slate-50 rounded-xl border border-slate-200 p-5 cursor-pointer relative group hover:bg-white hover:shadow-lg transition-all">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div
+                                class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-sm">
+                                3</div>
+                            <h4 class="font-bold text-slate-700">狀態機組合</h4>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-3">提交巢狀物件的結構設計。</p>
+                        <!-- Hover Overlay -->
+                        <div
+                            class="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-white text-purple-600 px-3 py-1 rounded-full font-bold shadow text-xs">
+                                點擊繳交
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-slate-400 py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <div class="font-bold text-xl text-white mb-2">🚀 Vibe Coding</div>
+            <p class="text-sm">&copy; 2025 Vibe Coding. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Media Overlay injected by course-shared.js?v=20260404REV -->
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/KnuXXUo87f0",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vSVkD7iQ2vDjZNg6IzhSnvWfRBNC2T4brsYjTaQ42juKnTAuF4dsts06YoU7nW2Vc5M0BwczuQURKoG/pub?embedded=true"
+        };
+    </script>
+    <script src="/js/course-shared.js?v=20260404REV"></script>
+    <script>
+
+        // --- Lab 1: Interactive JSON Handwriting ---
+        const jsonInput = document.getElementById('json-input');
+        const jsonFeedback = document.getElementById('json-feedback');
+        const labScore = document.getElementById('lab-score');
+
+        jsonInput.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            try {
+                // Try to parse
+                const obj = JSON.parse(val);
+
+                // Check if specific keys exist to ensure they aren't just parsing empty {}
+                if (obj.x === 50 && obj.y === -20 && obj.cmd === "LOCK") {
+                    jsonFeedback.innerHTML = "<span class='text-emerald-500'>✅ 完美！格式正確且數值吻合。</span>";
+                    jsonInput.classList.remove('border-red-500', 'border-slate-600');
+                    jsonInput.classList.add('border-emerald-500');
+                    labScore.textContent = "1/1";
+                    labScore.classList.add('bg-emerald-500', 'text-white');
+                } else {
+                    jsonFeedback.innerHTML = "<span class='text-yellow-500'>⚠️ JSON 格式正確，但數值不符合目標物件。</span>";
+                    jsonInput.classList.remove('border-red-500', 'border-emerald-500');
+                    jsonInput.classList.add('border-yellow-500');
+                }
+            } catch (err) {
+                // Check common mistakes
+                if (val.includes("{x:") || val.includes("x:")) {
+                    jsonFeedback.innerHTML = "<span class='text-red-400'>❌ 錯誤：Key 必須用雙引號包起來，例如 \"x\"</span>";
+                } else if (val.includes("'")) {
+                    jsonFeedback.innerHTML = "<span class='text-red-400'>❌ 錯誤：JSON 必須使用雙引號 \"，不能用單引號 '</span>";
+                } else {
+                    jsonFeedback.innerHTML = "<span class='text-red-400'>❌ 語法錯誤</span>";
+                }
+                jsonInput.classList.add('border-red-500');
+                jsonInput.classList.remove('border-emerald-500', 'border-yellow-500');
+                labScore.textContent = "0/1";
+            }
+        });
+
+        // --- Tabs Logic ---
+        const tabs = document.querySelectorAll('[data-tab]');
+        const contents = document.querySelectorAll('.challenge-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active classes
+                tabs.forEach(t => {
+                    t.classList.remove('text-purple-600', 'border-b-2', 'border-purple-600', 'font-bold');
+                    t.classList.add('text-slate-500', 'font-medium');
+                });
+                contents.forEach(c => c.classList.add('hidden'));
+
+                // Add active class
+                tab.classList.add('text-purple-600', 'border-b-2', 'border-purple-600', 'font-bold');
+                tab.classList.remove('text-slate-500', 'font-medium');
+
+                // Show content
+                const targetId = tab.getAttribute('data-tab');
+                document.getElementById('content-' + targetId).classList.remove('hidden');
+            });
+        });
+
+        // --- Challenge Functions ---
+        function checkC1() {
+            const code = document.getElementById('code-c1').value;
+            const resFunc = new Function('id', code);
+            const resultDiv = document.getElementById('result-c1');
+
+            try {
+                const jsonStr = resFunc("btn_A");
+                const obj = JSON.parse(jsonStr);
+
+                if (obj.timestamp || obj.ts || obj.time) {
+                    resultDiv.innerHTML = `<span class="text-emerald-500">✅ 成功！Output: ${jsonStr.substring(0, 40)}...</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="text-yellow-600">⚠️ JSON 格式正確，但在物件中找不到 timestamp 或 time 屬性。</span>`;
+                }
+            } catch (e) {
+                resultDiv.innerHTML = `<span class="text-red-500">❌ 錯誤: ${e.message}</span>`;
+            }
+        }
+
+        function checkC2() {
+            const code = document.getElementById('code-c2').value;
+            const resFunc = new Function(code);
+            const resultDiv = document.getElementById('result-c2');
+
+            try {
+                const jsonStr = resFunc();
+                const obj = JSON.parse(jsonStr);
+                const len = jsonStr.length;
+
+                if (obj.c === "f" && obj.v === 255) {
+                    if (len <= 20) {
+                        resultDiv.innerHTML = `✅ 完美！長度僅 ${len} bytes。優化成功。`;
+                    } else {
+                        resultDiv.innerHTML = `⚠️ 格式正確，但長度 (${len}) 似乎還可以更短？檢查是否有額外空白。`;
+                    }
+                } else {
+                    resultDiv.innerHTML = `<span class="text-red-500">❌ 數值或 Key 不符合 c='f', v=255 的要求。</span>`;
+                }
+            } catch (e) {
+                resultDiv.innerHTML = `<span class="text-red-500">❌ 錯誤: ${e.message}</span>`;
+            }
+        }
+
+        function checkC3() {
+            const code = document.getElementById('code-c3').value;
+            const resFunc = new Function(code);
+            const resultDiv = document.getElementById('result-c3');
+
+            try {
+                const jsonStr = resFunc();
+                const obj = JSON.parse(jsonStr);
+
+                if (obj.joy && obj.joy.x === 10 && obj.joy.y === -5 && obj.btn && obj.btn.a === 1) {
+                    resultDiv.innerHTML = `✅ 結構正確！這就是巢狀物件的威力。`;
+                } else {
+                    resultDiv.innerHTML = `<span class="text-red-500">❌ 結構錯誤。請確保 joy:{x:10, y:-5} 且 btn:{a:1}</span>`;
+                }
+            } catch (e) {
+                resultDiv.innerHTML = `<span class="text-red-500">❌ 錯誤: ${e.message}</span>`;
+            }
+        }
+    </script>
+
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2>JSON 封包設計師</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title">任務 1：把控制指令轉成標準 JSON (Serialize Command)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：物聯網開發者</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：40 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>接受作業</strong>：建立專屬 GitHub Classroom 倉庫，確認範本含有資料物件與輸出位置。</li>
+                    <li><strong>建立指令物件</strong>：定義包含方向、速度、時間戳等欄位的控制資料。</li>
+                    <li><strong>轉成 JSON</strong>：使用 <code>JSON.stringify()</code> 產生標準字串，並驗證輸出格式是否正確。</li>
+                    <li><strong>同步版本</strong>：將函式與測試結果寫進 README 後再 <code>commit</code> / <code>push</code>。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>格式正確</strong>：輸出的 JSON 是否符合標準語法，而不是手刻字串拼接？</li>
+                    <li>[ ] <strong>欄位完整</strong>：方向、速度與時間資訊是否清楚存在？</li>
+                    <li>[ ] <strong>序列化理解</strong>：是否知道哪些資料型別會在 stringify 時被忽略？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 2：幫封包瘦身以節省頻寬 (Compact Payload)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：韌體通訊工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：40 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>設計縮寫</strong>：把長欄位改成短鍵名，例如 <code>command → c</code>、<code>velocity → v</code>。</li>
+                    <li><strong>比較長度</strong>：量測精簡前後字節數，確認確實有顯著縮短。</li>
+                    <li><strong>維持可解碼性</strong>：確保 ESP32 或接收端仍能按約定讀回正確資料。</li>
+                    <li><strong>提交協議</strong>：把縮寫對照表與示例封包一起推送到 GitHub。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>瘦身效果</strong>：封包長度是否真的有縮短，而不是只換名稱？</li>
+                    <li>[ ] <strong>映射清楚</strong>：縮寫與原始欄位意義是否交代清楚？</li>
+                    <li>[ ] <strong>可維護性</strong>：協議精簡後，是否仍保有團隊可讀性？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title">任務 3：規劃可擴充的巢狀控制資料 (Nested State)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：嵌入式系統架構師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>拆分資料責任</strong>：將搖桿、按鈕、系統狀態等資訊整理成清楚的巢狀結構。</li>
+                    <li><strong>控制深度</strong>：避免過深巢狀，讓資料既清楚又容易在 MCU 端解析。</li>
+                    <li><strong>驗證案例</strong>：用不同操作組合測試資料輸出是否穩定且可預測。</li>
+                    <li><strong>提交方案</strong>：把資料 schema、測試案例與範例輸出一併提交。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>結構合理</strong>：資料分層是否容易在前後端與 ESP32 間對齊？</li>
+                    <li>[ ] <strong>擴充彈性</strong>：之後新增欄位時，是否不需要整體推翻原結構？</li>
+                    <li>[ ] <strong>測試完整</strong>：是否有實例證明多種控制狀態都能正確組合？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tutor Guide (Hidden) -->
+    <section id="tutor-guide" style="display: none;">
+        <h2>數據格式化與 JSON 協議 教學引導指南</h2>
+        <div class="classroom-guide">
+            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
+            <ol>
+                <li>上傳基礎專案框架與 <code>protocol-helper.js</code> 註解框架，並勾選 <strong>"Template repository"</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
+            <ol>
+                <li>建立作業並連結範本，啟用 <strong>"Enable feedback pull requests"</strong> 以便檢視協議設計。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
+            <ol>
+                <li>學生領取作業，定義 JSON 協議邏輯並實作數據縮減（瘦身）策略。</li>
+                <li>本地開發後 <strong>Push 代碼</strong>。</li>
+            </ol>
+
+            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
+            <ol>
+                <li>進入 Feedback PR，針對學生縮寫 Key 的邏輯嚴謹度、巢狀結構的合理性給予評價。</li>
+            </ol>
+        </div>
+
+        <h2>在 GitHub Classroom 的實戰部署建議</h2>
+        <p>此單元引導學生設計基於 JSON 的通訊協議，並實作數據縮減優化，建議範本倉庫設置如下：</p>
+
+        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
+        <pre><code>.
+├── index.html       # 基礎交互介面
+├── protocol-helper.js # (核心) 學生需在此實作 encode/decode 函式
+└── README.md        # 協議設計規範與數據縮減對照表</code></pre>
+
+        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
+        <p><strong>protocol-helper.js (封裝與縮寫)</strong></p>
+        <pre><code>// 基礎封裝 (Task 1)
+function createPacket(btnId) {
+    const data = {
+        btn: btnId,
+        ts: Date.now()
+    };
+    return JSON.stringify(data);
+}
+
+// 封包瘦身 (Task 2)
+// 使用單字元 Key 可節省約 50% 頻寬
+function createOptimizedPacket(cmd, val) {
+    return JSON.stringify({ c: cmd, v: val });
+}
+
+// 巢狀結構 (Task 3)
+const joyData = {
+    joy: { x: 10, y: -5 },
+    btn: { a: 1 }
+};</code></pre>
+
+        <h3>C. 自動評分 (Autograding) 的設計</h3>
+        <ul>
+            <li><strong>字節檢查：</strong> 使用 Actions 檢查產生的 JSON 字串長度（優化挑戰要求 < 20 bytes）。</li>
+            <li><strong>語法檢查：</strong> 驗證學生產出的 JSON 是否包含正確的嵌套 Key (joy/btn)。</li>
+        </ul>
+
+        <h2>翻轉教室的實施策略</h2>
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background-color: #f8fafc;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
+                </tr>
+            </thead>
+            <tbody style="color: #4b5563;">
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">操作本頁的互動編輯器，練習手寫符合 JSON 規範的物件。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>檢查學生預習紀錄與語法錯誤頻率。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作 <code>createPacket</code> 基礎與瘦身挑戰並更新代碼。
+                    </td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>助教角色：</strong>引導學生理解 JSON 在 BLE MTU
+                        限制下的瓶頸。
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;">完成巢狀結構設計，將協議設計總結寫入 PR 並 Commit。</td>
+                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>檢視通訊協議的擴展性與文檔完整度。
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+</body>
+
+</html>

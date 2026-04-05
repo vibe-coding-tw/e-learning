@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS 與安全性基礎 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6 tracking-wide uppercase">
+                基礎 6 - 網路安全
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit] uppercase tracking-tighter">
+                瀏覽器的安全邊界：<br><span class="text-blue-400">CORS 與硬體防禦策略</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                掌握 CORS 運作機制。為物聯網建立安全屏障。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button onclick="enterMediaMode('video', window.RESOURCES.youtube)"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: What is CORS? -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3 text-justify">
+                        <span class="text-4xl text-blue-600 text-justify">🛑</span> 1. 什麼是 CORS？
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 text-justify">
+                        <div class="space-y-6 text-justify uppercase tracking-widest leading-relaxed">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify uppercase tracking-tighter">
+                                決定是否允許網頁讀取跨網域資料防禦機制。
+                            </p>
+                            <div class="p-8 rounded-3xl border border-amber-100 shadow-sm bg-amber-50 text-justify uppercase tracking-widest font-black leading-relaxed">
+                                <h4 class="font-bold text-amber-900 mb-2 text-xs uppercase tracking-widest italic text-justify font-black">Same-Origin Policy</h4>
+                                <p class="text-amber-800 font-light leading-relaxed text-justify text-[11px] uppercase tracking-tighter font-black">
+                                    防止網站偷隱私。禁止網域 A 讀取 B。
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="p-8 rounded-3xl shadow-2xl border border-slate-700 text-white bg-slate-900 text-justify uppercase tracking-widest font-black">
+                            <h4 class="font-bold text-slate-500 mb-6 uppercase tracking-widest text-[10px] text-justify font-black">Origin Matching</h4>
+                            <div class="space-y-4 text-justify font-black">
+                                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-800 border border-slate-700 group text-justify font-black">
+                                    <span class="font-mono text-slate-400 group-hover:text-blue-300 text-[10px] text-justify font-black text-left">vibe.car/a.js<br>vibe.car/b.js</span>
+                                    <span class="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded font-bold text-emerald-400 uppercase text-[9px] text-justify font-black border border-slate-100">Same</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-800 border border-slate-700 group text-justify font-black">
+                                    <span class="font-mono text-slate-400 group-hover:text-amber-300 text-[10px] text-justify font-black text-left">https://vibe.car<br>http://vibe.car</span>
+                                    <span class="px-3 py-1 bg-red-500/10 border border-red-500/20 rounded font-bold text-red-400 uppercase text-[9px] text-justify font-black border border-slate-100">Cross</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Preflight -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-indigo-500 to-blue-500"></div>
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3 text-justify uppercase tracking-widest font-black">
+                        <span class="text-4xl text-indigo-500 text-justify">🙋‍♂️</span> 2. 預檢請求：敲門機制
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 text-justify uppercase tracking-widest">
+                        <div class="space-y-8 text-justify font-black">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify uppercase tracking-tighter">
+                                複雜請求時，發送 OPTIONS 敲門。
+                            </p>
+                            <div class="grid grid-cols-2 gap-4 text-justify font-black border border-slate-100">
+                                <div class="p-5 rounded-2xl border border-indigo-100 bg-indigo-50 text-justify font-black uppercase tracking-widest">
+                                    <h5 class="text-[10px] font-bold text-indigo-400 mb-2 uppercase tracking-widest italic text-justify font-black">The Knock</h5>
+                                    <p class="text-xs font-bold text-indigo-900 mb-1 text-justify font-black">OPTIONS 方法</p>
+                                    <p class="text-[10px] text-slate-500 font-light leading-relaxed text-justify uppercase tracking-widest">詢問：「准許入內？」</p>
+                                </div>
+                                <div class="p-5 rounded-2xl border border-blue-100 bg-blue-50 text-justify font-black uppercase tracking-tighter">
+                                    <h5 class="text-[10px] font-bold text-blue-400 mb-2 uppercase tracking-widest italic text-justify font-black">The Ticket</h5>
+                                    <p class="text-xs font-bold text-blue-900 mb-1 text-justify uppercase tracking-widest font-black">Allow-Origin</p>
+                                    <p class="text-[10px] text-slate-500 font-light leading-relaxed text-justify uppercase tracking-widest">伺服器回傳合規標頭。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-8 rounded-3xl shadow-2xl border border-slate-700 bg-slate-900 text-justify uppercase tracking-widest font-black text-left">
+                            <div class="flex items-center gap-3 mb-6 text-justify font-black">
+                                <span class="w-3 h-3 bg-red-400 rounded-full text-justify font-black"></span>
+                                <span class="w-3 h-3 bg-amber-400 rounded-full text-justify font-black"></span>
+                                <span class="w-3 h-3 bg-emerald-400 rounded-full text-justify font-black"></span>
+                                <span class="ml-auto text-slate-500 font-mono tracking-widest text-justify uppercase tracking-widest font-black text-[10px]">ESP32 CONFIG</span>
+                            </div>
+                            <pre class="leading-relaxed overflow-x-auto text-blue-300 font-mono text-justify uppercase tracking-widest font-black text-[11px] border border-slate-700">
+DefaultHeaders::Instance().addHeader(
+  "Access-Control-Allow-Origin", "*"
+);
+DefaultHeaders::Instance().addHeader(
+  "Access-Control-Allow-Methods", "GET,POST,OPTIONS"
+);</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Security Mindset -->
+        <section class="module-section mb-16">
+            <div class="glass-card rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700 bg-slate-900">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-emerald-400 text-justify uppercase tracking-widest font-black">
+                        <span class="p-2 bg-emerald-500/20 rounded-lg text-emerald-400 text-2xl text-justify font-black border border-slate-800">🔐</span> 3. 硬體安全防禦
+                    </h2>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center text-justify uppercase tracking-widest leading-relaxed">
+                        <div class="flex-1 space-y-6 text-justify font-black">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg text-justify font-black uppercase tracking-widest">
+                                合規通訊。防禦性編程。
+                            </p>
+                            <div class="p-8 rounded-3xl border border-emerald-500/20 shadow-inner bg-emerald-500/10 text-justify uppercase tracking-widest font-black text-left">
+                                <h4 class="font-bold text-emerald-400 mb-4 text-xs uppercase tracking-widest text-justify font-black">Defense Strategy</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light text-justify uppercase tracking-widest font-black">
+                                    <li class="flex items-start gap-2 text-justify font-black"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1 text-justify"></span><div><strong class="text-white text-justify font-black">權限最小化</strong>：不使用萬用符號。只開放必要。</div></li>
+                                    <li class="flex items-start gap-2 text-justify font-black"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1 text-justify"></span><div><strong class="text-white text-justify font-black">指令啟動</strong>：雜湊效驗防止竄改。</div></li>
+                                    <li class="flex items-start gap-2 text-justify font-black"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1 text-justify"></span><div><strong class="text-white text-justify font-black">資料遮蔽</strong>：敏感資訊封裝 Body。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="lg:w-80 p-10 rounded-3xl border border-red-500/20 text-center relative overflow-hidden group bg-red-600/10 text-justify font-black">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-red-500/5 rounded-full group-hover:scale-150 transition-transform duration-700 text-justify font-black"></div>
+                           <h4 class="text-red-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-justify font-black uppercase tracking-widest">Warning Zone</h4>
+                           <p class="text-slate-500 leading-relaxed font-light mb-8 italic text-[11px] text-justify uppercase tracking-widest font-black border border-slate-700">
+                                "CORS 保護使用者，後端仍需驗證。"
+                           </p>
+                           <div class="inline-block px-8 py-3 bg-red-500 text-white rounded-xl font-bold text-[10px] shadow-lg text-justify uppercase tracking-widest font-black">HTTP 403 Forbidden</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心任務：安全性與應急實踐</h2>
+            <p class="text-center text-gray-500 mb-12">診斷報錯與實作協議。</p>
+
+            <div class="grid md:grid-cols-3 gap-6 text-justify uppercase tracking-widest font-black text-left">
+                <!-- Task 6-1 -->
+                <div onclick="openSubmissionModal('basic-06-security-1', '【作業 6-1】邊界診斷員：CORS 錯誤追蹤 (CORS Trace)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify uppercase tracking-widest font-black text-left border border-slate-100">
+                    <div class="bg-red-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4 text-justify font-black text-left">
+                            <span class="text-4xl text-red-500 group-hover:scale-110 transition-transform text-justify font-black">🛑</span>
+                            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase text-justify font-black">30 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition text-justify uppercase tracking-widest font-black text-left">【作業 6-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify font-black uppercase tracking-widest leading-relaxed">「邊界診斷」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify uppercase tracking-widest font-black text-left italic">
+                            模擬 CORS 報錯。找出標頭缺失。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 6-2 -->
+                <div onclick="openSubmissionModal('basic-06-security-2', '【作業 6-2】開發應急方案：代理與插件繞過 (Legacy Bypass)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify uppercase tracking-tighter text-left font-black border border-slate-100">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4 text-justify font-black text-left">
+                            <span class="text-4xl text-blue-500 group-hover:rotate-12 transition-transform text-justify font-black">🛠️</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase text-justify font-black">45 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition text-justify uppercase tracking-widest font-black text-left">【作業 6-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-left text-justify font-black uppercase tracking-widest leading-relaxed">「繞過技術」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify uppercase tracking-widest font-black text-left italic">
+                            插件繞過限制。分析原理與風險。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 6-3 -->
+                <div onclick="openSubmissionModal('basic-06-security-3', '【作業 6-3】硬體安全官：ESP32 標頭注入 (Hardware Sentry)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify font-black border border-slate-100 text-left">
+                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4 text-justify font-black text-left">
+                            <span class="text-4xl text-emerald-500 group-hover:translate-x-1 transition-transform text-justify font-black">🛡️</span>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase text-justify font-black">60 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition text-justify uppercase tracking-widest font-black text-left">【作業 6-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify font-black uppercase tracking-widest leading-relaxed">「許可協議」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify uppercase tracking-widest font-black italic">
+                            實作 OPTIONS 饗應。硬體端配置 CORS。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 py-12 border-t border-gray-700 text-center">
+        <div class="container mx-auto px-4 text-center text-center">
+            <p class="text-gray-500 text-sm mb-4 text-center">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400 text-center uppercase tracking-widest font-black border border-slate-700">
+                <span>課程單元 基礎 6 - 網路安全基礎</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Define Resources
+        window.RESOURCES = {
+            youtube: "https://www.youtube.com/embed/frEd9ExuOSw",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vQXCijxWdyyPG4LpqwvurXSStWdv1V3sM10gJzDvjD9XbH05gmbTPbKNTpAubcdV_BJYVaIFfMaIChl/pub?embedded=true"
+        };
+    </script>
+    <script src="/js/course-shared.js?v=20260404REV"></script>
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">網路安全實驗室：CORS 診斷、預檢請求機制與標頭注入實戰</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title text-justify">任務 1：「邊界診斷員」：CORS 錯誤追蹤 (Network Boundary)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：30 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫。</li>
+                    <li><strong>報錯</strong>：存取未開放 CORS 站點並截圖。</li>
+                    <li><strong>分析</strong>：解釋三要素（協議/網域/埠）判定。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>診斷精準</strong>：定位阻斷原因？</li>
+                    <li>[ ] <strong>概念正確</strong>：解釋保護意圖？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title text-justify">任務 2：「開發期繞過方案」：代理與插件測試 (Legacy Bypass)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：開發者</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>測試</strong>：安裝插件執行代碼並驗證聯通。</li>
+                    <li><strong>分析</strong>：描述插件繞過 CORS 原理。</li>
+                    <li><strong>報告</strong>：撰寫風險評估簡報。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>實踐成功</strong>：完成跨域通訊測試？</li>
+                    <li>[ ] <strong>意識確立</strong>：識別環境風險？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title text-justify">任務 3：「硬體安全官」：ESP32 標頭注入 (Hardware Sentry)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：架構師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>開發</strong>：配置韌體 CORS 標頭。</li>
+                    <li><strong>響應</strong>：實作 OPTIONS 預檢邏輯。</li>
+                    <li><strong>交付</strong>：提交合法韌體代碼。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>標頭精確</strong>：符合標頭語法？</li>
+                    <li>[ ] <strong>通訊閉環</strong>：解決跨域封鎖？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tutor Guide (Hidden) -->
+    <section id="tutor-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify text-left">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：合規通訊。</p>
+            <ol class="space-y-4 text-slate-600 text-justify text-left">
+                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：安全性邊界</strong> - 瀏覽器保護意圖。</li>
+                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：OPTIONS 機制</strong> - 解析隱形敲門。</li>
+                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：伺服器配置</strong> - 唯一解法。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify uppercase tracking-widest font-black border border-slate-700 text-left">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300 text-justify uppercase tracking-widest font-black text-left">
+            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm text-justify uppercase tracking-widest font-black border border-slate-100">
+.
+├── src/main.cpp      # (必修) CORS 配置
+└── README.md         # 診斷截圖與報告
+            </pre>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify uppercase tracking-widest font-black">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-center text-justify font-black text-left">
+            <table class="w-full text-left border-collapse border border-slate-100 text-justify font-black">
+                <thead>
+                    <tr class="bg-slate-100 border border-slate-100 text-justify font-black">
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest border border-slate-100">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest border border-slate-100">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest border border-slate-100">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600 border border-slate-100 text-justify font-black">
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5 text-justify">觀看「CORS 阻斷」影片。</td>
+                        <td class="px-6 py-5 text-justify border border-slate-100"><strong>Dashboard:</strong> 測試同源概念。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify border border-slate-100 text-left">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify text-left">領取 Repo，診斷封鎖並修復標頭。</td>
+                        <td class="px-6 py-5 text-left text-justify border border-slate-100 font-black"><strong>技術點評:</strong> 分析 OPTIONS 請求特徵。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
+                        <td class="px-6 py-5 text-justify text-left text-justify font-black">討論生產環境合規邏輯。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評安全性標頭細緻度。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</body>
+
+</html>

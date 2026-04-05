@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影像座標系與誤差計算 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+
+    <!-- Hero Section -->
+    <header
+        class="relative bg-gradient-to-br from-slate-900 via-indigo-900 to-blue-900 text-white pt-24 pb-32 overflow-hidden">
+        <div
+            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <span
+                class="badge-header inline-block py-1.5 px-4 rounded-full bg-white/10 border border-white/20 text-white/90 text-sm font-medium mb-6 tracking-wider uppercase backdrop-blur-sm font-[Outfit]">
+                進階 8 - 單元 2
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">影像座標系與<br><span class="text-blue-400">誤差計算 (Error Calculation)</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                從像素到控制指令：學習如何量化「視覺目標」與「車體中心」的距離，並將其轉化為精確的轉向補償。
+            </p>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <button
+                    onclick="window.courseShared.enterMediaMode('video', 'https://www.youtube.com/embed/89hJHZKIXvA?autoplay=1')"
+                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📺</span> 觀看教學影片
+                </button>
+                <button
+                    onclick="window.courseShared.enterMediaMode('doc', 'https://docs.google.com/document/d/e/2PACX-1vRNZod12cl4ROPz_uh_tVL09nnXbkja5bAOcCWC9DDHPwKRndLbhXxrMfINA3Z7pO_FT-hKmiYkIbWw/pub?embedded=true')"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                    <span>📄</span> 閱讀課程講義
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+
+        <!-- Module 1: Coordinate System -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                <div class="p-8 md:p-14 text-justify">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-justify text-left">📏</span> 1. 影像座標系：從 (0,0) 開始 (20 min)
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <div class="space-y-6">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light">
+                                影像的原點 $(0,0)$ 位於左上角，$X$ 軸向右，$Y$ 軸向下。這與傳統數學座標系不同。理解此映射是進行空間誤差量化的第一步。
+                            </p>
+                            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+                                <h4 class="font-bold text-blue-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed">System Constraints</h4>
+                                <ul class="text-[9px] text-slate-500 space-y-2 font-light text-justify">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1"></span> <div><strong>解析度邊界</strong>：如 $320 \times 240$。超出此範圍的像素數據將被截斷。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1"></span> <div><strong>幾何中心</strong>：$W/2$ 與 $H/2$ 是我們對齊「車體中軸線」的零誤差基準。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group text-justify">
+                           <div class="absolute inset-0 bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors"></div>
+                           <h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10 text-justify">Viewport Mapping</h4>
+                           <div class="relative z-10 flex flex-col items-center">
+                               <div class="w-48 h-32 border border-blue-500/30 rounded flex items-center justify-center relative text-justify">
+                                   <div class="absolute top-0 left-0 w-2 h-2 bg-blue-500"></div>
+                                   <div class="absolute top-1 left-3 text-[8px] text-blue-400 font-mono">(0,0)</div>
+                                   <div class="w-px h-full bg-red-500/50"></div>
+                                   <div class="h-px w-full bg-red-500/50 absolute"></div>
+                                   <div class="text-[7px] text-red-400 mt-2 font-mono">DEAD CENTER</div>
+                               </div>
+                               <div class="text-[9px] text-slate-500 mt-4 font-mono tracking-widest uppercase italic">X-Axis Error Measurement</div>
+                           </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Normalization -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-emerald-500 to-blue-500"></div>
+                <div class="p-8 md:p-14 text-justify">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                        <span class="text-4xl text-justify text-left">🧮</span> 2. 誤差 (Error) 定義與正規化 (30 min)
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 text-justify">
+                        <div class="space-y-8 text-justify">
+                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify">
+                                正規化讓算法具備通用性。我們將原始像素座標映射至 $[-1.0, 1.0]$。$0$ 代表目標在正中央，$-1.0$ 代表極左，$1.0$ 代表極右。
+                            </p>
+                            <div class="bg-emerald-50 p-8 rounded-3xl border border-emerald-100 text-center text-justify">
+                                <h4 class="text-emerald-900 font-bold mb-4 text-xs uppercase tracking-widest text-justify uppercase tracking-tighter">Mathematical Formula</h4>
+                                <div class="font-mono text-[11px] text-left space-y-1 bg-white p-4 rounded-xl shadow-sm text-justify">
+                                    <span class="text-emerald-600">Norm_Error</span> = (Target_X - Center_X) / Center_X;
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group text-justify">
+                           <div class="absolute inset-0 bg-emerald-500/5 text-justify"></div>
+                           <h4 class="text-emerald-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10 text-justify">Cross-Resolution Logic</h4>
+                           <div class="w-full space-y-2 px-10 relative z-10 font-mono text-[9px] text-slate-400 text-justify">
+                               <div class="text-emerald-300">// 160x120 camera</div>
+                               <div>Norm_Error = (40 - 80) / 80 = <span class="text-white">-0.5</span></div>
+                               <div class="text-emerald-300 mt-2">// 640x480 camera</div>
+                               <div>Norm_Error = (160 - 320) / 320 = <span class="text-white">-0.5</span></div>
+                           </div>
+                           <p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest uppercase italic text-center">Invariant Control Output O(1)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Control Mapping -->
+        <section class="module-section mb-16">
+            <div class="glass-card bg-slate-900 rounded-3xl shadow-xl overflow-hidden text-white border border-slate-700">
+                <div class="p-8 md:p-14">
+                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-cyan-400">
+                        <span class="p-2 bg-cyan-500/20 rounded-lg text-cyan-400 text-2xl">🚗</span> 3. 誤差與控制的聯覺 (Mapping)
+                    </h2>
+                    <div class="flex flex-col lg:flex-row gap-16 items-center">
+                        <div class="flex-1 space-y-6">
+                            <p class="text-slate-400 font-light leading-relaxed text-lg text-justify text-justify">
+                                誤差的正負號決定了馬達轉向的需求。正值 ($+$) 代表目標在右，需向右修正；負值 ($-$) 則代表需向左修正。這就是比例控制 (P-Control) 的物理基礎。
+                            </p>
+                            <div class="bg-cyan-500/10 p-8 rounded-3xl border border-cyan-500/20 shadow-inner text-justify">
+                                <h4 class="font-bold text-cyan-400 mb-4 text-xs uppercase tracking-widest text-center text-justify text-left">Visual Servo Feedback</h4>
+                                <ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light text-justify">
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1"></span><div><strong class="text-white">誤差強度</strong>：$|Error|$ 越大，代表車體偏離越遠，修正力道應越強。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1"></span><div><strong class="text-white">增益 (Gain)</strong>：透過滑桿動態調整 $K_p$，讓修正力道在「過慢」與「劇烈抖動」之間取得平衡。</div></li>
+                                    <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-1"></span><div><strong class="text-white">死區 (Dead-zone)</strong>：當誤差極小時忽略不計，防止馬達在高頻雜訊下頻繁跳變。</div></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="lg:w-80 bg-cyan-600/10 p-10 rounded-3xl border border-cyan-500/20 text-center relative overflow-hidden group">
+                           <div class="absolute -right-8 -top-8 w-32 h-32 bg-cyan-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                           <h4 class="text-cyan-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center">Steering Logic</h4>
+                           <div class="text-4xl font-extrabold text-white mb-2">PID IN</div>
+                           <p class="text-[11px] text-slate-500 mt-8 leading-relaxed font-light italic text-center text-justify text-left">
+                               "視覺是感官，而誤差是行動的理由。"
+                           </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Homework Section -->
+        <section class="module-section">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit]">核心實驗室：誤差計算實戰</h2>
+            <p class="text-center text-gray-500 mb-12">透過 Git Workflow 建立高精度的視覺回饋系統。學習如何量化像素偏差並實作穩定的控制映射。</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Task 2-1 -->
+                <div onclick="openSubmissionModal('adv-08-coord-extractor', '【作業 2-1】「目標追蹤」座標提取器 (Object Tracking Coordinate Extractor)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
+                    <div class="bg-blue-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-blue-500 group-hover:scale-110 transition-transform">🎯</span>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold uppercase uppercase tracking-tighter uppercase tracking-widest font-black text-justify">60 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-600 transition text-justify">【作業 2-1】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「座標提取看板」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            在影像 Canvas 上繪製十字準星，標示畫面中心。即時提取目標物中心點 $(X, Y)$，並在 UI 上動態印出 Normalized Error，實現可視化的數據反饋。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 2-2 -->
+                <div onclick="openSubmissionModal('adv-08-error-mapping', '【作業 2-2】動態誤差補償實驗 (Dynamic Error Compensation Lab)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
+                    <div class="bg-emerald-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-emerald-500 group-hover:rotate-12 transition-transform text-justify">⚡</span>
+                            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-tighter uppercase tracking-widest text-justify">60 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition text-justify">【作業 2-2】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「誤差控制映射器」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
+                            實作線性映射函式，將 $[-1.0, 1.0]$ 誤差映射至馬達 PWM 修正量。加入「Gain 控制滑桿」調整 $K_p$ 值，觀察不同靈敏度下虛擬車體的轉向反應。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Task 2-3 -->
+                <div onclick="openSubmissionModal('adv-08-moving-average', '【作業 2-3】多點誤差平均濾波法 (Moving Average Error Filter)')"
+                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
+                    <div class="bg-indigo-500 h-2"></div>
+                    <div class="p-8 flex-grow">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-4xl text-indigo-500 group-hover:translate-x-1 transition-transform text-justify uppercase tracking-tighter">🌊</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest">45 min</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition text-justify">【作業 2-3】</h3>
+                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「雜訊濾波穩定器」</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            處理真實感測器雜訊。實作移動平均法 (Moving Average)，取最近 5 幀誤差取平均。記錄並對比濾波開啟前後「控制指令」的跳動程度，實現絲滑的自動追蹤。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto text-center">
+        <div class="container mx-auto px-4 text-center text-center">
+            <p class="text-slate-500 text-sm mb-4 text-center">&copy; 2026 Vibe Coding. All rights reserved.</p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400 text-center">
+                <span>單元課程 進階 8 - 誤差計算</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/course-shared.js?v=20260404REV"></script>
+
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">視覺實驗室：座標正規化與誤差量化</h2>
+
+        <div class="assignment-quest">
+            <h3 class="quest-title text-justify">任務 1：座標提取與正規化 (Coordinate Extraction Lab)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：視覺演算法開發者</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-tighter font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>建立倉庫</strong>：從 GitHub Classroom 連結建立個人作業倉庫並 Clone 到本地。</li>
+                    <li><strong>視覺對齊實作</strong>：在 Canvas 繪製十字中心線，並實作 <code>findCenter()</code> 提取目標物幾何邊界的質心。</li>
+                    <li><strong>誤差正規化</strong>：實作公式 $E_n = (X_{obj} - W/2) / (W/2)$，將座標轉換為 $[-1, 1]$ 純數字。</li>
+                    <li><strong>看板更新</strong>：在 UI 下方即時印出解析度、原始像素、與正規化誤差，並在 README 貼上測試截圖。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>映射正確性</strong>：當目標移至最左緣時，正規化值是否精確顯示為 -1.0？</li>
+                    <li>[ ] <strong>視算穩定度</strong>：當畫面中出現複數物體時，座標提取是否能穩定鎖定「最大面積」的目標？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title text-justify">任務 2：動態補償映射 (Control Mapping Challenge)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：自動駕駛教練</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>線性映射設計</strong>：撰寫 <code>errorToSteer(en)</code> 函式。將誤差線性轉換為馬達轉速差。</li>
+                    <li><strong>增益調校介面</strong>：建立一個 $K_p$ 滑桿，範圍 0-500。用於控制「看到誤差後的反應力道」。</li>
+                    <li><strong>物理實證</strong>：錄製一段「手持目標物移動」的錄影，展示虛擬車頭（或數據流）如何跟隨目標物偏轉。</li>
+                    <li><strong>Push Final</strong>：提交具備即時調校能力的控制邏輯。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>邏輯一致性</strong>：當誤差為正時，输出的轉向指令是否正確導向右側（或左側，視馬達極性而定）？</li>
+                    <li>[ ] <strong>動態範圍</strong>：當誤差達到最大值時，馬達輸出是否能正確觸發「全速補償」而不發生數據溢位？</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="assignment-quest" style="margin-top: 2rem;">
+            <h3 class="quest-title text-justify">任務 3：移動平均濾波 (Signal Smoothing Filter)</h3>
+            <div class="quest-meta">
+                <span>角色扮演：濾波架構師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
+            </div>
+
+            <div class="quest-workflow">
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)</h4>
+                <ol>
+                    <li><strong>隊列緩衝實作</strong>：建立一個長度為 5 的 Array 儲存最近 5 次的誤差值。</li>
+                    <li><strong>滑動窗口運算</strong>：實作 <code>smoothError()</code> 函式，每次計算後的輸出為該 Array 的平均值。</li>
+                    <li><strong>對比數據分析</strong>：在 README 中說明濾波器帶來的「反應延遲」與「畫面平滑度」之間的權衡細節。</li>
+                    <li><strong>Push Final</strong>：提交具備抗噪能力的穩健視覺核心。</li>
+                </ol>
+            </div>
+
+            <div class="tutor-benchmark">
+                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)</h4>
+                <ul>
+                    <li>[ ] <strong>雜訊抑制效果</strong>：開啟濾波後，控制指令的跳動頻率是否顯著降低？</li>
+                    <li>[ ] <strong>延遲控制</strong>：5 幀的平均窗口是否產生了肉眼可見的「追蹤滯後」？如何優化此參數？</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tutor Guide (Hidden) -->
+    <section id="tutor-guide" style="display: none;">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
+        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
+            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：讓學生掌握「從感知到行動」的量化橋樑。這不只是數學，更是控制理論在視覺上的落實。</p>
+            <ol class="space-y-4 text-slate-600 text-justify">
+                <li><strong class="text-blue-600 font-bold uppercase tracking-widest text-justify">重點 1：座標系的衝突</strong> - 學生常死記硬背 $(0,0)$ 在左上。必須讓他們畫圖，自行導出「中心點為 0」的變換公式。</li>
+                <li><strong class="text-blue-600 font-bold text-justify uppercase tracking-widest">重點 2：正規化的威力</strong> - 強調正規化後，代碼就不再受「相機換成高清」或「螢幕變大」的硬體綁架。</li>
+                <li><strong class="text-blue-600 font-bold text-justify uppercase tracking-tighter">重點 3：沒濾波就沒平滑</strong> - 展示真實世界感測器有多「髒」。教導移動平均法作為通向 Kalman Filter 的基礎。</li>
+            </ol>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
+            <h3 class="text-blue-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
+            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
+.
+├── js/vision_utils.js  # 核心：待學員實作正規化與平均濾波邏輯
+├── js/motor_control.js # 集成：負責將誤差轉化為模擬馬達訊號
+└── samples/data_log.js # 紀錄：提供一組帶雜訊的目標物追蹤座標作為測試源
+            </pre>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
+        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
+                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-slate-600">
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
+                        <td class="px-6 py-5">練習「區間映射」數學小考。理解正規化的物理意義。</td>
+                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能推導出 $(200 - 160) / 160$ 代表的空間象限。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
+                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black">領取作業 (Repo)，調教 Gain 模型。實施移動平均濾波並肉眼觀察控制抖動的變化。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 指導如何透過 Chrome 錄製數據流 (Canvas Capture) 以便分析誤差收斂。</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
+                        <td class="px-6 py-5 text-justify text-left text-justify font-black">提交針對不同雜訊強度 (Noise Intensity) 的濾波方案並 Push。閱讀教師對「反饋系統延遲」的回饋。</td>
+                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「誤差正負號」物理意義的解釋準用度，表揚具備嚴謹濾波調校思維的學員。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</body>
+
+</html>

@@ -26,8 +26,8 @@ window.addEventListener('load', () => {
     initAnimations();
 });
 
-// Global State
-let currentMode = null;
+// Global State (Using var for redeclaration safety in Master/Unit contexts)
+var currentMode = typeof currentMode !== 'undefined' ? currentMode : null;
 let sessionStartTime = null;
 let currentScale = 1.0;
 const BASE_DOC_WIDTH = 850;
