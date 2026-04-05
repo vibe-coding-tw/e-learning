@@ -1,4 +1,4 @@
-console.log("Dashboard Script v11.3.142 (Payment-Assignment Flow) Loaded");
+console.log("Dashboard Script v11.3.143 (Payment-Assignment Flow) Loaded");
 // alert("Dashboard Script v5 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -134,7 +134,9 @@ async function loadLessons() {
     try {
         // [MOD] Use centralized Firestore-backed fetch from course-shared.js
         if (typeof vibeFetchLessons === 'function') {
-            allLessons = await vibeFetchLessons();
+            const result = await vibeFetchLessons();
+            // [FIX v11.3.143] Properly unpack result.data.lessons for Callable result
+            allLessons = (result && result.data && result.data.lessons) ? result.data.lessons : (Array.isArray(result) ? result : []);
         } else {
             console.error("[Dashboard] vibeFetchLessons not found. Firestore data unavailable.");
             allLessons = [];
@@ -178,7 +180,8 @@ async function loadDashboard() {
                 allLessons = data.lessons;
                 allLessons.forEach(l => { lessonsMap[l.courseId] = l.title; });
             } else if (typeof vibeFetchLessons === 'function') {
-                allLessons = await vibeFetchLessons();
+                const result = await vibeFetchLessons();
+                allLessons = (result && result.data && result.data.lessons) ? result.data.lessons : (Array.isArray(result) ? result : []);
                 allLessons.forEach(l => { lessonsMap[l.courseId] = l.title; });
             }
         }
