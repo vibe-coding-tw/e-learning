@@ -288,11 +288,11 @@ function injectDashboardFAB() {
 
 function initNavComponent() {
     const placeholder = document.getElementById('nav-placeholder');
-    if (placeholder) {
-        const root = placeholder.getAttribute('data-root') || '.';
-        const showAuth = placeholder.getAttribute('data-show-auth') === 'true';
-        window.renderNav(root, { showAuth });
-    }
+    const root = placeholder ? (placeholder.getAttribute('data-root') || '.') : '/';
+    const showAuth = placeholder ? (placeholder.getAttribute('data-show-auth') === 'true') : false;
+
+    // Always render, using fallback in renderNav if placeholder is missing
+    window.renderNav(root, { showAuth });
 
     try {
         if (document.body) { injectDashboardFAB(); }
