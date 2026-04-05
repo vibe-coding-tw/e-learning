@@ -258,7 +258,7 @@ function enterMediaMode(mode, url) {
 }
 
 // Flag to prevent recursive closing
-let isClosingModal = false;
+var isClosingModal = typeof isClosingModal !== 'undefined' ? isClosingModal : false;
 
 /**
  * Closes the Media Overlay

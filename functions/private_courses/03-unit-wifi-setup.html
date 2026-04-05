@@ -228,7 +228,7 @@
     </main>
 
     <!-- Logic Script -->
-    <script src="/js/course-shared.js?v=2026.04.05.FINAL_V6"></script>
+    <script src="/js/course-shared.js?v=2026.04.05.FINAL_V8_STABLE"></script>
     <script>
         const connectBtn = document.getElementById('connectBtn');
         const sendBtn = document.getElementById('sendBtn');
@@ -371,8 +371,19 @@
             dot.className = 'w-2 h-2 rounded-full mr-2';
 
             if (state === 'connected') {
-                dot.classList.add    <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none;">
+                dot.classList.add('bg-green-500');
+            } else if (state === 'connecting') {
+                dot.classList.add('bg-amber-500', 'animate-pulse');
+            } else if (state === 'sending') {
+                dot.classList.add('bg-blue-500', 'animate-pulse');
+            } else {
+                dot.classList.add('bg-slate-400');
+            }
+
+            connectionStatus.appendChild(dot);
+            connectionStatus.appendChild(document.createTextNode(text));
+        }
+    </script>
         <h2>WiFi 組態設定 - BLE 傳輸操作</h2>
 
         <div class="assignment-quest">
@@ -485,7 +496,7 @@
         </table>
     </section>
 
-    <script src="/js/course-shared.js?v=2026.04.05.FINAL_V6"></script>
+    <script src="/js/course-shared.js?v=2026.04.05.FINAL_V8_STABLE"></script>
 
 </body>
 
