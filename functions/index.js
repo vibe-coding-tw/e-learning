@@ -1120,6 +1120,7 @@ exports.serveCourse = onRequest(async (req, res) => {
             window.vibeApp = app;
             window.getFunctions = getFunctions;
             window.httpsCallable = httpsCallable;
+            window.resizeIframe = (obj) => { if(obj && obj.contentWindow) obj.style.height = obj.contentWindow.document.documentElement.scrollHeight + 'px'; };
             console.log("[Firebase] SDK Injected & Initialized");
         </script>
         `;
