@@ -1,4 +1,4 @@
-console.log("Dashboard Script v2026.04.05.FINAL_V8.3_STABLE Loaded");
+console.log("Dashboard Script v2026.04.05.FINAL_V14.3_AI_STABLE Loaded");
 // alert("Dashboard Script v6 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -1172,65 +1172,52 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
     })();
 };
 
+/**
+ * [V14.3] Standardized Render Assignments with Placeholder Support
+ */
 function renderAssignments(assignments = [], guideContent = "", options = {}) {
     const { showGuide = true } = options;
     const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
     const isAdmin = myRole === 'admin';
     const canManageAssignments = isUserAuthorizedForUnit(filterUnitId, filterCourseId, myEmail) || (isAdmin && !filterUnitId);
 
-    // [Cleanup] Remove old guides from all possible containers before rendering new one
+    // [Cleanup] Remove old guides
     const possibleContainers = [
         document.getElementById('view-assignments'),
         document.getElementById('assignments-container')
     ];
     possibleContainers.forEach(container => {
         if (!container) return;
-        const oldGuides = container.querySelectorAll('.integrated-tutor-guide, .bg-blue-50, .markdown-embed');
+        const oldGuides = container.querySelectorAll('.integrated-tutor-guide, .bg-blue-50');
         oldGuides.forEach(g => g.remove());
     });
 
-    // [MODIFIED] If Admin and NO unit filter, we show a GLOBAL FEED of all assignments
-    if (isAdmin && !filterUnitId) {
-        console.log("[Assignments] Rendering GLOBAL feed for Admin.");
-        const sortedAll = [...assignments].sort((a, b) => {
-            const getTs = (item) => {
-                const ts = item.updatedAt || item.submittedAt;
-                if (!ts) return 0;
-                return ts.seconds || ts._seconds || new Date(ts).getTime() / 1000 || 0;
-            };
-            return getTs(b) - getTs(a);
-        });
-        renderAssignmentsTable(sortedAll, true); // true = force canManage for Admin
-        return;
-    }
+    // [V14.3] GitHub README Placeholder Management
+    const readmePlaceholders = [
+        document.getElementById('github-readme-placeholder-main'),
+        document.getElementById('github-readme-placeholder-settings')
+    ];
+    readmePlaceholders.forEach(p => { if (p) p.innerHTML = ""; });
 
-    // Existing Student/Tutor-specific logic
-    // [V12.2.0] RESTORED: Assignments tab always shows the list for Admin.
-    // [RESTORED] Tutor Benchmarks for grading reference
-    // [V8.1] Load and Render GitHub README
+    // [V14.3] GitHub README loading (Refactored to target placeholders)
     if (filterUnitId) {
         (async () => {
-             // Derive the GitHub repo name from unitId (e.g. "01-unit-developer-identity.html" → "01-unit-developer-identity")
+             // Derive repo: "01-unit-developer-identity.html" -> "01-unit-developer-identity"
             const repoName = filterUnitId.replace(/\.html$/, '');
             const GITHUB_ORG = 'vibe-coding-classroom';
             const rawUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${repoName}/main/README.md`;
 
-            console.log(`[Markdown] Loading README from: ${rawUrl}`);
+            console.log(`[V14.3] Fetching README from: ${rawUrl}`);
             const markdownHtml = await loadMarkdown(rawUrl);
-            if (!markdownHtml) return;
+            if (!markdownHtml) {
+                console.warn("[V14.3] No markdown content received from GitHub.");
+                return;
+            }
 
-            const mdContainer = document.createElement('div');
-            mdContainer.className = 'markdown-embed p-6 mt-8 rounded-3xl border border-slate-200 bg-gray-50 shadow-sm overflow-hidden';
-            mdContainer.innerHTML = markdownHtml;
-
-            possibleContainers.forEach(container => {
-                if (container) {
-                    // Prepend to ensure it's ABOVE everything else (like assignment-guide)
-                    if (container.firstChild) {
-                        container.insertBefore(mdContainer.cloneNode(true), container.firstChild);
-                    } else {
-                        container.appendChild(mdContainer.cloneNode(true));
-                    }
+            readmePlaceholders.forEach(placeholder => {
+                if (placeholder) {
+                    placeholder.innerHTML = markdownHtml;
+                    console.log("[V14.3] README successfully injected into:", placeholder.id);
                 }
             });
         })();
