@@ -1,4 +1,4 @@
-console.log("Dashboard Script v2026.04.05.FINAL_V8_STABLE Loaded");
+console.log("Dashboard Script v2026.04.05.FINAL_V8.1_STABLE Loaded");
 // alert("Dashboard Script v6 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -1007,26 +1007,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
     const guideContent = resolveAssignmentGuide(data, filterCourseId, filterUnitId);
 
     renderChart(chartData);
-    (async () => {
-        const unitId = filterUnitId;
-        if (!unitId) return;
-
-        // Derive the GitHub repo name from unitId (e.g. "01-unit-developer-identity.html" → "01-unit-developer-identity")
-        const repoName = unitId.replace(/\.html$/, '');
-        const GITHUB_ORG = 'vibe-coding-classroom';
-        const rawUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${repoName}/main/README.md`;
-
-        console.log(`[Markdown] Loading README from: ${rawUrl}`);
-        const markdownHtml = await loadMarkdown(rawUrl);
-        if (!markdownHtml) return;
-
-        const mdContainer = document.createElement('div');
-        mdContainer.className = 'markdown-embed p-4 mt-4 bg-gray-50 rounded-lg overflow-auto shadow-inner';
-        mdContainer.innerHTML = markdownHtml;
-
-        const assignmentsSection = document.getElementById('assignments-section');
-        if (assignmentsSection) assignmentsSection.appendChild(mdContainer);
-    })();
+    // [V8.1] GitHub README loading moved to renderAssignments for better container management
 
 /**
  * [NEW] Fetches and parses Markdown content from a URL
@@ -1229,7 +1210,7 @@ function renderAssignments(assignments = [], guideContent = "", options = {}) {
     ];
     possibleContainers.forEach(container => {
         if (!container) return;
-        const oldGuides = container.querySelectorAll('.integrated-tutor-guide, .bg-blue-50');
+        const oldGuides = container.querySelectorAll('.integrated-tutor-guide, .bg-blue-50, .markdown-embed');
         oldGuides.forEach(g => g.remove());
     });
 
@@ -1251,6 +1232,35 @@ function renderAssignments(assignments = [], guideContent = "", options = {}) {
     // Existing Student/Tutor-specific logic
     // [V12.2.0] RESTORED: Assignments tab always shows the list for Admin.
     // [RESTORED] Tutor Benchmarks for grading reference
+    // [V8.1] Load and Render GitHub README
+    if (filterUnitId) {
+        (async () => {
+             // Derive the GitHub repo name from unitId (e.g. "01-unit-developer-identity.html" → "01-unit-developer-identity")
+            const repoName = filterUnitId.replace(/\.html$/, '');
+            const GITHUB_ORG = 'vibe-coding-classroom';
+            const rawUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${repoName}/main/README.md`;
+
+            console.log(`[Markdown] Loading README from: ${rawUrl}`);
+            const markdownHtml = await loadMarkdown(rawUrl);
+            if (!markdownHtml) return;
+
+            const mdContainer = document.createElement('div');
+            mdContainer.className = 'markdown-embed p-6 mt-8 rounded-3xl border border-slate-200 bg-gray-50 shadow-sm overflow-hidden';
+            mdContainer.innerHTML = markdownHtml;
+
+            possibleContainers.forEach(container => {
+                if (container) {
+                    // Prepend to ensure it's ABOVE everything else (like assignment-guide)
+                    if (container.firstChild) {
+                        container.insertBefore(mdContainer.cloneNode(true), container.firstChild);
+                    } else {
+                        container.appendChild(mdContainer.cloneNode(true));
+                    }
+                }
+            });
+        })();
+    }
+
     if (showGuide && guideContent) {
         const guideDiv = document.createElement('div');
         guideDiv.className = 'integrated-tutor-guide mt-8 rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden';
@@ -1259,10 +1269,6 @@ function renderAssignments(assignments = [], guideContent = "", options = {}) {
                 ${guideContent}
             </div>
         `;
-        const possibleContainers = [
-            document.getElementById('view-assignments'),
-            document.getElementById('assignments-container')
-        ];
         possibleContainers.forEach(container => {
             if (container) {
                 // Ensure no duplicates
