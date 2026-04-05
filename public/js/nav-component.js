@@ -1,6 +1,7 @@
 /**
- * Unified Navigation & Dashboard Component (v2026.04.05)
+ * Unified Navigation & Dashboard Component (v2026.04.05.AUTO)
  * Combines Top Navbar Rendering and Floating Dashboard FAB logic.
+ * Supports Auto-Scan rendering via #nav-placeholder data attributes.
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -20,17 +21,17 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- 1. Global Navigation Logic (Legacy Re-implementation) ---
+// --- 1. Global Navigation Logic ---
 
 window.toggleMobileMenu = function () {
     const menu = document.getElementById('mobile-menu');
-    console.log('[Nav] Toggle Mobile Menu', menu);
     if (menu) {
         menu.classList.toggle('hidden');
         menu.style.display = menu.classList.contains('hidden') ? 'none' : 'block';
     }
 };
 
+// Global event for mobile menu
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('#mobile-menu-btn');
     if (btn) {
@@ -47,7 +48,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
 
     const resolve = (path) => {
         if (path.startsWith('http')) return path;
-        return `${rootPath}/${path}`.replace('./http', 'http').replace('//', '/');
+        return `${rootPath}/${path}`.replace('./http', 'http').replace(/\/\//g, '/');
     };
 
     const style = document.createElement('style');
@@ -146,20 +147,26 @@ window.renderNav = function (rootPath = '.', options = {}) {
     `;
 
     const placeholder = document.getElementById('nav-placeholder');
-    if (placeholder) placeholder.outerHTML = navHTML;
-    else {
+    if (placeholder) {
+        placeholder.innerHTML = navHTML; // IMPORTANT: Changed from outerHTML to innerHTML to keep placeholder if needed, or just replace content
+        // Actually outerHTML is better to completely swap, but we need the data attributes before swapping
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = navHTML;
+        placeholder.parentNode.replaceChild(tempDiv.firstElementChild, placeholder);
+    } else {
         const existingNav = document.getElementById('main-nav') || document.querySelector('nav');
         if (existingNav) existingNav.outerHTML = navHTML;
         else document.body.insertAdjacentHTML('afterbegin', navHTML);
     }
 
-    // Auth status sync
+    // Sync Auth Status
     onAuthStateChanged(auth, (user) => {
         const userDisplay = document.getElementById('user-display');
         const loginBtn = document.getElementById('login-btn');
         if (userDisplay && loginBtn) {
             if (user) {
                 userDisplay.innerText = user.email.split('@')[0];
+                userDisplay.classList.remove('hidden');
                 loginBtn.innerText = '登出';
                 loginBtn.onclick = () => auth.signOut();
             } else {
@@ -170,7 +177,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
         }
     });
 
-    // Active link highlight
+    // Active Highlight
     setTimeout(() => {
         const currentPath = window.location.pathname;
         document.querySelectorAll('nav a').forEach(link => {
@@ -187,64 +194,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
     }, 0);
 };
 
-// --- 2. Dashboard FAB & Modal Logic (Former MasterNav) ---
-
-function injectDashboardModal() {
-    if (document.getElementById('dashboard-modal')) return;
-    const modal = document.createElement('div');
-    modal.id = 'dashboard-modal';
-    modal.className = 'fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-all duration-300';
-    modal.style.zIndex = '10000000';
-    modal.innerHTML = `
-        <div class="bg-white w-full h-full max-w-7xl rounded-2xl shadow-2xl relative overflow-hidden flex flex-col transform scale-100 transition-transform">
-            <div class="flex justify-between items-center p-4 border-b bg-gray-50/80 backdrop-blur">
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl">📊</span>
-                    <h3 class="text-lg font-bold text-gray-800">儀表板 (Dashboard)</h3>
-                </div>
-                <button id="close-dashboard-btn" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div class="flex-grow relative bg-gray-100">
-                <div id="dashboard-loading" class="absolute inset-0 flex items-center justify-center z-10 bg-white/50">
-                    <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
-                </div>
-                <iframe id="dashboard-frame" class="w-full h-full border-0" src="" onload="document.getElementById('dashboard-loading').classList.add('hidden')"></iframe>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    document.getElementById('close-dashboard-btn').onclick = window.closeDashboardModal;
-}
-
-window.openDashboardModal = function (courseParam) {
-    injectDashboardModal();
-    const modal = document.getElementById('dashboard-modal');
-    const frame = document.getElementById('dashboard-frame');
-    const loader = document.getElementById('dashboard-loading');
-
-    let finalUnitId = '';
-    const iframe = document.getElementById('content-frame');
-    if (iframe && iframe.src) {
-        try {
-            finalUnitId = new URL(iframe.src, window.location.href).pathname.split('/').pop();
-        } catch (e) { finalUnitId = iframe.src.split('/').pop().split('?')[0]; }
-    }
-    if (!finalUnitId) finalUnitId = window.location.pathname.split('/').pop();
-
-    const separator = courseParam.includes('?') ? '&' : '?';
-    const unitParam = finalUnitId ? `&unitId=${finalUnitId}` : '';
-    frame.src = `/dashboard.html${courseParam}${separator}mode=iframe${unitParam}`;
-    loader.classList.remove('hidden');
-
-    modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-    
-    // Auto Fullscreen if supported
-    if (modal.requestFullscreen) modal.requestFullscreen();
-    else if (modal.webkitRequestFullscreen) modal.webkitRequestFullscreen();
-};
+// --- 2. Dashboard FAB Logic ---
 
 window.closeDashboardModal = function () {
     const modal = document.getElementById('dashboard-modal');
@@ -259,18 +209,66 @@ window.closeDashboardModal = function () {
     }
 };
 
+window.openDashboardModal = function (courseParam) {
+    if (!document.getElementById('dashboard-modal')) {
+        const modal = document.createElement('div');
+        modal.id = 'dashboard-modal';
+        modal.className = 'fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-all duration-300';
+        modal.style.zIndex = '10000000';
+        modal.innerHTML = `
+            <div class="bg-white w-full h-full max-w-7xl rounded-2xl shadow-2xl relative overflow-hidden flex flex-col transform scale-100 transition-transform">
+                <div class="flex justify-between items-center p-4 border-b bg-gray-50/80 backdrop-blur">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">📊</span>
+                        <h3 class="text-lg font-bold text-gray-800">儀表板 (Dashboard)</h3>
+                    </div>
+                    <button id="close-dashboard-btn" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <div class="flex-grow relative bg-gray-100">
+                    <div id="dashboard-loading" class="absolute inset-0 flex items-center justify-center z-10 bg-white/50">
+                        <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+                    </div>
+                    <iframe id="dashboard-frame" class="w-full h-full border-0" src="" onload="document.getElementById('dashboard-loading').classList.add('hidden')"></iframe>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        document.getElementById('close-dashboard-btn').onclick = window.closeDashboardModal;
+    }
+
+    const modal = document.getElementById('dashboard-modal');
+    const frame = document.getElementById('dashboard-frame');
+    const loader = document.getElementById('dashboard-loading');
+
+    let finalUnitId = '';
+    const iframe = document.getElementById('content-frame');
+    if (iframe && iframe.src) {
+        try { finalUnitId = new URL(iframe.src, window.location.href).pathname.split('/').pop(); } 
+        catch (e) { finalUnitId = iframe.src.split('/').pop().split('?')[0]; }
+    }
+    if (!finalUnitId) finalUnitId = window.location.pathname.split('/').pop();
+
+    const separator = courseParam.includes('?') ? '&' : '?';
+    const unitParam = finalUnitId ? `&unitId=${finalUnitId}` : '';
+    frame.src = `/dashboard.html${courseParam}${separator}mode=iframe${unitParam}`;
+    loader.classList.remove('hidden');
+
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    if (modal.requestFullscreen) modal.requestFullscreen();
+    else if (modal.webkitRequestFullscreen) modal.webkitRequestFullscreen();
+};
+
 function injectDashboardFAB() {
     if (document.getElementById('dashboard-fab')) return;
-    injectDashboardModal();
-
+    
     const path = decodeURIComponent(window.location.pathname);
     const filename = path.split('/').pop();
     let courseId = '';
-    
     const match = filename.match(/^([a-zA-Z0-9]+-\d+|\d+)-/) || filename.match(/^([a-zA-Z0-9]+)-(master|unit)/);
     if (match) courseId = match[1];
-
-    // Specific logic for courseId extraction if above fails
     if (!courseId) {
         if (filename.includes('01-')) courseId = '01';
         else if (filename.includes('02-')) courseId = '02';
@@ -290,16 +288,28 @@ function injectDashboardFAB() {
     document.body.appendChild(fab);
 }
 
-// --- 3. Auto-Initialization ---
+// --- 3. AUTO-SCAN INITIALIZATION ---
 
 function init() {
+    console.log("[VibeNav] Running Auto-Init...");
+    
+    // 1. Scan for Navbar Placeholder
+    const placeholder = document.getElementById('nav-placeholder');
+    if (placeholder) {
+        const root = placeholder.getAttribute('data-root') || '.';
+        const authFlag = placeholder.getAttribute('data-show-auth') === 'true';
+        console.log(`[VibeNav] Auto-rendering Nav: root=${root}, auth=${authFlag}`);
+        window.renderNav(root, { showAuth: authFlag });
+    }
+
+    // 2. Scan for Course Context
     const path = window.location.pathname;
-    // Auto-inject FAB if on a course page
     if (path.includes('/courses/') || path.includes('master-') || path.includes('unit-')) {
         console.log("[VibeNav] Course context detected, injecting FAB...");
         injectDashboardFAB();
     }
 }
 
+// Ensure init runs after DOM is ready
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
 else init();
