@@ -1,4 +1,4 @@
-console.log("Dashboard Script v11.3.141 (Payment-Assignment Flow) Loaded");
+console.log("Dashboard Script v11.3.142 (Payment-Assignment Flow) Loaded");
 // alert("Dashboard Script v5 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -17,7 +17,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const functions = getFunctions(app, 'asia-east1');
-const vibeFetchLessons = httpsCallable(functions, 'vibeFetchLessons');
+const vibeFetchLessons = httpsCallable(functions, 'getLessonsMetadata');
 const PUBLIC_SITE_URL = 'https://vibe-coding.tw';
 
 // DOM Elements
