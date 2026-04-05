@@ -1,7 +1,6 @@
 /**
- * Unified Navigation & Dashboard Component (v2026.04.05.AUTO)
- * Combines Top Navbar Rendering and Floating Dashboard FAB logic.
- * Supports Auto-Scan rendering via #nav-placeholder data attributes.
+ * Unified Navigation & Dashboard Component (v2026.04.05.FIX)
+ * Fixed Rendering Engine for better stability.
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -31,7 +30,6 @@ window.toggleMobileMenu = function () {
     }
 };
 
-// Global event for mobile menu
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('#mobile-menu-btn');
     if (btn) {
@@ -42,22 +40,16 @@ document.addEventListener('click', (e) => {
 }, true);
 
 window.renderNav = function (rootPath = '.', options = {}) {
+    console.log(`[VibeNav] renderNav called with root: ${rootPath}`);
     const showAuth = options.showAuth || false;
     const brandSuffix = options.brandSuffix || '';
     const isFluid = options.isFluid !== undefined ? options.isFluid : true;
 
     const resolve = (path) => {
         if (path.startsWith('http')) return path;
-        return `${rootPath}/${path}`.replace('./http', 'http').replace(/\/\//g, '/');
+        // Clean double slashes
+        return `${rootPath}/${path}`.replace(/\/+/g, '/').replace(':/', '://');
     };
-
-    const style = document.createElement('style');
-    style.innerHTML = `
-        @media (hover: hover) { .dropdown:hover .dropdown-menu { display: block; } }
-        #mobile-menu { transition: all 0.3s ease-in-out; }
-        #mobile-menu-btn { cursor: pointer; touch-action: manipulation; }
-    `;
-    document.head.appendChild(style);
 
     const navHTML = `
     <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-[99999]" id="main-nav">
@@ -112,54 +104,43 @@ window.renderNav = function (rootPath = '.', options = {}) {
                                 <button id="login-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">登入</button>
                             </div>
                         </div>` : ''}
-                        <div class="md:hidden z-[99999]" style="position: relative;">
-                            <button id="mobile-menu-btn" type="button" style="pointer-events: auto; cursor: pointer; position: relative; z-index: 99999;" class="text-gray-600 focus:outline-none p-2 border rounded hover:bg-gray-100">
-                                <svg class="w-6 h-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                        <div class="md:hidden">
+                            <button id="mobile-menu-btn" class="text-gray-600 focus:outline-none p-2 border rounded hover:bg-gray-100">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
-            <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-100 mt-2 absolute w-full left-0 bg-white shadow-lg z-[99998] px-4" style="display: none;">
-                <div class="flex flex-col space-y-3 pt-4 font-medium text-gray-600">
-                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
-                        <p class="text-xs text-gray-400 mb-1 uppercase">課程連結</p>
-                        <a href="${resolve('prepare.html')}" class="block py-1 hover:text-cyan-600">課前準備</a>
-                        <a href="${resolve('started.html')}" class="block py-1 hover:text-cyan-600">入門課程</a>
-                        <a href="${resolve('basic.html')}" class="block py-1 hover:text-cyan-600">基礎實作</a>
-                        <a href="${resolve('advanced.html')}" class="block py-1 hover:text-cyan-600">進階應用</a>
-                    </div>
-                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
-                        <p class="text-xs text-gray-400 mb-1 uppercase">組態設定</p>
-                        <a href="${resolve('examples/wifi-config.html')}" class="block py-1 hover:text-cyan-600">WiFi 設定</a>
-                        <a href="${resolve('examples/motor-config.html')}" class="block py-1 hover:text-cyan-600">馬達設定</a>
-                    </div>
-                    <div class="pl-2 border-l-2 border-gray-200 ml-2">
-                        <p class="text-xs text-gray-400 mb-1 uppercase">關於我們</p>
-                        <a href="${resolve('faq.html')}" class="block py-1 hover:text-cyan-600">課程使用說明</a>
-                        <a href="${resolve('about.html')}" class="block py-1 hover:text-cyan-600">關於付費與購買</a>
-                        <a href="${resolve('collaboration.html')}" class="block py-1 hover:text-cyan-600">合作事宜</a>
-                    </div>
-                </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-100 absolute w-full left-0 bg-white shadow-lg px-4">
+            <div class="flex flex-col space-y-3 pt-4 font-medium text-gray-600">
+                <a href="${resolve('prepare.html')}" class="block py-1">課前準備</a>
+                <a href="${resolve('started.html')}" class="block py-1">入門課程</a>
+                <a href="${resolve('basic.html')}" class="block py-1">基礎實作</a>
+                <a href="${resolve('advanced.html')}" class="block py-1">進階應用</a>
             </div>
         </div>
     </nav>
+    <style>
+        @media (hover: hover) { .dropdown:hover .dropdown-menu { display: block; } }
+        #mobile-menu { transition: all 0.2s ease-in-out; }
+    </style>
     `;
 
     const placeholder = document.getElementById('nav-placeholder');
     if (placeholder) {
-        placeholder.innerHTML = navHTML; // IMPORTANT: Changed from outerHTML to innerHTML to keep placeholder if needed, or just replace content
-        // Actually outerHTML is better to completely swap, but we need the data attributes before swapping
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = navHTML;
-        placeholder.parentNode.replaceChild(tempDiv.firstElementChild, placeholder);
+        console.log("[VibeNav] Found placeholder, performing outerHTML swap");
+        placeholder.outerHTML = navHTML;
     } else {
+        console.warn("[VibeNav] Placeholder NOT found, falling back to body prepend");
         const existingNav = document.getElementById('main-nav') || document.querySelector('nav');
-        if (existingNav) existingNav.outerHTML = navHTML;
-        else document.body.insertAdjacentHTML('afterbegin', navHTML);
+        if (!existingNav) {
+            document.body.insertAdjacentHTML('afterbegin', navHTML);
+        }
     }
 
-    // Sync Auth Status
+    // Auth status sync
     onAuthStateChanged(auth, (user) => {
         const userDisplay = document.getElementById('user-display');
         const loginBtn = document.getElementById('login-btn');
@@ -176,140 +157,85 @@ window.renderNav = function (rootPath = '.', options = {}) {
             }
         }
     });
-
-    // Active Highlight
-    setTimeout(() => {
-        const currentPath = window.location.pathname;
-        document.querySelectorAll('nav a').forEach(link => {
-            const href = link.getAttribute('href');
-            if (!href || href === '#' || href.startsWith('javascript')) return;
-            const isMatch = (href === '/' && (currentPath === '/' || currentPath.endsWith('index.html'))) ||
-                          (href !== '/' && currentPath.includes(href));
-            if (isMatch) {
-                link.classList.add('text-cyan-600', 'font-bold');
-                const dropdown = link.closest('.dropdown');
-                if (dropdown) dropdown.querySelector('button')?.classList.add('text-cyan-600', 'font-bold');
-            }
-        });
-    }, 0);
 };
 
 // --- 2. Dashboard FAB Logic ---
+
+window.openDashboardModal = function (courseParam) {
+    if (!document.getElementById('dashboard-modal')) {
+        const modal = document.createElement('div');
+        modal.id = 'dashboard-modal';
+        modal.className = 'fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 backdrop-blur-sm';
+        modal.style.zIndex = '10000000';
+        modal.innerHTML = `
+            <div class="bg-white w-full h-full max-w-7xl rounded-2xl shadow-2xl relative overflow-hidden flex flex-col">
+                <div class="flex justify-between items-center p-4 border-b bg-gray-50/80">
+                    <h3 class="text-lg font-bold text-gray-800">儀表板 (Dashboard)</h3>
+                    <button onclick="window.closeDashboardModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <div class="flex-grow relative bg-gray-100">
+                    <iframe id="dashboard-frame" class="w-full h-full border-0" src=""></iframe>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    const modal = document.getElementById('dashboard-modal');
+    const frame = document.getElementById('dashboard-frame');
+    frame.src = `/dashboard.html${courseParam}&mode=iframe`;
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+};
 
 window.closeDashboardModal = function () {
     const modal = document.getElementById('dashboard-modal');
     if (modal) {
         modal.classList.add('hidden');
         document.body.style.overflow = '';
-        if (document.fullscreenElement || document.webkitFullscreenElement) {
-            if (document.exitFullscreen) document.exitFullscreen();
-            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-        }
-        setTimeout(() => { document.getElementById('dashboard-frame').src = ''; }, 300);
+        document.getElementById('dashboard-frame').src = '';
     }
-};
-
-window.openDashboardModal = function (courseParam) {
-    if (!document.getElementById('dashboard-modal')) {
-        const modal = document.createElement('div');
-        modal.id = 'dashboard-modal';
-        modal.className = 'fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-all duration-300';
-        modal.style.zIndex = '10000000';
-        modal.innerHTML = `
-            <div class="bg-white w-full h-full max-w-7xl rounded-2xl shadow-2xl relative overflow-hidden flex flex-col transform scale-100 transition-transform">
-                <div class="flex justify-between items-center p-4 border-b bg-gray-50/80 backdrop-blur">
-                    <div class="flex items-center gap-3">
-                        <span class="text-2xl">📊</span>
-                        <h3 class="text-lg font-bold text-gray-800">儀表板 (Dashboard)</h3>
-                    </div>
-                    <button id="close-dashboard-btn" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                </div>
-                <div class="flex-grow relative bg-gray-100">
-                    <div id="dashboard-loading" class="absolute inset-0 flex items-center justify-center z-10 bg-white/50">
-                        <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
-                    </div>
-                    <iframe id="dashboard-frame" class="w-full h-full border-0" src="" onload="document.getElementById('dashboard-loading').classList.add('hidden')"></iframe>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        document.getElementById('close-dashboard-btn').onclick = window.closeDashboardModal;
-    }
-
-    const modal = document.getElementById('dashboard-modal');
-    const frame = document.getElementById('dashboard-frame');
-    const loader = document.getElementById('dashboard-loading');
-
-    let finalUnitId = '';
-    const iframe = document.getElementById('content-frame');
-    if (iframe && iframe.src) {
-        try { finalUnitId = new URL(iframe.src, window.location.href).pathname.split('/').pop(); } 
-        catch (e) { finalUnitId = iframe.src.split('/').pop().split('?')[0]; }
-    }
-    if (!finalUnitId) finalUnitId = window.location.pathname.split('/').pop();
-
-    const separator = courseParam.includes('?') ? '&' : '?';
-    const unitParam = finalUnitId ? `&unitId=${finalUnitId}` : '';
-    frame.src = `/dashboard.html${courseParam}${separator}mode=iframe${unitParam}`;
-    loader.classList.remove('hidden');
-
-    modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-    if (modal.requestFullscreen) modal.requestFullscreen();
-    else if (modal.webkitRequestFullscreen) modal.webkitRequestFullscreen();
 };
 
 function injectDashboardFAB() {
     if (document.getElementById('dashboard-fab')) return;
-    
     const path = decodeURIComponent(window.location.pathname);
     const filename = path.split('/').pop();
-    let courseId = '';
-    const match = filename.match(/^([a-zA-Z0-9]+-\d+|\d+)-/) || filename.match(/^([a-zA-Z0-9]+)-(master|unit)/);
-    if (match) courseId = match[1];
+    let courseId = filename.match(/^([a-zA-Z0-9]+-\d+|\d+)-/)?.[1] || '';
+    
+    // Manual fallback for common patterns
     if (!courseId) {
         if (filename.includes('01-')) courseId = '01';
         else if (filename.includes('02-')) courseId = '02';
         else if (filename.includes('03-')) courseId = '03';
-        else if (filename.includes('04-')) courseId = '04';
     }
 
     const fab = document.createElement('button');
     fab.id = 'dashboard-fab';
-    fab.className = 'fixed bottom-8 right-8 w-16 h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group z-50';
-    fab.style.zIndex = '9999';
-    fab.innerHTML = `
-        <span class="text-3xl group-hover:rotate-12 transition-transform">📊</span>
-        <span class="absolute right-full mr-4 px-3 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg">查看儀表板</span>
-    `;
+    fab.className = 'fixed bottom-8 right-8 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center z-50';
+    fab.innerHTML = `<span class="text-3xl">📊</span>`;
     fab.onclick = () => window.openDashboardModal(`?courseId=${courseId}`);
     document.body.appendChild(fab);
 }
 
-// --- 3. AUTO-SCAN INITIALIZATION ---
+// --- 3. AUTO-INIT ---
 
 function init() {
-    console.log("[VibeNav] Running Auto-Init...");
-    
-    // 1. Scan for Navbar Placeholder
+    console.log("[VibeNav] Init Scan...");
     const placeholder = document.getElementById('nav-placeholder');
     if (placeholder) {
         const root = placeholder.getAttribute('data-root') || '.';
         const authFlag = placeholder.getAttribute('data-show-auth') === 'true';
-        console.log(`[VibeNav] Auto-rendering Nav: root=${root}, auth=${authFlag}`);
         window.renderNav(root, { showAuth: authFlag });
     }
 
-    // 2. Scan for Course Context
     const path = window.location.pathname;
     if (path.includes('/courses/') || path.includes('master-') || path.includes('unit-')) {
-        console.log("[VibeNav] Course context detected, injecting FAB...");
         injectDashboardFAB();
     }
 }
 
-// Ensure init runs after DOM is ready
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
 else init();
