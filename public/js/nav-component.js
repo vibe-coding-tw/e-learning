@@ -104,6 +104,15 @@ window.renderNav = function (rootPath = '.', options = {}) {
         }
     }
 
+    // Event Listeners for Mobile Menu
+    const mobileBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    if (mobileBtn && mobileMenu) {
+        mobileBtn.onclick = () => {
+            mobileMenu.classList.toggle('hidden');
+        };
+    }
+
     // Restore login button functional logic after base render (Legacy mode until Firebase catches up)
     const loginBtn = document.getElementById('login-btn-legacy');
     if (loginBtn) {
@@ -146,9 +155,15 @@ window.renderNav = function (rootPath = '.', options = {}) {
             if (userDisplay && loginBtn) {
                 if (user) {
                     userDisplay.innerText = user.email.split('@')[0];
-                    userDisplay.classList.remove('hidden');
+                    // Keep 'hidden md:inline' classes to avoid mobile overcrowding
+                    userDisplay.className = 'text-gray-600 hidden md:inline mr-2';
                     loginBtn.innerText = '登出';
                     loginBtn.onclick = () => auth.signOut();
+                } else {
+                    userDisplay.innerText = '訪客';
+                    userDisplay.className = 'text-gray-600 hidden md:inline mr-2';
+                    loginBtn.innerText = '登入';
+                    loginBtn.onclick = () => window.location.href = resolve('auth.html');
                 }
             }
         });
