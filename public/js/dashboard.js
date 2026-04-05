@@ -1,4 +1,4 @@
-console.log("Dashboard Script v2026.04.05.FINAL_V14.3_AI_STABLE Loaded");
+console.log("Dashboard Script v2026.04.05.FINAL_V14.4_AI_STABLE Loaded");
 // alert("Dashboard Script v6 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -1192,14 +1192,23 @@ function renderAssignments(assignments = [], guideContent = "", options = {}) {
         oldGuides.forEach(g => g.remove());
     });
 
-    // [V14.3] GitHub README Placeholder Management
+    // [V14.4] GitHub README Placeholder Management
     const readmePlaceholders = [
         document.getElementById('github-readme-placeholder-main'),
         document.getElementById('github-readme-placeholder-settings')
     ];
-    readmePlaceholders.forEach(p => { if (p) p.innerHTML = ""; });
+    readmePlaceholders.forEach(p => { 
+        if (p) {
+            p.classList.remove('hidden'); // [V14.4] Show loading UI
+            p.innerHTML = `
+                <div class="flex items-center gap-3 text-slate-400 italic">
+                    <span class="animate-pulse">⏳</span> 正在抓取 GitHub 任務說明 (README.md)...
+                </div>
+            `;
+        }
+    });
 
-    // [V14.3] GitHub README loading (Refactored to target placeholders)
+    // [V14.4] GitHub README loading (Refactored to target placeholders)
     if (filterUnitId) {
         (async () => {
              // Derive repo: "01-unit-developer-identity.html" -> "01-unit-developer-identity"
@@ -1207,20 +1216,39 @@ function renderAssignments(assignments = [], guideContent = "", options = {}) {
             const GITHUB_ORG = 'vibe-coding-classroom';
             const rawUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${repoName}/main/README.md`;
 
-            console.log(`[V14.3] Fetching README from: ${rawUrl}`);
-            const markdownHtml = await loadMarkdown(rawUrl);
-            if (!markdownHtml) {
-                console.warn("[V14.3] No markdown content received from GitHub.");
-                return;
-            }
-
-            readmePlaceholders.forEach(placeholder => {
-                if (placeholder) {
-                    placeholder.innerHTML = markdownHtml;
-                    console.log("[V14.3] README successfully injected into:", placeholder.id);
+            console.log(`[V14.4] Fetching README from: ${rawUrl}`);
+            try {
+                const markdownHtml = await loadMarkdown(rawUrl);
+                if (!markdownHtml) {
+                    throw new Error("GitHub 回傳內容為空。");
                 }
-            });
+
+                readmePlaceholders.forEach(placeholder => {
+                    if (placeholder) {
+                        placeholder.innerHTML = markdownHtml;
+                        console.log("[V14.4] README successfully injected into:", placeholder.id);
+                    }
+                });
+            } catch (error) {
+                console.error("[V14.4] README Loading Error:", error);
+                readmePlaceholders.forEach(p => {
+                    if (p) {
+                       p.innerHTML = `
+                            <div class="flex items-center gap-3 text-red-500 bg-red-50 p-4 rounded-xl border border-red-100">
+                                <span>⚠️</span>
+                                <div>
+                                    <div class="font-bold">無法載入任務說明 (README.md)</div>
+                                    <div class="text-xs opacity-75">${error.message || "請檢查 GitHub 儲存庫狀態。"}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            }
         })();
+    } else {
+        // [V14.4] Hide placeholders if no unit filter (e.g. Global Feed)
+        readmePlaceholders.forEach(p => { if (p) p.classList.add('hidden'); });
     }
 
     if (showGuide && guideContent) {
