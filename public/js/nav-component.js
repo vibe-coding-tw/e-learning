@@ -15,21 +15,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/** 
- * Global utility for resizing iframes (used in Master course pages) 
- */
-window.resizeIframe = function(obj) {
-    if (obj && obj.contentWindow) {
-        try {
-            const height = obj.contentWindow.document.documentElement.scrollHeight;
-            obj.style.height = height + 'px';
-        } catch (e) {
-            console.warn("[Nav] Cannot resize cross-origin iframe or missing contentWindow:", e);
-        }
-    }
-};
-
-const NAV_STATE_VERSION = "2026.04.05.FINAL_V5";
+const NAV_STATE_VERSION = "2026.04.05.FINAL_V6";
 
 // --- 1. Navigation Rendering Engine (Original Style) ---
 

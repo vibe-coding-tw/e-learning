@@ -1,5 +1,5 @@
-console.log("Dashboard Script v2026.04.05.FINAL_V5 Loaded");
-// alert("Dashboard Script v5 Loaded"); // Uncomment if needed for hard debugging
+console.log("Dashboard Script v2026.04.05.FINAL_V6 Loaded");
+// alert("Dashboard Script v6 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
@@ -1020,12 +1020,39 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
   const markdownHtml = await loadMarkdown(mdPath);
   const mdContainer = document.createElement('div');
-  mdContainer.className = 'markdown-embed p-4 mt-4 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-auto';
+  mdContainer.className = 'markdown-embed p-4 mt-4 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-auto shadow-inner';
   mdContainer.innerHTML = markdownHtml;
 
   const assignmentsSection = document.getElementById('assignments-section');
   if (assignmentsSection) assignmentsSection.appendChild(mdContainer);
 })();
+
+/**
+ * [NEW] Fetches and parses Markdown content from a URL
+ * Uses marked.js (included in dashboard.html)
+ */
+async function loadMarkdown(url) {
+    try {
+        console.log("[Markdown] Fetching from:", url);
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
+        const text = await resp.text();
+        
+        if (typeof marked !== 'undefined') {
+            // Using marked.parse() for safer rendering
+            return marked.parse(text);
+        } else {
+            console.warn("[Markdown] marked.js not loaded, returning raw text.");
+            return `<pre class="whitespace-pre-wrap">${text}</pre>`;
+        }
+    } catch (e) {
+        console.error("[Markdown] Error loading or parsing:", e);
+        return `<div class="p-4 bg-red-50 border border-red-100 rounded-lg text-red-600 text-sm">
+            <h4 class="font-bold mb-1">無法讀取 GitHub README</h4>
+            <p class="opacity-75">${e.message}</p>
+        </div>`;
+    }
+}
 renderAssignments(displayAssignments, guideContent);
 }
 

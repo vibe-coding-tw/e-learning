@@ -28,12 +28,27 @@ window.addEventListener('load', () => {
 
 // Global State (Using var for redeclaration safety in Master/Unit contexts)
 var currentMode = typeof currentMode !== 'undefined' ? currentMode : null;
-let sessionStartTime = null;
-let currentScale = 1.0;
-const BASE_DOC_WIDTH = 850;
-const boundDocs = new Set(); // To prevent duplicate event listeners
-let globalLessonsData = null; // [NEW] Cache for Firestore-based lessons
-let globalCourseConfigs = null; // [NEW] Cache for Firestore configs
+var sessionStartTime = typeof sessionStartTime !== 'undefined' ? sessionStartTime : null;
+var currentScale = typeof currentScale !== 'undefined' ? currentScale : 1.0;
+var BASE_DOC_WIDTH = typeof BASE_DOC_WIDTH !== 'undefined' ? BASE_DOC_WIDTH : 850;
+var boundDocs = typeof boundDocs !== 'undefined' ? boundDocs : new Set(); // To prevent duplicate event listeners
+var globalLessonsData = typeof globalLessonsData !== 'undefined' ? globalLessonsData : null; // [NEW] Cache for Firestore-based lessons
+var globalCourseConfigs = typeof globalCourseConfigs !== 'undefined' ? globalCourseConfigs : null; // [NEW] Cache for Firestore configs
+
+/**
+ * Global utility for resizing iframes (used in Master course pages)
+ * Moved to course-shared.js for synchronous availability.
+ */
+window.resizeIframe = function (obj) {
+    if (obj && obj.contentWindow) {
+        try {
+            const height = obj.contentWindow.document.documentElement.scrollHeight;
+            obj.style.height = height + 'px';
+        } catch (e) {
+            console.warn("[CourseShared] Cannot resize cross-origin iframe or missing contentWindow:", e);
+        }
+    }
+};
 
 /**
  * [NEW] Helper to wait for Firebase SDK injection
