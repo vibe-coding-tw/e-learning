@@ -1038,10 +1038,6 @@ exports.serveCourse = onRequest(async (req, res) => {
                     const isMasterMatch = (normalizedFileName === masterFile);
                     let isUnitMatch = course.courseUnits && course.courseUnits.includes(normalizedFileName);
                     
-                    // Hotfix for newly merged unit
-                    if (scopePart === '03-master-wifi-motor.html' && normalizedFileName === '03-unit-github-classroom.html') {
-                        isUnitMatch = true;
-                    }
                     debugInfo = `CourseFound: ${course.courseId}, isMasterMatch: ${isMasterMatch}, isUnitMatch: ${isUnitMatch}, masterFile: ${masterFile}`;
 
                     if (isMasterMatch || isUnitMatch) {
@@ -1066,10 +1062,6 @@ exports.serveCourse = onRequest(async (req, res) => {
                 const isMasterMatch = (manualFallback.classroomUrl && manualFallback.classroomUrl.endsWith(normalizedFileName));
                 let isUnitMatch = (manualFallback.courseUnits && manualFallback.courseUnits.includes(normalizedFileName));
                 
-                // Hotfix for newly merged unit
-                if (scopePart === '03-master-wifi-motor.html' && normalizedFileName === '03-unit-github-classroom.html') {
-                    isUnitMatch = true;
-                }
                 if (isMasterMatch || isUnitMatch) {
                     isAuthorizedScope = true;
                     console.log(`[serveCourse] ${normalizedFileName} authorized via manual fallback for scope ${scopePart}`);
@@ -2048,11 +2040,6 @@ exports.getDashboardData = onCall(async (request) => {
                     const masterFile = (course.classroomUrl || "").split('/').pop().split('?')[0];
                     const units = Array.isArray(course.courseUnits) ? [...course.courseUnits] : [];
                     
-                    // Hotfix for new classroom unit missing in DB
-                    if (masterFile === '03-master-wifi-motor.html' && !units.includes('03-unit-github-classroom.html')) {
-                        units.push('03-unit-github-classroom.html');
-                    }
-
                     const relatedFiles = [masterFile, ...units].filter(f => f && allFiles.includes(f));
                     let aggregatedGuides = {};
 
