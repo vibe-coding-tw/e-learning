@@ -190,21 +190,6 @@
         }
 
         onAuthStateChanged(auth, (user) => {
-            const userDisplay = document.getElementById('user-display');
-            const loginBtn = document.getElementById('login-btn');
-
-            if (user) {
-                userDisplay.textContent = `您好, ${user.displayName || '使用者'}`;
-                userDisplay.classList.remove('hidden');
-                loginBtn.textContent = '登出';
-                loginBtn.onclick = window.handleLogout;
-            } else {
-                userDisplay.textContent = '訪客';
-                userDisplay.classList.add('hidden');
-                loginBtn.textContent = '登入';
-                loginBtn.onclick = window.handleLogin;
-            }
-
             window.updateAuthUI();
         });
     </script>
