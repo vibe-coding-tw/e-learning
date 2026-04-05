@@ -1,26 +1,72 @@
-/**
- * Unified Navigation & Dashboard Component (v2026.04.05.SAFE_RENDER)
- * Extremely safe rendering engine that prioritizes UI before SDK initialization.
- */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-// --- 1. IMMEDIATE UI RENDERING ENGINE ---
-// Defined GLOBALLY to ensures zero-delay execution
+const firebaseConfig = {
+    apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
+    authDomain: "e-learning-942f7.firebaseapp.com",
+    projectId: "e-learning-942f7",
+    storageBucket: "e-learning-942f7.firebasestorage.app",
+    messagingSenderId: "878397058574",
+    appId: "1:878397058574:web:28aaa07a291ee3baab165f"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// --- 1. Navigation Rendering Engine (Original Style) ---
+
+window.toggleMobileMenu = function () {
+    const menu = document.getElementById('mobile-menu');
+    if (menu) {
+        menu.classList.toggle('hidden');
+        menu.style.display = menu.classList.contains('hidden') ? 'none' : 'block';
+    }
+};
+
+const handleMenuClick = (e) => {
+    const btn = e.target.closest('#mobile-menu-btn');
+    if (btn) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.toggleMobileMenu();
+    }
+};
+
+document.addEventListener('click', handleMenuClick, true);
+document.addEventListener('touchend', function (e) {
+    const btn = e.target.closest('#mobile-menu-btn');
+    if (btn) {
+        e.preventDefault();
+        window.toggleMobileMenu();
+    }
+}, { passive: false });
+
 window.renderNav = function (rootPath = '.', options = {}) {
-    console.log("%c[VibeNav] Rendering UI Engine Start...", "color: green; font-weight: bold;");
     const showAuth = options.showAuth || false;
     const brandSuffix = options.brandSuffix || '';
     const isFluid = options.isFluid !== undefined ? options.isFluid : true;
 
     const resolve = (path) => {
         if (path.startsWith('http')) return path;
-        return `${rootPath}/${path}`.replace(/\/+/g, '/').replace(':/', '://');
+        return `${rootPath}/${path}`.replace('./http', 'http').replace('//', '/');
     };
+
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @media (hover: hover) { .dropdown:hover .dropdown-menu { display: block; } }
+        #mobile-menu { transition: all 0.3s ease-in-out; }
+        #mobile-menu-btn { cursor: pointer; touch-action: manipulation; }
+    `;
+    document.head.appendChild(style);
 
     const navHTML = `
     <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-[99999]" id="main-nav">
-        <div class="${isFluid ? 'px-6' : 'container mx-auto px-4'}">
+        <div class="${isFluid ? 'w-full px-6' : 'container mx-auto px-4'}">
             <div class="flex justify-between items-center py-4">
-                <a href="${resolve('index.html')}" class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
+                <a href="${resolve('index.html')}"
+                    class="text-2xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2">
                     <span>🚀</span> Vibe Coding ${brandSuffix ? `<span class="text-sm font-normal text-gray-500 ml-2">${brandSuffix}</span>` : ''}
                 </a>
                 <div class="flex items-center gap-6">
@@ -59,147 +105,221 @@ window.renderNav = function (rootPath = '.', options = {}) {
                     <div class="flex items-center gap-4">
                         ${showAuth ? `
                         <div class="flex items-center space-x-4">
-                            <a href="${resolve('cart.html')}" class="text-gray-600 hover:text-cyan-600 transition duration-150 relative">
+                            <a href="${resolve('cart.html')}" class="text-gray-600 hover:text-cyan-600 transition duration-150 relative" title="前往購物車">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.2 4h12.4M15 13H7" />
                                 </svg>
                             </a>
                             <div id="auth-status" class="text-sm flex items-center">
                                 <span id="user-display" class="text-gray-600 hidden md:inline mr-2">訪客</span>
-                                <button id="login-btn-legacy" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">登入</button>
+                                <button id="login-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-4 rounded-full transition shadow-md">登入</button>
                             </div>
                         </div>` : ''}
-                        <div class="md:hidden">
-                            <button id="mobile-menu-btn" class="text-gray-600 focus:outline-none p-2 border rounded hover:bg-gray-100">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                        <div class="md:hidden z-[99999]" style="position: relative;">
+                            <button id="mobile-menu-btn" type="button" class="text-gray-600 focus:outline-none p-2 border rounded hover:bg-gray-100">
+                                <svg class="w-6 h-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
-            <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-100 absolute w-full left-0 bg-white shadow-lg px-4">
+            <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-100 mt-2 absolute w-full left-0 bg-white shadow-lg z-[99998] px-4" style="display: none;">
                 <div class="flex flex-col space-y-3 pt-4 font-medium text-gray-600">
-                    <a href="${resolve('prepare.html')}" class="block py-1">課前準備</a>
-                    <a href="${resolve('started.html')}" class="block py-1">入門課程</a>
-                    <a href="${resolve('basic.html')}" class="block py-1">基礎實作</a>
-                    <a href="${resolve('advanced.html')}" class="block py-1">進階應用</a>
+                    <a href="${resolve('prepare.html')}" class="block py-1 hover:text-cyan-600">課前準備</a>
+                    <a href="${resolve('started.html')}" class="block py-1 hover:text-cyan-600">入門課程</a>
+                    <a href="${resolve('basic.html')}" class="block py-1 hover:text-cyan-600">基礎實作</a>
+                    <a href="${resolve('advanced.html')}" class="block py-1 hover:text-cyan-600">進階應用</a>
                 </div>
             </div>
         </div>
     </nav>
-    <style>
-        @media (hover: hover) { .dropdown:hover .dropdown-menu { display: block; } }
-    </style>
     `;
 
     const placeholder = document.getElementById('nav-placeholder');
     if (placeholder) {
         placeholder.outerHTML = navHTML;
-        console.log("%c[VibeNav] UI Rendered Successfully via outerHTML", "color: green;");
     } else {
         const existingNav = document.getElementById('main-nav') || document.querySelector('nav');
-        if (!existingNav) {
-            document.body.insertAdjacentHTML('afterbegin', navHTML);
-            console.log("%c[VibeNav] UI Rendered Successfully via body prepend", "color: green;");
-        }
+        if (existingNav) { existingNav.outerHTML = navHTML; }
+        else { document.body.insertAdjacentHTML('afterbegin', navHTML); }
     }
 
-    // Event Listeners for Mobile Menu
-    const mobileBtn = document.getElementById('mobile-menu-btn');
-    const mobileMenu = document.getElementById('mobile-menu');
-    if (mobileBtn && mobileMenu) {
-        mobileBtn.onclick = () => {
-            mobileMenu.classList.toggle('hidden');
-        };
-    }
-
-    // Restore login button functional logic after base render (Legacy mode until Firebase catches up)
-    const loginBtn = document.getElementById('login-btn-legacy');
-    if (loginBtn) {
-        loginBtn.onclick = () => window.location.href = resolve('auth.html');
-    }
+    setTimeout(() => {
+        const currentPath = window.location.pathname;
+        const navLinks = document.querySelectorAll('nav a');
+        navLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            if (!href || href.startsWith('javascript') || href === '#') return;
+            const isMatch = (href === '/' && (currentPath === '/' || currentPath.endsWith('index.html'))) || (href !== '/' && currentPath.includes(href));
+            if (isMatch) {
+                link.classList.add('text-cyan-600', 'font-bold');
+                link.classList.remove('text-gray-600');
+            }
+        });
+    }, 0);
 };
 
-// --- 2. ASYNC SDK LOAD & DASHBOARD LOGIC ---
-// Use dynamic import or defer SDK to not block UI
-(async function initSafe() {
-    console.log("%c[VibeNav] Safe Bootloader Initiated...", "color: blue;");
-    
-    // Immediate UI Render
+// --- 2. Dashboard Modal logic (From original master-nav.js) ---
+
+function injectDashboardModal() {
+    if (document.getElementById('dashboard-modal')) return;
+    const modal = document.createElement('div');
+    modal.id = 'dashboard-modal';
+    modal.className = 'fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-all duration-300';
+    modal.style.zIndex = '10000000';
+    modal.innerHTML = `
+        <div class="bg-white w-full h-full max-w-7xl rounded-2xl shadow-2xl relative overflow-hidden flex flex-col transform scale-100 transition-transform">
+            <div class="flex justify-between items-center p-4 border-b bg-gray-50/80 backdrop-blur">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📊</span>
+                    <h3 class="text-lg font-bold text-gray-800">儀表板 (Dashboard)</h3>
+                </div>
+                <button onclick="closeDashboardModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="flex-grow relative bg-gray-100">
+                <div id="dashboard-loading" class="absolute inset-0 flex items-center justify-center z-10 bg-white/50">
+                    <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+                </div>
+                <iframe id="dashboard-frame" class="w-full h-full border-0" src="" onload="document.getElementById('dashboard-loading').classList.add('hidden')"></iframe>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+window.openDashboardModal = function (courseParam) {
+    injectDashboardModal();
+    const modal = document.getElementById('dashboard-modal');
+    const frame = document.getElementById('dashboard-frame');
+    const loader = document.getElementById('dashboard-loading');
+    let separator = courseParam.includes('?') ? '&' : '?';
+
+    let finalUnitId = '';
+    const iframe = document.getElementById('content-frame');
+    if (iframe && iframe.src) {
+        try {
+            const absoluteSrc = new URL(iframe.src, window.location.href).href;
+            finalUnitId = absoluteSrc.split('/').pop().split('?')[0].split('#')[0];
+        } catch (e) { finalUnitId = iframe.src.split('/').pop().split('?')[0].split('#')[0]; }
+    }
+    if (!finalUnitId) { finalUnitId = window.location.pathname.split('/').pop().split('#')[0]; }
+
+    const unitParam = finalUnitId ? `&unitId=${finalUnitId}` : '';
+    let url = `/dashboard.html${courseParam}${separator}mode=iframe${unitParam}`;
+
+    frame.src = url;
+    loader.classList.remove('hidden');
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    document.body.classList.add('modal-open');
+
+    if (modal.requestFullscreen) modal.requestFullscreen();
+    else if (modal.webkitRequestFullscreen) modal.webkitRequestFullscreen();
+
+    const nav = document.getElementById('main-nav') || document.querySelector('nav');
+    if (nav) nav.style.setProperty('display', 'none', 'important');
+};
+
+window.closeDashboardModal = function () {
+    const modal = document.getElementById('dashboard-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.classList.remove('modal-open');
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+            if (document.exitFullscreen) document.exitFullscreen();
+            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        }
+        const nav = document.getElementById('main-nav') || document.querySelector('nav');
+        if (nav) nav.style.display = '';
+        setTimeout(() => { document.getElementById('dashboard-frame').src = ''; }, 300);
+    }
+    document.body.style.overflow = '';
+};
+
+// Sync Modal state with Native Fullscreen Exit
+document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        const modal = document.getElementById('dashboard-modal');
+        if (modal && !modal.classList.contains('hidden')) { closeDashboardModal(); }
+    }
+});
+
+function injectDashboardFAB() {
+    const existing = document.getElementById('dashboard-fab');
+    if (existing) existing.remove();
+    injectDashboardModal();
+
+    const path = decodeURIComponent(window.location.pathname);
+    const filename = path.split('/').pop();
+
+    // Rule: ONLY show on Course Units (filenames containing 'unit-' or 'master-')
+    const isCourseUnit = filename.includes('unit-') || filename.includes('master-');
+    if (!isCourseUnit) return;
+
+    let courseParam = '';
+    if (filename) {
+        let idPrefix = null;
+        if (filename.includes('-unit')) { idPrefix = filename.split('-unit')[0]; }
+        else if (filename.includes('-master')) { idPrefix = filename.split('-master')[0]; }
+        else {
+            const match = filename.match(/^([a-zA-Z0-9]+-\d+|\d+)-/);
+            if (match) idPrefix = match[1];
+        }
+        if (idPrefix) { courseParam = `?courseId=${idPrefix}`; }
+    }
+
+    const fab = document.createElement('button');
+    fab.id = 'dashboard-fab';
+    fab.className = 'fixed bottom-8 right-8 w-16 h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group z-50';
+    fab.style.zIndex = '9999';
+    fab.innerHTML = `
+        <span class="text-3xl group-hover:rotate-12 transition-transform">📊</span>
+        <span class="absolute right-full mr-4 px-3 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg">
+            查看儀表板
+        </span>
+    `;
+    fab.onclick = function () { openDashboardModal(courseParam); };
+    document.body.appendChild(fab);
+}
+
+// --- 3. Initializer Bootloader (SAFE RENDER) ---
+
+function initNavComponent() {
     const placeholder = document.getElementById('nav-placeholder');
     if (placeholder) {
         const root = placeholder.getAttribute('data-root') || '.';
-        const authFlag = placeholder.getAttribute('data-show-auth') === 'true';
-        window.renderNav(root, { showAuth: authFlag });
+        const showAuth = placeholder.getAttribute('data-show-auth') === 'true';
+        window.renderNav(root, { showAuth });
     }
 
-    // Async Load Firebase
     try {
-        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js");
-        const { getAuth, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js");
-        
-        const firebaseConfig = {
-            apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
-            authDomain: "e-learning-942f7.firebaseapp.com",
-            projectId: "e-learning-942f7",
-            storageBucket: "e-learning-942f7.firebasestorage.app",
-            messagingSenderId: "878397058574",
-            appId: "1:878397058574:web:28aaa07a291ee3baab165f"
-        };
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+        if (document.body) { injectDashboardFAB(); }
+        else { document.addEventListener('DOMContentLoaded', injectDashboardFAB); }
+    } catch (e) { console.error("[NavComp] FAB failed:", e); }
 
-        onAuthStateChanged(auth, (user) => {
-            const userDisplay = document.getElementById('user-display');
-            const loginBtn = document.getElementById('login-btn-legacy');
-            if (userDisplay && loginBtn) {
-                if (user) {
-                    userDisplay.innerText = user.email.split('@')[0];
-                    // Keep 'hidden md:inline' classes to avoid mobile overcrowding
-                    userDisplay.className = 'text-gray-600 hidden md:inline mr-2';
-                    loginBtn.innerText = '登出';
-                    loginBtn.onclick = () => auth.signOut();
-                } else {
-                    userDisplay.innerText = '訪客';
-                    userDisplay.className = 'text-gray-600 hidden md:inline mr-2';
-                    loginBtn.innerText = '登入';
-                    loginBtn.onclick = () => window.location.href = resolve('auth.html');
-                }
-            }
-        });
-
-        // Dashboard Injector (Restricted to Course Units only)
-        const path = window.location.pathname;
-        const filename = decodeURIComponent(path.split('/').pop() || 'index.html');
-        
-        // Rules: ONLY show on Course Units (filenames containing 'unit-' or 'master-')
-        const isCourseUnit = filename.includes('unit-') || filename.includes('master-');
-        
-        if (isCourseUnit) {
-            let courseId = filename.match(/^([a-zA-Z0-9]+-\d+|\d+)-/)?.[1] || '';
-            const unitId = filename; // unitId is the full filename
-
-            if (!courseId) {
-                if (filename.includes('01-')) courseId = '01';
-                else if (filename.includes('02-')) courseId = '02';
-                else if (filename.includes('03-')) courseId = '03';
-                else if (filename.includes('04-')) courseId = '04';
-            }
-
-            if (!document.getElementById('dashboard-fab')) {
-                const fab = document.createElement('button');
-                fab.id = 'dashboard-fab';
-                fab.className = 'fixed bottom-8 right-8 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center z-50 hover:bg-blue-700 transition-all hover:scale-110 active:scale-95 cursor-pointer';
-                fab.innerHTML = `<span class="text-3xl">📊</span>`;
-                fab.onclick = () => {
-                    let targetUrl = `/dashboard.html?unitId=${unitId}`;
-                    if (courseId) targetUrl += `&courseId=${courseId}`;
-                    window.location.href = targetUrl;
+    onAuthStateChanged(auth, async (user) => {
+        const userDisplay = document.getElementById('user-display');
+        const loginBtn = document.getElementById('login-btn');
+        if (userDisplay && loginBtn) {
+            if (user) {
+                userDisplay.innerText = user.email.split('@')[0];
+                userDisplay.classList.remove('hidden');
+                loginBtn.innerText = '登出';
+                loginBtn.onclick = () => auth.signOut();
+            } else {
+                userDisplay.innerText = '訪客';
+                userDisplay.classList.add('hidden');
+                loginBtn.innerText = '登入';
+                loginBtn.onclick = () => {
+                   const root = placeholder ? (placeholder.getAttribute('data-root') || '.') : '.';
+                   window.location.href = `${root}/auth.html`.replace('//', '/');
                 };
-                document.body.appendChild(fab);
             }
         }
-    } catch (e) {
-        console.error("[VibeNav] SDK failed to load, UI should still be active.", (e.message || e));
-    }
-})();
+    });
+}
+
+if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initNavComponent); }
+else { initNavComponent(); }
