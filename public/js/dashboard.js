@@ -1004,7 +1004,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
     renderChart(chartData);
     (async () => {
-  const unitId = getCurrentUnitId();
+  const unitId = filterUnitId;
   if (!unitId) return;
 
   // Try to read a meta tag that provides the markdown URL for this unit
@@ -2229,31 +2229,19 @@ async function renderSettingsTab(filterUnitId = null) {
             return;
         }
 
-        let totalAssignmentHTML = "";
-        let totalGuideHTML = "";
+        // [NEW v13.7] Collect and Deduplicate all units across all authorized courses
+        const unitToDataMap = new Map();
 
         authorizedLessons.forEach(course => {
-            console.log("[Settings] Rendering Course:", course.courseId);
             const units = Array.isArray(course.courseUnits) ? [...course.courseUnits] : [];
-            
-            // [NEW] Ensure master page is also available for settings
             const masterFile = (course.classroomUrl || "").split('/').pop().split('?')[0];
             if (masterFile && !units.includes(masterFile)) {
                 units.unshift(masterFile);
             }
 
             const guideConfig = getCourseGuideConfig(course.courseId);
-            const rawInstructor = guideConfig.tutorGuide;
-            const rawAssignment = guideConfig.assignmentGuide;
-            const rawAttachment = guideConfig.attachmentGuide;
-            const guideData = robustExtractGuideSegments(rawInstructor, rawAssignment);
-            
-            // [NEW] Attachment Segment Extraction
-            const attachSegments = {};
-            if (rawAttachment) {
-                // Attachments are often mapped by unit filename
-                Object.assign(attachSegments, rawAttachment);
-            }
+            const guideData = robustExtractGuideSegments(guideConfig.tutorGuide, guideConfig.assignmentGuide);
+            const attachSegments = guideConfig.attachmentGuide || {};
 
             const filteredUnits = units.filter(f => {
                 const isMaster = f.includes('-master-');
@@ -2271,65 +2259,73 @@ async function renderSettingsTab(filterUnitId = null) {
                 })()
                 : filteredUnits;
 
-            const uniqueFinalUnits = Array.from(
-                new Map(
-                    finalUnits
-                        .map(fileName => getPreferredUnitId(fileName, units, Object.keys(dashboardData?.unitTutorConfigs || {})))
-                        .filter(isRenderableUnitFile)
-                        .map(fileName => [fileName, fileName])
-                ).values()
-            );
-
-            console.log("[Settings] Filtered units mapping:", uniqueFinalUnits);
-
-            const assignmentRows = uniqueFinalUnits.map(fileName => {
-                const isAuthorized = isUserAuthorizedForUnit(fileName, course.courseId, userEmail);
-                return renderAssignmentConfigRow(course.courseId, fileName, getUnitTutorConfig(fileName).githubClassroomUrls, course.title, isAuthorized);
-            }).filter(h => !!h).join('');
-
-            const guideRows = uniqueFinalUnits.map(fileName => {
-                const realUnitsOnly = units.filter(u => !u.includes('-master-'));
-                const unitIdx = realUnitsOnly.indexOf(fileName);
-                const unitNum = unitIdx !== -1 ? unitIdx + 1 : null;
-                const tutorSegment = guideData.segments[fileName] || (unitNum ? guideData.segments[unitNum] : "") || "";
-                const attachmentSegment = attachSegments[fileName] || (unitNum ? attachSegments[unitNum] : "") || "";
-
-                if (!tutorSegment && !attachmentSegment) return "";
-                const isAuthorized = isUserAuthorizedForUnit(fileName, course.courseId, userEmail);
+            finalUnits.forEach(fileName => {
+                const preferredFileName = getPreferredUnitId(fileName, units, Object.keys(dashboardData?.unitTutorConfigs || {}));
+                if (!isRenderableUnitFile(preferredFileName)) return;
                 
-                // [NEW] Prepend Attachment Segment if exists
-                let combinedSegment = "";
-                if (attachmentSegment) {
-                    combinedSegment += `
-                        <div class="mb-4 p-4 bg-orange-50 border border-orange-100 rounded-2xl">
-                             <div class="text-[10px] text-orange-500 font-bold uppercase mb-2 tracking-widest flex items-center gap-2">
-                                <span class="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
-                                附件資料 / Attachments
-                             </div>
-                             <div class="text-sm text-orange-900 leading-relaxed font-medium">
-                                ${attachmentSegment}
-                             </div>
-                        </div>
-                    `;
+                if (!unitToDataMap.has(preferredFileName)) {
+                    const realUnitsOnly = units.filter(u => !u.includes('-master-'));
+                    const unitIdx = realUnitsOnly.indexOf(preferredFileName);
+                    const unitNum = unitIdx !== -1 ? unitIdx + 1 : null;
+                    const tutorSegment = guideData.segments[preferredFileName] || (unitNum ? guideData.segments[unitNum] : "") || "";
+                    const attachmentSegment = attachSegments[preferredFileName] || (unitNum ? attachSegments[unitNum] : "") || "";
+
+                    unitToDataMap.set(preferredFileName, {
+                        courseId: course.courseId,
+                        courseTitle: course.title,
+                        tutorSegment: tutorSegment,
+                        attachmentSegment: attachmentSegment,
+                        unitsForPreference: units
+                    });
                 }
-                combinedSegment += tutorSegment;
-
-                return renderGuideRow(course.courseId, fileName, combinedSegment, course.title, isAuthorized);
-            }).filter(h => !!h).join('');
-
-            if (assignmentRows) {
-                totalAssignmentHTML += `
-                    <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm font-mono text-sm mb-6 w-full">
-                        <div class="divide-y divide-gray-100">${assignmentRows}</div>
-                    </div>`;
-            }
-
-            if (guideRows) {
-                totalGuideHTML += `<div class="w-full space-y-6">${guideRows}</div>`;
-            }
+            });
         });
 
-        console.log("[Settings] Final check items. Any HTML?", !!totalAssignmentHTML);
+        console.log("[Settings] Deduplicated unique units count:", unitToDataMap.size);
+
+        let totalAssignmentHTML = "";
+        let totalGuideHTML = "";
+
+        const allUniqueUnits = Array.from(unitToDataMap.keys());
+        
+        const assignmentRows = allUniqueUnits.map(fileName => {
+            const uData = unitToDataMap.get(fileName);
+            const isAuthorized = isUserAuthorizedForUnit(fileName, uData.courseId, userEmail);
+            return renderAssignmentConfigRow(uData.courseId, fileName, getUnitTutorConfig(fileName).githubClassroomUrls, uData.courseTitle, isAuthorized);
+        }).filter(h => !!h).join('');
+
+        const guideRows = allUniqueUnits.map(fileName => {
+            const uData = unitToDataMap.get(fileName);
+            if (!uData.tutorSegment && !uData.attachmentSegment) return "";
+            
+            const isAuthorized = isUserAuthorizedForUnit(fileName, uData.courseId, userEmail);
+            let combinedSegment = "";
+            if (uData.attachmentSegment) {
+                combinedSegment += `
+                    <div class="mb-4 p-4 bg-orange-50 border border-orange-100 rounded-2xl">
+                         <div class="text-[10px] text-orange-500 font-bold uppercase mb-2 tracking-widest flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+                            附件資料 / Attachments
+                         </div>
+                         <div class="text-sm text-orange-900 leading-relaxed font-medium">
+                            ${uData.attachmentSegment}
+                         </div>
+                    </div>
+                `;
+            }
+            combinedSegment += uData.tutorSegment;
+            return renderGuideRow(uData.courseId, fileName, combinedSegment, uData.courseTitle, isAuthorized);
+        }).filter(h => !!h).join('');
+
+        if (assignmentRows) {
+            totalAssignmentHTML = `
+                <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm font-mono text-sm mb-6 w-full">
+                    <div class="divide-y divide-gray-100">${assignmentRows}</div>
+                </div>`;
+        }
+        if (guideRows) {
+            totalGuideHTML = `<div class="w-full space-y-6">${guideRows}</div>`;
+        }
 
         assignmentContainer.innerHTML = totalAssignmentHTML || `<div class="text-center py-20 text-gray-400">尚無作業連結設定需求。</div>`;
         guideContainer.innerHTML = totalGuideHTML || `<div class="text-center py-20 text-gray-400">尚無相關教學指引。</div>`;
