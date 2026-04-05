@@ -1,4 +1,4 @@
-console.log("Dashboard Script v2026.04.05.FINAL_V14.4_AI_STABLE Loaded");
+console.log("Dashboard Script v2026.04.05.FINAL_V14.5_AI_STABLE Loaded");
 // alert("Dashboard Script v6 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
