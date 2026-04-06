@@ -1018,15 +1018,17 @@ async function initGithubReadme() {
         const text = await resp.text();
         const html = window.marked.parse(text);
 
-        // 4. Inject
+        // 4. Inject - [V14.8.4] Only if specifically requested or in non-hide-mode
+        // User requested to HIDE README.md and assignment-guide in the main unit body.
+        // We will keep the fetch logic but skip the injection here.
+        /*
         const mdContainer = document.createElement('div');
         mdContainer.className = 'markdown-embed p-6 mt-12 mb-12 rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden';
         mdContainer.innerHTML = html;
-        
-        // Ensure section is visible if it was hidden
-        target.style.display = 'block';
         target.parentNode.insertBefore(mdContainer, target);
-        console.log("[CourseShared] GitHub README injected successfully.");
+        */
+        
+        console.log("[CourseShared] README loaded but hidden in main body as requested.");
     } catch (e) {
         console.warn("[CourseShared] Failed to load GitHub README:", e);
     }
