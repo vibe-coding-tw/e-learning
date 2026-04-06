@@ -1,4 +1,4 @@
-console.log("Dashboard Script v2026.04.05.FINAL_V14.7_AI_STABLE Loaded");
+console.log("Dashboard Script v2026.04.06.FINAL_V14.8_AI_STABLE Loaded");
 // alert("Dashboard Script v6 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -499,15 +499,18 @@ function configureStudentTabsForUnitAccess() {
 }
 
 function filterAssignmentsForCurrentView(assignments = []) {
-    const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
-    const isQualifiedTutor = currentDashboardPermissions.isQualifiedTutor;
     const normalizeEmail = (value = '') => String(value || '').trim().toLowerCase();
     const isOwnAssignment = (assignment) =>
         (assignment.userId || assignment.uid) === myUid ||
         normalizeEmail(assignment.studentEmail || assignment.userEmail) === normalizeEmail(myEmail);
 
-    // [MODIFIED] Assignments filtering:
-    // 1. If Qualified Tutor (or Admin in Tutor Mode): Only see students assigned to THEM.
+    // [V14.8] Assignments visibility hierarchy:
+    // 1. Admin: Sees everything.
+    if (currentDashboardPermissions.isAdmin) {
+        return assignments;
+    }
+
+    // 2. Qualified Tutor: Sees students assigned to THEM.
     if (currentDashboardPermissions.isQualifiedTutor) {
         return assignments.filter(a =>
             normalizeEmail(a.assignedTutorEmail) === normalizeEmail(myEmail) &&
@@ -515,12 +518,7 @@ function filterAssignmentsForCurrentView(assignments = []) {
         );
     }
 
-    // 2. If Admin in Global View (No unit context): Show ALL assignments.
-    if (currentDashboardPermissions.isAdmin && !filterUnitId) {
-        return assignments;
-    }
-
-    // 3. If Student: Only see their own.
+    // 3. Student (Paid or Role): Only see their own.
     if (myRole === 'student' || currentDashboardPermissions.isPaidStudent) {
         return assignments.filter(isOwnAssignment);
     }
@@ -974,10 +972,18 @@ function renderAdminDashboard(data, filterUnitId = null) {
         `;
     }).join('');
 
-    // [NEW] Use filterUnitId for chart and assignment filtering if courseId is present
+    // [V14.8] Use filterUnitId for chart and assignment filtering
     let chartData = data.students;
     let displayAssignments = filterAssignmentsForCurrentView(data.assignments);
 
+    // Assignment Filtering Priority: unitId > courseId
+    if (filterUnitId) {
+        displayAssignments = displayAssignments.filter(a => unitIdsMatch(a.unitId, filterUnitId));
+    } else if (filterCourseId) {
+        displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
+    }
+
+    // Chart Data Filtering
     if (filterCourseId) {
         chartData = data.students.map(s => {
             const courses = s.courseProgress || {};
@@ -996,12 +1002,6 @@ function renderAdminDashboard(data, filterUnitId = null) {
                 pageTime: finalStats.page || finalStats.pageTime || 0
             };
         });
-
-        if (filterUnitId) {
-            displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId && unitIdsMatch(a.unitId, filterUnitId));
-        } else {
-            displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
-        }
     }
 
     const guideContent = resolveAssignmentGuide(data, filterCourseId, filterUnitId);
