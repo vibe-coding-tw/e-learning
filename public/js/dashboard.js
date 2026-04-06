@@ -1,4 +1,4 @@
-console.log("Dashboard Script v2026.04.06.FINAL_V14.8.6_AI_STABLE Loaded");
+console.log("Dashboard Script v2026.04.07.FINAL_V14.8.7_AI_STABLE Loaded");
 // alert("Dashboard Script v6 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -1354,7 +1354,7 @@ function renderAssignmentsTable(assignments, canManageAssignments) {
                 <div class="font-bold text-[10px] md:text-xs text-gray-700 truncate max-w-[120px] md:max-w-none">
                     ${escapeHtml(a.title || unitsTitleMap[resolveCanonicalUnitId(a.unitId)] || lessonsMap[a.courseId] || a.courseId)}
                 </div>
-                <div class="text-[10px] text-gray-400 capitalize">${escapeHtml(displayUnit)}</div>
+                <div class="text-[10px] text-gray-400 capitalize">${escapeHtml(a.unitId ? a.unitId.replace('.html', '').replace(/-/g, ' ') : 'N/A')}</div>
             </td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-400 text-center">${submittedDate}</td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-center">${badge}</td>
