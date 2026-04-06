@@ -1,4 +1,4 @@
-console.log("Dashboard Script v2026.04.06.FINAL_V14.8.4_AI_STABLE Loaded");
+console.log("Dashboard Script v2026.04.06.FINAL_V14.8.5_AI_STABLE Loaded");
 // alert("Dashboard Script v6 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -516,14 +516,18 @@ function filterAssignmentsForCurrentView(assignments = []) {
         (assignment.userId || assignment.uid) === myUid ||
         normalizeEmail(assignment.studentEmail || assignment.userEmail) === normalizeEmail(myEmail);
 
-    // [V14.8] Assignments visibility hierarchy:
-    // 1. Admin: Sees everything.
-    if (currentDashboardPermissions.isAdmin) {
+    // [V14.8.5] Assignments visibility hierarchy:
+    // 1. Admin: Sees everything in GLOBAL view.
+    // BUT in UNIT view (Integrated Assignments), we follow the tutor assignment if they are acting as a tutor.
+    const urlParams = new URLSearchParams(window.location.search);
+    const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
+
+    if (currentDashboardPermissions.isAdmin && !filterUnitId) {
         return assignments;
     }
 
-    // 2. Qualified Tutor: Sees students assigned to THEM.
-    if (currentDashboardPermissions.isQualifiedTutor) {
+    // 2. Qualified Tutor or Admin in Unit Context: Sees students assigned to THEM.
+    if (currentDashboardPermissions.isQualifiedTutor || currentDashboardPermissions.isAdmin) {
         return assignments.filter(a =>
             normalizeEmail(a.assignedTutorEmail) === normalizeEmail(myEmail) &&
             !isOwnAssignment(a)
@@ -2386,11 +2390,10 @@ function renderAssignmentConfigRow(courseId, fileName, tutorMap = {}, courseTitl
     const userEmail = auth.currentUser?.email;
     const isAdmin = myRole === 'admin' && adminTutorMode;
     
-    let entries = isAdmin
-        ? Object.entries(tutorMap || {})
-        : Object.entries(tutorMap || {}).filter(([tutor]) => tutor === userEmail);
+    // [V14.8.5] Even if admin, only show self in unit-settings view to maintain isolation/clutter-free UI
+    let entries = Object.entries(tutorMap || {}).filter(([tutor]) => tutor === userEmail);
     
-    // 依然是空的，就給一個空的佔位符給當前帳號
+    // Fallback: If current user doesn't have a specific link yet, show an empty row for them
     if (entries.length === 0 && userEmail) entries.push([userEmail, '']);
 
     const unitName = formatUnitName(fileName);
