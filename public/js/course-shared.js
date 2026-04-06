@@ -982,6 +982,9 @@ async function initGithubReadme() {
     const target = document.getElementById('assignment-guide');
     if (!target) return;
 
+    // [V14.8.6] Reinforcement: Explicitly hide the guide in main unit body as requested
+    target.style.display = 'none';
+
     // 1. Identify Unit ID
     let unitId = "";
     const meta = document.querySelector('meta[name="markdown-url"]');
