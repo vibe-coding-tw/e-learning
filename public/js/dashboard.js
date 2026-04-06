@@ -535,7 +535,7 @@ function filterAssignmentsForCurrentView(assignments = []) {
     }
 
     // 3. Student (Paid or Role): Only see their own.
-    if (myRole === 'student' || currentDashboardPermissions.isPaidStudent) {
+    if (myRole === 'student' || myRole === 'user' || !myRole || currentDashboardPermissions.isPaidStudent) {
         return assignments.filter(isOwnAssignment);
     }
 
@@ -635,14 +635,21 @@ function renderStudentDashboard(data, filterUnitId = null) {
                     <tbody class="text-sm text-gray-700 divide-y">
                         ${displayAssignments.length > 0 ? displayAssignments.map(a => `
                             <tr class="hover:bg-gray-50">
-                                <td class="py-3 px-2 font-medium">${escapeHtml(a.assignmentTitle)}</td>
+                                <td class="py-3 px-2">
+                                    <div class="font-bold text-gray-800 mb-0.5">${escapeHtml(a.assignmentTitle || a.title || "未指定任務")}</div>
+                                    <div class="text-[10px] text-gray-400 flex items-center gap-1">
+                                        <span class="bg-gray-100 px-1 rounded">📦 ${escapeHtml(unitsTitleMap[resolveCanonicalUnitId(a.unitId)] || a.unitId || "課程單元")}</span>
+                                        <span class="opacity-50">/</span>
+                                        <span>${escapeHtml(lessonsMap[a.courseId] || a.courseId)}</span>
+                                    </div>
+                                </td>
                                 <td class="py-3 px-2 text-gray-500 text-xs">${a.submittedAt ? new Date(a.submittedAt.seconds * 1000).toLocaleString() : '-'}</td>
                                 <td class="py-3 px-2">
                                     <span class="px-2 py-1 rounded text-xs font-bold ${a.grade ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
                                         ${a.grade ? '已評分' : '待批改'}
                                     </span>
                                 </td>
-                                <td class="py-3 px-2 text-right font-bold text-blue-600">${a.grade !== null ? a.grade : '-'}</td>
+                                <td class="py-3 px-2 text-right font-bold text-blue-600">${a.grade !== null && a.grade !== undefined ? a.grade : '-'}</td>
                                 <td class="py-3 px-2 text-right text-gray-500 max-w-xs truncate" title="${escapeHtml(a.tutorFeedback)}">
                                     ${a.tutorFeedback ? escapeHtml(a.tutorFeedback) : '-'}
                                 </td>
@@ -1350,11 +1357,15 @@ function renderAssignmentsTable(assignments, canManageAssignments) {
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-gray-800">
                 <div class="font-medium group-hover:text-blue-600 transition-colors truncate max-w-[150px] md:max-w-none">${escapeHtml(a.studentEmail || a.userEmail)}</div>
             </td>
-            <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] md:text-sm text-gray-600">
-                <div class="font-bold text-[10px] md:text-xs text-gray-700 truncate max-w-[120px] md:max-w-none">
-                    ${escapeHtml(a.title || unitsTitleMap[resolveCanonicalUnitId(a.unitId)] || lessonsMap[a.courseId] || a.courseId)}
+            <td class="py-2 px-1 sm:py-3 sm:px-2">
+                <div class="font-bold text-gray-800 text-xs md:text-sm mb-0.5">
+                    ${escapeHtml(a.title || a.assignmentTitle || unitsTitleMap[resolveCanonicalUnitId(a.unitId)] || "未指定任務")}
                 </div>
-                <div class="text-[10px] text-gray-400 capitalize">${escapeHtml(a.unitId ? a.unitId.replace('.html', '').replace(/-/g, ' ') : 'N/A')}</div>
+                <div class="text-[10px] text-slate-400 flex items-center gap-1">
+                    <span class="bg-slate-100 px-1 rounded">📦 ${escapeHtml(unitsTitleMap[resolveCanonicalUnitId(a.unitId)] || a.unitId)}</span>
+                    <span class="opacity-50">/</span>
+                    <span>${escapeHtml(lessonsMap[a.courseId] || a.courseId)}</span>
+                </div>
             </td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-400 text-center">${submittedDate}</td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-center">${badge}</td>
