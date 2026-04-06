@@ -1,4 +1,4 @@
-console.log("Dashboard Script v2026.04.06.FINAL_V14.8_AI_STABLE Loaded");
+console.log("Dashboard Script v2026.04.06.FINAL_V14.8.1_AI_STABLE Loaded");
 // alert("Dashboard Script v6 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -65,6 +65,7 @@ let myEmail = null;
 let charts = {};
 let dashboardData = null;
 let lessonsMap = {};
+let unitsTitleMap = {};
 let allLessons = [];
 let currentGradingAssignment = null;
 let currentDashboardPermissions = {
@@ -143,12 +144,23 @@ async function loadLessons() {
         }
         
         console.log(`[Dashboard] Loaded ${allLessons.length} lessons from metadata source.`);
-        allLessons.forEach(l => {
-            lessonsMap[l.courseId] = l.title;
-        });
+        syncLessonsAndUnitsMap(allLessons);
     } catch (e) {
         console.error("Failed to load lessons:", e);
     }
+}
+
+function syncLessonsAndUnitsMap(lessons) {
+    if (!lessons) return;
+    lessons.forEach(l => {
+        lessonsMap[l.courseId] = l.title;
+        if (l.courseUnits && l.courseUnitTitles) {
+            l.courseUnits.forEach((u, i) => {
+                const uid = resolveCanonicalUnitId(u);
+                unitsTitleMap[uid] = l.courseUnitTitles[i];
+            });
+        }
+    });
 }
 
 
@@ -178,11 +190,11 @@ async function loadDashboard() {
         if (!allLessons || allLessons.length === 0) {
             if (data.lessons && data.lessons.length > 0) {
                 allLessons = data.lessons;
-                allLessons.forEach(l => { lessonsMap[l.courseId] = l.title; });
+                syncLessonsAndUnitsMap(allLessons);
             } else if (typeof vibeFetchLessons === 'function') {
                 const result = await vibeFetchLessons();
                 allLessons = (result && result.data && result.data.lessons) ? result.data.lessons : (Array.isArray(result) ? result : []);
-                allLessons.forEach(l => { lessonsMap[l.courseId] = l.title; });
+                syncLessonsAndUnitsMap(allLessons);
             }
         }
 
@@ -1335,7 +1347,9 @@ function renderAssignmentsTable(assignments, canManageAssignments) {
                 <div class="font-medium group-hover:text-blue-600 transition-colors truncate max-w-[150px] md:max-w-none">${escapeHtml(a.studentEmail || a.userEmail)}</div>
             </td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] md:text-sm text-gray-600">
-                <div class="font-bold text-[10px] md:text-xs text-gray-700 truncate max-w-[120px] md:max-w-none">${escapeHtml(title)}</div>
+                <div class="font-bold text-[10px] md:text-xs text-gray-700 truncate max-w-[120px] md:max-w-none">
+                    ${escapeHtml(unitsTitleMap[resolveCanonicalUnitId(a.unitId)] || lessonsMap[a.courseId] || a.courseId)}
+                </div>
                 <div class="text-[10px] text-gray-400 capitalize">${escapeHtml(displayUnit)}</div>
             </td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-400 text-center">${submittedDate}</td>
