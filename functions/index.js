@@ -1828,6 +1828,7 @@ exports.getDashboardData = onCall(async (request) => {
         '04': 'hkdq5j3m',
         '05': 'io5rxgxl',
         'ai-agents-vibe': 'ai-agents-vibe', // Explicit mapping for new course
+        '01-master-identity': '01-master-getting-started.html',
         '04-unit-wifi-setup.html': '03-unit-wifi-setup.html',
         '04-unit-motor-ramping.html': '03-unit-motor-ramping.html'
     };

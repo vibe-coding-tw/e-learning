@@ -350,42 +350,60 @@ function resolveCourseIdFromUrlParam(paramId) {
     return paramId;
 }
 
-function normalizeUnitId(unitId) {
-    if (!unitId || typeof unitId !== 'string') return '';
-    // Keep the canonical filename key; only strip URL noise.
-    return unitId.split('#')[0].split('?')[0].trim();
+function unitIdsMatch(idA, idB) {
+    if (!idA || !idB) return false;
+    
+    // Normalize both for basic comparison
+    const normA = idA.toLowerCase().trim();
+    const normB = idB.toLowerCase().trim();
+    
+    if (normA === normB) return true;
+    
+    // Robust variant matching (handling .html and start- prefix)
+    const variantsA = getEquivalentUnitIds(normA);
+    const variantsB = getEquivalentUnitIds(normB);
+    
+    // Check if any variant of A matches any variant of B
+    for (let vA of variantsA) {
+        if (variantsB.has(vA)) return true;
+    }
+    
+    return false;
 }
 
 function getEquivalentUnitIds(unitId) {
-    const normalized = normalizeUnitId(unitId);
-    if (!normalized) return [];
-
-    const variants = new Set([normalized]);
+    if (!unitId) return new Set();
+    const normalized = unitId.toLowerCase().trim();
+    const variants = new Set();
+    variants.add(normalized);
+    
+    // Handle .html suffix
     const withHtml = normalized.endsWith('.html') ? normalized : `${normalized}.html`;
     const withoutHtml = withHtml.replace(/\.html$/i, '');
-
     variants.add(withHtml);
     variants.add(withoutHtml);
-
+    // Handle start- prefix variants for older data consistency
     if (/^0[1-5]-unit-/.test(withHtml)) {
         variants.add(`start-${withHtml}`);
         variants.add(`start-${withoutHtml}`);
     }
 
-    if (/^start-0[1-5]-unit-/.test(withHtml)) {
-        const shortWithHtml = withHtml.replace(/^start-/, '');
-        const shortWithoutHtml = withoutHtml.replace(/^start-/, '');
-        variants.add(shortWithHtml);
-        variants.add(shortWithoutHtml);
+    if (normalized.startsWith('start-')) {
+        const sliced = normalized.substring(6);
+        variants.add(sliced);
+        variants.add(`${sliced}.html`);
     }
-
 
     return Array.from(variants);
 }
 
-function unitIdsMatch(a, b) {
-    const left = new Set(getEquivalentUnitIds(a));
-    return getEquivalentUnitIds(b).some(id => left.has(id));
+function unitIdsMatch(idA, idB) {
+    if (!idA || !idB) return false;
+    
+    const variantsA = new Set(getEquivalentUnitIds(idA));
+    const variantsB = getEquivalentUnitIds(idB);
+    
+    return variantsB.some(vB => variantsA.has(vB));
 }
 
 function resolveCanonicalUnitId(unitId) {
@@ -567,6 +585,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
     if (filterCourseId) {
         // [NEW] Filter assignments by unit if present
         if (filterUnitId) {
+            // [V14.9] Relaxed unit filtering: Only care about unitId, ignore courseId mismatches for existing assignments
             displayAssignments = displayAssignments.filter(a => unitIdsMatch(a.unitId, filterUnitId));
         } else {
             displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
