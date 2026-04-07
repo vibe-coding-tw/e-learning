@@ -1,4 +1,4 @@
-console.log("Dashboard Script v2026.04.07.V14.10.2_FIX_REF Loaded");
+console.log("Dashboard Script v2026.04.07.V14.10.3_FIX_404 Loaded");
 // alert("Dashboard Script v6 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -1365,7 +1365,7 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
         
         return `
         <tr class="lg:hover:bg-blue-50/50 transition border-b border-gray-100 cursor-pointer group text-xs md:text-sm" 
-            onclick="window.open('${a.assignmentUrl}', '_blank')">
+            onclick="${canManageAssignments ? `window.openGradingModal('${a.id}')` : (a.assignmentUrl ? `window.open('${a.assignmentUrl}', '_blank')` : '')}">
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-gray-800">
                 <div class="font-medium group-hover:text-blue-600 transition-colors truncate max-w-[150px] md:max-w-none">${escapeHtml(a.studentEmail || a.userEmail)}</div>
             </td>
