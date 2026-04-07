@@ -1453,12 +1453,11 @@ window.switchTab = function (tabName) {
         if (isQualifiedTutor || myRole === 'admin') {
             document.getElementById('assignments-container')?.classList.remove('hidden');
             let displayAssignments = filterAssignmentsForCurrentView(dashboardData.assignments);
-            if (filterCourseId) {
-                if (filterUnitId) {
-                    displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId && unitIdsMatch(a.unitId, filterUnitId));
-                } else {
-                    displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
-                }
+            if (filterUnitId) {
+                // If unitId is present, we prioritize matching by unitId and ignore strict courseId field
+                displayAssignments = displayAssignments.filter(a => unitIdsMatch(a.unitId, filterUnitId));
+            } else if (filterCourseId) {
+                displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
             }
             // Resolve guide for the integrated view
             renderAssignments(displayAssignments, "", { showGuide: false });
@@ -1480,12 +1479,11 @@ window.switchTab = function (tabName) {
         let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
 
         let displayAssignments = filterAssignmentsForCurrentView(dashboardData.assignments);
-        if (filterCourseId) {
-            if (filterUnitId) {
-                displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId && unitIdsMatch(a.unitId, filterUnitId));
-            } else {
-                displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
-            }
+        if (filterUnitId) {
+            // Same here: prioritize unitId and relax courseId requirement for unit-specific view
+            displayAssignments = displayAssignments.filter(a => unitIdsMatch(a.unitId, filterUnitId));
+        } else if (filterCourseId) {
+            displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
         }
 
         // [NEW] Extract and pass assignment guide

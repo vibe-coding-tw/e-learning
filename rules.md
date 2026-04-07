@@ -103,6 +103,12 @@
 - **顯示標準**: 副標題僅允許顯示 `unitId` (Slug 格式，如 `03-unit-wifi-setup`)。
 - **目的**: 保持介面資訊密度適中，避免視覺過載，並確保導師能透過 ID 快速對應底層檔案。
 
+### 5-E. 作業顯示與單元規範 (Unit-Centric Assignment Visibility)
+為了確保測試與開發的靈活性，作業列表的顯示邏輯必須遵守下列準則：
+- **管理者豁免 (Admin Override)**：當管理員 (Admin) 處於單元視角 (Unit Context) 且進入「Integrated Assignments」表格時，**必須顯示管理員自己的測試作業**。嚴禁在單元視議下對管理員套用 `!isOwnAssignment` 過濾邏輯。
+- **單元識別相容性 (Unit ID Normalization)**：系統在比對 `unitId` 時，必須對 `.html` 後綴與 `start-` 等導學前綴具有容錯性。只要核心 Slug 一致，即應視為同一單元的作業並在儀表板中合併顯示。
+- **取消 CourseId 強制過濾**：在具備 `unitId` 的單元視角下，只要 `unitId` 符合，即應顯示作業。禁止因為 `courseId` 欄位不精確匹配而篩除符合單元條件的紀錄。
+
 ---
 
 ## 6. AI 開發與驗證準則 (AI Development & Verification)
