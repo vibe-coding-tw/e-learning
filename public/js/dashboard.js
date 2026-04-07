@@ -1,4 +1,4 @@
-console.log("Dashboard Script v2026.04.07.DEBUG_V14.9.6_FIX_LOGS Loaded");
+console.log("Dashboard Script v2026.04.07.V14.9.7_FIX_REF Loaded");
 // alert("Dashboard Script v6 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -19,6 +19,14 @@ const auth = getAuth(app);
 const functions = getFunctions(app, 'asia-east1');
 const vibeFetchLessons = httpsCallable(functions, 'getLessonsMetadata');
 const PUBLIC_SITE_URL = 'https://vibe-coding.tw';
+
+/**
+ * Standard Email Normalizer
+ */
+function normalizeEmail(email) {
+    if (!email) return "";
+    return String(email).trim().toLowerCase();
+}
 
 // DOM Elements
 const loadingState = document.getElementById('loading-state');
