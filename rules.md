@@ -109,7 +109,22 @@
     - **輔導老師模式 OFF (學員視角)**：僅顯示管理員自己的測試作業（遵循 `isOwnAssignment` 邏輯）。
     - **輔導老師模式 ON (老師視角)**：僅顯示指派給該管理員（作為導師）的學生作業。管理員自己的作業在此模式下應被隱藏。
 - **單元識別相容性 (Unit ID Normalization)**：系統在比對 `unitId` 時，必須對 `.html` 後綴與 `start-` 等導學前綴具有容錯性。只要核心 Slug 一致，即應視為同一單元的作業並在儀表板中合併顯示。
-- **取消 CourseId 強制過濾**：在具備 `unitId` 的單元視角下，只要 `unitId` 符合，即應顯示作業。禁止因為 `courseId` 欄位不精確匹配而篩除符合單元條件的紀錄。
+- **取消 CourseId 強制過濾**：在具備 `unitId` 的單元視議下，只要 `unitId` 符合，即應顯示作業。禁止因為 `courseId` 欄位不精確匹配而篩除符合單元條件的紀錄。
+
+### 5-F. 作業列表情境行為規範 (Context-Aware Table Rules)
+為了優化不同情境下的操作效率，作業列表的點擊行為與欄位顯示必須遵循：
+1. **全域視野 (No UnitId)**：
+   - **分頁**: 主要 Assignments 標籤。
+   - **操作欄位**: 隱藏。
+   - **行為**: 點擊作業列 (Row Click) 直接開啟 **評分視窗 (Grading Modal)**。
+2. **單元視野 (With UnitId)**：
+   - **分頁**: 主要 Assignments 標籤。
+   - **操作欄位**: 隱藏。
+   - **行為**: 點擊作業列 (Row Click) 開啟學員提供的 **外部作業連結 (assignmentUrl)**。
+3. **單元視野 - 整合批改 (With UnitId)**：
+   - **分頁**: Settings 標籤內的 Integrated Assignments 表格。
+   - **操作欄位**: 顯示 (包含「評分」按鈕)。
+   - **行為**: 點擊「評分」按鈕或作業列開啟 **評分視窗 (Grading Modal)**。
 
 ---
 

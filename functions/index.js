@@ -2627,7 +2627,6 @@ exports.submitAssignment = onCall(async (request) => {
             assignmentId,
             assignmentTitle: title || assignmentId,
             assignmentUrl: url || "",
-            submissionUrl: url || "", // 標準化：統一收納 GitHub / Demo 連結 (保持相容)
             studentNote: note || "",
             status: finalStatus,
             currentStatus: finalStatus,

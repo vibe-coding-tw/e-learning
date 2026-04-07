@@ -1303,10 +1303,16 @@ window.renderAssignments = window.renderAssignments || function(assignments = []
         });
     }
 
-    const thAction = document.getElementById('assignment-th-action');
-    if (thAction) thAction.classList.toggle('hidden', !canManageAssignments);
+    const isGlobal = !filterUnitId;
+    const thMain = document.getElementById('th-assignment-action-main');
+    const thIntegrated = document.getElementById('th-assignment-action-integrated');
 
-    if (isAdmin && !filterUnitId) {
+    // [V14.12] Action column is NEVER visible in the main Assignments tab
+    if (thMain) thMain.classList.add('hidden');
+    // Integrated Action column only visible if we are in a unit (can manage)
+    if (thIntegrated) thIntegrated.classList.toggle('hidden', isGlobal || !canManageAssignments);
+
+    if (isAdmin && isGlobal) {
         // [V12.1.3] Global Feed: Sort all assignments by newest first
         const sortedAll = [...assignments].sort((a, b) => {
             const getTs = (item) => {
@@ -1316,9 +1322,13 @@ window.renderAssignments = window.renderAssignments || function(assignments = []
             };
             return getTs(b) - getTs(a);
         });
-        renderAssignmentsTable(sortedAll, true);
+        // Target specifically the Global/Main Assignments Table
+        renderAssignmentsTable(sortedAll, canManageAssignments, 'global', '#view-assignments .assignment-table-body');
     } else {
-        renderAssignmentsTable(assignments, canManageAssignments);
+        // Target specifically the Main Assignments Tab (Unit View)
+        renderAssignmentsTable(assignments, canManageAssignments, 'unit-main', '#view-assignments .assignment-table-body');
+        // Target specifically the Integrated Assignments Table (Settings Tab)
+        renderAssignmentsTable(assignments, canManageAssignments, 'unit-integrated', '#assignments-container .assignment-table-body');
     }
     // [V13.6] Note: Cleanup of old guides moved to the TOP of the function to prevent flickering
 }
@@ -1326,13 +1336,19 @@ window.renderAssignments = window.renderAssignments || function(assignments = []
 /**
  * Shared Table Renderer for Assignments
  */
-window.renderAssignmentsTable = window.renderAssignmentsTable || function(assignments, canManageAssignments) {
-    const assignmentTableBodies = document.querySelectorAll('.assignment-table-body');
-    if (assignmentTableBodies.length === 0) return;
+window.renderAssignmentsTable = window.renderAssignmentsTable || function(assignments, canManageAssignments, context = 'unit-main', targetSelector = '.assignment-table-body') {
+    const tableBodies = document.querySelectorAll(targetSelector);
+    if (tableBodies.length === 0) return;
     
+    // logic constants
+    const showActionCol = (context === 'unit-integrated') && canManageAssignments;
+    const clickAction = (context === 'global' || context === 'unit-integrated') 
+                        ? 'modal' 
+                        : (context === 'unit-main' ? 'url' : 'modal');
+
     if (!assignments || assignments.length === 0) {
-        const emptyMsg = `<tr><td colspan="${canManageAssignments ? 6 : 5}" class="text-center py-8 text-gray-400">尚無作業繳交紀錄</td></tr>`;
-        assignmentTableBodies.forEach(tbody => tbody.innerHTML = emptyMsg);
+        const emptyMsg = `<tr><td colspan="${showActionCol ? 6 : 5}" class="text-center py-8 text-gray-400">尚無作業繳交紀錄</td></tr>`;
+        tableBodies.forEach(tbody => tbody.innerHTML = emptyMsg);
         return;
     }
 
@@ -1345,27 +1361,21 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
             else submittedDate = new Date(ts).toLocaleString();
         }
 
-        const title = lessonsMap[a.courseId] || a.courseId;
         const currentStatus = a.currentStatus || a.status || 'new'; 
-
         const badge = `<span class="${currentStatus === 'submitted' ? 'bg-yellow-100 text-yellow-800' : (currentStatus === 'graded' ? 'bg-green-100 text-green-800' : 'bg-gray-100')} px-2 py-0.5 rounded text-[10px] font-bold">${currentStatus === 'submitted' ? '待評分' : (currentStatus === 'graded' ? '已評分' : currentStatus)}</span>`;
 
-        let displayUnit = (a.unitId || '').replace('.html', '').replace(/-/g, ' ');
-        
-        let actionButton = '';
-        if (canManageAssignments) {
-            actionButton = `
-                <button onclick="event.stopPropagation(); window.openGradingModal('${a.id}')" 
-                    id="btn-grade-${a.id}"
-                    class="bg-blue-100 hover:bg-blue-600 hover:text-white text-blue-700 px-2 py-0.5 sm:px-3 sm:py-1 rounded text-[10px] sm:text-xs font-bold transition">
-                    ${currentStatus === 'graded' ? '查看/修改' : '評分'}
-                </button>
-            `;
+        // Determine Row Onclick logic
+        let rowOnClick = '';
+        if (clickAction === 'modal') {
+            rowOnClick = `window.openGradingModal('${a.id}')`;
+        } else {
+            // clickAction === 'url'
+            rowOnClick = a.assignmentUrl ? `window.open('${a.assignmentUrl}', '_blank')` : "vibeShowToast('此作業無連結', 'warning')";
         }
         
         return `
         <tr class="lg:hover:bg-blue-50/50 transition border-b border-gray-100 cursor-pointer group text-xs md:text-sm" 
-            onclick="${canManageAssignments ? `window.openGradingModal('${a.id}')` : (a.assignmentUrl ? `window.open('${a.assignmentUrl}', '_blank')` : '')}">
+            onclick="${rowOnClick}">
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-gray-800">
                 <div class="font-medium group-hover:text-blue-600 transition-colors truncate max-w-[150px] md:max-w-none">${escapeHtml(a.studentEmail || a.userEmail)}</div>
             </td>
@@ -1378,7 +1388,7 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-400 text-center">${submittedDate}</td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-center">${badge}</td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 font-bold text-gray-700 text-center">${a.grade !== null && a.grade !== undefined ? a.grade : '-'}</td>
-            <td class="py-2 px-1 sm:py-3 sm:px-2 text-right ${!canManageAssignments ? 'hidden' : ''}">
+            <td class="py-2 px-1 sm:py-3 sm:px-2 text-right ${!showActionCol ? 'hidden' : ''}">
                 <button 
                     onclick="event.stopPropagation(); window.openGradingModal('${a.id}')"
                     id="btn-grade-${a.id}"
@@ -1389,7 +1399,7 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
         </tr>`;
     }).join('');
 
-    assignmentTableBodies.forEach(tbody => tbody.innerHTML = content);
+    tableBodies.forEach(tbody => tbody.innerHTML = content);
 }
 
 
