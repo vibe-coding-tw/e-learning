@@ -637,11 +637,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
                             <tr class="hover:bg-gray-50">
                                 <td class="py-3 px-2">
                                     <div class="font-bold text-gray-800 mb-0.5">${escapeHtml(a.assignmentTitle || a.title || "未指定任務")}</div>
-                                    <div class="text-[10px] text-gray-400 flex items-center gap-1">
-                                        <span class="bg-gray-100 px-1 rounded">📦 ${escapeHtml(unitsTitleMap[resolveCanonicalUnitId(a.unitId)] || a.unitId || "課程單元")}</span>
-                                        <span class="opacity-50">/</span>
-                                        <span>${escapeHtml(lessonsMap[a.courseId] || a.courseId)}</span>
-                                    </div>
+                                    <div class="text-[10px] text-gray-400 capitalize">${escapeHtml(a.unitId ? a.unitId.replace('.html', '').replace(/-/g, ' ') : 'N/A')}</div>
                                 </td>
                                 <td class="py-3 px-2 text-gray-500 text-xs">${a.submittedAt ? new Date(a.submittedAt.seconds * 1000).toLocaleString() : '-'}</td>
                                 <td class="py-3 px-2">
@@ -1341,10 +1337,10 @@ function renderAssignmentsTable(assignments, canManageAssignments) {
 
         let displayUnit = (a.unitId || '').replace('.html', '').replace(/-/g, ' ');
         
-        let actionButton = '';
         if (canManageAssignments) {
             actionButton = `
-                <button onclick="event.stopPropagation(); openGradingModal('${a.id}')" 
+                <button onclick="event.stopPropagation(); window.openGradingModal('${a.id}')" 
+                    id="btn-grade-${a.id}"
                     class="bg-blue-100 hover:bg-blue-600 hover:text-white text-blue-700 px-2 py-0.5 sm:px-3 sm:py-1 rounded text-[10px] sm:text-xs font-bold transition">
                     ${currentStatus === 'graded' ? '查看/修改' : '評分'}
                 </button>
@@ -1353,7 +1349,7 @@ function renderAssignmentsTable(assignments, canManageAssignments) {
         
         return `
         <tr class="lg:hover:bg-blue-50/50 transition border-b border-gray-100 cursor-pointer group text-xs md:text-sm" 
-            onclick="openGradingModal('${a.id}')">
+            onclick="window.openGradingModal('${a.id}')">
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-gray-800">
                 <div class="font-medium group-hover:text-blue-600 transition-colors truncate max-w-[150px] md:max-w-none">${escapeHtml(a.studentEmail || a.userEmail)}</div>
             </td>
@@ -1361,11 +1357,7 @@ function renderAssignmentsTable(assignments, canManageAssignments) {
                 <div class="font-bold text-gray-800 text-xs md:text-sm mb-0.5">
                     ${escapeHtml(a.title || a.assignmentTitle || unitsTitleMap[resolveCanonicalUnitId(a.unitId)] || "未指定任務")}
                 </div>
-                <div class="text-[10px] text-slate-400 flex items-center gap-1">
-                    <span class="bg-slate-100 px-1 rounded">📦 ${escapeHtml(unitsTitleMap[resolveCanonicalUnitId(a.unitId)] || a.unitId)}</span>
-                    <span class="opacity-50">/</span>
-                    <span>${escapeHtml(lessonsMap[a.courseId] || a.courseId)}</span>
-                </div>
+                <div class="text-[10px] text-gray-400 capitalize">${escapeHtml(a.unitId ? a.unitId.replace('.html', '').replace(/-/g, ' ') : 'N/A')}</div>
             </td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-400 text-center">${submittedDate}</td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-center">${badge}</td>
@@ -1913,6 +1905,9 @@ function setupGradingFunctions() {
         const assignment = dashboardData.assignments.find(a => a.id === id);
         if (!assignment) return;
         currentGradingAssignment = assignment;
+
+        const titleEl = document.getElementById('grading-assignment-title');
+        if (titleEl) titleEl.innerText = assignment.assignmentTitle || assignment.title || "評分作業";
 
         idInput.value = id;
         scoreInput.value = assignment.grade || '';
