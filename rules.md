@@ -99,9 +99,11 @@
 - **取消 「分潤 (Earnings)」獨立分頁**: 該分頁按鈕必須隱藏/移除，所有財務數據統一整合至 Settings 分頁。
 
 ### 5-D. 介面欄位簡約規範 (UI Minimalism)
-- **核心規則**: 在作業列表 (Assignments Table) 的副標題中，**嚴禁**顯示單元標題 (Unit Title) 或課程分類 (Course Category)。
-- **顯示標準**: 副標題僅允許顯示 `unitId` (Slug 格式，如 `03-unit-wifi-setup`)。
-- **目的**: 保持介面資訊密度適中，避免視覺過載，並確保導師能透過 ID 快速對應底層檔案。
+- **核心規則**: 在作業列表 (Assignments Table) 的欄位中，**嚴禁**顯示單元標題 (Unit Title) 或課程分類 (Course Category)。
+- **顯示佈局**: 
+  - **上方 (Top)**: 顯示 `unitId` (Slug 格式)，採小字灰色設計 (`text-[10px] text-gray-400`)。
+  - **下方 (Bottom)**: 顯示「作業標題 (Assignment Title)」，採粗體深色設計 (`font-bold text-gray-800`)。
+- **目的**: 保持介面資訊密度適中，確保導師能透過 ID 快速對應底層檔案。
 
 ### 5-E. 作業顯示與單元規範 (Unit-Centric Assignment Visibility)
 為了確保測試與開發的靈活性，作業列表的顯示邏輯必須遵守下列準則：

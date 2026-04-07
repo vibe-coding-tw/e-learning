@@ -1380,10 +1380,12 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
                 <div class="font-medium group-hover:text-blue-600 transition-colors truncate max-w-[150px] md:max-w-none">${escapeHtml(a.studentEmail || a.userEmail)}</div>
             </td>
             <td class="py-2 px-1 sm:py-3 sm:px-2">
-                <div class="font-bold text-gray-800 text-xs md:text-sm mb-0.5">
+                <div class="text-[10px] text-gray-400 capitalize mb-0.5">
+                    ${escapeHtml(a.unitId ? a.unitId.replace('.html', '').replace(/-/g, ' ') : 'N/A')}
+                </div>
+                <div class="font-bold text-gray-800 text-xs md:text-sm">
                     ${escapeHtml(a.title || a.assignmentTitle || unitsTitleMap[resolveCanonicalUnitId(a.unitId)] || "未指定任務")}
                 </div>
-                <div class="text-[10px] text-gray-400 capitalize">${escapeHtml(a.unitId ? a.unitId.replace('.html', '').replace(/-/g, ' ') : 'N/A')}</div>
             </td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-400 text-center">${submittedDate}</td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-center">${badge}</td>
