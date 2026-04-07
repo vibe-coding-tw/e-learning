@@ -1,4 +1,4 @@
-console.log("Dashboard Script v2026.04.07.V14.9.8_FINAL_REF Loaded");
+console.log("Dashboard Script v2026.04.07.V14.10.1_STRICT_SIM Loaded");
 // alert("Dashboard Script v6 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -508,26 +508,40 @@ function filterAssignmentsForCurrentView(assignments = []) {
         (assignment.userId || assignment.uid) === myUid ||
         normalizeEmail(assignment.studentEmail || assignment.userEmail) === normalizeEmail(myEmail);
 
-    // [V14.8.5] Assignments visibility hierarchy:
-    // 1. Admin: Sees everything in GLOBAL view.
-    // BUT in UNIT view (Integrated Assignments), we follow the tutor assignment if they are acting as a tutor.
-    const urlParams = new URLSearchParams(window.location.search);
-    const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
+    // 2. Unit Context: STRICT Role simulation for Admins/Tutors
+    if (filterUnitId) {
+        if (currentDashboardPermissions.isAdmin) {
+            if (adminTutorMode) {
+                // Admin in TUTOR mode: Only see assigned students, hide own.
+                console.log("[Debug] Admin Simulation: TUTOR MODE");
+                return assignments.filter(a => {
+                    return normalizeEmail(a.assignedTutorEmail) === normalizeEmail(myEmail) && !isOwnAssignment(a);
+                });
+            } else {
+                // Admin in STUDENT mode: Only see own.
+                console.log("[Debug] Admin Simulation: STUDENT MODE");
+                return assignments.filter(isOwnAssignment);
+            }
+        }
+        
+        if (currentDashboardPermissions.isQualifiedTutor) {
+             // Regular Tutor: Only see assigned students, hide own.
+             return assignments.filter(a => {
+                 return normalizeEmail(a.assignedTutorEmail) === normalizeEmail(myEmail) && !isOwnAssignment(a);
+             });
+        }
+    }
 
-    if (currentDashboardPermissions.isAdmin && !filterUnitId) {
+    // 3. Global Feed or Fallback:
+    if (currentDashboardPermissions.isAdmin) {
+        // Super Admin Global Feed: See everything.
         return assignments;
     }
 
-    // 2. Qualified Tutor or Admin in Unit Context:
-    if (currentDashboardPermissions.isAdmin || currentDashboardPermissions.isQualifiedTutor) {
-        console.log(`[Debug] Permitted View: isAdmin=${currentDashboardPermissions.isAdmin}, isTutor=${currentDashboardPermissions.isQualifiedTutor}`);
+    if (currentDashboardPermissions.isQualifiedTutor) {
+        // Global Tutor Feed: See assigned students.
         return assignments.filter(a => {
-            // Admin sees everything in the dashboard view
-            if (currentDashboardPermissions.isAdmin) return true;
-
-            // Qualified Tutor sees students assigned to them, but not themselves
-            const isMatch = normalizeEmail(a.assignedTutorEmail) === normalizeEmail(myEmail) && !isOwnAssignment(a);
-            return isMatch;
+            return normalizeEmail(a.assignedTutorEmail) === normalizeEmail(myEmail) && !isOwnAssignment(a);
         });
     }
 

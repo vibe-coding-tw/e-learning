@@ -105,7 +105,9 @@
 
 ### 5-E. 作業顯示與單元規範 (Unit-Centric Assignment Visibility)
 為了確保測試與開發的靈活性，作業列表的顯示邏輯必須遵守下列準則：
-- **管理者豁免 (Admin Override)**：當管理員 (Admin) 處於單元視角 (Unit Context) 且進入「Integrated Assignments」表格時，**必須顯示管理員自己的測試作業**。嚴禁在單元視議下對管理員套用 `!isOwnAssignment` 過濾邏輯。
+- **單元視角下的角色模擬 (Role Simulation in Unit Context)**：當管理員 (Admin) 處於單元視角 (Unit Context) 且進入「Integrated Assignments」表格時，**嚴禁具備全域特權**。系統必須依據「導師模式 (Tutor Mode)」開關進行 100% 擬真切換：
+    - **輔導老師模式 OFF (學員視角)**：僅顯示管理員自己的測試作業（遵循 `isOwnAssignment` 邏輯）。
+    - **輔導老師模式 ON (老師視角)**：僅顯示指派給該管理員（作為導師）的學生作業。管理員自己的作業在此模式下應被隱藏。
 - **單元識別相容性 (Unit ID Normalization)**：系統在比對 `unitId` 時，必須對 `.html` 後綴與 `start-` 等導學前綴具有容錯性。只要核心 Slug 一致，即應視為同一單元的作業並在儀表板中合併顯示。
 - **取消 CourseId 強制過濾**：在具備 `unitId` 的單元視角下，只要 `unitId` 符合，即應顯示作業。禁止因為 `courseId` 欄位不精確匹配而篩除符合單元條件的紀錄。
 
