@@ -518,7 +518,8 @@ function filterAssignmentsForCurrentView(assignments = []) {
             if (currentDashboardPermissions.isAdmin) return true;
 
             // Qualified Tutor sees students assigned to them, but not themselves
-            return normalizeEmail(a.assignedTutorEmail) === normalizeEmail(myEmail) && !isOwnAssignment(a);
+            const isMatch = normalizeEmail(a.assignedTutorEmail) === normalizeEmail(myEmail) && !isOwnAssignment(a);
+            return isMatch;
         });
     }
 
@@ -1452,13 +1453,24 @@ window.switchTab = function (tabName) {
         const isQualifiedTutor = !!filterUnitId && currentDashboardPermissions.isQualifiedTutor;
         if (isQualifiedTutor || myRole === 'admin') {
             document.getElementById('assignments-container')?.classList.remove('hidden');
+            console.log("[Debug] Total raw assignments in data:", dashboardData.assignments.length);
+            console.log("[Debug] Filtering for Unit:", filterUnitId);
+            
             let displayAssignments = filterAssignmentsForCurrentView(dashboardData.assignments);
+            console.log("[Debug] Assignments after permission filter:", displayAssignments.length);
+
             if (filterUnitId) {
-                // If unitId is present, we prioritize matching by unitId and ignore strict courseId field
-                displayAssignments = displayAssignments.filter(a => unitIdsMatch(a.unitId, filterUnitId));
+                displayAssignments = displayAssignments.filter(a => {
+                    const match = unitIdsMatch(a.unitId, filterUnitId);
+                    if (normalizeEmail(a.studentEmail).includes('rover.k.chen')) {
+                        console.log(`[Debug] Checking Rover's doc ${a.id}: unitId=${a.unitId}, match=${match}`);
+                    }
+                    return match;
+                });
             } else if (filterCourseId) {
                 displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
             }
+            console.log("[Debug] Final assignments to render:", displayAssignments.length);
             // Resolve guide for the integrated view
             renderAssignments(displayAssignments, "", { showGuide: false });
         } else {
