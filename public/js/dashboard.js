@@ -1,4 +1,4 @@
-console.log("Dashboard Script v2026.04.07.FINAL_V14.8.7_AI_STABLE Loaded");
+console.log("Dashboard Script v2026.04.07.FINAL_V14.9.2_FIX_SYNTAX_ERR Loaded");
 // alert("Dashboard Script v6 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -350,63 +350,30 @@ function resolveCourseIdFromUrlParam(paramId) {
     return paramId;
 }
 
-function unitIdsMatch(idA, idB) {
-    if (!idA || !idB) return false;
-    
-    // Normalize both for basic comparison
-    const normA = idA.toLowerCase().trim();
-    const normB = idB.toLowerCase().trim();
-    
-    if (normA === normB) return true;
-    
-    // Robust variant matching (handling .html and start- prefix)
-    const variantsA = getEquivalentUnitIds(normA);
-    const variantsB = getEquivalentUnitIds(normB);
-    
-    // Check if any variant of A matches any variant of B
-    for (let vA of variantsA) {
-        if (variantsB.has(vA)) return true;
-    }
-    
-    return false;
-}
+window.unitIdsMatch = window.unitIdsMatch || function(id1, id2) {
+    if (!id1 || !id2) return false;
+    // Universal prefix stripper: removes "01-unit-", "start-", "basic-03-unit-", etc.
+    const clean = (id) => String(id).trim().toLowerCase().replace('.html', '').replace(/^.*?-(unit|start|lesson)-/i, '');
+    return clean(id1) === clean(id2);
+};
 
-function getEquivalentUnitIds(unitId) {
-    if (!unitId) return new Set();
+window.getEquivalentUnitIds = window.getEquivalentUnitIds || function(unitId) {
+    if (!unitId) return [];
     const normalized = unitId.toLowerCase().trim();
-    const variants = new Set();
-    variants.add(normalized);
+    const base = normalized.replace('.html', '').replace(/^.*?-(unit|start|lesson)-/i, '');
     
-    // Handle .html suffix
-    const withHtml = normalized.endsWith('.html') ? normalized : `${normalized}.html`;
-    const withoutHtml = withHtml.replace(/\.html$/i, '');
-    variants.add(withHtml);
-    variants.add(withoutHtml);
-    // Handle start- prefix variants for older data consistency
-    if (/^0[1-5]-unit-/.test(withHtml)) {
-        variants.add(`start-${withHtml}`);
-        variants.add(`start-${withoutHtml}`);
-    }
+    // Return a list of variants to help with lookup/matching
+    return [
+        normalized,
+        base,
+        `${base}.html`,
+        `01-unit-${base}.html`,
+        `start-${base}`,
+        `start-${base}.html`
+    ];
+};
 
-    if (normalized.startsWith('start-')) {
-        const sliced = normalized.substring(6);
-        variants.add(sliced);
-        variants.add(`${sliced}.html`);
-    }
-
-    return Array.from(variants);
-}
-
-function unitIdsMatch(idA, idB) {
-    if (!idA || !idB) return false;
-    
-    const variantsA = new Set(getEquivalentUnitIds(idA));
-    const variantsB = getEquivalentUnitIds(idB);
-    
-    return variantsB.some(vB => variantsA.has(vB));
-}
-
-function resolveCanonicalUnitId(unitId) {
+window.resolveCanonicalUnitId = window.resolveCanonicalUnitId || function(unitId) {
     const candidates = getEquivalentUnitIds(unitId);
     if (candidates.length === 0) return '';
 
@@ -583,9 +550,9 @@ function renderStudentDashboard(data, filterUnitId = null) {
 
     // Filter if courseId is present
     if (filterCourseId) {
-        // [NEW] Filter assignments by unit if present
+        // [V14.9] DECOUPLED: If we have a unit context, prioritize unitId matching.
+        // We no longer strip courseId matches if the unitId is correct.
         if (filterUnitId) {
-            // [V14.9] Relaxed unit filtering: Only care about unitId, ignore courseId mismatches for existing assignments
             displayAssignments = displayAssignments.filter(a => unitIdsMatch(a.unitId, filterUnitId));
         } else {
             displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
@@ -1052,7 +1019,7 @@ renderAssignments(displayAssignments, guideContent);
 }
 
 // Helper: Resolve assignment guide for a unit
-function resolveAssignmentGuide(data, filterCourseId, filterUnitId) {
+window.resolveAssignmentGuide = window.resolveAssignmentGuide || function(data, filterCourseId, filterUnitId) {
     if (!filterCourseId || !filterUnitId) return "";
     filterUnitId = resolveCanonicalUnitId(filterUnitId);
 
@@ -1213,7 +1180,7 @@ window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null)
 /**
  * [V14.3] Standardized Render Assignments with Placeholder Support
  */
-function renderAssignments(assignments = [], guideContent = "", options = {}) {
+window.renderAssignments = window.renderAssignments || function(assignments = [], guideContent = "", options = {}) {
     const { showGuide = true } = options;
     const { filterUnitId, filterCourseId } = getCurrentDashboardContext();
     const isAdmin = myRole === 'admin';
@@ -1330,7 +1297,7 @@ function renderAssignments(assignments = [], guideContent = "", options = {}) {
 /**
  * Shared Table Renderer for Assignments
  */
-function renderAssignmentsTable(assignments, canManageAssignments) {
+window.renderAssignmentsTable = window.renderAssignmentsTable || function(assignments, canManageAssignments) {
     const assignmentTableBodies = document.querySelectorAll('.assignment-table-body');
     if (assignmentTableBodies.length === 0) return;
     
@@ -1552,11 +1519,11 @@ window.switchTab = function (tabName) {
 };
 
 // --- Admin Features ---
-function setupAdminFeatures() {
+window.setupAdminFeatures = window.setupAdminFeatures || function() {
     // Admin features are now initialized during renderAdminConsole
 }
 
-function renderAdminConsole() {
+window.renderAdminConsole = window.renderAdminConsole || function() {
     if (myRole !== 'admin') return;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -1837,7 +1804,7 @@ window.handleAssignTutor = async function (studentUid, unitId, tutorEmail) {
 };
 
 // --- Grading Logic ---
-function setupGradingFunctions() {
+window.setupGradingFunctions = window.setupGradingFunctions || function() {
     const modal = document.getElementById('grading-modal');
     if (!modal) return; // Guard if modal not found
 
@@ -1922,8 +1889,17 @@ function setupGradingFunctions() {
     }
 
     window.openGradingModal = function (id) {
+        console.log(`[Grading] Opening modal for ID: ${id}`);
+        if (!dashboardData || !dashboardData.assignments) {
+            console.error("[Grading] dashboardData.assignments is missing!");
+            return;
+        }
         const assignment = dashboardData.assignments.find(a => a.id === id);
-        if (!assignment) return;
+        if (!assignment) {
+            console.error(`[Grading] Assignment NOT FOUND for ID: ${id}. Candidates:`, dashboardData.assignments.map(a => a.id));
+            alert("找不到該作業資料，請重新整理頁面。");
+            return;
+        }
         currentGradingAssignment = assignment;
 
         const titleEl = document.getElementById('grading-assignment-title');
@@ -2070,7 +2046,7 @@ function setupGradingFunctions() {
 }
 
 // Utils
-function escapeHtml(text) {
+window.escapeHtml = window.escapeHtml || function(text) {
     if (!text) return "";
     return String(text)
         .replace(/&/g, "&amp;")
@@ -2080,7 +2056,7 @@ function escapeHtml(text) {
         .replace(/'/g, "&#039;");
 }
 
-function formatUnitName(fileName) {
+window.formatUnitName = window.formatUnitName || function(fileName) {
     if (!fileName) return "Unknown";
     let name = fileName.replace('.html', '');
 
@@ -2096,7 +2072,7 @@ function formatUnitName(fileName) {
 }
 
 // --- Data Aggregation Logic ---
-function aggregateData(data) {
+window.aggregateData = window.aggregateData || function(data) {
     if (!data.students) return;
 
     const MENU_PAGES = new Set([
@@ -2144,19 +2120,21 @@ function aggregateData(data) {
         student.courseProgress = aggregated;
     });
 
-    // Fix assignments courseId if needed
+    // Fix assignments courseId & ensure ID stability
     if (data.assignments) {
         data.assignments.forEach(a => {
+            // [REPAIR] Ensure id is always present (backend returns id, but we be defensive)
+            if (!a.id && a.docId) a.id = a.docId;
+            
             const realId = findCourseId(a.courseId);
             if (realId && realId !== a.courseId) {
-                // console.log(`Mapping Assignment ${ a.id } courseId ${ a.courseId } -> ${ realId } `);
                 a.courseId = realId;
             }
         });
     }
 }
 
-function findCourseId(key) {
+window.findCourseId = window.findCourseId || function(key) {
     // 1. Exact match in loaded lessons
     const exact = allLessons.find(l => l.courseId === key);
     if (exact) return key;
@@ -2200,7 +2178,7 @@ function findCourseId(key) {
 
 // --- Course Settings Feature ---
 
-function setupSettingsFeature() {
+window.setupSettingsFeature = window.setupSettingsFeature || function() {
     // Buttons are now rendered individually in each row
 }
 
@@ -2208,7 +2186,7 @@ function setupSettingsFeature() {
  * Checks if a user is explicitly authorized as a tutor for a specific unit.
  * Logic matches renderAdminConsole: unit-level authorizedTutors OR legacy classroom URL keys.
  */
-function isUserAuthorizedForUnit(fileName, courseId, email) {
+window.isUserAuthorizedForUnit = window.isUserAuthorizedForUnit || function(fileName, courseId, email) {
     if (!email) return false;
     const { isAdmin, isPaidStudent } = currentDashboardPermissions;
 
@@ -2412,7 +2390,7 @@ async function renderSettingsTab(filterUnitId = null) {
     }
 }
 
-function renderAssignmentConfigRow(courseId, fileName, tutorMap = {}, courseTitle = "", isAuthorized) {
+window.renderAssignmentConfigRow = window.renderAssignmentConfigRow || function(courseId, fileName, tutorMap = {}, courseTitle = "", isAuthorized) {
     const userEmail = auth.currentUser?.email;
     const isAdmin = myRole === 'admin' && adminTutorMode;
     
@@ -2455,7 +2433,7 @@ function renderAssignmentConfigRow(courseId, fileName, tutorMap = {}, courseTitl
     `;
 }
 
-function renderGuideRow(courseId, fileName, tutorSegment, courseTitle, isAuthorized) {
+window.renderGuideRow = window.renderGuideRow || function(courseId, fileName, tutorSegment, courseTitle, isAuthorized) {
     return `
         <div class="unit-guide-row bg-white rounded-3xl border border-gray-100 p-10 shadow-sm transition-all hover:shadow-md">
             ${isAuthorized ? `
@@ -2474,7 +2452,7 @@ function renderGuideRow(courseId, fileName, tutorSegment, courseTitle, isAuthori
 }
 
 // Helper to split instructor guide into parts
-function robustExtractGuideSegments(tutorInput, assignmentInput = null) {
+window.robustExtractGuideSegments = window.robustExtractGuideSegments || function(tutorInput, assignmentInput = null) {
     console.log("[Debug] robustExtractGuideSegments init.",
         "Instructor type:", typeof tutorInput,
         "Assignment type:", typeof assignmentInput);
@@ -2605,7 +2583,7 @@ document.addEventListener('keydown', (e) => {
     }
 });
 // --- Earnings ---
-function renderEarningsTab(data) {
+window.renderEarningsTab = window.renderEarningsTab || function(data) {
     const totalEarningsEl = document.getElementById('stat-total-earnings');
     const promoCodeEl = document.getElementById('display-promo-code');
     const tableBody = document.getElementById('earnings-table-body');
@@ -2735,7 +2713,7 @@ function renderEarningsTab(data) {
     totalEarningsEl.innerText = total.toLocaleString();
 }
 
-function buildPromoInviteKit(unitId, promoCode) {
+window.buildPromoInviteKit = window.buildPromoInviteKit || function(unitId, promoCode) {
     if (!unitId) {
         return { ready: false, message: '請先切換到特定課程單元，才能生成專屬招生邀請工具。' };
     }
