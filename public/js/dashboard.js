@@ -511,12 +511,15 @@ function filterAssignmentsForCurrentView(assignments = []) {
         return assignments;
     }
 
-    // 2. Qualified Tutor or Admin in Unit Context: Sees students assigned to THEM.
-    if (currentDashboardPermissions.isQualifiedTutor || currentDashboardPermissions.isAdmin) {
-        return assignments.filter(a =>
-            normalizeEmail(a.assignedTutorEmail) === normalizeEmail(myEmail) &&
-            !isOwnAssignment(a)
-        );
+    // 2. Qualified Tutor or Admin in Unit Context:
+    if (currentDashboardPermissions.isAdmin || currentDashboardPermissions.isQualifiedTutor) {
+        return assignments.filter(a => {
+            // Admin sees everything in the dashboard view
+            if (currentDashboardPermissions.isAdmin) return true;
+
+            // Qualified Tutor sees students assigned to them, but not themselves
+            return normalizeEmail(a.assignedTutorEmail) === normalizeEmail(myEmail) && !isOwnAssignment(a);
+        });
     }
 
     // 3. Student (Paid or Role): Only see their own.
