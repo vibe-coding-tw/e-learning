@@ -3108,23 +3108,8 @@ exports.verifyPromoCode = onCall(async (request) => {
             };
         }
 
-        // Standard Promo Code Logic
-        const promoDoc = await db.collection('promo_codes').doc(inputStr.toUpperCase()).get();
-        if (!promoDoc.exists) {
-            return { success: false, message: '無效的代碼' };
-        }
-
-        const promoData = promoDoc.data();
-        if (promoData.isActive === false) {
-            return { success: false, message: '此代碼已停用' };
-        }
-
-        return { 
-            success: true, 
-            tutor: promoData.tutorEmail,
-            tutorName: promoData.tutorName || promoData.tutorEmail,
-            courseId: promoData.courseId || ''
-        };
+        // [V15.2] Legacy Promo Code Removal: No longer supports 6-digit codes.
+        return { success: false, message: '目前僅支援以 GitHub Classroom 連結作為推薦識別，請輸入老師提供的作業連結。' };
     } catch (e) {
         console.error(`[Promo] Error: ${e.message}`);
         throw new HttpsError('internal', e.message);
