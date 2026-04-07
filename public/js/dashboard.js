@@ -1,4 +1,4 @@
-console.log("Dashboard Script v2026.04.07.FINAL_V14.9.3_FIX_MODAL_REF Loaded");
+console.log("Dashboard Script v2026.04.07.DEBUG_V14.9.6_FIX_LOGS Loaded");
 // alert("Dashboard Script v6 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -513,6 +513,7 @@ function filterAssignmentsForCurrentView(assignments = []) {
 
     // 2. Qualified Tutor or Admin in Unit Context:
     if (currentDashboardPermissions.isAdmin || currentDashboardPermissions.isQualifiedTutor) {
+        console.log(`[Debug] Permitted View: isAdmin=${currentDashboardPermissions.isAdmin}, isTutor=${currentDashboardPermissions.isQualifiedTutor}`);
         return assignments.filter(a => {
             // Admin sees everything in the dashboard view
             if (currentDashboardPermissions.isAdmin) return true;
@@ -1490,13 +1491,23 @@ window.switchTab = function (tabName) {
         const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
         let filterCourseId = resolveCourseIdFromUrlParam(urlParams.get('courseId'));
 
+        console.log("[DebugTab] tab assignments: filterUnitId=", filterUnitId, "total raw counts:", dashboardData.assignments.length);
         let displayAssignments = filterAssignmentsForCurrentView(dashboardData.assignments);
+        console.log("[DebugTab] tab assignments: count after permissions filter:", displayAssignments.length);
+
         if (filterUnitId) {
             // Same here: prioritize unitId and relax courseId requirement for unit-specific view
-            displayAssignments = displayAssignments.filter(a => unitIdsMatch(a.unitId, filterUnitId));
+            displayAssignments = displayAssignments.filter(a => {
+                const match = unitIdsMatch(a.unitId, filterUnitId);
+                if (normalizeEmail(a.studentEmail).includes('rover.k.chen')) {
+                     console.log(`[DebugAssignmentTab] Checking Rover's doc ${a.id}: unitId=${a.unitId}, match=${match}`);
+                }
+                return match;
+            });
         } else if (filterCourseId) {
             displayAssignments = displayAssignments.filter(a => a.courseId === filterCourseId);
         }
+        console.log("[DebugTab] tab assignments: Final count to render:", displayAssignments.length);
 
         // [NEW] Extract and pass assignment guide
         let assignmentGuide = "";
