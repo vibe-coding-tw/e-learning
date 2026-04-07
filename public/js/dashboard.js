@@ -1114,9 +1114,9 @@ window.toggleUnitLogs = function (id, event) {
 };
 
 
-window.handleAssignmentClick = function (courseId, unitId, submissionUrl = null) {
-    if (submissionUrl) {
-        window.open(submissionUrl, '_blank');
+window.handleAssignmentClick = function (courseId, unitId, assignmentUrl = null) {
+    if (assignmentUrl) {
+        window.open(assignmentUrl, '_blank');
         return;
     }
     // [MOD v12.0.7] Dynamic Permission Check (Context-Aware)

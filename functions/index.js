@@ -2596,15 +2596,14 @@ exports.submitAssignment = onCall(async (request) => {
             throw new HttpsError('failed-precondition', '此單元尚未完成老師指派，暫時無法建立作業紀錄。');
         }
 
-        // [NEW] Prevent status downgrade
+        // Prevent status downgrade
         const existingDoc = await docRef.get();
         let finalStatus = currentStatus;
         if (existingDoc.exists) {
             const existingData = existingDoc.data();
             const existingStatus = existingData.currentStatus || existingData.status;
             if ((existingStatus === 'submitted' || existingStatus === 'graded') && currentStatus === 'started') {
-                finalStatus = existingStatus; // Keep the higher status
-                console.log(`[submitAssignment] Status downgrade prevented for ${docId}: ${existingStatus} (existing) vs ${currentStatus} (new)`);
+                finalStatus = existingStatus;
             }
         }
 
@@ -2620,37 +2619,40 @@ exports.submitAssignment = onCall(async (request) => {
 
         const assignmentData = {
             id: docId,
-            userId: userId,
-            userEmail: userEmail,
-            userName: userName,
+            userId,
+            userEmail,
+            userName,
             courseId: courseId || "unknown_course",
             unitId: unitId || "unknown_unit",
-            assignmentId: assignmentId,
+            assignmentId,
             assignmentTitle: title || assignmentId,
-            submissionUrl: url || "",
+            assignmentUrl: url || "",
+            submissionUrl: url || "", // 標準化：統一收納 GitHub / Demo 連結 (保持相容)
             studentNote: note || "",
-            submittedAt: admin.firestore.FieldValue.serverTimestamp(),
             status: finalStatus,
-            currentStatus: finalStatus, // Consistency with gradeAssignment
+            currentStatus: finalStatus,
             assignmentType: assignmentType || "manual",
-            assignedTutorEmail: assignedTutorEmail,
-            grade: null,
-            tutorFeedback: null,
-            submissionHistory: admin.firestore.FieldValue.arrayUnion(historyEntry),
+            assignedTutorEmail,
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
         };
 
-        if (existingDoc.exists && finalStatus !== currentStatus) {
-            // If we prevented a downgrade, only update the history and updatedAt
+        if (existingDoc.exists) {
+            // 更新現有紀錄：推送 historyEntry 並覆蓋 assignment 元數據
             await docRef.update({
-                submissionHistory: admin.firestore.FieldValue.arrayUnion(historyEntry),
-                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                ...assignmentData,
+                submissionHistory: admin.firestore.FieldValue.arrayUnion(historyEntry)
             });
         } else {
-            await docRef.set(assignmentData, { merge: true });
+            // 全新繳交：初始化並設定 submittedAt
+            await docRef.set({
+                ...assignmentData,
+                submittedAt: admin.firestore.FieldValue.serverTimestamp(),
+                grade: null,
+                tutorFeedback: null,
+                submissionHistory: [historyEntry]
+            }, { merge: true });
         }
 
-        // Notify Tutor ONLY on final submission and only when a tutor is assigned
         if (currentStatus === 'submitted' && assignedTutorEmail) {
             const dashboardUrl = `https://vibe-coding.tw/dashboard.html?courseId=${encodeURIComponent(access.effectiveCourseId)}&unitId=${encodeURIComponent(access.canonicalUnitId)}&tab=assignments`;
             await sendAssignmentNotification(assignedTutorEmail, userName, assignmentData.assignmentTitle, dashboardUrl);
@@ -2665,7 +2667,6 @@ exports.submitAssignment = onCall(async (request) => {
     }
 });
 
-// 8.2 評改作業 (Tutor/Admin)
 exports.gradeAssignment = onCall(async (request) => {
     const { data, auth } = request;
     if (!auth) throw new HttpsError('unauthenticated', 'Must be logged in.');
