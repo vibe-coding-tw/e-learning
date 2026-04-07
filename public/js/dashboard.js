@@ -1,4 +1,4 @@
-console.log("Dashboard Script v2026.04.07.V14.10.1_STRICT_SIM Loaded");
+console.log("Dashboard Script v2026.04.07.V14.10.2_FIX_REF Loaded");
 // alert("Dashboard Script v6 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -507,6 +507,9 @@ function filterAssignmentsForCurrentView(assignments = []) {
     const isOwnAssignment = (assignment) =>
         (assignment.userId || assignment.uid) === myUid ||
         normalizeEmail(assignment.studentEmail || assignment.userEmail) === normalizeEmail(myEmail);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
 
     // 2. Unit Context: STRICT Role simulation for Admins/Tutors
     if (filterUnitId) {
