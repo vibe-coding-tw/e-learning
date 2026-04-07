@@ -1,4 +1,4 @@
-console.log("Dashboard Script v2026.04.07.FINAL_V14.9.2_FIX_SYNTAX_ERR Loaded");
+console.log("Dashboard Script v2026.04.07.FINAL_V14.9.3_FIX_MODAL_REF Loaded");
 // alert("Dashboard Script v6 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -1890,6 +1890,19 @@ window.setupGradingFunctions = window.setupGradingFunctions || function() {
 
     window.openGradingModal = function (id) {
         console.log(`[Grading] Opening modal for ID: ${id}`);
+        const modal = document.getElementById('grading-modal');
+        const idInput = document.getElementById('grade-assignment-id');
+        const scoreInput = document.getElementById('grade-score');
+        const feedbackInput = document.getElementById('grade-feedback');
+        const titleEl = document.getElementById('grading-assignment-title');
+        const historyContainer = document.getElementById('assignment-history');
+
+        if (!modal || !idInput || !scoreInput || !feedbackInput) {
+            console.error("[Grading] One or more grading modal elements are missing!");
+            alert("系統錯誤：找不到評分視窗元素，請重新整理頁面。");
+            return;
+        }
+
         if (!dashboardData || !dashboardData.assignments) {
             console.error("[Grading] dashboardData.assignments is missing!");
             return;
@@ -1902,7 +1915,6 @@ window.setupGradingFunctions = window.setupGradingFunctions || function() {
         }
         currentGradingAssignment = assignment;
 
-        const titleEl = document.getElementById('grading-assignment-title');
         if (titleEl) titleEl.innerText = assignment.assignmentTitle || assignment.title || "評分作業";
 
         idInput.value = id;
@@ -1955,6 +1967,16 @@ window.setupGradingFunctions = window.setupGradingFunctions || function() {
     }
 
     window.submitGrade = async function () {
+        const idInput = document.getElementById('grade-assignment-id');
+        const scoreInput = document.getElementById('grade-score');
+        const feedbackInput = document.getElementById('grade-feedback');
+        const submitBtn = document.getElementById('btn-submit-grade');
+
+        if (!idInput || !scoreInput || !feedbackInput || !submitBtn) {
+            alert('系統錯誤：找不到評分表單元素');
+            return;
+        }
+
         const id = idInput.value;
         const score = scoreInput.value;
         const feedback = feedbackInput.value;
