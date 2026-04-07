@@ -1337,6 +1337,7 @@ function renderAssignmentsTable(assignments, canManageAssignments) {
 
         let displayUnit = (a.unitId || '').replace('.html', '').replace(/-/g, ' ');
         
+        let actionButton = '';
         if (canManageAssignments) {
             actionButton = `
                 <button onclick="event.stopPropagation(); window.openGradingModal('${a.id}')" 
