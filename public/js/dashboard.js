@@ -1,4 +1,4 @@
-console.log("Dashboard Script v2026.04.07.V14.9.7_FIX_REF Loaded");
+console.log("Dashboard Script v2026.04.07.V14.9.8_FINAL_REF Loaded");
 // alert("Dashboard Script v6 Loaded"); // Uncomment if needed for hard debugging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -504,7 +504,6 @@ function configureStudentTabsForUnitAccess() {
 }
 
 function filterAssignmentsForCurrentView(assignments = []) {
-    const normalizeEmail = (value = '') => String(value || '').trim().toLowerCase();
     const isOwnAssignment = (assignment) =>
         (assignment.userId || assignment.uid) === myUid ||
         normalizeEmail(assignment.studentEmail || assignment.userEmail) === normalizeEmail(myEmail);
