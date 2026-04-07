@@ -1336,7 +1336,7 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
         
         return `
         <tr class="lg:hover:bg-blue-50/50 transition border-b border-gray-100 cursor-pointer group text-xs md:text-sm" 
-            onclick="window.openGradingModal('${a.id}')">
+            onclick="window.open('${a.assignmentUrl}', '_blank')">
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-gray-800">
                 <div class="font-medium group-hover:text-blue-600 transition-colors truncate max-w-[150px] md:max-w-none">${escapeHtml(a.studentEmail || a.userEmail)}</div>
             </td>
@@ -1350,7 +1350,12 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-center">${badge}</td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 font-bold text-gray-700 text-center">${a.grade !== null && a.grade !== undefined ? a.grade : '-'}</td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-right ${!canManageAssignments ? 'hidden' : ''}">
-                ${actionButton}
+                <button 
+                    onclick="event.stopPropagation(); window.openGradingModal('${a.id}')"
+                    id="btn-grade-${a.id}"
+                    class="bg-blue-100 hover:bg-blue-600 hover:text-white text-blue-700 px-2 py-0.5 sm:px-3 sm:py-1 rounded text-[10px] sm:text-xs font-bold transition">
+                    ${currentStatus === 'graded' ? '查看/修改' : '評分'}
+                </button>
             </td>
         </tr>`;
     }).join('');
