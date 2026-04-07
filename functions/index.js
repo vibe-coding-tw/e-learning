@@ -596,6 +596,41 @@ function hasQualifiedTutorStatus(userData = {}, unitId = '') {
     return Object.values(tutorConfigs).some(config => config && config.authorized === true);
 }
 
+/**
+ * Checks if a tutor is fully certified for all units in a specific course.
+ * @param {object} userData - User document data
+ * @param {string} courseId - The course to check
+ * @param {Array} lessons - Lessons metadata
+ * @returns {boolean}
+ */
+function isTutorFullyQualifiedForCourse(userData = {}, courseId = '', lessons = []) {
+    const tutorConfigs = userData.tutorConfigs || {};
+    const lesson = lessons.find(l => l.courseId === courseId);
+    if (!lesson || !Array.isArray(lesson.courseUnits)) return false;
+
+    // A tutor is fully qualified for a course ONLY if EVERY unit in that course is authorized in their config
+    return lesson.courseUnits.every(unitId => {
+        const canonical = resolveCanonicalUnitId(unitId, lessons);
+        return !!(tutorConfigs[canonical] && tutorConfigs[canonical].authorized === true);
+    });
+}
+
+/**
+ * Normalizes a GitHub Classroom URL for consistent matching.
+ */
+function normalizeGitHubUrl(url = '') {
+    if (!url) return '';
+    try {
+        let clean = url.trim().toLowerCase();
+        // Remove trailing slashes
+        clean = clean.replace(/\/+$/, '');
+        // Ensure it has protocol for URL parsing if needed, but here we just need a string match
+        return clean;
+    } catch (e) {
+        return url.trim().toLowerCase();
+    }
+}
+
 async function upsertStudentUnitAssignment(db, studentUid, unitId, tutorEmail, assignedByUid = 'system', notify = true) {
     const userRef = db.collection('users').doc(studentUid);
     const userDoc = await userRef.get();
@@ -3008,12 +3043,73 @@ exports.mapReply = onRequest((req, res) => {
 // 11.1 驗證優惠代碼 (verifyPromoCode)
 exports.verifyPromoCode = onCall(async (request) => {
     const { data } = request;
-    const { promoCode } = data;
+    const { promoCode, cartItems = [] } = data; // [V15.1] cartItems optional for course-level qualification check
     if (!promoCode) throw new HttpsError('invalid-argument', '缺少代碼');
 
     try {
         const db = admin.firestore();
-        const promoDoc = await db.collection('promo_codes').doc(promoCode.toUpperCase()).get();
+        const inputStr = promoCode.trim();
+        
+        // [V15.1] Check if input is a GitHub Classroom URL
+        const isUrl = inputStr.toLowerCase().includes('github.com/classroom/');
+        if (isUrl) {
+            console.log(`[Promo] Resolving GitHub Link: ${inputStr}`);
+            const normalizedLink = normalizeGitHubUrl(inputStr);
+            
+            // Query collectionGroup for tutorConfigs with this assignmentUrl
+            const tutorConfigsSnap = await db.collectionGroup('tutorConfigs')
+                .where('assignmentUrl', '==', normalizedLink)
+                .get();
+
+            if (tutorConfigsSnap.empty) {
+                // Try non-normalized just in case
+                const retrySnap = await db.collectionGroup('tutorConfigs')
+                    .where('assignmentUrl', '==', inputStr)
+                    .get();
+                if (retrySnap.empty) {
+                    return { success: false, message: '查無此作業連結對應的導師' };
+                }
+                // Use retry results
+                tutorConfigsSnap.docs = retrySnap.docs;
+            }
+
+            // Extract Tutor Info from parent User Doc
+            const configDoc = tutorConfigsSnap.docs[0];
+            const tutorUid = configDoc.ref.parent.parent.id; // tutorConfigs -> unitId -> users -> uid
+            const tutorDoc = await db.collection('users').doc(tutorUid).get();
+            if (!tutorDoc.exists) return { success: false, message: '導師帳號已移除' };
+
+            const tutorData = tutorDoc.data();
+            const lessons = await getLessons();
+
+            // [Rule 5-G] Qualification Check: Must be certified for the WHOLE course
+            // If cartItems are provided, verify qualification for each course in cart
+            if (cartItems && cartItems.length > 0) {
+                const results = cartItems.map(item => {
+                    const courseId = item.courseId || item.id;
+                    return {
+                        courseId,
+                        qualified: isTutorFullyQualifiedForCourse(tutorData, courseId, lessons)
+                    };
+                });
+                const allQualified = results.every(r => r.qualified);
+                if (!allQualified) {
+                    const failId = results.find(r => !r.qualified).courseId;
+                    return { success: false, message: `此導師尚未取得「${failId}」的全單元認證，無法作為推薦人。` };
+                }
+            }
+
+            return { 
+                success: true, 
+                tutor: tutorData.email,
+                tutorName: tutorData.name || tutorData.email,
+                isLink: true,
+                message: '已成功辨識老師推薦連結'
+            };
+        }
+
+        // Standard Promo Code Logic
+        const promoDoc = await db.collection('promo_codes').doc(inputStr.toUpperCase()).get();
         if (!promoDoc.exists) {
             return { success: false, message: '無效的代碼' };
         }
@@ -3030,6 +3126,7 @@ exports.verifyPromoCode = onCall(async (request) => {
             courseId: promoData.courseId || ''
         };
     } catch (e) {
+        console.error(`[Promo] Error: ${e.message}`);
         throw new HttpsError('internal', e.message);
     }
 });
