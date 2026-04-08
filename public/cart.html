@@ -164,14 +164,31 @@
             renderCartItems();
         }
 
+        function normalizeId(id) {
+            if (!id) return '';
+            return id.trim().replace(/\.html$/, '');
+        }
+
         function findCartItemIdForPromo(cart, targetCourseId = '', targetUnitId = '') {
             if (!cart || typeof cart !== 'object') return null;
-            if (targetCourseId && cart[targetCourseId]) return targetCourseId;
+            
+            const normalizedTargetCourseId = normalizeId(targetCourseId);
+            const normalizedTargetUnitId = normalizeId(targetUnitId || targetCourseId);
 
-            const normalizedUnitId = (targetUnitId || '').trim();
+            // 1. Direct Course ID Match
+            if (normalizedTargetCourseId && cart[normalizedTargetCourseId]) return normalizedTargetCourseId;
+
+            // 2. Iterate and match normalized unit identifiers
             return Object.keys(cart).find(itemId => {
                 const item = cart[itemId] || {};
-                return item.unitId === normalizedUnitId || item.sourceUnitId === normalizedUnitId;
+                const itemUnitId = normalizeId(item.unitId);
+                const itemSourceUnitId = normalizeId(item.sourceUnitId);
+                const itemProductId = normalizeId(itemId);
+
+                return itemUnitId === normalizedTargetUnitId || 
+                       itemSourceUnitId === normalizedTargetUnitId ||
+                       itemProductId === normalizedTargetUnitId ||
+                       itemProductId === normalizedTargetCourseId;
             }) || null;
         }
 
@@ -183,13 +200,15 @@
         }
 
         async function resolvePromoTargetItemId(cart, promoCourseId = '') {
-            let targetItemId = findCartItemIdForPromo(cart, promoCourseId, promoCourseId);
+            const normalizedPromoId = normalizeId(promoCourseId);
+            let targetItemId = findCartItemIdForPromo(cart, normalizedPromoId, normalizedPromoId);
             if (targetItemId) return targetItemId;
 
             const lessons = await getLessonsList();
-            const parentCourse = lessons.find(lesson =>
-                Array.isArray(lesson.courseUnits) && lesson.courseUnits.includes(promoCourseId)
-            );
+            const parentCourse = lessons.find(lesson => {
+                const units = (Array.isArray(lesson.courseUnits) ? lesson.courseUnits : []).map(u => normalizeId(u));
+                return units.includes(normalizedPromoId) || normalizeId(lesson.courseId) === normalizedPromoId;
+            });
 
             if (parentCourse?.courseId && cart[parentCourse.courseId]) {
                 return parentCourse.courseId;

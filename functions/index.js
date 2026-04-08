@@ -3108,26 +3108,28 @@ exports.verifyPromoCode = onCall(async (request) => {
             const usersSnapshot = await db.collection('users').get();
             let foundTutorDoc = null;
             let foundTutorData = null;
+            let matchedUnitId = null;
 
             for (const doc of usersSnapshot.docs) {
                 const uData = doc.data();
                 const tConfigs = uData.tutorConfigs || {};
                 
-                // Use Object.values or iterate to find the matching githubClassroomUrl
-                const hasMatch = Object.values(tConfigs).some(config => {
+                // [V15.6] Track exactly which unitId matches the URL
+                for (const [uId, config] of Object.entries(tConfigs)) {
                     // Config might be nested if dot in key (.html)
                     const effectiveConfig = (config && !config.authorized && config.html) ? config.html : config;
-                    if (!effectiveConfig || !effectiveConfig.authorized) return false;
+                    if (!effectiveConfig || !effectiveConfig.authorized) continue;
                     
                     const storedUrl = effectiveConfig.githubClassroomUrl || effectiveConfig.assignmentUrl || "";
-                    return normalizeGitHubUrl(storedUrl) === normalizedLink;
-                });
-
-                if (hasMatch) {
-                    foundTutorDoc = doc;
-                    foundTutorData = uData;
-                    break;
+                    if (normalizeGitHubUrl(storedUrl) === normalizedLink) {
+                        foundTutorDoc = doc;
+                        foundTutorData = uData;
+                        matchedUnitId = uId;
+                        break;
+                    }
                 }
+
+                if (foundTutorDoc) break;
             }
 
             if (!foundTutorDoc) {
@@ -3158,6 +3160,7 @@ exports.verifyPromoCode = onCall(async (request) => {
                 success: true, 
                 tutor: tutorData.email,
                 tutorName: tutorData.name || tutorData.email,
+                courseId: matchedUnitId, // [V15.6] Return our internal unitId for mapping in cart
                 isLink: true,
                 message: '已成功辨識老師推薦連結'
             };
