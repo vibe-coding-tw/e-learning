@@ -21,9 +21,16 @@ const NAV_STATE_VERSION = "2026.04.05.FINAL_V6";
 
 window.toggleMobileMenu = function () {
     const menu = document.getElementById('mobile-menu');
+    const btn = document.getElementById('mobile-menu-btn');
     if (menu) {
-        menu.classList.toggle('hidden');
-        menu.style.display = menu.classList.contains('hidden') ? 'none' : 'block';
+        const isHidden = menu.classList.contains('hidden');
+        if (isHidden) {
+            menu.classList.remove('hidden');
+            if (btn) btn.innerHTML = '<svg class="w-6 h-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+        } else {
+            menu.classList.add('hidden');
+            if (btn) btn.innerHTML = '<svg class="w-6 h-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>';
+        }
     }
 };
 
@@ -58,10 +65,20 @@ window.renderNav = function (rootPath = '.', options = {}) {
     const style = document.createElement('style');
     style.innerHTML = `
         @media (hover: hover) { .dropdown:hover .dropdown-menu { display: block; } }
-        #mobile-menu { transition: all 0.3s ease-in-out; }
+        #mobile-menu { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: top; }
         #mobile-menu-btn { cursor: pointer; touch-action: manipulation; }
+        #mobile-menu.hidden { display: none !important; opacity: 0; transform: scaleY(0.95); }
+        #mobile-menu:not(.hidden) { display: block !important; opacity: 1; transform: scaleY(1); }
     `;
     document.head.appendChild(style);
+
+    // [New] Inject FontAwesome for global icon support
+    if (!document.querySelector('link[href*="font-awesome"]')) {
+        const fa = document.createElement('link');
+        fa.rel = 'stylesheet';
+        fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';
+        document.head.appendChild(fa);
+    }
 
     const navHTML = `
     <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-[99999]" id="main-nav">
@@ -125,37 +142,40 @@ window.renderNav = function (rootPath = '.', options = {}) {
                     </div>
                 </div>
             </div>
-            <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-100 mt-2 absolute w-full left-0 bg-white shadow-lg z-[99998] px-4" style="display: none;">
-                <div class="flex flex-col space-y-4 pt-4 font-medium text-gray-600">
+            <div id="mobile-menu" class="hidden md:hidden pb-8 border-t border-slate-100 mt-0 absolute w-full left-0 bg-white/95 backdrop-blur-lg shadow-2xl z-[99998] px-6 max-h-[80vh] overflow-y-auto">
+                <div class="flex flex-col space-y-6 pt-6 font-medium text-slate-600">
                     <!-- Courses Section -->
-                    <div class="space-y-2">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">課程連結</span>
-                        <div class="grid grid-cols-2 gap-2">
-                            <a href="${resolve('prepare.html')}" class="block py-2 px-3 bg-slate-50 rounded-xl hover:text-cyan-600 transition-colors">課前準備</a>
-                            <a href="${resolve('started.html')}" class="block py-2 px-3 bg-slate-50 rounded-xl hover:text-cyan-600 transition-colors">入門課程</a>
-                            <a href="${resolve('basic.html')}" class="block py-2 px-3 bg-slate-50 rounded-xl hover:text-cyan-600 transition-colors">基礎實作</a>
-                            <a href="${resolve('advanced.html')}" class="block py-2 px-3 bg-slate-50 rounded-xl hover:text-cyan-600 transition-colors">進階應用</a>
+                    <div class="space-y-3">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] px-1">課程連結</span>
+                        <div class="grid grid-cols-2 gap-3">
+                            <a href="${resolve('prepare.html')}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 transition-all border border-transparent hover:border-indigo-100"><i class="fa-solid fa-book-open text-xs opacity-50"></i> 課前準備</a>
+                            <a href="${resolve('started.html')}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 transition-all border border-transparent hover:border-indigo-100"><i class="fa-solid fa-rocket text-xs opacity-50"></i> 入門課程</a>
+                            <a href="${resolve('basic.html')}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 transition-all border border-transparent hover:border-indigo-100"><i class="fa-solid fa-code text-xs opacity-50"></i> 基礎實作</a>
+                            <a href="${resolve('advanced.html')}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 transition-all border border-transparent hover:border-indigo-100"><i class="fa-solid fa-microchip text-xs opacity-50"></i> 進階應用</a>
                         </div>
                     </div>
                     <!-- Config Section -->
-                    <div class="space-y-2">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 text-blue-500">組態設定</span>
-                        <div class="grid grid-cols-2 gap-2">
-                            <a href="${resolve('examples/wifi-config.html')}" class="block py-2 px-3 bg-blue-50/50 rounded-xl hover:text-blue-600 transition-colors">WiFi 設定</a>
-                            <a href="${resolve('examples/motor-config.html')}" class="block py-2 px-3 bg-blue-50/50 rounded-xl hover:text-blue-600 transition-colors">馬達設定</a>
+                    <div class="space-y-3">
+                        <span class="text-[11px] font-bold text-blue-400 uppercase tracking-[0.2em] px-1">系統組態</span>
+                        <div class="grid grid-cols-2 gap-3">
+                            <a href="${resolve('examples/wifi-config.html')}" class="flex items-center gap-2 py-3 px-4 bg-blue-50/50 rounded-2xl hover:bg-blue-100 hover:text-blue-600 transition-all border border-transparent hover:border-blue-200"><i class="fa-solid fa-wifi text-xs opacity-50"></i> WiFi 設定</a>
+                            <a href="${resolve('examples/motor-config.html')}" class="flex items-center gap-2 py-3 px-4 bg-blue-50/50 rounded-2xl hover:bg-blue-100 hover:text-blue-600 transition-all border border-transparent hover:border-blue-200"><i class="fa-solid fa-gears text-xs opacity-50"></i> 馬達設定</a>
                         </div>
                     </div>
                     <!-- About Section -->
-                    <div class="space-y-2 pb-2">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 text-cyan-600">關於我們</span>
-                        <div class="flex flex-col gap-2">
-                            <a href="${resolve('faq.html')}" class="block py-3 px-4 bg-cyan-50/50 border border-cyan-100 rounded-xl hover:text-cyan-700 transition-colors flex justify-between items-center group">
-                                <span>課程使用說明</span>
-                                <i class="fa-solid fa-chevron-right text-[10px] opacity-30 group-hover:opacity-100 transition-opacity"></i>
+                    <div class="space-y-3 pb-4">
+                        <span class="text-[11px] font-bold text-cyan-500 uppercase tracking-[0.2em] px-1">關於 Vibe Coding</span>
+                        <div class="flex flex-col gap-3">
+                            <a href="${resolve('faq.html')}" class="flex items-center justify-between py-4 px-5 bg-cyan-50/50 border border-cyan-100 rounded-2xl hover:bg-cyan-100 hover:text-cyan-700 transition-all group">
+                                <div class="flex items-center gap-3">
+                                    <i class="fa-solid fa-circle-question opacity-50"></i>
+                                    <span>課程使用規範與 FAQ</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-right text-xs opacity-30 group-hover:translate-x-1 transition-transform"></i>
                             </a>
-                            <div class="grid grid-cols-2 gap-2">
-                                <a href="${resolve('about.html')}" class="block py-2 px-3 bg-slate-50 rounded-xl hover:text-cyan-600 transition-colors text-sm">關於付費</a>
-                                <a href="${resolve('collaboration.html')}" class="block py-2 px-3 bg-slate-50 rounded-xl hover:text-cyan-600 transition-colors text-sm">合作事宜</a>
+                            <div class="grid grid-cols-2 gap-3">
+                                <a href="${resolve('about.html')}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-cyan-50 hover:text-cyan-600 transition-all border border-transparent hover:border-cyan-100 text-sm"><i class="fa-solid fa-credit-card text-xs opacity-50"></i> 購買說明</a>
+                                <a href="${resolve('collaboration.html')}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-cyan-50 hover:text-cyan-600 transition-all border border-transparent hover:border-cyan-100 text-sm"><i class="fa-solid fa-handshake text-xs opacity-50"></i> 合作洽談</a>
                             </div>
                         </div>
                     </div>
