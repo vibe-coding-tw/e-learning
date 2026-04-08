@@ -164,9 +164,9 @@ async function sendCourseExpiringEmail(email, displayName, courseName, daysLeft)
  * @param {string} email - Tutor's email address
  * @param {string} unitName - Name of the unit
  * @param {string} unitId - The course unit ID
- * @param {string} promoCode - The unique 6-digit promo code for this unit
+ * @param {string} assignmentUrl - The GitHub Classroom assignment URL
  */
-async function sendTutorAuthorizationEmail(email, unitName, unitId, promoCode) {
+async function sendTutorAuthorizationEmail(email, unitName, unitId, assignmentUrl) {
     const cleanUnitId = unitId ? unitId.replace('.html', '') : '';
     const dashboardUrl = cleanUnitId ? `https://vibe-coding.tw/dashboard.html?unitId=${cleanUnitId}&tab=assignments` : `https://vibe-coding.tw/dashboard.html`;
 
@@ -174,7 +174,7 @@ async function sendTutorAuthorizationEmail(email, unitName, unitId, promoCode) {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
         subject: `Vibe Coding 課程單元授權通知: ${unitName}`,
-        text: `恭喜您成為 Vibe Coding 授權導師！\n\n您已獲得課程單元 "${unitName}" 的管理權限。\n\n您的專屬推薦代碼為：${promoCode}\n(學生使用此代碼購買本單元時，系統將自動計算您的分潤)\n\n請前往導師儀表板開始管理：\n${dashboardUrl}\n\nHappy Teaching!\nVibe Coding Team`,
+        text: `恭喜您成為 Vibe Coding 授權導師！\n\n您已獲得課程單元 "${unitName}" 的管理權限。\n\n您的專屬招生連結 (GitHub Classroom) 為：\n${assignmentUrl || '尚未配置'}\n\n學生點擊此連結報名時，系統將自動計算您的分潤。\n\n請前往導師儀表板開始管理：\n${dashboardUrl}\n\nHappy Teaching!\nVibe Coding Team`,
         html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6;">
                 <h2 style="color: #4A90E2;">恭喜您成為 Vibe Coding 授權導師！</h2>
@@ -182,16 +182,18 @@ async function sendTutorAuthorizationEmail(email, unitName, unitId, promoCode) {
                 <p>您已獲得課程單元 <strong>${unitName}</strong> 的管理授權。現在可以存取導師資源與管理功能。</p>
                 
                 <div style="background: #f0f7ff; padding: 20px; border-radius: 10px; margin: 25px 0; border: 1px solid #d0e7ff;">
-                    <p style="margin: 0; color: #4A90E2; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">您的專屬推薦代碼</p>
-                    <p style="margin: 10px 0; font-size: 32px; font-weight: 900; color: #333; font-family: monospace;">${promoCode}</p>
-                    <p style="margin: 0; font-size: 13px; color: #666;">（學生在結帳時輸入此代碼，即可連結至您的分潤帳戶）</p>
+                    <p style="margin: 0; color: #4A90E2; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">您的專屬招生連結 (GitHub Classroom)</p>
+                    <p style="margin: 10px 0; font-size: 14px; word-break: break-all; color: #333; font-family: monospace;">
+                        <a href="${assignmentUrl || '#'}" style="color: #4A90E2; text-decoration: underline;">${assignmentUrl || '尚未配置連結'}</a>
+                    </p>
+                    <p style="margin: 0; font-size: 13px; color: #666;">（學生點擊此連結報名課程，即可自動獲取作業權限並連結至您的分潤帳戶）</p>
                 </div>
 
                 <div style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
                     <p style="margin: 0;"><strong>下一步：</strong></p>
                     <ul style="margin: 10px 0;">
-                        <li>登入導師儀表板獲取 GitHub Classroom 連結</li>
-                        <li>分享您的推薦代碼給學生</li>
+                        <li>登入導師儀表板獲取推廣 QR Code</li>
+                        <li>分享您的 GitHub Classroom 連結給學生</li>
                         <li>在「分潤」分頁追蹤您的推廣成效</li>
                     </ul>
                 </div>

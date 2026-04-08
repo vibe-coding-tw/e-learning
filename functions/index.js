@@ -691,6 +691,19 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
             };
         }
 
+        // Status-based Authorization: Fully Qualified Tutors for the Course
+        if (effectiveCourseId && isTutorFullyQualifiedForCourse(userData, effectiveCourseId, lessons)) {
+            console.log(`[resolveAccess] SUCCESS: Fully Qualified Tutor Bypass for ${uid} on ${effectiveCourseId}`);
+            return { 
+                authorized: true, 
+                accessMode: 'fully_qualified_tutor', 
+                canonicalUnitId, 
+                effectiveCourseId, 
+                assignedTutorEmail, 
+                course 
+            };
+        }
+
         // Status-based Authorization: Qualified Tutors for their units (Digital Only)
         const isQualifiedTutorForThisUnit = !!(userData.tutorConfigs && userData.tutorConfigs[canonicalUnitId] && userData.tutorConfigs[canonicalUnitId].authorized);
         if (isQualifiedTutorForThisUnit) {
@@ -1533,17 +1546,21 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
             // [V12.0.2] Removed writes to legacy course_configs.
             // parentDocRef logic is now handled during propagate-on-save in user documents.
 
-            // [NEW] Unit-Specific Promo Code & Email Notification
+            // [V15.2] Unit-Specific Assignment Link & Email Notification
             try {
-                const promoCode = await internalGetOrCreatePromoCode(db, tutorEmail, courseId, tutorName);
-                
-                // Fetch Unit Name for Email
                 const lessons = await getLessons();
                 const unitMetadata = lessons.find(l => l.courseId === courseId || (l.courseUnits && l.courseUnits.includes(courseId)));
                 const unitName = unitMetadata ? (unitMetadata.title || unitMetadata.courseName || courseId) : courseId;
 
-                await sendTutorAuthorizationEmail(tutorEmail, unitName, courseId, promoCode);
-                console.log(`[Auth] Promo code ${promoCode} generated and email sent to ${tutorEmail} for ${courseId}`);
+                // Fetch the recently updated assignmentUrl from tutor's config
+                const tutorUserRecord = await admin.auth().getUserByEmail(tutorEmail);
+                const tutorUid = tutorUserRecord.uid;
+                const tutorDoc = await db.collection('users').doc(tutorUid).get();
+                const tutorData = tutorDoc.exists ? tutorDoc.data() : {};
+                const assignmentUrl = tutorData.tutorConfigs?.[courseId]?.assignmentUrl || null;
+
+                await sendTutorAuthorizationEmail(tutorEmail, unitName, courseId, assignmentUrl);
+                console.log(`[Auth] Authorization link ${assignmentUrl || 'None'} sent to ${tutorEmail} for ${courseId}`);
             } catch (authExtraErr) {
                 console.error("[Auth] Failed to generate promo code or send email:", authExtraErr);
             }
@@ -2165,20 +2182,17 @@ exports.getDashboardData = onCall(async (request) => {
             pendingApplications: allPendingApplications
         };
 
-        // [NEW] Fetch Profit Sharing Data for Tutors (Unit-Specific Promo Codes)
+        // [V15.2] Fetch Profit Sharing Data for Tutors (Assignment Links as Promo ID)
         if (isManagementView) {
             try {
-                // If a unitId is provided from the frontend, fetch the SPECIFIC code for that unit
+                // If a unitId is provided from the frontend, fetch the assignmentUrl for that unit
                 const filterUnitId = data.unitId || null;
-                let promoQuery = db.collection('promo_codes').where('tutorEmail', '==', email);
-                
                 if (filterUnitId) {
-                    promoQuery = promoQuery.where('courseId', '==', filterUnitId);
-                }
-
-                const promoSnap = await promoQuery.limit(filterUnitId ? 1 : 10).get();
-                if (!promoSnap.empty) {
-                    result.myPromoCode = promoSnap.docs[0].id; // Return the first matching one
+                    const canonicalId = resolveCanonicalUnitId(filterUnitId, lessons);
+                    // Find assignmentUrl from myTutorConfigs if authorized
+                    if (myTutorConfigs[canonicalId] && myTutorConfigs[canonicalId].authorized) {
+                        result.myPromoCode = myTutorConfigs[canonicalId].assignmentUrl || null;
+                    }
                 }
 
                 const ledgerSnap = await db.collection('profit_ledger')

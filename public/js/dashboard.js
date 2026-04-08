@@ -2686,18 +2686,18 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
     if (!filterUnitId) {
         promoCodeEl.innerHTML = `
             <span class="text-gray-400 text-sm block mb-1">請先從上方切換單元</span>
-            <span class="text-[10px] text-gray-300">每一單元皆有專屬推薦碼</span>
+            <span class="text-[10px] text-gray-300">每一單元皆有專屬作業連結</span>
         `;
     } else if (!data.myPromoCode) {
         promoCodeEl.innerHTML = `
-            <span class="text-orange-400 text-sm block font-bold">尚未配置推薦碼</span>
+            <span class="text-orange-400 text-sm block font-bold">尚未配置作業連結</span>
             <span class="text-[10px] text-gray-400">請聯繫管理員獲取該單元授權</span>
         `;
     } else {
         promoCodeEl.innerHTML = `
             <div class="flex flex-col items-center">
-                <span class="text-2xl font-black text-blue-600 tracking-widest font-mono">${data.myPromoCode}</span>
-                <span class="text-[10px] text-gray-400 mt-1 uppercase tracking-tighter">此單元專屬推薦碼 / Unit Code</span>
+                <span class="text-xs font-mono text-blue-600 break-all max-w-[200px] text-center">${data.myPromoCode}</span>
+                <span class="text-[10px] text-gray-400 mt-1 uppercase tracking-tighter">此單元教學作業連結 / Unit Link</span>
             </div>
         `;
     }
@@ -2715,7 +2715,7 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
                     <div class="border-b border-slate-100 pb-4">
                         <p class="text-xs font-black uppercase tracking-[0.24em] text-amber-500">招生工具 / Invite Tools</p>
                         <h3 class="text-2xl font-black text-gray-900 mt-2">推薦報名工具包</h3>
-                        <p class="text-sm text-gray-500 mt-2 leading-relaxed">學生掃描 QR Code 或點擊專屬連結後，系統會自動將課程加入購物車並套用您的推薦代碼。</p>
+                        <p class="text-sm text-gray-500 mt-2 leading-relaxed">學生掃描 QR Code 或點擊專屬連結後，系統會自動將課程加入購物車並連結您的教學作業權限。</p>
                     </div>
                     
                     <div class="flex flex-col md:flex-row gap-8 items-start">
@@ -2806,7 +2806,7 @@ window.buildPromoInviteKit = window.buildPromoInviteKit || function(unitId, prom
     }
 
     if (!promoCode) {
-        return { ready: false, message: '此單元尚未配置推薦代碼，請先確認導師授權或聯繫管理員。' };
+        return { ready: false, message: '此單元尚未配置作業連結，請先確認導師授權或聯繫管理員。' };
     }
 
     const canonicalUnitId = resolveCanonicalUnitId(unitId);
@@ -2842,7 +2842,7 @@ window.buildPromoInviteKit = window.buildPromoInviteKit || function(unitId, prom
 
 請直接點擊下方專屬報名連結，系統會自動：
 1. 在 Shopping Cart 加入此課程項目
-2. 套用我的推薦代碼 ${promoCode}
+2. 綁定我的教學作業邀請權限
 3. 引導您完成登入與結帳
 
 專屬報名連結：
