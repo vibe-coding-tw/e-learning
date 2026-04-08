@@ -314,6 +314,40 @@ exports.paymentNotify = onRequest(async (req, res) => {
             });
             console.log(`訂單 ${orderId} 更新成功`);
 
+            // [V15.9] HARNESSING RELIABILITY: Ensure referralTutor is backfilled from PromoCode index
+            // This protects shares if the front-end failed to save referralTutor correctly.
+            try {
+                const db = admin.firestore();
+                const oDoc = await db.collection("orders").doc(orderId).get();
+                const oData = oDoc.data();
+                const oItems = oData.items || {};
+                
+                let updatedItems = false;
+                for (const [key, val] of Object.entries(oItems)) {
+                    if (val.promoCode && !val.referralTutor) {
+                        const pDoc = await db.collection('promo_codes').doc(val.promoCode).get();
+                        if (pDoc.exists && pDoc.data().tutorEmail) {
+                            oItems[key].referralTutor = pDoc.data().tutorEmail;
+                            updatedItems = true;
+                        } else if (val.promoCode.includes('github.com')) {
+                            // If it's a URL-based promo, check link index
+                            const linkId = Buffer.from(normalizeGitHubUrl(val.promoCode)).toString('base64');
+                            const lDoc = await db.collection('referral_links').doc(linkId).get();
+                            if (lDoc.exists) {
+                                oItems[key].referralTutor = lDoc.data().tutorEmail;
+                                updatedItems = true;
+                            }
+                        }
+                    }
+                }
+                if (updatedItems) {
+                    await db.collection("orders").doc(orderId).update({ items: oItems });
+                    console.log(`[paymentNotify] ✅ Backfilled referralTutor for order ${orderId}`);
+                }
+            } catch (backfillErr) {
+                console.error("[paymentNotify] Backfill failed:", backfillErr);
+            }
+
             // [NEW] Send Payment Success Email + auto tutor assignment from promo code
             try {
                 // Fetch order details to get email and items
@@ -663,6 +697,26 @@ function normalizeGitHubUrl(url = '') {
     } catch (e) {
         return url.trim().toLowerCase();
     }
+}
+
+/**
+ * [V15.9] SYNC HELPER: Maintains the referral_links index for O(1) lookups during checkout.
+ */
+async function syncReferralLink(db, url, tutorEmail, tutorName, unitId) {
+    if (!url) return;
+    const normalized = normalizeGitHubUrl(url);
+    if (!normalized) return;
+    
+    // Key: Base64 of normalized URL to avoid issues with slashes in document IDs
+    const linkId = Buffer.from(normalized).toString('base64');
+    await db.collection('referral_links').doc(linkId).set({
+        url: normalized,
+        tutorEmail,
+        tutorName: tutorName || tutorEmail,
+        unitId,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    console.log(`[ReferralSync] ✅ Indexed ${normalized} -> ${tutorEmail}`);
 }
 
 async function upsertStudentUnitAssignment(db, studentUid, unitId, tutorEmail, assignedByUid = 'system', notify = true) {
@@ -1375,6 +1429,10 @@ const saveTutorConfigsHandler = onCall(async (request) => {
                                 }
                             }
                         }, { merge: true });
+                        
+                        // [V15.9] ARCHITECTURE SYNC: Update the global referral index for fast lookup
+                        await syncReferralLink(db, url, tEmail, (uData.name || tEmail), unitId);
+
                         console.log(`[saveTutorConfigs] ✅ Synced ${unitId} for ${tEmail}`);
                     } catch (err) {
                         console.warn(`[saveTutorConfigs] Failed to sync ${tEmail} for ${unitId}: ${err.message}`);
@@ -3106,47 +3164,29 @@ exports.verifyPromoCode = onCall(async (request) => {
         const isUrl = lowerInput.includes('github.com/classroom/') || lowerInput.includes('classroom.github.com/');
         
         if (isUrl) {
-            console.log(`[Promo] Resolving GitHub Link: ${inputStr}`);
+            console.log(`[Promo] [V15.9] Resolving GitHub Link via INDEX: ${inputStr}`);
             const normalizedLink = normalizeGitHubUrl(inputStr);
+            const linkId = Buffer.from(normalizedLink).toString('base64');
             
-            // [V15.5] STRUCTURAL FIX: tutorConfigs is a Map field on user docs, NOT a collectionGroup.
-            // We must iterate over users to find the matching URL.
-            const usersSnapshot = await db.collection('users').get();
-            let foundTutorDoc = null;
-            let foundTutorData = null;
-            let matchedUnitId = null;
-
-            for (const doc of usersSnapshot.docs) {
-                const uData = doc.data();
-                const tConfigs = uData.tutorConfigs || {};
-                
-                // [V15.6] Track exactly which unitId matches the URL
-                for (const [uId, config] of Object.entries(tConfigs)) {
-                    // Config might be nested if dot in key (.html)
-                    const effectiveConfig = (config && !config.authorized && config.html) ? config.html : config;
-                    if (!effectiveConfig || !effectiveConfig.authorized) continue;
-                    
-                    const storedUrl = effectiveConfig.githubClassroomUrl || effectiveConfig.assignmentUrl || "";
-                    if (normalizeGitHubUrl(storedUrl) === normalizedLink) {
-                        foundTutorDoc = doc;
-                        foundTutorData = uData;
-                        matchedUnitId = uId;
-                        break;
-                    }
-                }
-
-                if (foundTutorDoc) break;
+            // [V15.9] PERFORMANCE FIX: Use the O(1) referral_links index instead of scanning all users.
+            const linkDoc = await db.collection('referral_links').doc(linkId).get();
+            
+            if (!linkDoc.exists) {
+                return { success: false, message: '查無此作業連結對應的導師 (若剛更新設定，請稍候 30 秒)' };
             }
 
-            if (!foundTutorDoc) {
-                return { success: false, message: '查無此作業連結對應的導師' };
-            }
+            const lData = linkDoc.data();
+            const tEmail = lData.tutorEmail;
 
-            const tutorData = foundTutorData;
+            // Fetch the actual user data to verify qualification
+            const tutorUserSnap = await db.collection('users').where('email', '==', tEmail).limit(1).get();
+            if (tutorUserSnap.empty) {
+                return { success: false, message: '對應的導師帳號似乎已被移除' };
+            }
+            const tutorData = tutorUserSnap.docs[0].data();
             const lessons = await getLessons();
 
             // [Rule 5-G] Qualification Check: Must be certified for the WHOLE course
-            // If cartItems are provided, verify qualification for each course in cart
             if (cartItems && cartItems.length > 0) {
                 const results = cartItems.map(item => {
                     const courseId = item.courseId || item.id;
@@ -3164,9 +3204,9 @@ exports.verifyPromoCode = onCall(async (request) => {
 
             return { 
                 success: true, 
-                tutor: tutorData.email,
-                tutorName: tutorData.name || tutorData.email,
-                courseId: matchedUnitId, // [V15.6] Return our internal unitId for mapping in cart
+                tutor: tEmail,
+                tutorName: tutorData.name || tEmail,
+                courseId: lData.unitId,
                 isLink: true,
                 message: '已成功辨識老師推薦連結'
             };
