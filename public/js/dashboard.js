@@ -671,6 +671,13 @@ function renderStudentDashboard(data, filterUnitId = null) {
             </div>
         </div>
 
+        <!-- [V15.11] Student README Placeholder -->
+        <div id="github-readme-placeholder-student" class="markdown-embed p-6 mt-8 rounded-3xl border border-slate-200 bg-gray-50 shadow-sm overflow-hidden hidden">
+            <div class="flex items-center gap-3 text-slate-400 italic font-medium">
+                <span class="animate-pulse">⏳</span> 正在抓取 GitHub 任務說明 (README.md)...
+            </div>
+        </div>
+
         <!-- Detailed Activity Chart -->
         <div class="card mt-8">
              <div class="flex flex-col md:flex-row gap-8 items-center">
@@ -727,6 +734,11 @@ function renderStudentDashboard(data, filterUnitId = null) {
     }
 
     renderChart(chartData);
+
+    // [V15.11] Student README Trigger
+    if (filterUnitId) {
+        vibeRefreshReadmeContent(filterUnitId);
+    }
 }
 
 function renderAdminDashboard(data, filterUnitId = null) {
@@ -775,6 +787,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
     if (settingsTabBtn) {
         settingsTabBtn.classList.toggle('hidden', !showSettingsTab);
+        settingsTabBtn.textContent = '課程設定 (Settings)';
     }
     
     // [MODIFIED] Explicitly REMOVE/HIDE the Earnings standalone tab as requested
@@ -1229,63 +1242,7 @@ window.renderAssignments = window.renderAssignments || function(assignments = []
     });
 
     // [V14.4] GitHub README Placeholder Management
-    const readmePlaceholders = [
-        document.getElementById('github-readme-placeholder-main'),
-        document.getElementById('github-readme-placeholder-settings')
-    ];
-    readmePlaceholders.forEach(p => { 
-        if (p) {
-            p.classList.remove('hidden'); // [V14.4] Show loading UI
-            p.innerHTML = `
-                <div class="flex items-center gap-3 text-slate-400 italic">
-                    <span class="animate-pulse">⏳</span> 正在抓取 GitHub 任務說明 (README.md)...
-                </div>
-            `;
-        }
-    });
-
-    // [V14.4] GitHub README loading (Refactored to target placeholders)
-    if (filterUnitId) {
-        (async () => {
-             // Derive repo: "01-unit-developer-identity.html" -> "01-unit-developer-identity"
-            const repoName = filterUnitId.replace(/\.html$/, '');
-            const GITHUB_ORG = 'vibe-coding-classroom';
-            const rawUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${repoName}/main/README.md`;
-
-            console.log(`[V14.4] Fetching README from: ${rawUrl}`);
-            try {
-                const markdownHtml = await loadMarkdown(rawUrl);
-                if (!markdownHtml) {
-                    throw new Error("GitHub 回傳內容為空。");
-                }
-
-                readmePlaceholders.forEach(placeholder => {
-                    if (placeholder) {
-                        placeholder.innerHTML = markdownHtml;
-                        console.log("[V14.4] README successfully injected into:", placeholder.id);
-                    }
-                });
-            } catch (error) {
-                console.error("[V14.4] README Loading Error:", error);
-                readmePlaceholders.forEach(p => {
-                    if (p) {
-                       p.innerHTML = `
-                            <div class="flex items-center gap-3 text-red-500 bg-red-50 p-4 rounded-xl border border-red-100">
-                                <span>⚠️</span>
-                                <div>
-                                    <div class="font-bold">無法載入任務說明 (README.md)</div>
-                                    <div class="text-xs opacity-75">${error.message || "請檢查 GitHub 儲存庫狀態。"}</div>
-                                </div>
-                            </div>
-                        `;
-                    }
-                });
-            }
-        })();
-    } else {
-        // [V14.4] Hide placeholders if no unit filter (e.g. Global Feed)
-        readmePlaceholders.forEach(p => { if (p) p.classList.add('hidden'); });
-    }
+    vibeRefreshReadmeContent(filterUnitId);
 
     if (showGuide && guideContent) {
         const guideDiv = document.createElement('div');
@@ -1406,6 +1363,66 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
     tableBodies.forEach(tbody => tbody.innerHTML = content);
 }
 
+
+/**
+ * [V15.11] Shared README Refresher
+ * Fetches README from GitHub and injects into all available placeholders.
+ */
+async function vibeRefreshReadmeContent(filterUnitId) {
+    const readmePlaceholders = [
+        document.getElementById('github-readme-placeholder-main'),
+        document.getElementById('github-readme-placeholder-settings'),
+        document.getElementById('github-readme-placeholder-student')
+    ].filter(Boolean);
+
+    if (readmePlaceholders.length === 0) return;
+
+    if (!filterUnitId) {
+        readmePlaceholders.forEach(p => p.classList.add('hidden'));
+        return;
+    }
+
+    // Show loading state
+    readmePlaceholders.forEach(p => {
+        p.classList.remove('hidden');
+        p.innerHTML = `
+            <div class="flex items-center gap-3 text-slate-400 italic">
+                <span class="animate-pulse">⏳</span> 正在抓取 GitHub 任務說明 (README.md)...
+            </div>
+        `;
+    });
+
+    try {
+        const repoName = filterUnitId.replace(/\.html$/, '');
+        const GITHUB_ORG = 'vibe-coding-classroom';
+        const rawUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${repoName}/main/README.md`;
+
+        console.log(`[V15.11] Fetching README from: ${rawUrl}`);
+        const markdownHtml = await loadMarkdown(rawUrl);
+        
+        if (!markdownHtml) {
+            throw new Error("GitHub 回傳內容為空。");
+        }
+
+        readmePlaceholders.forEach(placeholder => {
+            placeholder.innerHTML = markdownHtml;
+            console.log("[V15.11] README successfully injected into:", placeholder.id);
+        });
+    } catch (error) {
+        console.error("[V15.11] README Loading Error:", error);
+        readmePlaceholders.forEach(p => {
+            p.innerHTML = `
+                <div class="flex items-center gap-3 text-red-500 bg-red-50 p-4 rounded-xl border border-red-100">
+                    <span>⚠️</span>
+                    <div>
+                        <div class="font-bold">無法載入任務說明 (README.md)</div>
+                        <div class="text-xs opacity-75">${error.message || "請檢查 GitHub 儲存庫狀態。"}</div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+}
 
 window.renderAssignments = renderAssignments;
 
