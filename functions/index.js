@@ -3095,36 +3095,46 @@ exports.verifyPromoCode = onCall(async (request) => {
         const db = admin.firestore();
         const inputStr = promoCode.trim();
         
-        // [V15.1] Check if input is a GitHub Classroom URL
-        const isUrl = inputStr.toLowerCase().includes('github.com/classroom/');
+        // [V15.5] Check if input is a GitHub Classroom URL (Handles various subdomains)
+        const lowerInput = inputStr.toLowerCase();
+        const isUrl = lowerInput.includes('github.com/classroom/') || lowerInput.includes('classroom.github.com/');
+        
         if (isUrl) {
             console.log(`[Promo] Resolving GitHub Link: ${inputStr}`);
             const normalizedLink = normalizeGitHubUrl(inputStr);
             
-            // Query collectionGroup for tutorConfigs with this assignmentUrl
-            const tutorConfigsSnap = await db.collectionGroup('tutorConfigs')
-                .where('assignmentUrl', '==', normalizedLink)
-                .get();
+            // [V15.5] STRUCTURAL FIX: tutorConfigs is a Map field on user docs, NOT a collectionGroup.
+            // We must iterate over users to find the matching URL.
+            const usersSnapshot = await db.collection('users').get();
+            let foundTutorDoc = null;
+            let foundTutorData = null;
 
-            if (tutorConfigsSnap.empty) {
-                // Try non-normalized just in case
-                const retrySnap = await db.collectionGroup('tutorConfigs')
-                    .where('assignmentUrl', '==', inputStr)
-                    .get();
-                if (retrySnap.empty) {
-                    return { success: false, message: '查無此作業連結對應的導師' };
+            for (const doc of usersSnapshot.docs) {
+                const uData = doc.data();
+                const tConfigs = uData.tutorConfigs || {};
+                
+                // Use Object.values or iterate to find the matching githubClassroomUrl
+                const hasMatch = Object.values(tConfigs).some(config => {
+                    // Config might be nested if dot in key (.html)
+                    const effectiveConfig = (config && !config.authorized && config.html) ? config.html : config;
+                    if (!effectiveConfig || !effectiveConfig.authorized) return false;
+                    
+                    const storedUrl = effectiveConfig.githubClassroomUrl || effectiveConfig.assignmentUrl || "";
+                    return normalizeGitHubUrl(storedUrl) === normalizedLink;
+                });
+
+                if (hasMatch) {
+                    foundTutorDoc = doc;
+                    foundTutorData = uData;
+                    break;
                 }
-                // Use retry results
-                tutorConfigsSnap.docs = retrySnap.docs;
             }
 
-            // Extract Tutor Info from parent User Doc
-            const configDoc = tutorConfigsSnap.docs[0];
-            const tutorUid = configDoc.ref.parent.parent.id; // tutorConfigs -> unitId -> users -> uid
-            const tutorDoc = await db.collection('users').doc(tutorUid).get();
-            if (!tutorDoc.exists) return { success: false, message: '導師帳號已移除' };
+            if (!foundTutorDoc) {
+                return { success: false, message: '查無此作業連結對應的導師' };
+            }
 
-            const tutorData = tutorDoc.data();
+            const tutorData = foundTutorData;
             const lessons = await getLessons();
 
             // [Rule 5-G] Qualification Check: Must be certified for the WHOLE course
