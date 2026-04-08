@@ -39,6 +39,11 @@
 - **實體產品決策**: 凡 `isPhysical` 為 `true` 且有價格的卡片（如：開發平台裝置），無論使用者是否具備管理員權限，在前台銷售頁面（Prepare, Basic, Advanced 等）必須優先顯示 **「🛒 加入購物車」** 與價格，嚴禁管理員 God Mode 自動跳轉為「進入課程」。這是為了確保銷售 UI 的正確性與購買流程的測試完整。
 - **單一資料來源**: 所有前台展示的課程標題、價格、核心內容、圖示等元數據，必須以 **Firestore 的 `metadata_lessons` 為唯一準則**，嚴禁在 HTML 中硬編碼過時的資料。
 
+### 2-D. ID 歸一化與授權比對規範 (ID Normalization & Authorization Rules)
+- **歸一化原則 (Normalization Rule)**: 由於課程元數據 (Metadata) 可能包含 `.html` 副檔名，而 Firestore 的 `tutorConfigs` 鍵值通常為純 ID，系統在執行任何權限比對前，**必須**統一執行歸一化處理（例如：移除 `.html` 後綴）。
+- **課程卡片開通門檻 (Course Card Unlock)**: 對於課程整體的存取權限（如首頁或 Dashboard 的課程卡片），必須滿足該課程下**所有 (EVERY)** 關聯單元均已在 `tutorConfigs` 中標記為 `authorized: true`，系統才可將該卡片判定為「已開通 (Opened)」。
+- **實作要求**: 後端 `isTutorFullyQualifiedForCourse` 與 `checkPaymentAuthorization` 必須強制執行上述歸一化比對，防止因後綴不一致導致的授權失效。
+
 ---
 
 ## 3. Dashboard 分頁規劃 (V13.0)
@@ -171,4 +176,4 @@
 - **目標**: 杜絕環境漂移 (Environment Drift)，確保開發代理人 (AI Agent) 隨時能在最新的生產環境基礎上進行下一次迭代。
 
 ---
-*最後更新日期: 2026-04-08 (V14.5 - Standardized Deployment Workflow)*
+*最後更新日期: 2026-04-08 (V14.6 - ID Normalization & Strict Qualification)*
