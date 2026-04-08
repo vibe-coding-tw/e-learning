@@ -587,7 +587,20 @@
                 : `「${productName}」原本已在購物車中，已保留現有品項。`;
 
             if (promoCode) {
-                const promoResult = await applyPromoCode(promoCode, { silent: false, keepEditable: false });
+                // Find the UI elements for the item that was just added/rendered
+                const targetInput = document.querySelector(`.item-promo-input[data-product-id="${courseId}"]`);
+                const targetStatus = document.querySelector(`.item-promo-status[data-product-id="${courseId}"]`);
+                const targetButton = document.querySelector(`.apply-item-promo-btn[data-product-id="${courseId}"]`);
+
+                const promoResult = await applyPromoCode(promoCode, { 
+                    silent: false, 
+                    keepEditable: false,
+                    targetItemId: courseId,
+                    inputElement: targetInput,
+                    statusElement: targetStatus,
+                    buttonElement: targetButton
+                 });
+
                 if (promoResult.success) {
                     statusMessage += ` 已自動套用老師推薦代碼 ${promoCode}。`;
                 } else {
