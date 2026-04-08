@@ -725,23 +725,29 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
             };
         }
 
-        // Status-based Authorization: Fully Qualified Tutors for the Course
-        if (effectiveCourseId && isTutorFullyQualifiedForCourse(userData, effectiveCourseId, lessons)) {
-            console.log(`[resolveAccess] SUCCESS: Fully Qualified Tutor Bypass for ${uid} on ${effectiveCourseId}`);
-            return { 
-                authorized: true, 
-                accessMode: 'fully_qualified_tutor', 
-                canonicalUnitId, 
-                effectiveCourseId, 
-                assignedTutorEmail, 
-                course 
-            };
-        }
+        // [V15.7] Enforce simulation: If Admin Simulation is OFF, skip teacher/tutor-related privileges.
+        // This ensures Admins can test the student paywall experience accurately.
+        const shouldSkipTutorBypass = isAdminRole && !tutorMode;
 
-        // Status-based Authorization: Qualified Tutors for their units (Digital Only)
-        const isQualifiedTutorForThisUnit = !!(userData.tutorConfigs && userData.tutorConfigs[canonicalUnitId] && userData.tutorConfigs[canonicalUnitId].authorized);
-        if (isQualifiedTutorForThisUnit) {
-            return { authorized: true, accessMode: 'qualified_tutor', canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
+        if (!shouldSkipTutorBypass) {
+            // Status-based Authorization: Fully Qualified Tutors for the Course
+            if (effectiveCourseId && isTutorFullyQualifiedForCourse(userData, effectiveCourseId, lessons)) {
+                console.log(`[resolveAccess] SUCCESS: Fully Qualified Tutor Bypass for ${uid} on ${effectiveCourseId}`);
+                return { 
+                    authorized: true, 
+                    accessMode: 'fully_qualified_tutor', 
+                    canonicalUnitId, 
+                    effectiveCourseId, 
+                    assignedTutorEmail, 
+                    course 
+                };
+            }
+
+            // Status-based Authorization: Qualified Tutors for their units (Digital Only)
+            const isQualifiedTutorForThisUnit = !!(userData.tutorConfigs && userData.tutorConfigs[canonicalUnitId] && userData.tutorConfigs[canonicalUnitId].authorized);
+            if (isQualifiedTutorForThisUnit) {
+                return { authorized: true, accessMode: 'qualified_tutor', canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
+            }
         }
 
         // FREE COURSE (NT$ 0) (Digital Only)
