@@ -18,7 +18,7 @@
         - `calculateMonthlySharing`: 每月 1 號自動計算並分配推薦利潤。
         - `remindAdminPendingAssignments`: 定期提醒未批改作業。
 - **數據庫 (Firestore)**:
-    - `users`: 使用者角色、UID 與權限映射。
+    - `users`: 使用者角色 (`admin`, `user`)、UID 與權限映射。
     - `activity_logs`: 毫秒級追蹤學生觀看影片、閱讀文件的學習時數。
     - `orders`: 支付訂單；推薦代碼與導師關係綁在各個 `items[itemId]` 上，而非整張訂單。
     - `profit_ledger`: 自動化產出的月度分潤清單。
@@ -54,7 +54,7 @@
 3. 綠界付款成功後，`paymentNotify` 會：
    - 將訂單標記為 `SUCCESS`
    - 保留各 item 的 `promoCode` / `referralTutor`
-   - 逐 item 檢查 promo code 對應單元，並自動把學生指派到該單元老師 (`users/{uid}.unitAssignments[{unitId}] = teacherEmail`)
+   - 逐 item 檢查推薦連結對應單元，並自動把使用者指派到該單元老師 (`users/{uid}.unitAssignments[{unitId}] = teacherEmail`)
    - 自動寄出付款成功、老師指派成功的 email 通知
 4. 學生在課程頁或 Dashboard 點擊作業時，前端不再直接讀第一個 Classroom URL，而是先呼叫 `resolveAssignmentAccess`：
    - 若未付款：不開放作業入口
@@ -76,13 +76,13 @@
     - 在「分潤 (Earnings)」標籤中查看您的月度累積佣金與當前使用的推薦代碼。
 4. **權限授予**: 管理員可在 `view-admin` 控制台授權特定 Email 成為教師。
 
-### 對於學生 (Student)
+### 對於一般使用者 (General User)
 1. **選購課程**: 在 `cart.html` 加入課程或硬體。
-2. **代碼驗證**: 結帳前輸入 Promotion Code 享受導師專業指導 (如有)。
+2. **推薦連結驗證**: 結帳前輸入或點擊老師的 GitHub Classroom 連結。
 3. **提交作業**:
     - 付款成功且老師指派完成後，點擊作業入口會自動導向該老師提供的 GitHub Classroom。
     - 完成實作後，將 Repo / Demo 連結貼回提交視窗。
-    - 系統會寄送作業繳交通知給對應老師；老師評分後，學生也會收到評分通知信。
+    - 系統會寄送作業繳交通知給對應老師；老師評分後，使用者也會收到評分通知信。
 
 ## 🔧 教師與管理員進階功能 (Teacher & Admin Advanced Features)
 
