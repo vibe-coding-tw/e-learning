@@ -1058,8 +1058,11 @@ function renderAdminDashboard(data, filterUnitId = null) {
     renderChart(chartData);
     // [V8.1] GitHub README loading moved to renderAssignments for better container management
 
+    // [V15.11] Ensure README is refreshed for Admin Overview as well
+    vibeRefreshReadmeContent(filterUnitId);
+
     // [V8.1] GitHub README loading moved to renderAssignments for better container management
-renderAssignments(displayAssignments, guideContent);
+    renderAssignments(displayAssignments, guideContent);
 }
 
 // Helper: Resolve assignment guide for a unit
@@ -1372,7 +1375,8 @@ async function vibeRefreshReadmeContent(filterUnitId) {
     const readmePlaceholders = [
         document.getElementById('github-readme-placeholder-main'),
         document.getElementById('github-readme-placeholder-settings'),
-        document.getElementById('github-readme-placeholder-student')
+        document.getElementById('github-readme-placeholder-student'),
+        document.getElementById('github-readme-placeholder-admin-overview')
     ].filter(Boolean);
 
     if (readmePlaceholders.length === 0) return;
