@@ -2197,9 +2197,11 @@ exports.getDashboardData = onCall(async (request) => {
                 const filterUnitId = data.unitId || null;
                 if (filterUnitId) {
                     const canonicalId = resolveCanonicalUnitId(filterUnitId, lessons);
-                    // Find assignmentUrl from myTutorConfigs if authorized
-                    if (myTutorConfigs[canonicalId] && myTutorConfigs[canonicalId].authorized) {
-                        result.myPromoCode = myTutorConfigs[canonicalId].assignmentUrl || null;
+                    const firestoreKey = normalizeForFirestore(canonicalId);
+                    // [V15.2] Correct field name lookup (prioritize githubClassroomUrl)
+                    const unitConfig = myTutorConfigs[firestoreKey];
+                    if (unitConfig && unitConfig.authorized) {
+                        result.myPromoCode = unitConfig.githubClassroomUrl || unitConfig.assignmentUrl || null;
                     }
                 }
 
