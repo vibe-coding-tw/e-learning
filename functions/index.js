@@ -462,6 +462,28 @@ function normalizeForFirestore(unitId) {
     return unitId.replace(/\.html$/, '');
 }
 
+/**
+ * Robustly extracts tutor configuration for a given unitId from the tutorConfigs map.
+ * Handles both flat keys and Firestore's automatic nesting of dot-containing keys (e.g. .html).
+ */
+function getEffectiveTutorConfig(unitId, tutorConfigs = {}) {
+    if (!unitId) return null;
+    
+    // 1. Precise Match (Original)
+    if (tutorConfigs[unitId] && tutorConfigs[unitId].authorized) return tutorConfigs[unitId];
+
+    // 2. Normalized Match (No .html)
+    const normalized = unitId.replace(/\.html$/, '');
+    const config = tutorConfigs[normalized];
+
+    // 3. Nested HTML Match (Firestore's dot-in-key behavior: unit.html -> { unit: { html: { ... } } })
+    if (config && !config.authorized && config.html) {
+        return config.html;
+    }
+
+    return config || null;
+}
+
 function findParentCourseIdByUnit(unitId, lessons = []) {
     if (!unitId) return null;
 
@@ -622,8 +644,8 @@ function isTutorFullyQualifiedForCourse(userData = {}, courseId = '', lessons = 
     // A tutor is fully qualified for a course ONLY if EVERY unit in that course is authorized in their config
     return lesson.courseUnits.every(unitId => {
         const canonical = resolveCanonicalUnitId(unitId, lessons);
-        const firestoreKey = normalizeForFirestore(canonical);
-        return !!(tutorConfigs[firestoreKey] && tutorConfigs[firestoreKey].authorized === true);
+        const config = getEffectiveTutorConfig(canonical, tutorConfigs);
+        return !!(config && config.authorized === true);
     });
 }
 
@@ -2197,9 +2219,8 @@ exports.getDashboardData = onCall(async (request) => {
                 const filterUnitId = data.unitId || null;
                 if (filterUnitId) {
                     const canonicalId = resolveCanonicalUnitId(filterUnitId, lessons);
-                    const firestoreKey = normalizeForFirestore(canonicalId);
-                    // [V15.2] Correct field name lookup (prioritize githubClassroomUrl)
-                    const unitConfig = myTutorConfigs[firestoreKey];
+                    // [V15.5] Robust field lookup via getEffectiveTutorConfig (Handles nested dots)
+                    const unitConfig = getEffectiveTutorConfig(canonicalId, myTutorConfigs);
                     if (unitConfig && unitConfig.authorized) {
                         result.myPromoCode = unitConfig.githubClassroomUrl || unitConfig.assignmentUrl || null;
                     }
