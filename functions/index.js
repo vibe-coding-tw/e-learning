@@ -1224,12 +1224,12 @@ const getRole = async (uid) => {
         const userDoc = await admin.firestore().collection('users').doc(uid).get();
         if (userDoc.exists) {
             const role = userDoc.data().role;
-            return role === 'admin' ? 'admin' : 'student';
+            return role === 'admin' ? 'admin' : 'user';
         }
     } catch (e) {
         console.error("[Role] Error in getRole:", e);
     }
-    return 'student'; // Default to student
+    return 'user'; // Default to user
 };
 
 // ==========================================
@@ -1253,7 +1253,7 @@ exports.setUserRole = onCall(async (request) => {
 
     const { email, role } = data;
 
-    if (!['student', 'admin'].includes(role)) {
+    if (!['user', 'admin'].includes(role)) {
         throw new HttpsError('invalid-argument', 'Invalid role.');
     }
 
@@ -2259,7 +2259,7 @@ exports.getDashboardData = onCall(async (request) => {
                         const userRef = db.collection('users').doc(au.uid);
                         // Find existing role from snapshot if exists
                         const existingDoc = usersSnapshot.docs.find(d => d.id === au.uid);
-                        const role = existingDoc?.data()?.role || 'student';
+                        const role = existingDoc?.data()?.role || 'user';
 
                         batch.set(userRef, {
                             email: au.email || "",
@@ -2282,7 +2282,7 @@ exports.getDashboardData = onCall(async (request) => {
 
             usersSnapshot.forEach(doc => {
                 const uData = doc.data();
-                const role = uData.role || 'student';
+                const role = uData.role || 'user';
                 // [V13.0.16] Visibility Rule: Admin Global View (No Context) ALWAYS shows all users.
                 // tutorMode only filters content (not people) in Global View for Admin.
                 const isAdmin = requesterRole === 'admin';
@@ -2332,7 +2332,7 @@ exports.getDashboardData = onCall(async (request) => {
                         uid: sid,
                         email: usersMap[sid]?.email || 'Unknown',
                         name: usersMap[sid]?.name || '', // [NEW] Include student name
-                        role: usersMap[sid]?.role || 'student',
+                        role: usersMap[sid]?.role || 'user',
                         totalTime: 0, videoTime: 0, docTime: 0, pageTime: 0, lastActive: null,
                         courseProgress: {},
                         unitAssignments: usersMap[sid]?.unitAssignments || {},
@@ -2383,7 +2383,7 @@ exports.getDashboardData = onCall(async (request) => {
                             uid: sid,
                             email: usersMap[sid].email || 'Unknown',
                             name: usersMap[sid].name || '', // [NEW] Include name
-                            role: usersMap[sid].role || 'student',
+                            role: usersMap[sid].role || 'user',
                             totalTime: 0, videoTime: 0, docTime: 0, pageTime: 0, lastActive: null,
                             courseProgress: {},
                             accountStatus: 'paid',
@@ -2446,7 +2446,7 @@ exports.getDashboardData = onCall(async (request) => {
         if (isManagementView) {
             Object.keys(usersMap).forEach(sid => {
                 const repair = legacyRepairMap[sid];
-                const userRole = usersMap[sid].role || 'student';
+                const userRole = usersMap[sid].role || 'user';
                 const shouldIncludeUser = shouldIncludeAllRegisteredUsers || userRole === 'student' || userRole === 'user' || !userRole;
                 
                 if (!studentStats[sid] && shouldIncludeUser) {
@@ -2528,7 +2528,7 @@ exports.getDashboardData = onCall(async (request) => {
         // 2.5 Fetch Tutors (Administrators and Authorized Tutors)
         const tutorList = [];
         Object.entries(usersMap).forEach(([uid, data]) => {
-            const role = data.role || 'student';
+            const role = data.role || 'user';
             if (role === 'admin' || hasQualifiedTutorStatus(data)) {
                 tutorList.push({
                     uid,
