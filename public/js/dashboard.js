@@ -753,7 +753,9 @@ function renderAdminDashboard(data, filterUnitId = null) {
         if (myRole === 'admin') {
             adminTabBtn.classList.remove('hidden');
         } else {
+            // [V14.13] REINFORCED: Explicitly hide for anyone else
             adminTabBtn.classList.add('hidden');
+            adminTabBtn.style.display = 'none'; // Double layer protection
         }
     }
 
@@ -1440,10 +1442,22 @@ function renderChart(students) {
 
 // --- Tab Logic ---
 window.switchTab = function (tabName) {
+    if (!tabName) return;
+    
+    // [V14.12] PERMISSION LEAK FIX: Explicitly block 'admin' tab for non-admins
+    if (tabName === 'admin' && myRole !== 'admin') {
+        console.warn(`[Security] Unauthorized tab access: ${tabName} blocked for ${myRole}.`);
+        // Fallback: Redirect to assignments for tutors or overview for admins.
+        tabName = getPreferredDashboardTab(getCurrentDashboardContext().filterUnitId);
+        if (tabName === 'admin') {
+            tabName = 'assignments'; // Extreme safety fallback
+        }
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
 
-    // [MODIFIED] Redirect standalone tabs to Settings in consolidated mode
+    // Role-based restrictions for other tabs
     if (tabName === 'assignments' && !canCurrentUserViewAssignmentsTab()) {
         tabName = getPreferredDashboardTab(filterUnitId);
         if (tabName === 'assignments' && !canCurrentUserViewAssignmentsTab()) {
@@ -1463,7 +1477,13 @@ window.switchTab = function (tabName) {
     // Hide all contents
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     // Show target content
-    document.getElementById(`view-${tabName}`).classList.remove('hidden');
+    const targetPane = document.getElementById(`view-${tabName}`);
+    if (targetPane) {
+        targetPane.classList.remove('hidden');
+    } else {
+        console.error(`[Dashboard] Tab pane not found: view-${tabName}`);
+        return;
+    }
 
     // Update buttons
     document.querySelectorAll('.tab-btn').forEach(btn => {
