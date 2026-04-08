@@ -587,6 +587,7 @@
                 : `「${productName}」原本已在購物車中，已保留現有品項。`;
 
             if (promoCode) {
+                const promoResult = await applyPromoCode(promoCode, { silent: false, keepEditable: false });
                 if (promoResult.success) {
                     statusMessage += ` 已自動套用老師推薦代碼 ${promoCode}。`;
                 } else {
