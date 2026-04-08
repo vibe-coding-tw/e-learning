@@ -436,19 +436,30 @@ async function getLessons() {
 function resolveCanonicalUnitId(unitId, lessons = []) {
     if (!unitId) return unitId;
 
+    // [V14.12] NORMALIZATION: Strip extension and handle 'start-' prefix
+    const cleanId = unitId.replace(/\.html$/, '').replace(/^start-/, '');
+
     for (const lesson of lessons) {
         const courseUnits = Array.isArray(lesson.courseUnits) ? lesson.courseUnits : [];
-        if (courseUnits.includes(unitId)) return unitId;
-
+        if (courseUnits.includes(unitId)) return unitId; // Match original
+        
         const matchedUnit = courseUnits.find(courseUnit => {
-            const shortUnit = courseUnit.replace(/^start-/, '');
-            return shortUnit === unitId;
+            const shortCourseUnit = courseUnit.replace(/\.html$/, '').replace(/^start-/, '');
+            return shortCourseUnit === cleanId;
         });
 
         if (matchedUnit) return matchedUnit;
     }
 
     return unitId;
+}
+
+/**
+ * Normalizes a unitId for Firestore storage keys (strips .html, keep start- etc).
+ */
+function normalizeForFirestore(unitId) {
+    if (!unitId) return unitId;
+    return unitId.replace(/\.html$/, '');
 }
 
 function findParentCourseIdByUnit(unitId, lessons = []) {
@@ -611,7 +622,8 @@ function isTutorFullyQualifiedForCourse(userData = {}, courseId = '', lessons = 
     // A tutor is fully qualified for a course ONLY if EVERY unit in that course is authorized in their config
     return lesson.courseUnits.every(unitId => {
         const canonical = resolveCanonicalUnitId(unitId, lessons);
-        return !!(tutorConfigs[canonical] && tutorConfigs[canonical].authorized === true);
+        const firestoreKey = normalizeForFirestore(canonical);
+        return !!(tutorConfigs[firestoreKey] && tutorConfigs[firestoreKey].authorized === true);
     });
 }
 
@@ -908,19 +920,15 @@ exports.checkPaymentAuthorization_Legacy = onRequest(async (req, res) => {
             const tutorConfigs = userData.tutorConfigs || {};
 
             const isAuthorizedTutor = authSources.some(sourceId => {
-                const config = tutorConfigs[sourceId];
+                const canonical = resolveCanonicalUnitId(sourceId, lessons);
+                const firestoreKey = normalizeForFirestore(canonical);
+                const config = tutorConfigs[firestoreKey];
                 return config && config.authorized === true;
             });
 
             if (isAuthorizedTutor) {
                 console.log(`[checkPaymentAuthorization] Status-based Authorization granted for ${userEmail}`);
                 const token = generateToken(effectiveCourseId, fileName);
-                return res.status(200).json({ result: { authorized: true, token: token, role: userRole } });
-            }
-
-            if (isAuthorized) {
-                console.log(`[checkPaymentAuthorization] ${userRole} ${userEmail} authorized for ${effectiveCourseId} via User-Centric check`);
-                const token = generateToken(effectiveCourseId, effectiveCourseId);
                 return res.status(200).json({ result: { authorized: true, token: token, role: userRole } });
             }
 
