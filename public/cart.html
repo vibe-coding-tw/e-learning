@@ -548,7 +548,9 @@
 
             const courseId = params.get('courseId');
             const unitId = params.get('unitId') || courseId;
-            const promoCode = (params.get('promoCode') || '').trim().toUpperCase();
+            const rawPromo = (params.get('promoCode') || '').trim();
+            const isUrl = rawPromo.toLowerCase().includes('github.com/classroom/') || rawPromo.toLowerCase().includes('classroom.github.com/');
+            const promoCode = isUrl ? rawPromo : rawPromo.toUpperCase();
             const fallbackName = params.get('courseName') || courseId;
             const fallbackPrice = parseInt(params.get('coursePrice') || '0', 10) || 0;
             const fallbackPhysical = params.get('isPhysical') === 'true';
@@ -585,11 +587,10 @@
                 : `「${productName}」原本已在購物車中，已保留現有品項。`;
 
             if (promoCode) {
-                const promoResult = await applyPromoCode(promoCode, { silent: false, keepEditable: false });
                 if (promoResult.success) {
                     statusMessage += ` 已自動套用老師推薦代碼 ${promoCode}。`;
                 } else {
-                    statusMessage += ` 但推薦代碼 ${promoCode} 驗證失敗。`;
+                    statusMessage += ` 但推薦代碼 ${promoCode} 驗證失敗：${promoResult.message || '無法識別的錯誤'}。`;
                 }
             }
 
