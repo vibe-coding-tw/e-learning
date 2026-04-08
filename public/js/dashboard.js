@@ -2730,51 +2730,57 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
         `;
     } else {
         inviteKitEl.innerHTML = `
-            <div class="flex flex-col gap-10">
-                <div class="space-y-6">
-                    <div class="border-b border-slate-100 pb-4">
-                        <p class="text-xs font-black uppercase tracking-[0.24em] text-amber-500">招生工具 / Invite Tools</p>
-                        <h3 class="text-2xl font-black text-gray-900 mt-2">推薦報名工具包</h3>
-                        <p class="text-sm text-gray-500 mt-2 leading-relaxed">學生掃描 QR Code 或點擊專屬連結後，系統會自動將課程加入購物車並連結您的教學作業權限。</p>
-                    </div>
-                    
-                    <div class="flex flex-col md:flex-row gap-8 items-start">
-                        <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 flex flex-col items-center flex-shrink-0">
-                            <img src="${escapeHtml(inviteKit.qrUrl)}" alt="Promo invite QR code" class="w-48 h-48 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-                            <p class="text-[10px] text-gray-400 mt-4 text-center break-all font-mono max-w-[200px]">${escapeHtml(inviteKit.inviteUrl)}</p>
-                        </div>
-                        
-                        <div class="flex-grow space-y-4 w-full">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
-                                    <p class="text-[10px] text-blue-600 font-bold uppercase mb-2 tracking-widest">分銷連結 / Referral Link</p>
-                                    <button type="button" class="promo-copy-link w-full inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-700 transition shadow-md active:scale-95">複製專屬連結</button>
-                                </div>
-                                <div class="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
-                                    <p class="text-[10px] text-emerald-600 font-bold uppercase mb-2 tracking-widest">快速分享 / Quick Share</p>
-                                    <a href="${escapeHtml(inviteKit.mailtoUrl)}" class="w-full inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-700 transition shadow-md active:scale-95">按此發送郵件</a>
-                                </div>
-                            </div>
-                            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-500 italic">
-                                💡 建議：您可以將 QR Code 下載後印在課程講義上，或直接將專屬連結貼到班級群組中。
-                            </div>
-                        </div>
-                    </div>
+            <div class="space-y-6">
+                <!-- Header -->
+                <div class="border-b border-slate-100 pb-4">
+                    <p class="text-xs font-black uppercase tracking-[0.24em] text-amber-500">招生工具 / Invite Tools</p>
+                    <h3 class="text-2xl font-black text-gray-900 mt-2">推薦報名工具包</h3>
+                    <p class="text-sm text-gray-500 mt-2 leading-relaxed">學生掃描 QR Code 或點擊專屬連結後，系統會自動將課程加入購物車並連結您的教學作業權限。</p>
                 </div>
 
-                <div class="space-y-4 pt-10 border-t border-slate-100">
-                    <div class="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                        <div class="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
-                            <p class="text-xs font-black uppercase tracking-[0.24em] text-indigo-500">標準文案 / Invite Notice</p>
-                            <h4 class="text-xl font-black text-slate-900 mt-2">寄給學生的報名通知書</h4>
-                            <p class="text-sm text-slate-500 mt-1 font-medium">複製下方文案並貼給學生，能提供最完整的報名指引。</p>
+                <!-- Main Layout Grid -->
+                <div class="flex flex-col lg:flex-row gap-8 items-start">
+                    
+                    <!-- Left Column: QR & Primary Actions -->
+                    <div class="lg:w-[320px] w-full flex flex-col gap-6 flex-shrink-0">
+                        <!-- QR Code -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 flex flex-col items-center">
+                            <img src="${escapeHtml(inviteKit.qrUrl)}" alt="Promo invite QR code" class="w-48 h-48 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+                            <p class="text-[10px] text-gray-400 mt-4 text-center break-all font-mono max-w-full">${escapeHtml(inviteKit.inviteUrl)}</p>
                         </div>
-                        <div class="p-8">
-                            <pre class="promo-invite-letter whitespace-pre-wrap break-words text-sm leading-8 text-slate-700 font-sans bg-slate-50 rounded-2xl p-6 border border-slate-100">${escapeHtml(inviteKit.letterText)}</pre>
+
+                        <!-- Buttons (Moved from right to below QR) -->
+                        <div class="flex flex-col gap-4">
+                            <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                                <p class="text-[10px] text-blue-600 font-bold uppercase mb-2 tracking-widest">分銷連結 / Referral Link</p>
+                                <button type="button" class="promo-copy-link w-full inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-700 transition shadow-md active:scale-95">複製專屬連結</button>
+                            </div>
+                            <div class="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
+                                <p class="text-[10px] text-emerald-600 font-bold uppercase mb-2 tracking-widest">快速分享 / Quick Share</p>
+                                <a href="${escapeHtml(inviteKit.mailtoUrl)}" class="w-full inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-700 transition shadow-md active:scale-95">按此發送郵件</a>
+                            </div>
                         </div>
-                        <div class="px-8 pb-8 flex flex-col sm:flex-row gap-4">
-                            <button type="button" class="promo-copy-letter flex-1 inline-flex items-center justify-center rounded-xl bg-slate-900 px-6 py-4 text-sm font-bold text-white hover:bg-slate-800 transition shadow-lg active:scale-95">複製完整通知書內容</button>
-                            <button type="button" class="promo-copy-qr inline-flex items-center justify-center rounded-xl border border-slate-300 px-6 py-4 text-sm font-bold text-slate-700 hover:bg-slate-50 transition active:scale-95">複製 QR 連結</button>
+
+                        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-500 italic">
+                            💡 建議：您可以將 QR Code 下載後印在課程講義上，或直接將專屬連結貼到班級群組中。
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Registration Notice Letter -->
+                    <div class="flex-grow w-full">
+                        <div class="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden h-full flex flex-col">
+                            <div class="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
+                                <p class="text-xs font-black uppercase tracking-[0.24em] text-indigo-500">標準文案 / Invite Notice</p>
+                                <h4 class="text-xl font-black text-slate-900 mt-2">寄給學生的報名通知書</h4>
+                                <p class="text-sm text-slate-500 mt-1 font-medium">複製下方文案並貼給學生，能提供最完整的報名指引。</p>
+                            </div>
+                            <div class="p-8 flex-grow">
+                                <pre class="promo-invite-letter whitespace-pre-wrap break-words text-sm leading-8 text-slate-700 font-sans bg-slate-50 rounded-2xl p-6 border border-slate-100 h-full">${escapeHtml(inviteKit.letterText)}</pre>
+                            </div>
+                            <div class="px-8 pb-8 flex flex-col sm:flex-row gap-4 mt-auto">
+                                <button type="button" class="promo-copy-letter flex-1 inline-flex items-center justify-center rounded-xl bg-slate-900 px-6 py-4 text-sm font-bold text-white hover:bg-slate-800 transition shadow-lg active:scale-95">複製完整通知書內容</button>
+                                <button type="button" class="promo-copy-qr inline-flex items-center justify-center rounded-xl border border-slate-300 px-6 py-4 text-sm font-bold text-slate-700 hover:bg-slate-50 transition active:scale-95">複製 QR 連結</button>
+                            </div>
                         </div>
                     </div>
                 </div>
