@@ -126,11 +126,39 @@ window.renderNav = function (rootPath = '.', options = {}) {
                 </div>
             </div>
             <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-100 mt-2 absolute w-full left-0 bg-white shadow-lg z-[99998] px-4" style="display: none;">
-                <div class="flex flex-col space-y-3 pt-4 font-medium text-gray-600">
-                    <a href="${resolve('prepare.html')}" class="block py-1 hover:text-cyan-600">課前準備</a>
-                    <a href="${resolve('started.html')}" class="block py-1 hover:text-cyan-600">入門課程</a>
-                    <a href="${resolve('basic.html')}" class="block py-1 hover:text-cyan-600">基礎實作</a>
-                    <a href="${resolve('advanced.html')}" class="block py-1 hover:text-cyan-600">進階應用</a>
+                <div class="flex flex-col space-y-4 pt-4 font-medium text-gray-600">
+                    <!-- Courses Section -->
+                    <div class="space-y-2">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">課程連結</span>
+                        <div class="grid grid-cols-2 gap-2">
+                            <a href="${resolve('prepare.html')}" class="block py-2 px-3 bg-slate-50 rounded-xl hover:text-cyan-600 transition-colors">課前準備</a>
+                            <a href="${resolve('started.html')}" class="block py-2 px-3 bg-slate-50 rounded-xl hover:text-cyan-600 transition-colors">入門課程</a>
+                            <a href="${resolve('basic.html')}" class="block py-2 px-3 bg-slate-50 rounded-xl hover:text-cyan-600 transition-colors">基礎實作</a>
+                            <a href="${resolve('advanced.html')}" class="block py-2 px-3 bg-slate-50 rounded-xl hover:text-cyan-600 transition-colors">進階應用</a>
+                        </div>
+                    </div>
+                    <!-- Config Section -->
+                    <div class="space-y-2">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 text-blue-500">組態設定</span>
+                        <div class="grid grid-cols-2 gap-2">
+                            <a href="${resolve('examples/wifi-config.html')}" class="block py-2 px-3 bg-blue-50/50 rounded-xl hover:text-blue-600 transition-colors">WiFi 設定</a>
+                            <a href="${resolve('examples/motor-config.html')}" class="block py-2 px-3 bg-blue-50/50 rounded-xl hover:text-blue-600 transition-colors">馬達設定</a>
+                        </div>
+                    </div>
+                    <!-- About Section -->
+                    <div class="space-y-2 pb-2">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 text-cyan-600">關於我們</span>
+                        <div class="flex flex-col gap-2">
+                            <a href="${resolve('faq.html')}" class="block py-3 px-4 bg-cyan-50/50 border border-cyan-100 rounded-xl hover:text-cyan-700 transition-colors flex justify-between items-center group">
+                                <span>課程使用說明</span>
+                                <i class="fa-solid fa-chevron-right text-[10px] opacity-30 group-hover:opacity-100 transition-opacity"></i>
+                            </a>
+                            <div class="grid grid-cols-2 gap-2">
+                                <a href="${resolve('about.html')}" class="block py-2 px-3 bg-slate-50 rounded-xl hover:text-cyan-600 transition-colors text-sm">關於付費</a>
+                                <a href="${resolve('collaboration.html')}" class="block py-2 px-3 bg-slate-50 rounded-xl hover:text-cyan-600 transition-colors text-sm">合作事宜</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
