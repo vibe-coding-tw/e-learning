@@ -910,24 +910,6 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
     }
 });
 
-
-// 4. 安全檔案服務 (serveCourse)
-
-        // [FIXED v11.3.9] Robust Course Identification
-        // Match by courseId, current fileName (unit), or classroomUrl (master)
-        const course = lessons.find(l =>
-            l.courseId === pageId ||
-            (fileName && l.courseUnits && l.courseUnits.includes(fileName)) ||
-            (fileName && l.classroomUrl && l.classroomUrl.endsWith(fileName))
-        );
-
-        // Normalize pageId if we matched by file
-        const effectiveCourseId = course ? course.courseId : pageId;
-
-        // 2. Check if course exists and is free (price === 0) - Prioritize this!
-        if (course && course.price === 0) {
-            console.log(`Course ${effectiveCourseId} is free, authorizing...`);
-
 // 4. 安全檔案服務 (serveCourse)
 // ==========================================
 exports.serveCourse = onRequest(async (req, res) => {
