@@ -238,11 +238,16 @@ function enterMediaMode(mode, url) {
 
         docs.forEach(doc => {
             const nav = doc.getElementById('main-nav');
-            if (nav) nav.style.display = 'none';
+            if (nav) nav.style.setProperty('display', 'none', 'important');
 
-            // Hide the Dashboard FAB [NEW]
-            const fab = doc.getElementById('dashboard-fab');
-            if (fab) fab.style.display = 'none';
+            // Aggressive FAB Hiding via CSS Injection [NEW]
+            let styleHide = doc.getElementById('vibe-media-hide-fab');
+            if (!styleHide) {
+                styleHide = doc.createElement('style');
+                styleHide.id = 'vibe-media-hide-fab';
+                styleHide.textContent = '#dashboard-fab, .dashboard-fab { display: none !important; opacity: 0 !important; pointer-events: none !important; }';
+                doc.head.appendChild(styleHide);
+            }
 
             // Also hide the tab bar if it exists (Master Page pattern)
             const tabs = doc.getElementById('course-tabs-container');
@@ -292,8 +297,9 @@ function closeModal() {
         const nav = doc.getElementById('main-nav');
         if (nav) nav.style.display = '';
 
-        const fab = doc.getElementById('dashboard-fab');
-        if (fab) fab.style.display = '';
+        // Restore FAB Visibility [NEW]
+        const styleHide = doc.getElementById('vibe-media-hide-fab');
+        if (styleHide) styleHide.remove();
 
         const tabs = doc.getElementById('course-tabs-container');
         if (tabs) {
