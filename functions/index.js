@@ -40,6 +40,8 @@ const db = admin.firestore();
 setGlobalOptions({
     region: "asia-east1",
     maxInstances: 10,
+    minInstances: 0,
+    memory: 256,
     concurrency: 80 // V2 feature: multiple requests per instance
 });
 
