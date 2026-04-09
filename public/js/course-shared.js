@@ -240,6 +240,10 @@ function enterMediaMode(mode, url) {
             const nav = doc.getElementById('main-nav');
             if (nav) nav.style.display = 'none';
 
+            // Hide the Dashboard FAB [NEW]
+            const fab = doc.getElementById('dashboard-fab');
+            if (fab) fab.style.display = 'none';
+
             // Also hide the tab bar if it exists (Master Page pattern)
             const tabs = doc.getElementById('course-tabs-container');
             if (tabs) {
@@ -287,6 +291,9 @@ function closeModal() {
     docs.forEach(doc => {
         const nav = doc.getElementById('main-nav');
         if (nav) nav.style.display = '';
+
+        const fab = doc.getElementById('dashboard-fab');
+        if (fab) fab.style.display = '';
 
         const tabs = doc.getElementById('course-tabs-container');
         if (tabs) {
