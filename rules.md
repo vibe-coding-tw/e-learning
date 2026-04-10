@@ -134,7 +134,7 @@
    - **行為**: 點擊「評分」按鈕或作業列開啟 **評分視窗 (Grading Modal)**。
 
 ### 5-G. 推薦分潤與作業連結整合規範 (Integrated Referral & Link Rules)
-本系統將作業邀請連結 (assignmentUrl) 與老師作業連結 (Promo Code) 進行功能整合，以簡化推廣流程並強化產學連結：
+本系統將作業邀請連結 (assignmentUrl) 與老師作業連結 (Referral Link) 進行功能整合，以簡化推廣流程並強化產學連結：
 
 1. **唯一推廣媒介 (Unified Medium)**：
    - 廢除傳統隨機字串老師作業連結。導師推廣時，一律分享其個人在 `tutorConfigs` 中設定的 **GitHub Classroom 原生連結**。

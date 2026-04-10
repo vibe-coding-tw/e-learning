@@ -2719,7 +2719,7 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
 
     if (!totalEarningsEl || !promoCodeEl || !tableBody || !inviteKitEl) return;
 
-    // 1. Display Promo Code (Unit-Specific)
+    // 1. Display Referral Link (Unit-Specific)
     const urlParams = new URLSearchParams(window.location.search);
     const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
     const inviteKit = buildReferralInviteKit(filterUnitId, data.myReferralLink);
@@ -2755,7 +2755,7 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
                 <!-- Header -->
                 <div class="border-b border-slate-100 pb-4">
                     <p class="text-xs font-black uppercase tracking-[0.24em] text-amber-500">招生工具 / Invite Tools</p>
-                    <h3 class="text-2xl font-black text-gray-900 mt-2">推薦報名工具包</h3>
+                    <h3 class="text-2xl font-black text-gray-900 mt-2">招生邀請工具包</h3>
                     <p class="text-sm text-gray-500 mt-2 leading-relaxed">學生掃描 QR Code 或點擊專屬連結後，系統會自動將課程加入購物車並連結您的教學作業權限。</p>
                 </div>
 
@@ -2885,7 +2885,7 @@ window.buildReferralInviteKit = window.buildReferralInviteKit || function(unitId
 `親愛的同學您好：
 
 歡迎加入 Vibe Coding 的「${courseName}」課程學習。
-本次推薦學習單元為：${unitName}
+本次邀請學習單元為：${unitName}
 
 請直接點擊下方專屬報名連結，系統會自動：
 1. 在 Shopping Cart 加入此課程項目

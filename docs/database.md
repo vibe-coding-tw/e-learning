@@ -18,7 +18,8 @@
 | `unitAssignments` | map | **學生專用**。Key 為單元 ID，Value 為指派之導師 Email。 |
 | `courseProgress` | map | 學習進度數據。Key 為單元 ID 或課程 ID。 |
 | `orders` | array | 已購課程 ID 列表。 |
-| `promoCodes` | map | **導師專用**。單元對應之推薦碼映射。 |
+| `referralLinks` | map | **導師專用**。單元對應之老師作業連結內容映射。 |
+| `referredByTutor` | string | **學生專用**。記錄最初推薦該學員入站的導師。 |
 | `updatedAt` | timestamp | 最後更新時間。 |
 | `joinedAt` | timestamp | 加入時間。 |
 
