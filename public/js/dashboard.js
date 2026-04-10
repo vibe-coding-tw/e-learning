@@ -779,9 +779,9 @@ function renderAdminDashboard(data, filterUnitId = null) {
         filterCourseId = findParentCourseIdByUnit(filterUnitId);
     }
 
-    // [RESTORE] If Admin and Tutor Mode is ON, they see these tabs (GOD MODE)
-    // If Tutor, they see these if they have qualified access for CURRENT view
-    // [V13.0.12] Revised God Mode and Unit Context rules based on rules.md
+    // Tutor Mode ON = teacher view for qualified tutors and admins.
+    // Tutor Mode OFF = student-like view within the current unit context.
+    // Settings & Assignments switch according to rules.md.
     // Settings & Earnings are only accessible within a specific UNIT context
     const showSettingsTab = canCurrentUserViewSettingsTab();
 
@@ -2318,7 +2318,7 @@ window.isUserAuthorizedForUnit = window.isUserAuthorizedForUnit || function(file
     if (!email) return false;
     const { isAdmin, isPaidStudent } = currentDashboardPermissions;
 
-    // RULE 1: Admin in Tutor Mode = God Mode.
+    // RULE 1: Admin in Tutor Mode follows the teacher-view path for this unit.
     if (isAdmin && adminTutorMode) return true;
 
     // [V12.5.0] INTRO MONTH RULE: 1 month free for intro units upon registration
@@ -2722,14 +2722,14 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
     // 1. Display Promo Code (Unit-Specific)
     const urlParams = new URLSearchParams(window.location.search);
     const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
-    const inviteKit = buildPromoInviteKit(filterUnitId, data.myPromoCode);
+    const inviteKit = buildReferralInviteKit(filterUnitId, data.myReferralLink);
 
     if (!filterUnitId) {
         promoCodeEl.innerHTML = `
             <span class="text-gray-400 text-sm block mb-1">請先從上方切換單元</span>
             <span class="text-[10px] text-gray-300">每一單元皆有專屬作業連結</span>
         `;
-    } else if (!data.myPromoCode) {
+    } else if (!data.myReferralLink) {
         promoCodeEl.innerHTML = `
             <span class="text-orange-400 text-sm block font-bold">尚未配置作業連結</span>
             <span class="text-[10px] text-gray-400">請聯繫管理員獲取該單元授權</span>
@@ -2737,7 +2737,7 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
     } else {
         promoCodeEl.innerHTML = `
             <div class="flex flex-col items-center">
-                <span class="text-xs font-mono text-blue-600 break-all max-w-[200px] text-center">${data.myPromoCode}</span>
+                <span class="text-xs font-mono text-blue-600 break-all max-w-[200px] text-center">${data.myReferralLink}</span>
                 <span class="text-[10px] text-gray-400 mt-1 uppercase tracking-tighter">此單元教學作業連結 / Unit Link</span>
             </div>
         `;
@@ -2847,12 +2847,12 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
     totalEarningsEl.innerText = total.toLocaleString();
 }
 
-window.buildPromoInviteKit = window.buildPromoInviteKit || function(unitId, promoCode) {
+window.buildReferralInviteKit = window.buildReferralInviteKit || function(unitId, referralLink) {
     if (!unitId) {
         return { ready: false, message: '請先切換到特定課程單元，才能生成專屬招生邀請工具。' };
     }
 
-    if (!promoCode) {
+    if (!referralLink) {
         return { ready: false, message: '此單元尚未配置作業連結，請先確認導師授權或聯繫管理員。' };
     }
 
@@ -2873,7 +2873,7 @@ window.buildPromoInviteKit = window.buildPromoInviteKit || function(unitId, prom
         action: 'addInviteItem',
         courseId,
         unitId: canonicalUnitId,
-        promoCode,
+        referralLink,
         courseName,
         coursePrice: String(coursePrice),
         isPhysical: String(isPhysical)
@@ -2915,6 +2915,8 @@ Vibe Coding`;
         mailtoUrl
     };
 }
+
+window.buildPromoInviteKit = window.buildPromoInviteKit || window.buildReferralInviteKit;
 
 async function copyTextToClipboard(text, successMessage = '已複製') {
     try {

@@ -26,7 +26,7 @@
 
 ### 2-A. 全域角色 (Global Roles)
 1. **管理員 (Admin)**: 系統最高權限，可檢閱所有數據。
-    - **導師模式 (Tutor Mode: ON)**: 擁有 God Mode，可存取所有數位單元、指派作業、修改 GitHub classroom 連結。
+    - **導師模式 (Tutor Mode: ON)**: 切換為教師視角，可依教師規則檢視與管理單元內容、指派作業、修改 GitHub Classroom 連結。
     - **學員視角模擬 (Tutor Mode: OFF)**: **管理員身分不具備特權 (No Override)**。其行為與權限模擬一般學員：非合格導師且未付費（或已過期）者，嚴禁存取收費單元之作業連結與設定內容。
 2. **一般使用者 (Standard User)**: `role` 欄位為空或為 `user`。存取權限僅依據購買狀態與單元合格授權。
 
@@ -36,7 +36,7 @@
 - **實作要求**: `checkPaymentAuthorization` 與 `resolveAssignmentAccess` 必須共用同一套有效訂單與到期判定邏輯，禁止前端自行推測繳費狀態。
 
 ### 2-C. 實體產品與課程元數據 (Physical Products & Metadata)
-- **實體產品決策**: 凡 `isPhysical` 為 `true` 且有價格的卡片（如：開發平台裝置），無論使用者是否具備管理員權限，在前台銷售頁面（Prepare, Basic, Advanced 等）必須優先顯示 **「🛒 加入購物車」** 與價格，嚴禁管理員 God Mode 自動跳轉為「進入課程」。這是為了確保銷售 UI 的正確性與購買流程的測試完整。
+- **實體產品決策**: 凡 `isPhysical` 為 `true` 且有價格的卡片（如：開發平台裝置），無論使用者是否具備管理員權限，在前台銷售頁面（Prepare, Basic, Advanced 等）必須優先顯示 **「🛒 加入購物車」** 與價格，嚴禁管理員在 Tutor Mode 下自動跳轉為「進入課程」。這是為了確保銷售 UI 的正確性與購買流程的測試完整。
 - **單一資料來源**: 所有前台展示的課程標題、價格、核心內容、圖示等元數據，必須以 **Firestore 的 `metadata_lessons` 為唯一準則**，嚴禁在 HTML 中硬編碼過時的資料。
 
 ### 2-D. ID 歸一化與授權比對規範 (ID Normalization & Authorization Rules)
@@ -90,8 +90,8 @@
 在具備單元視角 (Unit Context) 時，Settings 分頁必須依序包含下列區塊 (不可隨意更動順序)：
 1. **Classroom Links (作業連結設定)**: URL 邀請連結設置區。
 2. **Integrated Assignments (本單元作業批改)**: 顯示該單元的學生繳交名單表格。
-3. **Financial Dashboard (分潤紀錄與推薦碼)**: 
-    - 需包含「累積總分潤」與「該單元專屬推薦碼」。
+3. **Financial Dashboard (分潤紀錄與老師作業連結)**: 
+    - 需包含「累積總分潤」與「該單元專屬老師作業連結」。
     - 需包含「分潤明細 (Ledger)」表格。
 4. **Tutor Guides / Attachments (教學指引與附件)**:
     - 位於分頁最底部。
@@ -134,10 +134,10 @@
    - **行為**: 點擊「評分」按鈕或作業列開啟 **評分視窗 (Grading Modal)**。
 
 ### 5-G. 推薦分潤與作業連結整合規範 (Integrated Referral & Link Rules)
-本系統將作業邀請連結 (assignmentUrl) 與推薦碼 (Promo Code) 進行功能整合，以簡化推廣流程並強化產學連結：
+本系統將作業邀請連結 (assignmentUrl) 與老師作業連結 (Promo Code) 進行功能整合，以簡化推廣流程並強化產學連結：
 
 1. **唯一推廣媒介 (Unified Medium)**：
-   - 廢除傳統隨機字串推薦碼。導師推廣時，一律分享其個人在 `tutorConfigs` 中設定的 **GitHub Classroom 原生連結**。
+   - 廢除傳統隨機字串老師作業連結。導師推廣時，一律分享其個人在 `tutorConfigs` 中設定的 **GitHub Classroom 原生連結**。
    - **連結限制**：必須使用原始 GitHub Classroom 網址，嚴禁使用任何中間跳轉頁 (Middle-man Link) 或短網址，以確保資訊純粹。
 
 2. **分潤與折扣機制**：
@@ -146,7 +146,7 @@
 
 3. **推薦關聯邏輯**：
    - **資格限定**：學員購買課程時，僅能關聯且輸入「已取得該課程全單元認證」之合格導師所屬連結。
-   - **解析機制 (V15.6)**：`verifyPromoCode` 在接收 GitHub 連結後，會遍歷導師資料以識別匹配的內部 **Unit ID**。
+   - **解析機制 (V15.6)**：`verifyReferralLink` 在接收 GitHub Classroom 連結後，會透過 `referral_links` 索引識別匹配的內部 **Unit ID** 與導師。
    - **對應傳回**：後端處理後，必須將識別出的內部 `unitId` 回傳給前端作為 `courseId` 欄位，確保購物車能正確執行 `addInviteItem` 並將連結與對應產品綁定。
    - **ID 容錯**：比對過程強制執行歸一化（移除 `.html`），確保推薦連結在任何 ID 格式下皆能穩定工作。
 

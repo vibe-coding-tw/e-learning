@@ -13,14 +13,14 @@
 - **平台**: Firebase (Google Cloud Platform)。
 - **Cloud Functions (Node.js 22)**:
     - **`asia-east1` 區域**: 提供高性能、低延遲的亞太地區服務。
-    - **API 服務**: 包含 `initiatePayment` (綠界支付)、`verifyPromoCode` (代碼驗證)、`getDashboardData` (各項數據導出) 等。
+    - **API 服務**: 包含 `initiatePayment` (綠界支付)、`verifyReferralLink` (老師作業連結驗證)、`getDashboardData` (各項數據導出) 等。
     - **定時任務 (Scheduled Functions)**:
         - `calculateMonthlySharing`: 每月 1 號自動計算並分配推薦利潤。
         - `remindAdminPendingAssignments`: 定期提醒未批改作業。
 - **數據庫 (Firestore)**:
     - `users`: 使用者角色 (`admin`, `user`)、UID 與權限映射。
     - `activity_logs`: 毫秒級追蹤學生觀看影片、閱讀文件的學習時數。
-    - `orders`: 支付訂單；推薦代碼與導師關係綁在各個 `items[itemId]` 上，而非整張訂單。
+    - `orders`: 支付訂單；老師作業連結與導師關係綁在各個 `items[itemId]` 上，而非整張訂單。
     - `profit_ledger`: 自動化產出的月度分潤清單。
 
 ## ✨ 核心特色 (Key Features)
@@ -36,7 +36,7 @@
 - **老師推薦制**: 學生不再自行申請合格教師，改由授課老師在「評分作業」對話框中推薦，交由管理員審核。
 
 ### 3. 多層級分潤與推薦 (Profit Sharing)
-- **推薦代碼 (Promotion Code)**: 學生結帳時輸入導師代碼，代碼只會套用到對應的課程/單元 item。
+- **老師作業連結 (Referral Link)**: 學生結帳時輸入老師提供的 GitHub Classroom 作業連結；連結只會套用到對應的課程/單元 item。
 - **遞迴計算 (Recursive Sharing)**: 
     - 直接推廣者獲得 20% 分潤。
     - 其上級導師可獲得後者分潤金額的 20%，直到根結點 (Admin)。
@@ -49,11 +49,11 @@
 ## 🛠️ 操作使用說明 (Usage Guide)
 
 ### 0. 付款、老師指派、作業與推薦的正式流程
-1. 學生在 `cart.html` 結帳前可輸入老師的 `promo code`。
-2. 前端先呼叫 `verifyPromoCode` 驗證代碼，成功後會把該代碼綁到對應的購物車 item，並記錄該 item 的 `promoCode` / `referralTutor`。
+1. 學生在 `cart.html` 結帳前可輸入老師提供的 GitHub Classroom 作業連結。
+2. 前端先呼叫 `verifyReferralLink` 驗證老師作業連結，成功後會把該連結綁到對應的購物車 item，並記錄該 item 的 `referralLink` / `referredTutorEmail`。
 3. 綠界付款成功後，`paymentNotify` 會：
    - 將訂單標記為 `SUCCESS`
-   - 保留各 item 的 `promoCode` / `referralTutor`
+   - 保留各 item 的 `referralLink` / `referredTutorEmail`
    - 逐 item 檢查推薦連結對應單元，並自動把使用者指派到該單元老師 (`users/{uid}.unitAssignments[{unitId}] = teacherEmail`)
    - 自動寄出付款成功、老師指派成功的 email 通知
 4. 學生在課程頁或 Dashboard 點擊作業時，前端不再直接讀第一個 Classroom URL，而是先呼叫 `resolveAssignmentAccess`：
@@ -73,7 +73,7 @@
     - 點擊「✍️ 評分」按鈕輸入分數與評語。
     - 若學生表現成熟，可在同一個評分對話框中點擊「老師推薦成為合格教師」。
 3. **分潤管理**:
-    - 在「分潤 (Earnings)」標籤中查看您的月度累積佣金與當前使用的推薦代碼。
+    - 在整合後的設定/分潤區塊中查看您的月度累積佣金與當前使用的老師作業連結。
 4. **權限授予**: 管理員可在 `view-admin` 控制台授權特定 Email 成為教師。
 
 ### 對於一般使用者 (General User)

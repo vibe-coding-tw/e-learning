@@ -149,7 +149,16 @@ exports.initiatePayment = onRequest(async (req, res) => {
         console.log("收到 initiatePayment 請求 (.env mode)");
 
         const requestData = req.body.data || req.body || {};
-        const { amount, returnUrl, cartDetails, logistics, promoCode, referralTutor } = requestData;
+        const {
+            amount,
+            returnUrl,
+            cartDetails,
+            logistics,
+            referralLink = '',
+            referredTutorEmail = '',
+            promoCode = '',
+            referralTutor = ''
+        } = requestData;
 
         // 簡易 Token 驗證
         let uid = "GUEST";
@@ -169,7 +178,12 @@ exports.initiatePayment = onRequest(async (req, res) => {
         const tradeDate = getCurrentTime();
 
         const lessons = await getLessons();
-        const normalizedItems = normalizeOrderItems(cartDetails || {}, promoCode, referralTutor, lessons);
+        const normalizedItems = normalizeOrderItems(
+            cartDetails || {},
+            referralLink || promoCode,
+            referredTutorEmail || referralTutor,
+            lessons
+        );
 
         // 建立訂單內容記錄 (Firestore)
         await admin.firestore().collection("orders").doc(orderNumber).set({
@@ -179,8 +193,6 @@ exports.initiatePayment = onRequest(async (req, res) => {
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             items: normalizedItems,
             logistics: logistics || null,
-            promoCode: null,
-            referralTutor: null,
             orderNumber: orderNumber
         });
 
@@ -189,8 +201,8 @@ exports.initiatePayment = onRequest(async (req, res) => {
         // ClientUrl (前端)
         const clientUrl = returnUrl || "https://vibe-coding.tw";
 
-        const appliedItemPromos = Object.values(normalizedItems).map(item => item?.promoCode).filter(Boolean);
-        console.log(`建立訂單: ${orderNumber} (Item Promos: ${appliedItemPromos.join(', ') || 'None'})`);
+        const appliedReferralLinks = Object.values(normalizedItems).map(item => item?.referralLink).filter(Boolean);
+        console.log(`建立訂單: ${orderNumber} (Referral Links: ${appliedReferralLinks.join(', ') || 'None'})`);
 
         let itemNameStr = 'Vibe Coding 線上課程';
         if (normalizedItems && Object.keys(normalizedItems).length > 0) {
@@ -316,8 +328,7 @@ exports.paymentNotify = onRequest(async (req, res) => {
             });
             console.log(`訂單 ${orderId} 更新成功`);
 
-            // [V15.9] HARNESSING RELIABILITY: Ensure referralTutor is backfilled from PromoCode index
-            // This protects shares if the front-end failed to save referralTutor correctly.
+            // Ensure referred tutor is backfilled from the referral link index.
             try {
                 const db = admin.firestore();
                 const oDoc = await db.collection("orders").doc(orderId).get();
@@ -326,25 +337,20 @@ exports.paymentNotify = onRequest(async (req, res) => {
                 
                 let updatedItems = false;
                 for (const [key, val] of Object.entries(oItems)) {
-                    if (val.promoCode && !val.referralTutor) {
-                        const pDoc = await db.collection('promo_codes').doc(val.promoCode).get();
-                        if (pDoc.exists && pDoc.data().tutorEmail) {
-                            oItems[key].referralTutor = pDoc.data().tutorEmail;
+                    const itemReferralLink = val.referralLink || val.promoCode || null;
+                    if (itemReferralLink && !val.referredTutorEmail) {
+                        const linkId = Buffer.from(normalizeGitHubUrl(itemReferralLink)).toString('base64');
+                        const lDoc = await db.collection('referral_links').doc(linkId).get();
+                        if (lDoc.exists) {
+                            oItems[key].referredTutorEmail = lDoc.data().tutorEmail;
+                            oItems[key].referredTutorName = lDoc.data().tutorName || lDoc.data().tutorEmail;
                             updatedItems = true;
-                        } else if (val.promoCode.includes('github.com')) {
-                            // If it's a URL-based promo, check link index
-                            const linkId = Buffer.from(normalizeGitHubUrl(val.promoCode)).toString('base64');
-                            const lDoc = await db.collection('referral_links').doc(linkId).get();
-                            if (lDoc.exists) {
-                                oItems[key].referralTutor = lDoc.data().tutorEmail;
-                                updatedItems = true;
-                            }
                         }
                     }
                 }
                 if (updatedItems) {
                     await db.collection("orders").doc(orderId).update({ items: oItems });
-                    console.log(`[paymentNotify] ✅ Backfilled referralTutor for order ${orderId}`);
+                    console.log(`[paymentNotify] ✅ Backfilled referred tutor for order ${orderId}`);
                 }
             } catch (backfillErr) {
                 console.error("[paymentNotify] Backfill failed:", backfillErr);
@@ -376,27 +382,28 @@ exports.paymentNotify = onRequest(async (req, res) => {
 
                     if (orderData.uid && orderData.uid !== 'GUEST') {
                         const lessons = await getLessons();
-                        const promoAssignments = extractPromoAssignmentsFromOrder(orderData.items || {}, lessons);
+                        const referralAssignments = extractReferralAssignmentsFromOrder(orderData.items || {}, lessons);
 
-                        for (const assignment of promoAssignments) {
-                            const promoDoc = await db.collection('promo_codes').doc(assignment.promoCode).get();
-                            if (!promoDoc.exists || promoDoc.data()?.isActive === false) continue;
+                        for (const assignment of referralAssignments) {
+                            const linkId = Buffer.from(normalizeGitHubUrl(assignment.referralLink)).toString('base64');
+                            const referralDoc = await db.collection('referral_links').doc(linkId).get();
+                            if (!referralDoc.exists) continue;
 
-                            const promoData = promoDoc.data();
-                            const targetUnitId = resolveCanonicalUnitId(promoData.courseId, lessons);
+                            const referralData = referralDoc.data();
+                            const targetUnitId = resolveCanonicalUnitId(referralData.unitId, lessons);
 
-                            if (targetUnitId && assignment.purchasedUnits.includes(targetUnitId) && promoData.tutorEmail) {
+                            if (targetUnitId && assignment.purchasedUnits.includes(targetUnitId) && referralData.tutorEmail) {
                                 await upsertStudentUnitAssignment(
                                     db,
                                     orderData.uid,
                                     targetUnitId,
-                                    promoData.tutorEmail,
+                                    referralData.tutorEmail,
                                     'paymentNotify',
                                     true
                                 );
-                                console.log(`[paymentNotify] Auto-assigned ${orderData.uid} -> ${promoData.tutorEmail} for ${targetUnitId}`);
+                                console.log(`[paymentNotify] Auto-assigned ${orderData.uid} -> ${referralData.tutorEmail} for ${targetUnitId}`);
                             } else {
-                                console.warn(`[paymentNotify] Promo ${assignment.promoCode} did not match purchased units for order ${orderId}`);
+                                console.warn(`[paymentNotify] Referral link ${assignment.referralLink} did not match purchased units for order ${orderId}`);
                             }
                         }
                     }
@@ -553,53 +560,62 @@ function collectPurchasedUnitIds(items = {}, lessons = []) {
     return Array.from(purchasedUnits);
 }
 
-function findMatchingOrderItemIdForPromo(items = {}, promoCourseId = '', lessons = []) {
-    if (!promoCourseId) return null;
+function findMatchingOrderItemIdForReferral(items = {}, referralTargetId = '', lessons = []) {
+    if (!referralTargetId) return null;
 
-    if (items[promoCourseId]) return promoCourseId;
+    if (items[referralTargetId]) return referralTargetId;
 
-    const canonicalPromoUnitId = resolveCanonicalUnitId(promoCourseId, lessons);
-    if (items[canonicalPromoUnitId]) return canonicalPromoUnitId;
+    const canonicalReferralUnitId = resolveCanonicalUnitId(referralTargetId, lessons);
+    if (items[canonicalReferralUnitId]) return canonicalReferralUnitId;
 
-    const parentCourseId = findParentCourseIdByUnit(canonicalPromoUnitId, lessons);
+    const parentCourseId = findParentCourseIdByUnit(canonicalReferralUnitId, lessons);
     if (parentCourseId && items[parentCourseId]) return parentCourseId;
 
     return Object.keys(items || {}).find(itemKey => {
-        if (itemKey === promoCourseId || itemKey === canonicalPromoUnitId) return true;
+        if (itemKey === referralTargetId || itemKey === canonicalReferralUnitId) return true;
         const lesson = lessons.find(l => l.courseId === itemKey);
-        return !!(lesson && Array.isArray(lesson.courseUnits) && lesson.courseUnits.includes(canonicalPromoUnitId));
+        return !!(lesson && Array.isArray(lesson.courseUnits) && lesson.courseUnits.includes(canonicalReferralUnitId));
     }) || null;
 }
 
-function normalizeOrderItems(cartDetails = {}, promoCode = '', referralTutor = '', lessons = []) {
+function normalizeOrderItems(cartDetails = {}, referralLink = '', referredTutorEmail = '', lessons = []) {
     const items = JSON.parse(JSON.stringify(cartDetails || {}));
-    const normalizedPromoCode = (promoCode && promoCode.trim()) ? promoCode.trim().toUpperCase() : null;
-    const normalizedReferralTutor = (referralTutor && referralTutor.trim()) ? referralTutor.trim() : 'info@vibe-coding.tw';
+    const normalizedReferralLink = referralLink && referralLink.trim()
+        ? String(referralLink).trim()
+        : null;
+    const normalizedReferredTutorEmail = referredTutorEmail && referredTutorEmail.trim()
+        ? String(referredTutorEmail).trim()
+        : 'info@vibe-coding.tw';
 
     Object.entries(items).forEach(([itemKey, itemValue]) => {
         if (!itemValue || typeof itemValue !== 'object') items[itemKey] = {};
-        items[itemKey].promoCode = itemValue?.promoCode ? String(itemValue.promoCode).trim().toUpperCase() : null;
-        items[itemKey].referralTutor = itemValue?.referralTutor ? String(itemValue.referralTutor).trim() : 'info@vibe-coding.tw';
+        const itemReferralLink = itemValue?.referralLink || itemValue?.promoCode || null;
+        const itemReferredTutorEmail = itemValue?.referredTutorEmail || itemValue?.referralTutor || 'info@vibe-coding.tw';
+        const itemReferredTutorName = itemValue?.referredTutorName || itemValue?.referralTutorName || null;
+
+        items[itemKey].referralLink = itemReferralLink ? String(itemReferralLink).trim() : null;
+        items[itemKey].referredTutorEmail = itemReferredTutorEmail ? String(itemReferredTutorEmail).trim() : 'info@vibe-coding.tw';
+        items[itemKey].referredTutorName = itemReferredTutorName ? String(itemReferredTutorName).trim() : null;
     });
 
-    if (normalizedPromoCode) {
-        const targetItemId = findMatchingOrderItemIdForPromo(items, normalizedPromoCode, lessons);
+    if (normalizedReferralLink) {
+        const targetItemId = findMatchingOrderItemIdForReferral(items, normalizedReferralLink, lessons);
         if (targetItemId && items[targetItemId]) {
-            items[targetItemId].promoCode = normalizedPromoCode;
-            items[targetItemId].referralTutor = normalizedReferralTutor;
+            items[targetItemId].referralLink = normalizedReferralLink;
+            items[targetItemId].referredTutorEmail = normalizedReferredTutorEmail;
         }
     }
 
     return items;
 }
 
-function extractPromoAssignmentsFromOrder(orderItems = {}, lessons = []) {
+function extractReferralAssignmentsFromOrder(orderItems = {}, lessons = []) {
     const assignments = [];
 
     Object.entries(orderItems || {}).forEach(([itemKey, itemValue]) => {
-        const itemPromoCode = itemValue?.promoCode ? String(itemValue.promoCode).trim().toUpperCase() : null;
-        const itemTutor = itemValue?.referralTutor ? String(itemValue.referralTutor).trim() : null;
-        if (!itemPromoCode) return;
+        const itemReferralLink = itemValue?.referralLink || itemValue?.promoCode || null;
+        const itemTutor = itemValue?.referredTutorEmail || itemValue?.referralTutor || null;
+        if (!itemReferralLink) return;
 
         const lesson = lessons.find(l => l.courseId === itemKey);
         const purchasedUnits = lesson
@@ -608,8 +624,8 @@ function extractPromoAssignmentsFromOrder(orderItems = {}, lessons = []) {
 
         assignments.push({
             itemKey,
-            promoCode: itemPromoCode,
-            referralTutor: itemTutor,
+            referralLink: String(itemReferralLink).trim(),
+            referredTutorEmail: itemTutor ? String(itemTutor).trim() : null,
             purchasedUnits
         });
     });
@@ -1322,9 +1338,6 @@ const getTutorConfigsHandler = onCall(async (request) => {
 
 exports.saveTutorConfigs = saveTutorConfigsHandler;
 exports.getTutorConfigs = getTutorConfigsHandler;
-// Backward-compatible aliases for older cached clients.
-exports.saveCourseConfigs = saveTutorConfigsHandler;
-exports.getCourseConfigs = getTutorConfigsHandler;
 
 exports.resolveAssignmentAccess = onCall(async (request) => {
     const { data, auth } = request;
@@ -1734,12 +1747,7 @@ exports.decideTutorApplication = onCall(async (request) => {
 
         updateData[new admin.firestore.FieldPath('tutorConfigs', canonicalUnitId)] = tutorData;
 
-        // Generate Promo Code in background
-        try {
-            await internalGetOrCreatePromoCode(db, userEmail, canonicalUnitId, tutorName);
-        } catch (authExtraErr) {
-            console.error("[Approve] Failed to generate promo code:", authExtraErr);
-        }
+        // No code generation: the tutor's GitHub Classroom assignment link is now the only referral medium.
     }
 
     // Save all updates to the User Document
@@ -1791,7 +1799,7 @@ exports.getDashboardData = onCall(async (request) => {
     try {
         // 0. Fetch Course Authorization Data
         const authorizedCourseIds = [];
-        const courseConfigs = {};
+        const courseGuideIndex = {};
         const unitTutorConfigs = {};
         const unitToDocId = {}; // [LEGACY] Map unit filename -> Firestore docId
         // [NEW v12.0.0] Fetch Tutor Application Status for THIS user from their own document
@@ -1818,7 +1826,7 @@ exports.getDashboardData = onCall(async (request) => {
         }
 
         // [NEW v12.0.2] (Admin Only) Fetch all PENDING applications from the users collection
-        // [V13.0.1] Simulation Rule: Only fetch if in Tutor Mode (God Mode)
+        // Admin only sees pending tutor applications while Tutor Mode is ON.
         let allPendingApplications = [];
         if (requesterRole === 'admin' && data.tutorMode !== false) {
             const pendingUsersSnapshot = await db.collection('users')
@@ -1840,7 +1848,7 @@ exports.getDashboardData = onCall(async (request) => {
             });
         }
 
-        // [V12.0.9] ULTIMATE FIX: Synthesize global courseConfigs from ALL users' tutorConfigs
+        // Build a guide index from all users' tutorConfigs. This is not the deprecated course_configs collection.
         const usersSnapshot = await db.collection('users').get();
         const synthesizedConfigs = {};
 
@@ -1914,9 +1922,8 @@ exports.getDashboardData = onCall(async (request) => {
         Object.keys(synthesizedConfigs).forEach(docId => {
             try {
                 const cfg = synthesizedConfigs[docId];
-                // [V13.0.2] Simulation Rule: Admin God Mode check
-                const isGodMode = requesterRole === 'admin' && data.tutorMode !== false;
-                const isAuthorized = isGodMode || (Array.isArray(cfg.authorizedTutors) && cfg.authorizedTutors.includes(email));
+                const isTutorModeAdmin = requesterRole === 'admin' && data.tutorMode !== false;
+                const isAuthorized = isTutorModeAdmin || (Array.isArray(cfg.authorizedTutors) && cfg.authorizedTutors.includes(email));
                 const mappedId = legacyMap[docId] || docId;
 
                 if (cfg.githubClassroomUrls) {
@@ -1962,9 +1969,9 @@ exports.getDashboardData = onCall(async (request) => {
                             authorizedCourseIds.push(mappedId);
                         }
                     }
-                    courseConfigs[mappedId] = cfg;
+                    courseGuideIndex[mappedId] = cfg;
                     if (mappedId !== docId) {
-                        courseConfigs[docId] = cfg;
+                        courseGuideIndex[docId] = cfg;
                     }
                 }
             } catch (err) {
@@ -1979,8 +1986,7 @@ exports.getDashboardData = onCall(async (request) => {
         const allFiles = fs.existsSync(privateCoursesDir) ? fs.readdirSync(privateCoursesDir) : [];
         console.log(`[getDashboardData] Total files found: ${allFiles.length}. First 5: ${JSON.stringify(allFiles.slice(0, 5))}`);
 
-        // [MODIFIED] If admin or global tutor, ensure ALL courses from Firestore metadata are considered for guide aggregation
-        // [V13.0.3] Simulation Rule: Admin God Mode check for global aggregation
+        // If admin is in Tutor Mode, ensure all courses are considered for guide aggregation.
         if (requesterRole === 'admin' && data.tutorMode !== false) {
             lessons.forEach(l => {
                 if (!authorizedCourseIds.includes(l.courseId)) {
@@ -2042,16 +2048,16 @@ exports.getDashboardData = onCall(async (request) => {
                         }
 
                         if (Object.keys(aggregatedGuides).length > 0) {
-                            if (!courseConfigs[cid]) courseConfigs[cid] = {};
+                            if (!courseGuideIndex[cid]) courseGuideIndex[cid] = {};
                             // [MERGE] Use Object.assign to preserve existing properties from Firestore
                             if (aggregatedGuides.tutor) {
-                                courseConfigs[cid].tutorGuide = Object.assign({}, courseConfigs[cid].tutorGuide || {}, aggregatedGuides.tutor);
+                                courseGuideIndex[cid].tutorGuide = Object.assign({}, courseGuideIndex[cid].tutorGuide || {}, aggregatedGuides.tutor);
                             }
                             if (aggregatedGuides.assignment) {
-                                courseConfigs[cid].assignmentGuide = Object.assign({}, courseConfigs[cid].assignmentGuide || {}, aggregatedGuides.assignment);
+                                courseGuideIndex[cid].assignmentGuide = Object.assign({}, courseGuideIndex[cid].assignmentGuide || {}, aggregatedGuides.assignment);
                             }
                             if (aggregatedGuides.attachment) {
-                                courseConfigs[cid].attachmentGuide = Object.assign({}, courseConfigs[cid].attachmentGuide || {}, aggregatedGuides.attachment);
+                                courseGuideIndex[cid].attachmentGuide = Object.assign({}, courseGuideIndex[cid].attachmentGuide || {}, aggregatedGuides.attachment);
                             }
                         }
                     }
@@ -2073,11 +2079,11 @@ exports.getDashboardData = onCall(async (request) => {
             summary: {},
             students: [],
             assignments: [],
-            courseGuideIndex: courseConfigs,
+            courseGuideIndex: courseGuideIndex,
             unitTutorConfigs: unitTutorConfigs,
             myTutorConfigs: myTutorConfigs,
             unitToDocId: unitToDocId, 
-            myPromoCode: null,
+            myReferralLink: null,
             earnings: [],
             // [NEW] Application Workflow support
             myApplications: myApplicationsMapping,
@@ -2085,7 +2091,7 @@ exports.getDashboardData = onCall(async (request) => {
             pendingApplications: allPendingApplications
         };
 
-        // [V15.2] Fetch Profit Sharing Data for Tutors (Assignment Links as Promo ID)
+        // Fetch profit sharing data and the current unit referral link for tutors.
         if (isManagementView) {
             try {
                 // If a unitId is provided from the frontend, fetch the assignmentUrl for that unit
@@ -2095,7 +2101,7 @@ exports.getDashboardData = onCall(async (request) => {
                     // [V15.5] Robust field lookup via getEffectiveTutorConfig (Handles nested dots)
                     const unitConfig = getEffectiveTutorConfig(canonicalId, myTutorConfigs);
                     if (unitConfig && unitConfig.authorized) {
-                        result.myPromoCode = unitConfig.githubClassroomUrl || unitConfig.assignmentUrl || null;
+                        result.myReferralLink = unitConfig.githubClassroomUrl || unitConfig.assignmentUrl || null;
                     }
                 }
 
@@ -2351,14 +2357,14 @@ exports.getDashboardData = onCall(async (request) => {
         }
 
         // [V13.0.14] UNIFIED STUDENT FILTERING: Filter students based on authorization scope.
-        // 1. Admin Global (tutorMode !== false): All students.
+        // 1. Admin Global with Tutor Mode ON: All students.
         // 2. Unit Context: Only students in that unit (assigned to the tutor).
         // 3. Course Context: Only students in that course.
         // 4. Tutor Global (Tutor Mode): Only students assigned to THEM.
         
         const filteredStudentStats = [];
         const isAdmin = requesterRole === 'admin';
-        const isGodMode = isAdmin && data.tutorMode !== false;
+        const isTutorModeAdmin = isAdmin && data.tutorMode !== false;
         const targetUnitId = data.unitId ? resolveCanonicalUnitId(data.unitId, lessons) : null;
         const targetCourseId = data.courseId || null;
 
@@ -2376,7 +2382,7 @@ exports.getDashboardData = onCall(async (request) => {
             // 1. Assignment Check: Is the student assigned to THIS tutor for THIS unit?
             if (targetUnitId) {
                 const assignedTutor = s.unitAssignments?.[targetUnitId];
-                if (assignedTutor === email || isGodMode) {
+                if (assignedTutor === email || isTutorModeAdmin) {
                     isRelevant = true;
                 }
             } else if (targetCourseId) {
@@ -2384,13 +2390,13 @@ exports.getDashboardData = onCall(async (request) => {
                 const hasCourseOrder = (s.orders || []).includes(targetCourseId);
                 const assignedToAnyInCourse = Object.keys(s.unitAssignments || {}).some(uid => {
                     const parent = findParentCourseIdByUnit(uid, lessons);
-                    return parent === targetCourseId && (s.unitAssignments[uid] === email || isGodMode);
+                    return parent === targetCourseId && (s.unitAssignments[uid] === email || isTutorModeAdmin);
                 });
                 if (hasCourseOrder || assignedToAnyInCourse) isRelevant = true;
             } else {
                 // Global Tutor View (No Context): Only see students assigned to THEM at all
                 const hasAnyAssignmentToMe = Object.values(s.unitAssignments || {}).some(t => t === email);
-                if (hasAnyAssignmentToMe || isGodMode) isRelevant = true;
+                if (hasAnyAssignmentToMe || isTutorModeAdmin) isRelevant = true;
             }
 
             if (isRelevant) filteredStudentStats.push(s);
@@ -2958,36 +2964,32 @@ exports.mapReply = onRequest((req, res) => {
 // 11. 利潤分享架構 (Profit Sharing)
 // ==========================================
 
-// 11.1 驗證優惠代碼 (verifyPromoCode)
-exports.verifyPromoCode = onCall(async (request) => {
+// 11.1 驗證老師作業連結 (verifyReferralLink)
+const verifyReferralLinkHandler = onCall(async (request) => {
     const { data } = request;
-    const { promoCode, cartItems = [] } = data; // [V15.1] cartItems optional for course-level qualification check
-    if (!promoCode) throw new HttpsError('invalid-argument', '缺少代碼');
+    const referralLink = data?.referralLink || data?.promoCode;
+    const { cartItems = [] } = data || {};
+    if (!referralLink) throw new HttpsError('invalid-argument', '缺少老師作業連結');
 
     try {
         const db = admin.firestore();
-        const inputStr = promoCode.trim();
-        
-        // [V15.5] Check if input is a GitHub Classroom URL (Handles various subdomains)
+        const inputStr = referralLink.trim();
+
         const lowerInput = inputStr.toLowerCase();
         const isUrl = lowerInput.includes('github.com/classroom/') || lowerInput.includes('classroom.github.com/');
-        
+
         if (isUrl) {
-            console.log(`[Promo] [V15.9] Resolving GitHub Link via INDEX: ${inputStr}`);
+            console.log(`[Referral] Resolving GitHub Link via index: ${inputStr}`);
             const normalizedLink = normalizeGitHubUrl(inputStr);
             const linkId = Buffer.from(normalizedLink).toString('base64');
-            
-            // [V15.9] PERFORMANCE FIX: Use the O(1) referral_links index instead of scanning all users.
             const linkDoc = await db.collection('referral_links').doc(linkId).get();
-            
+
             if (!linkDoc.exists) {
                 return { success: false, message: '查無此作業連結對應的導師 (若剛更新設定，請稍候 30 秒)' };
             }
 
             const lData = linkDoc.data();
             const tEmail = lData.tutorEmail;
-
-            // Fetch the actual user data to verify qualification
             const tutorUserSnap = await db.collection('users').where('email', '==', tEmail).limit(1).get();
             if (tutorUserSnap.empty) {
                 return { success: false, message: '對應的導師帳號似乎已被移除' };
@@ -2995,7 +2997,6 @@ exports.verifyPromoCode = onCall(async (request) => {
             const tutorData = tutorUserSnap.docs[0].data();
             const lessons = await getLessons();
 
-            // [Rule 5-G] Qualification Check: Must be certified for the WHOLE course
             if (cartItems && cartItems.length > 0) {
                 const results = cartItems.map(item => {
                     const courseId = item.courseId || item.id;
@@ -3011,113 +3012,24 @@ exports.verifyPromoCode = onCall(async (request) => {
                 }
             }
 
-            return { 
-                success: true, 
-                tutor: tEmail,
-                tutorName: tutorData.name || tEmail,
+            return {
+                success: true,
+                referredTutorEmail: tEmail,
+                referredTutorName: tutorData.name || tEmail,
                 courseId: lData.unitId,
                 isLink: true,
                 message: '已成功辨識老師推薦連結'
             };
         }
 
-        // [V15.2] Legacy Promo Code Removal: No longer supports 6-digit codes.
         return { success: false, message: '目前僅支援以 GitHub Classroom 連結作為推薦識別，請輸入老師提供的作業連結。' };
     } catch (e) {
-        console.error(`[Promo] Error: ${e.message}`);
+        console.error(`[Referral] Error: ${e.message}`);
         throw new HttpsError('internal', e.message);
     }
 });
-
-// 11.1.5 生成個人推薦代碼 (generatePromoCode)
-/**
- * Internal helper to get or create a unique 6-digit alphanumeric promo code for a tutor/unit.
- * @param {admin.firestore.Firestore} db - Firestore instance
- * @param {string} email - Tutor Email
- * @param {string} courseId - Course Unit ID (e.g., 01-unit-vscode.html)
- * @param {string} tutorName - Tutor Display Name
- * @returns {Promise<string>} - The unique promo code
- */
-async function internalGetOrCreatePromoCode(db, email, courseId, tutorName) {
-    if (!email || !courseId) throw new Error("Missing email or courseId for promo code generation");
-
-    // 1. Check for existing code for this tutor-unit pair
-    const existingSnap = await db.collection('promo_codes')
-        .where('tutorEmail', '==', email)
-        .where('courseId', '==', courseId)
-        .limit(1)
-        .get();
-
-    if (!existingSnap.empty) {
-        console.log(`[Promo] Found existing code ${existingSnap.docs[0].id} for ${email} / ${courseId}`);
-        return existingSnap.docs[0].id;
-    }
-
-    // 2. Generate a Unique 6-character Alphanumeric Code
-    const generateId = () => {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Avoid ambiguous chars
-        let result = '';
-        for (let i = 0; i < 6; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return result;
-    };
-
-    let newCode;
-    let isUnique = false;
-    let attempts = 0;
-
-    while (!isUnique && attempts < 10) {
-        newCode = generateId();
-        const checkDoc = await db.collection('promo_codes').doc(newCode).get();
-        if (!checkDoc.exists) isUnique = true;
-        attempts++;
-    }
-
-    if (!isUnique) throw new Error('無法生成唯一代碼，請稍後再試');
-
-    // 3. Save to Firestore
-    await db.collection('promo_codes').doc(newCode).set({
-        tutorEmail: email,
-        tutorName: tutorName || email,
-        courseId: courseId,
-        isActive: true,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        source: 'automated_auth'
-    });
-
-    console.log(`[Promo] Generated NEW code ${newCode} for ${email} / ${courseId}`);
-    return newCode;
-}
-
-exports.generatePromoCode = onCall(async (request) => {
-    const { auth, data } = request;
-    if (!auth) throw new HttpsError('unauthenticated', '請先登入');
-
-    const db = admin.firestore();
-    const uid = auth.uid;
-    const email = auth.token.email;
-    const { courseId } = data;
-
-    if (!courseId) throw new HttpsError('invalid-argument', '缺少課程單元 ID (courseId)');
-
-    try {
-        const role = await getRole(uid);
-        const userDoc = await db.collection('users').doc(uid).get();
-        const userData = userDoc.exists ? (userDoc.data() || {}) : {};
-        if (role !== 'admin' && !hasQualifiedTutorStatus(userData, courseId)) {
-            throw new HttpsError('permission-denied', '只有該單元合格導師可以生成推廣代碼');
-        }
-        const tutorName = userDoc.exists ? (userDoc.data().name || userDoc.data().displayName) : email;
-
-        const promoCode = await internalGetOrCreatePromoCode(db, email, courseId, tutorName);
-        return { success: true, promoCode };
-
-    } catch (e) {
-        console.error("[Promo] Error:", e);
-        throw new HttpsError('internal', e.message);
-    }
-});
+exports.verifyReferralLink = verifyReferralLinkHandler;
+exports.verifyPromoCode = verifyReferralLinkHandler;
 
 // 11.2 每月計算分潤 (Scheduled Job - 1st of each month)
 exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
@@ -3154,8 +3066,10 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
                 const quantity = parseInt(itemValue?.quantity || 1, 10) || 1;
                 const itemPrice = parseFloat(itemValue?.price || 0) || 0;
                 const lineAmount = itemPrice * quantity;
-                const initialTutor = (itemValue?.referralTutor && itemValue.referralTutor.trim()) ? itemValue.referralTutor.trim() : "info@vibe-coding.tw";
-                const itemPromoCode = itemValue?.promoCode ? String(itemValue.promoCode).trim().toUpperCase() : null;
+                const initialTutor = (itemValue?.referredTutorEmail && itemValue.referredTutorEmail.trim())
+                    ? itemValue.referredTutorEmail.trim()
+                    : ((itemValue?.referralTutor && itemValue.referralTutor.trim()) ? itemValue.referralTutor.trim() : "info@vibe-coding.tw");
+                const itemReferralLink = itemValue?.referralLink || itemValue?.promoCode || null;
 
                 if (lineAmount <= 0) continue;
 
@@ -3173,7 +3087,7 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
                         orderAmount: lineAmount,
                         shareAmount: Math.round(currentShare * 100) / 100,
                         level: level,
-                        promoCode: itemPromoCode,
+                        referralLink: itemReferralLink,
                         calculatedAt: admin.firestore.FieldValue.serverTimestamp(),
                         period: `${lastMonth.getFullYear()}-${(lastMonth.getMonth() + 1).toString().padStart(2, '0')}`
                     };
