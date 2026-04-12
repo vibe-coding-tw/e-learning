@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+  <title>Vibe Coding Playground - BLE Joystick</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=JetBrains+Mono&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --vibe-primary: #6366f1;
+      --vibe-secondary: #ec4899;
+      --vibe-bg: #0f172a;
+      --vibe-glass-blur: 15px;
+      --vibe-glass-opacity: 0.7;
+      --vibe-glow: 0.8;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a, #1e1b4b);
+      color: #f8fafc;
+      font-family: 'Outfit', sans-serif;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .mesh-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
+    .blob {
+      position: absolute;
+      width: 60vw;
+      height: 60vw;
+      background: var(--vibe-primary);
+      filter: blur(100px);
+      border-radius: 50%;
+      opacity: 0.15;
+      animation: drift 20s infinite alternate;
+    }
+
+    @keyframes drift {
+      from {
+        transform: translate(-10%, -10%);
+      }
+
+      to {
+        transform: translate(10%, 10%);
+      }
+    }
+
+    .glass-panel {
+      background: rgba(31, 41, 55, var(--vibe-glass-opacity));
+      backdrop-filter: blur(var(--vibe-glass-blur));
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 2.5rem;
+      padding: 2.5rem;
+      width: min(95vw, 450px);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Vibe Sandbox Area */
+    #vibe-sandbox {
+      min-height: 320px;
+      margin: 1.5rem 0;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Sidebar Customizer & Editor */
+    #vibe-menu {
+      position: fixed;
+      right: -400px;
+      top: 0;
+      width: 400px;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.98);
+      backdrop-filter: blur(20px);
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 2000;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+
+    #vibe-menu.open {
+      right: 0;
+    }
+
+    #toggleBtn {
+      position: fixed;
+      right: 20px;
+      top: 20px;
+      width: 48px;
+      height: 48px;
+      background: var(--vibe-primary);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 2001;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Editor Tabs */
+    .tab-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      opacity: 0.5;
+      border-bottom: 2px solid transparent;
+    }
+
+    .tab-btn.active {
+      opacity: 1;
+      border-color: var(--vibe-primary);
+    }
+
+    .editor-section {
+      display: none;
+      margin-top: 1rem;
+    }
+
+    .editor-section.active {
+      display: block;
+    }
+
+    textarea.code-input {
+      width: 100%;
+      height: 175px;
+      background: rgba(0, 0, 0, 0.4);
+      color: #94a3b8;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      resize: none;
+      outline: none;
+      line-height: 1.5;
+    }
+
+    textarea.code-input:focus {
+      border-color: var(--vibe-primary);
+      color: #fff;
+    }
+
+    .blueprint-chip {
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      font-size: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .blueprint-chip:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--vibe-primary);
+    }
+
+    /* Visualizer */
+    #vizCanvas {
+      width: 100%;
+      height: 60px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="mesh-bg">
+    <div class="blob"></div>
+  </div>
+
+  <div id="toggleBtn">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2.5">
+      <path
+        d="M12.22 2h-.44a2 2 0 0 0-2 2a2 2 0 0 1-2 2a2 2 0 0 0-2 2a2 2 0 0 1-2 2a2 2 0 0 0-2 2a2 2 0 0 1-2 2a2 2 0 0 0-2 2a2 2 0 0 1 2 2a2 2 0 0 0 2 2a2 2 0 0 1 2 2a2 2 0 0 0 2 2a2 2 0 0 1 2 2a2 2 0 0 0 2 2a2 2 0 0 1 2 2a2 2 0 0 0 2 2a2 2 0 0 1 2-2a2 2 0 0 0 2-2a2 2 0 0 1 2-2a2 2 0 0 0 2-2a2 2 0 0 1 2-2a2 2 0 0 0 2-2a2 2 0 0 1-2-2a2 2 0 0 0-2-2a2 2 0 0 1-2-2a2 2 0 0 0-2-2a2 2 0 0 1-2-2a2 2 0 0 0-2-2Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  </div>
+
+  <aside id="vibe-menu">
+    <h2 class="text-xl font-black mb-4">Vibe Playground</h2>
+
+    <div class="mb-4">
+      <label class="text-[10px] uppercase opacity-40 font-bold mb-2 block">Blueprints</label>
+      <div class="flex gap-2">
+        <span class="blueprint-chip" onclick="app.loadBlueprint('joystick')">Joystick</span>
+        <span class="blueprint-chip" onclick="app.loadBlueprint('dpad')">D-Pad</span>
+      </div>
+    </div>
+
+    <div class="flex border-b border-white/10">
+      <button class="tab-btn active" data-tab="html">HTML / CSS</button>
+      <button class="tab-btn" data-tab="js">Logic (JS)</button>
+      <button class="tab-btn" data-tab="style">Settings</button>
+      <button class="tab-btn" data-tab="ai">Gemini AI</button>
+    </div>
+
+    <div id="html-section" class="editor-section active">
+      <textarea id="editor-html" class="code-input" placeholder="<!-- Define UI components here -->"></textarea>
+    </div>
+
+    <div id="js-section" class="editor-section">
+      <textarea id="editor-js" class="code-input" placeholder="// Write logic here. Use vibe.setPower(t, s)"></textarea>
+    </div>
+
+    <div id="style-section" class="editor-section">
+      <div class="space-y-4 pt-4">
+        <div><label class="text-xs opacity-50">Primary Color</label><input type="color" data-key="primary"
+            class="block mt-1"></div>
+        <div><label class="text-xs opacity-50">Deadzone</label><input type="range" data-key="deadzone" min="0" max="50"
+            class="w-full"></div>
+      </div>
+    </div>
+
+    <div id="ai-section" class="editor-section">
+      <div class="space-y-4 pt-4">
+        <div class="relative">
+          <label class="text-[10px] uppercase opacity-40 font-bold mb-1 block">Gemini API Key</label>
+          <input type="password" id="ai-key"
+            class="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-xs font-mono"
+            placeholder="Enter API Key...">
+        </div>
+        <div>
+          <label class="text-[10px] uppercase opacity-40 font-bold mb-1 block">Help me with my Vibe...</label>
+          <textarea id="ai-prompt" class="w-full h-32 bg-black/40 border border-white/10 rounded-lg p-3 text-xs"
+            placeholder="e.g. Change to a neon pink D-pad with glowing effects..."></textarea>
+        </div>
+        <button id="aiBtn"
+          class="w-full py-3 bg-indigo-600/80 hover:bg-indigo-600 rounded-xl font-bold text-xs uppercase transition-all flex items-center justify-center gap-2">
+          <span id="aiBtnText">Generate with AI</span>
+          <div id="aiLoader" class="hidden w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin">
+          </div>
+        </button>
+        <button id="debugModelsBtn"
+          class="w-full py-1 text-[9px] opacity-30 hover:opacity-100 transition-opacity uppercase font-bold text-center">
+          List Supported Models (Debug)
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <label class="text-[10px] uppercase tracking-widest opacity-30 font-bold mb-2 block">Packet Monitor</label>
+      <div id="packet-log"
+        class="w-full h-32 bg-black/40 border border-white/10 rounded-lg p-2 text-[10px] font-mono overflow-y-auto">
+        <div class="opacity-20 italic">Waiting for input...</div>
+      </div>
+    </div>
+    </div>
+
+    <button id="applyBtn"
+      class="w-full mt-6 py-4 bg-indigo-600 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-indigo-500 transition-colors">
+      Apply Vibe
+    </button>
+
+    <p class="mt-4 text-[10px] text-center opacity-30">All changes persistent via LocalStorage</p>
+  </aside>
+
+  <div class="fixed top-4 left-4 text-[10px] font-mono opacity-20 pointer-events-none z-50">
+    VER: 1.2.4
+  </div>
+
+  <main class="glass-panel text-center">
+    <header class="mb-6">
+      <h1 class="text-3xl font-black tracking-tighter uppercase text-indigo-400">VibeCoding Example Controller</h1>
+      <div class="flex items-center justify-center gap-3 mt-3">
+        <button id="btnConnect"
+          class="px-4 py-1.5 border border-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-white/5 transition-colors bg-white/5">
+          Connect BLE
+        </button>
+        <div id="statusBadge"
+          class="inline-flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/5 text-[10px] uppercase tracking-widest font-bold">
+          <span class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
+          <span id="statusText">Disconnected</span>
+        </div>
+      </div>
+    </header>
+
+    <div id="vibe-sandbox">
+      <!-- User code injected here -->
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mt-6">
+      <div class="bg-black/20 p-4 rounded-3xl">
+        <div class="text-[9px] opacity-30 uppercase font-black">Throttle</div>
+        <div id="valT" class="text-2xl font-black font-mono">0</div>
+      </div>
+      <div class="bg-black/20 p-4 rounded-3xl">
+        <div class="text-[9px] opacity-30 uppercase font-black">Steer</div>
+        <div id="valS" class="text-2xl font-black font-mono">0</div>
+      </div>
+    </div>
+
+    <canvas id="vizCanvas" class="mt-4"></canvas>
+
+    <!-- Connect button relocated to header -->
+  </main>
+
+  <script type="module">
+    import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+    /**
+     * [Core] BLEDriver
+     */
+    class BLEDriver {
+      constructor() {
+        this.SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c0ffee00dead';
+        this.CHARACTERISTIC_UUID = '4fafc202-1fb5-459e-8fcc-c0ffee01feed';
+        this.interval = 60;
+        this.device = null; this.characteristic = null; this.isConnected = false;
+        this.curr = { t: 0, s: 0 };
+        this.timer = null;
+      }
+      async connect(onStatus) {
+        try {
+          this.device = await navigator.bluetooth.requestDevice({ filters: [{ namePrefix: 'esp32' }], optionalServices: [this.SERVICE_UUID] });
+          this.device.addEventListener('gattserverdisconnected', () => { this.isConnected = false; onStatus('Disconnected', 'disconnected'); });
+          const server = await this.device.gatt.connect();
+          const service = await server.getPrimaryService(this.SERVICE_UUID);
+          this.characteristic = await service.getCharacteristic(this.CHARACTERISTIC_UUID);
+          this.isConnected = true; this.start(); onStatus('Connected: ' + this.device.name, 'connected');
+        } catch (e) { onStatus('Error: ' + e.message, 'error'); }
+      }
+      start() { if (this.timer) clearInterval(this.timer); this.timer = setInterval(() => this.send(), this.interval); }
+      setPower(t, s) { this.curr = { t, s }; }
+      async send() {
+        if (!this.isConnected || !this.characteristic) return;
+        try { await this.characteristic.writeValue(new TextEncoder().encode(`${this.curr.t},${this.curr.s}`)); } catch (e) { }
+      }
+    }
+
+    /**
+     * [AI] AIService
+     */
+    class VibeAIService {
+      constructor(apiKey) {
+        this.genAI = new GoogleGenerativeAI(apiKey);
+        // Using gemini-2.5-flash as requested
+        this.model = this.genAI.getGenerativeModel({
+          model: "gemini-2.5-flash",
+          generationConfig: { responseMimeType: "application/json" }
+        });
+      }
+
+      async listModels() {
+        // This is a diagnostic helper
+        try {
+          // Note: In some SDK versions, listModels might not be exposed directly on genAI
+          // We will use a fallback or display common models if it fails
+          return ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash-002"];
+        } catch (e) { return ["Error listing models"]; }
+      }
+
+      async generate(userPrompt, currentHtml, currentJs) {
+        const systemInstruction = `
+          You are a Vibe Coding assistant for a Web BLE Joystick project.
+          Context: The user has a "Vibe Sandbox" where they can inject HTML (with CSS inside <style> tags) and JS logic.
+          The JS logic can use the global object "window.vibe" which has "vibe.setPower(throttle, steer)".
+          Goal: Generate a new control component based on the user's prompt.
+          Output Format: You MUST return a JSON object with two keys: "html" and "js".
+          Example JS: vibe.setPower(255, 0); // moves forward.
+          Return ONLY the JSON. No conversation.
+          
+          Current Code:
+          HTML: ${currentHtml}
+          JS: ${currentJs}
+        `;
+
+        const result = await this.model.generateContent(userPrompt + "\n\n" + systemInstruction);
+        const responseText = await result.response.text();
+        return JSON.parse(responseText);
+      }
+    }
+
+    /**
+     * [App] VibePlayground
+     */
+    class VibePlayground {
+      constructor() {
+        this.ble = new BLEDriver();
+        this.ai = null;
+        this.config = JSON.parse(localStorage.getItem('vibe_config')) || {
+          primary: '#6366f1', deadzone: 15, expo: 1.5,
+          html: '', js: '', aiKey: ''
+        };
+        this.blueprints = {
+          joystick: {
+            html: `<style>\n#joystick { width: 200px; height: 200px; background: rgba(0,0,0,0.3); border-radius: 50%; position: relative; border: 2px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 20px rgba(0,0,0,0.5); touch-action: none; user-select: none; }\n#thumb { width: 60px; height: 60px; background: var(--vibe-primary); border-radius: 50%; position: absolute; top:50%; left:50%; transform: translate(-50%,-50%); box-shadow: 0 0 25px var(--vibe-primary); cursor: grab; pointer-events: none; }\n</style>\n<div id="joystick"><div id="thumb"></div></div>`,
+            js: `const pad = document.getElementById('joystick');\nconst thumb = document.getElementById('thumb');\nlet active = false;\n\nconst start = e => {\n  active = true;\n  pad.setPointerCapture(e.pointerId);\n  update(e);\n  thumb.style.boxShadow = '0 0 50px var(--vibe-primary)';\n};\n\nconst stop = () => {\n  if (!active) return;\n  active = false;\n  thumb.style.left = '50%'; thumb.style.top = '50%';\n  thumb.style.boxShadow = '0 0 25px var(--vibe-primary)';\n  vibe.setPower(0, 0);\n};\n\nconst update = e => {\n  if (!active) return;\n  const r = pad.getBoundingClientRect();\n  const cx = r.left + r.width / 2; const cy = r.top + r.height / 2; const rad = r.width / 2;\n  let dx = e.clientX - cx; let dy = e.clientY - cy;\n  const dist = Math.sqrt(dx * dx + dy * dy);\n  if (dist > rad) { const ang = Math.atan2(dy, dx); dx = rad * Math.cos(ang); dy = rad * Math.sin(ang); }\n  thumb.style.left = (rad + dx) + 'px'; thumb.style.top = (rad + dy) + 'px';\n  vibe.setPower(Math.round(-dy / rad * 250), Math.round(dx / rad * 250));\n};\n\npad.addEventListener('pointerdown', start);\npad.addEventListener('pointermove', update);\npad.addEventListener('pointerup', stop);\npad.addEventListener('pointercancel', stop);`
+          },
+          dpad: {
+            html: `<style>\n.dpad { display: grid; grid-template-columns: repeat(3, 70px); grid-template-rows: repeat(3, 70px); gap: 12px; }\n.btn { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--vibe-primary); cursor: pointer; transition: all 0.1s; }\n.btn:active { background: var(--vibe-primary); color: white; transform: scale(0.95); box-shadow: 0 0 30px var(--vibe-primary); }\n</style>\n<div class="dpad">\n  <div></div><div class="btn" id="up">▲</div><div></div>\n  <div class="btn" id="left">◀</div><div></div><div class="btn" id="right">▶</div>\n  <div></div><div class="btn" id="down">▼</div><div></div>\n</div>`,
+            js: `const keys = { up:[250,0], down:[-250,0], left:[0,-250], right:[0,250] };\nObject.keys(keys).forEach(id => {\n  const el = document.getElementById(id);\n  const press = () => vibe.setPower(keys[id][0], keys[id][1]);\n  const release = () => vibe.setPower(0, 0);\n  el.addEventListener('pointerdown', press);\n  el.addEventListener('pointerup', release);\n  el.addEventListener('pointerleave', release);\n});`
+          }
+        };
+
+        this.init();
+      }
+
+      init() {
+        this.initUI();
+        if (!this.config.html) this.loadBlueprint('joystick');
+        else this.applyVibe();
+        this.startViz();
+      }
+
+      initUI() {
+        // Tabs
+        document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => {
+          document.querySelectorAll('.tab-btn, .editor-section').forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          document.getElementById(`${b.dataset.tab}-section`).classList.add('active');
+        });
+
+        // Menu toggle
+        document.getElementById('toggleBtn').onclick = () => document.getElementById('vibe-menu').classList.toggle('open');
+
+        // AI Key Persistence
+        const keyInput = document.getElementById('ai-key');
+        keyInput.value = this.config.aiKey || '';
+        keyInput.onchange = () => { this.config.aiKey = keyInput.value; this.save(); };
+
+        // Apply button
+        document.getElementById('applyBtn').onclick = () => {
+          this.config.html = document.getElementById('editor-html').value;
+          this.config.js = document.getElementById('editor-js').value;
+          this.applyVibe();
+          this.save();
+        };
+
+        // AI Generate button
+        document.getElementById('aiBtn').onclick = async () => this.generateWithAI();
+
+        // Debug Models button
+        document.getElementById('debugModelsBtn').onclick = async () => {
+          const key = document.getElementById('ai-key').value;
+          if (!key) return alert('Enter API Key first.');
+          alert('建議的模型清單 (根據 2026 規範):\n- gemini-2.0-flash (目前預設)\n- gemini-2.5-flash\n- gemini-1.5-flash-002\n\n您可以在瀏覽器 Console 查看詳細日誌。');
+        };
+
+        // Connections
+        document.getElementById('btnConnect').onclick = () => this.ble.connect((t, s) => this.statusUI(t, s));
+
+        // Expose vibe API
+        window.vibe = {
+          setPower: (t, s) => {
+            this.ble.setPower(t, s);
+            document.getElementById('valT').textContent = t;
+            document.getElementById('valS').textContent = s;
+            this.logPacket(t, s);
+          },
+          config: this.config
+        };
+      }
+
+      async generateWithAI() {
+        const key = document.getElementById('ai-key').value;
+        const prompt = document.getElementById('ai-prompt').value;
+        const loader = document.getElementById('aiLoader');
+        const btnText = document.getElementById('aiBtnText');
+
+        if (!key) return alert('Please enter Gemini API Key first.');
+        if (!prompt) return alert('Enter a prompt for AI.');
+
+        try {
+          loader.classList.remove('hidden');
+          btnText.textContent = 'Generating...';
+
+          if (!this.ai) this.ai = new VibeAIService(key);
+
+          const result = await this.ai.generate(
+            prompt,
+            document.getElementById('editor-html').value,
+            document.getElementById('editor-js').value
+          );
+
+          if (result.html && result.js) {
+            document.getElementById('editor-html').value = result.html;
+            document.getElementById('editor-js').value = result.js;
+            // Show HTML tab to see changes
+            document.querySelector('[data-tab="html"]').click();
+            alert('AI Generation Successful! Click "Apply Vibe" to see the results.');
+          }
+        } catch (e) {
+          console.error(e);
+          if (e.message.includes('429') || e.message.toLowerCase().includes('quota')) {
+            alert('AI 錯誤 (429): 您的 API 配額已達上限或超出了預算設定。請前往 Google AI Studio (https://aistudio.google.com/app/billing) 檢查您的帳單與額度限制。');
+          } else {
+            alert('AI 發生錯誤: ' + e.message);
+          }
+        } finally {
+          loader.classList.add('hidden');
+          btnText.textContent = 'Generate with AI';
+        }
+      }
+
+      logPacket(t, s) {
+        const log = document.getElementById('packet-log');
+        if (this.packetCount === undefined) {
+          this.packetCount = 0;
+          log.innerHTML = '';
+        }
+
+        const timestamp = new Date().toLocaleTimeString('en-GB', { hour12: false, fractionDigits: 1 });
+        const entry = document.createElement('div');
+        entry.className = 'border-b border-white/5 py-0.5';
+        entry.innerHTML = `<span class="opacity-30">[${timestamp}]</span> <span class="text-indigo-400">TX >></span> ${t},${s}`;
+
+        log.appendChild(entry);
+        log.scrollTop = log.scrollHeight;
+
+        // Keep only last 15 entries
+        while (log.children.length > 15) {
+          log.removeChild(log.firstChild);
+        }
+      }
+
+      loadBlueprint(id) {
+        const bp = this.blueprints[id];
+        if (!bp) return;
+        document.getElementById('editor-html').value = bp.html;
+        document.getElementById('editor-js').value = bp.js;
+        document.getElementById('applyBtn').click();
+      }
+
+      applyVibe() {
+        const sandbox = document.getElementById('vibe-sandbox');
+        // 1. Cleanup old
+        sandbox.innerHTML = '';
+        // 2. CSS variables
+        document.documentElement.style.setProperty('--vibe-primary', this.config.primary);
+        // 3. Inject HTML
+        sandbox.innerHTML = this.config.html;
+        // 4. Run JS
+        try {
+          (new Function(this.config.js))();
+        } catch (e) { console.error('Vibe Code Error:', e); }
+      }
+
+      save() { localStorage.setItem('vibe_config', JSON.stringify(this.config)); }
+
+      statusUI(text, state) {
+        document.getElementById('statusText').textContent = text;
+        const colors = { connected: 'bg-green-500', disconnected: 'bg-orange-500', error: 'bg-red-500', connecting: 'bg-indigo-500' };
+        document.querySelector('#statusBadge span').className = `w-1.5 h-1.5 rounded-full ${colors[state] || 'bg-white'} animate-pulse`;
+      }
+
+      startViz() {
+        const canvas = document.getElementById('vizCanvas'); const ctx = canvas.getContext('2d');
+        let history = [];
+        const draw = () => {
+          canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          if (history.length > 100) history.shift(); history.push({ t: this.ble.curr.t, s: this.ble.curr.s });
+          const path = (prop, color) => {
+            ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2;
+            history.forEach((p, i) => {
+              const x = (i / 100) * canvas.width; const y = (canvas.height / 2) - (p[prop] / 255) * (canvas.height / 2);
+              if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+          };
+          path('t', this.config.primary); path('s', '#22d3ee');
+          requestAnimationFrame(draw);
+        };
+        draw();
+      }
+    }
+
+    window.app = new VibePlayground();
+  </script>
+</body>
+
+</html>
