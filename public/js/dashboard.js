@@ -2206,7 +2206,7 @@ window.aggregateData = window.aggregateData || function(data) {
     const MENU_PAGES = new Set([
         'index.html', 'about.html', 'advanced.html', 'basic.html', 
         'started.html', 'prepare.html', 'auth.html', 'dashboard.html', 
-        'cart.html', 'faq.html', 'payment-return.html', 'collaboration.html',
+        'cart.html', 'faq.html', 'payment-return.html', 'tutors.html',
         'index', 'about', 'advanced', 'basic', 'started', 'prepare', 'auth', 'dashboard', 'cart', 'faq'
     ]);
 
