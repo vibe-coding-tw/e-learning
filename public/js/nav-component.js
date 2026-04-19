@@ -364,7 +364,7 @@ function initNavComponent() {
                 loginBtn.innerText = '登入';
                 loginBtn.onclick = () => {
                    const root = placeholder ? (placeholder.getAttribute('data-root') || '.') : '.';
-                   window.location.href = `${root}/auth.html`.replace('//', '/');
+                   window.location.href = `${root}/login.html`.replace('//', '/');
                 };
             }
         }

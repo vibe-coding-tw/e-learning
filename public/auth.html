@@ -167,8 +167,8 @@
                         console.warn("[Auth] Still no user after 3s. Redirecting to index.html");
                         // Only alert if we really have no user and no params? 
                         // Actually, if they was sent here, they SHOULD be logged in.
-                        alert("請先登入會員 (Login Required)");
-                        window.location.href = "index.html";
+                        const currentUrl = encodeURIComponent(window.location.href);
+                        window.location.href = `login.html?returnUrl=${currentUrl}`;
                     } else {
                         console.log("[Auth] User detected after delay. Resuming...");
                     }
