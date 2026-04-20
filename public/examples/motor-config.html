@@ -154,73 +154,76 @@
         </div>
 
         <!-- 設定參數表單 -->
-        <div class="bg-gray-800 p-6 rounded-xl shadow-2xl space-y-4">
-            <p class="text-sm font-bold text-indigo-300 mb-4">
-                MotorConfig_t 參數 (共 28 Bytes)
-            </p>
+        <div class="space-y-6">
+            <!-- Acceleration Zone -->
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-xl border border-indigo-500/20 space-y-4">
+                <div class="flex items-center space-x-2 border-b border-gray-700 pb-2 mb-2">
+                    <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    <h3 class="text-lg font-bold text-indigo-300">加速設定 (Throttle)</h3>
+                </div>
 
-            <div class="grid grid-cols-1 gap-4">
-                <!-- controlTimeoutMs (unsigned long, 4 bytes) - 獨立一行，放大寬度 -->
-                <div class="space-y-1 col-span-1">
-                    <label for="controlTimeoutMs" class="block text-sm font-medium text-gray-400">controlTimeoutMs
-                        (ms)</label>
-                    <!-- 初始值設定為空，連線後由裝置讀取，或由使用者輸入 -->
-                    <input type="number" id="controlTimeoutMs" value="" min="0" required placeholder="例如: 1000">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label for="controlTimeoutT" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">加速超時 (Timeout T) ms</label>
+                        <input type="number" id="controlTimeoutT" value="" min="0" required placeholder="例如: 500">
+                    </div>
+                    <div class="space-y-1">
+                        <label for="pwmStartKickT" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">啟動推力 (Start Kick) PWM</label>
+                        <input type="number" id="pwmStartKickT" value="" min="0" required placeholder="例如: 50">
+                    </div>
+                    <div class="space-y-1">
+                        <label for="rampAccelStepT" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">漸進步長 (Accel Step) PWM</label>
+                        <input type="number" id="rampAccelStepT" value="" min="0" required placeholder="例如: 10">
+                    </div>
+                    <div class="space-y-1">
+                        <label for="pwmEffectiveLimitT" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">輸出上限 (Max Limit) PWM</label>
+                        <input type="number" id="pwmEffectiveLimitT" value="" min="0" required placeholder="例如: 255">
+                    </div>
                 </div>
             </div>
 
-            <!-- 其餘 6 個欄位，二二並排 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                <!-- 1左. pwmEffectiveLimitS (int, 4 bytes) -->
-                <div class="space-y-1">
-                    <label for="pwmEffectiveLimitS"
-                        class="block text-sm font-medium text-gray-400">pwmEffectiveLimitS</label>
-                    <input type="number" id="pwmEffectiveLimitS" value="" min="0" required placeholder="例如: 255">
+            <!-- Steering Zone -->
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-xl border border-emerald-500/20 space-y-4">
+                <div class="flex items-center space-x-2 border-b border-gray-700 pb-2 mb-2">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                    </svg>
+                    <h3 class="text-lg font-bold text-emerald-300">轉向設定 (Steering)</h3>
                 </div>
 
-                <!-- 1右. pwmEffectiveLimitT (int, 4 bytes) -->
-                <div class="space-y-1">
-                    <label for="pwmEffectiveLimitT"
-                        class="block text-sm font-medium text-gray-400">pwmEffectiveLimitT</label>
-                    <input type="number" id="pwmEffectiveLimitT" value="" min="0" required placeholder="例如: 255">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label for="controlTimeoutS" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">轉向超時 (Timeout S) ms</label>
+                        <input type="number" id="controlTimeoutS" value="" min="0" required placeholder="例如: 2000">
+                    </div>
+                    <div class="space-y-1">
+                        <label for="pwmStartKickS" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">啟動推力 (Start Kick) PWM</label>
+                        <input type="number" id="pwmStartKickS" value="" min="0" required placeholder="例如: 50">
+                    </div>
+                    <div class="space-y-1">
+                        <label for="rampAccelStepS" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">漸進步長 (Accel Step) PWM</label>
+                        <input type="number" id="rampAccelStepS" value="" min="0" required placeholder="例如: 10">
+                    </div>
+                    <div class="space-y-1">
+                        <label for="pwmEffectiveLimitS" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider">輸出上限 (Max Limit) PWM</label>
+                        <input type="number" id="pwmEffectiveLimitS" value="" min="0" required placeholder="例如: 255">
+                    </div>
                 </div>
-
-                <!-- 2左. rampAccelStepS (int, 4 bytes) -->
-                <div class="space-y-1">
-                    <label for="rampAccelStepS" class="block text-sm font-medium text-gray-400">rampAccelStepS</label>
-                    <input type="number" id="rampAccelStepS" value="" min="0" required placeholder="例如: 10">
-                </div>
-
-                <!-- 2右. rampAccelStepT (int, 4 bytes) -->
-                <div class="space-y-1">
-                    <label for="rampAccelStepT" class="block text-sm font-medium text-gray-400">rampAccelStepT</label>
-                    <input type="number" id="rampAccelStepT" value="" min="0" required placeholder="例如: 10">
-                </div>
-
-                <!-- 3左. pwmStartKickS (int, 4 bytes) -->
-                <div class="space-y-1">
-                    <label for="pwmStartKickS" class="block text-sm font-medium text-gray-400">pwmStartKickS</label>
-                    <input type="number" id="pwmStartKickS" value="" min="0" required placeholder="例如: 50">
-                </div>
-
-                <!-- 3右. pwmStartKickT (int, 4 bytes) -->
-                <div class="space-y-1">
-                    <label for="pwmStartKickT" class="block text-sm font-medium text-gray-400">pwmStartKickT</label>
-                    <input type="number" id="pwmStartKickT" value="" min="0" required placeholder="例如: 50">
-                </div>
-
             </div>
 
-            <button id="btnSend"
-                class="mt-6 w-full bg-indigo-600 text-white p-4 rounded-xl font-bold transition duration-150 hover:bg-indigo-700 disabled:opacity-50"
-                disabled>
-                讀取/傳送 馬達組態設定
-            </button>
+            <div class="space-y-3">
+                <button id="btnSend"
+                    class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold transition duration-150 hover:bg-indigo-700 disabled:opacity-50 shadow-lg"
+                    disabled>
+                    讀取/傳送 馬達組態設定
+                </button>
 
-            <p class="text-center text-xs text-gray-500 pt-2">
-                點擊上方按鈕讀取/儲存 7 個 4-byte 參數 (共 28 Bytes)
-            </p>
+                <p class="text-center text-xs text-gray-500">
+                    點擊上方按鈕讀取/儲存 7 個 4-byte 參數 (共 28 Bytes)
+                </p>
+            </div>
         </div>
 
         <!-- 返回主選單按鈕 -->
@@ -248,7 +251,8 @@
 
         // 欄位 ID 陣列
         const PARAM_IDS = [
-            { id: 'controlTimeoutMs', type: 'Uint32', offset: 0 },
+            { id: 'controlTimeoutT', type: 'Uint16', offset: 0 },
+            { id: 'controlTimeoutS', type: 'Uint16', offset: 2 },
             { id: 'pwmEffectiveLimitT', type: 'Int32', offset: 4 },
             { id: 'rampAccelStepT', type: 'Int32', offset: 8 },
             { id: 'pwmStartKickT', type: 'Int32', offset: 12 },
@@ -310,9 +314,12 @@
                 PARAM_IDS.forEach(param => {
                     let val;
                     const element = document.getElementById(param.id);
-                    if (param.offset + 4 > dataView.byteLength) return;
+                    const byteSize = (param.type.includes('16') ? 2 : 4);
+                    if (param.offset + byteSize > dataView.byteLength) return;
 
-                    if (param.type === 'Uint32') {
+                    if (param.type === 'Uint16') {
+                        val = dataView.getUint16(param.offset, LITTLE_ENDIAN);
+                    } else if (param.type === 'Uint32') {
                         val = dataView.getUint32(param.offset, LITTLE_ENDIAN);
                     } else {
                         val = dataView.getInt32(param.offset, LITTLE_ENDIAN);
@@ -378,7 +385,9 @@
                     const value = parseInt(element.value);
                     if (isNaN(value)) throw new Error(`欄位 ${param.id} 包含無效數值。`);
 
-                    if (param.type === 'Uint32') {
+                    if (param.type === 'Uint16') {
+                        dataView.setUint16(param.offset, value, LITTLE_ENDIAN);
+                    } else if (param.type === 'Uint32') {
                         dataView.setUint32(param.offset, value, LITTLE_ENDIAN);
                     } else {
                         dataView.setInt32(param.offset, value, LITTLE_ENDIAN);
