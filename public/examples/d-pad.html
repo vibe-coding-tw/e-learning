@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+    <title>BLE D-Pad 控制中心</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+            background-color: #0d121c;
+            color: #e5e7eb;
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            padding: 1rem;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .container-wrap { 
+            max-width: 450px; 
+            width: 100%; 
+            padding: 24px; 
+            background-color: #1f2937;
+            border-radius: 2rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* 頂部狀態列 */
+        .status-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        #btnConnect {
+            background: linear-gradient(145deg, #4f46e5, #4338ca);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 14px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        #btnConnect:active { transform: scale(0.95); }
+        #status {
+            flex: 1;
+            background: #111827;
+            padding: 12px;
+            border-radius: 14px;
+            text-align: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: #9ca3af;
+        }
+        .connected { color: #10b981 !important; border-color: rgba(16, 185, 129, 0.3) !important; }
+
+        /* D-Pad 佈局 */
+        .d-pad-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 0 auto 30px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .control-btn {
+            background: #2d3748;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #9ca3af;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 0 #1a202c, 0 15px 20px rgba(0,0,0,0.3);
+            position: relative;
+            top: 0;
+            cursor: pointer;
+        }
+
+        .control-btn:active, .control-btn.active {
+            top: 6px;
+            box-shadow: 0 2px 0 #1a202c, 0 5px 10px rgba(0,0,0,0.3);
+            background: #4f46e5;
+            color: white;
+        }
+
+        /* 每個按鈕的位置 */
+        #btnUp { grid-column: 2; grid-row: 1; }
+        #btnLeft { grid-column: 1; grid-row: 2; }
+        #btnRight { grid-column: 3; grid-row: 2; }
+        #btnDown { grid-column: 2; grid-row: 3; }
+        .center-dot {
+            grid-column: 2;
+            grid-row: 2;
+            background: #1a202c;
+            border-radius: 50%;
+            margin: 20px;
+            border: 2px solid #2d3748;
+        }
+
+        /* 數值面板 */
+        .telemetry {
+            background: #111827;
+            padding: 15px;
+            border-radius: 18px;
+            display: flex;
+            justify-content: space-around;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .tel-item { text-align: center; }
+        .tel-label { font-size: 0.75rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
+        .tel-value { font-size: 1.25rem; font-weight: 800; color: #4f46e5; font-family: monospace; }
+        
+        .menu-button {
+            display: block;
+            margin-top: 30px;
+            text-align: center;
+            color: #6b7280;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .menu-button:hover { color: #e5e7eb; }
+    </style>
+</head>
+<body>
+    <div class="container-wrap">
+        <h1 class="text-2xl font-black text-center text-white mb-8 tracking-tight">遙控中心 <span class="text-indigo-500">DPAD</span></h1>
+
+        <div class="status-bar">
+            <button id="btnConnect">連線</button>
+            <div id="status">等待執行...</div>
+        </div>
+
+        <div class="d-pad-container">
+            <div id="btnUp" class="control-btn" data-t="255" data-s="0">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"></path></svg>
+            </div>
+            
+            <div id="btnLeft" class="control-btn" data-t="0" data-s="-255">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"></path></svg>
+            </div>
+            
+            <div class="center-dot"></div>
+            
+            <div id="btnRight" class="control-btn" data-t="0" data-s="255">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
+            </div>
+            
+            <div id="btnDown" class="control-btn" data-t="-255" data-s="0">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+        </div>
+
+        <div class="telemetry">
+            <div class="tel-item">
+                <div class="tel-label">Throttle (T)</div>
+                <div id="valT" class="tel-value">0</div>
+            </div>
+            <div class="tel-item">
+                <div class="tel-label">Steering (S)</div>
+                <div id="valS" class="tel-value">0</div>
+            </div>
+        </div>
+
+        <a href="../index.html" class="menu-button text-sm">← 返回主選單</a>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c0ffee00dead';
+        const CHARACTERISTIC_UUID = '4fafc202-1fb5-459e-8fcc-c0ffee01feed';
+        const SEND_INTERVAL = 60; // ms
+
+        // --- State ---
+        let device = null;
+        let characteristic = null;
+        let isConnected = false;
+        let currentThrottle = 0;
+        let currentSteering = 0;
+        let sendTimer = null;
+
+        // --- DOM ---
+        const btnConnect = document.getElementById('btnConnect');
+        const statusEl = document.getElementById('status');
+        const valTEl = document.getElementById('valT');
+        const valSEl = document.getElementById('valS');
+        const dpadButtons = document.querySelectorAll('.control-btn');
+
+        // --- Logic ---
+        function updateStatus(text, ok = false) {
+            statusEl.textContent = text;
+            statusEl.className = ok ? 'connected' : '';
+            btnConnect.textContent = isConnected ? '中斷' : '連線';
+        }
+
+        async function connect() {
+            if (isConnected) {
+                device.gatt.disconnect();
+                return;
+            }
+
+            try {
+                updateStatus('正在掃描...');
+                device = await navigator.bluetooth.requestDevice({
+                    filters: [{ namePrefix: 'esp32' }],
+                    optionalServices: [SERVICE_UUID]
+                });
+
+                device.addEventListener('gattserverdisconnected', () => {
+                    isConnected = false;
+                    characteristic = null;
+                    clearInterval(sendTimer);
+                    updateStatus('已斷線');
+                });
+
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService(SERVICE_UUID);
+                characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+
+                isConnected = true;
+                updateStatus('已連線', true);
+                
+                // Start control timer
+                sendTimer = setInterval(sendData, SEND_INTERVAL);
+
+            } catch (err) {
+                console.error(err);
+                updateStatus('失敗: ' + err.message.substring(0, 15));
+            }
+        }
+
+        async function sendData() {
+            if (!characteristic || !isConnected) return;
+            const payload = `${currentThrottle},${currentSteering}`;
+            try {
+                await characteristic.writeValue(new TextEncoder().encode(payload));
+                valTEl.textContent = currentThrottle;
+                valSEl.textContent = currentSteering;
+            } catch (e) {
+                console.warn('Write failed');
+            }
+        }
+
+        // --- Event Listeners ---
+        btnConnect.addEventListener('click', connect);
+
+        dpadButtons.forEach(btn => {
+            const startHandler = (e) => {
+                e.preventDefault();
+                if (!isConnected) return;
+                currentThrottle = parseInt(btn.dataset.t);
+                currentSteering = parseInt(btn.dataset.s);
+                btn.classList.add('active');
+            };
+
+            const endHandler = (e) => {
+                e.preventDefault();
+                currentThrottle = 0;
+                currentSteering = 0;
+                btn.classList.remove('active');
+            };
+
+            btn.addEventListener('pointerdown', startHandler);
+            btn.addEventListener('pointerup', endHandler);
+            btn.addEventListener('pointercancel', endHandler);
+            btn.addEventListener('pointerleave', endHandler);
+        });
+
+    </script>
+</body>
+</html>
