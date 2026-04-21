@@ -279,10 +279,37 @@
                 logStatus('✅ 已連線: ' + device.name, 'success');
                 updateUI(true);
 
+                // [NEW] 連線成功後，嘗試讀取目前的 SSID 與密碼
+                await readConfig();
+
             } catch (err) {
                 console.error('BLE 連線失敗:', err);
                 logStatus(`❌ 連線失敗 (${err.message})`, 'error');
                 updateUI(false);
+            }
+        }
+
+        /**
+         * 從裝置讀取目前的 SSID 和密碼
+         */
+        async function readConfig() {
+            try {
+                logStatus('正在從裝置抓取目前的 Wi-Fi 設定...', 'info');
+
+                const decoder = new TextDecoder();
+
+                // 1. 讀取 SSID
+                const ssidBuffer = await window.bleClient.readFrom(SSID_CHARACTERISTIC_UUID);
+                ssidInput.value = decoder.decode(ssidBuffer);
+
+                // 2. 讀取密碼
+                const passBuffer = await window.bleClient.readFrom(PASS_CHARACTERISTIC_UUID);
+                passwordInput.value = decoder.decode(passBuffer);
+
+                logStatus('✅ 已同步目前裝置的 SSID 與密碼', 'success');
+            } catch (err) {
+                console.warn('讀取設定失敗 (可能韌體不支援讀取特性):', err);
+                logStatus('⚠️ 已連線，但無法讀取目前設定', 'info');
             }
         }
 
