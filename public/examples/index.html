@@ -12,87 +12,120 @@
     <style>
         .example-card {
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
         }
 
-        .example-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            background: rgba(255, 255, 255, 0.95);
-            border-color: #06b6d4;
+        /* Hover effects for desktop */
+        @media (hover: hover) {
+            .example-card:hover {
+                transform: translateY(-8px);
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+                background: rgba(255, 255, 255, 0.98);
+                border-color: #06b6d4;
+            }
+        }
+
+        /* Active feedback for touch */
+        .example-card:active {
+            transform: scale(0.96);
+            opacity: 0.9;
         }
 
         .category-header {
-            background: linear-gradient(90deg, #1e3a8a 0%, #0891b2 100%);
+            background: linear-gradient(135deg, #1e3a8a 0%, #0891b2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .hero-gradient {
-            background: radial-gradient(circle at top right, #e0f2fe 0%, #f8fafc 50%);
+            background: radial-gradient(circle at top right, #f0f9ff 0%, #ffffff 70%);
+            position: relative;
+        }
+
+        .hero-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230891b2' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+
+        .scroll-reveal {
+            animation: reveal 0.6s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes reveal {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
 
-<body class="flex flex-col min-h-screen bg-slate-50">
+<body class="flex flex-col min-h-screen bg-slate-50/50">
     <div id="nav-placeholder" data-root=".." data-show-auth="true"></div>
-    <script type="module" src="/js/nav-component.js?v=2026.04.22.V1"></script>
+    <script type="module" src="/js/nav-component.js?v=2026.04.22.V2"></script>
 
-    <header class="hero-gradient py-20 border-b border-blue-100">
-        <div class="container mx-auto px-4 text-center">
-            <h1 class="text-4xl md:text-6xl font-black mb-6 category-header tracking-tight">
+    <header class="hero-gradient py-12 md:py-24 border-b border-blue-50 overflow-hidden">
+        <div class="container mx-auto px-6 text-center relative z-10">
+            <span class="inline-block py-1 px-3 rounded-full bg-cyan-100 text-cyan-700 text-xs font-bold uppercase tracking-widest mb-4">Examples Showcase</span>
+            <h1 class="text-4xl md:text-7xl font-black mb-6 category-header tracking-tight leading-tight">
                 範例專區
             </h1>
-            <p class="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            <p class="text-base md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed px-4">
                 探索 Physical AI 的無限可能。從基礎的硬體控制到進階的 AI 語音整合，
                 這些範例將協助您快速掌握開發技巧。
             </p>
         </div>
     </header>
 
-    <main class="flex-grow container mx-auto px-4 py-16">
+    <main class="flex-grow container mx-auto px-6 py-12">
         
         <!-- Category: Control -->
-        <section class="mb-20">
-            <div class="flex items-center gap-4 mb-10">
-                <div class="w-12 h-12 bg-cyan-500 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg">
+        <section class="mb-16 md:mb-24 scroll-reveal">
+            <div class="flex flex-col md:flex-row md:items-center gap-4 mb-8">
+                <div class="w-14 h-14 bg-cyan-500 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg shadow-cyan-200">
                     🎮
                 </div>
                 <div>
-                    <h2 class="text-3xl font-bold text-slate-800">控制介面</h2>
-                    <p class="text-slate-500">多樣化的遙控方案，體驗最直覺的操控</p>
+                    <h2 class="text-2xl md:text-3xl font-bold text-slate-800">控制介面</h2>
+                    <p class="text-sm md:text-base text-slate-500">多樣化的遙控方案，體驗最直覺的操控</p>
                 </div>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-
-
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                 <!-- Joystick -->
-                <a href="joystick.html" class="example-card p-6 rounded-[2rem] block group">
-                    <div class="bg-slate-100 rounded-2xl mb-6 aspect-video flex items-center justify-center text-5xl">
+                <a href="joystick.html" class="example-card p-5 md:p-8 rounded-[2rem] block group">
+                    <div class="bg-slate-100/50 rounded-2xl mb-6 aspect-video flex items-center justify-center text-6xl shadow-inner group-hover:bg-cyan-50 transition-colors">
                         🕹️
                     </div>
-                    <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-cyan-600">BLE 搖桿</h3>
-                    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-cyan-600 transition-colors">BLE 搖桿</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
                         使用虛擬 360 度搖桿，實現如遊戲般的流暢轉向與速度控制。
                     </p>
-                    <div class="flex items-center text-cyan-600 font-bold text-sm">
+                    <div class="flex items-center text-cyan-600 font-bold text-sm bg-cyan-50 w-fit px-4 py-2 rounded-full">
                         立即體驗 <span class="ml-2 group-hover:translate-x-2 transition-transform">→</span>
                     </div>
                 </a>
 
                 <!-- D-Pad -->
-                <a href="d-pad.html" class="example-card p-6 rounded-[2rem] block group">
-                    <div class="bg-slate-100 rounded-2xl mb-6 aspect-video flex items-center justify-center text-5xl">
+                <a href="d-pad.html" class="example-card p-5 md:p-8 rounded-[2rem] block group">
+                    <div class="bg-slate-100/50 rounded-2xl mb-6 aspect-video flex items-center justify-center text-6xl shadow-inner group-hover:bg-cyan-50 transition-colors">
                         ➕
                     </div>
-                    <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-cyan-600">方向按鈕 (D-Pad)</h3>
-                    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-cyan-600 transition-colors">方向按鈕 (D-Pad)</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
                         經典的四向控制介面，適合需要精確直線移動與 90 度轉彎的場景。
                     </p>
-                    <div class="flex items-center text-cyan-600 font-bold text-sm">
+                    <div class="flex items-center text-cyan-600 font-bold text-sm bg-cyan-50 w-fit px-4 py-2 rounded-full">
                         立即體驗 <span class="ml-2 group-hover:translate-x-2 transition-transform">→</span>
                     </div>
                 </a>
@@ -100,42 +133,42 @@
         </section>
 
         <!-- Category: AI & Voice -->
-        <section class="mb-20">
-            <div class="flex items-center gap-4 mb-10">
-                <div class="w-12 h-12 bg-purple-500 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg">
+        <section class="mb-16 md:mb-24 scroll-reveal" style="animation-delay: 0.2s;">
+            <div class="flex flex-col md:flex-row md:items-center gap-4 mb-8">
+                <div class="w-14 h-14 bg-purple-500 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg shadow-purple-200">
                     ✨
                 </div>
                 <div>
-                    <h2 class="text-3xl font-bold text-slate-800">AI 與語音互動</h2>
-                    <p class="text-slate-500">賦予硬體智慧靈魂，實現跨維度互動</p>
+                    <h2 class="text-2xl md:text-3xl font-bold text-slate-800">AI 與語音互動</h2>
+                    <p class="text-sm md:text-base text-slate-500">賦予硬體智慧靈魂，實現跨維度互動</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                 <!-- Hello World -->
-                <a href="hello-world.html" class="example-card p-6 rounded-[2rem] block group">
-                    <div class="relative overflow-hidden rounded-2xl mb-6 aspect-video bg-slate-100">
-                        <img src="../assets/examples/ai.png" alt="AI Hello World" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                <a href="hello-world.html" class="example-card p-5 md:p-8 rounded-[2rem] block group">
+                    <div class="relative overflow-hidden rounded-2xl mb-6 aspect-video bg-slate-100 shadow-inner">
+                        <img src="../assets/examples/ai.png" alt="AI Hello World" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110">
                     </div>
-                    <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-purple-600">AI Hello World</h3>
-                    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-purple-600 transition-colors">AI Hello World</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
                         整合 Gemini TTS，讓您的裝置能夠用富有情感的聲音說出「Hello World」。
                     </p>
-                    <div class="flex items-center text-purple-600 font-bold text-sm">
+                    <div class="flex items-center text-purple-600 font-bold text-sm bg-purple-50 w-fit px-4 py-2 rounded-full">
                         立即體驗 <span class="ml-2 group-hover:translate-x-2 transition-transform">→</span>
                     </div>
                 </a>
 
                 <!-- Voice Control -->
-                <a href="voice-control.html" class="example-card p-6 rounded-[2rem] block group">
-                    <div class="bg-slate-100 rounded-2xl mb-6 aspect-video flex items-center justify-center text-5xl">
+                <a href="voice-control.html" class="example-card p-5 md:p-8 rounded-[2rem] block group">
+                    <div class="bg-slate-100/50 rounded-2xl mb-6 aspect-video flex items-center justify-center text-6xl shadow-inner group-hover:bg-purple-50 transition-colors">
                         🎙️
                     </div>
-                    <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-purple-600">語音控制</h3>
-                    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-purple-600 transition-colors">語音控制</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
                         透過瀏覽器語音辨識技術，將口說指令轉換為車輛控制信號。
                     </p>
-                    <div class="flex items-center text-purple-600 font-bold text-sm">
+                    <div class="flex items-center text-purple-600 font-bold text-sm bg-purple-50 w-fit px-4 py-2 rounded-full">
                         立即體驗 <span class="ml-2 group-hover:translate-x-2 transition-transform">→</span>
                     </div>
                 </a>
@@ -143,54 +176,57 @@
         </section>
 
         <!-- Category: Config -->
-        <section>
-            <div class="flex items-center gap-4 mb-10">
-                <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg">
+        <section class="scroll-reveal" style="animation-delay: 0.4s;">
+            <div class="flex flex-col md:flex-row md:items-center gap-4 mb-8">
+                <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg shadow-blue-200">
                     ⚙️
                 </div>
                 <div>
-                    <h2 class="text-3xl font-bold text-slate-800">系統組態與設定</h2>
-                    <p class="text-slate-500">底層參數配置，打造最穩定的運行環境</p>
+                    <h2 class="text-2xl md:text-3xl font-bold text-slate-800">系統組態與設定</h2>
+                    <p class="text-sm md:text-base text-slate-500">底層參數配置，打造最穩定的運行環境</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                 <!-- WiFi Config -->
-                <a href="wifi-config.html" class="example-card p-6 rounded-[2rem] block group">
-                    <div class="relative overflow-hidden rounded-2xl mb-6 aspect-video bg-slate-100">
-                        <img src="../assets/examples/config.png" alt="WiFi 設定" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                <a href="wifi-config.html" class="example-card p-5 md:p-8 rounded-[2rem] block group">
+                    <div class="relative overflow-hidden rounded-2xl mb-6 aspect-video bg-slate-100 shadow-inner">
+                        <img src="../assets/examples/config.png" alt="WiFi 設定" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110">
                     </div>
-                    <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-blue-600">WiFi 連線設定</h3>
-                    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">WiFi 連線設定</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
                         專為 ESP32 設計的連線管理介面，快速切換網路環境。
                     </p>
-                    <div class="flex items-center text-blue-600 font-bold text-sm">
+                    <div class="flex items-center text-blue-600 font-bold text-sm bg-blue-50 w-fit px-4 py-2 rounded-full">
                         立即體驗 <span class="ml-2 group-hover:translate-x-2 transition-transform">→</span>
                     </div>
                 </a>
 
                 <!-- Motor Config -->
-                <a href="motor-config.html" class="example-card p-6 rounded-[2rem] block group">
-                    <div class="bg-slate-100 rounded-2xl mb-6 aspect-video flex items-center justify-center text-5xl">
+                <a href="motor-config.html" class="example-card p-5 md:p-8 rounded-[2rem] block group">
+                    <div class="bg-slate-100/50 rounded-2xl mb-6 aspect-video flex items-center justify-center text-6xl shadow-inner group-hover:bg-blue-50 transition-colors">
                         🔧
                     </div>
-                    <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-blue-600">馬達參數校準</h3>
-                    <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">馬達參數校準</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
                         校準馬達的輸出方向與最大動力值，解決轉向偏差問題。
                     </p>
-                    <div class="flex items-center text-blue-600 font-bold text-sm">
+                    <div class="flex items-center text-blue-600 font-bold text-sm bg-blue-50 w-fit px-4 py-2 rounded-full">
                         立即體驗 <span class="ml-2 group-hover:translate-x-2 transition-transform">→</span>
                     </div>
                 </a>
-
-
             </div>
         </section>
     </main>
 
-    <footer class="bg-slate-900 py-12 text-slate-400 mt-20">
-        <div class="container mx-auto px-4 text-center">
-            <p>&copy; 2025 Vibe Coding. All rights reserved.</p>
+    <footer class="bg-slate-900 py-16 text-slate-400 mt-24 border-t border-slate-800">
+        <div class="container mx-auto px-6 text-center">
+            <div class="mb-8">
+                <span class="text-2xl font-bold text-white tracking-tight">🚀 Vibe Coding</span>
+            </div>
+            <p class="text-sm mb-4">Empowering the next generation of Physical AI creators.</p>
+            <div class="w-12 h-px bg-slate-700 mx-auto mb-6"></div>
+            <p class="text-xs">&copy; 2025 Vibe Coding. All rights reserved.</p>
         </div>
     </footer>
 
