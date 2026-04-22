@@ -101,15 +101,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
                                 <a href="${resolve('advanced.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">進階應用</a>
                             </div>
                         </div>
-                        <div class="relative dropdown group">
-                            <button class="flex items-center hover:text-cyan-600 transition cursor-pointer py-2">
-                                組態設定 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                            <div class="dropdown-menu absolute hidden group-hover:block bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
-                                <a href="${resolve('examples/wifi-config.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">WiFi 設定</a>
-                                <a href="${resolve('examples/motor-config.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">馬達設定</a>
-                            </div>
-                        </div>
+
                         <div class="relative dropdown group">
                             <button class="flex items-center text-cyan-600 font-bold transition cursor-pointer py-2">
                                 關於我們 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -155,14 +147,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
                             <a href="${resolve('advanced.html')}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 transition-all border border-transparent hover:border-indigo-100"><i class="fa-solid fa-microchip text-xs opacity-50"></i> 進階應用</a>
                         </div>
                     </div>
-                    <!-- Config Section -->
-                    <div class="space-y-3">
-                        <span class="text-[11px] font-bold text-blue-400 uppercase tracking-[0.2em] px-1">系統組態</span>
-                        <div class="grid grid-cols-2 gap-3">
-                            <a href="${resolve('examples/wifi-config.html')}" class="flex items-center gap-2 py-3 px-4 bg-blue-50/50 rounded-2xl hover:bg-blue-100 hover:text-blue-600 transition-all border border-transparent hover:border-blue-200"><i class="fa-solid fa-wifi text-xs opacity-50"></i> WiFi 設定</a>
-                            <a href="${resolve('examples/motor-config.html')}" class="flex items-center gap-2 py-3 px-4 bg-blue-50/50 rounded-2xl hover:bg-blue-100 hover:text-blue-600 transition-all border border-transparent hover:border-blue-200"><i class="fa-solid fa-gears text-xs opacity-50"></i> 馬達設定</a>
-                        </div>
-                    </div>
+
                     <!-- About Section -->
                     <div class="space-y-3 pb-4">
                         <span class="text-[11px] font-bold text-cyan-500 uppercase tracking-[0.2em] px-1">關於 Vibe Coding</span>
