@@ -115,6 +115,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
                                 關於我們 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                             <div class="dropdown-menu absolute hidden group-hover:block bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
+                                <a href="${resolve('examples/index.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">範例展示參考</a>
                                 <a href="${resolve('faq.html')}" class="block px-4 py-2 bg-cyan-50 text-cyan-700">課程使用說明</a>
                                 <a href="${resolve('about.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">關於付費與購買</a>
                                 <a href="${resolve('tutors.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">專業導師與合作</a>
@@ -174,6 +175,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
                                 <i class="fa-solid fa-chevron-right text-xs opacity-30 group-hover:translate-x-1 transition-transform"></i>
                             </a>
                             <div class="grid grid-cols-2 gap-3">
+                                <a href="${resolve('examples/index.html')}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-cyan-50 hover:text-cyan-600 transition-all border border-transparent hover:border-cyan-100 text-sm"><i class="fa-solid fa-code text-xs opacity-50"></i> 範例展示</a>
                                 <a href="${resolve('about.html')}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-cyan-50 hover:text-cyan-600 transition-all border border-transparent hover:border-cyan-100 text-sm"><i class="fa-solid fa-credit-card text-xs opacity-50"></i> 購買說明</a>
                                 <a href="${resolve('tutors.html')}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-cyan-50 hover:text-cyan-600 transition-all border border-transparent hover:border-cyan-100 text-sm"><i class="fa-solid fa-handshake text-xs opacity-50"></i> 導師與合作洽談</a>
                             </div>
