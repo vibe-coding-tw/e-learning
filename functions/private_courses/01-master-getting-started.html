@@ -48,8 +48,12 @@
         const tabVscode = document.getElementById('tab-vscode');
         const tabOnline = document.getElementById('tab-online');
 
+        // [V20.1] Support tab selection from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const requestedTab = urlParams.get('tab') || 'identity';
+        
         // Initial Load
-        loadContent('01-unit-developer-identity.html');
+        switchTab(requestedTab);
 
         function switchTab(tab) {
             // Helper to reset all tabs
