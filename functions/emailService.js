@@ -10,6 +10,9 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+const APP_BASE_URL = (process.env.APP_BASE_URL || 'https://vibe-coding.tw').replace(/\/+$/, '');
+const appUrl = (path = '') => `${APP_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+
 /**
  * Standard Premium Email Wrapper to ensure responsiveness and brand consistency.
  */
@@ -40,12 +43,27 @@ function getEmailHtmlWrapper(title, content, footer = 'Vibe Coding 團隊') {
     `;
 }
 
+function renderNextSteps(title, steps = []) {
+    const items = steps.map((step) => `<li style="margin-bottom: 6px;">${step}</li>`).join('');
+    return `
+        <div style="background: #f8fafc; padding: 20px; border-radius: 10px; margin: 20px 0; border: 1px solid #e2e8f0;">
+            <p style="margin: 0 0 10px 0; font-weight: bold;">${title}</p>
+            <ol style="margin: 0; padding-left: 20px; color: #334155; font-size: 14px;">
+                ${items}
+            </ol>
+        </div>
+    `;
+}
+
 /**
  * Send a welcome email to a newly registered user.
  * @param {string} email - User's email address
  * @param {string} displayName - User's display name
  */
 async function sendWelcomeEmail(email, displayName, expiryDateStr) {
+    const dashboardUrl = appUrl('/dashboard.html');
+    const introUrl = appUrl('/prepare.html');
+    const courseListUrl = appUrl('/started.html');
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
@@ -62,11 +80,22 @@ async function sendWelcomeEmail(email, displayName, expiryDateStr) {
                     <p style="margin: 5px 0 0 0; font-size: 20px; font-weight: bold; color: #ef4444;">${expiryDateStr}</p>
                 </div>
 
-                <p>您可以立即開始您的學習之旅：</p>
+                <div style="background: #f8fafc; padding: 20px; border-radius: 10px; margin: 20px 0; border: 1px solid #e2e8f0;">
+                    <p style="margin: 0 0 10px 0; font-weight: bold;">接下來建議您這樣做：</p>
+                    <ol style="margin: 0; padding-left: 20px; color: #334155; font-size: 14px;">
+                        <li style="margin-bottom: 6px;">先完成環境準備與帳號設定（約 10-15 分鐘）。</li>
+                        <li style="margin-bottom: 6px;">挑 1 堂入門單元先做完，建立第一個可執行成果。</li>
+                        <li>到儀表板查看學習進度與可解鎖內容。</li>
+                    </ol>
+                </div>
+
                 <p style="margin-top: 25px;">
-                    <a href="https://vibe-coding.tw/index.html" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);">開始學習</a>
+                    <a href="${introUrl}" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);">先完成環境準備</a>
                 </p>
-                <p style="margin-top: 25px; font-size: 14px; color: #64748b;">如果您有任何問題，隨時回覆這封郵件。</p>
+                <p style="margin-top: 14px; font-size: 14px;">
+                    或直接前往：<a href="${courseListUrl}" style="color: #4f46e5; text-decoration: none;">入門課程列表</a> / <a href="${dashboardUrl}" style="color: #4f46e5; text-decoration: none;">學習儀表板</a>
+                </p>
+                <p style="margin-top: 25px; font-size: 14px; color: #64748b;">如果您卡住，直接回覆這封信說「我卡在第幾步」，我們會協助你快速排除。</p>
             `,
             '祝學習愉快！<br>Vibe Coding 團隊'
         )
@@ -107,8 +136,13 @@ async function sendPaymentSuccessEmail(email, orderId, amount, itemsDesc, hasPhy
                     <p style="margin: 0;"><strong style="color: #64748b; font-size: 13px; text-transform: uppercase;">實付金額</strong><br><span style="font-size: 18px; color: #10b981; font-weight: bold;">TWD $${amount}</span></p>
                 </div>
                 <p>${fulfillmentMessage}</p>
+                ${renderNextSteps('接下來請這樣做：', [
+                    '先到儀表板確認本次訂單已啟用的課程或教材。',
+                    hasPhysical ? '若含實體教材，請在儀表板查看出貨狀態與物流資訊。' : '先完成一個單元，建立第一個可驗收成果。',
+                    '若要提交作業，請從儀表板進入對應單元。'
+                ])}
                 <p style="margin-top: 30px;">
-                    <a href="https://vibe-coding.tw/dashboard.html" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">前往學習儀表板</a>
+                    <a href="${appUrl('/dashboard.html')}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">前往學習儀表板</a>
                 </p>
             `,
             '謝謝您的支持！<br>Vibe Coding 團隊'
@@ -130,6 +164,8 @@ async function sendPaymentSuccessEmail(email, orderId, amount, itemsDesc, hasPhy
  * @param {number} daysLeft - Days remaining in trial
  */
 async function sendTrialExpiringEmail(email, displayName, daysLeft) {
+    const dashboardUrl = appUrl('/dashboard.html');
+    const pricingUrl = appUrl('/index.html');
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
@@ -138,10 +174,26 @@ async function sendTrialExpiringEmail(email, displayName, daysLeft) {
             '試用期即將結束',
             `
                 <p>Hi ${displayName || '開發者'},</p>
-                <p>提醒您，您的 Vibe Coding 入門試用資格即將在 <strong>${daysLeft} 天</strong>後到期。</p>
-                <p>希望您在這些課程中收穫滿滿！如果您希望繼續存取這些內容或解鎖更多進階課程，請考慮升級您的帳戶，解鎖更多 AI 實作技能。</p>
+                <p>提醒您，您的 Vibe Coding 入門試用資格將在 <strong>${daysLeft} 天</strong>後到期。</p>
+
+                <div style="background-color: #fff7ed; border-left: 4px solid #f97316; padding: 16px; margin: 20px 0; border-radius: 8px;">
+                    <p style="margin: 0; font-size: 14px; color: #9a3412;"><strong>現在建議優先完成：</strong>至少 1 個單元作業 + 儀表板進度確認，避免權限到期後中斷。</p>
+                </div>
+
+                <div style="background: #f8fafc; padding: 20px; border-radius: 10px; margin: 20px 0; border: 1px solid #e2e8f0;">
+                    <p style="margin: 0 0 10px 0; font-weight: bold;">你可以這樣安排接下來：</p>
+                    <ol style="margin: 0; padding-left: 20px; color: #334155; font-size: 14px;">
+                        <li style="margin-bottom: 6px;">今天先登入儀表板，確認目前未完成單元。</li>
+                        <li style="margin-bottom: 6px;">優先完成一個最短的入門單元與作業提交。</li>
+                        <li>若需要持續學習，提早完成升級，避免中斷。</li>
+                    </ol>
+                </div>
+
                 <p style="margin-top: 30px;">
-                    <a href="https://vibe-coding.tw/index.html" style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);">查看課程方案</a>
+                    <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);">先查看我的進度</a>
+                </p>
+                <p style="margin-top: 12px; font-size: 14px;">
+                    需要延長學習與解鎖更多內容：<a href="${pricingUrl}" style="color: #4f46e5; text-decoration: none;">查看課程方案</a>
                 </p>
             `,
             'Vibe Coding 團隊'
@@ -164,6 +216,7 @@ async function sendTrialExpiringEmail(email, displayName, daysLeft) {
  * @param {number} daysLeft - Days remaining
  */
 async function sendCourseExpiringEmail(email, displayName, courseName, daysLeft) {
+    const pricingUrl = appUrl('/index.html');
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
@@ -174,8 +227,16 @@ async function sendCourseExpiringEmail(email, displayName, courseName, daysLeft)
                 <p>Hi ${displayName || '開發者'},</p>
                 <p>提醒您，您的課程 <strong>${courseName}</strong> 的使用期限即將在 <strong>${daysLeft} 天</strong>後到期。</p>
                 <p>把握最後的時間複習課程內容！如果您希望繼續存取這些內容或解鎖更多進階課程，請考慮購買續約或查看最新優惠。</p>
+                ${renderNextSteps('到期前建議完成：', [
+                    '登入儀表板確認尚未完成的單元與作業。',
+                    '優先完成 1 個最重要單元，避免學習中斷。',
+                    '若需持續存取，先完成續購或升級。'
+                ])}
                 <p style="margin-top: 30px;">
-                    <a href="https://vibe-coding.tw/dashboard.html" style="display: inline-block; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);">登入儀表板</a>
+                    <a href="${appUrl('/dashboard.html')}" style="display: inline-block; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);">登入儀表板</a>
+                </p>
+                <p style="margin-top: 12px; font-size: 14px;">
+                    需要延長存取權限：<a href="${pricingUrl}" style="color: #4f46e5; text-decoration: none;">查看課程方案</a>
                 </p>
             `,
             'Happy Coding!<br>Vibe Coding 團隊'
@@ -199,7 +260,7 @@ async function sendCourseExpiringEmail(email, displayName, courseName, daysLeft)
  */
 async function sendTutorAuthorizationEmail(email, unitName, unitId, assignmentUrl) {
     const cleanUnitId = unitId ? unitId.replace('.html', '') : '';
-    const dashboardUrl = cleanUnitId ? `https://vibe-coding.tw/dashboard.html?unitId=${cleanUnitId}&tab=assignments` : `https://vibe-coding.tw/dashboard.html`;
+    const dashboardUrl = cleanUnitId ? appUrl(`/dashboard.html?unitId=${cleanUnitId}&tab=assignments`) : appUrl('/dashboard.html');
 
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
@@ -254,6 +315,7 @@ async function sendTutorAuthorizationEmail(email, unitName, unitId, assignmentUr
  * @param {string} assignmentUrl - Link to the assignment or dashboard
  */
 async function sendAssignmentNotification(tutorEmail, studentName, assignmentTitle, assignmentUrl) {
+    const targetUrl = assignmentUrl || appUrl('/dashboard.html?tab=assignments');
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: tutorEmail,
@@ -272,9 +334,14 @@ async function sendAssignmentNotification(tutorEmail, studentName, assignmentTit
                     <p style="margin: 0; font-weight: bold; color: #854d0e; font-size: 14px;">💡 教學互動建議</p>
                     <p style="margin: 10px 0 0 0; font-size: 14px; color: #713f12;">除了批改分數，給予深入的具體反饋能幫助學生更快進步。良好的師生互動是持續學習的最佳動力！</p>
                 </div>
+                ${renderNextSteps('建議處理順序：', [
+                    '先打開作業內容確認需求與提交完整性。',
+                    '給出分數前，先留 1-2 個可執行的改進建議。',
+                    '完成評分後，確認學生已收到回饋。'
+                ])}
 
                 <p style="margin-top: 30px;">
-                    <a href="${assignmentUrl || 'https://vibe-coding.tw/dashboard.html?tab=assignments'}" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);">前往儀表板批改</a>
+                    <a href="${targetUrl}" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);">前往儀表板批改</a>
                 </p>
             `,
             'Vibe Coding 自動化管家'
@@ -297,7 +364,7 @@ async function sendAssignmentNotification(tutorEmail, studentName, assignmentTit
  * @param {number} grade - Grade received
  * @param {string} feedback - Tutor's feedback
  */
-async function sendGradingNotification(email, studentName, assignmentTitle, grade, feedback, dashboardUrl = 'https://vibe-coding.tw/dashboard.html?tab=assignments') {
+async function sendGradingNotification(email, studentName, assignmentTitle, grade, feedback, dashboardUrl = appUrl('/dashboard.html?tab=assignments')) {
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
@@ -317,6 +384,11 @@ async function sendGradingNotification(email, studentName, assignmentTitle, grad
                     <p style="margin: 0; font-weight: bold; color: #1d4ed8; font-size: 14px;">🤝 建立良好的師生互動</p>
                     <p style="margin: 10px 0 0 0; font-size: 14px; color: #1e40af;">對評語或課程有疑問嗎？歡迎透過平台的功能或 Email 向老師提問。保持積極的溝通能讓您的學習更有效率！</p>
                 </div>
+                ${renderNextSteps('接下來建議：', [
+                    '先閱讀老師評語，整理 1-2 個重點修正項目。',
+                    '回到程式碼實作修正，必要時二次提交。',
+                    '若有不理解的地方，直接在平台向老師提問。'
+                ])}
 
                 <p style="margin-top: 30px;">
                     <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">查看作業詳情</a>
@@ -339,7 +411,7 @@ async function sendGradingNotification(email, studentName, assignmentTitle, grad
  */
 async function sendStudentLinkedToTutorEmail(email, studentName, unitId, tutorEmail) {
     const cleanUnitId = unitId ? unitId.replace('.html', '') : '';
-    const dashboardUrl = cleanUnitId ? `https://vibe-coding.tw/dashboard.html?unitId=${cleanUnitId}&tab=assignments` : 'https://vibe-coding.tw/dashboard.html';
+    const dashboardUrl = cleanUnitId ? appUrl(`/dashboard.html?unitId=${cleanUnitId}&tab=assignments`) : appUrl('/dashboard.html');
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
@@ -354,6 +426,11 @@ async function sendStudentLinkedToTutorEmail(email, studentName, unitId, tutorEm
                     <p style="margin: 0; font-size: 18px; font-weight: bold; color: #0ea5e9;">${tutorEmail}</p>
                 </div>
                 <p>在學習過程中若有任何疑問，或完成作業後需要批改，老師都會全程協助您。鼓勵您主動與老師保持聯繫，祝您學習愉快！</p>
+                ${renderNextSteps('現在可以先做這三件事：', [
+                    '到儀表板確認此單元已可進入作業。',
+                    '先完成一次作業提交，建立與老師的互動節奏。',
+                    '若 24 小時內仍無法提交，直接回覆此信求助。'
+                ])}
                 <p style="margin-top: 30px;">
                     <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);">前往儀表板</a>
                 </p>
@@ -373,7 +450,7 @@ async function sendStudentLinkedToTutorEmail(email, studentName, unitId, tutorEm
  */
 async function sendTutorLinkedToStudentEmail(email, studentName, unitId) {
     const cleanUnitId = unitId ? unitId.replace('.html', '') : '';
-    const dashboardUrl = cleanUnitId ? `https://vibe-coding.tw/dashboard.html?unitId=${cleanUnitId}&tab=assignments` : 'https://vibe-coding.tw/dashboard.html';
+    const dashboardUrl = cleanUnitId ? appUrl(`/dashboard.html?unitId=${cleanUnitId}&tab=assignments`) : appUrl('/dashboard.html');
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,
@@ -387,6 +464,11 @@ async function sendTutorLinkedToStudentEmail(email, studentName, unitId) {
                     <p style="margin: 0; font-weight: bold; color: #92400e; font-size: 14px; text-transform: uppercase;">💡 教務提醒</p>
                     <p style="margin: 10px 0 0 0; font-size: 14px; color: #92400e;">請隨時關注這位學生的學習進度與作業繳交狀況，並透過積極的正向回饋建立良好的教學互動關係。學生的成長是我們最大的成就！</p>
                 </div>
+                ${renderNextSteps('建議處理順序：', [
+                    '先打開該單元，確認學生目前進度。',
+                    '主動發出第一則指引訊息，建立互動。',
+                    '學生提交後 24 小時內完成首輪回饋。'
+                ])}
                 <p style="margin-top: 30px;">
                     <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);">開啟導師後台</a>
                 </p>
@@ -406,7 +488,7 @@ async function sendTutorLinkedToStudentEmail(email, studentName, unitId) {
  */
 async function sendAdminNewApplicationEmail(adminEmail, userEmail, unitId) {
     const cleanUnitId = unitId ? unitId.replace('.html', '') : '';
-    const dashboardUrl = cleanUnitId ? `https://vibe-coding.tw/dashboard.html?unitId=${cleanUnitId}&tab=admin` : 'https://vibe-coding.tw/dashboard.html?tab=admin';
+    const dashboardUrl = cleanUnitId ? appUrl(`/dashboard.html?unitId=${cleanUnitId}&tab=admin`) : appUrl('/dashboard.html?tab=admin');
     const mailOptions = {
         from: '"Vibe Coding System" <info@vibe-coding.tw>',
         to: adminEmail,
@@ -419,7 +501,11 @@ async function sendAdminNewApplicationEmail(adminEmail, userEmail, unitId) {
                 <div style="background-color: #fff7ed; padding: 20px; border-radius: 12px; margin: 25px 0; border: 1px solid #ffedd5; text-align: center;">
                     <p style="margin: 0; font-size: 14px; font-weight: bold; color: #ea580c;">申請人：${userEmail}</p>
                 </div>
-                <p>請前往 Admin Console 進行資料審核與權限授權。</p>
+                ${renderNextSteps('建議審核流程：', [
+                    '先確認申請單元與作業紀錄是否完整。',
+                    '核准時同步檢查導師設定與授權範圍。',
+                    '完成後確認申請人已收到結果通知。'
+                ])}
                 <p style="margin-top: 30px;">
                     <a href="${dashboardUrl}" style="display: inline-block; background-color: #ea580c; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(234, 88, 12, 0.2);">開啟管理控制台</a>
                 </p>
@@ -443,7 +529,7 @@ async function sendApplicationResultEmail(email, unitId, status, message = "") {
     const titleColor = isApproved ? '#2ECC71' : '#E74C3C';
     const resultText = isApproved ? '恭喜！您的申請已獲批准。' : '很遺憾，您的申請目前未獲批准。';
     const cleanUnitId = unitId ? unitId.replace('.html', '') : '';
-    const dashboardUrl = cleanUnitId ? `https://vibe-coding.tw/dashboard.html?unitId=${cleanUnitId}&tab=assignments` : 'https://vibe-coding.tw/dashboard.html';
+    const dashboardUrl = cleanUnitId ? appUrl(`/dashboard.html?unitId=${cleanUnitId}&tab=assignments`) : appUrl('/dashboard.html');
 
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
@@ -462,11 +548,21 @@ async function sendApplicationResultEmail(email, unitId, status, message = "") {
 
                 ${isApproved ? `
                 <p>恭喜您正式加入導師團隊！您現在已經具備該單元的管理權限。建議您立即登入儀表板查看相關功能：</p>
+                ${renderNextSteps('建議立刻完成：', [
+                    '先進入儀表板確認授權已生效。',
+                    '檢查該單元設定與作業連結是否正確。',
+                    '安排第一位學生的互動回饋節奏。'
+                ])}
                 <p style="margin-top: 30px;">
                     <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">開啟導師儀表板</a>
                 </p>
                 ` : `
                 <p>若有任何疑問，歡迎回覆此郵件與我們聯繫。您可以持續精進實作技能，並於日後再次提交申請。我們期待您的加入！</p>
+                ${renderNextSteps('建議下一步：', [
+                    '先根據管理員回覆補強不足項目。',
+                    '完成至少一個單元的高品質作業示範。',
+                    '準備好後再重新提交申請。'
+                ])}
                 `}
             `,
             '祝 順心！<br>Vibe Coding 團隊'
@@ -483,7 +579,7 @@ async function sendApplicationResultEmail(email, unitId, status, message = "") {
  * Send a summary email to the admin about pending student assignments.
  */
 async function sendAdminAssignmentReminder(adminEmail, pendingList) {
-    const dashboardUrl = 'https://vibe-coding.tw/dashboard.html?tab=admin';
+    const dashboardUrl = appUrl('/dashboard.html?tab=admin');
     const listHtml = pendingList.map(item => `
         <li style="margin-bottom: 10px;">
             <strong>${item.email}</strong> 購買了: <em>${item.units.join(', ')}</em>
@@ -501,7 +597,11 @@ async function sendAdminAssignmentReminder(adminEmail, pendingList) {
                 <ul style="background-color: #f8fafc; padding: 25px; border-radius: 12px; list-style-type: none; border: 1px solid #e2e8f0; margin: 25px 0;">
                     ${listHtml}
                 </ul>
-                <p>完成指派能確保學生的學習權益與教學互動品質。良好的第一印象是學員續約的關鍵。</p>
+                ${renderNextSteps('建議先處理：', [
+                    '先處理購買時間最早的學生，避免等待過久。',
+                    '指派後抽查 1 次是否可正常進入作業。',
+                    '每日關帳前再重刷一次待辦清單。'
+                ])}
                 <p style="margin-top: 30px;">
                     <a href="${dashboardUrl}" style="display: inline-block; background-color: #ef4444; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);">前往後台處理</a>
                 </p>
@@ -520,7 +620,7 @@ async function sendAdminAssignmentReminder(adminEmail, pendingList) {
  * Send a summary email to the admin about pending shipments.
  */
 async function sendAdminShipmentReminder(adminEmail, pendingList) {
-    const dashboardUrl = 'https://vibe-coding.tw/dashboard.html?tab=admin';
+    const dashboardUrl = appUrl('/dashboard.html?tab=admin');
     const listHtml = pendingList.map(item => `
         <li style="margin-bottom: 15px; border-bottom: 1px solid #edf2f7; padding-bottom: 10px;">
             <div style="font-weight: bold; color: #2d3748;">訂單: ${item.orderId}</div>
@@ -540,7 +640,11 @@ async function sendAdminShipmentReminder(adminEmail, pendingList) {
                 <ul style="background-color: #f8fafc; padding: 25px; border-radius: 12px; list-style-type: none; border: 1px solid #e2e8f0; margin: 25px 0;">
                     ${listHtml}
                 </ul>
-                <p>及時的出貨與精美的包裝能顯著提升品牌信任感。加油！</p>
+                ${renderNextSteps('建議先處理：', [
+                    '先出貨付款時間最早的訂單。',
+                    '出貨後立即標記為 SHIPPED 並核對物流資訊。',
+                    '收工前再檢查是否仍有未標記訂單。'
+                ])}
                 <p style="margin-top: 30px;">
                     <a href="${dashboardUrl}" style="display: inline-block; background-color: #3b82f6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);">前往後台處理</a>
                 </p>
