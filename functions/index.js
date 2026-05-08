@@ -1780,7 +1780,8 @@ exports.getDashboardData = onCall(async (request) => {
     const requesterRole = await getRole(uid);
     console.log(`[getDashboardData] Requester UID: ${uid}, Email: ${email}, Role: ${requesterRole}`);
     const db = admin.firestore();
-    const lessons = await getLessons(); 
+    const lessons = await getLessons();
+    const physicalUnitIds = new Set(lessons.filter(l => l.isPhysical === true).map(l => l.id));
     
     // [V12.1.2] SECURITY RULE: Global dashboard (no unitId) is ADMIN ONLY.
     if (!data.unitId && !data.courseId && requesterRole !== 'admin') {
@@ -2488,6 +2489,42 @@ exports.getDashboardData = onCall(async (request) => {
             totalHours: paidStudentStats.reduce((acc, curr) => acc + curr.totalTime, 0) / 3600
         };
 
+        // [NEW] 2.6 Aggregate Pending Shipments for Admin
+        if (requesterRole === 'admin') {
+            const pendingShipments = [];
+            try {
+                const shipmentsSnapshot = await db.collection('orders')
+                    .where('status', '==', 'SUCCESS')
+                    .get();
+
+                shipmentsSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.fulfillmentStatus === 'SHIPPED') return;
+
+                    const items = data.items || {};
+                    const physicalItems = Object.keys(items).filter(id => physicalUnitIds.has(id));
+
+                    if (physicalItems.length > 0) {
+                        const student = usersMap[data.uid] || {};
+                        pendingShipments.push({
+                            orderId: doc.id,
+                            uid: data.uid,
+                            email: student.email || 'Unknown',
+                            name: student.name || '',
+                            items: physicalItems.map(id => lessons.find(l => l.id === id)?.title || id),
+                            paidAt: data.paidAt ? data.paidAt.toDate().toISOString() : (data.createdAt ? data.createdAt.toDate().toISOString() : null),
+                            logistics: data.logistics || null
+                        });
+                    }
+                });
+                // Sort by paidAt descending
+                pendingShipments.sort((a, b) => new Date(b.paidAt) - new Date(a.paidAt));
+                result.pendingShipments = pendingShipments;
+            } catch (shipErr) {
+                console.error("Error aggregating shipments:", shipErr);
+            }
+        }
+
         result.lessons = lessons; // [NEW] Backend fallback for frontend loadLessons() failures
         return result;
 
@@ -3181,5 +3218,34 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
         console.log(`Profit sharing completed. Recorded ${auditTrail.length} share entries.`);
     } catch (error) {
         console.error("Error in calculateMonthlySharing:", error);
+    }
+});
+
+/**
+ * [NEW] Mark an order as shipped (markOrderShipped)
+ */
+exports.markOrderShipped = onCall(async (request) => {
+    const { orderId } = request.data;
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', '請先登入');
+    if (!orderId) throw new HttpsError('invalid-argument', '缺少訂單編號');
+
+    const db = admin.firestore();
+    try {
+        const userDoc = await db.collection('users').doc(uid).get();
+        if (userDoc.data()?.role !== 'admin') {
+            throw new HttpsError('permission-denied', '只有管理員可以標記出貨');
+        }
+
+        await db.collection('orders').doc(orderId).update({
+            fulfillmentStatus: 'SHIPPED',
+            shippedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        console.log(`Order ${orderId} marked as SHIPPED by ${uid}`);
+        return { success: true };
+    } catch (error) {
+        console.error("Error in markOrderShipped:", error);
+        throw new HttpsError('internal', error.message);
     }
 });
