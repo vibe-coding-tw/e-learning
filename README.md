@@ -21,7 +21,8 @@
         - `checkTrialExpiration`: 每日檢查試用期即將到期帳號並寄送提醒。
         - `checkCourseExpiration`: 每日檢查課程到期前 7 天/1 天並寄送提醒。
 - **數據庫 (Firestore)**:
-    - `users`: 使用者角色（實務上含 `admin`, `user`, `student`）、UID 與權限映射。
+    - `users`: 使用者角色僅 `admin` 與 `user`，並維護 UID 與權限映射。
+    - `tutorConfigs`: 導師資格狀態（Tutor 不是角色，而是單元層級授權狀態）。
     - `activity_logs`: 毫秒級追蹤學生觀看影片、閱讀文件的學習時數。
     - `orders`: 支付訂單；老師作業連結與導師關係綁在各個 `items[itemId]` 上，而非整張訂單。
     - `profit_ledger`: 自動化產出的月度分潤清單。
