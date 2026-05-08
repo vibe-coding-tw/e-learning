@@ -550,7 +550,7 @@ function filterAssignmentsForCurrentView(assignments = []) {
     }
 
     // 3. Student (Paid or Role): Only see their own.
-    if (myRole === 'student' || myRole === 'user' || !myRole || currentDashboardPermissions.isPaidStudent) {
+    if (myRole === 'user' || !myRole || currentDashboardPermissions.isPaidStudent) {
         return assignments.filter(isOwnAssignment);
     }
 

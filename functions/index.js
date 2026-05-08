@@ -2174,7 +2174,7 @@ exports.getDashboardData = onCall(async (request) => {
                 // [V13.0.16] Visibility Rule: Admin Global View (No Context) ALWAYS shows all users.
                 // tutorMode only filters content (not people) in Global View for Admin.
                 const isAdmin = requesterRole === 'admin';
-                if (isAdmin || role === 'student' || role === 'user' || !role) {
+                if (isAdmin || role === 'user' || !role) {
                     usersMap[doc.id] = { ...uData, role: role, _id: doc.id };
                 }
             });
@@ -2336,7 +2336,7 @@ exports.getDashboardData = onCall(async (request) => {
             Object.keys(usersMap).forEach(sid => {
                 const repair = legacyRepairMap[sid];
                 const userRole = usersMap[sid].role || 'user';
-                const shouldIncludeUser = shouldIncludeAllRegisteredUsers || userRole === 'student' || userRole === 'user' || !userRole;
+                const shouldIncludeUser = shouldIncludeAllRegisteredUsers || userRole === 'user' || !userRole;
                 
                 if (!studentStats[sid] && shouldIncludeUser) {
                     studentStats[sid] = {
@@ -2484,7 +2484,7 @@ exports.getDashboardData = onCall(async (request) => {
 
         // Summary
         const registeredUserStats = result.students;
-        const paidStudentStats = result.students.filter(s => s.accountStatus === 'paid' && (s.role === 'student' || s.role === 'user' || !s.role));
+        const paidStudentStats = result.students.filter(s => s.accountStatus === 'paid' && (s.role === 'user' || !s.role));
 
         result.summary = {
             totalStudents: registeredUserStats.length,
