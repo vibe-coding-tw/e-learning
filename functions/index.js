@@ -2504,6 +2504,10 @@ exports.getDashboardData = onCall(async (request) => {
                     const items = data.items || {};
                     const physicalItems = Object.keys(items).filter(id => {
                         const canonicalId = legacyMap[id] || id;
+                        const itemData = items[id] || {};
+                        // Primary signal: order item explicitly marked as physical.
+                        if (itemData.isPhysical === true) return true;
+                        // Backward compatibility: infer from lesson metadata IDs.
                         return physicalUnitIds.has(canonicalId) || physicalUnitIds.has(id);
                     });
 
@@ -2514,7 +2518,11 @@ exports.getDashboardData = onCall(async (request) => {
                             uid: data.uid,
                             email: student.email || 'Unknown',
                             name: student.name || '',
-                            items: physicalItems.map(id => lessons.find(l => l.id === id)?.title || id),
+                            items: physicalItems.map(id => {
+                                const lessonTitle = lessons.find(l => l.id === id)?.title;
+                                const itemName = items[id]?.name;
+                                return lessonTitle || itemName || id;
+                            }),
                             paidAt: data.paidAt ? data.paidAt.toDate().toISOString() : (data.createdAt ? data.createdAt.toDate().toISOString() : null),
                             logistics: data.logistics || null
                         });
@@ -3009,7 +3017,11 @@ exports.remindAdminPendingShipments = onSchedule({
             const data = doc.data();
             if (data.fulfillmentStatus === 'SHIPPED') continue;
 
-            const physicalItems = Object.keys(data.items || {}).filter(id => physicalUnitIds.has(id));
+            const items = data.items || {};
+            const physicalItems = Object.keys(items).filter(id => {
+                if (items[id]?.isPhysical === true) return true;
+                return physicalUnitIds.has(id);
+            });
             if (physicalItems.length > 0) {
                 // Fetch user info for the email
                 const userDoc = await db.collection('users').doc(data.uid).get();
@@ -3018,7 +3030,7 @@ exports.remindAdminPendingShipments = onSchedule({
                 pendingShipments.push({
                     orderId: doc.id,
                     email: userData.email || '未提供',
-                    items: physicalItems.map(id => lessons.find(l => l.id === id)?.title || id),
+                    items: physicalItems.map(id => lessons.find(l => l.id === id)?.title || items[id]?.name || id),
                     paidAt: data.paidAt ? data.paidAt.toDate().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }) : '未知'
                 });
             }
