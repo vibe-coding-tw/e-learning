@@ -461,61 +461,6 @@ function <span class="text-yellow-300">getPosition</span>(e) {
         </div>
 
     </section>
-
-    <!-- Tutor Guide (Hidden) -->
-    <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
-            <p class="font-bold text-slate-700 mb-4">本單元教學重點：掌握跨平台事件生成的順序與攔截機制。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600">第一步：範本設置</strong> - 提供一個會產生「數據污染」的壞代碼範例（即重複觸發點擊），讓學生自行診斷。</li>
-                <li><strong class="text-indigo-600">第二步：發布作業</strong> - 在 Classroom 啟用專用測試環境，重點檢查對 <code>{ passive: false }</code> 的應用。</li>
-                <li><strong class="text-indigo-600">第三步：開發引導</strong> - 確保學生理解 <code>e.preventDefault()</code> 的真正作用：它切斷了「觸控」向「模擬滑鼠」轉換的鍊條。</li>
-                <li><strong class="text-indigo-600">第四步：驗收回饋</strong> - 檢查 <code>getPosition</code> 函數是否能跨環境穩定運行，這是未來所有複雜 UI 的基礎。</li>
-            </ol>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
-.
-├── index.html        # 包含觸控測試區與日誌面板
-├── touch-logic.js    # (核心) 實作萬用座標解析與事件攔截
-└── README.md         # 紀錄 300ms 延遲解決方案與測試報告
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
-                        <td class="p-4 border-b">使用行動裝置操作本頁測試區，截圖紀錄 <code>click</code> 的具體延遲毫秒數。</td>
-                        <td class="p-4 border-b"><strong>Dashboard:</strong> 確認學生已體驗過 300ms 延遲的「不適感」。</td>
-                    </tr>
-                    <tr>
-                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
-                        <td class="p-4 border-b">領取作業 (Repo)，完成萬用按鈕 (Quest 1) 與防抖滑桿 (Quest 2) 並 Push。</td>
-                        <td class="p-4 border-b"><strong>現場展示:</strong> 比較「原生 vs 模擬」事件的差異。</td>
-                    </tr>
-                    <tr>
-                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
-                        <td class="p-4">挑戰 contextmenu 屏蔽與 Tap Highlight 優化 (Quest 3)，撰寫跨平台交互心得。</td>
-                        <td class="p-4"><strong>Feedback PR:</strong> 點評對 `passive` 機制的理解與 UI 流暢度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
 </body>
 
 </html>

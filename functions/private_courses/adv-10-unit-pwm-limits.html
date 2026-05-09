@@ -313,60 +313,6 @@
             </div>
         </div>
     </section>
-
-    <!-- Tutor Guide (Hidden) -->
-    <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：讓學生理解「軟體設計必須尊重物理現實」。當計算結果超出硬體極限，優先保護「幾何關係」。</p>
-            <ol class="space-y-4 text-slate-600 text-justify">
-                <li><strong class="text-blue-600 font-bold uppercase tracking-widest text-justify">重點 1：裁剪是惡魔</strong> - 學生需親眼看見 Clipping 破壞控制穩定性的慘痛代價。</li>
-                <li><strong class="text-blue-600 font-bold text-justify uppercase tracking-widest">重點 2：不對稱死區</strong> - 引導學員發現為什麼車子明明代碼一樣卻走歪：通常是左右輪死區電壓不同（摩擦力不對稱）。</li>
-                <li><strong class="text-blue-600 font-bold text-justify uppercase tracking-tighter text-justify">重點 3：線性化映射</strong> - 教導學員如何建立「虛擬的線性通道」，讓 PID 演算法在真實物理世界更穩定。</li>
-            </ol>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-blue-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── include/motor_limits.h # 介面：定義 normalizePWM 與補償函式
-├── src/motor_limits.cpp   # 實作：待學生寫入縮放演算法
-└── tests/scaling.test.js  # 測試：驗證 V_L/V_R 比值在飽和時是否恆定
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse text-justify">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify uppercase tracking-tighter">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「為什麼便宜的馬達低速會卡住」短片。理解摩擦力與死區。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能計算比例縮放因子 $Factor$。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black">領取作業 (Repo)，調教「低速絲滑參數」。實作防飽和缩放演算法。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 指導如何透過「動態係數 (Dynamic Factor)」在硬體飽和時自動保護系統穩定性。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black">提交飽和對比報告並 Push。閱讀教師對「非線性補償曲面」的進階思維回饋。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「幾何優先」原則的實作理解度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
 </body>
 
 </html>
