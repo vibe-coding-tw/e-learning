@@ -2562,8 +2562,8 @@ async function renderSettingsTab(filterUnitId = null) {
             totalGuideHTML = `<div class="w-full space-y-6">${guideRows}</div>`;
         }
 
-        assignmentContainer.innerHTML = totalAssignmentHTML || `<div class="text-center py-20 text-gray-400">尚無作業連結設定需求。</div>`;
-        guideContainer.innerHTML = totalGuideHTML || `<div class="text-center py-20 text-gray-400">尚無相關教學指引。</div>`;
+        assignmentContainer.innerHTML = totalAssignmentHTML || "";
+        guideContainer.innerHTML = totalGuideHTML || "";
         if (guideContainer) guideContainer.classList.remove('hidden');
 
     } catch (e) {
