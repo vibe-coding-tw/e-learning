@@ -348,61 +348,6 @@
         </div>
     </section>
 
-    <!-- Tutor Guide (Hidden) -->
-    <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：數據封裝的嚴絲合縫。理解序列化在跨平台通訊中的角色，並培養防禦性編程習慣。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：序列化與通訊模型</strong> - 強調「物件（Object）」是記憶體中的私有格式，「字串（String）」才是網路中的通用語。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：防護牆思維</strong> - 在 2-2 任務中，引導學生思考：當通訊環境不安穩時，如何用程式邏輯建置最後一道防線。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：頻寬與記憶體的權衡</strong> - 透過精簡任務，讓學生看見在嵌入式設備中，每一個 Byte 的節省對於時延與頻寬的巨大補償。</li>
-            </ol>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── src/json_handler.js  # 核心：待填寫 try-catch 與序列化邏輯
-├── src/config.h         # 韌體：定義精簡方案下的 Key 對照表
-├── test/payload.test.js # 自動化：檢查輸出的 JSON 是否符合 API 規範
-└── README.md            # 引導：要求學生紀錄不同優化策略下的數據對比
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5">觀看「家具裝箱：JSON 序列化原理」影片。理解 Key-Value 結構的交換含義。</td>
-                        <td class="px-6 py-5"><strong>Dashboard:</strong> 測試學員是否能手寫出包含巢狀物件的合法 JSON。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900">領取作業 (Repo)，挑戰在數據損毀的情境下，網頁儀表板依然能顯示「預設安全值」。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 協助排查 ArduinoJson 在 ESP32 端的記憶體溢位問題。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
-                        <td class="px-6 py-5">提交 Payload 瘦身報告。在 PR 中討論縮寫 Key 是否會造成維護困難。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價對「資料精確度」與「傳輸體積」權衡的合理性。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
-
 
     <script src="/js/course-shared.js?v=2026.04.09.V19.STABLE"></script>
 </body>

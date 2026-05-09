@@ -506,61 +506,6 @@
         </div>
 
     </section>
-
-    <!-- Tutor Guide (Hidden) -->
-    <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
-            <p class="font-bold text-slate-700 mb-4">本單元教學重點：將抽象幾何公式轉化為具體的物理交互限制。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600">第一步：範本設置</strong> - 提供基本的 <code>atan2</code> 與 <code>sqrt</code> 公式框架，建議在代碼中預先留好 <code>// FIXME</code> 位置。</li>
-                <li><strong class="text-indigo-600">第二步：發布作業</strong> - 啟用 Classroom 的自動評分，針對 \( (d > R) \) 的座標點進行數值斷言檢驗。</li>
-                <li><strong class="text-indigo-600">第三步：學生開發</strong> - 重點觀察學生是否能正確推導出 <code>(dx * R / d)</code> 的縮放倍率，而非手動拼湊數值。</li>
-                <li><strong class="text-indigo-600">第四步：代碼審閱</strong> - 檢查 <code>touchend</code> 時的資源清理邏輯，這是防止遙控車「暴走」的關鍵安全設計。</li>
-            </ol>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
-.
-├── index.html        # 包含搖桿視覺 UI 與數據面板
-├── math-logic.js     # (核心) 實作幾何限位、回彈與歸一化
-└── README.md         # 記錄勾股定理與比例縮放的數學推導
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
-                        <td class="p-4 border-b">複習基礎三角形幾何，預演 \( (30,40,50) \) 的經典比例場景。</td>
-                        <td class="p-4 border-b"><strong>Dashboard:</strong> 觀察學生是否理解 \(\sqrt{a^2+b^2}\) 的由來。</td>
-                    </tr>
-                    <tr>
-                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
-                        <td class="p-4 border-b">領取作業 (Repo)，完成圓形限位 (Quest 1) 與數據顯示 (Quest 2) 並 Push。</td>
-                        <td class="p-4 border-b"><strong>現場排錯:</strong> 診斷「手柄瞬移」問題（通常是沒處理好中心偏移量）。</td>
-                    </tr>
-                    <tr>
-                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
-                        <td class="p-4">挑戰平滑自動回彈 (Quest 3)，撰寫穩健性報告並提交最後 Commit。</td>
-                        <td class="p-4"><strong>Feedback PR:</strong> 點評幾何運算的優雅度與安全性（邊界狀況處理）。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
 </body>
 
 </html>

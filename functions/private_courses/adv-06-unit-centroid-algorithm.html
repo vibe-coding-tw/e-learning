@@ -326,60 +326,6 @@
             </div>
         </div>
     </section>
-
-    <!-- Tutor Guide (Hidden) -->
-    <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
-            <p class="font-bold text-slate-700 mb-4">本單元教學重點：讓學生理解「影像處理」的終極目的不是看照片，而是提取「可用於控制的座標數據」。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-blue-600">重點 1：從像素到座標</strong> - 不要讓學生迷失在 `for` 迴圈中，要引導他們思考：當我們找到質心時，我們實質上掌握了物體在世界中的「地址」。</li>
-                <li><strong class="text-blue-600">重點 2：穩定性的價值</strong> - 多數學生會困惑「為什麼準星一直在抖」。這是引入數位濾波與雜訊抑制概念的絕佳契機。</li>
-                <li><strong class="text-blue-600">重點 3：誤差就是驅動力</strong> - 建立 Error 與 Control 的簡單映射關係，為下一個單元的 PID 控制理論鋪路。</li>
-            </ol>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-blue-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── js/vision.js        # 包含二值化框架，待填寫質心計算邏輯
-├── js/car_link.js      # 包含 BLE 連線框架，待實作 Error 到轉向的映射
-└── README.md           # 實驗紀錄：需包含計算出的質心座標截圖
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5">手動計算 3x3 網格中幾個隨機點的平均座標，掌握公式原理。觀看「ROI 原理」短片。</td>
-                        <td class="px-6 py-5"><strong>Dashboard:</strong> 測試學員是否能理解當 $n=0$ 時公式為何會失敗。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5">領取作業 (Repo)，在 Canvas 上實作動態準星。測試不同 ROI 範圍對計算結果的穩定性影響。</td>
-                        <td class="px-6 py-5"><strong>巡場師資:</strong> 協助學員除錯「掃描區塊與數值座標」的對應邏輯缺失。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
-                        <td class="px-6 py-5">撰寫「濾波器對穩定性的提升」報告並 Push。閱讀 PR 回饋以優化控制邏輯。</td>
-                        <td class="px-6 py-5"><strong>Feedback PR:</strong> 點評對「誤差映射」的理解細緻度，表揚具備 ROI 防禦性檢查的代碼。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
 </body>
 
 </html>

@@ -316,60 +316,6 @@
             </div>
         </div>
     </section>
-
-    <!-- Tutor Guide (Hidden) -->
-    <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：讓學生跨越「影像處理」進入「人工智慧推論」。強調模型不是魔法，而是機率與統計的疊加結果。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-emerald-600">重點 1：速度是關鍵</strong> - 無論模型多準，如果推論需要 2 秒，在移動中的車端就是不可用的。必須強調 30 FPS 的實戰意義。</li>
-                <li><strong class="text-emerald-600">重點 2：數據的質感</strong> - 教導學員如何解析 <code>[x, y, w, h]</code> 陣列。物件偵測回傳的是空間資訊，而非單純的類別。</li>
-                <li><strong class="text-emerald-600">重點 3：決策邊界</strong> - 信心分數 0.5 跟 0.9 的差別在哪？引導學員建立自己的過濾原則。</li>
-            </ol>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-emerald-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── models/             # 存放：MobileNet-SSD 的靜態權重與配置 JSON
-├── js/inference_core.js# 處理：模型的 Load 與 Run 基本呼叫
-└── js/decision_node.js # 提供：空函式待學員填入物體避讓判斷邏輯
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「卷積神經網路 (CNN) 基礎」概念短片。理解特徵提取的概念。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能區分「影像分類」與「物件定位」的輸出差異。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter">領取作業 (Repo)，執行 GPU 壓力測試。實作 ROI 過濾與狀態機導航邏輯。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>AI 教練:</strong> 指導如何解讀「置信度」分佈，並調整 NMS 參數優化視覺流。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
-                        <td class="px-6 py-5 text-justify">上傳針對極端角度下物體誤判的分析報告並 Push。閱讀教師對「邊緣運算優化」的回饋。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「決策代價」的思考，表揚能主動為系統添加「容錯機制」的學員。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
 </body>
 
 </html>

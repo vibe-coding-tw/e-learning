@@ -303,61 +303,6 @@
         </div>
     </section>
 
-    <!-- Tutor Guide (Hidden) -->
-    <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：通訊協議的「硬漢實力」。掌握 I2C/SPI 的時序物理意義與現代化數據封裝流程。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：匯流排定址與專線選擇</strong> - 透過 1-1 掃描任務，強化學生對 Master-Slave 架構中設備辨識的底層認知。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：物理層的極限探索</strong> - 利用 1-2 任務探討時脈頻率對通訊質量的影響，理解數位訊號在高速下的物理變形與雜訊。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：二進制與語義化轉換</strong> - 教導學生如何將「冷冰冰的 Hex」轉換為「易懂的 JSON」，這是 IoT 全棧開發的關鍵能力。</li>
-            </ol>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── src/bus_scanner.cpp  # 核心：待填寫 I2C 掃描邏輯與 ACK 檢測
-├── src/json_bridge.ino  # 整合：待補完從 Raw Data 到 JSON 的轉換邏輯
-├── include/registers.h  # 配置：定義感測器暫存器映射表
-└── README.md            # 指引：要求記錄不同 SPI 頻率下的穩定度表現
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5">閱讀「一條大馬路 vs 多條快速道路」比喻。掌握 I2C SDA/SCL 的時序起點特徵。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能正確計算 SPI 四種 Mode 的極性組合。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900">領取作業 (Repo)，挑戰在同一個總線上掛載不同地址的設備，並處理地址衝突情境。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 現場示範邏輯分析儀波形抓取，解釋「上拉電阻不足」導致的訊號緩慢上升現象。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
-                        <td class="px-6 py-5">提交具備協議轉換功能的最終專案並 Push。在 PR 中說明對 Endianness（大/小端）的處理方案。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價對「數據幀原子性」與「緩衝區溢位預防」的程式魯棒性考量。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
-
 
     <script src="/js/course-shared.js?v=2026.04.09.V19.STABLE"></script>
 </body>
