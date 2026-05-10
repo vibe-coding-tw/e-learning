@@ -1414,20 +1414,26 @@ async function vibeRefreshReadmeContent(filterUnitId) {
         const repoName = filterUnitId.replace(/\.html$/, '');
         const GITHUB_ORG = 'vibe-coding-classroom';
         
-        // [V17.0.2] Prioritized Fetching: tutor_guide.md > README.md
-        const tutorGuideUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${repoName}/main/tutor_guide.md`;
-        const readmeUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${repoName}/main/README.md`;
+        // [V17.0.3] Prioritized Fetching: tutor_guide.md > tutor-guide.md > README.md
+        const possibleFiles = ['tutor_guide.md', 'tutor-guide.md', 'README.md'];
+        let markdownHtml = null;
 
-        console.log(`[V17.0.2] Attempting to fetch primary guide: ${tutorGuideUrl}`);
-        let markdownHtml = await loadMarkdown(tutorGuideUrl);
-        
-        // If tutor_guide.md fails (loadMarkdown returns a red error div on HTTP failure)
-        if (markdownHtml && markdownHtml.includes('無法讀取')) {
-            console.log(`[V17.0.2] tutor_guide.md not found, falling back to: ${readmeUrl}`);
+        for (const fileName of possibleFiles) {
+            const fileUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${repoName}/main/${fileName}`;
+            console.log(`[V17.0.3] Attempting to fetch: ${fileUrl}`);
+            
             readmePlaceholders.forEach(p => {
-                p.innerHTML = `<div class="flex items-center gap-3 text-slate-400 italic"><span class="animate-pulse">⏳</span> 找不到導師指南，改讀 README.md...</div>`;
+                p.innerHTML = `<div class="flex items-center gap-3 text-slate-400 italic"><span class="animate-pulse">⏳</span> 正在抓取 ${fileName}...</div>`;
             });
-            markdownHtml = await loadMarkdown(readmeUrl);
+
+            const result = await loadMarkdown(fileUrl);
+            
+            // If loadMarkdown returns successful content (not a red error div)
+            if (result && !result.includes('無法讀取')) {
+                markdownHtml = result;
+                console.log(`[V17.0.3] Successfully loaded: ${fileName}`);
+                break;
+            }
         }
         
         if (!markdownHtml || markdownHtml.includes('無法讀取')) {
