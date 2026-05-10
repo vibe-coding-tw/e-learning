@@ -1414,8 +1414,8 @@ async function vibeRefreshReadmeContent(filterUnitId) {
         const repoName = filterUnitId.replace(/\.html$/, '');
         const GITHUB_ORG = 'vibe-coding-classroom';
         
-        // [V17.0.3] Prioritized Fetching: tutor_guide.md > tutor-guide.md > README.md
-        const possibleFiles = ['tutor_guide.md', 'tutor-guide.md', 'README.md'];
+        // [V17.0.4] Prioritized Fetching: .github/tutor_guide.md > tutor_guide.md > tutor-guide.md > README.md
+        const possibleFiles = ['.github/tutor_guide.md', 'tutor_guide.md', 'tutor-guide.md', 'README.md'];
         let markdownHtml = null;
 
         for (const fileName of possibleFiles) {
