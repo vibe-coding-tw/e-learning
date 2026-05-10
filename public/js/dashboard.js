@@ -1405,7 +1405,7 @@ async function vibeRefreshReadmeContent(filterUnitId) {
         p.classList.remove('hidden');
         p.innerHTML = `
             <div class="flex items-center gap-3 text-slate-400 italic">
-                <span class="animate-pulse">⏳</span> 正在抓取 GitHub 任務說明 (README.md)...
+                <span class="animate-pulse">⏳</span> 正在抓取 GitHub 教學指引 (tutor_guide.md)...
             </div>
         `;
     });
@@ -1413,27 +1413,39 @@ async function vibeRefreshReadmeContent(filterUnitId) {
     try {
         const repoName = filterUnitId.replace(/\.html$/, '');
         const GITHUB_ORG = 'vibe-coding-classroom';
-        const rawUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${repoName}/main/README.md`;
-
-        console.log(`[V15.11] Fetching README from: ${rawUrl}`);
-        const markdownHtml = await loadMarkdown(rawUrl);
         
-        if (!markdownHtml) {
-            throw new Error("GitHub 回傳內容為空。");
+        // [V17.0.2] Prioritized Fetching: tutor_guide.md > README.md
+        const tutorGuideUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${repoName}/main/tutor_guide.md`;
+        const readmeUrl = `https://raw.githubusercontent.com/${GITHUB_ORG}/${repoName}/main/README.md`;
+
+        console.log(`[V17.0.2] Attempting to fetch primary guide: ${tutorGuideUrl}`);
+        let markdownHtml = await loadMarkdown(tutorGuideUrl);
+        
+        // If tutor_guide.md fails (loadMarkdown returns a red error div on HTTP failure)
+        if (markdownHtml && markdownHtml.includes('無法讀取')) {
+            console.log(`[V17.0.2] tutor_guide.md not found, falling back to: ${readmeUrl}`);
+            readmePlaceholders.forEach(p => {
+                p.innerHTML = `<div class="flex items-center gap-3 text-slate-400 italic"><span class="animate-pulse">⏳</span> 找不到導師指南，改讀 README.md...</div>`;
+            });
+            markdownHtml = await loadMarkdown(readmeUrl);
+        }
+        
+        if (!markdownHtml || markdownHtml.includes('無法讀取')) {
+            throw new Error("GitHub 儲存庫中找不到可用說明 (tutor_guide.md 或 README.md)。");
         }
 
         readmePlaceholders.forEach(placeholder => {
             placeholder.innerHTML = markdownHtml;
-            console.log("[V15.11] README successfully injected into:", placeholder.id);
+            console.log("[V17.0.2] Guide content successfully injected into:", placeholder.id);
         });
     } catch (error) {
-        console.error("[V15.11] README Loading Error:", error);
+        console.error("[V17.0.2] External Content Loading Error:", error);
         readmePlaceholders.forEach(p => {
             p.innerHTML = `
                 <div class="flex items-center gap-3 text-red-500 bg-red-50 p-4 rounded-xl border border-red-100">
                     <span>⚠️</span>
                     <div>
-                        <div class="font-bold">無法載入任務說明 (README.md)</div>
+                        <div class="font-bold">無法載入外部說明檔案</div>
                         <div class="text-xs opacity-75">${error.message || "請檢查 GitHub 儲存庫狀態。"}</div>
                     </div>
                 </div>
