@@ -250,6 +250,11 @@ async function loadDashboard() {
                     }
                 }
             }
+            
+            // [NEW] Ensure Admin Tutor Mode toggle is injected on initial load
+            if (typeof vibeInjectAdminTutorModeToggle === 'function') {
+                vibeInjectAdminTutorModeToggle();
+            }
         } else if (isPaidStudent) {
             // Paid student unit view
             renderStudentDashboard(data, filterUnitId);
@@ -1660,7 +1665,11 @@ window.switchTab = function (tabName) {
     if (tabName === 'admin') {
         renderAdminConsole();
     }
-    // Redundant switch logic removed for merged tabs.
+    
+    // [NEW] Inject Admin Tutor Mode Toggle if applicable
+    if (typeof vibeInjectAdminTutorModeToggle === 'function') {
+        vibeInjectAdminTutorModeToggle();
+    }
 };
 
 // --- Admin Features ---
@@ -1963,6 +1972,47 @@ window.toggleAdminTutorMode = function (enabled) {
     localStorage.setItem('adminTutorMode', enabled);
     // [V13.0.21] Force reload to ensure ALL functions and UI respect the new simulation state
     window.location.reload();
+};
+
+/**
+ * [NEW] Inject Admin Tutor Mode Toggle into Assignments & Settings Tabs
+ */
+window.vibeInjectAdminTutorModeToggle = function() {
+    if (myRole !== 'admin') return;
+    
+    const toggleHtml = `
+        <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm scale-90 sm:scale-100 origin-right">
+            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">導師模式 / Tutor Mode</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" value="" class="sr-only peer" ${adminTutorMode ? 'checked' : ''} onchange="toggleAdminTutorMode(this.checked)">
+                <div class="w-10 h-5 bg-gray-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
+            </label>
+        </div>
+    `;
+
+    // 1. Assignments Tab
+    const assignmentsHeader = document.getElementById('assignments-header');
+    if (assignmentsHeader) {
+        let container = assignmentsHeader.querySelector('.admin-tutor-mode-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'admin-tutor-mode-container';
+            assignmentsHeader.appendChild(container);
+        }
+        container.innerHTML = toggleHtml;
+    }
+
+    // 2. Settings Tab
+    const settingsHeader = document.getElementById('settings-header');
+    if (settingsHeader) {
+        let container = settingsHeader.querySelector('.admin-tutor-mode-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'admin-tutor-mode-container';
+            settingsHeader.appendChild(container);
+        }
+        container.innerHTML = toggleHtml;
+    }
 };
 
 window.handleAssignTutor = async function (studentUid, unitId, tutorEmail) {
