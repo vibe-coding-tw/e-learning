@@ -913,7 +913,7 @@ window.openSubmissionModal = async function (assignmentId, title) {
     }
 
     // --- 1. Resolve Classroom URL (Priority Order) ---
-    const shouldResolveFallbackLink = !classroomUrl && !assignmentAccess?.accessMode;
+    const shouldResolveFallbackLink = !classroomUrl;
     if (shouldResolveFallbackLink) {
 
         // A. Try Dynamic Configs (Firestore) [NEW]
@@ -965,7 +965,7 @@ window.openSubmissionModal = async function (assignmentId, title) {
 
     // --- 2. Direct Navigation Logic ---
     // [V18.1] Move calculation here to ensure fallback links are respected
-    shouldUseDirectClassroomLink = ['paid_student', 'free_course', 'trial_course', 'admin_simulated', 'fully_qualified_tutor', 'qualified_tutor'].includes(assignmentAccess?.accessMode) && !!classroomUrl;
+    shouldUseDirectClassroomLink = (assignmentAccess?.authorized === true || ['paid_student', 'free_course', 'trial_course', 'admin_simulated', 'fully_qualified_tutor', 'qualified_tutor'].includes(assignmentAccess?.accessMode)) && !!classroomUrl;
 
     // If we have a link and Shift is NOT held, navigate directly (User Request)
     const isShiftPressed = window.event && window.event.shiftKey;
