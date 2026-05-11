@@ -3348,7 +3348,12 @@ exports.bindTutorToUnit = onCall(async (request) => {
         }
 
         return { success: true, tutorEmail };
-
+    } catch (error) {
+        console.error("Self-binding failed:", error);
+        if (error instanceof HttpsError) throw error;
+        throw new HttpsError('internal', error.message);
+    }
+});
 
 // ==========================================
 // [TEMP] Maintenance: Update Classroom URL
