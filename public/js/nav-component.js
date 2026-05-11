@@ -108,7 +108,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
                             </button>
                             <div class="dropdown-menu absolute hidden group-hover:block bg-white shadow-xl rounded-lg py-2 w-48 mt-0 border border-gray-100 left-0">
                                 <a href="${resolve('examples/index.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">範例展示參考</a>
-                                <a href="${resolve('faq.html')}" class="block px-4 py-2 bg-cyan-50 text-cyan-700">課程使用說明</a>
+                                <a href="${resolve('students.html')}" class="block px-4 py-2 bg-cyan-50 text-cyan-700">課程使用說明</a>
                                 <a href="${resolve('about.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">關於付費與購買</a>
                                 <a href="${resolve('tutors.html')}" class="block px-4 py-2 hover:bg-cyan-50 hover:text-cyan-700">專業導師與合作</a>
                             </div>
@@ -152,7 +152,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
                     <div class="space-y-3 pb-4">
                         <span class="text-[11px] font-bold text-cyan-500 uppercase tracking-[0.2em] px-1">關於 Vibe Coding</span>
                         <div class="flex flex-col gap-3">
-                            <a href="${resolve('faq.html')}" class="flex items-center justify-between py-4 px-5 bg-cyan-50/50 border border-cyan-100 rounded-2xl hover:bg-cyan-100 hover:text-cyan-700 transition-all group">
+                            <a href="${resolve('students.html')}" class="flex items-center justify-between py-4 px-5 bg-cyan-50/50 border border-cyan-100 rounded-2xl hover:bg-cyan-100 hover:text-cyan-700 transition-all group">
                                 <div class="flex items-center gap-3">
                                     <i class="fa-solid fa-circle-question opacity-50"></i>
                                     <span>課程使用規範與 FAQ</span>
