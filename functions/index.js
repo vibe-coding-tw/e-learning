@@ -726,6 +726,28 @@ function normalizeGitHubUrl(url = '') {
     }
 }
 
+function fallbackNameFromEmail(email, defaultName = "使用者") {
+    if (!email || typeof email !== "string") return defaultName;
+    const localPart = email.split("@")[0] || "";
+    return localPart.trim() || defaultName;
+}
+
+function resolveNameFromUserData(userData = {}, email = "", authDisplayName = "") {
+    return userData.name || userData.displayName || authDisplayName || fallbackNameFromEmail(email);
+}
+
+async function resolveUserDisplayName(db, uid, email = "", authDisplayName = "") {
+    try {
+        if (!uid) return resolveNameFromUserData({}, email, authDisplayName);
+        const userDoc = await db.collection("users").doc(uid).get();
+        const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+        return resolveNameFromUserData(userData, email, authDisplayName);
+    } catch (e) {
+        console.warn(`[NameResolver] Failed to resolve user name for uid=${uid}:`, e.message);
+        return resolveNameFromUserData({}, email, authDisplayName);
+    }
+}
+
 /**
  * [V15.9] SYNC HELPER: Maintains the referral_links index for O(1) lookups during checkout.
  */
@@ -761,7 +783,7 @@ async function upsertStudentUnitAssignment(db, studentUid, unitId, tutorEmail, a
     }, { merge: true });
 
     if (notify && tutorEmail && previousTutor !== tutorEmail) {
-        const studentName = userData.displayName || userData.name || userData.email || "學生";
+        const studentName = resolveNameFromUserData(userData, userData.email, "");
         const studentEmail = userData.email;
 
         if (studentEmail) {
@@ -1451,15 +1473,11 @@ exports.authorizeTutorForCourse = onCall(async (request) => {
 
         if (action === 'add') {
             // ... [ADD Logic remains same focus on unit-level] ...
-            let tutorName = tutorEmail.split('@')[0];
+            let tutorName = fallbackNameFromEmail(tutorEmail);
             try {
                 const userRecord = await admin.auth().getUserByEmail(tutorEmail);
                 const userDoc = await db.collection('users').doc(userRecord.uid).get();
-                if (userDoc.exists && userDoc.data().name) {
-                    tutorName = userDoc.data().name;
-                } else if (userRecord.displayName) {
-                    tutorName = userRecord.displayName;
-                }
+                tutorName = resolveNameFromUserData(userDoc.exists ? (userDoc.data() || {}) : {}, tutorEmail, userRecord.displayName || "");
             } catch (err) {
                 console.log(`[Role] Metadata skip: ${err.message}`);
             }
@@ -1760,10 +1778,7 @@ exports.decideTutorApplication = onCall(async (request) => {
     };
 
     if (status === 'approved') {
-        let tutorName = userEmail.split('@')[0];
-        if (userData.name || userData.displayName) {
-            tutorName = userData.name || userData.displayName;
-        }
+        const tutorName = resolveNameFromUserData(userData, userEmail, "");
 
         const tutorData = { 
             authorized: true,
@@ -1915,7 +1930,7 @@ exports.getDashboardData = onCall(async (request) => {
                 }
                 synthesizedConfigs[cid].tutorDetails[email] = {
                     email,
-                    name: uData.displayName || email.split('@')[0],
+                    name: resolveNameFromUserData(uData, email, ""),
                     qualifiedAt: config.updatedAt || config.qualifiedAt
                 };
 
@@ -1938,7 +1953,7 @@ exports.getDashboardData = onCall(async (request) => {
                     }
                     unitTutorConfigs[unitId].tutorDetails[email] = {
                         email,
-                        name: uData.displayName || email.split('@')[0],
+                        name: resolveNameFromUserData(uData, email, ""),
                         qualifiedAt: config.updatedAt || config.qualifiedAt
                     };
                     if (config.githubClassroomUrl) {
@@ -2171,7 +2186,7 @@ exports.getDashboardData = onCall(async (request) => {
 
                         batch.set(userRef, {
                             email: au.email || "",
-                            name: au.displayName || (au.email ? au.email.split('@')[0] : "New User"),
+                            name: au.displayName || fallbackNameFromEmail(au.email || "", "New User"),
                             role: role,
                             createdAt: au.metadata.creationTime ? new Date(au.metadata.creationTime) : admin.firestore.FieldValue.serverTimestamp(),
                             updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -2608,7 +2623,7 @@ exports.submitAssignment = onCall(async (request) => {
     const { courseId, unitId, assignmentId, url, note, title, status, assignmentType } = data;
     const userId = auth.uid;
     const userEmail = auth.token.email || "Unknown";
-    const userName = auth.token.name || userEmail.split('@')[0];
+    const userName = await resolveUserDisplayName(admin.firestore(), userId, userEmail, auth.token.name || "");
 
     // Simple validation (unless just starting)
     const currentStatus = status || "submitted";
@@ -2741,7 +2756,8 @@ exports.gradeAssignment = onCall(async (request) => {
 
         // Notify Student
         const studentEmail = assignData.userEmail;
-        const studentName = assignData.userName || studentEmail.split('@')[0];
+        const studentName = assignData.userName ||
+            await resolveUserDisplayName(admin.firestore(), assignData.userId || "", studentEmail, "");
         const title = assignData.assignmentTitle || "您的作業";
 
         if (studentEmail) {
@@ -3002,7 +3018,12 @@ exports.checkCourseExpiration = onSchedule({
                     // Fetch user email and name
                     const userRecord = await admin.auth().getUser(orderData.uid);
                     const email = userRecord.email;
-                    const displayName = userRecord.displayName || email.split('@')[0];
+                    const displayName = await resolveUserDisplayName(
+                        admin.firestore(),
+                        orderData.uid || "",
+                        email || "",
+                        userRecord.displayName || ""
+                    );
 
                     if (email) {
                         // Get Course Name from items
