@@ -2719,58 +2719,10 @@ exports.submitAssignment = onCall(async (request) => {
 });
 
 exports.gradeAssignment = onCall(async (request) => {
-    const { data, auth } = request;
-    if (!auth) throw new HttpsError('unauthenticated', 'Must be logged in.');
-
-    // Check Role
-    const role = await getRole(auth.uid);
-    const { assignmentId, grade, feedback } = data;
-    // assignmentId should include uid, e.g., "UID_COURSE_UNIT"
-
-    const db = admin.firestore();
-    const docRef = db.collection('assignments').doc(assignmentId);
-
-    try {
-        const assignDoc = await docRef.get();
-        if (!assignDoc.exists) throw new HttpsError('not-found', 'Assignment not found.');
-
-        const assignData = assignDoc.data();
-        if (role !== 'admin' && assignData.assignedTutorEmail !== auth.token.email) {
-            throw new HttpsError('permission-denied', 'Only the assigned tutor can grade this assignment.');
-        }
-
-        const historyEntry = {
-            timestamp: admin.firestore.Timestamp.now(),
-            content: `Grade: ${grade}, Feedback: ${feedback}`,
-            action: 'GRADE',
-            grader: auth.uid
-        };
-
-        await docRef.update({
-            grade: Number(grade),
-            tutorFeedback: feedback,
-            currentStatus: 'graded',
-            updatedAt: admin.firestore.Timestamp.now(),
-            submissionHistory: admin.firestore.FieldValue.arrayUnion(historyEntry)
-        });
-
-        // Notify Student
-        const studentEmail = assignData.userEmail;
-        const studentName = assignData.userName ||
-            await resolveUserDisplayName(admin.firestore(), assignData.userId || "", studentEmail, "");
-        const title = assignData.assignmentTitle || "您的作業";
-
-        if (studentEmail) {
-            const dashboardUrl = `https://vibe-coding.tw/dashboard.html?courseId=${encodeURIComponent(assignData.courseId)}&unitId=${encodeURIComponent(assignData.unitId)}&tab=assignments`;
-            await sendGradingNotification(studentEmail, studentName, title, Number(grade), feedback, dashboardUrl);
-        }
-
-        return { success: true };
-    } catch (e) {
-        console.error("Grade Error:", e);
-        if (e instanceof HttpsError) throw e;
-        throw new HttpsError('internal', 'Grading failed.');
-    }
+    throw new HttpsError(
+        'failed-precondition',
+        'Manual grading has been removed. Please use GitHub autograde sync.'
+    );
 });
 
 // 8.2 GitHub 自動評分寫回 (MVP)
