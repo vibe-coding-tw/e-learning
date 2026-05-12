@@ -5,7 +5,7 @@
 ---
 
 ## 📖 相關文件 (Documentation)
-- **[🛠️ 操作使用說明 (Usage Guide)](usage-guide.md)**：包含完整的付款、導師指派、作業提交及師資申請流程。
+- **[📘 學生與導師指南](public/students.html)**：包含完整的付款、導師指派、作業提交及師資申請流程。
 - **[課前準備事項 (Preparation)](public/prepare.html)**：軟硬體環境準備與教材購買指引。
 
 ---
@@ -67,10 +67,17 @@
 ```bash
 # 全域部署
 firebase deploy --project e-learning-942f7
-
-# 僅部署指定功能的 Cloud Functions (例如新增的自助綁定功能)
-firebase deploy --only functions:bindTutorToUnit --project e-learning-942f7
 ```
+
+### CI/CD 自動化流程 (GitHub Actions)
+專案配置了自動化部署工作流，確保程式碼品質與發佈穩定性：
+
+1.  **PR 預覽部署 (`firebase-hosting-pull-request.yml`)**：
+    *   **觸發時機**：發起 Pull Request (PR) 時。
+    *   **用途**：自動將變動部署至「預覽頻道 (Preview Channel)」。GitHub 會自動在 PR 下方留言提供臨時網址，供審核者在合併前查驗 UI 與功能。
+2.  **正式上線部署 (`firebase-hosting-merge.yml`)**：
+    *   **觸發時機**：當程式碼合併 (Merge) 至 `main` 分支時。
+    *   **用途**：執行正式部署，同步更新 **Hosting** (網頁內容) 與 **Functions** (雲端函式) 至生產環境。
 
 ---
 Vibe Coding &copy; 2026 | [info@vibe-coding.tw](mailto:info@vibe-coding.tw)
