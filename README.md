@@ -80,6 +80,44 @@
 - 站點與通知：
   - `APP_BASE_URL`（email 連結基底，預設 `https://vibe-coding.tw`）
   - `ADMIN_EMAIL`（管理員通知信收件人；未設定時 fallback 至 `MAIL_USER`）
+- GitHub 自動評分：
+  - `GITHUB_WEBHOOK_SECRET`（用於驗證 `ingestGithubAutograde` 的 `X-Hub-Signature-256`）
+
+### GitHub Classroom 自動評分回寫 (MVP)
+- Webhook/API 入口：`ingestGithubAutograde`（HTTP POST）
+- 功能：將 GitHub Actions / Classroom 評分結果寫回 `assignments` 文件的 `autoGrade` 欄位。
+- 文件定位方式（二選一）：
+  - `assignmentDocId`
+  - `userId + assignmentId`（系統會組成 `${userId}_${assignmentId}`）
+- MVP 安全策略：只寫入 `autoGrade*` 欄位，不覆蓋人工 `grade`。
+
+範例 payload：
+```json
+{
+  "assignmentDocId": "uid_xxx_unit-01",
+  "score": 92,
+  "maxScore": 100,
+  "status": "completed",
+  "runUrl": "https://github.com/org/repo/actions/runs/123",
+  "workflow": "autograde",
+  "commitSha": "abc123"
+}
+```
+
+範例 GitHub Actions（呼叫 Cloud Function）：
+```yaml
+- name: Send auto grade to Vibe Coding
+  env:
+    VC_AUTOGRADE_URL: ${{ secrets.VC_AUTOGRADE_URL }}
+    VC_AUTOGRADE_TOKEN: ${{ secrets.VC_AUTOGRADE_TOKEN }}
+  run: |
+    payload='{"assignmentDocId":"'"$ASSIGNMENT_DOC_ID"'","score":92,"maxScore":100,"status":"completed","runUrl":"'"$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"'","workflow":"'"$GITHUB_WORKFLOW"'","commitSha":"'"$GITHUB_SHA"'"}'
+    sig="sha256=$(printf %s "$payload" | openssl dgst -sha256 -hmac "$VC_AUTOGRADE_TOKEN" | sed 's/^.* //')"
+    curl -sS -X POST "$VC_AUTOGRADE_URL" \
+      -H "Content-Type: application/json" \
+      -H "X-Hub-Signature-256: $sig" \
+      -d "$payload"
+```
 
 ### 部署命令
 ```bash

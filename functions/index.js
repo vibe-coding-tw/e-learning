@@ -55,6 +55,7 @@ const HASH_KEY = process.env.ECPAY_HASH_KEY;
 const HASH_IV = process.env.ECPAY_HASH_IV;
 const ECPAY_API_URL = process.env.ECPAY_API_URL;
 const ECPAY_LOGISTICS_MAP_URL = process.env.ECPAY_LOGISTICS_MAP_URL;
+const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET || "";
 
 const REGION = "asia-east1";
 // 為了避免專案 ID 寫死，我們也可以動態抓取，或者您保留原本寫死的字串
@@ -2756,6 +2757,95 @@ exports.gradeAssignment = onCall(async (request) => {
     }
 });
 
+// 8.2 GitHub 自動評分寫回 (MVP)
+exports.ingestGithubAutograde = onRequest(async (req, res) => {
+    if (req.method !== "POST") {
+        return res.status(405).json({ success: false, error: "Method not allowed" });
+    }
+
+    try {
+        const signature = req.get("x-hub-signature-256") || "";
+        if (GITHUB_WEBHOOK_SECRET) {
+            if (!signature.startsWith("sha256=")) {
+                return res.status(401).json({ success: false, error: "Missing signature" });
+            }
+            const expected = "sha256=" + crypto
+                .createHmac("sha256", GITHUB_WEBHOOK_SECRET)
+                .update(req.rawBody || Buffer.from(JSON.stringify(req.body || {})))
+                .digest("hex");
+            const sigBuffer = Buffer.from(signature);
+            const expectedBuffer = Buffer.from(expected);
+            if (sigBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
+                return res.status(401).json({ success: false, error: "Invalid signature" });
+            }
+        }
+
+        const payload = (req.body && typeof req.body === "object") ? req.body : {};
+        const assignmentDocId = payload.assignmentDocId || payload.assignment?.docId || null;
+        const userId = payload.userId || payload.assignment?.userId || null;
+        const assignmentId = payload.assignmentId || payload.assignment?.assignmentId || null;
+        const scoreRaw = payload.score ?? payload.grade ?? payload.autoGrade?.score;
+        const maxScoreRaw = payload.maxScore ?? payload.autoGrade?.maxScore ?? null;
+        const score = Number(scoreRaw);
+        const maxScore = maxScoreRaw !== null && maxScoreRaw !== undefined ? Number(maxScoreRaw) : null;
+        const resolvedDocId = assignmentDocId || (userId && assignmentId ? `${userId}_${assignmentId}` : null);
+
+        if (!resolvedDocId) {
+            return res.status(400).json({
+                success: false,
+                error: "Missing assignment identifier. Provide assignmentDocId or userId + assignmentId."
+            });
+        }
+        if (!Number.isFinite(score)) {
+            return res.status(400).json({ success: false, error: "Invalid score value." });
+        }
+
+        const assignmentRef = db.collection("assignments").doc(resolvedDocId);
+        const assignmentDoc = await assignmentRef.get();
+        if (!assignmentDoc.exists) {
+            return res.status(404).json({ success: false, error: "Assignment not found." });
+        }
+
+        const now = admin.firestore.Timestamp.now();
+        const autoGrade = {
+            score,
+            maxScore: Number.isFinite(maxScore) ? maxScore : null,
+            status: payload.status || payload.conclusion || "completed",
+            source: "github_actions",
+            runUrl: payload.runUrl || payload.html_url || payload.workflow_run?.html_url || null,
+            repository: payload.repository?.full_name || payload.repo || null,
+            workflow: payload.workflow || payload.workflow_run?.name || null,
+            commitSha: payload.commitSha || payload.head_sha || payload.workflow_run?.head_sha || null,
+            actor: payload.actor || payload.sender?.login || null,
+            summary: payload.summary || payload.feedback || null,
+            updatedAt: now
+        };
+
+        await assignmentRef.set({
+            autoGrade,
+            autoGradeRaw: {
+                score: scoreRaw,
+                maxScore: maxScoreRaw,
+                status: payload.status || payload.conclusion || null,
+                runUrl: payload.runUrl || payload.html_url || payload.workflow_run?.html_url || null
+            },
+            autoGradeSource: "github_actions",
+            autoGradeUpdatedAt: now,
+            updatedAt: now,
+            submissionHistory: admin.firestore.FieldValue.arrayUnion({
+                timestamp: now,
+                action: "AUTO_GRADE",
+                content: `GitHub auto-grade: ${score}${Number.isFinite(maxScore) ? `/${maxScore}` : ""}`
+            })
+        }, { merge: true });
+
+        return res.status(200).json({ success: true, assignmentId: resolvedDocId });
+    } catch (error) {
+        console.error("ingestGithubAutograde Error:", error);
+        return res.status(500).json({ success: false, error: "Internal server error" });
+    }
+});
+
 // ==========================================
 // 8. 新用戶歡迎信 (onUserCreated)
 // ==========================================
@@ -3354,4 +3444,3 @@ exports.bindTutorToUnit = onCall(async (request) => {
         throw new HttpsError('internal', error.message);
     }
 });
-
