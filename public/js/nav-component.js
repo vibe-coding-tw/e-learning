@@ -88,10 +88,10 @@ window.renderNav = function (rootPath = '.', options = {}) {
         style.id = 'nav-comp-styles';
         style.innerHTML = `
             @media (hover: hover) { 
-                .dropdown:hover .dropdown-menu { display: block; } 
+                .dropdown:hover .dropdown-menu { display: block !important; } 
             }
             /* [A11y] Focus-within support for keyboard users */
-            .dropdown:focus-within .dropdown-menu { display: block; }
+            .dropdown:focus-within .dropdown-menu { display: block !important; }
             
             #mobile-menu { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: top; }
             #mobile-menu-btn { cursor: pointer; touch-action: manipulation; }
@@ -255,6 +255,8 @@ window.renderNav = function (rootPath = '.', options = {}) {
 
     const placeholder = document.getElementById('nav-placeholder');
     if (placeholder) {
+        placeholder.style.position = 'relative';
+        placeholder.style.zIndex = '999999';
         placeholder.innerHTML = navHTML;
     } else {
         const existingNav = document.getElementById('main-nav') || document.querySelector('nav');
