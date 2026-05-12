@@ -115,7 +115,27 @@
 
 ---
 
-## 6. 成功指標（KPI）
+## 6. 互動流程圖（Tutor x Student）
+
+```mermaid
+flowchart TD
+    A["Student: 開始作業（started）"] --> B["Student: 開發 + git push"]
+    B --> C["GitHub Actions: 自動評分"]
+    C --> D["Vibe System: ingestGithubAutograde 回寫分數"]
+    D --> E{"分數是否低於門檻?"}
+    E -- "是" --> F["System: 建立介入任務（intervention）"]
+    F --> G["Tutor: 查看卡點 / 嘗試紀錄"]
+    G --> H["Tutor: 給提示階梯 + nextAction"]
+    H --> I["Student: 依建議修正再 push"]
+    I --> C
+    E -- "否" --> J["System: 更新成長里程碑"]
+    J --> K["Tutor: 進階引導（優化/延伸）"]
+    K --> L["Student: 穩定高分與獨立解題"]
+```
+
+---
+
+## 7. 成功指標（KPI）
 
 1. 首次低分後 7 天內提升分數比例
 2. 介入任務平均完成時間
@@ -124,7 +144,7 @@
 
 ---
 
-## 7. 文件同步規範
+## 8. 文件同步規範
 
 若調整以下任一項，需同步更新本文件與 `docs/database.md`：
 
