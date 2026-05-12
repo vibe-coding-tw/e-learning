@@ -219,6 +219,12 @@ window.renderNav = function (rootPath = '.', options = {}) {
                                 <span class="text-sm font-bold text-indigo-900">專業導師與合作洽談</span>
                             </div>
                         </a>
+                        <a href="${resolve('examples/index.html')}" class="flex items-center justify-between py-3.5 px-5 bg-slate-50 border border-slate-200 rounded-2xl hover:bg-slate-100 hover:text-slate-700 transition-all">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-display text-slate-600"></i>
+                                <span class="text-sm font-bold text-slate-900">範例程式展示</span>
+                            </div>
+                        </a>
                     </div>
                 </div>
             </div>

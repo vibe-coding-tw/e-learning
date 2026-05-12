@@ -1288,10 +1288,9 @@ window.renderAssignments = window.renderAssignments || function(assignments = []
     const thMain = document.getElementById('th-assignment-action-main');
     const thIntegrated = document.getElementById('th-assignment-action-integrated');
 
-    // [V14.12] Action column is NEVER visible in the main Assignments tab
+    // Manual grading removed: hide action column in all assignment tables.
     if (thMain) thMain.classList.add('hidden');
-    // Integrated Action column only visible if we are in a unit (can manage)
-    if (thIntegrated) thIntegrated.classList.toggle('hidden', isGlobal || !canManageAssignments);
+    if (thIntegrated) thIntegrated.classList.add('hidden');
 
     if (isAdmin && isGlobal) {
         // [V12.1.3] Global Feed: Sort all assignments by newest first
@@ -1344,11 +1343,8 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
     if (tableBodies.length === 0) return;
     
     // logic constants
-    const showActionCol = (context === 'unit-integrated') && canManageAssignments;
-    // [V17.0.6] Integrated Assignments Row click should open URL directly, as there is a dedicated Grade button
-    const clickAction = (context === 'unit-integrated') 
-                        ? 'url' 
-                        : (context === 'global' ? 'modal' : (context === 'unit-main' ? 'url' : 'modal'));
+    const showActionCol = false;
+    const clickAction = 'url';
 
     if (!assignments || assignments.length === 0) {
         const emptyMsg = `<tr><td colspan="${showActionCol ? 6 : 5}" class="text-center py-8 text-gray-400">尚無作業繳交紀錄</td></tr>`;
@@ -1400,14 +1396,7 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-400 text-center">${submittedDate}</td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-center">${badge}</td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 font-bold text-gray-700 text-center">${resolveAssignmentGradeDisplay(a)}</td>
-            <td class="py-2 px-1 sm:py-3 sm:px-2 text-right ${!showActionCol ? 'hidden' : ''}">
-                <button 
-                    onclick="event.stopPropagation(); window.openGradingModal('${a.id}')"
-                    id="btn-grade-${a.id}"
-                    class="bg-blue-100 hover:bg-blue-600 hover:text-white text-blue-700 px-2 py-0.5 sm:px-3 sm:py-1 rounded text-[10px] sm:text-xs font-bold transition">
-                    ${normalizedStatus === 'graded' ? '查看/修改' : '評分'}
-                </button>
-            </td>
+            <td class="py-2 px-1 sm:py-3 sm:px-2 text-right hidden"></td>
         </tr>`;
     }).join('');
 
@@ -1805,16 +1794,6 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                 <span class="p-2.5 bg-orange-100 rounded-xl">🛠️</span> 
                 課程管理控制台 (Course Management)
             </h3>
-            
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm">
-                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">導師模式 / Tutor Mode</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" value="" class="sr-only peer" ${adminTutorMode ? 'checked' : ''} onchange="toggleAdminTutorMode(this.checked)">
-                        <div class="w-10 h-5 bg-gray-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
-                    </label>
-                </div>
-            </div>
 
             <p id="admin-msg" class="text-sm font-bold text-orange-600 animate-pulse"></p>
         </div>
@@ -2066,6 +2045,8 @@ window.handleAssignTutor = async function (studentUid, unitId, tutorEmail) {
 
 // --- Grading Logic ---
 window.setupGradingFunctions = window.setupGradingFunctions || function() {
+    // Manual grading removed; keep a safe no-op for legacy calls.
+    return;
     const modal = document.getElementById('grading-modal');
     if (!modal) return; // Guard if modal not found
 
