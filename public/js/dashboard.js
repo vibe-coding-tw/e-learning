@@ -675,11 +675,11 @@ function renderStudentDashboard(data, filterUnitId = null) {
                                 </td>
                                 <td class="py-3 px-2 text-gray-500 text-xs">${a.submittedAt ? new Date(a.submittedAt.seconds * 1000).toLocaleString() : '-'}</td>
                                 <td class="py-3 px-2">
-                                    <span class="px-2 py-1 rounded text-xs font-bold ${a.grade ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
-                                        ${a.grade ? '已評分' : '待批改'}
+                                    <span class="px-2 py-1 rounded text-xs font-bold ${isAssignmentGraded(a) ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                                        ${isAssignmentGraded(a) ? '已評分' : '待批改'}
                                     </span>
                                 </td>
-                                <td class="py-3 px-2 text-right font-bold text-blue-600">${a.grade !== null && a.grade !== undefined ? a.grade : '-'}</td>
+                                <td class="py-3 px-2 text-right font-bold text-blue-600">${resolveAssignmentGradeDisplay(a)}</td>
                                 <td class="py-3 px-2 text-right text-gray-500 max-w-xs truncate" title="${escapeHtml(a.tutorFeedback)}">
                                     ${a.tutorFeedback ? escapeHtml(a.tutorFeedback) : '-'}
                                 </td>
@@ -1317,6 +1317,21 @@ window.renderAssignments = window.renderAssignments || function(assignments = []
 /**
  * Shared Table Renderer for Assignments
  */
+function resolveAssignmentGradeDisplay(assignment) {
+    if (assignment.grade !== null && assignment.grade !== undefined) {
+        return String(assignment.grade);
+    }
+    const score = assignment.autoGrade?.score;
+    if (score === null || score === undefined) return '-';
+    const maxScore = assignment.autoGrade?.maxScore;
+    return (maxScore !== null && maxScore !== undefined) ? `${score}/${maxScore}` : String(score);
+}
+
+function isAssignmentGraded(assignment) {
+    if (assignment.grade !== null && assignment.grade !== undefined) return true;
+    return assignment.autoGrade?.score !== null && assignment.autoGrade?.score !== undefined;
+}
+
 window.renderAssignmentsTable = window.renderAssignmentsTable || function(assignments, canManageAssignments, context = 'unit-main', targetSelector = '.assignment-table-body') {
     const tableBodies = document.querySelectorAll(targetSelector);
     if (tableBodies.length === 0) return;
@@ -1343,8 +1358,9 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
             else submittedDate = new Date(ts).toLocaleString();
         }
 
-        const currentStatus = a.currentStatus || a.status || 'new'; 
-        const badge = `<span class="${currentStatus === 'submitted' ? 'bg-yellow-100 text-yellow-800' : (currentStatus === 'graded' ? 'bg-green-100 text-green-800' : 'bg-gray-100')} px-2 py-0.5 rounded text-[10px] font-bold">${currentStatus === 'submitted' ? '待評分' : (currentStatus === 'graded' ? '已評分' : currentStatus)}</span>`;
+        const currentStatus = a.currentStatus || a.status || 'new';
+        const normalizedStatus = isAssignmentGraded(a) ? 'graded' : currentStatus;
+        const badge = `<span class="${normalizedStatus === 'submitted' ? 'bg-yellow-100 text-yellow-800' : (normalizedStatus === 'graded' ? 'bg-green-100 text-green-800' : 'bg-gray-100')} px-2 py-0.5 rounded text-[10px] font-bold">${normalizedStatus === 'submitted' ? '待評分' : (normalizedStatus === 'graded' ? '已評分' : normalizedStatus)}</span>`;
 
         // Determine Row Onclick logic
         let rowOnClick = '';
@@ -1371,13 +1387,13 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
             </td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-[10px] text-gray-400 text-center">${submittedDate}</td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-center">${badge}</td>
-            <td class="py-2 px-1 sm:py-3 sm:px-2 font-bold text-gray-700 text-center">${a.grade !== null && a.grade !== undefined ? a.grade : '-'}</td>
+            <td class="py-2 px-1 sm:py-3 sm:px-2 font-bold text-gray-700 text-center">${resolveAssignmentGradeDisplay(a)}</td>
             <td class="py-2 px-1 sm:py-3 sm:px-2 text-right ${!showActionCol ? 'hidden' : ''}">
                 <button 
                     onclick="event.stopPropagation(); window.openGradingModal('${a.id}')"
                     id="btn-grade-${a.id}"
                     class="bg-blue-100 hover:bg-blue-600 hover:text-white text-blue-700 px-2 py-0.5 sm:px-3 sm:py-1 rounded text-[10px] sm:text-xs font-bold transition">
-                    ${currentStatus === 'graded' ? '查看/修改' : '評分'}
+                    ${normalizedStatus === 'graded' ? '查看/修改' : '評分'}
                 </button>
             </td>
         </tr>`;

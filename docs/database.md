@@ -73,11 +73,18 @@
 | `courseId` | string | 課程識別碼。 |
 | `unitId` | string | 單元 ID。 |
 | `assignmentTitle` | string | 作業標題。 |
-| `submissionUrl` / `submissionText` | string | 提交內容。 |
+| `assignmentId` | string | 作業識別碼（常與 `userId` 組合成文件 id）。 |
+| `assignmentUrl` | string | 學生提交連結（GitHub / Demo）。 |
+| `studentNote` | string | 學生備註。 |
 | `assignedTutorEmail` | string | 該作業對應導師。 |
+| `currentStatus` | string | `started` / `submitted` / `graded`。 |
 | `grade` | number | 分數。 |
-| `feedback` | string | 評語。 |
-| `createdAt` / `updatedAt` | timestamp | 建立/更新時間。 |
+| `tutorFeedback` | string | 導師評語。 |
+| `autoGrade` | map | GitHub 自動評分結果（`score`, `maxScore`, `status`, `source`, `runUrl`, `workflow`, `commitSha`, `updatedAt`）。 |
+| `autoGradeSource` | string | 自動評分來源（MVP 為 `github_actions`）。 |
+| `autoGradeUpdatedAt` | timestamp | 最近一次自動評分更新時間。 |
+| `submissionHistory` | array | 作業歷程（START / SUBMIT / GRADE / AUTO_GRADE）。 |
+| `submittedAt` / `updatedAt` | timestamp | 提交/更新時間。 |
 
 ---
 
