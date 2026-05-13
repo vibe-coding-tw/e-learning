@@ -115,10 +115,16 @@
 | 欄位名稱 | 類型 | 說明 |
 | :--- | :--- | :--- |
 | `tutorEmail` | string | 分潤歸屬導師。 |
+| `studentUid` | string | 訂單對應學生 UID。 |
 | `orderId` | string | 關聯訂單 ID。 |
+| `orderItemId` | string | 關聯訂單項目 key。 |
+| `orderAmount` | number | 該項目金額（單價 x 數量）。 |
 | `shareAmount` | number | 分潤金額。 |
 | `level` | number | 分潤層級。 |
+| `referralLink` | string | 對應推薦連結（若有）。 |
 | `period` | string | 計算月份（YYYY-MM）。 |
+| `calculatedAt` | timestamp | 本次計算寫入時間。 |
+| `idempotencyKey` | string | 冪等鍵（`period+orderId+orderItemId+level+tutorEmail` 雜湊），避免重跑重複入帳。 |
 
 ---
 
