@@ -29,8 +29,8 @@
     - `getLogisticsMapParams` / `mapReply`: 綠界物流電子地圖整合。
     - `verifyReferralLink` / `verifyPromoCode`: 推薦連結與折扣碼驗證。
     - `resolveAssignmentAccess`: 判定使用者是否有權存取特定單元的作業指引。
-    - `submitAssignment` / `gradeAssignment`: 作業提交與導師人工評分。
-    - `ingestGithubAutograde`: GitHub Classroom 自動評分結果回寫。
+    - `submitAssignment`: 作業紀錄建立與正式提交。
+    - `ingestGithubAutograde`: GitHub Classroom 自動評分結果回寫（人工評分已停用）。
     - `getDashboardData`: 提供儀表板統計與作業 Feed 數據。
     - `serveCourse`: 安全分發私有單元內容。
     - `logActivity`: 毫秒級學習行為追蹤 API。

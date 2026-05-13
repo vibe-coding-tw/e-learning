@@ -2570,6 +2570,7 @@ exports.getDashboardData = onCall(async (request) => {
                     }
                 });
                 result.hardwareOrders.sort((a, b) => new Date(b.paidAt) - new Date(a.paidAt));
+                result.pendingShipments = pendingShipments;
                 result.pendingShipmentsCount = pendingShipments.length;
             } catch (shipErr) {
                 console.error("Error aggregating shipments:", shipErr);
@@ -3348,6 +3349,7 @@ exports.markOrderShipped = onCall(async (request) => {
         return { success: true };
     } catch (error) {
         console.error("Error in markOrderShipped:", error);
+        if (error instanceof HttpsError) throw error;
         throw new HttpsError('internal', error.message);
     }
 });
