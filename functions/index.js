@@ -847,7 +847,8 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
             }
 
             // Status-based Authorization: Qualified Tutors for their units (Digital Only)
-            const isQualifiedTutorForThisUnit = !!(userData.tutorConfigs && userData.tutorConfigs[canonicalUnitId] && userData.tutorConfigs[canonicalUnitId].authorized);
+            const effectiveTutorCfg = getEffectiveTutorConfig(canonicalUnitId, userData.tutorConfigs || {});
+            const isQualifiedTutorForThisUnit = !!(effectiveTutorCfg && effectiveTutorCfg.authorized === true);
             if (isQualifiedTutorForThisUnit) {
                 return { authorized: true, accessMode: 'qualified_tutor', canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
             }
@@ -1596,17 +1597,26 @@ exports.applyForTutorRole = onCall(async (request) => {
 
     // Create application object
     const application = {
-        applicationId: `app_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
         userId: uid,
         userEmail: email,
         unitId: canonicalUnitId,
         status: 'pending',
+        source: 'self_application',
         appliedAt: new Date().toISOString()
     };
 
+    // [Single Source of Truth] write to tutor_applications
+    const newAppRef = await db.collection('tutor_applications').add({
+        ...application,
+        appliedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
     // Update User Document
     await userRef.set({
-        tutorApplications: admin.firestore.FieldValue.arrayUnion(application),
+        tutorApplications: admin.firestore.FieldValue.arrayUnion({
+            ...application,
+            applicationId: newAppRef.id
+        }),
         hasPendingApplication: true,
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
@@ -1615,7 +1625,7 @@ exports.applyForTutorRole = onCall(async (request) => {
     const adminEmail = process.env.ADMIN_EMAIL || 'rover.k.chen@gmail.com';
     await sendAdminNewApplicationEmail(adminEmail, email, canonicalUnitId);
 
-    return { success: true, applicationId: application.applicationId };
+    return { success: true, applicationId: newAppRef.id };
 });
 
 // [DEBUG TOOL] 偵錯專用：查看目前教師屬性結構
@@ -1659,15 +1669,20 @@ exports.recommendTutorForUnit = onCall(async (request) => {
     if (!candidateUid || !candidateEmail || !canonicalUnitId) {
         throw new HttpsError('failed-precondition', 'Assignment metadata is incomplete.');
     }
-    if (assignment.grade === null || assignment.grade === undefined) {
-        throw new HttpsError('failed-precondition', 'Assignment must be graded before recommendation.');
+    const autoGradeScore = Number(assignment.autoGrade?.score);
+    const recommendationThreshold = 80;
+    if (!Number.isFinite(autoGradeScore)) {
+        throw new HttpsError('failed-precondition', 'Assignment must have a valid auto-grade score before recommendation.');
+    }
+    if (autoGradeScore < recommendationThreshold) {
+        throw new HttpsError('failed-precondition', `Auto-grade score must be >= ${recommendationThreshold} before recommendation.`);
     }
 
     // Check permissions of the requester in their own user document
     const requesterDoc = await db.collection('users').doc(auth.uid).get();
     const requesterData = requesterDoc.exists ? requesterDoc.data() : {};
     const requesterTutorConfigs = requesterData.tutorConfigs || {};
-    const isAuthorizedForThisUnit = requesterTutorConfigs[canonicalUnitId] && requesterTutorConfigs[canonicalUnitId].authorized;
+    const isAuthorizedForThisUnit = !!(getEffectiveTutorConfig(canonicalUnitId, requesterTutorConfigs)?.authorized);
 
     if (requesterRole !== 'admin' && !isAuthorizedForThisUnit) {
         throw new HttpsError('permission-denied', 'Only the qualified tutor for this unit can recommend students.');
@@ -1680,7 +1695,7 @@ exports.recommendTutorForUnit = onCall(async (request) => {
     const candidateDoc = await db.collection('users').doc(candidateUid).get();
     const candidateData = candidateDoc.exists ? candidateDoc.data() : {};
     const candidateTutorConfigs = candidateData.tutorConfigs || {};
-    if (candidateTutorConfigs[canonicalUnitId] && candidateTutorConfigs[canonicalUnitId].authorized) {
+    if (getEffectiveTutorConfig(canonicalUnitId, candidateTutorConfigs)?.authorized) {
         throw new HttpsError('already-exists', 'Student is already a qualified tutor for this unit.');
     }
 
@@ -1730,52 +1745,24 @@ exports.decideTutorApplication = onCall(async (request) => {
     }
 
     const db = admin.firestore();
-    
-    // [NEW v12.0.0] Find User by Application ID using Collection Query
-    // Since we now store applications inside the user document, we need to find which user owns this application.
-    const usersSnapshot = await db.collection('users')
-        .where('hasPendingApplication', '==', true)
-        .get();
-    
-    let targetUserDoc = null;
-    let applications = [];
-    let appIndex = -1;
+    const appRef = db.collection('tutor_applications').doc(applicationId);
+    const appSnap = await appRef.get();
+    if (!appSnap.exists) throw new HttpsError('not-found', 'Pending application not found.');
 
-    for (const doc of usersSnapshot.docs) {
-        const data = doc.data();
-        const apps = data.tutorApplications || [];
-        const idx = apps.findIndex(a => a.applicationId === applicationId && a.status === 'pending');
-        if (idx !== -1) {
-            targetUserDoc = doc;
-            applications = apps;
-            appIndex = idx;
-            break;
-        }
+    const appData = appSnap.data() || {};
+    if (appData.status !== 'pending') {
+        throw new HttpsError('failed-precondition', 'Application is already resolved.');
     }
-
-    if (!targetUserDoc) throw new HttpsError('not-found', 'Pending application not found.');
-
-    const userData = targetUserDoc.data();
-    const appData = applications[appIndex];
     const { userEmail, unitId, userId } = appData;
+    const targetUserRef = db.collection('users').doc(userId);
+    const targetUserDoc = await targetUserRef.get();
+    const userData = targetUserDoc.exists ? (targetUserDoc.data() || {}) : {};
 
     const lessons = await getLessons();
     const canonicalUnitId = resolveCanonicalUnitId(unitId, lessons);
     const parentCourseId = findParentCourseIdByUnit(canonicalUnitId, lessons);
 
-    // Update application status locally in the array
-    applications[appIndex].status = status;
-    applications[appIndex].adminMessage = adminMessage || "";
-    applications[appIndex].resolvedAt = new Date().toISOString();
-
-    // Determine if user still has pending applications
-    const stillHasPending = applications.some(a => a.status === 'pending');
-
-    const updateData = {
-        tutorApplications: applications,
-        hasPendingApplication: stillHasPending,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    };
+    const updateData = { updatedAt: admin.firestore.FieldValue.serverTimestamp() };
 
     if (status === 'approved') {
         const tutorName = resolveNameFromUserData(userData, userEmail, "");
@@ -1793,8 +1780,45 @@ exports.decideTutorApplication = onCall(async (request) => {
         // No code generation: the tutor's GitHub Classroom assignment link is now the only referral medium.
     }
 
-    // Save all updates to the User Document
-    await targetUserDoc.ref.update(updateData);
+    await appRef.update({
+        status,
+        adminMessage: adminMessage || "",
+        resolvedAt: admin.firestore.FieldValue.serverTimestamp(),
+        resolvedByUid: auth.uid
+    });
+
+    // Keep user snapshot in sync for legacy UI compatibility
+    const userApplications = Array.isArray(userData.tutorApplications) ? [...userData.tutorApplications] : [];
+    const legacyIndex = userApplications.findIndex(a => a.applicationId === applicationId);
+    if (legacyIndex >= 0) {
+        userApplications[legacyIndex].status = status;
+        userApplications[legacyIndex].adminMessage = adminMessage || "";
+        userApplications[legacyIndex].resolvedAt = new Date().toISOString();
+    } else {
+        userApplications.push({
+            applicationId,
+            userId,
+            userEmail,
+            unitId: canonicalUnitId,
+            status,
+            adminMessage: adminMessage || "",
+            source: appData.source || 'unknown',
+            appliedAt: appData.appliedAt || new Date().toISOString(),
+            resolvedAt: new Date().toISOString()
+        });
+    }
+
+    const stillHasPendingSnap = await db.collection('tutor_applications')
+        .where('userId', '==', userId)
+        .where('status', '==', 'pending')
+        .limit(1)
+        .get();
+
+    await targetUserRef.set({
+        ...updateData,
+        tutorApplications: userApplications,
+        hasPendingApplication: !stillHasPendingSnap.empty
+    }, { merge: true });
 
     // Notify User via Email
     await sendApplicationResultEmail(userEmail, canonicalUnitId, status, adminMessage);
@@ -1846,15 +1870,30 @@ exports.getDashboardData = onCall(async (request) => {
         const courseGuideIndex = {};
         const unitTutorConfigs = {};
         const unitToDocId = {}; // [LEGACY] Map unit filename -> Firestore docId
-        // [NEW v12.0.0] Fetch Tutor Application Status for THIS user from their own document
+        // [Single Source] Fetch Tutor Application Status for THIS user from tutor_applications
         const myApplicationsMapping = {};
         const userDoc = await db.collection('users').doc(uid).get();
         const userData = userDoc.exists ? userDoc.data() : {};
-        
-        const myApps = userData.tutorApplications || [];
-        myApps.forEach(app => {
-            myApplicationsMapping[app.unitId] = { status: app.status, appliedAt: app.appliedAt };
-        });
+        try {
+            const myAppsSnapshot = await db.collection('tutor_applications')
+                .where('userId', '==', uid)
+                .orderBy('appliedAt', 'desc')
+                .limit(100)
+                .get();
+            myAppsSnapshot.forEach(doc => {
+                const app = doc.data() || {};
+                if (!app.unitId) return;
+                if (!myApplicationsMapping[app.unitId]) {
+                    myApplicationsMapping[app.unitId] = {
+                        status: app.status,
+                        appliedAt: app.appliedAt,
+                        applicationId: doc.id
+                    };
+                }
+            });
+        } catch (appErr) {
+            console.warn("[getDashboardData] Failed to fetch user applications from tutor_applications:", appErr.message);
+        }
 
         // [NEW v12.0.1] Tutor Authorization Summary for Frontend
         // We can just return the tutorConfigs directly if needed, or map it.
@@ -1869,25 +1908,26 @@ exports.getDashboardData = onCall(async (request) => {
             console.warn("[getDashboardData] Failed to fetch tutor terms:", e);
         }
 
-        // [NEW v12.0.2] (Admin Only) Fetch all PENDING applications from the users collection
-        // Admin only sees pending tutor applications while Tutor Mode is ON.
+        // (Admin Only) Fetch all PENDING applications from tutor_applications
         let allPendingApplications = [];
         if (requesterRole === 'admin' && data.tutorMode !== false) {
-            const pendingUsersSnapshot = await db.collection('users')
-                .where('hasPendingApplication', '==', true)
+            const pendingAppsSnapshot = await db.collection('tutor_applications')
+                .where('status', '==', 'pending')
                 .get();
-            
-            pendingUsersSnapshot.forEach(doc => {
-                const uData = doc.data();
-                const apps = uData.tutorApplications || [];
-                const pendingApps = apps.filter(a => a.status === 'pending');
-                allPendingApplications.push(...pendingApps);
+
+            pendingAppsSnapshot.forEach(doc => {
+                const app = doc.data() || {};
+                allPendingApplications.push({
+                    id: doc.id,
+                    applicationId: doc.id,
+                    ...app
+                });
             });
 
             // Sort in-memory
             allPendingApplications.sort((a, b) => {
-                const timeA = a.appliedAt?.toMillis ? a.appliedAt.toMillis() : 0;
-                const timeB = b.appliedAt?.toMillis ? b.appliedAt.toMillis() : 0;
+                const timeA = a.appliedAt?.toMillis ? a.appliedAt.toMillis() : (new Date(a.appliedAt || 0).getTime() || 0);
+                const timeB = b.appliedAt?.toMillis ? b.appliedAt.toMillis() : (new Date(b.appliedAt || 0).getTime() || 0);
                 return timeB - timeA;
             });
         }
