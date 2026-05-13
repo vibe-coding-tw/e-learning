@@ -35,7 +35,7 @@ The protocol requires `getDashboardData` to return a `hardwareOrders` array excl
 ### 3.2 Backend: `markOrderShipped`
 An atomic Cloud Function that transitions an order's `fulfillmentStatus` to `SHIPPED`.
 - **Permission**: Requires `requesterRole === 'admin'`.
-- **Side Effects**: Logs the shipment timestamp and potentially triggers a student notification (Future).
+- **Side Effects**: Logs the shipment timestamp and sends student shipment confirmation email via `sendOrderShippedEmail`.
 
 ## 4. Admin Interface Protocol (`dashboard.js`)
 
@@ -60,6 +60,12 @@ An atomic Cloud Function that transitions an order's `fulfillmentStatus` to `SHI
 - **Protocol**: Notifies the student of successful hardware registration.
 - **Deep Link**: Points to `${APP_BASE_URL}/dashboard.html?tab=overview` where the student can monitor their personal shipment status.
 
+### 5.3 Student Shipment Notice (`sendOrderShippedEmail`)
+- **Trigger**: Admin marks order as shipped (`markOrderShipped`).
+- **Protocol**: Notifies student that hardware order is now `SHIPPED`, including order/item summary and logistics metadata (if available).
+- **Deep Link**: Points to `${APP_BASE_URL}/dashboard.html?tab=overview`.
+
 ## 6. Implementation Notes
 - **Zero-Cost Strategy**: Relies on Cloud Functions `onCall` and `Firestore` triggers without expensive 3rd party logistics API polling (manual transition to `SHIPPED`).
 - **Data Integrity**: Logistics information (e.g., ECPay CVS info) is stored directly in the `orders` document under the `logistics` key.
+- **Notification Spec**: See `docs/email-notifications.md` for delivery matrix and failure handling.
