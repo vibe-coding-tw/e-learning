@@ -30,7 +30,7 @@ graph TD
 The protocol requires `getDashboardData` to return a `hardwareOrders` array exclusively for users with `role === 'admin'`.
 - **Logic**: Filters all `SUCCESS` orders in the `orders` collection.
 - **Criteria**: Matches items with `isPhysical: true` or legacy IDs in `physicalUnitIds`.
-- **Payload**: Includes `uid`, `email`, `amount`, `paidAt`, `logistics`, and `fulfillmentStatus`.
+- **Payload**: Includes `uid`, `email`, `amount`, `paidAt`, `logistics`, `shippingContact{name,phone}`, `shippingAddress`, and `fulfillmentStatus`.
 
 ### 3.2 Backend: `markOrderShipped`
 An atomic Cloud Function that transitions an order's `fulfillmentStatus` to `SHIPPED`.
@@ -46,7 +46,7 @@ An atomic Cloud Function that transitions an order's `fulfillmentStatus` to `SHI
 
 ### 4.2 Rendering (`renderLogisticsTab`)
 - **Data Source**: `dashboardData.hardwareOrders`.
-- **View**: A comprehensive table displaying order ID, customer info, item details, and logistics metadata (CVS store info or receiver address).
+- **View**: A comprehensive table displaying order ID, customer info, item details, receiver contact info (name/phone), and logistics address metadata (CVS store or receiver address).
 - **Action**: Provides a "Mark as Shipped" button for any order in `PENDING` status.
 
 ## 5. Communication Protocol (`emailService.js`)

@@ -1654,21 +1654,29 @@ window.renderLogisticsTab = function() {
     const orders = dashboardData.hardwareOrders || [];
     
     if (orders.length === 0) {
-        container.innerHTML = '<tr><td colspan="6" class="py-10 text-center text-gray-400 italic">尚無硬體產品訂單紀錄</td></tr>';
+        container.innerHTML = '<tr><td colspan="7" class="py-10 text-center text-gray-400 italic">尚無硬體產品訂單紀錄</td></tr>';
         return;
     }
 
     container.innerHTML = orders.map(o => {
         const isShipped = o.fulfillmentStatus === 'SHIPPED';
         const logisticsInfo = o.logistics || {};
-        
-        // Format logistics details based on content
+
+        const receiverName = o.shippingContact?.name || logisticsInfo.receiverName || logisticsInfo.ReceiverName || '未提供';
+        const receiverPhone = o.shippingContact?.phone || logisticsInfo.receiverPhone || logisticsInfo.ReceiverCellPhone || logisticsInfo.ReceiverPhone || '未提供';
+
         let logisticsDesc = '無物流資訊';
-        if (logisticsInfo.CVSStoreName) {
-            logisticsDesc = `超商: ${logisticsInfo.CVSStoreName} (${logisticsInfo.CVSStoreID})`;
-        } else if (logisticsInfo.ReceiverAddress) {
-            logisticsDesc = `地址: ${logisticsInfo.ReceiverAddress}`;
+        if (logisticsInfo.CVSStoreName || logisticsInfo.storeName) {
+            const storeName = logisticsInfo.CVSStoreName || logisticsInfo.storeName || '未提供門市';
+            const storeId = logisticsInfo.CVSStoreID || logisticsInfo.storeId || '';
+            logisticsDesc = `超商: ${storeName}${storeId ? ` (${storeId})` : ''}`;
         }
+
+        const shippingAddress = o.shippingAddress
+            || logisticsInfo.storeAddress
+            || logisticsInfo.CVSAddress
+            || logisticsInfo.ReceiverAddress
+            || '未提供';
 
         const buyerName = o.name || '未提供';
         const buyerEmail = o.email || '未提供';
@@ -1688,8 +1696,13 @@ window.renderLogisticsTab = function() {
                         ${o.items.map(item => `<li class="list-disc ml-4 font-medium text-slate-700">${escapeHtml(item)}</li>`).join('')}
                     </ul>
                 </td>
-                <td class="py-4 px-2 text-center">
-                    <div class="text-xs text-gray-600 font-medium">${escapeHtml(logisticsDesc)}</div>
+                <td class="py-4 px-2">
+                    <div class="text-xs text-slate-700 font-semibold">收件人: ${escapeHtml(receiverName)}</div>
+                    <div class="text-xs text-slate-600">電話: ${escapeHtml(receiverPhone)}</div>
+                </td>
+                <td class="py-4 px-2">
+                    <div class="text-xs text-gray-700 font-medium">${escapeHtml(logisticsDesc)}</div>
+                    <div class="text-xs text-gray-600 mt-0.5 break-all">地址: ${escapeHtml(shippingAddress)}</div>
                     <div class="text-[10px] text-emerald-600 mt-1 font-bold">金額: TWD $${o.amount}</div>
                 </td>
                 <td class="py-4 px-2 text-center">
