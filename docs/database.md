@@ -17,7 +17,7 @@
 | `hasPendingApplication` | boolean | 是否有待審導師申請。 |
 | `unitAssignments` | map | 學生單元指派導師。Key = unitId，Value = tutorEmail。 |
 | `courseProgress` | map | 學習進度聚合資料。 |
-| `orders` | array | 購買課程/項目識別資料（依版本可能有差異）。 |
+| `orders` | array | 主要為 Dashboard 聚合回傳欄位，非主要持久化來源（實際訂單以 `orders` 集合為準）。 |
 | `updatedAt` | timestamp | 最後更新時間。 |
 | `createdAt` / `joinedAt` | timestamp | 建立時間。 |
 
@@ -33,7 +33,7 @@
 | `orderNumber` | string | 系統訂單編號（如 `VIBE...`）。 |
 | `uid` | string | 購買者 UID。 |
 | `amount` | number | 交易金額。 |
-| `status` | string | `PENDING`, `SUCCESS`, `FAILED`。 |
+| `status` | string | 目前主流程實際寫入 `PENDING`, `SUCCESS`（`FAILED` 保留為擴充狀態）。 |
 | `items` | map | 訂單項目。Key 為 itemId，value 可含 `name`, `price`, `quantity`, `isPhysical`, `referralLink`, `referredTutorEmail`。 |
 | `gateway` | string | 付款閘道（例如 `ECPAY`）。 |
 | `paidAt` | timestamp | 付款完成時間。 |
@@ -80,9 +80,10 @@
 | `currentStatus` | string | `started` / `submitted` / `graded`。 |
 | `grade` | number | 分數。 |
 | `tutorFeedback` | string | 導師評語。 |
-| `autoGrade` | map | GitHub 自動評分結果（`score`, `maxScore`, `status`, `source`, `runUrl`, `workflow`, `commitSha`, `updatedAt`）。 |
+| `autoGrade` | map | GitHub 自動評分結果（常見欄位：`score`, `maxScore`, `status`, `source`, `runUrl`, `workflow`, `commitSha`, `repository`, `actor`, `summary`, `updatedAt`）。 |
 | `autoGradeSource` | string | 自動評分來源（MVP 為 `github_actions`）。 |
 | `autoGradeUpdatedAt` | timestamp | 最近一次自動評分更新時間。 |
+| `autoGradeRaw` | map | 原始分數/狀態回寫快照（便於追蹤 webhook payload）。 |
 | `submissionHistory` | array | 作業歷程（START / SUBMIT / GRADE / AUTO_GRADE）。 |
 | `submittedAt` / `updatedAt` | timestamp | 提交/更新時間。 |
 
@@ -98,8 +99,13 @@
 | `unitId` | string | 申請單元。 |
 | `status` | string | `pending`, `approved`, `rejected`。 |
 | `source` | string | 來源（如 `tutor_recommendation`）。 |
+| `recommendedByUid` | string | 推薦者 UID（推薦流程）。 |
 | `recommendedByEmail` | string | 推薦老師 Email。 |
+| `recommendedFromAssignmentId` | string | 由哪筆 assignment 推薦而來。 |
 | `appliedAt` | timestamp | 申請時間。 |
+| `adminMessage` | string | 管理員審核回覆。 |
+| `resolvedAt` | timestamp | 審核完成時間。 |
+| `resolvedByUid` | string | 審核管理員 UID。 |
 
 ---
 
@@ -122,22 +128,45 @@
 | 欄位名稱 | 類型 | 說明 |
 | :--- | :--- | :--- |
 | `uid` | string | 執行行為的使用者 UID。 |
-| `type` | string | 行為類型（如 `view_video`, `read_doc`, `submit_test`）。 |
-| `path` | string | 發生行為的頁面路徑。 |
-| `duration` | number | 持續時間（秒/毫秒，視行為而定）。 |
+| `courseId` | string | 課程識別碼。 |
+| `action` | string | 行為類型（如 `VIDEO`, `DOC`, `PAGE_VIEW`；目前 `PAGE_VIEW` 寫入已停用）。 |
+| `duration` | number | 持續時間（秒）。 |
 | `metadata` | map | 額外參數（如 `videoId`, `percentComplete`）。 |
 | `timestamp` | timestamp | 記錄時間。 |
 
 ---
 
-## 8. 遷移備註 (Migration Notes)
+## 8. `referral_links` 集合
+儲存導師推薦/綁定用 GitHub Classroom URL 索引。
+
+| 欄位名稱 | 類型 | 說明 |
+| :--- | :--- | :--- |
+| `tutorEmail` | string | 該推薦連結所屬導師 Email。 |
+| `tutorName` | string | 導師名稱。 |
+| `unitId` | string | 連結對應單元 ID。 |
+| `normalizedUrl` | string | 正規化後的 GitHub URL。 |
+| `createdAt` | timestamp | 建立時間。 |
+
+---
+
+## 9. `metadata_settings` 集合
+系統全域設定（目前已使用：`tutor_terms`）。
+
+| 欄位名稱 | 類型 | 說明 |
+| :--- | :--- | :--- |
+| `content` | string | 設定內容（例：合格教師條款）。 |
+| `updatedAt` | timestamp | 設定更新時間。 |
+
+---
+
+## 10. 遷移備註 (Migration Notes)
 1. 角色已統一為 `admin` 與 `user`，歷史 `student` 角色需遷移為 `user`。
 2. 申請/推薦/審核流程以 `tutor_applications` 為單一真實來源（Source of Truth）；`users.tutorApplications` 僅作歷史快照與相容欄位。
 3. 單元 key 含 `.html` 時，Firestore update 請使用 `FieldPath` 或一致正規化，避免 dot-in-key 巢狀化問題。
 
 ---
 
-## 9. 規劃中互動欄位 (Planned)
+## 11. 規劃中互動欄位 (Planned)
 以下欄位屬於 Tutor x Student 互動層 MVP 的規劃，請以實際部署版本為準。
 
 ### `assignments` 擴充（規劃）
