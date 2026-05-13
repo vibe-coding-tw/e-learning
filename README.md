@@ -108,6 +108,8 @@
   - `ADMIN_EMAIL`（管理員通知信收件人；未設定時 fallback 至 `MAIL_USER`）
 - GitHub 自動評分：
   - `GITHUB_WEBHOOK_SECRET`（用於驗證 `ingestGithubAutograde` 的 `X-Hub-Signature-256`）
+- 物流資料回補：
+  - `ECPAY_LOGISTICS_QUERY_URL`（選填；預設 `https://logistics.ecpay.com.tw/Helper/QueryLogisticsTradeInfo/V5`）
 
 ### GitHub Classroom 自動評分回寫 (MVP)
 - Webhook/API 入口：`ingestGithubAutograde`（HTTP POST）
