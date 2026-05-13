@@ -28,7 +28,7 @@ It is the source of truth for:
 | New tutor application | `applyForTutorRole` / `recommendTutorForUnit` | Admin | `sendAdminNewApplicationEmail` | `/dashboard.html?unitId=...&tab=admin` |
 | Tutor application result | `decideTutorApplication` | Applicant | `sendApplicationResultEmail` | `/dashboard.html?unitId=...&tab=assignments` |
 | Admin pending assignment reminder | Daily schedule | Admin | `sendAdminAssignmentReminder` | `/dashboard.html?tab=admin` |
-| Admin pending shipment reminder | Daily schedule | Admin | `sendAdminShipmentReminder` | `/dashboard.html?tab=logistics` |
+| Admin pending shipment reminder | Daily schedule | Admin | `sendAdminShipmentReminder` | `/dashboard.html?tab=shipments` |
 | Autograde result (student) | `ingestGithubAutograde` success | Student | `sendAutogradeResultToStudent` | `/dashboard.html?unitId=...&tab=assignments` |
 | Autograde result (tutor) | `ingestGithubAutograde` success | Assigned tutor | `sendAutogradeResultToTutor` | `/dashboard.html?unitId=...&tab=assignments` |
 | Order shipped | `markOrderShipped` success | Student | `sendOrderShippedEmail` | `/dashboard.html?tab=overview` |

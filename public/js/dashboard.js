@@ -437,8 +437,9 @@ function getCurrentDashboardContext() {
 
 function getRequestedTabFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
-    const requestedTab = (urlParams.get('tab') || '').trim();
-    const allowedTabs = new Set(['overview', 'assignments', 'settings', 'earnings', 'admin', 'logistics']);
+    const rawTab = (urlParams.get('tab') || '').trim();
+    const requestedTab = rawTab === 'logistics' ? 'shipments' : rawTab; // backward compatibility
+    const allowedTabs = new Set(['overview', 'assignments', 'settings', 'earnings', 'admin', 'shipments']);
     return allowedTabs.has(requestedTab) ? requestedTab : '';
 }
 
@@ -771,7 +772,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
     const adminTabBtn = document.getElementById('tab-btn-admin');
     const settingsTabBtn = document.getElementById('tab-btn-settings');
     const earningsTabBtn = document.getElementById('tab-btn-earnings');
-    const logisticsTabBtn = document.getElementById('tab-btn-logistics');
+    const shipmentsTabBtn = document.getElementById('tab-btn-shipments');
 
     if (assignmentsTabBtn) {
         const canViewAssignments = canCurrentUserViewAssignmentsTab();
@@ -791,13 +792,13 @@ function renderAdminDashboard(data, filterUnitId = null) {
         }
     }
 
-    // 1.5 Logistics Tab (Admin Only)
-    if (logisticsTabBtn) {
+    // 1.5 Shipment Management Tab (Admin Only)
+    if (shipmentsTabBtn) {
         if (myRole === 'admin') {
-            logisticsTabBtn.classList.remove('hidden');
+            shipmentsTabBtn.classList.remove('hidden');
         } else {
-            logisticsTabBtn.classList.add('hidden');
-            logisticsTabBtn.style.display = 'none';
+            shipmentsTabBtn.classList.add('hidden');
+            shipmentsTabBtn.style.display = 'none';
         }
     }
 
@@ -1538,14 +1539,15 @@ window.switchTab = function (tabName) {
     if (!tabName) return;
     
     // [V14.12] PERMISSION LEAK FIX: Explicitly block admin-only tabs for non-admins
-    if ((tabName === 'admin' || tabName === 'logistics') && myRole !== 'admin') {
+    if ((tabName === 'admin' || tabName === 'shipments' || tabName === 'logistics') && myRole !== 'admin') {
         console.warn(`[Security] Unauthorized tab access: ${tabName} blocked for ${myRole}.`);
         // Fallback: Redirect to assignments for tutors or overview for admins.
         tabName = getPreferredDashboardTab(getCurrentDashboardContext().filterUnitId);
-        if (tabName === 'admin' || tabName === 'logistics') {
+        if (tabName === 'admin' || tabName === 'shipments' || tabName === 'logistics') {
             tabName = 'assignments'; // Extreme safety fallback
         }
     }
+    if (tabName === 'logistics') tabName = 'shipments'; // backward compatibility
 
     const urlParams = new URLSearchParams(window.location.search);
     const filterUnitId = resolveCanonicalUnitId(urlParams.get('unitId'));
@@ -1578,8 +1580,8 @@ window.switchTab = function (tabName) {
         return;
     }
 
-    // [V17.0] Logistics Tab Specific Rendering
-    if (tabName === 'logistics') {
+    // Shipment Management Tab Specific Rendering
+    if (tabName === 'shipments') {
         renderLogisticsTab();
     }
 
@@ -1716,7 +1718,7 @@ window.setupAdminFeatures = window.setupAdminFeatures || function() {
 window.renderLogisticsTab = function() {
     if (myRole !== 'admin' || !dashboardData) return;
     
-    const container = document.getElementById('logistics-table-body');
+    const container = document.getElementById('shipments-table-body');
     if (!container) return;
 
     const orders = dashboardData.hardwareOrders || [];
@@ -1803,7 +1805,6 @@ window.markAsShipped = async function(orderId) {
 };
 
 window.renderAdminConsole = window.renderAdminConsole || function() {
-    renderLogisticsTab(); // [V17.0] Always ensure logistics is ready if admin
     if (myRole !== 'admin') return;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -1853,50 +1854,7 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
         `;
     }
 
-    // [NEW] Render Pending Shipments
-    const pendingShipments = dashboardData.pendingShipments || [];
-    let shipmentsHtml = '';
-    if (pendingShipments.length > 0) {
-        shipmentsHtml = `
-            <div class="mb-10 bg-blue-50 border border-blue-100 rounded-2xl overflow-hidden shadow-sm">
-                <div class="px-6 py-4 border-b border-blue-100 flex items-center justify-between">
-                    <h4 class="text-sm font-black text-blue-900 flex items-center gap-2">
-                        <span class="animate-pulse">📦</span> 待出貨管理 (Shipment Management)
-                    </h4>
-                </div>
-                <div class="p-6 space-y-4">
-                    ${pendingShipments.map(ship => `
-                        <div class="flex flex-col sm:flex-row items-center justify-between bg-white p-4 rounded-xl border border-blue-100 gap-4 shadow-sm hover:shadow-md transition-shadow">
-                            <div class="flex items-center gap-4 flex-grow">
-                                <div class="p-2 bg-blue-100 rounded-lg text-lg">🚚</div>
-                                <div>
-                                    <div class="text-sm font-black text-gray-800">${escapeHtml(ship.email)}</div>
-                                    <div class="text-[10px] font-mono text-gray-400 mt-0.5">訂單: ${escapeHtml(ship.orderId)}</div>
-                                    <div class="text-[10px] text-blue-600 mt-1 font-bold">項目: ${escapeHtml((ship.items || []).join(', '))}</div>
-                                    <div class="text-[10px] text-gray-500 mt-1">付款時間: ${new Date(ship.paidAt).toLocaleString()}</div>
-                                    ${ship.logistics ? `
-                                        <div class="mt-2 p-2 bg-gray-50 rounded-lg border border-gray-100 text-[10px] text-gray-600">
-                                            <strong>收件資訊:</strong> ${escapeHtml(ship.logistics.CVSStoreName || '')} (${escapeHtml(ship.logistics.CVSStoreID || '')})<br>
-                                            ${escapeHtml(ship.logistics.CVSAddress || '')}
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3 w-full sm:w-auto">
-                                <button onclick="handleMarkAsShipped('${ship.orderId}')"
-                                    class="flex-grow sm:flex-none px-8 py-2 bg-emerald-500 text-white rounded-lg text-xs font-black hover:bg-emerald-600 shadow-sm transition-all active:scale-95">
-                                    標記為已出貨 Mark Shipped ✅
-                                </button>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
-    }
-
     let html = `
-        ${shipmentsHtml}
         ${pendingHtml}
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <h3 class="text-2xl font-black text-orange-900 flex items-center gap-3">
@@ -3237,24 +3195,3 @@ async function loadMarkdown(url) {
         </div>`;
     }
 }
-
-window.handleMarkAsShipped = async function (orderId) {
-    if (!orderId) return;
-    if (!confirm(`確認將訂單 ${orderId} 標記為已出貨？\n這將停止提醒郵件並更新學生的狀態。`)) return;
-
-    const msg = document.getElementById('admin-msg');
-    try {
-        if (msg) msg.textContent = "正在更新出貨狀態...";
-
-        const markShippedFunc = httpsCallable(functions, 'markOrderShipped');
-        await markShippedFunc({ orderId });
-
-        alert("出貨狀態已更新！");
-        await loadDashboard(); // Refresh UI
-    } catch (e) {
-        console.error("Mark Shipped Error:", e);
-        alert("更新失敗: " + e.message);
-    } finally {
-        if (msg) msg.textContent = "";
-    }
-};
