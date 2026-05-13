@@ -55,8 +55,10 @@
 - **`orders`**: 訂單紀錄。
   - `items[itemId]` 內含 `referralLink` / `referredTutorEmail`（item 級推薦綁定）。
   - `fulfillmentStatus` / `logistics`（硬體出貨狀態與物流資訊）。
-- **`activity_logs`**: 毫秒級學習行為追蹤（影片觀看、文件閱讀）。
+- **`activity_logs`**: 學習行為追蹤（主要欄位：`courseId`, `action`, `duration`, `metadata`, `timestamp`）。
 - **`tutor_applications`**: 導師申請審核資料（由推薦/申請流程建立）。
+- **`referral_links`**: GitHub Classroom 推薦/綁定連結索引（導師身份驗證與關聯回填）。
+- **`metadata_settings`**: 全域設定（目前包含 `tutor_terms`）。
 - **`profit_ledger`**: 分潤計算明細。
 
 ---
