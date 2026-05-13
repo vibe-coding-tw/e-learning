@@ -1,5 +1,5 @@
 # Logistics Management Minimum Viable Product (MVP)
-**Version**: 2026.05.13.V1
+**Version**: 2026.05.13.V2
 **Objective**: Define the automated management and fulfillment protocol for physical hardware products.
 
 ## 1. System Overview
@@ -26,11 +26,19 @@ graph TD
 
 ## 3. Data Integration & Aggregation
 
+### 3.0 Checkout Guardrail (`initiatePayment`)
+- For orders containing physical items, checkout must include complete logistics payload:
+  - receiver name
+  - receiver phone
+  - store ID or shipping address
+- If missing, API returns `400` and the order is rejected before payment.
+
 ### 3.1 Backend: `getDashboardData`
 The protocol requires `getDashboardData` to return a `hardwareOrders` array exclusively for users with `role === 'admin'`.
 - **Logic**: Filters all `SUCCESS` orders in the `orders` collection.
 - **Criteria**: Matches items with `isPhysical: true` or legacy IDs in `physicalUnitIds`.
 - **Payload**: Includes `uid`, `email`, `amount`, `paidAt`, `logistics`, `shippingContact{name,phone}`, `shippingAddress`, and `fulfillmentStatus`.
+- **Quality Flag**: `logisticsMissing` indicates paid physical order with incomplete logistics data (for admin remediation).
 
 ### 3.2 Backend: `markOrderShipped`
 An atomic Cloud Function that transitions an order's `fulfillmentStatus` to `SHIPPED`.

@@ -33,7 +33,7 @@
 ### 後端 (Backend - Firebase)
 - **Cloud Functions (Node.js 22)**:
   - **API 服務**: 
-    - `initiatePayment` / `paymentNotify`: 綠界金流整合與付款回寫。
+    - `initiatePayment` / `paymentNotify`: 綠界金流整合與付款回寫（實體商品需通過物流資料驗證；缺漏會標記 `logisticsMissing`）。
     - `getLogisticsMapParams` / `mapReply`: 綠界物流電子地圖整合。
     - `verifyReferralLink` / `verifyPromoCode`: 推薦連結與折扣碼驗證。
     - `resolveAssignmentAccess`: 判定使用者是否有權存取特定單元的作業指引。
@@ -63,6 +63,7 @@
 - **`orders`**: 訂單紀錄。
   - `items[itemId]` 內含 `referralLink` / `referredTutorEmail`（item 級推薦綁定）。
   - `fulfillmentStatus` / `logistics`（硬體出貨狀態與物流資訊）。
+  - `logisticsMissing`（實體商品付款後物流資料不完整時的警示旗標）。
 - **`activity_logs`**: 學習行為追蹤（主要欄位：`courseId`, `action`, `duration`, `metadata`, `timestamp`）。
 - **`tutor_applications`**: 導師申請審核資料（由推薦/申請流程建立）。
 - **`referral_links`**: GitHub Classroom 推薦/綁定連結索引（導師身份驗證與關聯回填）。
