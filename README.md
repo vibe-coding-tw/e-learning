@@ -6,9 +6,14 @@
 
 ## 📖 相關文件 (Documentation)
 - **[📘 學生與導師指南](public/students.html)**：包含付款、導師指派、作業提交及師資申請流程。
+- **[🧑‍🏫 導師操作指南](public/tutors.html)**：導師端日常操作與協作流程說明。
 - **[課前準備事項 (Preparation)](public/prepare.html)**：軟硬體環境準備與教材購買指引。
+- **[🗄️ Firestore 結構文件](docs/database.md)**：集合、欄位與遷移備註（以實作為準）。
+- **[🚚 物流管理 MVP](docs/logistics-mvp.md)**：硬體訂單出貨流程與 Admin Logistics 分頁規格。
+- **[✅ 合格教師管理 MVP](docs/tutor-management-mvp.md)**：申請、推薦、審核與授權流程。
 - **[⚖️ 開發與營運規範 (Project Rules)](rules.md)**：包含零元帳單規範、權限模型、ID 歸一化準則與開發 SOP。
 - **[🤝 Tutor x Student 互動層 MVP 規格](docs/tutor-student-interaction-mvp.md)**：自動評分之外的教學互動設計（卡點、提示階梯、成長軌跡、介入任務）。
+- **[🧭 Dashboard Legacy 遷移計畫](docs/dashboard-legacy-migration-plan.md)**：舊欄位相容、ID 歸一化與遷移策略。
 
 ---
 
