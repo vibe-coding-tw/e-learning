@@ -17,6 +17,7 @@
 - **[🤝 Tutor x Student 互動層 MVP 規格](docs/tutor-student-interaction-mvp.md)**：自動評分之外的教學互動設計（卡點、提示階梯、成長軌跡、介入任務）。
 - **[🧭 Dashboard Legacy 遷移計畫](docs/dashboard-legacy-migration-plan.md)**：舊欄位相容、ID 歸一化與遷移策略。
 - **[🧩 單元 Repo 協作改善流程](docs/unit-repo-collaboration-workflow.md)**：學生、導師、管理員共同迭代 README、tutor-guide 與測試/流程設定的提案與審核流程。
+- **[🔄 Classroom 同步 PR 流程](docs/classroom-sync-pr-workflow.md)**：當單元 template 更新後，批次對學生作業 repo 開同步 PR（含 dry-run 與衝突處理）。
 
 ---
 
@@ -118,6 +119,12 @@
   - `assignmentDocId`
   - `userId + assignmentId`（系統會組成 `${userId}_${assignmentId}`）
 - MVP 安全策略：只寫入 `autoGrade*` 欄位，不覆蓋人工 `grade`。
+
+### GitHub Classroom 學生 Repo 同步（建議）
+- 工具腳本：`scripts/sync_classroom_repos.sh`
+- 目的：template repo 更新後，批次建立學生 repo 同步 PR。
+- 操作文件：`docs/classroom-sync-pr-workflow.md`
+- 先 dry-run，再 `--apply` 正式開 PR。
 
 範例 payload：
 ```json
