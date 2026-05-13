@@ -1017,6 +1017,11 @@ exports.serveCourse = onRequest(async (req, res) => {
         if (!value) return value;
         return legacyCourseAliasMap[value] || value;
     };
+    const normalizeCourseFile = (value = '') => {
+        if (!value) return value;
+        const filePart = String(value).split('/').pop().split('?')[0];
+        return normalizeLegacyAlias(filePart);
+    };
 
     // 1. Parsing Path (e.g. /courses/ble-connection-master.html)
     const urlPath = req.path; // /courses/foo.html
@@ -1064,7 +1069,7 @@ exports.serveCourse = onRequest(async (req, res) => {
             }
         }
 
-        const normalizedScopePart = normalizeLegacyAlias(scopePart);
+        const normalizedScopePart = normalizeCourseFile(scopePart);
 
         // B. Validate Expiry
         if (Date.now() > expiry) {
@@ -1088,13 +1093,14 @@ exports.serveCourse = onRequest(async (req, res) => {
                 // Find the course by pageId/courseId or scopePart
                 const course = lessons.find(l =>
                     l.courseId === normalizedScopePart ||
-                    (l.classroomUrl && l.classroomUrl.endsWith(normalizedScopePart))
+                    normalizeCourseFile(l.classroomUrl || '') === normalizedScopePart
                 );
 
                 if (course) {
-                    const masterFile = (course.classroomUrl || "").split('/').pop();
-                    const isMasterMatch = (normalizedFileName === masterFile);
-                    let isUnitMatch = course.courseUnits && course.courseUnits.includes(normalizedFileName);
+                    const masterFile = normalizeCourseFile(course.classroomUrl || "");
+                    const normalizedUnits = (course.courseUnits || []).map(u => normalizeCourseFile(u));
+                    const isMasterMatch = (normalizeCourseFile(normalizedFileName) === masterFile);
+                    let isUnitMatch = normalizedUnits.includes(normalizeCourseFile(normalizedFileName));
                     
                     debugInfo = `CourseFound: ${course.courseId}, isMasterMatch: ${isMasterMatch}, isUnitMatch: ${isUnitMatch}, masterFile: ${masterFile}`;
 
@@ -1120,8 +1126,10 @@ exports.serveCourse = onRequest(async (req, res) => {
             
             // [MODIFIED v11.3.14] Fallback: If scopePart is a fileName and lesson contains it, allow.
             if (manualFallback) {
-                const isMasterMatch = (manualFallback.classroomUrl && manualFallback.classroomUrl.endsWith(normalizedFileName));
-                let isUnitMatch = (manualFallback.courseUnits && manualFallback.courseUnits.includes(normalizedFileName));
+                const fallbackMaster = normalizeCourseFile(manualFallback.classroomUrl || '');
+                const normalizedUnits = (manualFallback.courseUnits || []).map(u => normalizeCourseFile(u));
+                const isMasterMatch = (fallbackMaster === normalizeCourseFile(normalizedFileName));
+                let isUnitMatch = normalizedUnits.includes(normalizeCourseFile(normalizedFileName));
                 
                 if (isMasterMatch || isUnitMatch) {
                     isAuthorizedScope = true;
