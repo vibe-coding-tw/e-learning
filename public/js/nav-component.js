@@ -15,7 +15,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const NAV_STATE_VERSION = "2026.04.05.FINAL_V8";
+const NAV_STATE_VERSION = "2026.05.13.FINAL_V9";
 
 // --- 1. Navigation Rendering Engine ---
 
