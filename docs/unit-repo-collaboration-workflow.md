@@ -23,6 +23,8 @@
 4. 至少 1 位 Tutor + 1 位 Admin Review 後 merge
 5. merge 後在課堂公告或群組同步「本次單元 repo 改動重點」
 
+延伸：若本次改動需要回補到既有學生作業 repo，請使用 [Classroom 同步 PR 流程](/Users/roverchen/Documents/Apps/vibe-coding-tw/docs/classroom-sync-pr-workflow.md)。
+
 ### 流程圖：提案到合併
 ```mermaid
 flowchart TD
