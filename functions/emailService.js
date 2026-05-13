@@ -620,7 +620,7 @@ async function sendAdminAssignmentReminder(adminEmail, pendingList) {
  * Send a summary email to the admin about pending shipments.
  */
 async function sendAdminShipmentReminder(adminEmail, pendingList) {
-    const dashboardUrl = appUrl('/dashboard.html?tab=logistics');
+    const dashboardUrl = appUrl('/dashboard.html?tab=shipments');
     const listHtml = pendingList.map(item => `
         <li style="margin-bottom: 15px; border-bottom: 1px solid #edf2f7; padding-bottom: 10px;">
             <div style="font-weight: bold; color: #2d3748;">訂單: ${item.orderId}</div>

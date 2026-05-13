@@ -40,8 +40,9 @@ An atomic Cloud Function that transitions an order's `fulfillmentStatus` to `SHI
 ## 4. Admin Interface Protocol (`dashboard.js`)
 
 ### 4.1 Access Control
-- The **Logistics Tab** (`#tab-btn-logistics`) must only be visible if `myRole === 'admin'`.
-- Access via URL parameter `?tab=logistics` must be validated against user roles.
+- The **Shipment Management Tab** (`#tab-btn-shipments`) must only be visible if `myRole === 'admin'`.
+- Access via URL parameter `?tab=shipments` must be validated against user roles.
+- Backward compatibility: legacy link `?tab=logistics` is redirected to `shipments`.
 
 ### 4.2 Rendering (`renderLogisticsTab`)
 - **Data Source**: `dashboardData.hardwareOrders`.
@@ -53,7 +54,7 @@ An atomic Cloud Function that transitions an order's `fulfillmentStatus` to `SHI
 ### 5.1 Admin Reminders (`sendAdminShipmentReminder`)
 - **Trigger**: Daily 9:30 AM cron job.
 - **Protocol**: Aggregates all `PENDING` shipments and sends a summary to the admin.
-- **Deep Link**: Must point to `${APP_BASE_URL}/dashboard.html?tab=logistics`.
+- **Deep Link**: Must point to `${APP_BASE_URL}/dashboard.html?tab=shipments`.
 
 ### 5.2 Student Confirmation (`sendPaymentSuccessEmail`)
 - **Trigger**: Immediate post-payment.
