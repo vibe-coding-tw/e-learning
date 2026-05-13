@@ -2580,6 +2580,12 @@ exports.getDashboardData = onCall(async (request) => {
 
                     if (physicalItems.length > 0) {
                         const student = usersMap[data.uid] || {};
+                        const logistics = data.logistics || {};
+                        const shippingContact = {
+                            name: logistics.receiverName || logistics.ReceiverName || '',
+                            phone: logistics.receiverPhone || logistics.ReceiverCellPhone || logistics.ReceiverPhone || ''
+                        };
+                        const shippingAddress = logistics.storeAddress || logistics.CVSAddress || logistics.ReceiverAddress || '';
                         const orderRecord = {
                             id: doc.id,
                             uid: data.uid,
@@ -2589,7 +2595,9 @@ exports.getDashboardData = onCall(async (request) => {
                             paidAt: data.paidAt ? data.paidAt.toDate().toISOString() : (data.createdAt ? data.createdAt.toDate().toISOString() : null),
                             status: data.status,
                             fulfillmentStatus: data.fulfillmentStatus || 'PENDING',
-                            logistics: data.logistics || {},
+                            logistics,
+                            shippingContact,
+                            shippingAddress,
                             items: physicalItems.map(id => {
                                 const canonicalId = legacyMap[id] || id;
                                 return lessons.find(l => l.id === canonicalId)?.title || items[id]?.name || id;
