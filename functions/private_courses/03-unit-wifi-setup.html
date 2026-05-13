@@ -128,21 +128,31 @@
 
         <!-- Homework Section -->
         <section class="space-y-12">
-            <h2 class="text-2xl font-bold text-slate-800 text-center mb-8">🛠️ 課後練習與挑戰</h2>
+            <h2 class="text-2xl font-bold text-slate-800 text-center mb-8">🛠️ 課後練習與提交要求（Classroom 同步版）</h2>
+
+            <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-6">
+                <h3 class="text-lg font-bold text-indigo-900 mb-3">📂 程式庫結構（提交時請確認）</h3>
+                <ul class="text-sm text-indigo-900 list-disc list-inside space-y-1">
+                    <li><code>wifi-config.html</code>：前端配網介面（主要實作檔）</li>
+                    <li><code>firmware/</code>：ESP32 韌體原始碼</li>
+                    <li><code>test/</code>：自動化測試腳本</li>
+                    <li><code>serial-output.log</code>：硬體連線日誌（必交）</li>
+                </ul>
+            </div>
 
             <div class="grid md:grid-cols-3 gap-6">
                 <!-- HW 1-1 -->
-                <div onclick="openSubmissionModal('wifi-setup-task-1', '作業 1-1: 前端防呆與 UI 優化')"
+                <div onclick="openSubmissionModal('wifi-setup-task-1', '作業 1: 連線狀態與 UX 優化')"
                     class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 cursor-pointer relative group hover:shadow-lg transition-all step-card">
                     <div
                         class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl font-bold mb-4">
-                        1-1</div>
-                    <h3 class="font-bold text-lg mb-2">前端防呆與 UI 優化</h3>
-                    <p class="text-sm text-slate-600 mb-4">確保使用者不會輸入無效資料導致裝置崩潰。</p>
+                        1</div>
+                    <h3 class="font-bold text-lg mb-2">連線狀態與 UX 優化</h3>
+                    <p class="text-sm text-slate-600 mb-4">讓使用者能清楚知道藍牙是否連線、斷線或連線中。</p>
                     <ul class="text-sm text-slate-500 list-disc list-inside space-y-1 mb-4">
-                        <li>加入 SSID/密碼長度檢查</li>
-                        <li>空值時禁用傳送按鈕</li>
-                        <li>連線成功後的背景色變換</li>
+                        <li>實作 <code>gattserverdisconnected</code> 事件監聽</li>
+                        <li>斷線後正確重置 UI 狀態</li>
+                        <li>連線中顯示明確提示（如 <code>animate-pulse</code>）</li>
                     </ul>
                     <!-- Hover Overlay -->
                     <div
@@ -155,17 +165,17 @@
                 </div>
 
                 <!-- HW 1-2 -->
-                <div onclick="openSubmissionModal('wifi-setup-task-2', '作業 1-2: 通訊協議除錯')"
+                <div onclick="openSubmissionModal('wifi-setup-task-2', '作業 2: 編碼與異常處理')"
                     class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 cursor-pointer relative group hover:shadow-lg transition-all step-card">
                     <div
                         class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xl font-bold mb-4">
-                        1-2</div>
-                    <h3 class="font-bold text-lg mb-2">通訊協議除錯</h3>
-                    <p class="text-sm text-slate-600 mb-4">理解數據如何被編碼並透過藍牙傳輸。</p>
+                        2</div>
+                    <h3 class="font-bold text-lg mb-2">編碼與異常處理</h3>
+                    <p class="text-sm text-slate-600 mb-4">確保 SSID/密碼可正確編碼並能處理通訊失敗。</p>
                     <ul class="text-sm text-slate-500 list-disc list-inside space-y-1 mb-4">
-                        <li>使用 console.log 觀察編碼結果</li>
-                        <li>測試中文字元的 Byte 佔用</li>
-                        <li>實作 try...catch 錯誤攔截</li>
+                        <li>使用 <code>TextEncoder</code> 進行字串轉 Byte</li>
+                        <li>使用 <code>try...catch</code> 包裹寫入流程</li>
+                        <li>可觀測寫入錯誤與中斷情境</li>
                     </ul>
                     <!-- Hover Overlay -->
                     <div
@@ -178,17 +188,17 @@
                 </div>
 
                 <!-- HW 1-3 -->
-                <div onclick="openSubmissionModal('wifi-setup-task-3', '作業 1-3: 硬體連線驗證')"
+                <div onclick="openSubmissionModal('wifi-setup-task-3', '作業 3: 硬體整合與 NVS 驗證')"
                     class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 cursor-pointer relative group hover:shadow-lg transition-all step-card">
                     <div
                         class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xl font-bold mb-4">
-                        1-3</div>
-                    <h3 class="font-bold text-lg mb-2">硬體連線驗證</h3>
-                    <p class="text-sm text-slate-600 mb-4">驗證軟硬體整合後的穩定性與 NVS 存取。</p>
+                        3</div>
+                    <h3 class="font-bold text-lg mb-2">硬體整合與 NVS 驗證</h3>
+                    <p class="text-sm text-slate-600 mb-4">確認設備可重啟後自動連線，且持久化寫入成功。</p>
                     <ul class="text-sm text-slate-500 list-disc list-inside space-y-1 mb-4">
-                        <li>斷電重啟測試自動連線</li>
-                        <li>多次覆寫設定測試穩定性</li>
-                        <li>藍牙傳輸距離極限測試</li>
+                        <li>燒錄 firmware 並傳送 WiFi 資訊</li>
+                        <li>驗證重啟後自動連線</li>
+                        <li><code>serial-output.log</code> 需含關鍵字：<code>WiFi Connected!</code> 與 <code>NVS Commit Success</code></li>
                     </ul>
                     <!-- Hover Overlay -->
                     <div
@@ -199,6 +209,15 @@
                         </span>
                     </div>
                 </div>
+            </div>
+
+            <div class="bg-slate-900 text-slate-200 rounded-xl p-6">
+                <h3 class="text-lg font-bold text-white mb-3">📝 提交要求（與 GitHub Classroom README 一致）</h3>
+                <ol class="list-decimal list-inside text-sm space-y-2">
+                    <li><code>wifi-config.html</code> 內 TODO 必須完成。</li>
+                    <li><code>serial-output.log</code> 必須包含關鍵連線與 NVS 成功訊息。</li>
+                    <li>將所有變更 push 到你的 GitHub Classroom repository。</li>
+                </ol>
             </div>
         </section>
 

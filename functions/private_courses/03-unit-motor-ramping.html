@@ -222,20 +222,28 @@
         </section>
 
         <!-- Homework -->
-        <h2 class="text-2xl font-bold text-slate-800 text-center mb-8">🛠️ 課後練習與挑戰</h2>
+        <h2 class="text-2xl font-bold text-slate-800 text-center mb-8">🛠️ 課後練習與提交要求（Classroom 同步版）</h2>
+        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-6 mb-8">
+            <h3 class="text-lg font-bold text-indigo-900 mb-3">📂 程式庫結構（提交時請確認）</h3>
+            <ul class="text-sm text-indigo-900 list-disc list-inside space-y-1">
+                <li><code>ramping-app.html</code>：主要網頁控制程式（需完成 UI 驗證與 DataView 邏輯）</li>
+                <li><code>test-protocol.js</code>：本地測試二進位解析腳本</li>
+                <li><code>firmware/</code>：ESP32 韌體源碼（實機測試用）</li>
+            </ul>
+        </div>
         <div class="grid md:grid-cols-3 gap-6 mb-12">
             <!-- HW 2-1 -->
-            <div onclick="openSubmissionModal('motor-ramping-task-1', '作業 2-1: UI 容錯機制')"
+            <div onclick="openSubmissionModal('motor-ramping-task-1', '作業 1: 軟體保險絲 - 前端輸入驗證')"
                 class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 cursor-pointer relative group hover:shadow-lg transition-all">
                 <div
                     class="w-12 h-12 bg-blue-100/50 rounded-full flex items-center justify-center text-blue-600 text-xl font-bold mb-4">
-                    2-1</div>
-                <h3 class="font-bold text-lg mb-2">UI 容錯機制</h3>
-                <p class="text-sm text-slate-600 mb-4">防止使用者輸入極端數值導致馬達燒毀。</p>
+                    1</div>
+                <h3 class="font-bold text-lg mb-2">軟體保險絲：前端輸入驗證</h3>
+                <p class="text-sm text-slate-600 mb-4">防止非法參數導致馬達損壞，是第一道安全防線。</p>
                 <ul class="text-sm text-slate-500 list-disc list-inside mb-4">
-                    <li>為每個 Input 加入 min/max 屬性。</li>
-                    <li>JS 實作：輸入紅框警告。</li>
-                    <li>空值保護：禁止傳送。</li>
+                    <li>PWM Limit 價值必須在合法範圍</li>
+                    <li>非法值時禁用傳送或顯示紅框警告</li>
+                    <li>避免輸入如 999 造成硬體風險</li>
                 </ul>
                 <!-- Hover Overlay -->
                 <div
@@ -248,17 +256,17 @@
             </div>
 
             <!-- HW 2-2 -->
-            <div onclick="openSubmissionModal('motor-ramping-task-2', '作業 2-2: 二進位逆向工程')"
+            <div onclick="openSubmissionModal('motor-ramping-task-2', '作業 2: 二進位橋樑 - 資料結構映射')"
                 class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 cursor-pointer relative group hover:shadow-lg transition-all">
                 <div
                     class="w-12 h-12 bg-purple-100/50 rounded-full flex items-center justify-center text-purple-600 text-xl font-bold mb-4">
-                    2-2</div>
-                <h3 class="font-bold text-lg mb-2">二進位逆向工程</h3>
-                <p class="text-sm text-slate-600 mb-4">實驗 DataView 與 Little-Endian。</p>
+                    2</div>
+                <h3 class="font-bold text-lg mb-2">二進位橋樑：資料結構映射</h3>
+                <p class="text-sm text-slate-600 mb-4">確保網頁封包與韌體結構完整對齊（28 Bytes, Little-Endian）。</p>
                 <ul class="text-sm text-slate-500 list-disc list-inside mb-4">
-                    <li>手動建立 ArrayBuffer 測試解析。</li>
-                    <li>將 LittleEndian 改為 false 觀察變化。</li>
-                    <li>思考 Alignment 問題。</li>
+                    <li>在 <code>ramping-app.html</code> 完成 TODO 區塊</li>
+                    <li>封包長度 28 Bytes、編碼 Little-Endian</li>
+                    <li>關鍵偏移量需正確（例如 <code>pwmStartKickT</code> 在 offset 12）</li>
                 </ul>
                 <!-- Hover Overlay -->
                 <div
@@ -271,17 +279,17 @@
             </div>
 
             <!-- HW 2-3 -->
-            <div onclick="openSubmissionModal('motor-ramping-task-3', '作業 2-3: 斷電保護驗證')"
+            <div onclick="openSubmissionModal('motor-ramping-task-3', '作業 3: 物理安全保護驗證')"
                 class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 cursor-pointer relative group hover:shadow-lg transition-all">
                 <div
                     class="w-12 h-12 bg-emerald-100/50 rounded-full flex items-center justify-center text-emerald-600 text-xl font-bold mb-4">
-                    2-3</div>
-                <h3 class="font-bold text-lg mb-2">斷電保護驗證</h3>
-                <p class="text-sm text-slate-600 mb-4">測試系統穩定性。</p>
+                    3</div>
+                <h3 class="font-bold text-lg mb-2">物理安全保護驗證</h3>
+                <p class="text-sm text-slate-600 mb-4">驗證超時保護（Fail-Safe）可在異常情境下自動停車。</p>
                 <ul class="text-sm text-slate-500 list-disc list-inside mb-4">
-                    <li>心跳包：500ms 超時自動停車。</li>
-                    <li>斷電後參數是否從 EEPROM 回復？</li>
-                    <li>手感調校：極限操駕測試。</li>
+                    <li>將 <code>controlTimeoutMs</code> 設為 500ms</li>
+                    <li>啟動馬達後立即關閉控制網頁</li>
+                    <li>日誌截圖需含 <code>[SAFETY] Timeout - Motor Stop</code></li>
                 </ul>
                 <!-- Hover Overlay -->
                 <div
@@ -292,6 +300,14 @@
                     </span>
                 </div>
             </div>
+        </div>
+        <div class="bg-slate-900 text-slate-200 rounded-xl p-6 mb-12">
+            <h3 class="text-lg font-bold text-white mb-3">📝 提交要求（與 GitHub Classroom README 一致）</h3>
+            <ol class="list-decimal list-inside text-sm space-y-2">
+                <li><code>ramping-app.html</code> 完成指定 TODO 並通過自動評分。</li>
+                <li>提交完整程式碼修改並 push 到 GitHub Classroom repository。</li>
+                <li>任務 3 安全停車截圖為選繳，但建議附上。</li>
+            </ol>
         </div>
 
     </main>
