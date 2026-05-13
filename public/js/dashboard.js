@@ -1537,12 +1537,12 @@ function renderChart(students) {
 window.switchTab = function (tabName) {
     if (!tabName) return;
     
-    // [V14.12] PERMISSION LEAK FIX: Explicitly block 'admin' tab for non-admins
-    if (tabName === 'admin' && myRole !== 'admin') {
+    // [V14.12] PERMISSION LEAK FIX: Explicitly block admin-only tabs for non-admins
+    if ((tabName === 'admin' || tabName === 'logistics') && myRole !== 'admin') {
         console.warn(`[Security] Unauthorized tab access: ${tabName} blocked for ${myRole}.`);
         // Fallback: Redirect to assignments for tutors or overview for admins.
         tabName = getPreferredDashboardTab(getCurrentDashboardContext().filterUnitId);
-        if (tabName === 'admin') {
+        if (tabName === 'admin' || tabName === 'logistics') {
             tabName = 'assignments'; // Extreme safety fallback
         }
     }
@@ -1872,7 +1872,7 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                                 <div>
                                     <div class="text-sm font-black text-gray-800">${escapeHtml(ship.email)}</div>
                                     <div class="text-[10px] font-mono text-gray-400 mt-0.5">訂單: ${escapeHtml(ship.orderId)}</div>
-                                    <div class="text-[10px] text-blue-600 mt-1 font-bold">項目: ${ship.items.join(', ')}</div>
+                                    <div class="text-[10px] text-blue-600 mt-1 font-bold">項目: ${escapeHtml((ship.items || []).join(', '))}</div>
                                     <div class="text-[10px] text-gray-500 mt-1">付款時間: ${new Date(ship.paidAt).toLocaleString()}</div>
                                     ${ship.logistics ? `
                                         <div class="mt-2 p-2 bg-gray-50 rounded-lg border border-gray-100 text-[10px] text-gray-600">
