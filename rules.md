@@ -182,4 +182,4 @@
 - **目標**: 杜絕環境漂移 (Environment Drift)，確保開發代理人 (AI Agent) 隨時能在最新的生產環境基礎上進行下一次迭代。
 
 ---
-*最後更新日期: 2026-04-08 (V15.6 - Role Renaming & ID Mapping Normalization)*
+*最後更新日期: 2026-05-13 (V15.7 - Documentation Audit & Core Component Sync)*

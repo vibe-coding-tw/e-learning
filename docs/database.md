@@ -116,14 +116,28 @@
 
 ---
 
-## 7. 遷移備註 (Migration Notes)
+## 7. `activity_logs` 集合
+儲存毫秒級的學習行為追蹤數據（由 `logActivity` API 寫入）。
+
+| 欄位名稱 | 類型 | 說明 |
+| :--- | :--- | :--- |
+| `uid` | string | 執行行為的使用者 UID。 |
+| `type` | string | 行為類型（如 `view_video`, `read_doc`, `submit_test`）。 |
+| `path` | string | 發生行為的頁面路徑。 |
+| `duration` | number | 持續時間（秒/毫秒，視行為而定）。 |
+| `metadata` | map | 額外參數（如 `videoId`, `percentComplete`）。 |
+| `timestamp` | timestamp | 記錄時間。 |
+
+---
+
+## 8. 遷移備註 (Migration Notes)
 1. 角色已統一為 `admin` 與 `user`，歷史 `student` 角色需遷移為 `user`。
 2. `tutor_applications` 與 `users.tutorApplications` 可能並存於過渡期；新流程以 `tutor_applications` 為主。
 3. 單元 key 含 `.html` 時，Firestore update 請使用 `FieldPath` 或一致正規化，避免 dot-in-key 巢狀化問題。
 
 ---
 
-## 8. 規劃中互動欄位 (Planned)
+## 9. 規劃中互動欄位 (Planned)
 以下欄位屬於 Tutor x Student 互動層 MVP 的規劃，請以實際部署版本為準。
 
 ### `assignments` 擴充（規劃）

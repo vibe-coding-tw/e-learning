@@ -7,6 +7,7 @@
 ## 📖 相關文件 (Documentation)
 - **[📘 學生與導師指南](public/students.html)**：包含付款、導師指派、作業提交及師資申請流程。
 - **[課前準備事項 (Preparation)](public/prepare.html)**：軟硬體環境準備與教材購買指引。
+- **[⚖️ 開發與營運規範 (Project Rules)](rules.md)**：包含零元帳單規範、權限模型、ID 歸一化準則與開發 SOP。
 - **[🤝 Tutor x Student 互動層 MVP 規格](docs/tutor-student-interaction-mvp.md)**：自動評分之外的教學互動設計（卡點、提示階梯、成長軌跡、介入任務）。
 
 ---
@@ -16,29 +17,41 @@
 ### 前端 (Frontend)
 - **技術棧**: 原生 HTML5 / CSS3 (Vanilla CSS) / JavaScript (ES6+), TailwindCSS (部分組件)。
 - **核心模組**:
-  - `nav-component.js`: 跨頁面統一導覽與身份驗證狀態管理。
+  - `nav-component.js`: 跨頁面統一導覽、純 CSS Hover 注入與身份驗證狀態管理。
+  - `footer-component.js`: 全站底欄渲染與相對路徑解析中心。
   - `course-shared.js`: 單元內容渲染、進度追蹤、GitHub Classroom 整合與作業提交邏輯。
 - **數據通訊**: 透過 Firebase JS SDK 與 Firestore 及 Cloud Functions 交互。
 
 ### 後端 (Backend - Firebase)
 - **Cloud Functions (Node.js 22)**:
-  - **API 服務**: `initiatePayment`, `paymentNotify`, `verifyReferralLink`, `resolveAssignmentAccess`, `submitAssignment`, `getDashboardData` 等。
-  - **指派與綁定**:
-    - `paymentNotify`: 付款成功後依訂單 item 進行導師指派。
-    - `bindTutorToUnit`: 學生以 Classroom 連結事後自助綁定導師。
+  - **API 服務**: 
+    - `initiatePayment` / `paymentNotify`: 綠界金流整合與付款回寫。
+    - `getLogisticsMapParams` / `mapReply`: 綠界物流電子地圖整合。
+    - `verifyReferralLink` / `verifyPromoCode`: 推薦連結與折扣碼驗證。
+    - `resolveAssignmentAccess`: 判定使用者是否有權存取特定單元的作業指引。
+    - `submitAssignment` / `gradeAssignment`: 作業提交與導師人工評分。
+    - `ingestGithubAutograde`: GitHub Classroom 自動評分結果回寫。
+    - `getDashboardData`: 提供儀表板統計與作業 Feed 數據。
+    - `serveCourse`: 安全分發私有單元內容。
+    - `logActivity`: 毫秒級學習行為追蹤 API。
+  - **權限與導師管理**:
+    - `setUserRole`: 管理員設置使用者全域角色。
+    - `authorizeTutorForCourse` / `getTutorConfigs`: 導師單元授權管理。
+    - `applyForTutorRole` / `decideTutorApplication`: 導師申請與審核工作流。
+    - `bindTutorToUnit` / `assignStudentToTutor`: 學生與導師的單元級綁定。
   - **出貨處理**:
     - `markOrderShipped`: 管理員手動標記已出貨。
   - **定時任務 (Scheduled Functions)**:
     - `calculateMonthlySharing`: 每月 1 號結算分潤。
     - `remindAdminPendingAssignments`: 每日提醒未完成導師指派的訂單。
     - `remindAdminPendingShipments`: 每日提醒待出貨硬體訂單。
-    - `checkTrialExpiration`: 每日檢查試用期到期提醒。
-    - `checkCourseExpiration`: 每日檢查課程權限到期提醒。
+    - `checkTrialExpiration` / `checkCourseExpiration`: 權限到期自動檢核與提醒。
 
 ### 數據庫結構 (Firestore)
 - **`users`**: 核心使用者文件，角色僅 `admin` 與 `user`。
   - `unitAssignments`: 學生各單元對應導師 Email。
-  - `tutorConfigs`: Tutor 資格狀態（Tutor 是單元授權狀態，不是角色）。
+  - `tutorConfigs`: 單元授權狀態 (Status)，非全域角色。比對時強制執行 **ID 歸一化** (移除 `.html`)。
+  - `tutorMode`: 管理員專用開關，開啟時模擬導師視角，關閉時模擬學員視角（遵循 `rules.md` 規範）。
 - **`orders`**: 訂單紀錄。
   - `items[itemId]` 內含 `referralLink` / `referredTutorEmail`（item 級推薦綁定）。
   - `fulfillmentStatus` / `logistics`（硬體出貨狀態與物流資訊）。
