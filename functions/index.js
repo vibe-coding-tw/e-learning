@@ -188,6 +188,31 @@ exports.initiatePayment = onRequest(async (req, res) => {
             lessons
         );
 
+        // Guardrail: physical-product orders must include complete logistics info.
+        const physicalUnitIds = new Set(lessons.filter(l => l.isPhysical === true).map(l => l.id));
+        const hasPhysicalItem = Object.keys(normalizedItems || {}).some(id => {
+            const canonicalId = legacyMap[id] || id;
+            const itemData = normalizedItems[id] || {};
+            if (itemData.isPhysical === true) return true;
+            return physicalUnitIds.has(canonicalId) || physicalUnitIds.has(id);
+        });
+
+        if (hasPhysicalItem) {
+            const logisticsPayload = (logistics && typeof logistics === 'object') ? logistics : {};
+            const receiverName = String(logisticsPayload.receiverName || logisticsPayload.ReceiverName || '').trim();
+            const receiverPhone = String(logisticsPayload.receiverPhone || logisticsPayload.ReceiverCellPhone || logisticsPayload.ReceiverPhone || '').trim();
+            const shippingAddress = String(logisticsPayload.storeAddress || logisticsPayload.CVSAddress || logisticsPayload.ReceiverAddress || '').trim();
+            const storeId = String(logisticsPayload.storeId || logisticsPayload.CVSStoreID || '').trim();
+
+            if (!receiverName || !receiverPhone || (!shippingAddress && !storeId)) {
+                return res.status(400).json({
+                    error: {
+                        message: "實體商品訂單缺少完整物流資訊（收件人、電話、門市/地址）。"
+                    }
+                });
+            }
+        }
+
         // 建立訂單內容記錄 (Firestore)
         await admin.firestore().collection("orders").doc(orderNumber).set({
             uid: uid,
@@ -366,6 +391,26 @@ exports.paymentNotify = onRequest(async (req, res) => {
                 const orderDoc = await db.collection("orders").doc(orderId).get();
                 if (orderDoc.exists) {
                     const orderData = orderDoc.data();
+                    const lessons = await getLessons();
+                    const physicalUnitIds = new Set(lessons.filter(l => l.isPhysical === true).map(l => l.id));
+                    const orderItems = orderData.items || {};
+                    const hasPhysicalItem = Object.keys(orderItems).some(id => {
+                        const canonicalId = legacyMap[id] || id;
+                        const itemData = orderItems[id] || {};
+                        if (itemData.isPhysical === true) return true;
+                        return physicalUnitIds.has(canonicalId) || physicalUnitIds.has(id);
+                    });
+                    const logisticsData = orderData.logistics || {};
+                    const hasReceiverName = !!String(logisticsData.receiverName || logisticsData.ReceiverName || '').trim();
+                    const hasReceiverPhone = !!String(logisticsData.receiverPhone || logisticsData.ReceiverCellPhone || logisticsData.ReceiverPhone || '').trim();
+                    const hasShippingAddress = !!String(logisticsData.storeAddress || logisticsData.CVSAddress || logisticsData.ReceiverAddress || '').trim();
+                    const hasStoreId = !!String(logisticsData.storeId || logisticsData.CVSStoreID || '').trim();
+                    const logisticsMissing = hasPhysicalItem && (!hasReceiverName || !hasReceiverPhone || (!hasShippingAddress && !hasStoreId));
+
+                    if (hasPhysicalItem) {
+                        await db.collection("orders").doc(orderId).update({ logisticsMissing });
+                    }
+
                     let userEmail = "";
                     if (orderData.uid === "GUEST") {
                         // Handling guest checkout if applicable, though typically we have UID
@@ -378,18 +423,14 @@ exports.paymentNotify = onRequest(async (req, res) => {
 
                     // If we have an email, send it
                     if (userEmail) {
-                        const items = orderData.items || {};
+                        const items = orderItems;
                         const itemDesc = Object.values(items).map(i => `${i.name} x${i.quantity || 1}`).join(', ');
-                        
-                        // [V14.16] Check if any item is physical to customize email message
-                        const lessons = await getLessons();
-                        const hasPhysical = Object.keys(items).some(id => lessons.find(l => l.id === id)?.isPhysical === true);
+                        const hasPhysical = hasPhysicalItem;
                         
                         await sendPaymentSuccessEmail(userEmail, orderId, orderData.amount, itemDesc, hasPhysical);
                     }
 
                     if (orderData.uid && orderData.uid !== 'GUEST') {
-                        const lessons = await getLessons();
                         const referralAssignments = extractReferralAssignmentsFromOrder(orderData.items || {}, lessons);
 
                         for (const assignment of referralAssignments) {
