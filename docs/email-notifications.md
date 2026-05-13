@@ -25,14 +25,14 @@ It is the source of truth for:
 | Assignment submitted | `submitAssignment` with `status=submitted` | Assigned tutor | `sendAssignmentNotification` | `/dashboard.html?...&tab=assignments` |
 | Student linked to tutor | `upsertStudentUnitAssignment` flow | Student | `sendStudentLinkedToTutorEmail` | `/dashboard.html?unitId=...&tab=assignments` |
 | Tutor linked to student | `upsertStudentUnitAssignment` flow | Tutor | `sendTutorLinkedToStudentEmail` | `/dashboard.html?unitId=...&tab=assignments` |
-| New tutor application | `applyForTutorRole` / `recommendTutorForUnit` | Admin | `sendAdminNewApplicationEmail` | `/dashboard.html?unitId=...&tab=admin` |
+| New tutor application | `applyForTutorRole` / `submitTutorRecommendationInviteLink` | Admin | `sendAdminNewApplicationEmail` | `/dashboard.html?unitId=...&tab=admin` |
 | Tutor application result | `decideTutorApplication` | Applicant | `sendApplicationResultEmail` | `/dashboard.html?unitId=...&tab=assignments` |
 | Admin pending assignment reminder | Daily schedule | Admin | `sendAdminAssignmentReminder` | `/dashboard.html?tab=admin` |
 | Admin pending shipment reminder | Daily schedule | Admin | `sendAdminShipmentReminder` | `/dashboard.html?tab=shipments` |
 | Autograde result (student) | `ingestGithubAutograde` success | Student | `sendAutogradeResultToStudent` | `/dashboard.html?unitId=...&tab=assignments` |
 | Autograde result (tutor) | `ingestGithubAutograde` success | Assigned tutor | `sendAutogradeResultToTutor` | `/dashboard.html?unitId=...&tab=assignments` |
 | Order shipped | `markOrderShipped` success | Student | `sendOrderShippedEmail` | `/dashboard.html?tab=overview` |
-| Tutor recommendation candidate | `recommendTutorForUnit` success | Candidate student | `sendTutorRecommendationCandidateEmail` | `/dashboard.html?unitId=...&tab=assignments` |
+| Tutor recommendation candidate | `recommendTutorForUnit` success | Candidate student | `sendTutorRecommendationCandidateEmail` | `/dashboard.html?unitId=...&tab=assignments&action=submitTutorInvite&applicationId=...` |
 | Autograde failure alert | `ingestGithubAutograde` validation/runtime failure | Admin | `sendAutogradeFailureAlertEmail` | `/dashboard.html?tab=admin` |
 
 ## 3. Key Operational Rules

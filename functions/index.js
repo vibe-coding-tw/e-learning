@@ -1794,11 +1794,15 @@ exports.recommendTutorForUnit = onCall(async (request) => {
     const existingPending = await db.collection('tutor_applications')
         .where('userId', '==', candidateUid)
         .where('unitId', '==', canonicalUnitId)
-        .where('status', '==', 'pending')
+        .where('status', 'in', ['pending', 'awaiting_candidate_link'])
         .limit(1)
         .get();
 
     if (!existingPending.empty) {
+        const existingStatus = (existingPending.docs[0].data() || {}).status;
+        if (existingStatus === 'awaiting_candidate_link') {
+            throw new HttpsError('already-exists', 'Student already has a pending recommendation waiting for classroom invite link.');
+        }
         throw new HttpsError('already-exists', 'Student already has a pending application for this unit.');
     }
 
@@ -1806,21 +1810,66 @@ exports.recommendTutorForUnit = onCall(async (request) => {
         userId: candidateUid,
         userEmail: candidateEmail,
         unitId: canonicalUnitId,
-        status: 'pending',
+        status: 'awaiting_candidate_link',
         source: 'tutor_recommendation',
         recommendedByUid: auth.uid,
         recommendedByEmail: auth.token.email || '',
         recommendedFromAssignmentId: assignmentId,
-        appliedAt: admin.firestore.FieldValue.serverTimestamp()
+        recommendedAt: admin.firestore.FieldValue.serverTimestamp(),
+        candidateClassroomInviteUrl: '',
+        candidateLinkSubmittedAt: null,
+        appliedAt: null
     };
 
     const newAppRef = await db.collection('tutor_applications').add(application);
+    await sendTutorRecommendationCandidateEmail(candidateEmail, canonicalUnitId, auth.token.email || '', newAppRef.id);
+
+    return { success: true, applicationId: newAppRef.id, status: 'awaiting_candidate_link' };
+});
+
+exports.submitTutorRecommendationInviteLink = onCall(async (request) => {
+    const data = request.data || {};
+    const auth = request.auth;
+    if (!auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
+
+    const { applicationId, classroomInviteUrl } = data;
+    if (!applicationId || !classroomInviteUrl) {
+        throw new HttpsError('invalid-argument', 'Missing applicationId or classroomInviteUrl');
+    }
+
+    const normalizedInvite = normalizeGitHubUrl(String(classroomInviteUrl).trim());
+    if (!normalizedInvite.includes('classroom.github.com/a/')) {
+        throw new HttpsError('invalid-argument', 'Classroom invite link must be a valid GitHub Classroom invitation URL.');
+    }
+
+    const db = admin.firestore();
+    const appRef = db.collection('tutor_applications').doc(applicationId);
+    const appSnap = await appRef.get();
+    if (!appSnap.exists) throw new HttpsError('not-found', 'Application not found.');
+
+    const appData = appSnap.data() || {};
+    if (appData.userId !== auth.uid) {
+        throw new HttpsError('permission-denied', 'You can only submit your own application link.');
+    }
+    if (appData.source !== 'tutor_recommendation') {
+        throw new HttpsError('failed-precondition', 'This action is only valid for tutor recommendations.');
+    }
+    if (appData.status !== 'awaiting_candidate_link') {
+        throw new HttpsError('failed-precondition', 'This application is not waiting for candidate invite link.');
+    }
+
+    await appRef.update({
+        candidateClassroomInviteUrl: normalizedInvite,
+        candidateLinkSubmittedAt: admin.firestore.FieldValue.serverTimestamp(),
+        status: 'pending',
+        appliedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
 
     const adminEmail = process.env.ADMIN_EMAIL || 'rover.k.chen@gmail.com';
-    await sendAdminNewApplicationEmail(adminEmail, candidateEmail, canonicalUnitId);
-    await sendTutorRecommendationCandidateEmail(candidateEmail, canonicalUnitId, auth.token.email || '');
+    await sendAdminNewApplicationEmail(adminEmail, appData.userEmail || auth.token.email || '', appData.unitId || '');
 
-    return { success: true, applicationId: newAppRef.id };
+    return { success: true, status: 'pending' };
 });
 
 // 7.2. 決策合格教師申請 (decideTutorApplication)
