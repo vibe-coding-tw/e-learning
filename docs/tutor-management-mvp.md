@@ -7,7 +7,7 @@ The Tutor Management MVP governs the lifecycle of a student's transition to a "Q
 
 ```mermaid
 graph TD
-    A[現有教師批改作業] -->|發現優秀學生| B[點擊 推薦此學生]
+    A[學生 Push 並產生自動評分] -->|達推薦門檻| B[導師點擊 推薦此學生]
     B -->|建立申請紀錄| C(Firestore: tutor_applications)
     C -->|status: PENDING| D{管理員收到 Email}
     D -->|登入後台| E[進入 合格教師 分頁]
@@ -21,23 +21,24 @@ graph TD
 ## 2. Application & Recommendation Lifecycle
 | State | Description | Trigger |
 | :--- | :--- | :--- |
-| `PENDING` | Initial state after a recommendation or application is submitted. | Tutor clicks "Recommend Student" in Grading Modal. |
+| `PENDING` | Initial state after a recommendation or application is submitted. | Tutor clicks "Recommend Student" in assignment workflow. |
 | `APPROVED` | Applicant is granted tutoring rights for a specific unit. | Admin clicks "Approve" in Admin Console. |
 | `REJECTED` | Application is dismissed. | Admin clicks "Reject" in Admin Console. |
 
 ## 3. Workflow Implementation
 
 ### 3.1 Step 1: Recommendation (Tutor Action)
-- **Interface**: Located within the Assignment Grading Modal (`#grading-modal`).
+- **Interface**: Located within assignment workflow actions in Dashboard.
 - **Function**: `window.submitTutorRecommendation()`.
 - **Action**: Creates a document in the `tutor_applications` collection with `source: "tutor_recommendation"`.
+- **Gate**: Requires valid `autoGrade.score` and score threshold check on backend.
 
 ### 3.2 Step 2: Administrative Review (Admin Action)
 - **Interface**: The **Admin Console** tab (`#view-admin`) in the Dashboard.
-- **Aggregation**: `getDashboardData` collects all applications where `status === 'pending'`.
+- **Aggregation**: `getDashboardData` collects all documents in `tutor_applications` where `status === 'pending'`.
 - **Decision Logic**:
-    - **Approval**: Calls `authorizeTutorForCourse` with `action: 'add'`. This updates the unit's authorized tutors list and sets the applicant's role (if necessary).
-    - **Rejection**: Updates the application status to `rejected` and stops the process.
+    - **Approval**: `decideTutorApplication` updates `tutor_applications` status and writes `users.tutorConfigs[unitId].authorized = true`.
+    - **Rejection**: `decideTutorApplication` updates `tutor_applications` status to `rejected`.
 
 ### 3.3 Step 3: Automated Onboarding (System Action)
 - **Notification**: Calls `sendTutorAuthorizationEmail` via `emailService.js`.
@@ -47,14 +48,14 @@ graph TD
 ## 4. Technical Integration Points
 
 ### Firestore Collections
-- `tutor_applications`: Stores the history and status of all tutor requests.
+- `tutor_applications`: Source of truth for all tutor requests and review status.
 - `tutor_configs`: Stores unit-level tutor authorizations and GitHub Classroom URLs.
-- `users`: Tracks the `role` and `myTutorConfigs` for individual accounts.
+- `users`: Tracks `tutorConfigs`; `tutorApplications` is a legacy-compatible snapshot.
 
 ### Cloud Functions
 - `getDashboardData`: Aggregates pending applications for the admin view.
-- `handleDecideApplication`: The primary endpoint for approving or rejecting applications.
-- `authorizeTutorForCourse`: Handles the atomic updates to permissions and configuration files.
+- `decideTutorApplication`: The primary endpoint for approving or rejecting applications.
+- `recommendTutorForUnit`: Creates recommendation applications and validates auto-grade threshold.
 
 ## 5. Security & Validation
 - **Role Enforcement**: Only users with `role === 'admin'` can see or execute the `handleDecideApplication` logic.

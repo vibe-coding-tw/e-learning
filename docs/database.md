@@ -132,7 +132,7 @@
 
 ## 8. 遷移備註 (Migration Notes)
 1. 角色已統一為 `admin` 與 `user`，歷史 `student` 角色需遷移為 `user`。
-2. `tutor_applications` 與 `users.tutorApplications` 可能並存於過渡期；新流程以 `tutor_applications` 為主。
+2. 申請/推薦/審核流程以 `tutor_applications` 為單一真實來源（Source of Truth）；`users.tutorApplications` 僅作歷史快照與相容欄位。
 3. 單元 key 含 `.html` 時，Firestore update 請使用 `FieldPath` 或一致正規化，避免 dot-in-key 巢狀化問題。
 
 ---
