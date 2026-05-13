@@ -3385,8 +3385,12 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
                 let level = 1;
 
                 while (currentTutorEmail && currentShare >= 0.01) {
-                    const ledgerRef = db.collection('profit_ledger').doc();
+                    const period = `${lastMonth.getFullYear()}-${(lastMonth.getMonth() + 1).toString().padStart(2, '0')}`;
+                    const idempotencySeed = `${period}|${orderId}|${itemKey}|${level}|${currentTutorEmail.toLowerCase()}`;
+                    const idempotencyKey = crypto.createHash('sha256').update(idempotencySeed).digest('hex').slice(0, 40);
+                    const ledgerRef = db.collection('profit_ledger').doc(idempotencyKey);
                     const shareRecord = {
+                        idempotencyKey,
                         tutorEmail: currentTutorEmail,
                         studentUid: studentUid,
                         orderId: orderId,
@@ -3396,9 +3400,9 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
                         level: level,
                         referralLink: itemReferralLink,
                         calculatedAt: admin.firestore.FieldValue.serverTimestamp(),
-                        period: `${lastMonth.getFullYear()}-${(lastMonth.getMonth() + 1).toString().padStart(2, '0')}`
+                        period
                     };
-                    await ledgerRef.set(shareRecord);
+                    await ledgerRef.set(shareRecord, { merge: true });
                     auditTrail.push(shareRecord);
 
                     if (currentTutorEmail === "info@vibe-coding.tw") break;
