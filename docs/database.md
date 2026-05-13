@@ -99,11 +99,14 @@
 | `userId` | string | 申請者 UID。 |
 | `userEmail` | string | 申請者 Email。 |
 | `unitId` | string | 申請單元。 |
-| `status` | string | `pending`, `approved`, `rejected`。 |
+| `status` | string | `awaiting_candidate_link`, `pending`, `approved`, `rejected`。 |
 | `source` | string | 來源（如 `tutor_recommendation`）。 |
 | `recommendedByUid` | string | 推薦者 UID（推薦流程）。 |
 | `recommendedByEmail` | string | 推薦老師 Email。 |
 | `recommendedFromAssignmentId` | string | 由哪筆 assignment 推薦而來。 |
+| `recommendedAt` | timestamp | 推薦建立時間（推薦流程）。 |
+| `candidateClassroomInviteUrl` | string | 候選學生提交的 GitHub Classroom 邀請連結。 |
+| `candidateLinkSubmittedAt` | timestamp | 候選學生完成連結提交時間。 |
 | `appliedAt` | timestamp | 申請時間。 |
 | `adminMessage` | string | 管理員審核回覆。 |
 | `resolvedAt` | timestamp | 審核完成時間。 |

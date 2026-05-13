@@ -789,10 +789,13 @@ async function sendOrderShippedEmail(email, orderId, itemsDesc = "", logistics =
 /**
  * Notify candidate student that they were recommended for tutor qualification.
  */
-async function sendTutorRecommendationCandidateEmail(email, unitId, recommenderEmail = "") {
+async function sendTutorRecommendationCandidateEmail(email, unitId, recommenderEmail = "", applicationId = "") {
     if (!email) return;
     const cleanUnitId = unitId ? unitId.replace('.html', '') : '';
-    const dashboardUrl = cleanUnitId ? appUrl(`/dashboard.html?unitId=${cleanUnitId}&tab=assignments`) : appUrl('/dashboard.html?tab=assignments');
+    const dashboardPath = cleanUnitId ? `/dashboard.html?unitId=${cleanUnitId}&tab=assignments` : '/dashboard.html?tab=assignments';
+    const dashboardUrl = applicationId
+        ? `${appUrl(dashboardPath)}&action=submitTutorInvite&applicationId=${encodeURIComponent(applicationId)}`
+        : appUrl(dashboardPath);
 
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
@@ -802,12 +805,13 @@ async function sendTutorRecommendationCandidateEmail(email, unitId, recommenderE
             '您已被推薦為合格導師候選',
             `
                 <p>您好，恭喜您！</p>
-                <p>您已被推薦申請單元 <strong>${unitId}</strong> 的合格導師資格，系統已建立申請並送交管理員審核。</p>
+                <p>您已被推薦申請單元 <strong>${unitId}</strong> 的合格導師資格。</p>
+                <p><strong>下一步：</strong>請先填寫您接下來要使用的 GitHub Classroom 邀請連結，系統才會正式通知管理員審核。</p>
                 ${recommenderEmail ? `<p>推薦者：<strong>${recommenderEmail}</strong></p>` : ''}
                 ${renderNextSteps('建議您現在先做：', [
-                    '到儀表板確認該單元作業與分數狀態。',
-                    '整理 1-2 個可代表教學能力的作品或解題說明。',
-                    '留意後續審核通知信。'
+                    '點擊下方按鈕，進入 Dashboard 填寫 GitHub Classroom 邀請連結。',
+                    '確認連結可正常開啟，避免管理端審核後無法使用。',
+                    '送出後留意管理員審核通知信。'
                 ])}
                 <p style="margin-top: 30px;">
                     <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold;">前往儀表板查看</a>

@@ -263,6 +263,7 @@ async function loadDashboard() {
             showAccessDenied();
         }
 
+        await window.maybeHandleTutorRecommendationInviteAction();
     } catch (error) {
         console.error("Dashboard Load Error:", error);
         showAccessDenied(error.message);
@@ -2327,7 +2328,7 @@ window.setupGradingFunctions = window.setupGradingFunctions || function() {
 
             setTutorRecommendationState({
                 visible: true,
-                message: '已成功送出老師推薦，等待管理員審核。',
+                message: '已送出推薦通知，待學生先填寫 Classroom 邀請連結後才會送審給管理員。',
                 messageClass: 'text-green-700',
                 buttonLabel: '已送出推薦',
                 buttonDisabled: true
@@ -2339,7 +2340,7 @@ window.setupGradingFunctions = window.setupGradingFunctions || function() {
                 userId: currentGradingAssignment.userId,
                 userEmail: currentGradingAssignment.studentEmail || currentGradingAssignment.userEmail,
                 unitId: resolveCanonicalUnitId(currentGradingAssignment.unitId),
-                status: 'pending'
+                status: 'awaiting_candidate_link'
             });
         } catch (e) {
             console.error('Tutor recommendation failed:', e);
@@ -2351,6 +2352,14 @@ window.setupGradingFunctions = window.setupGradingFunctions || function() {
                     message: '此學生已是本單元合格導師。',
                     messageClass: 'text-green-700',
                     buttonLabel: '已具資格',
+                    buttonDisabled: true
+                });
+            } else if (msg.includes('waiting for classroom invite link')) {
+                setTutorRecommendationState({
+                    visible: true,
+                    message: '此學生已收到推薦，等待他先提交 Classroom 邀請連結。',
+                    messageClass: 'text-orange-700',
+                    buttonLabel: '等待學生提交連結',
                     buttonDisabled: true
                 });
             } else if (msg.includes('pending application')) {
@@ -2373,6 +2382,41 @@ window.setupGradingFunctions = window.setupGradingFunctions || function() {
         }
     };
 }
+
+window.maybeHandleTutorRecommendationInviteAction = window.maybeHandleTutorRecommendationInviteAction || async function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    const applicationId = urlParams.get('applicationId');
+    if (action !== 'submitTutorInvite' || !applicationId) return;
+    if (!auth.currentUser) return;
+
+    const myApps = dashboardData?.myApplications || {};
+    const appEntry = Object.values(myApps).find(app => app?.applicationId === applicationId);
+    if (!appEntry) return;
+    if (appEntry.status !== 'awaiting_candidate_link') return;
+
+    const inviteUrl = window.prompt('請貼上此單元的 GitHub Classroom 邀請連結（classroom.github.com/a/...）：', '');
+    if (!inviteUrl || !inviteUrl.trim()) return;
+
+    try {
+        const submitLink = httpsCallable(functions, 'submitTutorRecommendationInviteLink');
+        await submitLink({
+            applicationId,
+            classroomInviteUrl: inviteUrl.trim()
+        });
+
+        vibeShowToast('已送出 Classroom 邀請連結，管理員已收到審核通知。', 'success');
+        urlParams.delete('action');
+        urlParams.delete('applicationId');
+        const cleanedQuery = urlParams.toString();
+        const cleanedUrl = `${window.location.pathname}${cleanedQuery ? `?${cleanedQuery}` : ''}`;
+        window.history.replaceState({}, '', cleanedUrl);
+        await loadDashboard();
+    } catch (error) {
+        console.error('[TutorInvite] Submit failed:', error);
+        alert(`送出失敗：${error.message || '請稍後再試'}`);
+    }
+};
 
 // Utils
 window.escapeHtml = window.escapeHtml || function(text) {
