@@ -588,10 +588,18 @@ function findParentCourseIdByUnit(unitId, lessons = []) {
 }
 
 function findCourseByPageOrUnit(pageId, fileName, lessons = []) {
+    const normalizeCourseFile = (value = '') => {
+        if (!value) return '';
+        return String(value).split('/').pop().split('?')[0];
+    };
+    const normalizedPageId = normalizeCourseFile(pageId);
+    const normalizedFileName = normalizeCourseFile(fileName);
+
     return lessons.find(l =>
         l.courseId === pageId ||
-        (fileName && Array.isArray(l.courseUnits) && l.courseUnits.includes(fileName)) ||
-        (fileName && l.classroomUrl && l.classroomUrl.endsWith(fileName))
+        l.courseId === normalizedPageId ||
+        (normalizedFileName && Array.isArray(l.courseUnits) && l.courseUnits.includes(normalizedFileName)) ||
+        (normalizedFileName && l.classroomUrl && normalizeCourseFile(l.classroomUrl) === normalizedFileName)
     ) || null;
 }
 
