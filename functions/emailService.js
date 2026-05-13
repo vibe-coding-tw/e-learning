@@ -142,7 +142,7 @@ async function sendPaymentSuccessEmail(email, orderId, amount, itemsDesc, hasPhy
                     '若要提交作業，請從儀表板進入對應單元。'
                 ])}
                 <p style="margin-top: 30px;">
-                    <a href="${appUrl('/dashboard.html')}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">前往學習儀表板</a>
+                    <a href="${appUrl('/dashboard.html?tab=overview')}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">前往學習儀表板</a>
                 </p>
             `,
             '謝謝您的支持！<br>Vibe Coding 團隊'
@@ -620,7 +620,7 @@ async function sendAdminAssignmentReminder(adminEmail, pendingList) {
  * Send a summary email to the admin about pending shipments.
  */
 async function sendAdminShipmentReminder(adminEmail, pendingList) {
-    const dashboardUrl = appUrl('/dashboard.html?tab=admin');
+    const dashboardUrl = appUrl('/dashboard.html?tab=logistics');
     const listHtml = pendingList.map(item => `
         <li style="margin-bottom: 15px; border-bottom: 1px solid #edf2f7; padding-bottom: 10px;">
             <div style="font-weight: bold; color: #2d3748;">訂單: ${item.orderId}</div>
@@ -646,7 +646,7 @@ async function sendAdminShipmentReminder(adminEmail, pendingList) {
                     '收工前再檢查是否仍有未標記訂單。'
                 ])}
                 <p style="margin-top: 30px;">
-                    <a href="${dashboardUrl}" style="display: inline-block; background-color: #3b82f6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);">前往後台處理</a>
+                    <a href="${dashboardUrl}" style="display: inline-block; background-color: #3b82f6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);">前往物流管理後台</a>
                 </p>
             `,
             'Vibe Coding 自動化管家'

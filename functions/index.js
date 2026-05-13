@@ -2132,7 +2132,8 @@ exports.getDashboardData = onCall(async (request) => {
             // [NEW] Application Workflow support
             myApplications: myApplicationsMapping,
             tutorTerms: tutorTerms,
-            pendingApplications: allPendingApplications
+            pendingApplications: allPendingApplications,
+            hardwareOrders: [] // [NEW] Complete hardware order history for admin
         };
 
         // Fetch profit sharing data and the current unit referral link for tutors.
@@ -2537,39 +2538,39 @@ exports.getDashboardData = onCall(async (request) => {
 
                 shipmentsSnapshot.forEach(doc => {
                     const data = doc.data();
-                    if (data.fulfillmentStatus === 'SHIPPED') return;
-
                     const items = data.items || {};
                     const physicalItems = Object.keys(items).filter(id => {
                         const canonicalId = legacyMap[id] || id;
                         const itemData = items[id] || {};
-                        // Primary signal: order item explicitly marked as physical.
                         if (itemData.isPhysical === true) return true;
-                        // Backward compatibility: infer from lesson metadata IDs.
                         return physicalUnitIds.has(canonicalId) || physicalUnitIds.has(id);
                     });
 
                     if (physicalItems.length > 0) {
                         const student = usersMap[data.uid] || {};
-                        pendingShipments.push({
-                            orderId: doc.id,
+                        const orderRecord = {
+                            id: doc.id,
                             uid: data.uid,
-                            email: student.email || 'Unknown',
-                            name: student.name || '',
-                            items: physicalItems.map(id => {
-                                const lessonTitle = lessons.find(l => l.id === id)?.title;
-                                const itemName = items[id]?.name;
-                                return lessonTitle || itemName || id;
-                            }),
+                            email: student.email || '未提供',
+                            name: student.name || '未提供',
+                            amount: data.amount || 0,
                             paidAt: data.paidAt ? data.paidAt.toDate().toISOString() : (data.createdAt ? data.createdAt.toDate().toISOString() : null),
-                            logistics: data.logistics || null
-                        });
+                            status: data.status,
+                            fulfillmentStatus: data.fulfillmentStatus || 'PENDING',
+                            logistics: data.logistics || {},
+                            items: physicalItems.map(id => {
+                                const canonicalId = legacyMap[id] || id;
+                                return lessons.find(l => l.id === canonicalId)?.title || items[id]?.name || id;
+                            })
+                        };
+                        result.hardwareOrders.push(orderRecord);
+                        if (data.fulfillmentStatus !== 'SHIPPED') {
+                            pendingShipments.push(orderRecord);
+                        }
                     }
                 });
-                console.log(`[getDashboardData] Found ${pendingShipments.length} pending shipments for admin.`);
-                // Sort by paidAt descending
-                pendingShipments.sort((a, b) => new Date(b.paidAt) - new Date(a.paidAt));
-                result.pendingShipments = pendingShipments;
+                result.hardwareOrders.sort((a, b) => new Date(b.paidAt) - new Date(a.paidAt));
+                result.pendingShipmentsCount = pendingShipments.length;
             } catch (shipErr) {
                 console.error("Error aggregating shipments:", shipErr);
             }
