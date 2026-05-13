@@ -16,6 +16,7 @@
 - **[⚖️ 開發與營運規範 (Project Rules)](rules.md)**：包含零元帳單規範、權限模型、ID 歸一化準則與開發 SOP。
 - **[🤝 Tutor x Student 互動層 MVP 規格](docs/tutor-student-interaction-mvp.md)**：自動評分之外的教學互動設計（卡點、提示階梯、成長軌跡、介入任務）。
 - **[🧭 Dashboard Legacy 遷移計畫](docs/dashboard-legacy-migration-plan.md)**：舊欄位相容、ID 歸一化與遷移策略。
+- **[📝 README 協作改善流程](docs/readme-collaboration-workflow.md)**：學生、導師、管理員共同迭代單元作業說明的提案與審核流程。
 
 ---
 

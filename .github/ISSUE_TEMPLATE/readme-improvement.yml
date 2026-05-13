@@ -1,0 +1,60 @@
+name: "README 改進提案"
+description: "針對某個課程單元的 GitHub README 提出改進建議"
+title: "[README 改進] <unit-id>: <一句話摘要>"
+labels:
+  - documentation
+  - readme-improvement
+body:
+  - type: input
+    id: unit_id
+    attributes:
+      label: 單元 ID
+      description: 例如 `03-unit-wifi-setup`、`basic-04-unit-pwm-basics`
+      placeholder: "03-unit-wifi-setup"
+    validations:
+      required: true
+
+  - type: input
+    id: repo_url
+    attributes:
+      label: GitHub Classroom Repository URL
+      placeholder: "https://github.com/vibe-coding-classroom/<repo>"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 目前問題
+      description: 目前 README 哪裡不清楚？造成了什麼困難？
+      placeholder: "例：提交要求只寫了 push，但沒有說明要提交哪些檔案。"
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建議修改內容
+      description: 請直接貼出建議文字（可用 Markdown）
+      placeholder: "建議新增「提交要求」段落，列出必交檔案與驗收關鍵字。"
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: 預期改善效果
+      description: 這個改動會讓學生/導師更容易做到什麼？
+      placeholder: "新手可在 3 分鐘內理解要交什麼，減少重複提問。"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 提案自檢
+      options:
+        - label: 我已確認提案聚焦在 README 內容，不涉及系統權限或資料結構變更
+          required: true
+        - label: 我已提供具體可落地的文字，不是只有抽象建議
+          required: true
