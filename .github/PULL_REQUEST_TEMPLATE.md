@@ -3,15 +3,15 @@
 - Scope:
 - Why:
 
-## README Changes
-- [ ] Clarified learning goals
-- [ ] Clarified task steps
-- [ ] Clarified submission requirements
-- [ ] Clarified grading/acceptance criteria
-- [ ] Added troubleshooting / FAQ if needed
+## Unit Repo Changes
+- [ ] README updated (student-facing instructions)
+- [ ] tutor-guide updated (`tutor-guide.md` or `.github/tutor_guide.md`) if needed
+- [ ] tests/workflows/examples updated if needed
+- [ ] Submission requirements and acceptance criteria are aligned
 
 ## Consistency Checklist
 - [ ] README content is consistent with current system flow (`Dashboard > Assignments` now uses README only)
+- [ ] Tutor guidance is consistent with current system flow (`Dashboard > Settings` tutor area)
 - [ ] Terminology is consistent (`student` role in system = `user`)
 - [ ] File names / required artifacts are accurate
 - [ ] Links are valid and open correctly
