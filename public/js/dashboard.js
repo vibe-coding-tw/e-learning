@@ -438,7 +438,7 @@ function getCurrentDashboardContext() {
 function getRequestedTabFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
     const requestedTab = (urlParams.get('tab') || '').trim();
-    const allowedTabs = new Set(['overview', 'assignments', 'settings', 'earnings', 'admin']);
+    const allowedTabs = new Set(['overview', 'assignments', 'settings', 'earnings', 'admin', 'logistics']);
     return allowedTabs.has(requestedTab) ? requestedTab : '';
 }
 
@@ -771,6 +771,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
     const adminTabBtn = document.getElementById('tab-btn-admin');
     const settingsTabBtn = document.getElementById('tab-btn-settings');
     const earningsTabBtn = document.getElementById('tab-btn-earnings');
+    const logisticsTabBtn = document.getElementById('tab-btn-logistics');
 
     if (assignmentsTabBtn) {
         const canViewAssignments = canCurrentUserViewAssignmentsTab();
@@ -787,6 +788,16 @@ function renderAdminDashboard(data, filterUnitId = null) {
             // [V14.13] REINFORCED: Explicitly hide for anyone else
             adminTabBtn.classList.add('hidden');
             adminTabBtn.style.display = 'none'; // Double layer protection
+        }
+    }
+
+    // 1.5 Logistics Tab (Admin Only)
+    if (logisticsTabBtn) {
+        if (myRole === 'admin') {
+            logisticsTabBtn.classList.remove('hidden');
+        } else {
+            logisticsTabBtn.classList.add('hidden');
+            logisticsTabBtn.style.display = 'none';
         }
     }
 
@@ -1567,6 +1578,11 @@ window.switchTab = function (tabName) {
         return;
     }
 
+    // [V17.0] Logistics Tab Specific Rendering
+    if (tabName === 'logistics') {
+        renderLogisticsTab();
+    }
+
     // Update buttons
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.add('text-gray-500', 'hover:text-gray-700', 'border-transparent');
@@ -1694,7 +1710,100 @@ window.setupAdminFeatures = window.setupAdminFeatures || function() {
     // Admin features are now initialized during renderAdminConsole
 }
 
+/**
+ * [V17.0] Render Logistics Management Tab (Admin Only)
+ */
+window.renderLogisticsTab = function() {
+    if (myRole !== 'admin' || !dashboardData) return;
+    
+    const container = document.getElementById('logistics-table-body');
+    if (!container) return;
+
+    const orders = dashboardData.hardwareOrders || [];
+    
+    if (orders.length === 0) {
+        container.innerHTML = '<tr><td colspan="6" class="py-10 text-center text-gray-400 italic">尚無硬體產品訂單紀錄</td></tr>';
+        return;
+    }
+
+    container.innerHTML = orders.map(o => {
+        const isShipped = o.fulfillmentStatus === 'SHIPPED';
+        const logisticsInfo = o.logistics || {};
+        
+        // Format logistics details based on content
+        let logisticsDesc = '無物流資訊';
+        if (logisticsInfo.CVSStoreName) {
+            logisticsDesc = `超商: ${logisticsInfo.CVSStoreName} (${logisticsInfo.CVSStoreID})`;
+        } else if (logisticsInfo.ReceiverAddress) {
+            logisticsDesc = `地址: ${logisticsInfo.ReceiverAddress}`;
+        }
+
+        const buyerName = o.name || '未提供';
+        const buyerEmail = o.email || '未提供';
+
+        return `
+            <tr class="hover:bg-gray-50 transition border-b border-gray-100">
+                <td class="py-4 px-2">
+                    <div class="font-mono text-xs font-bold text-gray-800">${o.id}</div>
+                    <div class="text-[10px] text-gray-400 mt-0.5">${o.paidAt ? new Date(o.paidAt).toLocaleString() : '未知時間'}</div>
+                </td>
+                <td class="py-4 px-2">
+                    <div class="font-bold text-gray-800">${escapeHtml(buyerName)}</div>
+                    <div class="text-xs text-blue-600">${escapeHtml(buyerEmail)}</div>
+                </td>
+                <td class="py-4 px-2">
+                    <ul class="text-xs space-y-0.5">
+                        ${o.items.map(item => `<li class="list-disc ml-4 font-medium text-slate-700">${escapeHtml(item)}</li>`).join('')}
+                    </ul>
+                </td>
+                <td class="py-4 px-2 text-center">
+                    <div class="text-xs text-gray-600 font-medium">${escapeHtml(logisticsDesc)}</div>
+                    <div class="text-[10px] text-emerald-600 mt-1 font-bold">金額: TWD $${o.amount}</div>
+                </td>
+                <td class="py-4 px-2 text-center">
+                    <span class="px-2 py-1 rounded-full text-[10px] font-bold ${isShipped ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}">
+                        ${isShipped ? '已出貨 (SHIPPED)' : '待出貨 (PENDING)'}
+                    </span>
+                </td>
+                <td class="py-4 px-2 text-right">
+                    ${!isShipped ? `
+                        <button onclick="markAsShipped('${o.id}')" 
+                            class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700 transition shadow-sm">
+                            標記為出貨
+                        </button>
+                    ` : `
+                        <span class="text-gray-400 text-xs italic">已完成</span>
+                    `}
+                </td>
+            </tr>
+        `;
+    }).join('');
+};
+
+window.markAsShipped = async function(orderId) {
+    if (!confirm(`確定要將訂單 ${orderId} 標記為「已出貨」嗎？\n這將會同步更新學員的查看狀態。`)) return;
+
+    try {
+        const markShippedFunc = httpsCallable(functions, 'markOrderShipped');
+        const result = await markShippedFunc({ orderId });
+        
+        if (result.data?.success) {
+            vibeShowToast('訂單狀態已更新！', 'success');
+            // Refresh local data state
+            const order = (dashboardData.hardwareOrders || []).find(o => o.id === orderId);
+            if (order) order.fulfillmentStatus = 'SHIPPED';
+            renderLogisticsTab();
+        } else {
+            throw new Error(result.data?.error || '更新失敗');
+        }
+    } catch (err) {
+        console.error("Failed to mark order as shipped:", err);
+        alert(`更新失敗: ${err.message}`);
+    }
+};
+
 window.renderAdminConsole = window.renderAdminConsole || function() {
+    renderLogisticsTab(); // [V17.0] Always ensure logistics is ready if admin
     if (myRole !== 'admin') return;
 
     const urlParams = new URLSearchParams(window.location.search);
