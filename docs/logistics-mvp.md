@@ -78,3 +78,36 @@ An atomic Cloud Function that transitions an order's `fulfillmentStatus` to `SHI
 - **Zero-Cost Strategy**: Relies on Cloud Functions `onCall` and `Firestore` triggers without expensive 3rd party logistics API polling (manual transition to `SHIPPED`).
 - **Data Integrity**: Logistics information (e.g., ECPay CVS info) is stored directly in the `orders` document under the `logistics` key.
 - **Notification Spec**: See `docs/email-notifications.md` for delivery matrix and failure handling.
+
+## 7. Batch Recovery Tool (ECPay -> Firestore)
+Script: `functions/scripts/recover_ecpay_logistics.js`
+
+Purpose:
+- Query ECPay logistics API for orders marked `logisticsMissing=true` (or specific order IDs)
+- Recover contact/address fields
+- Write back to Firestore `orders.logistics`
+
+Modes:
+- `--dry-run` (default): query + report only, no write
+- `--apply`: query + write back
+
+Examples:
+```bash
+node functions/scripts/recover_ecpay_logistics.js --dry-run --limit=50
+node functions/scripts/recover_ecpay_logistics.js --apply --limit=50
+node functions/scripts/recover_ecpay_logistics.js --apply --order-ids=VIBE123,VIBE456
+```
+
+Required env vars:
+- `ECPAY_MERCHANT_ID`
+- `ECPAY_HASH_KEY`
+- `ECPAY_HASH_IV`
+
+Optional env vars:
+- `ECPAY_LOGISTICS_QUERY_URL` (default: `https://logistics.ecpay.com.tw/Helper/QueryLogisticsTradeInfo/V5`)
+
+Write-back fields:
+- `orders.logistics`
+- `orders.logisticsMissing`
+- `orders.logisticsRecoveredAt`
+- `orders.logisticsRecoveredSource = "ecpay_batch_tool"`
