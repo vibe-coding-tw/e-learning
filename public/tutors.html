@@ -16,6 +16,7 @@
         .gradient-text { background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
         .hero-gradient { background: radial-gradient(circle at top right, #f8fafc 0%, #e0e7ff 100%); }
         .card-hover:hover { transform: translateY(-5px); transition: all 0.3s ease; }
+        .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
     </style>
 </head>
 
@@ -27,21 +28,25 @@
 
     <!-- Hero Section -->
     <section class="relative min-h-[90vh] flex items-center pt-24 hero-gradient overflow-hidden">
-        <div class="absolute top-0 right-0 w-1/2 h-full bg-indigo-600/5 -skew-x-12 translate-x-1/4"></div>
+        <video class="hero-video" autoplay muted loop playsinline preload="metadata" aria-hidden="true">
+            <source src="assets/tutors-hero-bg.mp4" type="video/mp4">
+        </video>
+        <div class="absolute inset-0 bg-slate-950/45"></div>
+        <div class="absolute top-0 right-0 w-1/2 h-full bg-indigo-600/15 -skew-x-12 translate-x-1/4"></div>
         <div class="container mx-auto px-6 relative z-10">
             <div class="flex flex-col lg:flex-row items-center gap-16">
                 <div class="lg:w-1/2 text-center lg:text-left">
-                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-100 text-indigo-700 text-sm font-bold mb-8 animate-fade-in">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/85 text-indigo-700 text-sm font-bold mb-8 animate-fade-in">
                         <span class="relative flex h-3 w-3">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                             <span class="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
                         </span>
                         GLOBAL EDUCATION INFRASTRUCTURE
                     </div>
-                    <h1 class="text-5xl lg:text-7xl font-extrabold leading-tight mb-8">
-                        賦能<span class="gradient-text">真人導師</span><br>開創教育新紀元
+                    <h1 class="text-5xl lg:text-7xl font-extrabold leading-tight mb-8 text-white drop-shadow-md">
+                        賦能<span class="text-cyan-200">真人導師</span><br>開創教育新紀元
                     </h1>
-                    <p class="text-xl text-slate-600 leading-relaxed mb-10 max-w-2xl">
+                    <p class="text-xl text-slate-100 leading-relaxed mb-10 max-w-2xl drop-shadow-sm">
                         我們不相信 AI 能取代老師。在 Vibe Coding，導師（Tutor）是翻轉教室的核心靈魂。我們透過 GitHub Classroom 與 AI 診斷系統，為導師裝上「數位義肢」，讓教學回歸引導、啟發與深度連結。
                     </p>
                     <div class="flex flex-wrap gap-4 justify-center lg:justify-start">
