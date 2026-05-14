@@ -8,6 +8,8 @@ set -euo pipefail
 CSV_PATH="${1:-docs/examples/classroom-bridge-unrelated-r2.csv}"
 DATE_TAG="${2:-$(date +%F)-manual-fix}"
 WORKDIR="${3:-/tmp/classroom-bridge-unrelated-fix-$$}"
+RUN_STAMP="$(date +%H%M%S)"
+PR_LABEL="${PR_LABEL:-classroom-bridge-sync}"
 
 if [[ ! -f "$CSV_PATH" ]]; then
   echo "[ERROR] CSV not found: $CSV_PATH" >&2
@@ -42,7 +44,7 @@ echo "[INFO] Report: $REPORT"
 
     repo_dir="$WORKDIR/${bridge_repo##*/}"
     template_dir="$WORKDIR/template-${unit_id}"
-    fix_branch="manual-sync/${DATE_TAG}-${unit_id}"
+    fix_branch="manual-sync/${DATE_TAG}-${RUN_STAMP}-${unit_id}"
 
     echo "\n[INFO] Processing $bridge_repo (template: $template_repo)"
 
@@ -73,10 +75,29 @@ echo "[INFO] Report: $REPORT"
       git commit -m "chore: align bridge repo with template ${unit_id}"
       git push -u origin "$fix_branch" >/dev/null
 
+      pr_title="chore: manual sync from template (${unit_id})"
+      pr_body="Manual sync for previously unrelated-history bridge repo.\n\nTemplate: ${template_repo}\nStrategy: replace bridge content with template baseline."
+
+      set +e
       pr_url=$(gh pr create --repo "$bridge_repo" --base main --head "$fix_branch" \
-        --title "chore: manual sync from template (${unit_id})" \
-        --body "Manual sync for previously unrelated-history bridge repo.\n\nTemplate: ${template_repo}\nStrategy: replace bridge content with template baseline." \
-        --label classroom-bridge-sync)
+        --title "$pr_title" \
+        --body "$pr_body" \
+        --label "$PR_LABEL" 2>/tmp/gh_manual_sync_pr_err.txt)
+      pr_rc=$?
+      set -e
+
+      if [[ $pr_rc -ne 0 ]]; then
+        if rg -q "label.*not found" /tmp/gh_manual_sync_pr_err.txt; then
+          pr_url=$(gh pr create --repo "$bridge_repo" --base main --head "$fix_branch" \
+            --title "$pr_title" \
+            --body "$pr_body")
+          echo "[WARN] Label '$PR_LABEL' not found in $bridge_repo, created PR without label."
+        else
+          err_msg="$(tr '\n' ' ' < /tmp/gh_manual_sync_pr_err.txt | sed 's/,/;/g')"
+          echo "$bridge_repo,error,pr create failed: ${err_msg}," >> "$REPORT"
+          exit 0
+        fi
+      fi
 
       echo "$bridge_repo,opened,manual-sync,$pr_url" >> "$REPORT"
       echo "[OK] $pr_url"
