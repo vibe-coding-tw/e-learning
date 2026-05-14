@@ -16,6 +16,7 @@
         .gradient-text { background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
         .hero-gradient { background: radial-gradient(circle at top right, #f8fafc 0%, #e0e7ff 100%); }
         .card-hover:hover { transform: translateY(-5px); transition: all 0.3s ease; }
+        .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
     </style>
 </head>
 
@@ -27,15 +28,19 @@
 
     <!-- Hero Section -->
     <section class="relative pt-32 pb-20 hero-gradient overflow-hidden">
-        <div class="absolute top-0 right-0 w-1/2 h-full bg-indigo-600/5 -skew-x-12 translate-x-1/4"></div>
+        <video class="hero-video" autoplay muted loop playsinline preload="metadata" aria-hidden="true">
+            <source src="assets/students-hero-bg.mp4" type="video/mp4">
+        </video>
+        <div class="absolute inset-0 bg-slate-950/45"></div>
+        <div class="absolute top-0 right-0 w-1/2 h-full bg-indigo-600/15 -skew-x-12 translate-x-1/4"></div>
         <div class="container mx-auto px-6 relative z-10 text-center">
-            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-100 text-indigo-700 text-sm font-bold mb-8">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/85 text-indigo-700 text-sm font-bold mb-8">
                 <i class="fa-solid fa-rocket animate-bounce"></i> STUDENT SUCCESS GUIDE
             </div>
-            <h1 class="text-5xl lg:text-7xl font-extrabold leading-tight mb-8">
-                開啟您的<span class="gradient-text">學習實作之旅</span>
+            <h1 class="text-5xl lg:text-7xl font-extrabold leading-tight mb-8 text-white drop-shadow-md">
+                開啟您的<span class="text-cyan-200">學習實作之旅</span>
             </h1>
-            <p class="text-xl text-slate-600 leading-relaxed mb-10 max-w-2xl mx-auto">
+            <p class="text-xl text-slate-100 leading-relaxed mb-10 max-w-2xl mx-auto drop-shadow-sm">
                 這裡整理了從購買、上課到作業繳交的完整指引，協助您在 Vibe Coding 獲得最棒的開發體驗。
             </p>
         </div>
