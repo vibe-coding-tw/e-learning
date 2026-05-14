@@ -139,19 +139,25 @@ echo "[INFO] Report: $REPORT_FILE"
       git fetch upstream "$template_branch" --quiet
       git checkout -B "$sync_branch" "origin/$base_branch" >/dev/null
 
+      base_head="$(git rev-parse HEAD)"
       set +e
       git merge --no-ff --no-edit "upstream/$template_branch"
       merge_rc=$?
       set -e
 
       if [[ $merge_rc -ne 0 ]]; then
-        git merge --abort || true
-        echo "[WARN] merge conflict: $bridge_repo"
-        echo "$bridge_repo,conflict,manual merge required," >> "$REPORT_FILE"
+        if git merge --abort >/dev/null 2>&1; then
+          echo "[WARN] merge conflict: $bridge_repo"
+          echo "$bridge_repo,conflict,manual merge required," >> "$REPORT_FILE"
+        else
+          echo "[WARN] unrelated histories: $bridge_repo"
+          echo "$bridge_repo,unrelated,requires --allow-unrelated-histories strategy," >> "$REPORT_FILE"
+        fi
         exit 0
       fi
 
-      if [[ -z "$(git status --porcelain)" ]]; then
+      new_head="$(git rev-parse HEAD)"
+      if [[ "$new_head" == "$base_head" ]]; then
         echo "[INFO] no changes: $bridge_repo"
         echo "$bridge_repo,noop,already up to date," >> "$REPORT_FILE"
         exit 0
