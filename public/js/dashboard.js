@@ -3259,10 +3259,23 @@ window.adminFindInviteBinding = async function () {
     try {
         const inviteCodeOrUrlRaw = window.prompt('請輸入 GitHub Classroom 邀請連結（或 invite code）', '');
         if (!inviteCodeOrUrlRaw || !inviteCodeOrUrlRaw.trim()) return;
-
-        const fn = httpsCallable(functions, 'findClassroomInviteBinding');
-        const result = await fn({ inviteCodeOrUrl: inviteCodeOrUrlRaw.trim() });
-        const payload = result?.data || {};
+        const user = auth?.currentUser;
+        if (!user) {
+            throw new Error('請先登入 admin 帳號後再查詢');
+        }
+        const idToken = await user.getIdToken();
+        const resp = await fetch('https://asia-east1-e-learning-942f7.cloudfunctions.net/findClassroomInviteBindingHttp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({ inviteCodeOrUrl: inviteCodeOrUrlRaw.trim() })
+        });
+        const payload = await resp.json();
+        if (!resp.ok) {
+            throw new Error(payload?.error || `HTTP ${resp.status}`);
+        }
         const matches = Array.isArray(payload.matches) ? payload.matches : [];
 
         if (matches.length === 0) {
