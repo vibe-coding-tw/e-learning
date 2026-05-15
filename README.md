@@ -96,6 +96,15 @@
 
 ## 🚀 開發與部署 (DevOps)
 
+### 歷史工具封存 (Archive)
+- 一次性遷移/修復工具與大型操作快照已移至 `archive/`，不再作為日常 SOP：
+  - `archive/scripts/`
+  - `archive/functions-scripts/`
+  - `archive/docs-examples/`
+- 原則：
+  - 需要追溯時可參考 `archive/`。
+  - 新流程請以 `scripts/sync_classroom_repos.sh`、`scripts/sync_classroom_bridge_repos.sh` 與 `docs/` 現行規格為準。
+
 ### 環境變數 (`functions/.env`)
 - 金流：
   - `ECPAY_MERCHANT_ID`
