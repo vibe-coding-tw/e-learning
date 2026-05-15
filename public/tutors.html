@@ -16,7 +16,9 @@
         .gradient-text { background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
         .hero-gradient { background: radial-gradient(circle at top right, #f8fafc 0%, #e0e7ff 100%); }
         .card-hover:hover { transform: translateY(-5px); transition: all 0.3s ease; }
-        .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+        .hero-overlay { position: absolute; inset: 0; z-index: 1; }
+        .hero-content { position: relative; z-index: 10; }
     </style>
 </head>
 
@@ -28,12 +30,12 @@
 
     <!-- Hero Section -->
     <section class="relative min-h-[90vh] flex items-center pt-24 hero-gradient overflow-hidden">
-        <video class="hero-video" autoplay muted loop playsinline preload="metadata" aria-hidden="true">
+        <video class="hero-video" autoplay muted loop playsinline poster="assets/tutors-hero-poster.png" preload="auto" aria-hidden="true">
             <source src="assets/tutors-hero-bg.mp4" type="video/mp4">
         </video>
-        <div class="absolute inset-0 bg-slate-950/45"></div>
-        <div class="absolute top-0 right-0 w-1/2 h-full bg-indigo-600/15 -skew-x-12 translate-x-1/4"></div>
-        <div class="container mx-auto px-6 relative z-10">
+        <div class="hero-overlay bg-slate-950/45"></div>
+        <div class="hero-overlay bg-indigo-600/15 -skew-x-12 translate-x-1/4"></div>
+        <div class="container mx-auto px-6 hero-content">
             <div class="flex flex-col lg:flex-row items-center gap-16">
                 <div class="lg:w-1/2 text-center lg:text-left">
                     <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/85 text-indigo-700 text-sm font-bold mb-8 animate-fade-in">
