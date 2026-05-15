@@ -3538,6 +3538,81 @@ const verifyReferralLinkHandler = onCall(async (request) => {
 exports.verifyReferralLink = verifyReferralLinkHandler;
 exports.verifyPromoCode = verifyReferralLinkHandler;
 
+// 11.1-b Admin 工具：查詢 GitHub Classroom 邀請連結目前綁定在哪些單元
+exports.findClassroomInviteBinding = onCall(async (request) => {
+    const auth = request.auth;
+    if (!auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
+
+    const requesterRole = await getRole(auth.uid);
+    if (requesterRole !== 'admin') {
+        throw new HttpsError('permission-denied', 'Only admins can query invite bindings.');
+    }
+
+    const inputRaw = String(
+        request.data?.inviteCodeOrUrl ||
+        request.data?.inviteUrl ||
+        request.data?.inviteCode ||
+        ''
+    ).trim();
+    if (!inputRaw) throw new HttpsError('invalid-argument', '缺少 inviteCodeOrUrl');
+
+    const normalizeInvite = (value = '') => {
+        const s = String(value || '').trim();
+        if (!s) return '';
+        try {
+            const url = new URL(s);
+            if (url.hostname !== 'classroom.github.com') return s;
+            return `${url.origin}${url.pathname}`.replace(/\/+$/, '').toLowerCase();
+        } catch (_) {
+            const token = s.replace(/^https?:\/\/classroom\.github\.com\/a\//i, '').replace(/\/+$/, '');
+            return token ? `https://classroom.github.com/a/${token}`.toLowerCase() : '';
+        }
+    };
+
+    const extractCandidates = (cfg) => {
+        if (!cfg) return [];
+        if (typeof cfg === 'string') return [normalizeInvite(cfg)].filter(Boolean);
+        if (typeof cfg === 'object') {
+            return Object.values(cfg)
+                .filter(v => typeof v === 'string' && v.trim())
+                .map(v => normalizeInvite(v))
+                .filter(Boolean);
+        }
+        return [];
+    };
+
+    const normalizedInvite = normalizeInvite(inputRaw);
+    if (!normalizedInvite.includes('classroom.github.com/a/')) {
+        throw new HttpsError('invalid-argument', '請輸入 GitHub Classroom 邀請連結或 invite code。');
+    }
+
+    const lessons = await getLessons();
+    const matches = [];
+
+    for (const lesson of lessons) {
+        const urlMap = lesson?.githubClassroomUrls || {};
+        for (const [unitKey, cfg] of Object.entries(urlMap)) {
+            const candidates = extractCandidates(cfg);
+            if (!candidates.includes(normalizedInvite)) continue;
+
+            matches.push({
+                lessonDocId: lesson.id || null,
+                courseId: lesson.courseId || lesson.id || null,
+                title: lesson.title || null,
+                unitKey,
+                courseUnits: Array.isArray(lesson.courseUnits) ? lesson.courseUnits : []
+            });
+        }
+    }
+
+    return {
+        success: true,
+        normalizedInvite,
+        totalMatches: matches.length,
+        matches
+    };
+});
+
 // 11.2 每月計算分潤 (Scheduled Job - 1st of each month)
 exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
     const db = admin.firestore();

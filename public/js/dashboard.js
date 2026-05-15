@@ -3255,6 +3255,36 @@ window.handleDecideApplication = async function (applicationId, status) {
 
 };
 
+window.adminFindInviteBinding = async function () {
+    try {
+        const inviteCodeOrUrlRaw = window.prompt('請輸入 GitHub Classroom 邀請連結（或 invite code）', '');
+        if (!inviteCodeOrUrlRaw || !inviteCodeOrUrlRaw.trim()) return;
+
+        const fn = httpsCallable(functions, 'findClassroomInviteBinding');
+        const result = await fn({ inviteCodeOrUrl: inviteCodeOrUrlRaw.trim() });
+        const payload = result?.data || {};
+        const matches = Array.isArray(payload.matches) ? payload.matches : [];
+
+        if (matches.length === 0) {
+            alert(`查無綁定\\n${payload.normalizedInvite || inviteCodeOrUrlRaw}`);
+            return;
+        }
+
+        const lines = matches.map((m, idx) =>
+            `${idx + 1}. courseId=${m.courseId || '-'} | unitKey=${m.unitKey || '-'} | title=${m.title || '-'}`
+        );
+        alert(
+            `查到 ${matches.length} 筆綁定\\n` +
+            `${payload.normalizedInvite || inviteCodeOrUrlRaw}\\n\\n` +
+            lines.join('\\n')
+        );
+        console.log('[adminFindInviteBinding] result:', payload);
+    } catch (error) {
+        console.error('[adminFindInviteBinding] failed:', error);
+        alert(`查詢失敗：${error?.message || error}`);
+    }
+};
+
 
 // [CLEANUP] Deprecated legacy status renderers removed.
 
