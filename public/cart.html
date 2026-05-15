@@ -211,14 +211,25 @@
         }
 
         function extractClassroomInviteCandidates(urlConfig) {
-            if (!urlConfig) return [];
-            if (typeof urlConfig === 'string') return [normalizeClassroomInviteUrl(urlConfig)];
-            if (typeof urlConfig === 'object') {
-                return Object.values(urlConfig)
-                    .filter(v => typeof v === 'string' && v.trim())
-                    .map(v => normalizeClassroomInviteUrl(v));
+            const out = [];
+            const seen = new Set();
+
+            function walk(node) {
+                if (!node) return;
+                if (typeof node === 'string') {
+                    const normalized = normalizeClassroomInviteUrl(node);
+                    if (normalized && !seen.has(normalized)) {
+                        seen.add(normalized);
+                        out.push(normalized);
+                    }
+                    return;
+                }
+                if (typeof node !== 'object') return;
+                Object.values(node).forEach(walk);
             }
-            return [];
+
+            walk(urlConfig);
+            return out;
         }
 
         function getCartItemUnitCandidates(itemId, item = {}, lessons = []) {
