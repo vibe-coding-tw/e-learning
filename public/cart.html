@@ -200,11 +200,16 @@
             const lessons = await getLessonsList();
             const parentCourse = lessons.find(lesson => {
                 const units = (Array.isArray(lesson.courseUnits) ? lesson.courseUnits : []).map(u => normalizeId(u));
-                return units.includes(normalizedReferralId) || normalizeId(lesson.courseId) === normalizedReferralId;
+                return units.includes(normalizedReferralId) ||
+                    normalizeId(lesson.courseId) === normalizedReferralId ||
+                    normalizeId(lesson.id) === normalizedReferralId;
             });
 
-            if (parentCourse?.courseId && cart[parentCourse.courseId]) {
-                return parentCourse.courseId;
+            if (parentCourse) {
+                const parentCourseId = parentCourse.courseId || parentCourse.id;
+                if (parentCourseId && cart[parentCourseId]) {
+                    return parentCourseId;
+                }
             }
 
             return null;
@@ -244,11 +249,13 @@
 
             for (const lesson of lessons) {
                 const courseId = normalizeId(lesson?.courseId || '');
+                const lessonId = normalizeId(lesson?.id || '');
                 const units = (Array.isArray(lesson?.courseUnits) ? lesson.courseUnits : []).map(u => normalizeId(u));
-                const hits = seeds.some(seed => seed === courseId || units.includes(seed));
+                const hits = seeds.some(seed => seed === courseId || seed === lessonId || units.includes(seed));
                 if (!hits) continue;
 
                 if (courseId) foundCourseIds.add(courseId);
+                if (lessonId) foundCourseIds.add(lessonId);
                 units.forEach(u => u && foundUnits.add(u));
             }
 
