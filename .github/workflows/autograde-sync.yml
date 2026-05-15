@@ -23,26 +23,47 @@ on:
         type: string
   repository_dispatch:
     types: [autograde_result]
+  workflow_run:
+    workflows:
+      - GitHub Classroom Workflow
+      - Autograding Tests
+      - Classroom
+    types: [completed]
 
 jobs:
   sync:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.name != 'Autograde Sync To Vibe Coding'
     runs-on: ubuntu-latest
     steps:
       - name: Build payload
         id: payload
         env:
           EVENT_NAME: ${{ github.event_name }}
+          # Manual inputs
           INPUT_ASSIGNMENT_DOC_ID: ${{ inputs.assignment_doc_id }}
           INPUT_SCORE: ${{ inputs.score }}
           INPUT_MAX_SCORE: ${{ inputs.max_score }}
           INPUT_STATUS: ${{ inputs.status }}
+          # Optional user/assignment mapping (for repos not using assignment_doc_id)
+          DEFAULT_USER_ID: ${{ vars.VC_USER_ID }}
+          DEFAULT_ASSIGNMENT_ID: ${{ vars.VC_ASSIGNMENT_ID }}
+          DEFAULT_ASSIGNMENT_DOC_ID: ${{ vars.VC_ASSIGNMENT_DOC_ID }}
+          # repository_dispatch payload
           DISPATCH_ASSIGNMENT_DOC_ID: ${{ github.event.client_payload.assignmentDocId }}
+          DISPATCH_USER_ID: ${{ github.event.client_payload.userId }}
+          DISPATCH_ASSIGNMENT_ID: ${{ github.event.client_payload.assignmentId }}
           DISPATCH_SCORE: ${{ github.event.client_payload.score }}
           DISPATCH_MAX_SCORE: ${{ github.event.client_payload.maxScore }}
           DISPATCH_STATUS: ${{ github.event.client_payload.status }}
           DISPATCH_RUN_URL: ${{ github.event.client_payload.runUrl }}
           DISPATCH_WORKFLOW: ${{ github.event.client_payload.workflow }}
           DISPATCH_COMMIT_SHA: ${{ github.event.client_payload.commitSha }}
+          # workflow_run payload
+          WORKFLOW_RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          WORKFLOW_RUN_HTML_URL: ${{ github.event.workflow_run.html_url }}
+          WORKFLOW_RUN_NAME: ${{ github.event.workflow_run.name }}
+          WORKFLOW_RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          WORKFLOW_RUN_ACTOR: ${{ github.event.workflow_run.actor.login }}
           REPO: ${{ github.repository }}
           WORKFLOW_NAME: ${{ github.workflow }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -53,29 +74,58 @@ jobs:
 
           if [ "$EVENT_NAME" = "repository_dispatch" ]; then
             ASSIGNMENT_DOC_ID="${DISPATCH_ASSIGNMENT_DOC_ID:-}"
+            USER_ID="${DISPATCH_USER_ID:-}"
+            ASSIGNMENT_ID="${DISPATCH_ASSIGNMENT_ID:-}"
             SCORE="${DISPATCH_SCORE:-}"
             MAX_SCORE="${DISPATCH_MAX_SCORE:-100}"
             STATUS="${DISPATCH_STATUS:-completed}"
             GRADE_RUN_URL="${DISPATCH_RUN_URL:-$RUN_URL}"
             GRADE_WORKFLOW="${DISPATCH_WORKFLOW:-$WORKFLOW_NAME}"
             GRADE_COMMIT_SHA="${DISPATCH_COMMIT_SHA:-$COMMIT_SHA}"
+            GRADE_ACTOR="${ACTOR}"
+          elif [ "$EVENT_NAME" = "workflow_run" ]; then
+            ASSIGNMENT_DOC_ID="${DEFAULT_ASSIGNMENT_DOC_ID:-}"
+            USER_ID="${DEFAULT_USER_ID:-}"
+            ASSIGNMENT_ID="${DEFAULT_ASSIGNMENT_ID:-}"
+            MAX_SCORE="100"
+            if [ "${WORKFLOW_RUN_CONCLUSION:-}" = "success" ]; then
+              SCORE="100"
+              STATUS="completed"
+            else
+              SCORE="0"
+              STATUS="${WORKFLOW_RUN_CONCLUSION:-failed}"
+            fi
+            GRADE_RUN_URL="${WORKFLOW_RUN_HTML_URL:-$RUN_URL}"
+            GRADE_WORKFLOW="${WORKFLOW_RUN_NAME:-$WORKFLOW_NAME}"
+            GRADE_COMMIT_SHA="${WORKFLOW_RUN_HEAD_SHA:-$COMMIT_SHA}"
+            GRADE_ACTOR="${WORKFLOW_RUN_ACTOR:-$ACTOR}"
           else
             ASSIGNMENT_DOC_ID="${INPUT_ASSIGNMENT_DOC_ID:-}"
+            USER_ID="${DEFAULT_USER_ID:-}"
+            ASSIGNMENT_ID="${DEFAULT_ASSIGNMENT_ID:-}"
             SCORE="${INPUT_SCORE:-}"
             MAX_SCORE="${INPUT_MAX_SCORE:-100}"
             STATUS="${INPUT_STATUS:-completed}"
             GRADE_RUN_URL="$RUN_URL"
             GRADE_WORKFLOW="$WORKFLOW_NAME"
             GRADE_COMMIT_SHA="$COMMIT_SHA"
+            GRADE_ACTOR="$ACTOR"
           fi
 
-          if [ -z "$ASSIGNMENT_DOC_ID" ] || [ -z "$SCORE" ]; then
-            echo "assignment_doc_id and score are required"
+          if [ -z "$SCORE" ]; then
+            echo "score is required"
+            exit 1
+          fi
+          if [ -z "${ASSIGNMENT_DOC_ID:-}" ] && { [ -z "${USER_ID:-}" ] || [ -z "${ASSIGNMENT_ID:-}" ]; }; then
+            echo "Either assignment_doc_id or (userId + assignmentId) must be provided."
+            echo "Set vars.VC_ASSIGNMENT_DOC_ID or vars.VC_USER_ID + vars.VC_ASSIGNMENT_ID."
             exit 1
           fi
 
           PAYLOAD=$(jq -cn \
             --arg assignmentDocId "$ASSIGNMENT_DOC_ID" \
+            --arg userId "${USER_ID:-}" \
+            --arg assignmentId "${ASSIGNMENT_ID:-}" \
             --argjson score "$SCORE" \
             --argjson maxScore "$MAX_SCORE" \
             --arg status "$STATUS" \
@@ -83,9 +133,11 @@ jobs:
             --arg workflow "$GRADE_WORKFLOW" \
             --arg commitSha "$GRADE_COMMIT_SHA" \
             --arg repo "$REPO" \
-            --arg actor "$ACTOR" \
+            --arg actor "$GRADE_ACTOR" \
             '{
-              assignmentDocId: $assignmentDocId,
+              assignmentDocId: ($assignmentDocId | select(length > 0)),
+              userId: ($userId | select(length > 0)),
+              assignmentId: ($assignmentId | select(length > 0)),
               score: $score,
               maxScore: $maxScore,
               status: $status,
