@@ -3538,63 +3538,44 @@ const verifyReferralLinkHandler = onCall(async (request) => {
 exports.verifyReferralLink = verifyReferralLinkHandler;
 exports.verifyPromoCode = verifyReferralLinkHandler;
 
-// 11.1-b Admin 工具：查詢 GitHub Classroom 邀請連結目前綁定在哪些單元
-exports.findClassroomInviteBinding = onCall(async (request) => {
-    const auth = request.auth;
-    if (!auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
-
-    const requesterRole = await getRole(auth.uid);
-    if (requesterRole !== 'admin') {
-        throw new HttpsError('permission-denied', 'Only admins can query invite bindings.');
+function normalizeClassroomInvite(value = '') {
+    const s = String(value || '').trim();
+    if (!s) return '';
+    try {
+        const url = new URL(s);
+        if (url.hostname !== 'classroom.github.com') return s;
+        return `${url.origin}${url.pathname}`.replace(/\/+$/, '').toLowerCase();
+    } catch (_) {
+        const token = s.replace(/^https?:\/\/classroom\.github\.com\/a\//i, '').replace(/\/+$/, '');
+        return token ? `https://classroom.github.com/a/${token}`.toLowerCase() : '';
     }
+}
 
-    const inputRaw = String(
-        request.data?.inviteCodeOrUrl ||
-        request.data?.inviteUrl ||
-        request.data?.inviteCode ||
-        ''
-    ).trim();
-    if (!inputRaw) throw new HttpsError('invalid-argument', '缺少 inviteCodeOrUrl');
+function extractInviteCandidates(cfg) {
+    if (!cfg) return [];
+    if (typeof cfg === 'string') return [normalizeClassroomInvite(cfg)].filter(Boolean);
+    if (typeof cfg === 'object') {
+        return Object.values(cfg)
+            .filter(v => typeof v === 'string' && v.trim())
+            .map(v => normalizeClassroomInvite(v))
+            .filter(Boolean);
+    }
+    return [];
+}
 
-    const normalizeInvite = (value = '') => {
-        const s = String(value || '').trim();
-        if (!s) return '';
-        try {
-            const url = new URL(s);
-            if (url.hostname !== 'classroom.github.com') return s;
-            return `${url.origin}${url.pathname}`.replace(/\/+$/, '').toLowerCase();
-        } catch (_) {
-            const token = s.replace(/^https?:\/\/classroom\.github\.com\/a\//i, '').replace(/\/+$/, '');
-            return token ? `https://classroom.github.com/a/${token}`.toLowerCase() : '';
-        }
-    };
-
-    const extractCandidates = (cfg) => {
-        if (!cfg) return [];
-        if (typeof cfg === 'string') return [normalizeInvite(cfg)].filter(Boolean);
-        if (typeof cfg === 'object') {
-            return Object.values(cfg)
-                .filter(v => typeof v === 'string' && v.trim())
-                .map(v => normalizeInvite(v))
-                .filter(Boolean);
-        }
-        return [];
-    };
-
-    const normalizedInvite = normalizeInvite(inputRaw);
+async function lookupClassroomInviteBinding(inputRaw) {
+    const normalizedInvite = normalizeClassroomInvite(inputRaw);
     if (!normalizedInvite.includes('classroom.github.com/a/')) {
         throw new HttpsError('invalid-argument', '請輸入 GitHub Classroom 邀請連結或 invite code。');
     }
 
     const lessons = await getLessons();
     const matches = [];
-
     for (const lesson of lessons) {
         const urlMap = lesson?.githubClassroomUrls || {};
         for (const [unitKey, cfg] of Object.entries(urlMap)) {
-            const candidates = extractCandidates(cfg);
+            const candidates = extractInviteCandidates(cfg);
             if (!candidates.includes(normalizedInvite)) continue;
-
             matches.push({
                 lessonDocId: lesson.id || null,
                 courseId: lesson.courseId || lesson.id || null,
@@ -3604,13 +3585,56 @@ exports.findClassroomInviteBinding = onCall(async (request) => {
             });
         }
     }
+    return { success: true, normalizedInvite, totalMatches: matches.length, matches };
+}
 
-    return {
-        success: true,
-        normalizedInvite,
-        totalMatches: matches.length,
-        matches
-    };
+// 11.1-b Admin 工具：查詢 GitHub Classroom 邀請連結目前綁定在哪些單元
+exports.findClassroomInviteBinding = onCall(async (request) => {
+    const auth = request.auth;
+    if (!auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
+    const requesterRole = await getRole(auth.uid);
+    if (requesterRole !== 'admin') throw new HttpsError('permission-denied', 'Only admins can query invite bindings.');
+
+    const inputRaw = String(
+        request.data?.inviteCodeOrUrl ||
+        request.data?.inviteUrl ||
+        request.data?.inviteCode ||
+        ''
+    ).trim();
+    if (!inputRaw) throw new HttpsError('invalid-argument', '缺少 inviteCodeOrUrl');
+    return lookupClassroomInviteBinding(inputRaw);
+});
+
+exports.findClassroomInviteBindingHttp = onRequest(async (req, res) => {
+    res.set('Access-Control-Allow-Origin', 'https://vibe-coding.tw');
+    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') return res.status(204).send('');
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+    try {
+        const authHeader = req.headers.authorization || '';
+        if (!authHeader.startsWith('Bearer ')) return res.status(401).json({ error: 'Missing bearer token' });
+        const idToken = authHeader.substring(7);
+        const decoded = await admin.auth().verifyIdToken(idToken);
+        const requesterRole = await getRole(decoded.uid);
+        if (requesterRole !== 'admin') return res.status(403).json({ error: 'Only admins can query invite bindings.' });
+
+        const inputRaw = String(
+            req.body?.inviteCodeOrUrl ||
+            req.body?.inviteUrl ||
+            req.body?.inviteCode ||
+            req.body?.data?.inviteCodeOrUrl ||
+            ''
+        ).trim();
+        if (!inputRaw) return res.status(400).json({ error: '缺少 inviteCodeOrUrl' });
+
+        const result = await lookupClassroomInviteBinding(inputRaw);
+        return res.json(result);
+    } catch (error) {
+        console.error('[findClassroomInviteBindingHttp] failed:', error);
+        return res.status(500).json({ error: error.message || 'internal error' });
+    }
 });
 
 // 11.2 每月計算分潤 (Scheduled Job - 1st of each month)
