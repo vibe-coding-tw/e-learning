@@ -36,6 +36,21 @@ admin.initializeApp({
 });
 const db = admin.firestore();
 
+// Source of truth for course/unit authorization is metadata_lessons.
+// This helper is only for backward compatibility with historical item ids.
+function normalizeLegacyId(value) {
+    const map = {
+        '01': 'ydb63bg',
+        '02': 'a45cwlak',
+        '03': 'a7smdfeq',
+        '04': 'hkdq5j3m',
+        '05': 'io5rxgxl',
+        'ai-agents-vibe': 'ai-agents-vibe',
+        '01-master-identity': '01-master-getting-started.html'
+    };
+    return map[value] || value;
+}
+
 // ==========================================
 // Firebase Functions V2 全域設定
 // ==========================================
@@ -58,6 +73,8 @@ const HASH_IV = process.env.ECPAY_HASH_IV;
 const ECPAY_API_URL = process.env.ECPAY_API_URL;
 const ECPAY_LOGISTICS_MAP_URL = process.env.ECPAY_LOGISTICS_MAP_URL;
 const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET || "";
+const GITHUB_CLASSROOM_ORG = process.env.GITHUB_CLASSROOM_ORG || "vibe-coding-classroom";
+const GITHUB_ORG_ADMIN_TOKEN = process.env.GITHUB_ORG_ADMIN_TOKEN || "";
 
 const REGION = "asia-east1";
 // 為了避免專案 ID 寫死，我們也可以動態抓取，或者您保留原本寫死的字串
@@ -103,6 +120,82 @@ function getCurrentTime() {
     const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
     const date = new Date(utc + (3600000 * offset));
     return `${date.getFullYear()}/${('0' + (date.getMonth() + 1)).slice(-2)}/${('0' + date.getDate()).slice(-2)} ${('0' + date.getHours()).slice(-2)}:${('0' + date.getMinutes()).slice(-2)}:${('0' + date.getSeconds()).slice(-2)}`;
+}
+
+async function githubApiRequest(pathname, options = {}) {
+    if (!GITHUB_ORG_ADMIN_TOKEN) {
+        throw new Error("GITHUB_ORG_ADMIN_TOKEN is missing");
+    }
+    const url = `https://api.github.com${pathname}`;
+    const headers = {
+        "Authorization": `Bearer ${GITHUB_ORG_ADMIN_TOKEN}`,
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        ...(options.headers || {})
+    };
+    const resp = await fetch(url, { ...options, headers });
+    let body = null;
+    try {
+        body = await resp.json();
+    } catch (_) {
+        body = null;
+    }
+    return { ok: resp.ok, status: resp.status, body };
+}
+
+async function resolveGithubLoginFromFirebaseUid(firebaseUid) {
+    const userRecord = await admin.auth().getUser(firebaseUid);
+    const provider = (userRecord.providerData || []).find(p => p.providerId === "github.com");
+    if (!provider || !provider.uid) {
+        return { githubProviderUid: null, githubLogin: null };
+    }
+
+    const providerUid = String(provider.uid);
+    const userResp = await githubApiRequest(`/user/${encodeURIComponent(providerUid)}`);
+    if (!userResp.ok || !userResp.body || !userResp.body.login) {
+        return { githubProviderUid: providerUid, githubLogin: null };
+    }
+    return { githubProviderUid: providerUid, githubLogin: String(userResp.body.login) };
+}
+
+async function ensureGithubOrgMembership({ firebaseUid, org = GITHUB_CLASSROOM_ORG }) {
+    const { githubProviderUid, githubLogin } = await resolveGithubLoginFromFirebaseUid(firebaseUid);
+    if (!githubProviderUid || !githubLogin) {
+        return { ok: false, state: "missing_github_identity", githubLogin: null, inviteSent: false, org };
+    }
+
+    const membershipResp = await githubApiRequest(`/orgs/${encodeURIComponent(org)}/memberships/${encodeURIComponent(githubLogin)}`);
+    if (membershipResp.ok && membershipResp.body) {
+        const state = String(membershipResp.body.state || "").toLowerCase();
+        if (state === "active") {
+            return { ok: true, state: "active", githubLogin, inviteSent: false, org };
+        }
+        if (state === "pending") {
+            return { ok: false, state: "pending", githubLogin, inviteSent: false, org };
+        }
+    }
+
+    // If not found / not active, attempt to invite
+    let inviteSent = false;
+    let inviteId = null;
+    const inviteResp = await githubApiRequest(`/orgs/${encodeURIComponent(org)}/invitations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invitee_id: Number(githubProviderUid), role: "direct_member" })
+    });
+    if (inviteResp.ok && inviteResp.body) {
+        inviteSent = true;
+        inviteId = inviteResp.body.id || null;
+    }
+
+    return {
+        ok: false,
+        state: inviteSent ? "invited" : "not_member",
+        githubLogin,
+        inviteSent,
+        inviteId,
+        org
+    };
 }
 
 function extractHiddenSectionContent(html, sectionId) {
@@ -191,7 +284,7 @@ exports.initiatePayment = onRequest(async (req, res) => {
         // Guardrail: physical-product orders must include complete logistics info.
         const physicalUnitIds = new Set(lessons.filter(l => l.isPhysical === true).map(l => l.id));
         const hasPhysicalItem = Object.keys(normalizedItems || {}).some(id => {
-            const canonicalId = legacyMap[id] || id;
+            const canonicalId = normalizeLegacyId(id);
             const itemData = normalizedItems[id] || {};
             if (itemData.isPhysical === true) return true;
             return physicalUnitIds.has(canonicalId) || physicalUnitIds.has(id);
@@ -395,7 +488,7 @@ exports.paymentNotify = onRequest(async (req, res) => {
                     const physicalUnitIds = new Set(lessons.filter(l => l.isPhysical === true).map(l => l.id));
                     const orderItems = orderData.items || {};
                     const hasPhysicalItem = Object.keys(orderItems).some(id => {
-                        const canonicalId = legacyMap[id] || id;
+                        const canonicalId = normalizeLegacyId(id);
                         const itemData = orderItems[id] || {};
                         if (itemData.isPhysical === true) return true;
                         return physicalUnitIds.has(canonicalId) || physicalUnitIds.has(id);
@@ -1537,6 +1630,54 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
         courseId: effectiveCourseId,
         requiresTutorAssignment
     };
+});
+
+exports.precheckGithubClassroomAccess = onCall(async (request) => {
+    const { auth, data } = request;
+    if (!auth) throw new HttpsError('unauthenticated', '請先登入');
+
+    if (!GITHUB_ORG_ADMIN_TOKEN) {
+        return {
+            success: false,
+            precheckEnabled: false,
+            state: "disabled",
+            message: "GitHub precheck is not configured."
+        };
+    }
+
+    const classroomUrl = String(data?.classroomUrl || "").trim();
+    const isClassroom = /classroom\.github\.com\/a\//i.test(classroomUrl);
+    if (!isClassroom) {
+        return {
+            success: true,
+            precheckEnabled: true,
+            state: "skipped",
+            message: "Not a GitHub Classroom invite URL."
+        };
+    }
+
+    try {
+        const result = await ensureGithubOrgMembership({ firebaseUid: auth.uid, org: GITHUB_CLASSROOM_ORG });
+        return {
+            success: result.ok === true,
+            precheckEnabled: true,
+            state: result.state,
+            org: result.org,
+            githubLogin: result.githubLogin || null,
+            inviteSent: result.inviteSent === true,
+            inviteId: result.inviteId || null,
+            settingsUrl: "https://github.com/settings/organizations"
+        };
+    } catch (error) {
+        console.error("[precheckGithubClassroomAccess] failed:", error);
+        return {
+            success: false,
+            precheckEnabled: true,
+            state: "error",
+            message: error.message || "precheck failed",
+            settingsUrl: "https://github.com/settings/organizations"
+        };
+    }
 });
 
 // 7.3 授權課程老師 (Admin Only)
@@ -2881,6 +3022,21 @@ exports.submitAssignment = onCall(async (request) => {
         const assignedTutorEmail = access.assignedTutorEmail || null;
         if (access.requiresTutorAssignment && !assignedTutorEmail) {
             throw new HttpsError('failed-precondition', '此單元尚未完成老師指派，暫時無法建立作業紀錄。');
+        }
+
+        const submissionUrl = String(url || "").trim();
+        const isClassroomInvite = /classroom\.github\.com\/a\//i.test(submissionUrl);
+        if (currentStatus === "submitted" && isClassroomInvite && GITHUB_ORG_ADMIN_TOKEN) {
+            const membership = await ensureGithubOrgMembership({ firebaseUid: userId, org: GITHUB_CLASSROOM_ORG });
+            if (!membership.ok) {
+                const base = '尚未完成 GitHub Classroom 組織授權。請先到 https://github.com/settings/organizations 接受邀請後重試。';
+                const detail = membership.state === "missing_github_identity"
+                    ? '（目前帳號尚未綁定 GitHub 登入）'
+                    : membership.state === "invited"
+                        ? '（系統已自動補發邀請）'
+                        : '';
+                throw new HttpsError('failed-precondition', `${base}${detail}`);
+            }
         }
 
         // Prevent status downgrade

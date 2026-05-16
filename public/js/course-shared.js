@@ -733,6 +733,17 @@ function initFirebaseFeatures() {
             }
         };
 
+        window.firebasePrecheckGithubClassroomAccess = async (classroomUrl) => {
+            try {
+                const precheck = httpsCallable(functions, 'precheckGithubClassroomAccess');
+                const result = await precheck({ classroomUrl });
+                return result.data || null;
+            } catch (e) {
+                console.error("Failed to precheck GitHub Classroom access:", e);
+                return null;
+            }
+        };
+
         console.log("[Firebase] Initialized.");
     `;
 
@@ -759,6 +770,13 @@ function injectSubmissionModal() {
                     <h4 class="font-bold text-gray-800">GitHub Classroom</h4>
                 </div>
                 <p class="text-xs text-gray-600 mb-4">本單元已整合 GitHub Classroom。點擊作業卡片會先建立「開始作業」紀錄；完成後請回到這裡正式提交 Repo 連結。</p>
+                <div class="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs leading-relaxed">
+                    若看到 GitHub「Repository Access Issue」或提交時出現授權錯誤，請先到
+                    <a href="https://github.com/settings/organizations" target="_blank" rel="noopener noreferrer" class="font-bold underline">
+                        GitHub Settings / Organizations
+                    </a>
+                    接受待處理邀請後再重試。
+                </div>
                 <a id="sub-github-link" href="#" target="_blank"
                     class="block w-full text-center py-2 bg-slate-800 text-white rounded-lg font-bold hover:bg-slate-700 transition shadow-md flex items-center justify-center gap-2">
                     <span>🚀</span> 領取 GitHub Classroom 作業
@@ -1053,6 +1071,17 @@ function isLikelyGitHubClassroomLink(url = '') {
     return s.includes('classroom.github.com') || s.includes('github.com/classroom');
 }
 
+function buildSubmitFailureMessage(rawMessage = '', submitUrl = '') {
+    const message = String(rawMessage || '').trim();
+    const isClassroomSubmission = isLikelyGitHubClassroomLink(submitUrl);
+    const maybeOrgInviteIssue =
+        /付款授權|payment|repository access issue|no longer have access|no access|invitation|組織邀請|organization/i.test(message);
+    if (isClassroomSubmission && maybeOrgInviteIssue) {
+        return `繳交失敗：${message || '尚未完成授權'}\n\n請先完成以下步驟後再提交：\n1. 前往 https://github.com/settings/organizations\n2. 接受待處理的組織或 Repository 邀請\n3. 回到本頁重新提交`;
+    }
+    return `繳交失敗: ${message || 'Unknown error'}`;
+}
+
 function extractClassroomInviteCandidates(urlConfig) {
     if (!urlConfig) return [];
     if (typeof urlConfig === 'string') return [normalizeGitHubClassroomInviteUrl(urlConfig)];
@@ -1118,6 +1147,26 @@ window.submitAssignmentAction = async function () {
             throw new Error("Firebase SDK not initialized yet.");
         }
 
+        if (isLikelyGitHubClassroomLink(url) && typeof window.firebasePrecheckGithubClassroomAccess === 'function') {
+            const precheck = await window.firebasePrecheckGithubClassroomAccess(url);
+            const badStates = new Set(['pending', 'invited', 'not_member', 'missing_github_identity']);
+            if (precheck && precheck.precheckEnabled && badStates.has(String(precheck.state || ''))) {
+                const suffix = precheck.state === 'invited'
+                    ? '\n（系統已自動補發邀請）'
+                    : precheck.state === 'missing_github_identity'
+                        ? '\n（目前帳號尚未綁定 GitHub 登入）'
+                        : '';
+                alert(
+                    `請先完成 GitHub 組織邀請授權再提交。\n` +
+                    `1. 前往 ${precheck.settingsUrl || 'https://github.com/settings/organizations'}\n` +
+                    `2. 接受待處理邀請\n` +
+                    `3. 回到本頁重新提交` +
+                    suffix
+                );
+                return;
+            }
+        }
+
         const result = await window.firebaseSubmitAssignment({
             courseId: courseId,
             unitId: unitId,
@@ -1131,11 +1180,13 @@ window.submitAssignmentAction = async function () {
             alert("作業繳交成功！老師將會收到通知。");
             closeSubmissionModal();
         } else {
-            alert("繳交失敗: " + (result.message || "Unknown error"));
+            alert(buildSubmitFailureMessage(result.message, url));
         }
     } catch (e) {
         console.error(e);
-        // Error alert handled in firebaseSubmitAssignment or here
+        if (e && e.message) {
+            alert(buildSubmitFailureMessage(e.message, url));
+        }
     } finally {
         btn.disabled = false;
         btn.innerHTML = originalText;
