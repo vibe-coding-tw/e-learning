@@ -52,6 +52,28 @@ function extractAssignmentIdFromBridgeRepo(repo) {
   return short;
 }
 
+function normalizeUnitKey(s) {
+  const raw = String(s || "").trim().toLowerCase();
+  if (!raw) return "";
+  // Examples:
+  // 01-unit-vscode-online -> vscode-online
+  // start-01-unit-html5-basics -> html5-basics
+  // adv-01-unit-jpeg-quality -> jpeg-quality
+  const m = raw.match(/(?:^|-)unit-([a-z0-9-]+)$/);
+  if (m && m[1]) return m[1];
+  return raw;
+}
+
+function normalizeAssignmentKey(s) {
+  const raw = String(s || "").trim().toLowerCase();
+  if (!raw) return "";
+  // Examples:
+  // vscode-online-task-1 -> vscode-online
+  // html5-basics-task-3 -> html5-basics
+  // vibe-01-vision -> vibe-01-vision
+  return raw.replace(/-task-\d+(?:-\d+)?$/, "");
+}
+
 function pickBestCandidate(list, preferredStatuses) {
   if (!list || list.length === 0) return null;
 
@@ -81,6 +103,7 @@ function tsToMs(ts) {
 async function loadAssignmentsIndex() {
   const snap = await db.collection("assignments").get();
   const byAssignmentId = new Map();
+  const byAssignmentKey = new Map();
 
   for (const doc of snap.docs) {
     const d = doc.data() || {};
@@ -99,9 +122,15 @@ async function loadAssignmentsIndex() {
 
     if (!byAssignmentId.has(assignmentId)) byAssignmentId.set(assignmentId, []);
     byAssignmentId.get(assignmentId).push(item);
+
+    const key = normalizeAssignmentKey(assignmentId);
+    if (key) {
+      if (!byAssignmentKey.has(key)) byAssignmentKey.set(key, []);
+      byAssignmentKey.get(key).push(item);
+    }
   }
 
-  return byAssignmentId;
+  return { byAssignmentId, byAssignmentKey };
 }
 
 async function main() {
@@ -122,7 +151,7 @@ async function main() {
     throw new Error(`Bridge CSV is empty: ${bridgeCsvPath}`);
   }
 
-  const index = await loadAssignmentsIndex();
+  const { byAssignmentId, byAssignmentKey } = await loadAssignmentsIndex();
 
   const out = [];
   out.push("repo,assignment_doc_id,user_id,assignment_id,candidate_count,selected_status");
@@ -130,8 +159,12 @@ async function main() {
   for (const line of lines.slice(1)) {
     const [repo] = line.split(",");
     const assignmentId = extractAssignmentIdFromBridgeRepo(repo);
+    const unitKey = normalizeUnitKey(assignmentId);
 
-    const candidates = index.get(assignmentId) || [];
+    let candidates = byAssignmentId.get(assignmentId) || [];
+    if (candidates.length === 0 && unitKey) {
+      candidates = byAssignmentKey.get(unitKey) || [];
+    }
     const best = pickBestCandidate(candidates, preferredStatuses);
 
     const docId = best ? best.docId : "";
