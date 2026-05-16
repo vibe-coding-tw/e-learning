@@ -8,6 +8,9 @@ Make GitHub Classroom grading write back to Vibe Coding automatically with no ma
 - Trigger modes:
   - `repository_dispatch` (preferred for exact score)
   - `workflow_run` (fallback; success=100, failure=0)
+- Backend fallback:
+  - `ingestGithubAutograde` can auto-resolve assignment doc by repository/unit when `assignmentDocId` is missing.
+  - If multiple assignment candidates match the same unit, webhook returns ambiguity error and sends admin alert.
 
 ## Step 1: Configure per-repo mapping once
 Prepare CSV from sample:

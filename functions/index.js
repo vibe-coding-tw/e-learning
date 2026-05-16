@@ -2987,11 +2987,100 @@ exports.ingestGithubAutograde = onRequest(async (req, res) => {
         const assignmentDocId = payload.assignmentDocId || payload.assignment?.docId || null;
         const userId = payload.userId || payload.assignment?.userId || null;
         const assignmentId = payload.assignmentId || payload.assignment?.assignmentId || null;
+        const repositoryFullName = payload.repository?.full_name || payload.repo || "";
         const scoreRaw = payload.score ?? payload.grade ?? payload.autoGrade?.score;
         const maxScoreRaw = payload.maxScore ?? payload.autoGrade?.maxScore ?? null;
         const score = Number(scoreRaw);
         const maxScore = maxScoreRaw !== null && maxScoreRaw !== undefined ? Number(maxScoreRaw) : null;
-        const resolvedDocId = assignmentDocId || (userId && assignmentId ? `${userId}_${assignmentId}` : null);
+        let resolvedDocId = assignmentDocId || (userId && assignmentId ? `${userId}_${assignmentId}` : null);
+
+        const inferUnitIdFromRepo = (repoFullName = "") => {
+            const repoName = String(repoFullName || "").split("/").pop() || "";
+            // Typical classroom repo name pattern contains duplicated unit id:
+            // vibe-coding-classroom-01-unit-vscode-online-01-unit-vscode-online
+            const m = repoName.match(/((?:\d{2}|start-\d{2}|basic-\d{2}|adv-\d{2})-unit-[a-z0-9-]+)/i);
+            if (!m || !m[1]) return null;
+            return `${m[1].toLowerCase()}.html`;
+        };
+
+        const scoreStatusRank = (status = "") => {
+            const s = String(status || "").toLowerCase();
+            if (s === "graded") return 0;
+            if (s === "submitted") return 1;
+            if (s === "started") return 9;
+            return 5;
+        };
+
+        const tsToMs = (value) => {
+            if (!value) return 0;
+            if (typeof value.toMillis === "function") return value.toMillis();
+            if (typeof value === "number") return value;
+            return 0;
+        };
+
+        if (!resolvedDocId) {
+            const inferredUnitId = payload.unitId || payload.assignment?.unitId || inferUnitIdFromRepo(repositoryFullName);
+            if (inferredUnitId) {
+                const unitCandidates = Array.from(new Set([
+                    String(inferredUnitId || "").trim(),
+                    String(inferredUnitId || "").replace(/\.html$/, "").trim(),
+                ].filter(Boolean)));
+
+                const candidateDocs = [];
+                for (const unitCandidate of unitCandidates) {
+                    const snap = await db.collection("assignments").where("unitId", "==", unitCandidate).limit(200).get();
+                    snap.forEach((doc) => candidateDocs.push(doc));
+                }
+
+                const dedup = new Map();
+                for (const doc of candidateDocs) dedup.set(doc.id, doc);
+                let candidates = Array.from(dedup.values()).map((doc) => ({ id: doc.id, data: doc.data() || {} }));
+
+                if (repositoryFullName) {
+                    const strictMatched = candidates.filter((row) =>
+                        String(row.data.assignmentUrl || "").includes(repositoryFullName)
+                    );
+                    if (strictMatched.length > 0) candidates = strictMatched;
+                }
+
+                if (userId) {
+                    candidates = candidates.filter((row) => String(row.data.userId || row.data.uid || "") === String(userId));
+                }
+
+                if (assignmentId) {
+                    const exactMatched = candidates.filter((row) => String(row.data.assignmentId || "") === String(assignmentId));
+                    if (exactMatched.length > 0) candidates = exactMatched;
+                }
+
+                candidates.sort((a, b) => {
+                    const sr = scoreStatusRank(a.data.currentStatus) - scoreStatusRank(b.data.currentStatus);
+                    if (sr !== 0) return sr;
+                    return tsToMs(b.data.updatedAt) - tsToMs(a.data.updatedAt);
+                });
+
+                if (candidates.length === 1) {
+                    resolvedDocId = candidates[0].id;
+                } else if (candidates.length > 1) {
+                    await sendAutogradeFailureAlertEmail(
+                        process.env.ADMIN_EMAIL || process.env.MAIL_USER,
+                        `Ambiguous assignment mapping for unit ${inferredUnitId}`,
+                        {
+                            repository: repositoryFullName,
+                            inferredUnitId,
+                            candidateCount: candidates.length,
+                            candidateIds: candidates.slice(0, 20).map((c) => c.id),
+                            payload,
+                        }
+                    );
+                    return res.status(409).json({
+                        success: false,
+                        error: "Ambiguous assignment mapping. Please provide assignmentDocId or userId + assignmentId.",
+                        inferredUnitId,
+                        candidateCount: candidates.length,
+                    });
+                }
+            }
+        }
 
         if (!resolvedDocId) {
             try {
