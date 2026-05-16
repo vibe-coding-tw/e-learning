@@ -74,6 +74,9 @@
 - **`metadata_settings`**: 全域設定（目前包含 `tutor_terms`）。
 - **`profit_ledger`**: 分潤計算明細。
 
+> 課程授權判斷（含免費課程）以 Firestore `metadata_lessons` 為單一真實來源；
+> 課程單元鍵值異動請先更新 `metadata_lessons.courseUnits`，再部署程式碼。
+
 ---
 
 ## ✨ 平台特色 (Platform Highlights)

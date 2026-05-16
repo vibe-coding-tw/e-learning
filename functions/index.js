@@ -589,10 +589,6 @@ function findParentCourseIdByUnit(unitId, lessons = []) {
 
 function findCourseByPageOrUnit(pageId, fileName, lessons = []) {
     const legacyCourseAliasMap = {
-        '04-master-ai-agents.html': '02-master-ai-agents.html',
-        '04-unit-agent-mode.html': '02-unit-agent-mode.html',
-        '04-unit-web-agents.html': '02-unit-web-agents.html',
-        '04-unit-vibe-coding.html': '02-unit-vibe-coding.html',
         '02-unit-vibe-coding-intro.html': '03-unit-github-classroom.html',
         '02-unit-classroom-workflow.html': '03-unit-github-classroom.html',
         '02-unit-teacher-matrix.html': '03-unit-github-classroom.html'
@@ -1023,10 +1019,6 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
 // ==========================================
 exports.serveCourse = onRequest(async (req, res) => {
     const legacyCourseAliasMap = {
-        '04-master-ai-agents.html': '02-master-ai-agents.html',
-        '04-unit-agent-mode.html': '02-unit-agent-mode.html',
-        '04-unit-web-agents.html': '02-unit-web-agents.html',
-        '04-unit-vibe-coding.html': '02-unit-vibe-coding.html',
         '02-unit-vibe-coding-intro.html': '03-unit-github-classroom.html',
         '02-unit-classroom-workflow.html': '03-unit-github-classroom.html',
         '02-unit-teacher-matrix.html': '03-unit-github-classroom.html'
@@ -2001,9 +1993,7 @@ exports.getDashboardData = onCall(async (request) => {
         '04': 'hkdq5j3m',
         '05': 'io5rxgxl',
         'ai-agents-vibe': 'ai-agents-vibe', // Explicit mapping for new course
-        '01-master-identity': '01-master-getting-started.html',
-        '04-unit-wifi-setup.html': '03-unit-wifi-setup.html',
-        '04-unit-motor-ramping.html': '03-unit-motor-ramping.html'
+        '01-master-identity': '01-master-getting-started.html'
     };
 
     try {

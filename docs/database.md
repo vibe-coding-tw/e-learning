@@ -64,6 +64,13 @@
 | `isPhysical` | boolean | 是否為實體商品。 |
 | `orderWeight` | number | 排序權重。 |
 
+> 重要：課程授權判斷（包含免費課程 `price=0`）以 `metadata_lessons` 為唯一來源（Source of Truth）。
+> 不再依賴硬編碼單元白名單。
+>
+> 2026-05-16 更新：
+> - `ai-agents-vibe.courseUnits` 已切換為 `02-unit-agent-mode.html`, `02-unit-web-agents.html`, `02-unit-vibe-coding.html`
+> - `github-classroom.courseUnits` 已整併為 `03-unit-github-classroom.html`
+
 ---
 
 ## 4. `assignments` 集合
