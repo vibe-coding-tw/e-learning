@@ -3,85 +3,40 @@
 ## Goal
 Make GitHub Classroom grading write back to Vibe Coding automatically with no manual input for `assignmentDocId` or score submission.
 
-## Current architecture
-- `autograde-sync.yml` is deployed to each classroom bridge repo.
-- Trigger modes:
-  - `repository_dispatch` (preferred for exact score)
-  - `workflow_run` (fallback; success=100, failure=0)
-- Backend fallback:
-  - `ingestGithubAutograde` can auto-resolve assignment doc by repository/unit when `assignmentDocId` is missing.
-  - If multiple assignment candidates match the same unit, webhook returns ambiguity error and sends admin alert.
+## Current architecture (Webhook Based)
+- 自動評分系統已全面轉移至 GitHub Classroom 內建的 Autograding Webhook 機制。
+- 不再需要手動在每個 repo 中部署 `autograde-and-sync.yml`。
+- GitHub Classroom Autograding 會在學生 Push 程式碼時自動觸發測試。
+- 評分完成後，Classroom 會發送 Webhook (HTTP POST) 到平台的 `ingestGithubAutograde` 雲端函式。
+- Backend:
+  - `ingestGithubAutograde` 接收 webhook 後，會解析 payload 並將分數回寫至 `assignments` 集合的 `autoGrade` 欄位。
+  - 系統會透過 Webhook 內的 repository 等資訊自動解析並比對學生的作業記錄。若配對失敗或存在多筆相同的作業記錄，會回傳錯誤並發送管理員通知信。
 
-## Step 1: Configure per-repo mapping once
-Prepare CSV from sample:
-- [autograde-repo-mapping.sample.csv](/Users/roverchen/Documents/Apps/vibe-coding-tw/docs/examples/autograde-repo-mapping.sample.csv)
+## Step 1: Configure Autograding in GitHub Classroom
+1. 進入 GitHub Classroom，選擇您的 Assignment。
+2. 進入 Assignment 的編輯頁面 (Edit Assignment)。
+3. 在 Autograding 區塊，設定好您的自動測試規則 (Tests)。
 
-If you want to auto-fill mapping from Firestore assignments, generate one with:
-```bash
-node functions/scripts/export_autograde_mapping_from_firestore.js \
-  --bridge-csv=docs/examples/classroom-bridge-sync-units-only.csv \
-  --output=docs/examples/autograde-repo-mapping.firestore.csv
-```
-
-Then apply:
-```bash
-scripts/setup_autograde_repo_mapping.sh --dry-run docs/examples/autograde-repo-mapping.firestore.csv
-scripts/setup_autograde_repo_mapping.sh --apply docs/examples/autograde-repo-mapping.firestore.csv
-```
-
-Run:
-```bash
-scripts/setup_autograde_repo_mapping.sh --dry-run /path/to/mapping.csv
-scripts/setup_autograde_repo_mapping.sh --apply /path/to/mapping.csv
-```
-
-Accepted mapping formats:
-1. `assignment_doc_id` (recommended)
-2. `user_id + assignment_id` (fallback)
-
-## Step 2: Ensure webhook secrets exist in every classroom repo
-Required secrets:
-- `VC_AUTOGRADE_URL`
-- `VC_AUTOGRADE_TOKEN`
-
-## Step 3: Choose score mode
-### Mode A: Fully automatic fallback (already works)
-- No grading workflow changes needed.
-- `workflow_run` sends:
-  - success -> score 100
-  - non-success -> score 0
-
-### Mode B: Exact score automatic (recommended)
-In grading workflow, append a step that dispatches real score:
-
-```yaml
-- name: Dispatch exact score
-  if: always()
-  env:
-    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  run: |
-    SCORE="${{ steps.grader.outputs.score }}"
-    MAX_SCORE="${{ steps.grader.outputs.max_score }}"
-    STATUS="completed"
-    [ "${{ job.status }}" != "success" ] && STATUS="failed"
-
-    gh api repos/${{ github.repository }}/dispatches \
-      -f event_type='autograde_result' \
-      -F client_payload:='{"assignmentDocId":"${{ vars.VC_ASSIGNMENT_DOC_ID }}","score":'"${SCORE:-0}"',"maxScore":'"${MAX_SCORE:-100}"',"status":"'"$STATUS"'","runUrl":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}","workflow":"${{ github.workflow }}","commitSha":"${{ github.sha }}"}'
-```
+## Step 2: Configure the Webhook
+1. 在同一頁面或 Classroom 的設定中，找到 Webhook 設定。
+2. 設定 Payload URL 為您的 `ingestGithubAutograde` 端點 (例如: `https://asia-east1-e-learning-942f7.cloudfunctions.net/ingestGithubAutograde`)。
+3. Content type 設定為 `application/json`。
+4. 在 Secret 欄位填寫與 Firebase `.env` 中 `GITHUB_WEBHOOK_SECRET` 相同的值。
+5. 儲存設定。
 
 ## Validation checklist
-1. Trigger one grading run in a classroom repo.
-2. Confirm `Autograde Sync To Vibe Coding` runs automatically.
-3. Confirm Firestore assignment fields updated:
-- `autoGrade.score`
-- `autoGrade.maxScore`
-- `autoGradeUpdatedAt`
-- `autoGradeSource`
+1. 學生在 Classroom repo 推送 (push) 程式碼。
+2. 進入該 repo 的 Actions 頁籤確認 Autograding 成功執行。
+3. 進入 Vibe Coding 的 Dashboard 或是 Firebase Firestore `assignments` 集合，確認以下欄位已更新：
+   - `autoGrade.score`
+   - `autoGrade.maxScore`
+   - `autoGradeUpdatedAt`
+   - `autoGradeSource`
 
 ## Troubleshooting
-- If sync does not trigger:
-  - confirm workflow name is included in `workflow_run.workflows` list in `.github/workflows/autograde-sync.yml`.
-- If sync triggers but write-back fails:
-  - verify `VC_AUTOGRADE_URL` / `VC_AUTOGRADE_TOKEN`.
-  - verify mapping variable exists (`VC_ASSIGNMENT_DOC_ID` or `VC_USER_ID` + `VC_ASSIGNMENT_ID`).
+- 如果評分未觸發：
+  - 檢查 GitHub Actions 是否因額度限制或設定錯誤未執行。
+- 如果評分成功但 Vibe Coding 未更新：
+  - 檢查 Webhook Secret 是否相符。
+  - 檢查 Firebase Functions Log (`ingestGithubAutograde`) 是否有報錯。
+  - 確認學生的 GitHub 帳號與 Vibe Coding 帳號的連結狀態，或 repository 命名是否正確。
