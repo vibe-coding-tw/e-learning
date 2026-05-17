@@ -49,9 +49,14 @@
     - `logActivity`: 毫秒級學習行為追蹤 API。
   - **權限與導師管理**:
     - `setUserRole`: 管理員設置使用者全域角色。
-    - `authorizeTutorForCourse` / `getTutorConfigs`: 導師單元授權管理。
+    - `authorizeTutorForCourse` / `getTutorConfigs` / `saveTutorConfigs`: 導師單元授權與設定管理。
     - `applyForTutorRole` / `decideTutorApplication`: 導師申請與審核工作流。
+    - `recommendTutorForUnit` / `submitTutorRecommendationInviteLink`: 導師主動推薦流程與連結綁定。
     - `bindTutorToUnit` / `assignStudentToTutor`: 學生與導師的單元級綁定。
+    - `precheckGithubClassroomAccess`: 檢查學生是否已完成組織授權防呆機制。
+    - `checkPaymentAuthorization`: 確認單元存取權限並核發安全 Token。
+  - **系統輔助工具 (Utilities)**:
+    - `findClassroomInviteBinding` / `findClassroomInviteBindingHttp`: 管理員查詢綁定狀態用。
   - **出貨處理**:
     - `markOrderShipped`: 管理員手動標記已出貨。
   - **定時任務 (Scheduled Functions)**:
@@ -101,14 +106,8 @@
 
 ## 🚀 開發與部署 (DevOps)
 
-### 歷史工具封存 (Archive)
-- 一次性遷移/修復工具與大型操作快照已移至 `archive/`，不再作為日常 SOP：
-  - `archive/scripts/`
-  - `archive/functions-scripts/`
-  - `archive/docs-examples/`
-- 原則：
-  - 需要追溯時可參考 `archive/`。
-  - 新流程請以 `scripts/sync_classroom_repos.sh`、`scripts/sync_classroom_bridge_repos.sh` 與 `docs/` 現行規格為準。
+### 腳本工具與自動化
+- 新流程請以 `scripts/sync_classroom_repos.sh`、`scripts/sync_classroom_bridge_repos.sh` 與 `docs/` 現行規格為準。
 
 ### 環境變數 (`functions/.env`)
 - 金流：
@@ -131,6 +130,12 @@
 ### GitHub Classroom 自動評分回寫 (MVP)
 - Webhook/API 入口：`ingestGithubAutograde`（HTTP POST）
 - 功能：將 GitHub Actions / Classroom 評分結果寫回 `assignments` 文件的 `autoGrade` 欄位。
+- 運作機制：直接在 GitHub Classroom 作業設定中配置 Webhook，指向 `ingestGithubAutograde` 端點。
+- 觸發策略（省額度）：
+  - 預設建議手動 `workflow_dispatch`
+  - 若要 push 觸發，需滿足其一：
+    - Repo variable `VC_AUTOGRADE_ON_PUSH=true`
+    - commit message 含 `[autograde]`
 - 文件定位方式（二選一）：
   - `assignmentDocId`
   - `userId + assignmentId`（系統會組成 `${userId}_${assignmentId}`）

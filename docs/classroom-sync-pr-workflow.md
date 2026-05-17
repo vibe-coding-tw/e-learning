@@ -49,5 +49,6 @@ scripts/sync_classroom_repos.sh \
 - 若 template 改動包含評分規則，請同步通知 tutor 與學生重跑/重交。
 
 ## 與系統自動評分的關係
-- 同步 PR merge 後，學生 push 新提交會觸發 GitHub Actions。
-- 自動評分結果由 `ingestGithubAutograde` 回寫至 Firestore `assignments.autoGrade*`。
+- 同步 PR merge 後，學生 push 新提交會觸發 GitHub Classroom 內建的自動評分機制。
+- GitHub Classroom 會透過 Webhook 將結果直接發送給 Vibe Coding 後端 (`ingestGithubAutograde`)。
+- 自動評分結果將回寫至 Firestore `assignments.autoGrade*`，不需在個別 repo 中維護額外的 GitHub Actions workflow。
