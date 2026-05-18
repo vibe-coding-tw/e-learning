@@ -1,7 +1,7 @@
 # Admin Invite Binding Lookup Tool
 
 ## Purpose
-快速查詢某一條 GitHub Classroom 邀請連結目前在 Firestore 綁定到哪些課程單元，避免「連結有效但購物車判定不屬於該課程項目」這類問題難以排查。
+快速查詢某一條 GitHub Classroom 邀請連結目前在 Firestore 綁定到哪些課程單元，避免「連結有效但作業頁綁定導師失敗」這類問題難以排查。
 
 ## Entry Points
 - Cloud Functions callable: `findClassroomInviteBinding`
@@ -29,7 +29,7 @@
 
 ## Operational Notes
 1. 若 `totalMatches = 0`，表示該邀請連結尚未寫入 `metadata_lessons.githubClassroomUrls`。
-2. 若查到單元但購物車仍報錯，請檢查：
-   - 購物車項目 ID 是否為 `metadata_lessons` 文件 ID（例如 `ydb63bg`）
-   - 單元是否包含在該課程 `courseUnits`
-   - `githubClassroomUrls` 是否有 `.html` key 巢狀化資料型態
+2. 若查到單元但作業頁仍報錯，請檢查：
+   - 該 Tutor 在 `users.tutorConfigs[unitId].authorized` 是否為 `true`
+   - 該單元是否已設定 `assignmentUrl/githubClassroomUrl`
+   - 學生是否具備該單元付款授權

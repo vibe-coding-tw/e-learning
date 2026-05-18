@@ -947,16 +947,9 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
     const tbody = document.getElementById('student-table-body');
     tbody.innerHTML = sortedStudents.map(s => {
-        const courseIdAliasMap = {
-            'start-01-master-web-app': 'ydb63bg',
-            'start-02-master-web-ble': 'a45cwlak',
-            'start-03-master-remote-control': 'a7smdfeq',
-            'start-04-master-touch-events': 'hkdq5j3m',
-            'start-05-master-joystick-lab': 'io5rxgxl'
-        };
         const coursesRaw = s.courseProgress || {};
         const courses = Object.entries(coursesRaw).reduce((acc, [key, value]) => {
-            const canonicalKey = courseIdAliasMap[key] || key;
+            const canonicalKey = key;
             const prev = acc[canonicalKey] || { total: 0, video: 0, doc: 0, page: 0, units: {} };
             acc[canonicalKey] = {
                 ...prev,
@@ -3051,7 +3044,9 @@ window.renderEarningsTab = window.renderEarningsTab || function(data) {
     } else {
         promoCodeEl.innerHTML = `
             <div class="flex flex-col items-center">
-                <span class="text-xs font-mono text-blue-600 break-all max-w-[200px] text-center">${data.myReferralLink}</span>
+                <span class="text-xs font-mono text-indigo-700 break-all max-w-[200px] text-center">${escapeHtml(data.myPromotionCode || '尚未生成')}</span>
+                <span class="text-[10px] text-gray-400 mt-1 uppercase tracking-tighter">Promotion Code</span>
+                <span class="mt-3 text-xs font-mono text-blue-600 break-all max-w-[200px] text-center">${data.myReferralLink}</span>
                 <span class="text-[10px] text-gray-400 mt-1 uppercase tracking-tighter">此單元教學作業連結 / Unit Link</span>
             </div>
         `;

@@ -52,7 +52,7 @@
     - `authorizeTutorForCourse` / `getTutorConfigs` / `saveTutorConfigs`: 導師單元授權與設定管理。
     - `applyForTutorRole` / `decideTutorApplication`: 導師申請與審核工作流。
     - `recommendTutorForUnit` / `submitTutorRecommendationInviteLink`: 導師主動推薦流程與連結綁定。
-    - `bindTutorToUnit` / `assignStudentToTutor`: 學生與導師的單元級綁定。
+    - `bindTutorByPromotionCode` / `bindTutorToUnit` / `assignStudentToTutor`: 學生與導師的單元級綁定（現行主流程為 Promotion code）。
     - `precheckGithubClassroomAccess`: 檢查學生是否已完成組織授權防呆機制。
     - `checkPaymentAuthorization`: 確認單元存取權限並核發安全 Token。
   - **系統輔助工具 (Utilities)**:
@@ -71,7 +71,7 @@
   - `tutorConfigs`: 單元授權狀態 (Status)，非全域角色。比對時強制執行 **ID 歸一化** (移除 `.html`)。
   - `tutorMode`: 管理員專用開關，開啟時模擬導師視角，關閉時模擬學員視角（遵循 `rules.md` 規範）。
 - **`orders`**: 訂單紀錄。
-  - `items[itemId]` 內含 `referralLink` / `referredTutorEmail`（item 級推薦綁定）。
+  - `items[itemId]` 為購買項目本身（導師綁定不在購物車階段處理）。
   - `fulfillmentStatus` / `logistics`（硬體出貨狀態與物流資訊）。
   - `logisticsMissing`（實體商品付款後物流資料不完整時的警示旗標）。
 - **`activity_logs`**: 學習行為追蹤（主要欄位：`courseId`, `action`, `duration`, `metadata`, `timestamp`）。
@@ -82,13 +82,19 @@
 
 > 課程授權判斷（含免費課程）以 Firestore `metadata_lessons` 為單一真實來源；
 > 課程單元鍵值異動請先更新 `metadata_lessons.courseUnits`，再部署程式碼。
+>
+> **Firestore First 原則（強制）**：
+> - 所有「資料比對 / 權限判斷 / 邏輯驗證 / 寫入儲存」一律以 Firestore 為準。
+> - 禁止在前端或後端維護硬編碼白名單、相容名單、舊 ID 對照表作為執行期判斷依據。
+> - 若資料不一致，先修 Firestore 資料與遷移腳本，不新增 fallback 白名單邏輯。
 
 ---
 
 ## ✨ 平台特色 (Platform Highlights)
 
 ### 1. GitHub Classroom 深度整合
-每個學習單元可設定專屬 Classroom 邀請連結。系統支援「事後綁定」，學生可在開始作業前建立與老師的關聯，提升購買後彈性。
+每個學習單元可設定專屬 Classroom 邀請連結。系統支援「事後綁定」：學生在作業頁輸入 Tutor Promotion code 後，才會綁定導師與單元作業連結；購物車流程不再輸入 Promotion code。  
+目前規則：學生每次點擊作業都會先出現導師綁定對話框；Promotion code 可留白（會使用預設導師 `rover.k.chen@gmail.com`），若有輸入則必須是該單元合格導師的 code 才能通過。
 
 ### 2. 智慧型多層級分潤 (Recursive Sharing)
 推薦系統支援遞迴式計算：
@@ -131,6 +137,7 @@
 - Webhook/API 入口：`ingestGithubAutograde`（HTTP POST）
 - 功能：將 GitHub Actions / Classroom 評分結果寫回 `assignments` 文件的 `autoGrade` 欄位。
 - 運作機制：直接在 GitHub Classroom 作業設定中配置 Webhook，指向 `ingestGithubAutograde` 端點。
+- Workflow 定義與觸發條件由各 Classroom / bridge repo 維護，這個 repo 只負責後端回寫與同步腳本，不包含該 workflow 檔案。
 - 觸發策略（省額度）：
   - 預設建議手動 `workflow_dispatch`
   - 若要 push 觸發，需滿足其一：
@@ -194,6 +201,8 @@ firebase deploy --only hosting --project e-learning-942f7
 2. **正式上線部署 (`firebase-hosting-merge.yml`)**
    - 觸發時機：合併至 `main` 時。
    - 用途：部署 Hosting 與 Functions 至生產環境。
+
+> 注意：本 repo 的 GitHub Actions 只涵蓋 Firebase 部署，Classroom / bridge repo 內的 autograde workflow 定義由外部 repo 維護，並不在此 repository 中。
 
 ---
 

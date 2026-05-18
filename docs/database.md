@@ -16,6 +16,8 @@
 | `tutorApplications` | array | 該使用者申請紀錄快照（部分流程使用）。 |
 | `hasPendingApplication` | boolean | 是否有待審導師申請。 |
 | `unitAssignments` | map | 學生單元指派導師。Key = unitId，Value = tutorEmail。 |
+| `unitAssignmentMeta` | map | 學生單元綁定資訊。Key = unitId，常見欄位：`tutorUid`, `tutorEmail`, `promotionCode`, `linkedAt`。 |
+| `promotionCode` | string | Tutor 專屬 Promotion code（全域唯一）。 |
 | `courseProgress` | map | 學習進度聚合資料。 |
 | `orders` | array | 主要為 Dashboard 聚合回傳欄位，非主要持久化來源（實際訂單以 `orders` 集合為準）。 |
 | `updatedAt` | timestamp | 最後更新時間。 |
@@ -34,7 +36,7 @@
 | `uid` | string | 購買者 UID。 |
 | `amount` | number | 交易金額。 |
 | `status` | string | 目前主流程實際寫入 `PENDING`, `SUCCESS`（`FAILED` 保留為擴充狀態）。 |
-| `items` | map | 訂單項目。Key 為 itemId，value 可含 `name`, `price`, `quantity`, `isPhysical`, `referralLink`, `referredTutorEmail`。 |
+| `items` | map | 訂單項目。Key 為 itemId，value 可含 `name`, `price`, `quantity`, `isPhysical`。 |
 | `gateway` | string | 付款閘道（例如 `ECPAY`）。 |
 | `paidAt` | timestamp | 付款完成時間。 |
 | `paymentDate` | string | 金流回傳付款時間字串。 |
@@ -45,8 +47,8 @@
 | `ecpayTradeNo` | string | 綠界交易編號。 |
 | `createdAt` / `updatedAt` | timestamp | 建立/更新時間。 |
 
-> 推薦綁定採 item-level：`items[itemId].referralLink` 與 `items[itemId].referredTutorEmail`。
-> 購物車允許推薦連結留白，後續可再補上正確的 GitHub Classroom 邀請連結。
+> 購物車不再輸入 Promotion code / 推薦連結。  
+> 導師綁定在作業頁進行，並寫入 `users.unitAssignments` 與 `users.unitAssignmentMeta`。
 > 實體商品下單會在 `initiatePayment` 驗證物流必要欄位（收件人、電話、門市/地址）；若歷史資料或例外流程造成缺漏，`paymentNotify` 會標記 `logisticsMissing=true` 供後台追蹤。
 
 ---
@@ -66,6 +68,7 @@
 
 > 重要：課程授權判斷（包含免費課程 `price=0`）以 `metadata_lessons` 為唯一來源（Source of Truth）。
 > 不再依賴硬編碼單元白名單。
+> 所有執行期資料比對（包含邀請連結、課程授權、單元歸屬）都必須直接查 Firestore，禁止使用程式碼內相容名單或 fallback 白名單。
 >
 > 2026-05-16 更新：
 > - `ai-agents-vibe.courseUnits` 已切換為 `02-unit-agent-mode.html`, `02-unit-web-agents.html`, `02-unit-vibe-coding.html`
@@ -182,8 +185,9 @@
 
 ## 10. 遷移備註 (Migration Notes)
 1. 角色已統一為 `admin` 與 `user`，歷史 `student` 角色需遷移為 `user`。
-2. 申請/推薦/審核流程以 `tutor_applications` 為單一真實來源（Source of Truth）；`users.tutorApplications` 僅作歷史快照與相容欄位。
+2. 申請/推薦/審核流程以 `tutor_applications` 為單一真實來源（Source of Truth）；`users.tutorApplications` 僅作歷史快照，不得作為執行期判斷來源。
 3. 單元 key 含 `.html` 時，Firestore update 請使用 `FieldPath` 或一致正規化，避免 dot-in-key 巢狀化問題。
+4. 禁止新增白名單、相容名單、legacyMap 類型的執行期判斷層；需先完成 Firestore 資料遷移再上線。
 
 ---
 
