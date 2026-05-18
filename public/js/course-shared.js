@@ -828,7 +828,7 @@ function injectAssignmentLinkModal() {
                     🔗
                 </div>
                 <h3 class="text-2xl font-bold text-gray-800">連結您的授課老師</h3>
-                <p class="text-sm text-gray-500 mt-2">此單元需要指派老師才能開始作業。<br>請輸入老師提供的 <b>GitHub Classroom 作業連結</b>。</p>
+                <p class="text-sm text-gray-500 mt-2">此單元需要指派老師才能開始作業。<br>請輸入老師提供的 <b>Promotion code</b>。</p>
             </div>
             
             <input type="hidden" id="link-course-id">
@@ -837,10 +837,10 @@ function injectAssignmentLinkModal() {
             <input type="hidden" id="link-assignment-title">
 
             <div class="mb-6">
-                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">老師提供的作業連結</label>
-                <input type="url" id="link-referral-url" placeholder="https://classroom.github.com/a/..."
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">老師 Promotion code</label>
+                <input type="text" id="link-promotion-code" placeholder="例如：ROVER2026"
                     class="w-full border-2 border-gray-100 bg-gray-50 p-4 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition font-mono text-sm">
-                <p class="text-[10px] text-gray-400 mt-2">※ 系統將自動辨識連結並綁定您的導師關係。</p>
+                <p class="text-[10px] text-gray-400 mt-2">※ 可隨時輸入新的 code 更換導師。</p>
             </div>
 
             <div class="flex flex-col gap-3">
@@ -863,39 +863,25 @@ window.closeAssignmentLinkModal = function () {
 
 window.submitBindTutorAction = async function () {
     const btn = document.getElementById('btn-bind-tutor');
-    const urlInput = document.getElementById('link-referral-url');
-    const referralLink = normalizeGitHubClassroomInviteUrl(urlInput.value.trim());
+    const codeInput = document.getElementById('link-promotion-code');
+    const promotionCode = String(codeInput.value || '').trim().toUpperCase();
     const courseId = document.getElementById('link-course-id').value;
     const unitId = document.getElementById('link-unit-id').value;
     const assignmentId = document.getElementById('link-assignment-id').value;
     const title = document.getElementById('link-assignment-title').value;
 
-    if (!referralLink) {
-        alert("請輸入連結！");
-        return;
-    }
-    if (!isValidGitHubClassroomInviteUrl(referralLink)) {
-        alert("連結格式錯誤，請使用 GitHub Classroom 邀請連結：https://classroom.github.com/a/xxxxx");
-        return;
-    }
-    const knownForUnit = await isKnownInviteForUnit(unitId, referralLink);
-    if (!knownForUnit) {
-        alert("此邀請連結不在目前單元的既有設定中，請確認貼上的是該課程單元的 GitHub Classroom 邀請連結。");
-        return;
-    }
-
     btn.disabled = true;
-    btn.innerHTML = '正在驗證連結...';
+    btn.innerHTML = '正在驗證代碼...';
 
     try {
-        const bindTutorToUnit = httpsCallable(getFunctions(undefined, 'asia-east1'), 'bindTutorToUnit');
-        const result = await bindTutorToUnit({ unitId, courseId, referralLink });
+        const bindTutorByPromotionCode = httpsCallable(getFunctions(undefined, 'asia-east1'), 'bindTutorByPromotionCode');
+        const result = await bindTutorByPromotionCode({ unitId, courseId, promotionCode });
 
         if (result.data && result.data.success) {
             alert(`✅ 成功綁定導師：${result.data.tutorEmail}\n現在您可以開始作業了！`);
             closeAssignmentLinkModal();
             // Re-open the submission modal to refresh access state
-            openSubmissionModal(assignmentId, title);
+            openSubmissionModal(assignmentId, title, { skipTutorPrompt: true });
         } else {
             alert("❌ 綁定失敗：" + (result.data.message || "未知錯誤"));
         }
@@ -909,7 +895,8 @@ window.submitBindTutorAction = async function () {
 };
 
 // Global functions for Modal
-window.openSubmissionModal = async function (assignmentId, title) {
+window.openSubmissionModal = async function (assignmentId, title, options = {}) {
+    const skipTutorPrompt = options && options.skipTutorPrompt === true;
     const pathParts = window.location.pathname.split('/');
     const fileName = pathParts[pathParts.length - 1];
     const courseId = await findCourseIdByUnit(fileName);
@@ -922,13 +909,17 @@ window.openSubmissionModal = async function (assignmentId, title) {
             assignmentAccess = await window.firebaseResolveAssignmentAccess({ courseId, unitId: fileName, assignmentId });
             classroomUrl = assignmentAccess?.classroomUrl || null;
 
-            if (assignmentAccess?.requiresTutorAssignment && !assignmentAccess?.assignedTutorEmail) {
-                // [V16.1] Instead of alert, show the self-binding modal
+            const accessMode = String(assignmentAccess?.accessMode || '');
+            const shouldAlwaysPromptTutorBinding =
+                !skipTutorPrompt &&
+                ['paid_student', 'free_course', 'trial_course'].includes(accessMode);
+
+            if (shouldAlwaysPromptTutorBinding || (assignmentAccess?.requiresTutorAssignment && !assignmentAccess?.assignedTutorEmail)) {
                 document.getElementById('link-course-id').value = courseId;
                 document.getElementById('link-unit-id').value = fileName;
                 document.getElementById('link-assignment-id').value = assignmentId;
                 document.getElementById('link-assignment-title').value = title;
-                document.getElementById('link-referral-url').value = '';
+                document.getElementById('link-promotion-code').value = '';
                 document.getElementById('assignment-link-modal').classList.remove('hidden');
                 return;
             }
@@ -1080,39 +1071,6 @@ function buildSubmitFailureMessage(rawMessage = '', submitUrl = '') {
         return `繳交失敗：${message || '尚未完成授權'}\n\n請先完成以下步驟後再提交：\n1. 前往 https://github.com/settings/organizations\n2. 接受待處理的組織或 Repository 邀請\n3. 回到本頁重新提交`;
     }
     return `繳交失敗: ${message || 'Unknown error'}`;
-}
-
-function extractClassroomInviteCandidates(urlConfig) {
-    if (!urlConfig) return [];
-    if (typeof urlConfig === 'string') return [normalizeGitHubClassroomInviteUrl(urlConfig)];
-    if (typeof urlConfig === 'object') {
-        return Object.values(urlConfig)
-            .filter(v => typeof v === 'string' && v.trim())
-            .map(v => normalizeGitHubClassroomInviteUrl(v));
-    }
-    return [];
-}
-
-async function isKnownInviteForUnit(unitId, inviteUrl) {
-    const normalizedInvite = normalizeGitHubClassroomInviteUrl(inviteUrl);
-    if (!isValidGitHubClassroomInviteUrl(normalizedInvite)) return false;
-    try {
-        if (!globalLessonsData || globalLessonsData.length === 0) {
-            globalLessonsData = await vibeFetchLessons();
-        }
-        const unitCandidates = [unitId, String(unitId || '').replace(/\.html$/, '')].filter(Boolean);
-        for (const course of (globalLessonsData || [])) {
-            const map = course?.githubClassroomUrls || {};
-            for (const key of unitCandidates) {
-                const cfg = map[key] || map[`${key}.html`] || null;
-                const candidates = extractClassroomInviteCandidates(cfg);
-                if (candidates.includes(normalizedInvite)) return true;
-            }
-        }
-    } catch (err) {
-        console.warn('[CourseShared] Invite existence check failed:', err);
-    }
-    return false;
 }
 
 window.closeSubmissionModal = function () {

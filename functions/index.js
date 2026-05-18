@@ -36,18 +36,8 @@ admin.initializeApp({
 });
 const db = admin.firestore();
 
-// Source of truth for course/unit authorization is metadata_lessons.
-// This helper is only for backward compatibility with historical item ids.
 function normalizeLegacyId(value) {
-    const map = {
-        '01': 'ydb63bg',
-        '02': 'a45cwlak',
-        '03': 'a7smdfeq',
-        '04': 'hkdq5j3m',
-        '05': 'io5rxgxl',
-        '01-master-identity': '01-master-getting-started.html'
-    };
-    return map[value] || value;
+    return value;
 }
 
 // ==========================================
@@ -680,15 +670,10 @@ function findParentCourseIdByUnit(unitId, lessons = []) {
 }
 
 function findCourseByPageOrUnit(pageId, fileName, lessons = []) {
-    const legacyCourseAliasMap = {
-        '02-unit-vibe-coding-intro.html': '03-unit-github-classroom.html',
-        '02-unit-classroom-workflow.html': '03-unit-github-classroom.html',
-        '02-unit-teacher-matrix.html': '03-unit-github-classroom.html'
-    };
     const normalizeCourseFile = (value = '') => {
         if (!value) return '';
         const filePart = String(value).split('/').pop().split('?')[0];
-        return legacyCourseAliasMap[filePart] || filePart;
+        return filePart;
     };
     const normalizedPageId = normalizeCourseFile(pageId);
     const normalizedFileName = normalizeCourseFile(fileName);
@@ -902,6 +887,39 @@ function fallbackNameFromEmail(email, defaultName = "使用者") {
     return localPart.trim() || defaultName;
 }
 
+function buildPromotionCodeSeed(email = '', uid = '') {
+    const local = String(email || '').split('@')[0].replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    const suffix = String(uid || '').replace(/[^a-zA-Z0-9]/g, '').slice(-4).toUpperCase();
+    const base = (local || 'TUTOR').slice(0, 8);
+    return `${base}${suffix}` || 'TUTOR0000';
+}
+
+async function ensureTutorPromotionCode(db, userRef, userData = {}, uid = '', email = '') {
+    const existing = String(userData.promotionCode || '').trim().toUpperCase();
+    if (existing) return existing;
+
+    const candidate = buildPromotionCodeSeed(email, uid);
+    let finalCode = candidate;
+    let tries = 0;
+
+    while (tries < 5) {
+        const dup = await db.collection('users')
+            .where('promotionCode', '==', finalCode)
+            .limit(1)
+            .get();
+        if (dup.empty || (dup.docs[0] && dup.docs[0].id === uid)) break;
+        const rand = crypto.randomBytes(2).toString('hex').toUpperCase();
+        finalCode = `${candidate.slice(0, 8)}${rand}`.slice(0, 12);
+        tries += 1;
+    }
+
+    await userRef.set({
+        promotionCode: finalCode,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    return finalCode;
+}
+
 function resolveNameFromUserData(userData = {}, email = "", authDisplayName = "") {
     return userData.name || userData.displayName || authDisplayName || fallbackNameFromEmail(email);
 }
@@ -972,12 +990,18 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
     const userDoc = await db.collection('users').doc(uid).get();
     const userData = userDoc.exists ? (userDoc.data() || {}) : {};
     const isAdminRole = userData.role === 'admin';
-    const assignedTutorEmail = userData.unitAssignments?.[resolveCanonicalUnitId(normalizedUnitId, lessons)] || null;
+    const resolvedUnitFromInput = resolveCanonicalUnitId(normalizedUnitId, lessons);
+    const assignedTutorEmail = userData.unitAssignments?.[resolvedUnitFromInput] || null;
 
     // 2. Resolve Canonical Context
-    const canonicalUnitId = resolveCanonicalUnitId(normalizedUnitId, lessons);
+    let canonicalUnitId = resolveCanonicalUnitId(normalizedUnitId, lessons);
     const course = findCourseByPageOrUnit(normalizedCourseId, canonicalUnitId, lessons) || findCourseByPageOrUnit(normalizedCourseId, normalizedUnitId, lessons);
     const effectiveCourseId = course ? course.courseId : (normalizedCourseId || findParentCourseIdByUnit(canonicalUnitId, lessons));
+    // Course-level checks (e.g. started/basic/advanced cards) may only pass courseId.
+    // In that case, infer a representative unit from metadata so access is not falsely denied.
+    if (!canonicalUnitId && course && Array.isArray(course.courseUnits) && course.courseUnits.length > 0) {
+        canonicalUnitId = resolveCanonicalUnitId(course.courseUnits[0], lessons);
+    }
     const isPhysicalProduct = !!(course && course.isPhysical === true);
 
     // [V13.6] Special Physical Product Enforcement
@@ -1043,7 +1067,7 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
         }
     }
 
-    if (!effectiveCourseId || !canonicalUnitId) {
+    if (!effectiveCourseId) {
         console.warn(`[resolveAccess] FAIL: Missing context for UID:${uid} Page:${courseId} Unit:${unitId}`);
         return { authorized: false, reason: 'missing-context', canonicalUnitId, effectiveCourseId };
     }
@@ -1133,19 +1157,10 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
 // 4. 安全檔案服務 (serveCourse)
 // ==========================================
 exports.serveCourse = onRequest(async (req, res) => {
-    const legacyCourseAliasMap = {
-        '02-unit-vibe-coding-intro.html': '03-unit-github-classroom.html',
-        '02-unit-classroom-workflow.html': '03-unit-github-classroom.html',
-        '02-unit-teacher-matrix.html': '03-unit-github-classroom.html'
-    };
-    const normalizeLegacyAlias = (value = '') => {
-        if (!value) return value;
-        return legacyCourseAliasMap[value] || value;
-    };
     const normalizeCourseFile = (value = '') => {
         if (!value) return value;
         const filePart = String(value).split('/').pop().split('?')[0];
-        return normalizeLegacyAlias(filePart);
+        return filePart;
     };
 
     // 1. Parsing Path (e.g. /courses/ble-connection-master.html)
@@ -1181,11 +1196,8 @@ exports.serveCourse = onRequest(async (req, res) => {
             return res.status(403).send("Access Denied: Invalid signature.");
         }
 
-        // C. [NEW v11.3.16] Surgical Normalization
-        // Only prepend 'start-' if the requested 0X-unit- file doesn't exist as-is.
-        // This avoids breaking 'prepare' units which are naming 01-unit-... while allowing
-        // 'started' units (start-01-unit-...) to be accessed via legacy short links.
-        let normalizedFileName = normalizeLegacyAlias(fileName);
+        // C. Normalize target filename
+        let normalizedFileName = normalizeCourseFile(fileName);
         if (fileName.match(/^0[1-5]-/) && !fileName.includes('-master-')) {
             const asIsPath = path.join(__dirname, 'private_courses', fileName);
             if (!fs.existsSync(asIsPath)) {
@@ -1205,7 +1217,7 @@ exports.serveCourse = onRequest(async (req, res) => {
         let isAuthorizedScope = (
             scopePart === fileName ||
             normalizedScopePart === normalizedFileName ||
-            normalizeLegacyAlias(scopePart) === normalizeLegacyAlias(fileName)
+            normalizeCourseFile(scopePart) === normalizeCourseFile(fileName)
         );
         let debugInfo = "None";
         let lessons = [];
@@ -2154,15 +2166,7 @@ exports.getDashboardData = onCall(async (request) => {
         throw new HttpsError('permission-denied', 'You must specify a unitId or courseId to view your dashboard.');
     }
     
-    // [MIGRATION HELP] Mapping of legacy IDs to new metadata IDs
-    const legacyMap = {
-        '01': 'ydb63bg',
-        '02': 'a45cwlak',
-        '03': 'a7smdfeq',
-        '04': 'hkdq5j3m',
-        '05': 'io5rxgxl',
-        '01-master-identity': '01-master-getting-started.html'
-    };
+    const canonicalCourseId = (value) => String(value || '');
 
     try {
         // 0. Fetch Course Authorization Data
@@ -2255,7 +2259,7 @@ exports.getDashboardData = onCall(async (request) => {
                     (Array.isArray(l.courseUnits) && l.courseUnits.some(u => unitIdsMatch(u, unitId))) ||
                     (l.classroomUrl && l.classroomUrl.includes(unitId))
                 );
-                const cid = courseRecord ? courseRecord.courseId : (legacyMap[unitId] || unitId);
+                const cid = courseRecord ? courseRecord.courseId : unitId;
 
                 if (!synthesizedConfigs[cid]) {
                     synthesizedConfigs[cid] = { authorizedTutors: [], tutorDetails: {}, githubClassroomUrls: {} };
@@ -2308,7 +2312,7 @@ exports.getDashboardData = onCall(async (request) => {
                 const cfg = synthesizedConfigs[docId];
                 const isTutorModeAdmin = requesterRole === 'admin' && data.tutorMode !== false;
                 const isAuthorized = isTutorModeAdmin || (Array.isArray(cfg.authorizedTutors) && cfg.authorizedTutors.includes(email));
-                const mappedId = legacyMap[docId] || docId;
+                const mappedId = docId;
 
                 if (cfg.githubClassroomUrls) {
                     Object.keys(cfg.githubClassroomUrls).forEach(unitId => {
@@ -2457,6 +2461,7 @@ exports.getDashboardData = onCall(async (request) => {
             myTutorConfigs: myTutorConfigs,
             unitToDocId: unitToDocId, 
             myReferralLink: null,
+            myPromotionCode: null,
             earnings: [],
             // [NEW] Application Workflow support
             myApplications: myApplicationsMapping,
@@ -2468,6 +2473,11 @@ exports.getDashboardData = onCall(async (request) => {
         // Fetch profit sharing data and the current unit referral link for tutors.
         if (isManagementView) {
             try {
+                if (hasQualifiedTutorStatus(userData)) {
+                    const userRef = db.collection('users').doc(uid);
+                    result.myPromotionCode = await ensureTutorPromotionCode(db, userRef, userData, uid, email);
+                }
+
                 // If a unitId is provided from the frontend, fetch the assignmentUrl for that unit
                 const filterUnitId = data.unitId || null;
                 if (filterUnitId) {
@@ -2570,8 +2580,7 @@ exports.getDashboardData = onCall(async (request) => {
             if (log.action === 'PAGE_VIEW') return;
 
             const sid = log.uid;
-            let cid = log.courseId || 'unknown';
-            if (legacyMap[cid]) cid = legacyMap[cid];
+            const cid = canonicalCourseId(log.courseId || 'unknown');
 
             // Authorization Filter for each log:
             // - It's my own log
@@ -2671,7 +2680,7 @@ exports.getDashboardData = onCall(async (request) => {
                             items: order.items
                         });
                         Object.keys(order.items).forEach(originalCid => {
-                            const cid = legacyMap[originalCid] || originalCid;
+                            const cid = canonicalCourseId(originalCid);
                             if (!studentStats[sid].orders.includes(cid)) {
                                 studentStats[sid].orders.push(cid);
                             }
@@ -2732,7 +2741,7 @@ exports.getDashboardData = onCall(async (request) => {
                     });
 
                     Object.keys(order.items || {}).forEach(originalCid => {
-                        const cid = legacyMap[originalCid] || originalCid;
+                        const cid = canonicalCourseId(originalCid);
                         if (!studentStats[uid].orders) studentStats[uid].orders = [];
                         if (!studentStats[uid].orders.includes(cid)) {
                             studentStats[uid].orders.push(cid);
@@ -2744,36 +2753,22 @@ exports.getDashboardData = onCall(async (request) => {
             }
         }
 
-        // [NEW] Data Repair Map for legacy 'Unknown' users
-        const legacyRepairMap = {
-            'Cj8Xb2jHPzNRAOv4FCsvstOI2FN2': { name: '蔡逸颺', email: 'spps109422@spps.tp.edu.tw', createdAt: 1771208655457 },
-            'a16Qty77LiQmC6o0PBjFnzX8AOG2': { name: 'Henry Hsu', email: 'tzuheng.h@gmail.com', createdAt: 1768810048165 },
-            'eocqN6Dmbwh5PVe1DVA1pd2NQLl2': { name: 'leo lee', email: 'leolee0621@gmail.com', createdAt: 1770340750763 },
-            'k36RVpPwZoftnLwMtG4S4d4yLmj2': { name: 'Rover Chen', email: 'rover.k.chen@gmail.com', createdAt: 1765873595493 },
-            'kUUp1Pe8V9OoSZLL4vwBTnrLcbT2': { name: '陳育亮', email: 'chen.yuiliang@gmail.com', createdAt: 1770432917964 },
-            'lmg7jPw34ffuxRrSWLohzL9uey23': { name: '華岡羅浮群', email: 'hkboyscout@gmail.com', createdAt: 1769267447489 },
-            'mPYudHif5LPeEeNKzTWW22nwdbG2': { name: 'Lee Leon', email: 'tech@furzzle-pet.com', createdAt: 1774598905687 },
-            'p1dtkMwd3GhjVAwzwfWcnWWjDQf2': { name: '蔡逸颺', email: 'koala540886@gmail.com', createdAt: 1771497405886 },
-            's1VCXo1mEDd9RVoVKIbxF6aZvk72': { name: '陳子展', email: 'ms0683735@gmail.com', createdAt: 1774251155821 }
-        };
-
         // [NEW] Ensure the global admin overview includes every registered user, even with no activity.
         const shouldIncludeAllRegisteredUsers = isManagementView && requesterRole === 'admin' && !data.unitId && !data.courseId;
 
         // [NEW] Ensure all relevant users are included, along with registration time
         if (isManagementView) {
             Object.keys(usersMap).forEach(sid => {
-                const repair = legacyRepairMap[sid];
                 const userRole = usersMap[sid].role || 'user';
                 const shouldIncludeUser = shouldIncludeAllRegisteredUsers || userRole === 'user' || !userRole;
                 
                 if (!studentStats[sid] && shouldIncludeUser) {
                     studentStats[sid] = {
                         uid: sid,
-                        email: usersMap[sid].email || (repair ? repair.email : 'Unknown'),
-                        name: usersMap[sid].name || (repair ? repair.name : ''),
+                        email: usersMap[sid].email || 'Unknown',
+                        name: usersMap[sid].name || '',
                         role: userRole,
-                        createdAt: usersMap[sid].createdAt || (repair ? admin.firestore.Timestamp.fromMillis(repair.createdAt) : null),
+                        createdAt: usersMap[sid].createdAt || null,
                         totalTime: 0, videoTime: 0, docTime: 0, pageTime: 0, lastActive: null,
                         courseProgress: {},
                         accountStatus: 'free',
@@ -2782,11 +2777,6 @@ exports.getDashboardData = onCall(async (request) => {
                         orderRecords: []
                     };
                 } else if (studentStats[sid]) {
-                    // Patch existing record with repair data if name/email/createdAt is missing
-                    if (!studentStats[sid].name && repair) studentStats[sid].name = repair.name;
-                    if ((!studentStats[sid].email || studentStats[sid].email === 'Unknown') && repair) studentStats[sid].email = repair.email;
-                    if (!studentStats[sid].createdAt && repair) studentStats[sid].createdAt = admin.firestore.Timestamp.fromMillis(repair.createdAt);
-                    
                     // Always try to use the raw createdAt from usersMap if available
                     if (!studentStats[sid].createdAt) {
                         studentStats[sid].createdAt = usersMap[sid].createdAt || null;
@@ -2874,10 +2864,9 @@ exports.getDashboardData = onCall(async (request) => {
             }
             
             const originalCid = data.courseId || 'unknown';
-            const mappedCid = legacyMap[originalCid] || originalCid;
+            const mappedCid = canonicalCourseId(originalCid);
 
-            // [COMPATIBILITY] Map legacy 'assignedTeacherEmail' to 'assignedTutorEmail'
-            const assignmentTutor = data.assignedTutorEmail || data.assignedTeacherEmail || null;
+            const assignmentTutor = data.assignedTutorEmail || null;
             const requesterEmail = auth.token.email || "";
 
             // Authorization Filter for each assignment
@@ -2893,7 +2882,7 @@ exports.getDashboardData = onCall(async (request) => {
                                               authorizedCourseIds.includes(mappedCid) ||
                                               (data.unitId && authorizedCourseIds.some(cid => {
                                                   // Basic check: if tutor has access to a course that includes this unit
-                                                  // (This is advanced/deferred: for now we trust mappedCid and legacyMap)
+                                                  // (This is advanced/deferred: currently trust mappedCid)
                                                   return false; 
                                               }))
                                           ));
@@ -2933,7 +2922,7 @@ exports.getDashboardData = onCall(async (request) => {
                     const data = doc.data();
                     const items = data.items || {};
                     const physicalItems = Object.keys(items).filter(id => {
-                        const canonicalId = legacyMap[id] || id;
+                        const canonicalId = canonicalCourseId(id);
                         const itemData = items[id] || {};
                         if (itemData.isPhysical === true) return true;
                         return physicalUnitIds.has(canonicalId) || physicalUnitIds.has(id);
@@ -2960,7 +2949,7 @@ exports.getDashboardData = onCall(async (request) => {
                             shippingContact,
                             shippingAddress,
                             items: physicalItems.map(id => {
-                                const canonicalId = legacyMap[id] || id;
+                                const canonicalId = canonicalCourseId(id);
                                 return lessons.find(l => l.id === canonicalId)?.title || items[id]?.name || id;
                             })
                         };
@@ -3337,7 +3326,7 @@ exports.ingestGithubAutograde = onRequest(async (req, res) => {
             const assignmentTitle = assignmentData.assignmentTitle || assignmentData.assignmentId || resolvedDocId;
             const studentEmail = assignmentData.userEmail || assignmentData.studentEmail || '';
             const studentName = assignmentData.userName || assignmentData.studentName || '';
-            const tutorEmail = assignmentData.assignedTutorEmail || assignmentData.assignedTeacherEmail || '';
+            const tutorEmail = assignmentData.assignedTutorEmail || '';
 
             await sendAutogradeResultToStudent(
                 studentEmail,
@@ -4098,6 +4087,101 @@ exports.bindTutorToUnit = onCall(async (request) => {
         return { success: true, tutorEmail };
     } catch (error) {
         console.error("Self-binding failed:", error);
+        if (error instanceof HttpsError) throw error;
+        throw new HttpsError('internal', error.message);
+    }
+});
+
+/**
+ * Bind tutor by promotion code for a specific unit.
+ * Source of truth: users.promotionCode + users.tutorConfigs.{unitId}
+ */
+exports.bindTutorByPromotionCode = onCall(async (request) => {
+    const { data, auth } = request;
+    if (!auth) throw new HttpsError('unauthenticated', '請先登入');
+
+    const unitIdRaw = String(data?.unitId || '').trim();
+    const courseIdRaw = String(data?.courseId || '').trim();
+    const promoCodeRaw = String(data?.promotionCode || '').trim();
+    if (!unitIdRaw) {
+        throw new HttpsError('invalid-argument', '缺少必要參數（unitId）');
+    }
+
+    const db = admin.firestore();
+    const uid = auth.uid;
+
+    try {
+        const lessons = await getLessons();
+        const canonicalUnitId = resolveCanonicalUnitId(unitIdRaw, lessons);
+        const effectiveCourseId = findParentCourseIdByUnit(canonicalUnitId, lessons) || courseIdRaw;
+
+        // Payment authorization gate stays the same.
+        const access = await resolveStudentAssignmentAccess(db, uid, effectiveCourseId, canonicalUnitId, lessons);
+        if (!access.authorized) {
+            throw new HttpsError('permission-denied', '尚未取得此單元之付款授權。');
+        }
+
+        const DEFAULT_TUTOR_EMAIL = 'rover.k.chen@gmail.com';
+        const promotionCode = promoCodeRaw.toUpperCase();
+        let tutorSnap;
+        let resolvedPromotionCode = promotionCode;
+
+        if (promotionCode) {
+            tutorSnap = await db.collection('users')
+                .where('promotionCode', '==', promotionCode)
+                .limit(1)
+                .get();
+        } else {
+            tutorSnap = await db.collection('users')
+                .where('email', '==', DEFAULT_TUTOR_EMAIL)
+                .limit(1)
+                .get();
+        }
+        if (tutorSnap.empty) {
+            throw new HttpsError('not-found', promotionCode ? '查無此 Promotion code 對應的導師。' : '系統預設導師不存在。');
+        }
+
+        const tutorDoc = tutorSnap.docs[0];
+        const tutorData = tutorDoc.data() || {};
+        const tutorEmail = String(tutorData.email || '').trim();
+        if (!tutorEmail) {
+            throw new HttpsError('failed-precondition', '該導師資料不完整（缺少 email）。');
+        }
+
+        const cfg = getEffectiveTutorConfig(canonicalUnitId, tutorData.tutorConfigs || {});
+        if (!cfg || cfg.authorized !== true) {
+            throw new HttpsError('permission-denied', '此導師尚未取得該單元授權。');
+        }
+
+        const assignmentUrl = (cfg.assignmentUrl || cfg.githubClassroomUrl || '').trim();
+        if (!assignmentUrl) {
+            throw new HttpsError('failed-precondition', '此導師尚未設定該單元 GitHub Classroom 連結。');
+        }
+
+        const tutorRef = db.collection('users').doc(tutorDoc.id);
+        resolvedPromotionCode = await ensureTutorPromotionCode(db, tutorRef, tutorData, tutorDoc.id, tutorEmail);
+
+        await upsertStudentUnitAssignment(db, uid, canonicalUnitId, tutorEmail, 'promotionCodeBinding', true);
+
+        await db.collection('users').doc(uid).set({
+            [`unitAssignmentMeta.${canonicalUnitId}`]: {
+                tutorUid: tutorDoc.id,
+                tutorEmail,
+                promotionCode: resolvedPromotionCode,
+                linkedAt: admin.firestore.FieldValue.serverTimestamp()
+            },
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        return {
+            success: true,
+            tutorEmail,
+            tutorName: tutorData.name || tutorEmail,
+            promotionCode: resolvedPromotionCode,
+            assignmentUrl
+        };
+    } catch (error) {
+        console.error('bindTutorByPromotionCode failed:', error);
         if (error instanceof HttpsError) throw error;
         throw new HttpsError('internal', error.message);
     }

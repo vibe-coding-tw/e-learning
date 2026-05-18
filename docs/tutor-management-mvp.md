@@ -80,14 +80,13 @@ graph TD
 - `docs/template-org-migration-runbook.md` (source/publish layer policy)
 - `docs/admin-invite-binding-tool.md` (admin invite-link binding lookup)
 
-## 7. Invite URL Validation (Updated 2026-05-15)
-為避免推薦綁定錯誤到不相干單元，系統在多個入口採用一致的 GitHub Classroom 邀請連結檢查：
-
-- 格式檢查：
-  - 僅接受 `https://classroom.github.com/a/<invite-code>`。
-  - 會先做 URL normalize（去掉多餘 query/hash、標準化尾斜線）再驗證。
-- 單元對應檢查：
-  - 在課程單元頁（Assignments/Settings 綁定）提交時，會比對該單元既有授權設定與已知映射，避免把連結綁到錯誤單元。
-  - 在購物車填寫時，會依「本次購買課程項目 -> 對應 courseUnits」縮小可接受範圍，再檢查連結是否可對應到該範圍。
-- 購物車留白策略：
-  - 購物車允許不填推薦連結。
+## 7. Tutor Binding via Promotion Code (Updated 2026-05-18)
+- 綁定入口改為作業頁（Assignment modal），由學生輸入 Tutor 的 `Promotion code`。
+- 購物車流程不再輸入推薦連結或 Promotion code。
+- 學生每次點擊作業都會先顯示綁定對話框，可在此更換 Tutor。
+- Promotion code 可留白（系統會使用預設導師 `rover.k.chen@gmail.com`）；若有輸入，必須是該單元合格導師 code 才可綁定成功。
+- 系統驗證流程：
+  - 依 `users.promotionCode` 找到 Tutor
+  - 檢查 Tutor 在該單元 `tutorConfigs[unitId].authorized === true`
+  - 檢查該單元已配置 `assignmentUrl/githubClassroomUrl`
+  - 通過後寫入 `users.unitAssignments` 與 `users.unitAssignmentMeta`

@@ -5,7 +5,7 @@ Make GitHub Classroom grading write back to Vibe Coding automatically with no ma
 
 ## Current architecture (Webhook Based)
 - 自動評分系統已全面轉移至 GitHub Classroom 內建的 Autograding Webhook 機制。
-- 不再需要手動在每個 repo 中部署 `autograde-and-sync.yml`。
+- Workflow 定義與觸發條件由各 Classroom / bridge repo 維護，這個 root repo 不包含 `autograde-and-sync.yml`。
 - GitHub Classroom Autograding 會在學生 Push 程式碼時自動觸發測試。
 - 評分完成後，Classroom 會發送 Webhook (HTTP POST) 到平台的 `ingestGithubAutograde` 雲端函式。
 - Backend:

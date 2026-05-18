@@ -43,6 +43,7 @@
 - **歸一化原則 (Normalization Rule)**: 由於課程元數據 (Metadata) 可能包含 `.html` 副檔名，而 Firestore 的 `tutorConfigs` 鍵值通常為純 ID，系統在執行任何權限比對前，**必須**統一執行歸一化處理（例如：移除 `.html` 後綴）。
 - **課程卡片開通門檻 (Course Card Unlock)**: 對於課程整體的存取權限（如首頁或 Dashboard 的課程卡片），必須滿足該課程下**所有 (EVERY)** 關聯單元均已在 `tutorConfigs` 中標記為 `authorized: true`，系統才可將該卡片判定為「已開通 (Opened)」。
 - **實作要求**: 後端 `isTutorFullyQualifiedForCourse` 與 `checkPaymentAuthorization` 必須強制執行上述歸一化比對，防止因後綴不一致導致的授權失效。
+- **禁止名單規則**: 嚴禁以硬編碼白名單、相容名單、legacy 對照表作為執行期權限判斷依據。所有判斷必須直接查 Firestore canonical 資料。
 
 ---
 
@@ -80,6 +81,7 @@
 1. **禁止手動更改 Role**: 禁止將使用者 `role` 改為 `tutor`（導師是 Status 而非 Role）。
 2. **單一事實來源**: 所有設定資料必須透過 `users` 集合中的 `tutorConfigs` 字段存儲，`course_configs` 集合已廢棄。
 3. **過期檢核**: 後端 `checkPaymentAuthorization` 必須包含 `expiryDate.toMillis() > now.toMillis()` 的判定邏輯。
+4. **Firestore First（強制）**: 所有資料比對、驗證、儲存都以 Firestore 為唯一真實來源；若發現歷史資料鍵值不一致，必須走資料遷移，不可新增白名單/相容分支。
 
 ---
 
