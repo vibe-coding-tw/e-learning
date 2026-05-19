@@ -132,6 +132,35 @@ async function githubApiRequest(pathname, options = {}) {
     return { ok: resp.ok, status: resp.status, body };
 }
 
+async function upsertGithubActionsVariable({ owner, repo, name, value }) {
+    if (!owner || !repo || !name) return { ok: false, reason: "missing_params" };
+    if (!GITHUB_ORG_ADMIN_TOKEN) return { ok: false, reason: "missing_token" };
+
+    const body = { name, value: String(value ?? "") };
+    const resp = await githubApiRequest(
+        `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/variables/${encodeURIComponent(name)}`,
+        {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ value: body.value })
+        }
+    );
+    if (resp.ok) return { ok: true, action: "updated" };
+    if (resp.status === 404) {
+        const createResp = await githubApiRequest(
+            `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/variables`,
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            }
+        );
+        if (createResp.ok) return { ok: true, action: "created" };
+        return { ok: false, status: createResp.status, body: createResp.body };
+    }
+    return { ok: false, status: resp.status, body: resp.body };
+}
+
 async function resolveGithubLoginFromFirebaseUid(firebaseUid) {
     const userRecord = await admin.auth().getUser(firebaseUid);
     const provider = (userRecord.providerData || []).find(p => p.providerId === "github.com");
@@ -887,30 +916,35 @@ function fallbackNameFromEmail(email, defaultName = "使用者") {
     return localPart.trim() || defaultName;
 }
 
-function buildPromotionCodeSeed(email = '', uid = '') {
-    const local = String(email || '').split('@')[0].replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-    const suffix = String(uid || '').replace(/[^a-zA-Z0-9]/g, '').slice(-4).toUpperCase();
-    const base = (local || 'TUTOR').slice(0, 8);
-    return `${base}${suffix}` || 'TUTOR0000';
+function generatePromotionCode(length = 6) {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // avoid 0/O and 1/I ambiguity
+    let out = '';
+    for (let i = 0; i < length; i += 1) {
+        const idx = crypto.randomInt(0, chars.length);
+        out += chars[idx];
+    }
+    return out;
 }
 
 async function ensureTutorPromotionCode(db, userRef, userData = {}, uid = '', email = '') {
     const existing = String(userData.promotionCode || '').trim().toUpperCase();
     if (existing) return existing;
 
-    const candidate = buildPromotionCodeSeed(email, uid);
-    let finalCode = candidate;
+    let finalCode = '';
     let tries = 0;
 
-    while (tries < 5) {
+    while (tries < 20) {
+        finalCode = generatePromotionCode(6);
         const dup = await db.collection('users')
             .where('promotionCode', '==', finalCode)
             .limit(1)
             .get();
         if (dup.empty || (dup.docs[0] && dup.docs[0].id === uid)) break;
-        const rand = crypto.randomBytes(2).toString('hex').toUpperCase();
-        finalCode = `${candidate.slice(0, 8)}${rand}`.slice(0, 12);
         tries += 1;
+    }
+
+    if (!finalCode) {
+        throw new Error('Failed to generate promotion code');
     }
 
     await userRef.set({
@@ -3318,6 +3352,31 @@ exports.ingestGithubAutograde = onRequest(async (req, res) => {
             })
         }, { merge: true });
 
+        // Backfill GitHub Actions variable so future runs can always include assignmentDocId.
+        // This makes auto-grade write-back deterministic even if repo mapping is incomplete.
+        try {
+            const repoFullName = autoGrade.repository || repositoryFullName || "";
+            const parts = String(repoFullName).split("/");
+            if (parts.length === 2) {
+                const [owner, repo] = parts;
+                const upsertRes = await upsertGithubActionsVariable({
+                    owner,
+                    repo,
+                    name: "VC_ASSIGNMENT_DOC_ID",
+                    value: resolvedDocId
+                });
+                if (!upsertRes.ok) {
+                    console.warn("[ingestGithubAutograde] Failed to upsert VC_ASSIGNMENT_DOC_ID:", {
+                        repoFullName,
+                        resolvedDocId,
+                        upsertRes
+                    });
+                }
+            }
+        } catch (varErr) {
+            console.warn("[ingestGithubAutograde] Variable backfill error:", varErr);
+        }
+
         try {
             const assignmentData = assignmentDoc.data() || {};
             const dashboardUrl = assignmentData.unitId
@@ -4122,23 +4181,33 @@ exports.bindTutorByPromotionCode = onCall(async (request) => {
         }
 
         const DEFAULT_TUTOR_EMAIL = 'rover.k.chen@gmail.com';
-        const promotionCode = promoCodeRaw.toUpperCase();
+        const normalizedInput = promoCodeRaw;
+        const promotionCode = normalizedInput.toUpperCase();
+        const looksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedInput);
         let tutorSnap;
         let resolvedPromotionCode = promotionCode;
 
-        if (promotionCode) {
-            tutorSnap = await db.collection('users')
-                .where('promotionCode', '==', promotionCode)
-                .limit(1)
-                .get();
-        } else {
+        if (!normalizedInput) {
             tutorSnap = await db.collection('users')
                 .where('email', '==', DEFAULT_TUTOR_EMAIL)
                 .limit(1)
                 .get();
+        } else if (looksLikeEmail) {
+            tutorSnap = await db.collection('users')
+                .where('email', '==', normalizedInput.toLowerCase())
+                .limit(1)
+                .get();
+        } else if (promotionCode) {
+            tutorSnap = await db.collection('users')
+                .where('promotionCode', '==', promotionCode)
+                .limit(1)
+                .get();
         }
         if (tutorSnap.empty) {
-            throw new HttpsError('not-found', promotionCode ? '查無此 Promotion code 對應的導師。' : '系統預設導師不存在。');
+            if (!normalizedInput) {
+                throw new HttpsError('not-found', '系統預設導師不存在。');
+            }
+            throw new HttpsError('not-found', looksLikeEmail ? '查無此 Tutor email 對應的導師。' : '查無此 Promotion code 對應的導師。');
         }
 
         const tutorDoc = tutorSnap.docs[0];

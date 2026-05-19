@@ -450,7 +450,9 @@ async function sendStudentLinkedToTutorEmail(email, studentName, unitId, tutorEm
  */
 async function sendTutorLinkedToStudentEmail(email, studentName, unitId) {
     const cleanUnitId = unitId ? unitId.replace('.html', '') : '';
-    const dashboardUrl = cleanUnitId ? appUrl(`/dashboard.html?unitId=${cleanUnitId}&tab=assignments`) : appUrl('/dashboard.html');
+    const dashboardUrl = cleanUnitId
+        ? appUrl(`/dashboard.html?unitId=${cleanUnitId}&tab=assignments&tutorMode=1`)
+        : appUrl('/dashboard.html?tab=assignments&tutorMode=1');
     const mailOptions = {
         from: '"Vibe Coding" <info@vibe-coding.tw>',
         to: email,

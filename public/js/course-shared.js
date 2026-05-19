@@ -15,6 +15,7 @@ function init() {
     console.log("[CourseShared] Initializing...");
     injectMediaOverlay();
     initAnimations();
+    enhanceAssignmentEntryButtons();
     initFirebaseFeatures(); // [NEW] Start Firebase (Tracking + Assignments)
     initGithubReadme(); // [V8.2] Fetch and render GitHub README if applicable
 }
@@ -31,6 +32,7 @@ if (document.readyState === 'loading') {
 window.addEventListener('load', () => {
     console.log("[CourseShared] Window Load fallback check");
     initAnimations();
+    enhanceAssignmentEntryButtons();
 });
 
 // Global State (Using var for redeclaration safety in Master/Unit contexts)
@@ -750,6 +752,7 @@ function initFirebaseFeatures() {
     document.body.appendChild(script);
     injectSubmissionModal();
     injectAssignmentLinkModal();
+    enhanceAssignmentEntryButtons();
 }
 
 /**
@@ -769,7 +772,7 @@ function injectSubmissionModal() {
                     <span class="text-xl">🐙</span>
                     <h4 class="font-bold text-gray-800">GitHub Classroom</h4>
                 </div>
-                <p class="text-xs text-gray-600 mb-4">本單元已整合 GitHub Classroom。點擊作業卡片會先建立「開始作業」紀錄；完成後請回到這裡正式提交 Repo 連結。</p>
+                <p class="text-xs text-gray-600 mb-4">本單元已整合 GitHub Classroom。請先點作業卡下方「前往教室寫作業」按鈕建立「開始作業」紀錄；完成後請回到這裡正式提交 Repo 連結。</p>
                 <div class="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs leading-relaxed">
                     若看到 GitHub「Repository Access Issue」或提交時出現授權錯誤，請先到
                     <a href="https://github.com/settings/organizations" target="_blank" rel="noopener noreferrer" class="font-bold underline">
@@ -816,6 +819,85 @@ function injectSubmissionModal() {
 }
 
 /**
+ * Replace legacy "click whole assignment card" behavior with explicit CTA button.
+ * Source pages still contain inline onclick handlers, so we transform them at runtime.
+ */
+function enhanceAssignmentEntryButtons() {
+    const cards = document.querySelectorAll('[onclick*="openSubmissionModal("]');
+    console.log(`[CourseShared] Found ${cards.length} assignment cards for CTA enhancement.`);
+    const groupMap = new Map();
+
+    cards.forEach((card) => {
+        if (!(card instanceof HTMLElement)) return;
+        if (card.dataset.assignmentEntryEnhanced === '1') return;
+
+        const onclickValue = card.getAttribute('onclick') || '';
+        const match =
+            onclickValue.match(/openSubmissionModal\('([^']+)'\s*,\s*'([^']+)'\)/) ||
+            onclickValue.match(/openSubmissionModal\("([^"]+)"\s*,\s*"([^"]+)"\)/);
+        if (!match) return;
+
+        const assignmentId = match[1];
+        const assignmentTitle = match[2];
+
+        // Disable whole-card click trigger.
+        card.removeAttribute('onclick');
+        card.classList.remove('cursor-pointer');
+        card.classList.add('cursor-default');
+
+        // Hide legacy full-card hover overlays that can block CTA visibility/click.
+        card.querySelectorAll('.absolute.inset-0').forEach((overlay) => {
+            if (overlay instanceof HTMLElement) {
+                overlay.classList.add('hidden');
+            }
+        });
+
+        const groupEl = card.parentElement;
+        if (groupEl) {
+            if (!groupMap.has(groupEl)) groupMap.set(groupEl, []);
+            groupMap.get(groupEl).push({ assignmentId, assignmentTitle });
+        }
+        card.dataset.assignmentEntryEnhanced = '1';
+    });
+
+    groupMap.forEach((items, groupEl) => {
+        if (!(groupEl instanceof HTMLElement)) return;
+        if (!items || items.length === 0) return;
+        if (groupEl.nextElementSibling && groupEl.nextElementSibling.classList.contains('assignment-group-entry-wrap')) return;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'assignment-group-entry-wrap mt-6';
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'assignment-group-entry-btn w-full py-3 px-4 rounded-xl border-2 border-blue-500 text-blue-700 font-bold bg-white hover:bg-blue-50 transition shadow-sm';
+        btn.textContent = '前往教室寫作業';
+        btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const primary = items[0];
+            if (!primary) return;
+            const pathParts = window.location.pathname.split('/');
+            const fileName = pathParts[pathParts.length - 1];
+            const courseId = await findCourseIdByUnit(fileName);
+            openTutorBindingModal(courseId, fileName, primary.assignmentId, primary.assignmentTitle);
+        });
+
+        wrap.appendChild(btn);
+        groupEl.insertAdjacentElement('afterend', wrap);
+    });
+}
+
+function openTutorBindingModal(courseId, unitId, assignmentId, title) {
+    document.getElementById('link-course-id').value = courseId || '';
+    document.getElementById('link-unit-id').value = unitId || '';
+    document.getElementById('link-assignment-id').value = assignmentId || '';
+    document.getElementById('link-assignment-title').value = title || assignmentId || '';
+    document.getElementById('link-promotion-code').value = '';
+    document.getElementById('assignment-link-modal').classList.remove('hidden');
+}
+
+/**
  * Injects the Assignment Link Modal (for self-binding)
  */
 function injectAssignmentLinkModal() {
@@ -838,9 +920,9 @@ function injectAssignmentLinkModal() {
 
             <div class="mb-6">
                 <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">老師 Promotion code</label>
-                <input type="text" id="link-promotion-code" placeholder="例如：ROVER2026"
+                <input type="text" id="link-promotion-code" placeholder="輸入 Promotion code 或 Tutor email（留空使用預設）"
                     class="w-full border-2 border-gray-100 bg-gray-50 p-4 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition font-mono text-sm">
-                <p class="text-[10px] text-gray-400 mt-2">※ 可隨時輸入新的 code 更換導師。</p>
+                <p class="text-[10px] text-gray-400 mt-2">※ 可填 Promotion code 或 Tutor email；留空將使用預設導師。</p>
             </div>
 
             <div class="flex flex-col gap-3">
@@ -878,7 +960,6 @@ window.submitBindTutorAction = async function () {
         const result = await bindTutorByPromotionCode({ unitId, courseId, promotionCode });
 
         if (result.data && result.data.success) {
-            alert(`✅ 成功綁定導師：${result.data.tutorEmail}\n現在您可以開始作業了！`);
             closeAssignmentLinkModal();
             // Re-open the submission modal to refresh access state
             openSubmissionModal(assignmentId, title, { skipTutorPrompt: true });
@@ -896,7 +977,6 @@ window.submitBindTutorAction = async function () {
 
 // Global functions for Modal
 window.openSubmissionModal = async function (assignmentId, title, options = {}) {
-    const skipTutorPrompt = options && options.skipTutorPrompt === true;
     const pathParts = window.location.pathname.split('/');
     const fileName = pathParts[pathParts.length - 1];
     const courseId = await findCourseIdByUnit(fileName);
@@ -911,10 +991,14 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
 
             const accessMode = String(assignmentAccess?.accessMode || '');
             const shouldAlwaysPromptTutorBinding =
-                !skipTutorPrompt &&
                 ['paid_student', 'free_course', 'trial_course'].includes(accessMode);
+            const hasAssignedTutor = !!assignmentAccess?.assignedTutorEmail;
+            const skipTutorPrompt = !!options?.skipTutorPrompt;
+            const shouldShowTutorPrompt =
+                (shouldAlwaysPromptTutorBinding || (assignmentAccess?.requiresTutorAssignment && !hasAssignedTutor)) &&
+                !(skipTutorPrompt && hasAssignedTutor);
 
-            if (shouldAlwaysPromptTutorBinding || (assignmentAccess?.requiresTutorAssignment && !assignmentAccess?.assignedTutorEmail)) {
+            if (shouldShowTutorPrompt) {
                 document.getElementById('link-course-id').value = courseId;
                 document.getElementById('link-unit-id').value = fileName;
                 document.getElementById('link-assignment-id').value = assignmentId;

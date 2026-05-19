@@ -87,6 +87,14 @@ let currentDashboardPermissions = {
 // [NEW] Admin Super Mode state
 // [NEW] Admin Tutor Mode state (formerly Super Mode)
 let adminTutorMode = localStorage.getItem('adminTutorMode') === 'true'; 
+try {
+    const initialParams = new URLSearchParams(window.location.search);
+    const forceTutorMode = initialParams.get('tutorMode');
+    if (forceTutorMode === '1' || forceTutorMode === 'true') {
+        adminTutorMode = true;
+        localStorage.setItem('adminTutorMode', 'true');
+    }
+} catch (_) {}
 
 
 // [REMOVED] MASTER_UNIT_MAPPING is now standardized in lessons.json
@@ -418,6 +426,20 @@ function getPreferredUnitId(unitId, courseUnits = [], extraKeys = []) {
 
 function isRenderableUnitFile(fileName) {
     return typeof fileName === 'string' && fileName.endsWith('.html') && !fileName.includes('-master-');
+}
+
+function normalizeTutorAdminUnitId(unitId) {
+    const raw = String(unitId || '').trim();
+    if (!raw) return raw;
+    if (raw === '02-unit-classroom-workflow.html') return '03-unit-github-classroom.html';
+    if (raw.startsWith('04-')) return raw.replace(/^04-/, '02-');
+    return raw;
+}
+
+function shouldHideTutorAdminUnit(unitId) {
+    const normalized = normalizeTutorAdminUnitId(unitId);
+    return normalized === '02-unit-vibe-coding-intro.html' ||
+        normalized === '02-unit-teacher-matrix.html';
 }
 
 function normalizeTutorIdentifier(value) {
@@ -1837,7 +1859,9 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
     if (!adminPanel) return;
 
     // [NEW] Render Pending Applications
-    const pendingApps = dashboardData.pendingApplications || [];
+    const pendingApps = (dashboardData.pendingApplications || [])
+        .map(app => ({ ...app, unitId: normalizeTutorAdminUnitId(app.unitId) }))
+        .filter(app => !shouldHideTutorAdminUnit(app.unitId));
     let pendingHtml = '';
     if (pendingApps.length > 0) {
         pendingHtml = `
@@ -1900,8 +1924,9 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                 const canonicalUnitMap = new Map();
 
                 rawFiles.forEach(fileName => {
-                    const preferredId = getPreferredUnitId(fileName, units, Object.keys(dashboardData?.unitTutorConfigs || {}));
+                    const preferredId = normalizeTutorAdminUnitId(getPreferredUnitId(fileName, units, Object.keys(dashboardData?.unitTutorConfigs || {})));
                     if (!isRenderableUnitFile(preferredId)) return;
+                    if (shouldHideTutorAdminUnit(preferredId)) return;
                     if (!canonicalUnitMap.has(preferredId)) {
                         canonicalUnitMap.set(preferredId, preferredId);
                     }
@@ -1910,15 +1935,16 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
                 let allFiles = Array.from(canonicalUnitMap.values());
 
                 if (filterUnitId) {
-                    const preferredUnit = getPreferredUnitId(filterUnitId, units, Object.keys(dashboardData?.unitTutorConfigs || {}));
+                    const preferredUnit = normalizeTutorAdminUnitId(getPreferredUnitId(filterUnitId, units, Object.keys(dashboardData?.unitTutorConfigs || {})));
                     allFiles = preferredUnit ? [preferredUnit] : [];
                 }
 
                 if (allFiles.length === 0) return '';
 
                 return allFiles.map(unitFile => {
-                    const normalizedFile = getPreferredUnitId(unitFile, units, Object.keys(dashboardData?.unitTutorConfigs || {}));
+                    const normalizedFile = normalizeTutorAdminUnitId(getPreferredUnitId(unitFile, units, Object.keys(dashboardData?.unitTutorConfigs || {})));
                     if (!isRenderableUnitFile(normalizedFile)) return '';
+                    if (shouldHideTutorAdminUnit(normalizedFile)) return '';
                     if (renderedUnits.has(normalizedFile)) return ''; 
                     renderedUnits.add(normalizedFile);
 

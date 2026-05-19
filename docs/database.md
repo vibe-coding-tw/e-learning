@@ -100,6 +100,11 @@
 | `submissionHistory` | array | 作業歷程（START / SUBMIT / GRADE / AUTO_GRADE）。 |
 | `submittedAt` / `updatedAt` | timestamp | 提交/更新時間。 |
 
+作業 docId 規則與回寫關聯：
+- 建議固定使用 `assignments/{userId_assignmentId}`。
+- `submitAssignment` 第一次寫入時即建立該 docId（至少 `currentStatus=started`）。
+- `ingestGithubAutograde` 成功回寫分數後，系統會自動嘗試回填 GitHub Actions variable：`VC_ASSIGNMENT_DOC_ID=<docId>`，讓後續 workflow 可直接帶 identifier 回寫。
+
 ---
 
 ## 5. `tutor_applications` 集合
