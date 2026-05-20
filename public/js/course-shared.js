@@ -621,16 +621,13 @@ function initAnimations() {
 
 // --- Firebase Features (Tracking & Assignments) ---
 
-function initFirebaseFeatures() {
+async function initFirebaseFeatures() {
     console.log("[Firebase] Injecting Firebase SDK...");
 
-    const script = document.createElement('script');
-    script.type = 'module';
-    script.textContent = `
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js");
+    const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js");
+    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js");
+    const { getFirestore } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js");
 
         const firebaseConfig = {
             apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
@@ -1135,9 +1132,6 @@ function initFirebaseFeatures() {
         });
 
         console.log("[Firebase] Initialized.");
-    `;
-
-    document.body.appendChild(script);
     injectSubmissionModal();
     injectAssignmentLinkModal();
     enhanceAssignmentEntryButtons();

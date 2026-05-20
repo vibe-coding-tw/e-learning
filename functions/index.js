@@ -1024,8 +1024,8 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
     const userDoc = await db.collection('users').doc(uid).get();
     const userData = userDoc.exists ? (userDoc.data() || {}) : {};
     const isAdminRole = userData.role === 'admin';
-    const resolvedUnitFromInput = resolveCanonicalUnitId(normalizedUnitId, lessons);
     const assignedTutorEmail = userData.unitAssignments?.[resolvedUnitFromInput] || null;
+    const assignedPromotionCode = userData.unitAssignmentMeta?.[resolvedUnitFromInput]?.promotionCode || null;
 
     // 2. Resolve Canonical Context
     let canonicalUnitId = resolveCanonicalUnitId(normalizedUnitId, lessons);
@@ -1054,7 +1054,8 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
                 accessMode: 'admin_simulated',
                 canonicalUnitId: canonicalUnitId,
                 effectiveCourseId: effectiveCourseId,
-                assignedTutorEmail: assignedTutorEmail
+                assignedTutorEmail: assignedTutorEmail,
+                assignedPromotionCode: assignedPromotionCode
             };
         }
 
@@ -1072,6 +1073,7 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
                     canonicalUnitId, 
                     effectiveCourseId, 
                     assignedTutorEmail, 
+                    assignedPromotionCode,
                     course 
                 };
             }
@@ -1080,7 +1082,7 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
             const effectiveTutorCfg = getEffectiveTutorConfig(canonicalUnitId, userData.tutorConfigs || {});
             const isQualifiedTutorForThisUnit = !!(effectiveTutorCfg && effectiveTutorCfg.authorized === true);
             if (isQualifiedTutorForThisUnit) {
-                return { authorized: true, accessMode: 'qualified_tutor', canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
+                return { authorized: true, accessMode: 'qualified_tutor', canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode, course };
             }
         }
 
@@ -1088,7 +1090,7 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
         const lessonPrice = course ? course.price : (lessons.find(l => l.courseId === effectiveCourseId)?.price || 9999);
         const isFreeCourse = !!(course && parseInt(lessonPrice) === 0);
         if (isFreeCourse) {
-            return { authorized: true, accessMode: 'free_course', canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
+            return { authorized: true, accessMode: 'free_course', canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode, course };
         }
 
         // Trial Course (Started category, within 30 days) (Digital Only)
@@ -1097,7 +1099,7 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
         const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
         const isTrialCourse = !!(course && course.category === 'started' && ((now - new Date(userRecord.metadata.creationTime).getTime()) < THIRTY_DAYS_MS));
         if (isTrialCourse) {
-            return { authorized: true, accessMode: 'trial_course', canonicalUnitId, effectiveCourseId, assignedTutorEmail, course };
+            return { authorized: true, accessMode: 'trial_course', canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode, course };
         }
     }
 
@@ -1130,6 +1132,7 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
         canonicalUnitId,
         effectiveCourseId,
         assignedTutorEmail,
+        assignedPromotionCode,
         requiresTutorAssignment: !isPhysicalProduct,
         course
     };
@@ -1634,7 +1637,7 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
     const access = await resolveStudentAssignmentAccess(db, auth.uid, courseId, unitId, lessons, tutorMode === true);
     if (!access.authorized) return { authorized: false, reason: access.reason || 'forbidden', accessMode: access.accessMode || null };
 
-    const { canonicalUnitId, effectiveCourseId, assignedTutorEmail, requiresTutorAssignment, accessMode } = access;
+    const { canonicalUnitId, effectiveCourseId, assignedTutorEmail, assignedPromotionCode, requiresTutorAssignment, accessMode } = access;
 
     if (requiresTutorAssignment && !assignedTutorEmail) {
         return {
@@ -1710,6 +1713,7 @@ exports.resolveAssignmentAccess = onCall(async (request) => {
         accessMode,
         classroomUrl: personalRepoUrl || classroomUrl || null,
         assignedTutorEmail: assignedTutorEmail || null,
+        assignedPromotionCode: assignedPromotionCode || null,
         canonicalUnitId,
         courseId: effectiveCourseId,
         requiresTutorAssignment,
