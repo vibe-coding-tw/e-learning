@@ -921,70 +921,69 @@ async function initFirebaseFeatures() {
                 style.innerHTML = '#dashboard-fab { display: none !important; }';
                 document.head.appendChild(style);
             }
+            const removeDashboardFab = () => {
+                const fab = document.getElementById('dashboard-fab');
+                if (fab) fab.remove();
+            };
+            removeDashboardFab();
+            window.addEventListener('DOMContentLoaded', removeDashboardFab);
+            setTimeout(removeDashboardFab, 100);
+            setTimeout(removeDashboardFab, 500);
+            setTimeout(removeDashboardFab, 1500);
 
             // Define openDashboardModalFromHub helper
             window.openDashboardModalFromHub = function() {
                 if (typeof window.openDashboardModal === 'function') {
                     const param = courseId ? `?courseId=${courseId}` : '';
                     window.openDashboardModal(param);
-                    if (typeof window.toggleStudentHubModal === 'function') {
-                        window.toggleStudentHubModal();
+                    if (typeof window.toggleUnifiedSupportPanel === 'function') {
+                        window.toggleUnifiedSupportPanel();
                     }
                 } else {
                     alert("載入儀表板中，請稍後重試。");
                 }
             };
             
-            // Check where to render (Floating Button + Modal Overlay)
-            let hubTrigger = document.getElementById('student-hub-trigger');
+            // Check where to render (Floating Button + Slide-up Panel)
+            let hubTrigger = document.getElementById('unified-support-trigger');
             if (!hubTrigger) {
                 hubTrigger = document.createElement('div');
-                hubTrigger.id = 'student-hub-trigger';
+                hubTrigger.id = 'unified-support-trigger';
                 hubTrigger.className = 'fixed bottom-6 right-6 z-50';
                 document.body.appendChild(hubTrigger);
             }
 
-            let hubModal = document.getElementById('student-hub-modal');
+            let hubModal = document.getElementById('unified-support-panel');
             if (!hubModal) {
                 hubModal = document.createElement('div');
-                hubModal.id = 'student-hub-modal';
-                hubModal.className = 'fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-[60] p-4 transition-all duration-300';
+                hubModal.id = 'unified-support-panel';
+                hubModal.className = 'fixed bottom-24 right-6 w-[420px] max-w-[calc(100vw-2rem)] max-h-[75vh] bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-y-auto z-50 transition-all duration-300 transform scale-95 opacity-0 origin-bottom-right hidden';
                 hubModal.innerHTML = `
-                    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform scale-95 opacity-0 transition-all duration-300 relative border border-slate-100" id="student-hub-modal-content">
-                        <!-- Close Button -->
-                        <button onclick="toggleStudentHubModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 text-xl font-bold p-2 hover:bg-slate-100 rounded-full transition w-10 h-10 flex items-center justify-center">✕</button>
-                        
-                        <div id="student-hub-modal-body" class="p-8"></div>
-                    </div>
+                    <!-- Close Button -->
+                    <button onclick="toggleUnifiedSupportPanel()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg font-bold p-1.5 hover:bg-slate-100 rounded-full transition w-8 h-8 flex items-center justify-center">✕</button>
+                    
+                    <div id="unified-support-body" class="p-6"></div>
                 `;
                 document.body.appendChild(hubModal);
-
-                // Close modal when clicking outside
-                hubModal.addEventListener('click', (e) => {
-                    if (e.target === hubModal) {
-                        window.toggleStudentHubModal();
-                    }
-                });
             }
 
             // Define toggle function
-            if (!window.toggleStudentHubModal) {
-                window.toggleStudentHubModal = function() {
-                    const modal = document.getElementById('student-hub-modal');
-                    const content = document.getElementById('student-hub-modal-content');
-                    if (!modal || !content) return;
+            if (!window.toggleUnifiedSupportPanel) {
+                window.toggleUnifiedSupportPanel = function() {
+                    const panel = document.getElementById('unified-support-panel');
+                    if (!panel) return;
                     
-                    if (modal.classList.contains('hidden')) {
-                        modal.classList.remove('hidden');
+                    if (panel.classList.contains('hidden')) {
+                        panel.classList.remove('hidden');
                         setTimeout(() => {
-                            content.classList.remove('scale-95', 'opacity-0');
-                            content.classList.add('scale-100', 'opacity-100');
+                            panel.classList.remove('scale-95', 'opacity-0');
+                            panel.classList.add('scale-100', 'opacity-100');
                         }, 20);
                     } else {
-                        content.classList.remove('scale-100', 'opacity-100');
-                        content.classList.add('scale-95', 'opacity-0');
+                        panel.classList.remove('scale-100', 'opacity-100');
+                        panel.classList.add('scale-95', 'opacity-0');
                         setTimeout(() => {
-                            modal.classList.add('hidden');
+                            panel.classList.add('hidden');
                         }, 200);
                     }
                 };
@@ -1011,14 +1010,14 @@ async function initFirebaseFeatures() {
             }
             
             hubTrigger.innerHTML = `
-                <button onclick="toggleStudentHubModal()" class="relative flex items-center gap-2.5 px-6 py-4 bg-gradient-to-r ${btnBg} text-white font-bold rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 active:scale-95 ${pulseClass}">
+                <button onclick="toggleUnifiedSupportPanel()" class="relative flex items-center gap-2.5 px-6 py-4 bg-gradient-to-r ${btnBg} text-white font-bold rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 active:scale-95 ${pulseClass}">
                     <span class="text-xl">${icon}</span>
                     <span class="text-sm tracking-wide font-bold">師生互動與卡點支援</span>
                     ${badgeHtml}
                 </button>
             `;
 
-            const hubContainer = document.getElementById('student-hub-modal-body');
+            const hubContainer = document.getElementById('unified-support-body');
 
             // Render current progress bar
             let steps = [
@@ -1228,9 +1227,9 @@ async function initFirebaseFeatures() {
             if (user) {
                 renderStudentInteractionHub(user);
             } else {
-                const trigger = document.getElementById('student-hub-trigger');
+                const trigger = document.getElementById('unified-support-trigger');
                 if (trigger) trigger.remove();
-                const modal = document.getElementById('student-hub-modal');
+                const modal = document.getElementById('unified-support-panel');
                 if (modal) modal.remove();
             }
         });
