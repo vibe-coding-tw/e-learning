@@ -930,6 +930,13 @@ async function initFirebaseFeatures() {
             setTimeout(removeDashboardFab, 100);
             setTimeout(removeDashboardFab, 500);
             setTimeout(removeDashboardFab, 1500);
+            if (!window.__dashboardFabObserverInstalled) {
+                const observer = new MutationObserver(() => {
+                    removeDashboardFab();
+                });
+                observer.observe(document.body, { childList: true, subtree: true });
+                window.__dashboardFabObserverInstalled = true;
+            }
 
             // Define openDashboardModalFromHub helper
             window.openDashboardModalFromHub = function() {
@@ -1012,7 +1019,8 @@ async function initFirebaseFeatures() {
             hubTrigger.innerHTML = `
                 <button onclick="toggleUnifiedSupportPanel()" class="relative flex items-center gap-2.5 px-6 py-4 bg-gradient-to-r ${btnBg} text-white font-bold rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 active:scale-95 ${pulseClass}">
                     <span class="text-xl">${icon}</span>
-                    <span class="text-sm tracking-wide font-bold">師生互動與卡點支援</span>
+                    <span class="text-sm tracking-wide font-bold whitespace-nowrap">師生互動與卡點支援</span>
+                    <span class="text-lg">📊</span>
                     ${badgeHtml}
                 </button>
             `;
