@@ -913,6 +913,27 @@ async function initFirebaseFeatures() {
             };
 
             const learningState = details.learningState;
+
+            // [NEW] Hide duplicate dashboard floating button on unit pages to merge widgets
+            if (!document.getElementById('hide-dashboard-fab-style')) {
+                const style = document.createElement('style');
+                style.id = 'hide-dashboard-fab-style';
+                style.innerHTML = '#dashboard-fab { display: none !important; }';
+                document.head.appendChild(style);
+            }
+
+            // Define openDashboardModalFromHub helper
+            window.openDashboardModalFromHub = function() {
+                if (typeof window.openDashboardModal === 'function') {
+                    const param = courseId ? `?courseId=${courseId}` : '';
+                    window.openDashboardModal(param);
+                    if (typeof window.toggleStudentHubModal === 'function') {
+                        window.toggleStudentHubModal();
+                    }
+                } else {
+                    alert("載入儀表板中，請稍後重試。");
+                }
+            };
             
             // Check where to render (Floating Button + Modal Overlay)
             let hubTrigger = document.getElementById('student-hub-trigger');
@@ -1179,12 +1200,18 @@ async function initFirebaseFeatures() {
 
             // Inject combined HTML
             hubContainer.innerHTML = `
-                <div class="flex items-center gap-3 border-b border-slate-200 pb-4 mb-6">
-                    <span class="text-2xl">🤝</span>
-                    <div>
-                        <h3 class="text-xl font-extrabold text-slate-800 font-[Outfit]">師生互動與卡點支援中心</h3>
-                        <p class="text-xs text-slate-500">此單元的即時輔導狀態與下一步行動指引</p>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🤝</span>
+                        <div>
+                            <h3 class="text-xl font-extrabold text-slate-800 font-[Outfit]">師生互動與卡點支援中心</h3>
+                            <p class="text-xs text-slate-500">此單元的即時輔導狀態與下一步行動指引</p>
+                        </div>
                     </div>
+                    <button onclick="window.openDashboardModalFromHub()" class="flex items-center gap-1.5 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition shadow-sm active:scale-95 self-start sm:self-auto">
+                        <span>📊</span>
+                        <span>完整學習儀表板</span>
+                    </button>
                 </div>
 
                 <div class="flex justify-between items-center mt-6 mb-6">
