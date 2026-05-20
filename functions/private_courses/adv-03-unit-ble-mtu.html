@@ -262,141 +262,156 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">BLE 數據分段與 MTU 擴展實驗室</h2>
+<div class="markdown-heading"><h1 class="heading-element">adv-03-unit-ble-mtu: MTU 與分段傳輸</h1><a id="user-content-adv-03-unit-ble-mtu-mtu-與分段傳輸" class="anchor" aria-label="Permalink: adv-03-unit-ble-mtu: MTU 與分段傳輸" href="#adv-03-unit-ble-mtu-mtu-與分段傳輸"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本程式庫是關於 BLE (Bluetooth Low Energy) 通訊中 <strong>MTU (Maximum Transmission Unit)</strong> 與 <strong>數據分段 (Fragmentation)</strong> 的進階實作練習。你將學習如何突破 BLE 的物理傳輸限制，穩定地傳輸大型 JSON 數據。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>理解 BLE MTU 的概念及其對傳輸效能的影響。</li>
+<li>實作數據分段演算法，將大型字串切分為符合 MTU 限制的片段。</li>
+<li>實作接收端緩衝區重組器，利用終止符 (Terminator) 完整還原數據。</li>
+<li>分析 MTU 協商 (Negotiation) 前後的效能差異。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">🛠 任務說明</h2><a id="user-content--任務說明" class="anchor" aria-label="Permalink: 🛠 任務說明" href="#-任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：「電梯拆解工」：手動分段發送器</h3><a id="user-content-任務-1電梯拆解工手動分段發送器" class="anchor" aria-label="Permalink: 任務 1：「電梯拆解工」：手動分段發送器" href="#任務-1電梯拆解工手動分段發送器"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在 <code>src/ble_fragmenter.js</code> 中實作 <code>fragmentData(text, mtu)</code> 函數。</p>
+<ul>
+<li>
+<strong>目標</strong>：依據指定的 MTU 大小，將長字串正確切分為字串陣列。</li>
+<li>
+<strong>關鍵點</strong>：確保合併後的片段與原文字串完全一致。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：「拼圖高手」：緩衝區重組器</h3><a id="user-content-任務-2拼圖高手緩衝區重組器" class="anchor" aria-label="Permalink: 任務 2：「拼圖高手」：緩衝區重組器" href="#任務-2拼圖高手緩衝區重組器"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在 <code>src/ble_reassembler.js</code> 中完善重組邏輯。</p>
+<ul>
+<li>
+<strong>目標</strong>：建立一個累計緩衝區，只有在偵測到終止符（如 <code>\n</code>）時才嘗試解析 JSON。</li>
+<li>
+<strong>關鍵點</strong>：必須包含 <code>try-catch</code> 錯誤處理，防止因為數據殘缺導致程式當機。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：效能分析與實驗紀錄</h3><a id="user-content-任務-3效能分析與實驗紀錄" class="anchor" aria-label="Permalink: 任務 3：效能分析與實驗紀錄" href="#任務-3效能分析與實驗紀錄"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>使用 ESP32 開發板配合 Web Bluetooth API 進行測試。</p>
+<ul>
+<li>
+<strong>目標</strong>：比較預設 MTU (23 Bytes) 與請求增大 MTU (如 247 Bytes) 後的傳輸時間。</li>
+<li>
+<strong>產出</strong>：將觀察結果紀錄於 <code>docs/mtu_benchmarks.md</code>。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">🚀 如何開始</h2><a id="user-content--如何開始" class="anchor" aria-label="Permalink: 🚀 如何開始" href="#-如何開始"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>安裝依賴</strong>：
+<div class="highlight highlight-source-shell"><pre>npm install</pre></div>
+</li>
+<li>
+<strong>執行單元測試</strong>：
+<div class="highlight highlight-source-shell"><pre>npm <span class="pl-c1">test</span></pre></div>
+</li>
+<li>
+<strong>部署韌體</strong>：
+使用 PlatformIO 將 <code>firmware/ble_mtu_test.ino</code> 燒錄至 ESP32。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">📝 繳交規範</h2><a id="user-content--繳交規範" class="anchor" aria-label="Permalink: 📝 繳交規範" href="#-繳交規範"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>請確保所有測試項目通過 (<code>npm test</code>)。</li>
+<li>更新 <code>docs/mtu_benchmarks.md</code> 中的效能對比表。</li>
+<li>將程式碼推送到 GitHub 程式庫。</li>
+</ul>
+<hr>
+<p>祝你學習愉快！如果有任何問題，請參考 <code>.github/tutor_guide.md</code> (僅供參考) 或詢問助教。</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：「電梯拆解工」：手動分段發送器 (MTU Fragmenter Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：通訊底層工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>實作分段</strong>：撰寫 <code>fragmentData(text, size)</code> 函式，將長 JSON 字串依據 MTU 限制（如 20
-                        Bytes）進行切分。</li>
-                    <li><strong>邊界驗證</strong>：測試當字串長度非倍數時，最後一個片段是否被正確發送。</li>
-                    <li><strong>Push Final</strong>：提交具備「手動分段能力」且能穩定發送長數據的通訊專案。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>片段完整性</strong>：最後一個片段是否被遺漏或截斷？</li>
-                    <li>[ ] <strong>時序穩定性</strong>：片段間是否加入了適當延遲以防止發送端 Buffer 溢位？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：「拼圖高手」：緩衝區重組器 (Puzzle Reassembler)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：前端系統整合員</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>緩衝機制</strong>：在接收端建立臨時累加 Buffer，持續接收並存儲零散片段。</li>
-                    <li><strong>終止符偵測</strong>：實作對 <code>\n</code> 或自定義結束符號的自動掃描。</li>
-                    <li><strong>原子解析</strong>：確保僅在收到完整終止符後，才觸發 <code>JSON.parse()</code> 以防止崩潰。</li>
-                    <li><strong>Push Final</strong>：提交具備「抗殘缺、防崩潰」能力的重組引擎。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>魯棒性測試</strong>：當接收到不完整 JSON 時，代碼是否能有效捕獲錯誤而非導致程式鎖死？</li>
-                    <li>[ ] <strong>內存管理</strong>：Buffer 是否在每次成功解析後正確清空，避免數據疊加污染？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：MTU 請求與效能分析 (MTU Request & Analysis)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：效能優化專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>權限提升</strong>：嘗試在連線後調用 <code>requestMTU(247)</code> 並紀錄系統響應。</li>
-                    <li><strong>效率對比</strong>：紀錄並對比「多小包」與「單一大包」在同一段長數據下的傳輸總耗時。</li>
-                    <li><strong>差異化分析</strong>：在 README 中紀錄不同手機系統對 MTU 請求的成功率與行為差異。</li>
-                    <li><strong>Push Final</strong>：提交包含「MTU 效能權衡報告」的最終優化方案。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>實驗嚴謹度</strong>：報告中是否針對多次實驗結果取平均值，並標註測試環境？</li>
-                    <li>[ ] <strong>理論理解</strong>：能否原理解釋為何增加 MTU 能降低傳輸負擔 (Protocol Overhead)？</li>
-                </ul>
-            </div>
-        </div>
     </section>
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-                <li><strong class="text-blue-600">重點 3：容錯思維</strong> - 強調前端在解析 <code>JSON.parse()</code> 前必須具備的 Try-Catch 或 Buffer 完整度檢查。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-03-unit-ble-mtu</code> (MTU 與分段傳輸：破除傳輸邊界)</strong> 單元，這是一個涉及「通訊底層邊界」與「資料完整性優化」的關鍵進階課題，重點在於如何讓小容量的 BLE 封包承載大容量的 JSON 數據。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>由於本單元涉及雙向通訊，範本程式庫應模擬真實的「發送端」與「接收端」邏輯：</p>
+<ul>
+<li>
+<strong>📂 <code>src/fragmenter.js</code></strong>：Web 前端腳本，提供 <code>sendLargeData(data)</code> 框架，將數據切割逻辑 (Segmentation) 留給學員實作。</li>
+<li>
+<strong>📂 <code>firmware/ble_echo.ino</code></strong>：ESP32 韌體，可配置不同的物理 MTU 限制（如強制設為 23 Bytes），用於測試學員前端重組程式碼的魯棒性。</li>
+<li>
+<strong>📂 <code>tests/data_integrity.test.js</code></strong>：單元測試腳本。模擬收到亂序或殘缺的數據片段，檢核學員的「重組器 (Reassembler)」是否會正確報錯或成功拼接。</li>
+<li>
+<strong>📂 <code>ANALYSIS.md</code></strong>：預置效能對比表，讓學員紀錄提升 MTU 前後的傳輸成功率與耗時延遲。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「電梯拆解工」：手動分段發送器 (MTU Fragmenter Lab)</h4><a id="user-content-任務-1電梯拆解工手動分段發送器-mtu-fragmenter-lab" class="anchor" aria-label="Permalink: 任務 1：「電梯拆解工」：手動分段發送器 (MTU Fragmenter Lab)" href="#任務-1電梯拆解工手動分段發送器-mtu-fragmenter-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握字串切割演算法，突破 BLE 物理載荷限制。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>核心邏輯檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：依據 MTU 大小將字串切分為 Array</span>
+<span class="pl-k">function</span> <span class="pl-en">fragmentData</span><span class="pl-kos">(</span><span class="pl-s1">text</span><span class="pl-kos">,</span> <span class="pl-s1">mtu</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+    <span class="pl-k">let</span> <span class="pl-s1">chunks</span> <span class="pl-c1">=</span> <span class="pl-kos">[</span><span class="pl-kos">]</span><span class="pl-kos">;</span>
+    <span class="pl-k">for</span> <span class="pl-kos">(</span><span class="pl-k">let</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span><span class="pl-kos">;</span> <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">text</span><span class="pl-kos">.</span><span class="pl-c1">length</span><span class="pl-kos">;</span> <span class="pl-s1">i</span> <span class="pl-c1">+=</span> <span class="pl-s1">mtu</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+        <span class="pl-s1">chunks</span><span class="pl-kos">.</span><span class="pl-en">push</span><span class="pl-kos">(</span><span class="pl-s1">text</span><span class="pl-kos">.</span><span class="pl-en">substring</span><span class="pl-kos">(</span><span class="pl-s1">i</span><span class="pl-kos">,</span> <span class="pl-s1">i</span> <span class="pl-c1">+</span> <span class="pl-s1">mtu</span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+    <span class="pl-k">return</span> <span class="pl-s1">chunks</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
+</li>
+<li>
+<strong>Autograding</strong>：測試一段 100 字元的字串，設定 MTU=20，檢查是否回傳恰好 5 個片段，且合併後與原文字串完全一致（包含空格與符號）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：「拼圖高手」：緩衝區重組器 (Puzzle Reassembler)</h4><a id="user-content-任務-2拼圖高手緩衝區重組器-puzzle-reassembler" class="anchor" aria-label="Permalink: 任務 2：「拼圖高手」：緩衝區重組器 (Puzzle Reassembler)" href="#任務-2拼圖高手緩衝區重組器-puzzle-reassembler"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作狀態機緩衝區，利用「終止符 (Terminator)」觸發原子解析。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>驗證方式</strong>：學員需在接收端實作累積 Buffer。只有當偵測到 <code>\n</code> 或 <code>\0</code> 時，才執行 <code>JSON.parse()</code>。</li>
+<li>
+<strong>核核重點</strong>：導師應在 PR 中檢查學員是否對 <code>JSON.parse</code> 進行了 <strong>Try-Catch</strong> 封裝。在分段傳輸中，數據丟包是常態，若解析到殘缺 JSON 導致前端 JS 當機，即視為失敗。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：MTU 請求與效能分析 (MTU Request &amp; Analysis)</h4><a id="user-content-任務-3mtu-請求與效能分析-mtu-request--analysis" class="anchor" aria-label="Permalink: 任務 3：MTU 請求與效能分析 (MTU Request &amp; Analysis)" href="#任務-3mtu-請求與效能分析-mtu-request--analysis"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：理解硬體協商 (Negotiation) 的價值與頻寬開銷 (Overhead) 的關係。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>實驗紀錄</strong>：學員需嘗試調用 <code>requestMTU(247)</code>，並對比在傳輸 1KB 數據時，「多個 20B 小包」與「少數 247B 大包」的總傳輸時間差。</li>
+<li>
+<strong>理論分析</strong>：在 <code>ANALYSIS.md</code> 中解釋為什麼大包傳輸更快（提示：減少了每個封包重複的 L2CAP/ATT 標頭開銷）。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 進階通訊導師點評標準 (Communication Benchmarks)</h3><a id="user-content-3-進階通訊導師點評標準-communication-benchmarks" class="anchor" aria-label="Permalink: 3. 進階通訊導師點評標準 (Communication Benchmarks)" href="#3-進階通訊導師點評標準-communication-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對通訊邊界案例 (Edge Cases) 的處理」</strong>：</p>
+<ul>
+<li>[ ] <strong>邊界嚴謹度</strong>：當數據長度恰好是 MTU 的倍數時，分段邏輯是否會產生空包或遺失末尾？</li>
+<li>[ ] <strong>內存安全性</strong>：緩衝區 (Buffer) 是否在每次成功解析後歸零？是否有設置最大容量上限（防止惡意超大包導致 OOM）？</li>
+<li>[ ] <strong>異質平台理解</strong>：學員是否能指出不同手機系統對 MTU 協商結果的差異，並提出軟體分段作為「最終防禦線」的必要性？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/
+│   ├── ble_fragmenter.js   # 核心：發送端分割邏輯
+│   └── ble_reassembler.js  # 核心：接收端重組與終止符檢查
+├── firmware/
+│   └── ble_mtu_test.ino    # 硬體端：模擬低 MTU 環境
+├── docs/
+│   └── mtu_benchmarks.md   # 報告：MTU 23 vs 247 效能對比
+└── README.md               # 專案總結：我如何破除 BLE 的 20 位元組詛咒
+</code></pre>
+<p>透過這種部署方式，學生能從「只會發短指令」升級到「<strong>能穩定傳輸複雜結構數據</strong>」的高級通訊工程師水準。</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-blue-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── src/fragmenter.js    # 核心：待填寫數據分割邏輯
-├── src/assembler.js     # 核心：待填寫 Buffer 重組與終止符檢查
-├── tests/mtu_stress.js  # 工具：自動發送不同長度數據的壓力測試測試腳本
-└── README.md            # 引導：要求學生紀錄 MTU 提升後的 FPS 變化報告
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5">觀看「BLE MTU 物理邊界」影片。理解電梯限重比喻與 JSON 撕裂現象。</td>
-                        <td class="px-6 py-5"><strong>Dashboard:</strong> 測試學員是否能計算出特定 JSON 傳輸所需的 Packets 數量。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900">領取作業 (Repo)，挑戰在高頻發送下達成「無損數據重組」。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 協助除錯為何 JSON 解析報錯（通常是 Buffer 未清空或終止符位置偏移）。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
-                        <td class="px-6 py-5">提交 MTU 調校報告。閱讀導師對「GATT 長度延遲與穩定性」的進階補充。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評分段邏輯的邊界檢查是否嚴密。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

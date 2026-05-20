@@ -288,143 +288,166 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">感官實驗室：從特徵工程到 AI 命令流</h2>
+<div class="markdown-heading"><h1 class="heading-element">adv-09-unit-cnn-audio (AI 識別原理)</h1><a id="user-content-adv-09-unit-cnn-audio-ai-識別原理" class="anchor" aria-label="Permalink: adv-09-unit-cnn-audio (AI 識別原理)" href="#adv-09-unit-cnn-audio-ai-識別原理"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>這是一個解構「AI 黑盒子」的單元。你將學習到 AI 並非魔法，而是基於 <strong>「特徵工程 (Feature Engineering)」</strong> 與 <strong>「機率匹配」</strong> 的數據科學。請按照以下任務完成你的作業。</p>
+<div class="markdown-heading"><h2 class="heading-element">任務 1：「AI 訓練師」視覺數據標記 (Vision Labeling Lab)</h2><a id="user-content-任務-1ai-訓練師視覺數據標記-vision-labeling-lab" class="anchor" aria-label="Permalink: 任務 1：「AI 訓練師」視覺數據標記 (Vision Labeling Lab)" href="#任務-1ai-訓練師視覺數據標記-vision-labeling-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：理解 CNN 提取特徵的物理意義，建立高品質的標記數據集。</li>
+<li>
+<strong>實作要求</strong>：
+<ul>
+<li>在 <code>js/cnn_features.js</code> (或 <code>js/cnn_utils.js</code>) 中實作 Sobel 卷積運算，提取影像的邊緣特徵。</li>
+<li>拍攝並收集 50 張障礙物照片，存放在 <code>samples/</code> 目錄下。</li>
+<li>
+<strong>撰寫報告</strong>：在本 <code>README.md</code> 下方的「學生報告區」，貼出原始影像與 Sobel 特徵圖的對照，並說明為什麼邊緣資訊（特徵）對 AI 識別物體至關重要。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">任務 2：語音指令信心分析 (KWS Confidence Benchmarking)</h2><a id="user-content-任務-2語音指令信心分析-kws-confidence-benchmarking" class="anchor" aria-label="Permalink: 任務 2：語音指令信心分析 (KWS Confidence Benchmarking)" href="#任務-2語音指令信心分析-kws-confidence-benchmarking"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：量化 AI 在真實環境（噪音）下的可靠度極限。</li>
+<li>
+<strong>實作要求</strong>：
+<ul>
+<li>使用 ESP32-S3 的 KWS (Key Word Spotting) 模組，在不同的環境噪音下測試 "Stop" 指令。</li>
+<li>
+<strong>數據分析</strong>：在本 <code>README.md</code> 下方的「學生報告區」，建立一張分析表（包含：距離、噪音分貝、AI 置信度 (%), 判定結果 True/False）。並總結信噪比 (SNR) 對識別率的影響，找出該模型的「可靠度臨界點」。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">任務 3：AI 事件與 FSM 系統裝配 (AI-Driven FSM Integration)</h2><a id="user-content-任務-3ai-事件與-fsm-系統裝配-ai-driven-fsm-integration" class="anchor" aria-label="Permalink: 任務 3：AI 事件與 FSM 系統裝配 (AI-Driven FSM Integration)" href="#任務-3ai-事件與-fsm-系統裝配-ai-driven-fsm-integration"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實現從「語意理解」到「物理執行」的閉迴路控制。</li>
+<li>
+<strong>實作要求</strong>：
+<ul>
+<li>實作高信心觸發邏輯：當辨識到 "STOP" 且 confidence &gt; 0.85 時，觸發狀態機切換至 <code>EMERGENCY_STOP</code>。</li>
+<li>測試系統反應時延（從辨識成功到馬達停止的總耗時必須低於 300ms）。可以使用自動化腳本進行測試。</li>
+<li>
+<strong>性能報告</strong>：錄製一段測試影片，展示透過聲音叫停無人車，並在下方「學生報告區」記錄多次實驗的平均反應延遲。探討如果信心門檻降低到 0.5 會發生什麼事？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">學生報告區</h2><a id="user-content-學生報告區" class="anchor" aria-label="Permalink: 學生報告區" href="#學生報告區"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1 報告</h3><a id="user-content-任務-1-報告" class="anchor" aria-label="Permalink: 任務 1 報告" href="#任務-1-報告"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<blockquote>
+<p>（請在此貼上原始影像與 Sobel 特徵圖對照，並說明邊緣資訊為何重要）</p>
+</blockquote>
+<div class="markdown-heading"><h3 class="heading-element">任務 2 報告</h3><a id="user-content-任務-2-報告" class="anchor" aria-label="Permalink: 任務 2 報告" href="#任務-2-報告"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<blockquote>
+<p>（請在此提供噪音測試數據分析表，並總結 SNR 影響及模型可靠度臨界點）
+| 距離 | 噪音分貝 | AI 置信度 (%) | 判定結果 (True/False) |
+|---|---|---|---|
+| ... | ... | ... | ... |</p>
+</blockquote>
+<div class="markdown-heading"><h3 class="heading-element">任務 3 報告</h3><a id="user-content-任務-3-報告" class="anchor" aria-label="Permalink: 任務 3 報告" href="#任務-3-報告"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<blockquote>
+<p>（請在此附上影片連結、記錄平均反應延遲，並探討門檻降低到 0.5 的影響）</p>
+</blockquote>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：「AI 訓練師」視覺數據標記 (Vision Labeling Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：資料標記工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>數據採集</strong>：拍攝 50 張包含各種障礙物角度的照片，建立分類資料夾。</li>
-                    <li><strong>Sobel 轉型測試</strong>：在 <code>js/cnn_utils.js</code> 撰寫 Sobel 運算邏輯，提取影像邊緣特徵並渲染至 Canvas。
-                    </li>
-                    <li><strong>報告撰寫</strong>：在 README 貼上原始圖 vs. 特徵圖的對比，說明 Sobel 濾鏡如何幫助 AI 減少數據冗餘。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>標記質量</strong>：資料標籤是否清晰無誤？是否包含足夠的光影變化對抗過擬合？</li>
-                    <li>[ ] <strong>特徵理解力</strong>：Sobel 提取的邊緣是否清晰，能否正確解釋卷積核 (Kernel) 的數學作用？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：語音指令信心分析 (KWS Confidence Benchmarking)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：訊號處理專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>參數調校</strong>：啟動 ESP32-S3 的語音識別監聽模組。</li>
-                    <li><strong>噪點壓力測試</strong>：在背景播放白噪音，紀錄不同分貝下的識別置信度分數。</li>
-                    <li><strong>效能分佈圖</strong>：在網頁實作實時圖表，反映 MFCC 特徵隨聲音能量變化的波動情況。</li>
-                    <li><strong>Push Final</strong>：提交具備「信噪比分析」功能的語音診斷韌體。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>專業分析度</strong>：README 是否量化記錄了雜訊對識別成功率的影響臨界點？</li>
-                    <li>[ ] <strong>圖表直觀性</strong>：信心分數介面是否能即時且準確地反映 AI 的當前判斷狀態？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：AI 事件與 FSM 系統裝配 (AI-Driven FSM Integration)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統架構員</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>狀態機重構</strong>：在 FSM 配置中新增 <code>EMERGENCY_STOP</code> 狀態。</li>
-                    <li><strong>事件派發 (Event Dispatching)</strong>：當 AI 辨識出關鍵字且信心 > 0.85 時，發送廣播事件。</li>
-                    <li><strong>時延測量 (Latency)</strong>：計算從聲音發出到馬達停止的總耗時（包含傳輸、推論、邏輯執行）。</li>
-                    <li><strong>Push Final</strong>：完成具備 AI 介入能力的自動化控制核心。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>系統反應力</strong>：整體反應延遲是否控制在 300ms 以內？（這是實戰安全的底線）。</li>
-                    <li>[ ] <strong>邏輯嚴密度</strong>：針對「低信心」辨識結果是否實作了緩衝或過濾，防止車體無端跳動？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：破解 AI 魔法外衣。讓學員理解卷積 (Convolution) 是濾鏡，FFT 是稜鏡。AI 是對特徵數據的機率匹配。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600 font-bold tracking-tighter uppercase text-justify">重點 1：特徵的重要性</strong> - 學生常想直接把整片影像丟給 AI。必須強調 Sobel 或 MFCC 這種「降維」對嵌入式系統（ESP32）的必要性。</li>
-                <li><strong class="text-indigo-600 font-bold tracking-widest text-justify">重點 2：從訓練到推論</strong> - 明確區分 Cloud/PC Training 與 Edge Inference。讓學員知道為何 ESP32 能跑 AI：因為權重是固定的。</li>
-                <li><strong class="text-indigo-600 font-bold uppercase text-justify">重點 3：信心分數的哲學</strong> - AI 永遠不說「是」或「否」，它只給機率。如何決定門檻 (Threshold) 是工程師的核心決策。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-09-unit-cnn-audio</code> (AI 識別原理)</strong> 單元，這是一個解構「AI 黑盒子」的單元。學員將學習到 AI 並非魔法，而是基於 <strong>「特徵工程 (Feature Engineering)」</strong> 與 <strong>「機率匹配」</strong> 的數據科學。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本程式庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" href="#1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>AI 識別需要極強的數學視覺化與物理實驗數據，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>js/cnn_features.js</code></strong>：核心濾鏡組件。提供卷積核 (Kernel) 的計算框架，留下 Sobel 邊緣檢測與權重卷積的 <code>TODO</code>。</li>
+<li>
+<strong>📂 <code>js/audio_diagnostics.js</code></strong>：語音診斷面板。預置即時頻譜圖 (Spectrogram) 與 MFCC 能量分布圖，讓抽象的聲音變為可視化的「圖片」。</li>
+<li>
+<strong>📂 <code>fsm/ai_bridge.json</code></strong>：狀態機橋接配置。預留語音觸發事件與 <code>EMERGENCY_STOP</code> 狀態的映射關係。</li>
+<li>
+<strong>📂 <code>tests/latency.test.js</code></strong>：自動化評分脚本。專門測試系統反應時延——模擬發出語音指令，檢核從「辨識成功」到「狀態機切換（馬達停止）」的總耗時是否低於 300ms。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「AI 訓練師」視覺數據標記 (Vision Labeling Lab)</h4><a id="user-content-任務-1ai-訓練師視覺數據標記-vision-labeling-lab" class="anchor" aria-label="Permalink: 任務 1：「AI 訓練師」視覺數據標記 (Vision Labeling Lab)" href="#任務-1ai-訓練師視覺數據標記-vision-labeling-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：理解 CNN 提取特徵的物理意義，建立高品質的標記數據識。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>特徵提取檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：Sobel 卷積運算</span>
+<span class="pl-k">let</span> <span class="pl-s1">edgeX</span> <span class="pl-c1">=</span> <span class="pl-en">applyKernel</span><span class="pl-kos">(</span><span class="pl-s1">pixelData</span><span class="pl-kos">,</span> <span class="pl-c1">SOBEL_X</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-k">let</span> <span class="pl-s1">edgeY</span> <span class="pl-c1">=</span> <span class="pl-en">applyKernel</span><span class="pl-kos">(</span><span class="pl-s1">pixelData</span><span class="pl-kos">,</span> <span class="pl-c1">SOBEL_Y</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-k">let</span> <span class="pl-s1">magnitude</span> <span class="pl-c1">=</span> <span class="pl-v">Math</span><span class="pl-kos">.</span><span class="pl-en">sqrt</span><span class="pl-kos">(</span><span class="pl-s1">edgeX</span><span class="pl-c1">*</span><span class="pl-s1">edgeX</span> <span class="pl-c1">+</span> <span class="pl-s1">edgeY</span><span class="pl-c1">*</span><span class="pl-s1">edgeY</span><span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div>
+</li>
+<li>
+<strong>數據提交</strong>：學員需在 <code>samples/</code> 目錄下上傳自己拍攝並標記的 50 張障礙物照片。</li>
+<li>
+<strong>視覺對比報告</strong>：要求在 README 中貼出原始影像與 Sobel 特徵圖的對照，並說明為什麼邊緣資訊（特徵）對 AI 識別物體至關重要。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：語音指令信心分析 (KWS Confidence Benchmarking)</h4><a id="user-content-任務-2語音指令信心分析-kws-confidence-benchmarking" class="anchor" aria-label="Permalink: 任務 2：語音指令信心分析 (KWS Confidence Benchmarking)" href="#任務-2語音指令信心分析-kws-confidence-benchmarking"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：量化 AI 在真實環境（噪音）下的可靠度極限。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>壓力測試要求</strong>：學員需使用 ESP32-S3 的 KWS (Key Word Spotting) 模組，在不同的環境噪音下測試 "Stop" 指令。</li>
+<li>
+<strong>數據分析表</strong>：學員需在 README 建立一張分析表：<code>距離 | 噪音分貝 | AI 置信度 (%) | 判定結果 (True/False)</code>。</li>
+<li>
+<strong>PR 深度核核</strong>：點評其對「信噪比 (SNR)」影響識別率的總結。是否找到了該模型的「可靠度臨界點」？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：AI 事件與 FSM 系統裝配 (AI-Driven FSM Integration)</h4><a id="user-content-任務-3ai-事件與-fsm-系統裝配-ai-driven-fsm-integration" class="anchor" aria-label="Permalink: 任務 3：AI 事件與 FSM 系統裝配 (AI-Driven FSM Integration)" href="#任務-3ai-事件與-fsm-系統裝配-ai-driven-fsm-integration"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實現從「語意理解」到「物理執行」的閉迴路控制。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>決策門檻實作</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：高信心觸發邏輯</span>
+<span class="pl-k">if</span> <span class="pl-kos">(</span><span class="pl-s1">event</span><span class="pl-kos">.</span><span class="pl-c1">label</span> <span class="pl-c1">===</span> <span class="pl-s">'STOP'</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">event</span><span class="pl-kos">.</span><span class="pl-c1">confidence</span> <span class="pl-c1">&gt;</span> <span class="pl-c1">0.85</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+    <span class="pl-s1">fsm</span><span class="pl-kos">.</span><span class="pl-en">transitionTo</span><span class="pl-kos">(</span><span class="pl-s">'EMERGENCY_STOP'</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
+</li>
+<li>
+<strong>性能測試報告</strong>：學員需錄製影片展示透過聲音叫停無人車，並在 README 記綠多次實驗的平均反應延遲。</li>
+<li>
+<strong>魯棒性分析</strong>：引導學員討論：如果信心門檻降低到 0.5 會發生什麼事？（答案：誤判率上升導致車體無端頻繁跳停）。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. AI 訊號工程導師點評標準 (AI Signal Benchmarks)</h3><a id="user-content-3-ai-訊號工程導師點評標準-ai-signal-benchmarks" class="anchor" aria-label="Permalink: 3. AI 訊號工程導師點評標準 (AI Signal Benchmarks)" href="#3-ai-訊號工程導師點評標準-ai-signal-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對特徵數據的深度理解與系統整合能力」</strong>：</p>
+<ul>
+<li>[ ] <strong>特徵提取準確度</strong>：Sobel 濾鏡實作是否正確？產出的特徵圖是否真的強化了物體輪廓？</li>
+<li>[ ] <strong>實驗數據真實性</strong>：測試報告是否確實反映了噪音與識別率的負相關？</li>
+<li>[ ] <strong>系統集成意識</strong>：AI 與 FSM 的串接是否流暢？是否考慮到了推論時間對避障安全性的影響？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── js/
+│   ├── cnn_utils.js        # 核心：待填寫 Sobel 核心卷積邏輯
+│   ├── spectrum_view.js    # 工具：繪製語音特徵 MFCC 波形圖
+│   └── app_logic.js        # 整合：AI 事件與狀態機的串接點
+├── samples/                # 數據：學員存放自己採集的影像樣本
+├── README.md               # 專案心得：我如何利用 AI 建立高效的語音/視覺控制鏈
+└── tests/
+    └── response.test.js    # 自動化：檢核 300ms 安全反應時間
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「讓代碼具備感官」</strong> 的樂趣。掌握 CNN 原理與語音識別後，學員將擁有了構建「具身智慧 (Embodied AI)」的基礎能力，這將使他們設計的系統更自然、更具備環境適應性。</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── js/cnn_kernel.js    # 核心：待填寫 Sobel 計算與卷積對齊邏輯
-├── js/fsm_bridge.js    # 整合：負責將辨識結果注入狀態機的橋樑
-└── samples/audio/      # 數據：提供幾組標準指令的頻譜圖作為對比源
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「卷積層 (Convolution) 動畫」。理解濾鏡如何掃描圖片並產生特徵圖。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能正確預測 Sobel 濾鏡對橫向/縱向線條的反應差異。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify tracking-tighter font-black">領取作業 (Repo)，執行關鍵字壓力測試。實作 FSM 裝配，將語音指令轉化為無人車的實體動作。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 指導如何使用非同步方式處理辨識流，防止網頁渲染執行緒發生卡死。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black">提交「AI 置信度 vs. 環境噪音」對抗分析紀錄並 Push。閱讀教師對「邊緣 AI 侷限性」的回饋。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「特徵提取」數學原理的應用深度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

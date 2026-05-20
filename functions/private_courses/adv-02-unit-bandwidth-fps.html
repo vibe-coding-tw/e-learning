@@ -254,56 +254,113 @@
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：掌握影像傳輸中的「平衡藝術」。理解解析度、壓縮率與網路頻寬之間的數學權衡。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：數據秤重能力</strong> - 帶領學生從「感性觀察」轉向「理性測量」。通過具體 Bytes/sec 數據理解頻寬瓶頸。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：動態適應思維</strong> - 介紹 ABR (Adaptive Bitrate) 核心概念，理解如何在惡劣路徑下保持系統可用性。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：底層硬體限界</strong> - 探討 XCLK 與感測器取樣的物理限制，識別「軟體優化」與「硬體限界」的邊界。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-02-unit-bandwidth-fps</code> (網路頻寬與幀率的數學關係)</strong> 單元，這是一個深入探討「資源取捨 (Trade-off)」的進階工程課程，核心在於解析度、品質與流暢度的平衡。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>進階效能單元的範本應強調「量化測量」工具，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/main.cpp</code></strong>：內建精確的 $FPS$ 與 $Bytes/sec$ 監測與輸出邏輯，減少學員在底層測量上的重複勞動。</li>
+<li>
+<strong>📂 <code>src/abr_controller.cpp</code></strong>：預置一個「自動適應頻寬 (ABR)」的框架類別，將核心的降級邏輯 (Downscaling Logic) 留給學員實作。</li>
+<li>
+<strong>📂 <code>analysis/bandwidth_profile.csv</code></strong>：一個預先格式化的 CSV 檔案，讓學員填入在不同解析度下的頻寬消耗數據。</li>
+<li>
+<strong>📂 <code>.github/workflows/bench_checker.yml</code></strong>：自動化腳本，驗證 <code>bandwidth_profile.csv</code> 是否填寫完整且數值邏輯正確。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：頻寬消耗標定法 (Bandwidth Profiling)</h4><a id="user-content-任務-1頻寬消耗標定法-bandwidth-profiling" class="anchor" aria-label="Permalink: 任務 1：頻寬消耗標定法 (Bandwidth Profiling)" href="#任務-1頻寬消耗標定法-bandwidth-profiling"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過實驗數據，畫出解析度、品質與頻寬的三維關係圖。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>數據提交</strong>：學員需在 <code>analysis/bandwidth_profile.csv</code> 中紀錄 QQVGA、QVGA、VGA 解析度在 Quality=20 下的真實頻寬佔用。</li>
+<li>
+<strong>Autograding</strong>：檢查數據是否符合「面積加倍 -&gt; 流量近乎加倍」的線性趨勢，並核對學員是否發現了 Wi-Fi 傳輸的物理瓶頸（例如：當流量超過 2MB/s 時，FPS 是否開始異常跳動）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：動態擁塞控制實驗 (Congestion Control Lab)</h4><a id="user-content-任務-2動態擁塞控制實驗-congestion-control-lab" class="anchor" aria-label="Permalink: 任務 2：動態擁塞控制實驗 (Congestion Control Lab)" href="#任務-2動態擁塞控制實驗-congestion-control-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作簡單的 ABR (Adaptive Bitrate) 算法，確保系統在網路惡化時不會斷連。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>核心邏輯檢核</strong>：
+<div class="highlight highlight-source-c++"><pre><span class="pl-c"><span class="pl-c">//</span> 學生需實作：當 FPS 連續 3 秒低於 5 幀時，自動切換至更低解析度</span>
+<span class="pl-k">if</span> (consecutive_low_fps_seconds &gt;= <span class="pl-c1">3</span>) {
+    current_resolution = <span class="pl-c1">get_lower_res</span>(current_resolution);
+    <span class="pl-c1">update_camera_config</span>();
+}</pre></div>
+</li>
+<li>
+<strong>挑戰項 (Extra Credit)</strong>：學員是否實作了「遲滯 (Hysteresis)」邏輯？避免解析度在臨界點來回跳動 (Resolution Flickering)。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：硬體加速與 FPS 極限挑戰 (XCLK Optimization)</h4><a id="user-content-任務-3硬體加速與-fps-極限挑戰-xclk-optimization" class="anchor" aria-label="Permalink: 任務 3：硬體加速與 FPS 極限挑戰 (XCLK Optimization)" href="#任務-3硬體加速與-fps-極限挑戰-xclk-optimization"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：調教感測器時鐘 (XCLK)，找出硬體同步與功耗的極限。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>現象紀錄</strong>：要求學員紀錄將 XCLK 從 20MHz 提升後，影像是否出現「畫面撕裂 (Sync Lost)」或顏色失真。</li>
+<li>
+<strong>驗證方式</strong>：在 README 中說明為什麼盲目提升時鐘頻率不一定能提升有效 FPS（提示：後端的 DMA 搬運速度或 JPEG 編碼能力可能已經封頂）。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 進階效能單元導師點評標準 (Advanced Benchmarks)</h3><a id="user-content-3-進階效能單元導師點評標準-advanced-benchmarks" class="anchor" aria-label="Permalink: 3. 進階效能單元導師點評標準 (Advanced Benchmarks)" href="#3-進階效能單元導師點評標準-advanced-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「數據驅動的工程決策」</strong>：</p>
+<ul>
+<li>[ ] <strong>量化嚴謹度</strong>：提交的數據表是否完整，且能清晰標出系統的「雪崩點 (Performance Drop)」？</li>
+<li>[ ] <strong>算力感應</strong>：是否能區分出 $FPS$ 下降是因為「封包塞在大氣中」還是「CPU 來不及編碼」？</li>
+<li>[ ] <strong>自癒能力</strong>：實作的 ABR 邏輯是否能在模擬干擾撤除後，平滑地恢復至高品質影像？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/
+│   ├── main.cpp            # 主程式：含效能監測器
+│   └── abr_logic.cpp       # 核心：學員實作動態降級邏輯處
+├── analysis/
+│   └── throughput.csv      # 數據表：紀錄解析度與頻寬關係
+├── docs/
+│   └── bottleneck_report.md # 報告：分析系統瓶頸所在
+└── README.md               # 專案總結：我的 ABR 策略優勢
+</code></pre>
+<div class="markdown-heading"><h3 class="heading-element">4. 自我檢測與自動評分 (Autograding)</h3><a id="user-content-4-自我檢測與自動評分-autograding" class="anchor" aria-label="Permalink: 4. 自我檢測與自動評分 (Autograding)" href="#4-自我檢測與自動評分-autograding"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本專案內建自動化評分腳本，您可以隨時在本地端執行以驗證您的進度：</p>
+<ol>
+<li>
+<strong>安裝依賴</strong>：
+<div class="highlight highlight-source-shell"><pre>pip install pandas</pre></div>
+</li>
+<li>
+<strong>執行評分</strong>：
+<div class="highlight highlight-source-shell"><pre>python tools/grader.py</pre></div>
+</li>
+</ol>
+<p>評分腳本會檢查：</p>
+<ul>
+<li>
+<code>analysis/throughput.csv</code> 是否已填寫完整數據。</li>
+<li>
+<code>src/abr_logic.cpp</code> 中的 <code>TODO</code> 是否已處理（即已實作 ABR 邏輯）。</li>
+<li>
+<code>docs/bottleneck_report.md</code> 是否已完成分析且勾選了對應項。</li>
+</ul>
+<hr>
+<p>透過這種部署方式，學生能體會到 <strong>「數據是不會說謊的」</strong>。在面對網路多變的真實世界時，學會如何透過數學公式與動態邏輯，在受限的頻寬中榨取最高的視覺品質。</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
-.
-├── src/main.cpp          # 核心邏輯：內置不同解析度切換與 FPS 計測
-├── include/bandwidth.h   # 通訊協議：定義數據傳輸封包格式
-└── reports/analysis.md   # 報告模板：對比不同配置下的頻寬曲線
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「影像壓縮與網路頻寬」影片，理解 Raw vs JPEG 差異。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 確認學生是否掌握 Width*Height*Depth 的容量計算基礎。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black">領取作業 (Repo)，挑戰實驗室「頻寬極限測試」。實作擁塞控制並 Push。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>擁塞模擬:</strong> 協助演示如何在 Wi-Fi 端造成干擾，並引導學生觀察 ABR 觸發。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-left text-justify font-black text-justify">總結優化曲線，在 PR 中附上不同解析度下的 FPS/Latency 散佈圖。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「操控體感」與「數據完整度」的權衡判斷。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

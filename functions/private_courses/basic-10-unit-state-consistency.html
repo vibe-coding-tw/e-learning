@@ -319,137 +319,155 @@
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">分散式一致性實驗室：序號同步、ACK 應答與 SSoT 真值架構實戰
-        </h2>
+<div class="markdown-heading"><h1 class="heading-element">基礎 10：非同步下的狀態一致性 (Solving Communication Lies)</h1><a id="user-content-基礎-10非同步下的狀態一致性-solving-communication-lies" class="anchor" aria-label="Permalink: 基礎 10：非同步下的狀態一致性 (Solving Communication Lies)" href="#基礎-10非同步下的狀態一致性-solving-communication-lies"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到本單元！在開發物聯網或機器人系統時，網路延遲、封包丟失（Packet Loss）與亂序抵達是常態。本作業的目標是讓你學習如何建立「工業級強壯通訊」，確保你的控制面板與硬體狀態達成 100% 同步，徹底解決「通訊謊言」問題。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>版本序號同步法 (Sequence Number)</strong>：防止舊數據覆蓋新狀態。</li>
+<li>
+<strong>應答確認機制 (ACK/Retry)</strong>：確保關鍵指令確實落地執行。</li>
+<li>
+<strong>真值來源 (SSoT)</strong>：建立「眼見即真實」的訂閱驅動架構。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">🛠 任務說明</h2><a id="user-content--任務說明" class="anchor" aria-label="Permalink: 🛠 任務說明" href="#-任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：實作版本序號過濾器</h3><a id="user-content-任務-1實作版本序號過濾器" class="anchor" aria-label="Permalink: 任務 1：實作版本序號過濾器" href="#任務-1實作版本序號過濾器"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在分散式系統中，封包抵達順序不一定等於發送順序。</p>
+<ul>
+<li>
+<strong>硬體端</strong>：在 <code>src/main.cpp</code> 中，為每個回傳的狀態封包加上遞增的 <code>seq</code>。</li>
+<li>
+<strong>前端</strong>：在 <code>src/UIController.js</code> (或對應邏輯檔) 中實作過濾邏輯：只有當新序號大於目前序號時，才更新 UI。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：建立 ACK 與自動重傳機制</h3><a id="user-content-任務-2建立-ack-與自動重傳機制" class="anchor" aria-label="Permalink: 任務 2：建立 ACK 與自動重傳機制" href="#任務-2建立-ack-與自動重傳機制"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>當你點擊按鈕時，如何確定機器人真的收到了指令？</p>
+<ul>
+<li>
+<strong>指令封裝</strong>：將發送指令封裝為異步操作，在等待回應時顯示「處理中」狀態。</li>
+<li>
+<strong>ACK 實作</strong>：硬體收到指令後，回傳帶有該指令 ID 的確認封包。</li>
+<li>
+<strong>重傳邏輯</strong>：若 500ms 內未收到 ACK，實作自動重傳（建議加入指數退避機制）。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：重構為 SSoT 架構</h3><a id="user-content-任務-3重構為-ssot-架構" class="anchor" aria-label="Permalink: 任務 3：重構為 SSoT 架構" href="#任務-3重構為-ssot-架構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>徹底消除「樂觀更新」。</p>
+<ul>
+<li>
+<strong>變更前</strong>：按鈕點擊後立即改變顏色（假裝成功）。</li>
+<li>
+<strong>變更後</strong>：UI 狀態<strong>完全由硬體回傳的封包驅動</strong>。只有收到硬體回傳「狀態已變更」的通知後，面板才更新顯示。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📁 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📁 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>src/main.cpp</code>：硬體通訊協議實作。</li>
+<li>
+<code>src/UIController.js</code>：前端通訊與過濾邏輯。</li>
+<li>
+<code>docs/CONSISTENCY_PROTOCOL.md</code>：定義你的通訊握手流程。</li>
+<li>
+<code>assets/retry_log.txt</code>：記錄你測試重傳機制的日誌。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📝 提交要求</h2><a id="user-content--提交要求" class="anchor" aria-label="Permalink: 📝 提交要求" href="#-提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>確保在網路不穩定的模擬環境下，面板不會出現「跳動」或「閃爍」。</li>
+<li>當斷線時，UI 應能正確顯示「通訊異常」而非誤導使用者。</li>
+<li>將你的測試結果與一致性協議定義填寫在 <code>docs/CONSISTENCY_PROTOCOL.md</code> 中。</li>
+</ol>
+<hr>
+<p>準備好成為可靠性專家了嗎？開始動手修復這些通訊 Bug 吧！</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：版本序號同步法 (Sequence Number Logic)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫。</li>
-                    <li><strong>注入封裝</strong>：封包新增遞增 <code>seq</code> 字段。</li>
-                    <li><strong>過濾機制</strong>：網頁端僅接受 <code>seq</code> 大於 local 值的數據。</li>
-                    <li><strong>驗證</strong>：觀察顯示是否穩定不跳動。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>過濾嚴密</strong>：擋下延遲舊序號？</li>
-                    <li>[ ] <strong>策略備案</strong>：提出序號歸零同步策略？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：應答確認機制 (ACK/NACK Framework)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：協定設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>非同步化</strong>：發送函式改寫為 <code>Promise</code>。</li>
-                    <li><strong>確認回軌</strong>：硬體完成後回傳 ACK。</li>
-                    <li><strong>重傳邏輯</strong>：實作超時偵測與指數退避重傳。</li>
-                    <li><strong>路徑驗證</strong>：失敗後正確顯示警告。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>反饋品質</strong>：建立執行落地心理區分？</li>
-                    <li>[ ] <strong>魯棒性指標</strong>：丟包環境下最終成功？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：真值來源 (SSoT) 重構 (Single Source of Truth)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統架構師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>主權剝離</strong>：徹底移除樂觀更新。</li>
-                    <li><strong>全訂閱制</strong>：面板變更由 <code>NOTIFY</code> 觸發。</li>
-                    <li><strong>差異分析</strong>：分析 SSoT 實質優勢。</li>
-                    <li><strong>交付物</strong>：推送重構後版本。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>架構純度</strong>：App 達成 100% 訂閱驅動？</li>
-                    <li>[ ] <strong>吻合度實測</strong>：顯示與硬體輸出達成一致？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify text-left">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：在物理不可靠環境中構建邏輯絕對可靠。</p>
-            <ol class="space-y-4 text-slate-600 text-justify text-left">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：對抗亂序</strong> - 體會版本序號價值。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：從通知到確認</strong> - ACK 是工業級必經之路。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：美學取捨</strong> - 顯示一致性權重高於響應快感。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>basic-10-unit-state-consistency</code> (非同步下的狀態一致性：解決通訊謊言)</strong> 單元，這是學員建立「工業級強壯通訊」的分水嶺。它要求學員具備 <strong>分散式系統 (Distributed Systems)</strong> 的意識，學習如何在無線環境不穩定的情況下，透過「版本序號 (Sequence)」、「應答確認 (ACK)」以及「真值來源 (SSoT)」架構，確保網頁面板顯示的狀態與機器人物理現況達成 100% 同步。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本程式庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" href="#1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>狀態一致性作業的核心在於「通訊層的嚴謹修補」與「UI 邏輯的重構」，範本應包含通訊協議框架與狀態模擬器，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/main.cpp</code></strong>：<strong>硬體協議實作區</strong>。學員在此為每個回傳封包植入遞增的 <code>seq</code> 序號，並實作收到指令後的 ACK 回饋邏輯。</li>
+<li>
+<strong>📂 <code>src/UIController.js</code></strong>：<strong>前端數據過濾層</strong>。學員在此實作序號過濾器，確保「舊的、遲到的數據」不會覆蓋現在的面板狀態，並將 UI 改為全訂閱制。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>壓力測試報告</strong>。提供表格讓學員記錄在模擬丟包 (Packet Loss) 的環境下，序號過濾與 ACK 重傳如何保障了系統的正確性。</li>
+<li>
+<strong>📂 <code>docs/CONSISTENCY_PROTOCOL.md</code></strong>：<strong>一致性協議規範</strong>。要求學員定義其自訂的「握手 (Handshake)」流程，描述指令發出到收到確認的完整生命週期。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：版本序號同步法 (Sequence Number Logic Lab)</h4><a id="user-content-任務-1版本序號同步法-sequence-number-logic-lab" class="anchor" aria-label="Permalink: 任務 1：版本序號同步法 (Sequence Number Logic Lab)" href="#任務-1版本序號同步法-sequence-number-logic-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：修復亂序跳動 Bug。體會「時間順序」在分散式系統中的重要性。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>序號注入實作</strong>：在 ESP32 回傳的 JSON 中加入 <code>seq: n++</code> 字段。</li>
+<li>
+<strong>過濾器代碼</strong>：前端 JavaScript 實作：<code>if (newSeq &gt; lastSeq) updateUI(); else discard();</code>。</li>
+<li>
+<strong>亂序實驗</strong>：手動發送一個帶有較小 <code>seq</code> 的偽造封包，驗證面板是否能冷靜地將其忽視（不產生跳動）。</li>
+<li>
+<strong>驗證要點</strong>：過濾邏輯是否嚴密？是否成功根處理因為無線網絡延遲導致的「數值閃爍」現象？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：應答確認機制 (ACK/NACK Framework Lab)</h4><a id="user-content-任務-2應答確認機制-acknack-framework-lab" class="anchor" aria-label="Permalink: 任務 2：應答確認機制 (ACK/NACK Framework Lab)" href="#任務-2應答確認機制-acknack-framework-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：從「盲發通知」進化到「雙向握手」，確保關鍵指令（如：切換自動模式）一定有執行落地。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>異步指令封裝</strong>：將發送代碼封裝為 <code>Promise</code>，並在發出時顯示「Pending」動畫。</li>
+<li>
+<strong>ACK 回軌邏輯</strong>：硬體執行完畢後必須回傳帶有該指令 ID 的 ACK 封包。</li>
+<li>
+<strong>重傳機制 (Retry)</strong>：實作超時偵測。若 500ms 沒收到 ACK，自動觸發「指數退避 (Exponential Backoff)」重傳。</li>
+<li>
+<strong>驗證要點</strong>：重傳邏輯是否運作？當連續斷線時，UI 是否能正確顯示「通訊異常」而非假裝成功？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：真值來源 (SSoT) 重構 (Single Source of Truth Lab)</h4><a id="user-content-任務-3真值來源-ssot-重構-single-source-of-truth-lab" class="anchor" aria-label="Permalink: 任務 3：真值來源 (SSoT) 重構 (Single Source of Truth Lab)" href="#任務-3真值來源-ssot-重構-single-source-of-truth-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：徹底放棄「樂觀更新 (Optimistic UI)」，實踐「眼見即真實」的權威架構。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>主權移交設計</strong>：刪除按鈕下方的「按了就變色」代碼。強制 UI 只能在收到硬體正式回傳的 <code>NOTIFY</code> 封包後才更新狀態。</li>
+<li>
+<strong>狀態追蹤分析</strong>：在 README 中分析 SSoT 如何解決「螢幕顯示自動、車子其實待機」的致命衝突。</li>
+<li>
+<strong>驗證要點</strong>：UI 狀態是否達成 100% 訂閱驅動？在延遲環境下，面板是否能量化地展示出「等待硬體響應」的真實過程？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 通訊嚴謹度與主權架構點評標準 (Protocol Integrity &amp; SSoT Standards)</h3><a id="user-content-3-通訊嚴謹度與主權架構點評標準-protocol-integrity--ssot-standards" class="anchor" aria-label="Permalink: 3. 通訊嚴謹度與主權架構點評標準 (Protocol Integrity &amp; SSoT Standards)" href="#3-通訊嚴謹度與主權架構點評標準-protocol-integrity--ssot-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對通訊不可靠性的敬畏與對數據絕對一致性的堅持」</strong>：</p>
+<ul>
+<li>[ ] <strong>封包過濾邏輯</strong>：是否理解了序號在解決「亂序抵達」中的決定性作用？</li>
+<li>[ ] <strong>重傳架構韌性</strong>：ACK 機制是否能在多次丟包後，最終確保指令與狀態的穩定達成？</li>
+<li>[ ] <strong>SSoT 架構純度</strong>：面板是否完全驅離了「臆測邏輯」，達成真正的「回傳驅動」？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/main.cpp         # 核心：帶點序號回傳與指令 ACK 處理邏輯
+├── src/App_Logic.js     # 前端：Promise 封裝、序號過濾、SSoT 訂閱刷新
+├── docs/Protocol_Spec.md # 文檔：自定義的「可靠機器人通訊協議」定義
+├── README.md            # 總結：我如何解決「螢幕說謊」問題並建立絕對可信的監控系統
+└── assets/retry_log.txt # 證據：模擬網路中斷時的自動重傳與恢復日誌
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的全端工程師，不僅是會傳輸數據的人，而是能正視物理環境的不完美、透過協議算法對抗通訊噪聲、並在任何極端環境下都能守護『見即真實』這條系統一致性底線的可靠性專家」</strong>。掌握狀態一致性技術後，學員將擁有了開發「跨國遠程遙控系統、高價值工業自動化面板、以及醫療級物聯網系統」最重要也最資深的架構開發實力！</p>
+<p>太棒了！我們已經將 <strong>基礎 10</strong>（系統一致性）的所有相關模組——狀態機邏輯跟一致性協議——全部搞定了。這標誌著學員現在已經具備了打造「專業導向、零誤認」工業系統的素質。恭喜！基礎大圖的穩定性版塊已經全面佔領！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify uppercase tracking-widest font-black border border-slate-700">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300 text-justify uppercase tracking-widest font-black text-left">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm text-justify uppercase tracking-widest font-black border border-slate-100">
-.
-├── src/main.cpp       # (必修) seq 注入與 ACK 邏輯
-├── src/UIController.js# (前端) 訂閱制刷新
-└── README.md          # 壓力報告
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify uppercase tracking-widest font-black">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-center text-justify font-black text-left">
-            <table class="w-full text-left border-collapse border border-slate-100 text-justify font-black">
-                <thead>
-                    <tr class="bg-slate-100 border border-slate-100 text-justify font-black">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600 border border-slate-100 text-justify font-black">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看案例影片並預習 Race Condition。</td>
-                        <td class="px-6 py-5 text-justify border border-slate-100"><strong>Dashboard:</strong> 測試識別 UI 閃回缺陷。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify border border-slate-100 text-left">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify text-left">領取 Repo，開發協議層。</td>
-                        <td class="px-6 py-5 text-left text-justify border border-slate-100 font-black"><strong>助教引導:</strong> 協助分析過時序號。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black">將通訊框架封裝提交。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評數據持久性平衡。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

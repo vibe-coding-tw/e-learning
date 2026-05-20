@@ -332,138 +332,155 @@
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">空中韌體分發實驗室：路由實作、進度視覺化與 A/B 分區回滾實戰
-        </h2>
+<div class="markdown-heading"><h1 class="heading-element">實驗單元：Arduino OTA 與 Web OTA 原理</h1><a id="user-content-實驗單元arduino-ota-與-web-ota-原理" class="anchor" aria-label="Permalink: 實驗單元：Arduino OTA 與 Web OTA 原理" href="#實驗單元arduino-ota-與-web-ota-原理"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本單元將帶領你從「手動燒錄」進化到「物聯網自動化維護」。你將學習如何實作無線韌體更新 (OTA)，建立具備進度監測的前端介面，並理解硬體層級的 <strong>A/B 分區回滾安全機制</strong>。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>掌握 ESP32 分區表 (Partition Table) 的配置與原理。</li>
+<li>實作 Web-based OTA 更新功能。</li>
+<li>開發具備進度條 (Progress Bar) 的使用者介面。</li>
+<li>理解並測試 A/B 分區的容錯與回滾機制。</li>
+</ol>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🛠️ 任務說明</h2><a id="user-content-️-任務說明" class="anchor" aria-label="Permalink: 🛠️ 任務說明" href="#️-任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：分區表配置 (Partition Configuration)</h3><a id="user-content-任務-1分區表配置-partition-configuration" class="anchor" aria-label="Permalink: 任務 1：分區表配置 (Partition Configuration)" href="#任務-1分區表配置-partition-configuration"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>為了支援 OTA，ESP32 需要至少兩個應用程式分區 (<code>app0</code>, <code>app1</code>)。</p>
+<ul>
+<li>修改 <code>platformio.ini</code>，指定使用自定義的分區表文件。</li>
+<li>編輯 <code>ota_split.csv</code>，正確劃分 <code>app0</code>, <code>app1</code>, <code>otadata</code> 與 <code>nvs</code> 空間。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：Web OTA 核心實作</h3><a id="user-content-任務-2web-ota-核心實作" class="anchor" aria-label="Permalink: 任務 2：Web OTA 核心實作" href="#任務-2web-ota-核心實作"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在 <code>src/main.cpp</code> 中實作 WebServer 的 <code>/update</code> 路由處理。</p>
+<ul>
+<li>使用 <code>Update.begin()</code>, <code>Update.write()</code>, 與 <code>Update.end()</code> 處理上傳的二進位檔案。</li>
+<li>確保更新完成後設備能自動重啟。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：進度條視覺化介面</h3><a id="user-content-任務-3進度條視覺化介面" class="anchor" aria-label="Permalink: 任務 3：進度條視覺化介面" href="#任務-3進度條視覺化介面"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>編輯 <code>data/index.html</code>，為 OTA 上傳頁面加入視覺化反饋。</p>
+<ul>
+<li>利用 <code>XMLHttpRequest</code> 的 <code>progress</code> 事件監控上傳進度。</li>
+<li>實作動態 CSS 進度條，並在更新成功後引導使用者重啟或自動跳轉。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 4：故障與回滾測試</h3><a id="user-content-任務-4故障與回滾測試" class="anchor" aria-label="Permalink: 任務 4：故障與回滾測試" href="#任務-4故障與回滾測試"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>模擬真實環境中可能發生的意外中斷。</p>
+<ul>
+<li>在上傳過程中（約 50%）中斷電源或網路。</li>
+<li>驗證設備是否能自動回滾至原本健康的版本。</li>
+<li>完成 <code>docs/Rollback.md</code> 中的實驗報告。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📁 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📁 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── platformio.ini       # 核心：引導設定分區表路徑
+├── ota_split.csv        # 配置：定義 Flash 的 A/B 空間映射
+├── src/main.cpp         # 韌體：處理 HTTP Update 二進位流的實作
+├── data/index.html      # 前端：具備進度條動畫的 Web OTA 介面
+├── docs/Rollback.md     # 實驗：紀錄中斷更新後的系統恢復軌跡報告
+└── README.md            # 本文件
+</code></pre>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">✅ 提交要求</h2><a id="user-content--提交要求" class="anchor" aria-label="Permalink: ✅ 提交要求" href="#-提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>確保程式碼能正確編譯並執行。</li>
+<li>完成所有 <code>TODO</code> 標記的區塊。</li>
+<li>將實驗報告 <code>docs/Rollback.md</code> 填寫完整。</li>
+<li>將更改 push 回你的 GitHub 程式庫以進行自動評分。</li>
+</ol>
+<hr>
+<blockquote>
+<p>「好的物聯網工程師，不僅是在開發功能，更是在建立一套即便在最惡劣環境下也能自癒的生命鏈。」</p>
+</blockquote>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：「無線進化」基礎 Web OTA (Foundation of Web OTA)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：IoT 部署工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫教 Clone 到本地。</li>
-                    <li><strong>路由實作</strong>：在 ESP32 上建立 <code>/update</code> 路由處理 HTTP POST 請求。</li>
-                    <li><strong>前端部署</strong>：建立 HTML 頁面，包含檔案選擇器並透過 AJAX 發送二進位檔。</li>
-                    <li><strong>無線驗證</strong>：斷開 USB 線，僅透過 Wi-Fi 成功將修改後韧體上傳。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>服務通聯</strong>：能否在瀏覽器輸入 <code>esp32.local/update</code> 並加載上傳介面？</li>
-                    <li>[ ] <strong>功能驗證</strong>：燒錄後，設備能否自動重啟並執行新版本邏輯？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：「更新進度條」視覺化體驗 (OTA Progress Visualization)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：前端體驗設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>事件監聽</strong>：使用 <code>XMLHttpRequest</code> 監聽 <code>progress</code> 事件獲取進度。</li>
-                    <li><strong>UI 同步</strong>：實作動態 CSS 進度條反映 <code>(e.loaded / e.total)</code>。</li>
-                    <li><strong>狀態引導</strong>：上傳完畢顯示「進入燒錄模式」並在 3 秒後導向新首頁。</li>
-                    <li><strong>效能記錄</strong>：記錄不同環境下上傳 1MB 韌體的平均延遲。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>數據同步性</strong>：進度條的視覺位移是否與真實數據發送匹配？</li>
-                    <li>[ ] <strong>用戶告知</strong>：上傳後是否具備「更新中，請勿關機」提示？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：「安全防線」故障與回滾測試 (Security & Rollback Challenge)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：安全測試專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>分區表透視</strong>：配置 <code>ota_0</code> 與 <code>ota_1</code> 邊界。</li>
-                    <li><strong>故障模擬演練</strong>：在進度達到一半時故意中斷 Wi-Fi 或拔除電源。</li>
-                    <li><strong>魯棒性驗證</strong>：確認 ESP32 能否偵測分區損毀並安全回滾 (Rollback) 至原版本。</li>
-                    <li><strong>深度報告</strong>：撰寫 A/B 分區如何實現「零故障更新」技術原理。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>容錯機制認知</strong>：是否理解 <code>Update.abort()</code> 與數據校驗的重要性？</li>
-                    <li>[ ] <strong>系統恢復力</strong>：發生異常中斷後，裝置是否能在 10 秒內恢復功能？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify text-left">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：掌握「韌體生命週期管理」，理解硬體如何透過軟體分區實現長治久安。</p>
-            <ol class="space-y-4 text-slate-600 text-justify">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：打破燒錄恐懼</strong> - 讓學生體會部署硬體可以像 Push 網頁一樣輕鬆。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：強化回饋感</strong> - 經由 JavaScript 進度條，實踐全棧開發中的「狀態同步」。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：穩定性第一</strong> - 實作 A/B 分區回滾實驗，建立「Failure is expected, recovery is mandatory」意識。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>basic-02-unit-ota-principles</code> (Arduino OTA 與 Web OTA 原理)</strong> 單元，這是從「手動燒錄」進化到「物聯網自動化維護」的關鍵里程碑。它要求學員具備 <strong>全端思維</strong>，不僅要寫好韌體更新邏輯，還要實作具備進度監測的前端介面，並理解硬體層級的 <strong>A/B 分區回滾安全機制</strong>。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本程式庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" href="#1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>OTA 實作涉及「分區佈局」與「前後端協作」，範本應包含完整的系統架構，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>platformio.ini</code></strong>：<strong>配置練習核心</strong>。學員需在此設定 <code>partitions = ota_2mb.csv</code>，引導其手動配置非標準的分區空間。</li>
+<li>
+<strong>📂 <code>ota_2mb.csv</code></strong>：分區定義表。預設為空的或錯誤的分區表，學員需依照硬體 Flash 大小（如 4MB）劃分出 <code>app0</code>, <code>app1</code> 與 <code>otadata</code> 空間。</li>
+<li>
+<strong>📂 <code>data/update.html</code></strong>：<strong>前端實戰區</strong>。提供一個基礎的上傳表單，學員需在此補全 JavaScript 邏輯，實作具備動態 CSS 的「更新進度條」。</li>
+<li>
+<strong>📂 <code>src/main.cpp</code></strong>：<strong>伺服器框架區</strong>。內置 WebServer 框架，但 <code>/update</code> 的處理函式中預留 <code>TODO</code>，學員需實作二進位流寫入 (Update.write) 的核心對話。</li>
+<li>
+<strong>📂 <code>docs/Rollback.md</code></strong>：<strong>容錯實驗日誌</strong>。學員需模擬「斷電/斷網」情境，並記錄 A/B 分區如何發揮保護作用防止變磚。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「無線進化」基礎 Web OTA (Web-Based Wireless Update Lab)</h4><a id="user-content-任務-1無線進化基礎-web-ota-web-based-wireless-update-lab" class="anchor" aria-label="Permalink: 任務 1：「無線進化」基礎 Web OTA (Web-Based Wireless Update Lab)" href="#任務-1無線進化基礎-web-ota-web-based-wireless-update-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：打通電腦與 ESP32 的無線通訊路徑，徹底擺脫 USB 數據線。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>路由實作建構</strong>：學員需實作 <code>Update.begin()</code>, <code>Update.write()</code>, 與 <code>Update.end()</code> 這套三位一體的核心指令。</li>
+<li>
+<strong>連通性驗證</strong>：要求學員在 <code>esp32.local/update</code> 介面成功上傳一段修改後的 Blink 程式。</li>
+<li>
+<strong>驗證要點</strong>：README 中需展示上傳成功後，設備自動重啟並進入新程式的日誌。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：「更新進度條」視覺化設計 (OTA Progress &amp; UX Design Lab)</h4><a id="user-content-任務-2更新進度條視覺化設計-ota-progress--ux-design-lab" class="anchor" aria-label="Permalink: 任務 2：「更新進度條」視覺化設計 (OTA Progress &amp; UX Design Lab)" href="#任務-2更新進度條視覺化設計-ota-progress--ux-design-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過 JavaScript 監控二進位流傳輸狀態，建立專業的用戶反饋體驗。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>事件監聽實作</strong>：使用 <code>XMLHttpRequest</code> 的 <code>progress</code> 事件，學員需計算 <code>(e.loaded / e.total)</code> 並實時更新 CSS Width。</li>
+<li>
+<strong>狀態引導設計</strong>：上傳完成後需觸發「系統重啟中...」的提示頁面，並在 3 秒後自動跳轉。</li>
+<li>
+<strong>PR 提交內容</strong>：提交一段螢幕錄影或 GIF，展示進度條從 0% 到 100% 的平滑移動過程。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：「安全防線」故障與回滾測試 (Rollback &amp; Security Audit Lab)</h4><a id="user-content-任務-3安全防線故障與回滾測試-rollback--security-audit-lab" class="anchor" aria-label="Permalink: 任務 3：「安全防線」故障與回滾測試 (Rollback &amp; Security Audit Lab)" href="#任務-3安全防線故障與回滾測試-rollback--security-audit-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握 A/B 分區的底層邏輯，建立「硬體永遠能自癒」的專業工程觀念。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>故障模擬挑戰</strong>：要求學員在上傳進度達到 50% 時故意拔掉開發板電源。</li>
+<li>
+<strong>恢復力檢測</strong>：學員需重啟設備，並證明 ESP32 能自動切換回原本健康的分區 (Rollback)，而非停在損毀的分區中。</li>
+<li>
+<strong>技術原理分析</strong>：在報告中解釋 <code>otadata</code> 分區在這次回滾實驗中扮演的角色。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 物聯網部署專家導師點評標準 (IoT Deployment &amp; Reliability Standards)</h3><a id="user-content-3-物聯網部署專家導師點評標準-iot-deployment--reliability-standards" class="anchor" aria-label="Permalink: 3. 物聯網部署專家導師點評標準 (IoT Deployment &amp; Reliability Standards)" href="#3-物聯網部署專家導師點評標準-iot-deployment--reliability-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對大型系統佈署可靠性與前端交互的反饋意識」</strong>：</p>
+<ul>
+<li>[ ] <strong>架構嚴密性</strong>：分區表劃分是否精確？是否為 <code>otadata</code> 與 <code>nvs</code> 留出足夠空間？</li>
+<li>[ ] <strong>用戶體驗深度</strong>：進度條是否能準確反映真實上傳速率？重啟跳轉邏輯是否流暢？</li>
+<li>[ ] <strong>容錯思維</strong>：是否理解數據包校驗 (Checksum/Signature) 在 OTA 中的安全性重要地位？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── platformio.ini       # 核心：引導設定分區表路徑
+├── ota_split.csv        # 配置：定義 4MB Flash 的 A/B 空間映射
+├── src/main.cpp         # 韌體：處理 HTTP Update 二進位流的 C++ 實作
+├── data/index.html      # 前端：具備進度條動畫的 Web OTA 介面
+├── docs/Rollback.md     # 實驗：紀錄故意中斷更新後的系統恢復軌跡報告
+└── README.md            # 結案：我如何建立一套具備商業級魯棒性的無線進化系統
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的物聯網工程師，不僅是在開發功能，更是在建立一套即便在最惡劣網路環境下，也絕不消失、絕不變磚的永恆生命鏈」</strong>。掌握 Web OTA 原理後，學員將擁有了營運「萬物互聯、無線升級」工業系統最強大的生命線守護能力！</p>
+<p>太精采了！我們已經將 <strong>基礎 02</strong>（雲端更新）單元的標準化 Classroom 定義完成了。這意味著我們不僅在教「連線」，更在教「維運」。恭喜！課程的深度與專業度又提升了一個層次！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
-.
-├── platformio.ini   # (練習點) 配置分區表 partitions = ota.csv
-├── ota.csv          # 讓學生自行修改調整 app 空間大小
-├── src/main.cpp      # 包含 HTTP Update 平臺框架
-└── README.md         # 紀錄分區映射圖、異常恢復報告
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「ESP32 OTA 原理：A/B 分區奧義」影片。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試是否理解更新失敗為何不變磚的原因。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify">領取作業 (Repo)，實作無線更新頁面並挑戰「極限斷電」實驗。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>雲端助教:</strong> 協助演示如何在 <code>update.onProgress</code> 中注入錯誤輸出。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify">撰寫「OTA 異常處理與安全性報告」並 Push，總結分區表心得。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評學員對分區對齊與韌體校驗。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

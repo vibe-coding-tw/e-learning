@@ -310,136 +310,191 @@
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">控制數據處理實驗室：歸一化、非線性映射與通訊節流實戰</h2>
+<div class="markdown-heading"><h1 class="heading-element">搖桿數據的本質：歸一化、映射與死區</h1><a id="user-content-搖桿數據的本質歸一化映射與死區" class="anchor" aria-label="Permalink: 搖桿數據的本質：歸一化、映射與死區" href="#搖桿數據的本質歸一化映射與死區"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本單元將帶領你從「能動就好」跨入「專業操控」的領域。你將學習如何運用 <strong>控制數學 (Control Math)</strong>，將物理世界的搖桿位移轉化為精準的控制數據，並透過演算法打造出「職人級」的細膩手感。</p>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🛠 任務說明</h2><a id="user-content--任務說明" class="anchor" aria-label="Permalink: 🛠 任務說明" href="#-任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：數據標準化與死區防護 (Normalization &amp; Deadzone)</h3><a id="user-content-任務-1數據標準化與死區防護-normalization--deadzone" class="anchor" aria-label="Permalink: 任務 1：數據標準化與死區防護 (Normalization &amp; Deadzone)" href="#任務-1數據標準化與死區防護-normalization--deadzone"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：將搖桿位移轉為 <code>[-1.0, 1.0]</code> 的標準浮點數，並實作「死區」過濾機械雜訊。</li>
+<li>
+<strong>實作重點</strong>：
+<ul>
+<li>將原始物理座標映射至標準區間。</li>
+<li>實作 10% 的死區門檻。當搖桿在中心附近微動時，輸出應強制為 <code>0.0</code>。</li>
+<li>
+<strong>驗證</strong>：放開搖桿後，數據是否能穩定保持在「絕對 0.0」，而不會出現細微抖動？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：非線性映射：指數型油門 (Exponential Mapping)</h3><a id="user-content-任務-2非線性映射指數型油門-exponential-mapping" class="anchor" aria-label="Permalink: 任務 2：非線性映射：指數型油門 (Exponential Mapping)" href="#任務-2非線性映射指數型油門-exponential-mapping"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：提升低速精準操控的能力，避免起步過於突兀。</li>
+<li>
+<strong>實作重點</strong>：
+<ul>
+<li>實作公式：<code>output = sgn(input) * pow(abs(input), exponent)</code>。</li>
+<li>確保正確處理負數區間，讓油門推前與推後都能正常運作。</li>
+<li>
+<strong>驗證</strong>：推到底時是否能精準達到 <code>1.0</code> 或 <code>-1.0</code>？低速區間的數據增長是否變得平緩？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：數據發送節流 (Throttling)</h3><a id="user-content-任務-3數據發送節流-throttling" class="anchor" aria-label="Permalink: 任務 3：數據發送節流 (Throttling)" href="#任務-3數據發送節流-throttling"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：防止數據過度發送導致網路擁塞。</li>
+<li>
+<strong>實作重點</strong>：
+<ul>
+<li>限制發送頻率（建議每 100ms 傳送一次）。</li>
+<li>限制數值精度至小數點後兩位。</li>
+<li>
+<strong>驗證</strong>：在瀏覽器控制台觀察，快速滑動搖桿時，封包發送頻率是否穩定？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🚀 開始作業</h2><a id="user-content--開始作業" class="anchor" aria-label="Permalink: 🚀 開始作業" href="#-開始作業"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>開啟 <code>index.html</code> 檢視搖桿介面。</li>
+<li>編輯 <code>js/math_engine.js</code>，搜尋 <code>TODO</code> 並實作上述邏輯。</li>
+<li>使用視覺化 UI 測試你的演算法。</li>
+<li>將實測結果填寫至下方的 <strong>[作業報告]</strong>。</li>
+</ol>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📝 作業報告 (學生填寫區)</h2><a id="user-content--作業報告-學生填寫區" class="anchor" aria-label="Permalink: 📝 作業報告 (學生填寫區)" href="#-作業報告-學生填寫區"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<blockquote>
+<p><strong>學生姓名:</strong> [請填寫姓名]
+<strong>完成日期:</strong> [請填寫日期]</p>
+</blockquote>
+<div class="markdown-heading"><h3 class="heading-element">1. 操控感對比報告</h3><a id="user-content-1-操控感對比報告" class="anchor" aria-label="Permalink: 1. 操控感對比報告" href="#1-操控感對比報告"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<table>
+<thead>
+<tr>
+<th align="left">模式</th>
+<th align="left">操控感受描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><strong>線性 (Linear)</strong></td>
+<td align="left">[例如：反應太直接，很難做微小的調整]</td>
+</tr>
+<tr>
+<td align="left"><strong>指數 (Exponential)</strong></td>
+<td align="left">[例如：低速時非常滑順，適合精準定位]</td>
+</tr>
+</tbody>
+</table>
+<div class="markdown-heading"><h3 class="heading-element">2. 節流機制證明</h3><a id="user-content-2-節流機制證明" class="anchor" aria-label="Permalink: 2. 節流機制證明" href="#2-節流機制證明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p><em>(請在此處貼上瀏覽器 Network 頁面的截圖，證明封包發送頻率穩定)</em></p>
+<div class="markdown-heading"><h3 class="heading-element">3. 自我反思</h3><a id="user-content-3-自我反思" class="anchor" aria-label="Permalink: 3. 自我反思" href="#3-自我反思"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p><strong>數學映射如何改變了遠端控制系統的使用者體驗？</strong>
+[你的心得與反思...]</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：數據標準化實作 (Joystick Normalization)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>歸一化演算</strong>：實作轉為數據座標 <code>[-1.0, 1.0]</code>。</li>
-                    <li><strong>死區過濾</strong>：設定 10% 閥值抑制雜訊。</li>
-                    <li><strong>UI 驗證</strong>：顯示實時座標。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>極值完整</strong>：推到底是精準 1.0？</li>
-                    <li>[ ] <strong>中心點穩定</strong>：放開立刻恢復 0.0？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：非線性映射：指數型油門 (Exponential Mapping Profile)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：動力調校工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>曲線編寫</strong>：導入指數映射公式。</li>
-                    <li><strong>微操實測</strong>：比較低速區間數據差異。</li>
-                    <li><strong>端點閉合</strong>：驗證最大值完美對應。</li>
-                    <li><strong>調校報告</strong>：說明微調協助。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>指數掌握</strong>：體現起始溫和特徵？</li>
-                    <li>[ ] <strong>代碼穩健</strong>：處理負數符號保留？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：數據打包與發送節流 (Throttling & Packaging)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：優化專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>報文規範</strong>：封裝 JSON 並限制位數。</li>
-                    <li><strong>頻率控制</strong>：實作 Throttling 設定間隔。</li>
-                    <li><strong>負擔驗證</strong>：確認靜止時頻寬被抑制。</li>
-                    <li><strong>正式提交</strong>：Push 具優化意識代碼。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>優化實效</strong>：頻率隨操作自動調節？</li>
-                    <li>[ ] <strong>報文解析</strong>：符合嵌入式負載需求？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：掌握標準化、非線性動力學與高效通訊。</p>
-            <ol class="space-y-4 text-slate-600 text-justify text-left">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：歸一化的意義</strong> - 像素轉為比率是基石。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：感官與映射</strong> - 為什麼指數能創造「高級」感。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：節流必要性</strong> - 討論擁塞與延遲。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>basic-08-unit-joystick-mapping</code> (搖桿數據的本質：歸一化、映射與死區)</strong> 單元，這是學員從「能動就好」跨入「專業操控」的關鍵課程。它要求學員具備 <strong>控制數學 (Control Math)</strong> 的思維，學習如何將物理世界的像素位移，轉化為數學上的標準比例，並透過非線性對映打造出「職人級」的細膩手感。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>搖桿控制作業的核心在於「數據轉換」與「傳輸優化」，範本應包含前端 UI 與邏輯框架，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>index.html</code></strong>：<strong>搖桿控制介面</strong>。內建一個視覺化的虛擬搖桿元件。</li>
+<li>
+<strong>📂 <code>js/joystick_logic.js</code></strong>：<strong>控制數學實作區</strong>。學員在此撰寫歸一化函式、死區過濾邏輯以及指數對映公式。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>操控感調校報告</strong>。提供表格讓學員記錄：「線性模式」與「指數模式」在微操時的數據差異感。</li>
+<li>
+<strong>📂 <code>docs/MAPPING_CURVE.md</code></strong>：<strong>函數曲線分析</strong>。要求學員說明他們選擇的 <code>pow(v, n)</code> 指數值（如 1.5 或 2.0）之原因，並描述其對操縱感的提升。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：數據標準化實作 (Joystick Normalization Lab)</h4><a id="user-content-任務-1數據標準化實作-joystick-normalization-lab" class="anchor" aria-label="Permalink: 任務 1：數據標準化實作 (Joystick Normalization Lab)" href="#任務-1數據標準化實作-joystick-normalization-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握跨平台數據標準化的概念，理解「死區」在抑制機械雜訊中的決定性作用。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>座標規範化</strong>：將搖桿的物理位移轉為 <code>[-1.0, 1.0]</code> 的浮點數。</li>
+<li>
+<strong>死區防護</strong>：<strong>核心關鍵點</strong>。實作 10% 閥值的死區。當搖桿在中心附近微動時，輸出必須被強制拉回「絕對 0.0」。</li>
+<li>
+<strong>驗證要點</strong>：放開搖桿後，介面顯示的數據是否會因為雜訊而出現 <code>0.02</code> 等細微抖動？（若會，則死區實作失敗）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：非線性映射：指數型油門 (Exponential Mapping Lab)</h4><a id="user-content-任務-2非線性映射指數型油門-exponential-mapping-lab" class="anchor" aria-label="Permalink: 任務 2：非線性映射：指數型油門 (Exponential Mapping Lab)" href="#任務-2非線性映射指數型油門-exponential-mapping-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：學習如何利用數學函式模擬「高級感」，提升低速精準操控的能力，避免起步過於突兀。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>曲線實作</strong>：實作公式 <code>output = sgn(input) * pow(abs(input), exponent)</code>。</li>
+<li>
+<strong>正負號保留</strong>：<strong>技術審核重點</strong>。學員必須正確處理負數區間，確保油門推後與推前都能運作。</li>
+<li>
+<strong>感官對比</strong>：在 README 中描述在「倒車入庫」等精細動作中，指數映射如何協助使用者比線性映射更容易成功。</li>
+<li>
+<strong>驗證要點</strong>：推到底時是否能精準達到 <code>1.0</code> 或 <code>-1.0</code>？低速區間的數據增長是否變得更加平緩？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：數據打包與發送節流 (Throttling &amp; Packaging Lab)</h4><a id="user-content-任務-3數據打包與發送節流-throttling--packaging-lab" class="anchor" aria-label="Permalink: 任務 3：數據打包與發送節流 (Throttling &amp; Packaging Lab)" href="#任務-3數據打包與發送節流-throttling--packaging-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：建立網路效率與負擔的權衡意識，防止數據「濫發」造成網路擁塞 (Network Congestion)。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>負擔輕量化</strong>：封裝成 JSON 物件，並將座標限制在小數點後兩位（如 <code>0.85</code> 而非 <code>0.8499999</code>）。</li>
+<li>
+<strong>節流機制 (Throttling)</strong>：實作時間計數器。限制發送頻率（如：每 100ms 傳送一次），即使使用者瘋狂轉動搖桿。</li>
+<li>
+<strong>靜默抑制</strong>：當數值與上一次相比「變化微小」時，停止發送以節省流量。</li>
+<li>
+<strong>驗證要點</strong>：在瀏覽器控制台觀察 Network Tab。快速滑動搖桿時，封包發送頻率是否維持穩定而非爆炸式增長？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 控制品質與操控演算法點評標準 (Control Quality &amp; UX Standards)</h3><a id="user-content-3-控制品質與操控演算法點評標準-control-quality--ux-standards" class="anchor" aria-label="Permalink: 3. 控制品質與操控演算法點評標準 (Control Quality &amp; UX Standards)" href="#3-控制品質與操控演算法點評標準-control-quality--ux-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對數值的極限掌控力與對使用者感覺的數學量化能力」</strong>：</p>
+<ul>
+<li>[ ] <strong>中心點絕對靜默</strong>：死區是否能讓馬達在靜止時遠離震顫？</li>
+<li>[ ] <strong>對應精準力</strong>：最大推力與最小推力是否能完美對準物理邊界？</li>
+<li>[ ] <strong>通訊專業度</strong>：是否具備節流意識，將網路資源花在「變動」的瞬間而非重複發送？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── index.html           # 前端：搖桿視覺化 UI
+├── js/math_engine.js    # 核心：歸一化、死區與曲線演算法實作
+├── docs/Control_Lab.md  # 文檔：紀錄線性 vs 指數的實測數據對比
+├── README.md            # 總結：我如何透過數學對映打造「職人級」的賽車感
+└── assets/packet_log.png # 證據：Network Tab 中的節流效果截圖
+</code></pre>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">附錄：原始學生報告範本</h3><a id="user-content-附錄原始學生報告範本" class="anchor" aria-label="Permalink: 附錄：原始學生報告範本" href="#附錄原始學生報告範本"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>(這部分是原始 README.md 的內容，供 Tutor 參考學生應繳交的格式)</p>
+<div class="markdown-heading"><h1 class="heading-element">Unit 08: Joystick Mapping - The Art of Control Math</h1><a id="user-content-unit-08-joystick-mapping---the-art-of-control-math" class="anchor" aria-label="Permalink: Unit 08: Joystick Mapping - The Art of Control Math" href="#unit-08-joystick-mapping---the-art-of-control-math"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<blockquote>
+<p><strong>Student Name:</strong> [Your Name]
+<strong>Completion Date:</strong> [Date]</p>
+</blockquote>
+<div class="markdown-heading"><h2 class="heading-element">🎯 Project Overview</h2><a id="user-content--project-overview" class="anchor" aria-label="Permalink: 🎯 Project Overview" href="#-project-overview"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>... (其餘內容略)</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify uppercase tracking-widest font-black border border-slate-700">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300 text-justify uppercase tracking-widest font-black">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm text-justify uppercase tracking-widest font-black border border-slate-100">
-.
-├── index.html        # 搖桿基礎 UI
-├── js/control.js     # (必修) 實作邏輯
-└── README.md         # 實驗日誌
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify uppercase tracking-widest font-black">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-center text-justify">
-            <table class="w-full text-left border-collapse border border-slate-100 text-justify">
-                <thead>
-                    <tr class="bg-slate-100 border border-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600 border border-slate-100 text-justify">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">看座標系變換影片。</td>
-                        <td class="px-6 py-5 text-justify border border-slate-100"><strong>Dashboard:</strong> 測試辨識「死區」。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify border border-slate-100">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify text-left">領取 Repo，挑戰手刻非線性函式。</td>
-                        <td class="px-6 py-5 text-left text-justify border border-slate-100 font-black"><strong>助教引導:</strong> 觀察節流器頻率。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black">加入變動門檻邏輯。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價平衡點設計。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

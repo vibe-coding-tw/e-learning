@@ -316,139 +316,165 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">光電感測物理實驗室：從數位訊號到物理量測</h2>
+<div class="markdown-heading"><h1 class="heading-element">🛰️ 感測器原理 (adv-11-unit-sensor-principles)</h1><a id="user-content-️-感測器原理-adv-11-unit-sensor-principles" class="anchor" aria-label="Permalink: 🛰️ 感測器原理 (adv-11-unit-sensor-principles)" href="#️-感測器原理-adv-11-unit-sensor-principles"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到「感測器原理」單元！這是學習機器人感知系統的物理基礎課程。在本單元中，你將從最底層的 <strong>「光電遮斷 (Photo-Interruption)」</strong> 現象出發，理解數位方波的產生，並建立一套嚴謹的 <strong>「物理單位轉換引擎」</strong>（格數 $\to$ 轉速 $\to$ 時速）。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>理解數位訊號（方波）的物理意義。</li>
+<li>學習如何標定硬體解析度 (PPR)。</li>
+<li>實作物理單位轉換邏輯，將電子脈衝轉換為真實世界速度。</li>
+<li>掌握採樣頻率對數據穩定性的影響。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">🛠️ 作業任務</h2><a id="user-content-️-作業任務" class="anchor" aria-label="Permalink: 🛠️ 作業任務" href="#️-作業任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：方波波形分析 (Digital Waveform Lab)</h3><a id="user-content-任務-1方波波形分析-digital-waveform-lab" class="anchor" aria-label="Permalink: 任務 1：方波波形分析 (Digital Waveform Lab)" href="#任務-1方波波形分析-digital-waveform-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：建立對數位訊號物理意義的直覺。</li>
+<li>
+<strong>任務說明</strong>：使用 Serial Plotter 觀測感測器輸出。當光路被遮住時，輸出電位是多少？請在 <code>CALIBRATION_REPORT.md</code> 中紀錄觀測結果。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：PPR 定位標定 (Encoder PPR Lab)</h3><a id="user-content-任務-2ppr-定位標定-encoder-ppr-lab" class="anchor" aria-label="Permalink: 任務 2：PPR 定位標定 (Encoder PPR Lab)" href="#任務-2ppr-定位標定-encoder-ppr-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：校準硬體解析度，確保數據源頭的可靠性。</li>
+<li>
+<strong>任務說明</strong>：
+<ul>
+<li>在輪胎上貼標記，手動旋轉三圈，取平均值計算出該車型的 PPR（每圈脈衝數）。</li>
+<li>在 <code>src/main.ino</code> 中實作中斷計數代碼。</li>
+<li>將結果填入 <code>CALIBRATION_REPORT.md</code>。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：物理時速換算引擎 (Velocity Engine Lab)</h3><a id="user-content-任務-3物理時速換算引擎-velocity-engine-lab" class="anchor" aria-label="Permalink: 任務 3：物理時速換算引擎 (Velocity Engine Lab)" href="#任務-3物理時速換算引擎-velocity-engine-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實現從「脈衝」到「時速 (cm/s)」的全鏈路轉換。</li>
+<li>
+<strong>任務說明</strong>：
+<ul>
+<li>在 <code>include/params.h</code> 中定義輪胎直徑與 PPR。</li>
+<li>在 <code>src/main.ino</code> 中實作換算公式：
+$Speed (cm/s) = \frac{\Delta Ticks \times (\text{Diameter} \times \pi)}{PPR \times \Delta t}$</li>
+<li>將數據發送至網頁儀表板 (<code>web/vui_dashboard.html</code>) 進行即時觀測。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📁 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📁 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>include/params.h</code>: 定義 PPR、輪徑與採樣週期。</li>
+<li>
+<code>src/main.ino</code>: 實作中斷計數與單位換算引擎。</li>
+<li>
+<code>web/dashboard_bridge.js</code>: 網頁儀表板數據同步。</li>
+<li>
+<code>CALIBRATION_REPORT.md</code>: 實驗紀錄與標定報告。</li>
+<li>
+<code>tests/math_logic.test.js</code>: 自動化檢核測速數據換算正確性。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">🚀 提交要求</h2><a id="user-content--提交要求" class="anchor" aria-label="Permalink: 🚀 提交要求" href="#-提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>完成 <code>src/main.ino</code> 中的 <code>TODO</code> 項目。</li>
+<li>詳實填寫 <code>CALIBRATION_REPORT.md</code>。</li>
+<li>確保代碼通過 <code>npm test</code> 自動化測試。</li>
+<li>將更新後的內容 push 回你的程式庫。</li>
+</ol>
+<hr>
+<p>準備好了嗎？讓我們開始探索機器人的「數位之眼」吧！</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：方波波形分析 (Digital Waveform Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：訊號分析師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>波形觀測</strong>：手動旋轉馬達，利用 Serial Plotter 觀察光電感測器的輸出波形。</li>
-                    <li><strong>狀態紀錄</strong>：在 README 錄製影片並說明 0V 與 3.3V 對應的物理遮斷狀態。</li>
-                    <li><strong>Push Final</strong>：提交具備「邊緣觸發」意識的基礎觀測報告。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>訊號理解度</strong>：能否正確分辨上升沿 (Rising Edge) 代表的物理位移點？</li>
-                    <li>[ ] <strong>數據呈現</strong>：README 是否包含了清晰的波形截圖與物理狀態對照表？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：PPR 定位標定 (Encoder PPR Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：機器人幾何專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-tighter font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>中斷整合</strong>：實作 <code>attachInterrupt()</code> 計數邏輯，確保無漏噴。</li>
-                    <li><strong>物理校準</strong>：手動旋轉輪胎剛好一圈，記錄產生的總 Ticks 數。</li>
-                    <li><strong>誤差評估</strong>：重複測試三次，觀察計數值的穩定度與偏差量。</li>
-                    <li><strong>Push Final</strong>：提交具備「物理標定係數」的中斷計數代碼。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>計數精準性</strong>：實測 PPR 是否穩定？代碼中是否包含了正確的 PPR 定義。</li>
-                    <li>[ ] <strong>中斷安全性</strong>：ISR (Interrupt Service Routine) 是否足夠精簡，沒有執行耗時操作？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：物理時速引擎 (Velocity Engine Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統整合工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>單位轉換</strong>：實作從 Ticks 到 RPM 與 cm/s 的換算邏輯。</li>
-                    <li><strong>網頁同步</strong>：透過課程 JS 框架將數據同步至前端儀表板顯示。</li>
-                    <li><strong>驗證測試</strong>：在不同速度下測試數據顯示的即時性與準確度。</li>
-                    <li><strong>Push Final</strong>：提交具備「戰術數據儀表板」整合功能的最終專案。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>換算邏輯</strong>：轉速與線速度的數學映射是否正確（需考量輪徑）？</li>
-                    <li>[ ] <strong>介面整合</strong>：網頁端是否能穩定顯示來自機器人的轉速數據流？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：將「光與電」的連續物理現象轉化為「0 與 1」的高精度數位模型。這是自動導航最底層的感知基石。</p>
-            <ol class="space-y-4 text-slate-600 text-justify">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest">重點 1：訊號不是理想的</strong> - 引導學生觀察波形的上升毛刺或抖動。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：中斷的原子性</strong> - 強調在獲取 Ticks 數值時，應注意多執行緒/中斷衝突的可能性。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：量綱換算</strong> - 確保學員理解從「次數 (Count)」轉換為「頻率 (Hz)」再到「物理量 (m/s)」的嚴謹性。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-11-unit-sensor-principles</code> (感測器原理)</strong> 單元，這是機器人感知系統的物理基礎課程。它要求學員從最底層的 <strong>「光電遮斷 (Photo-Interruption)」</strong> 現象出發，理解數位方波的產生，並建立一套嚴謹的 <strong>「物理單位轉換引擎」</strong>（格數 $\to$ 轉速 $\to$ 時速）。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>感測器校準需要對應物理參數與軟體演算，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>include/sensor_config.h</code></strong>：參數配置檔。讓學員定義輪胎直徑與 PPR（每圈脈衝數），並留下計數器共享變數的 <code>TODO</code>。</li>
+<li>
+<strong>📂 <code>src/tachometer.ino</code></strong>：計速器實作。提供定時採樣（例如每 100ms 計算一次）的骨架，開發轉速換算邏輯。</li>
+<li>
+<strong>📂 <code>web/dashboard_bridge.js</code></strong>：網頁儀表板整合。預置與 Vibe Coding SDK 連接的代碼，讓學員能輕鬆將實體車速映射到網頁量表。</li>
+<li>
+<strong>📂 <code>CALIBRATION_REPORT.md</code></strong>：標定報告模板。提供對照表，讓學員紀錄「遮斷狀態」與「電位電平」的對應，以及實測一圈的精確格數。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：方波波形分析 (Digital Waveform Lab)</h4><a id="user-content-任務-1方波波形分析-digital-waveform-lab" class="anchor" aria-label="Permalink: 任務 1：方波波形分析 (Digital Waveform Lab)" href="#任務-1方波波形分析-digital-waveform-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：建立對數位訊號物理意義的直覺。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>波形觀測要求</strong>：學員需使用 Serial Plotter 觀測。要在 README 中說明「當光被遮住時，輸出是 3.3V 還是 0V？」。</li>
+<li>
+<strong>邊緣觸發觀測</strong>：在 README 中截圖波形，標註出「上升沿 (Rising Edge)」在物理旋轉中對應的瞬間。</li>
+<li>
+<strong>Autograding</strong>：透過簡單的問答 Test 檢核學員對高低電平與物理狀態對應的理解。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：PPR 定位標定 (Encoder PPR Lab)</h4><a id="user-content-任務-2ppr-定位標定-encoder-ppr-lab" class="anchor" aria-label="Permalink: 任務 2：PPR 定位標定 (Encoder PPR Lab)" href="#任務-2ppr-定位標定-encoder-ppr-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：校準硬體解析度，確保數據源頭的可靠性。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>計數演算法實作</strong>：
+<div class="highlight highlight-source-c++"><pre><span class="pl-c"><span class="pl-c">//</span> 學生需實作：中斷計數</span>
+<span class="pl-k">void</span> IRAM_ATTR <span class="pl-en">encoderISR</span>() {
+    tickCount++;
+}</pre></div>
+</li>
+<li>
+<strong>物理標定實驗</strong>：要求學員在輪胎上貼標記，手動旋轉三圈，取平均值計算出該車型的 PPR（例如：20 格）。</li>
+<li>
+<strong>Push Final</strong>：提交具備「消除毛刺與抖動」的中斷計數代碼。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：物理時速換算引擎 (Velocity Engine Lab)</h4><a id="user-content-任務-3物理時速換算引擎-velocity-engine-lab" class="anchor" aria-label="Permalink: 任務 3：物理時速換算引擎 (Velocity Engine Lab)" href="#任務-3物理時速換算引擎-velocity-engine-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實現從「脈衝」到「時速 (cm/s)」的全鏈路轉換。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>單位轉換邏輯</strong>：學員需實作以下公式：
+[Speed (cm/s) = \frac{\Delta Ticks \times (\text{Diameter} \times \pi)}{PPR \times \Delta t}]</li>
+<li>
+<strong>網頁儀表板整合</strong>：將換算後的 <code>cm/s</code> 透過 WebSocket 發送到網頁端。學員需截圖展示網頁儀表板數據與實體旋轉速度的同步性。</li>
+<li>
+<strong>PR 深度核核</strong>：點評其對「採樣頻率」的選擇。如果 1 秒才採樣一次，儀表板會太慢；如果 1 毫秒採樣一次，數據會太跳。理想值是 50~100ms。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 感知工程導師點評標準 (Perception Engineering Benchmarks)</h3><a id="user-content-3-感知工程導師點評標準-perception-engineering-benchmarks" class="anchor" aria-label="Permalink: 3. 感知工程導師點評標準 (Perception Engineering Benchmarks)" href="#3-感知工程導師點評標準-perception-engineering-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對硬體訊號的數位化建模能力」</strong>：</p>
+<ul>
+<li>[ ] <strong>量綱嚴謹度</strong>：單位換算是否正確？是否考慮了圓周率與輪徑？</li>
+<li>[ ] <strong>信號原子性</strong>：讀取計數器時是否有暫時關閉中斷以防數據錯位？</li>
+<li>[ ] <strong>數據穩定性</strong>：在馬達全速運轉時，數據是否仍能維持線性成長且不發生劇烈跳變？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── include/params.h        # 核心：定義 PPR、輪徑與採樣週期
+├── src/main.ino            # 實作：學員需寫入中斷計數與單位換算引擎
+├── web/vui_dashboard.html  # 介面：顯示即時時速與轉速曲線
+├── README.md               # 專案報告：我如何校準這台機器人的數位之眼
+└── tests/math_logic.test.js # 自動化：檢核 3 組測速數據的換算正確性
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「機器人是如何『感知』世界的頻率的」</strong>。掌握感測器原理後，學員將擁有了開發「巡航定速」、「里程計算法」或「高精度循跡」系統最底層的數據基礎。</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── src/encoder.ino       # 核心：學員需在此實作中斷與換算
-├── include/config.h      # 配置：定義 PPR 與輪徑常數
-└── docs/calibration.md   # 報告：學員需填寫實測 PPR 與波形分析
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「編碼器原理」短片。理解 PPR 與解析度的關係。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能區分「遮斷器」與「反射式」感測器的差異。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black">領取作業 (Repo)，挑戰「精準標定一圈格數」。實作與網頁儀表板的即時數據掛載。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 指導如何使用 <code>volatile</code> 關鍵字保護中斷共享變數。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black">提交具備「單位換算」的最終版代碼。閱讀教師對「高頻訊號 aliasing」現象的補充。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「傳感器物理侷限」的實測深度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

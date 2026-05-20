@@ -308,148 +308,236 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">架構實驗室：前端元件化與狀態通訊</h2>
+<div class="markdown-heading"><h1 class="heading-element">adv-07：UI 框架與元件化設計</h1><a id="user-content-adv-07ui-框架與元件化設計" class="anchor" aria-label="Permalink: adv-07：UI 框架與元件化設計" href="#adv-07ui-框架與元件化設計"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">📋 作業說明</h2><a id="user-content--作業說明" class="anchor" aria-label="Permalink: 📋 作業說明" href="#-作業說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本單元的核心目標是從「流程式撰寫」轉向<strong>組件化開發思維</strong>。你將實作一套模仿 React/Vue 核心哲學的 UI 元件系統：<strong>封裝、複用、狀態驅動</strong>。</p>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🗂️ 程式庫結構</h2><a id="user-content-️-程式庫結構" class="anchor" aria-label="Permalink: 🗂️ 程式庫結構" href="#️-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── components/
+│   ├── BaseComponent.js    # 組件基類（已提供）
+│   ├── Gauge.js            # 待實作：數據驅動顯示組件
+│   └── Joystick.js         # 待實作：搖桿事件發射組件
+├── css/
+│   └── dashboard.css       # 待實作：Grid 佈局與連線狀態樣式
+├── index.html              # 入口頁面（組件掛載點）
+├── tests/
+│   └── component.test.js   # 自動化測試腳本
+└── README.md               # 本說明文件（請於完成後補充作業報告）
+</code></pre>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">✅ 作業任務</h2><a id="user-content--作業任務" class="anchor" aria-label="Permalink: ✅ 作業任務" href="#-作業任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：通用原子組件 <code>Gauge.js</code>
+</h3><a id="user-content-任務-1通用原子組件-gaugejs" class="anchor" aria-label="Permalink: 任務 1：通用原子組件 Gauge.js" href="#任務-1通用原子組件-gaugejs"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p><strong>目標</strong>：透過 <code>Props</code> 驅動視覺呈現，落實宣告式 UI 思維。</p>
+<p><strong>需求</strong>：</p>
+<ul>
+<li>繼承 <code>BaseComponent</code>，實作 <code>render()</code> 方法</li>
+<li>根據 <code>this.props.label</code> 與 <code>this.props.value</code> 更新 DOM</li>
+<li>當 <code>value &lt; 20</code> 時，自動套用警示樣式（例如背景變紅）</li>
+<li>多個 <code>Gauge</code> 實例之間狀態<strong>必須完全獨立</strong>
+</li>
+</ul>
+<p><strong>驗收方式</strong>：</p>
+<ul>
+<li>[ ] 初始化三個 <code>Gauge</code>，各自顯示不同數值與標籤</li>
+<li>[ ] 截圖：電池組件數值設為 15 時，該組件出現警示色</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：搖桿事件發射器 <code>Joystick.js</code>
+</h3><a id="user-content-任務-2搖桿事件發射器-joystickjs" class="anchor" aria-label="Permalink: 任務 2：搖桿事件發射器 Joystick.js" href="#任務-2搖桿事件發射器-joystickjs"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p><strong>目標</strong>：實作強解耦架構。組件只負責交互，業務邏輯交由父層處理。</p>
+<p><strong>需求</strong>：</p>
+<ul>
+<li>在 <code>Joystick.js</code> 內封裝 Canvas 繪圖邏輯</li>
+<li>透過 <code>CustomEvent</code> 向外拋出座標資訊（事件名稱：<code>joystick:move</code>）</li>
+<li>
+<strong>禁止</strong>在 <code>Joystick.js</code> 內撰寫任何通訊代碼（如 <code>ble.send()</code>）</li>
+</ul>
+<p><strong>驗收方式</strong>：</p>
+<ul>
+<li>[ ] 在 <code>index.html</code> 或 <code>app.js</code>（父層）監聽 <code>joystick:move</code> 事件並印出座標日誌</li>
+<li>[ ] Code Review：<code>Joystick.js</code> 內不含任何業務邏輯</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：響應式儀表板 <code>dashboard.css</code>
+</h3><a id="user-content-任務-3響應式儀表板-dashboardcss" class="anchor" aria-label="Permalink: 任務 3：響應式儀表板 dashboard.css" href="#任務-3響應式儀表板-dashboardcss"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p><strong>目標</strong>：利用 CSS Grid 與狀態標籤，實現多端適配的專業儀表板。</p>
+<p><strong>需求</strong>：</p>
+<ul>
+<li>使用 CSS Grid 完成儀表板佈局</li>
+<li>加入 <code>@media</code> 查詢：手機直式 1 欄、桌機橫式 3 欄</li>
+<li>藍牙連線成功時，為 <code>body</code> 加上 <code>.is-connected</code> 類別</li>
+<li>透過 CSS 變數讓所有組件自動切換主題（灰階 → 彩色）</li>
+</ul>
+<p><strong>驗收方式</strong>：</p>
+<ul>
+<li>[ ] 截圖（手機直式排版）並貼至本 README 下方</li>
+<li>[ ] 截圖（桌機橫式排版）並貼至本 README 下方</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🧪 執行測試</h2><a id="user-content--執行測試" class="anchor" aria-label="Permalink: 🧪 執行測試" href="#-執行測試"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="highlight highlight-source-shell"><pre>npm install
+npm <span class="pl-c1">test</span></pre></div>
+<p>測試項目說明：</p>
+<table>
+<thead>
+<tr>
+<th>測試名稱</th>
+<th>說明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gauge Isolation</td>
+<td>驗證多個 Gauge 組件間狀態互不影響</td>
+</tr>
+<tr>
+<td>BaseComponent Methods</td>
+<td>驗證基類的 <code>render</code>、<code>updateProps</code>、<code>emit</code> 方法可正確繼承</td>
+</tr>
+<tr>
+<td>Joystick Emission</td>
+<td>驗證 Joystick 正確發射 <code>joystick:move</code> 自定義事件</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>提交前請確保所有測試通過。</p>
+</blockquote>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📝 作業報告區（請學生填寫）</h2><a id="user-content--作業報告區請學生填寫" class="anchor" aria-label="Permalink: 📝 作業報告區（請學生填寫）" href="#-作業報告區請學生填寫"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">我的設計說明</h3><a id="user-content-我的設計說明" class="anchor" aria-label="Permalink: 我的設計說明" href="#我的設計說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<blockquote>
+<p>請說明你如何設計組件架構，以及如何確保各組件的封裝性與可複用性。</p>
+</blockquote>
+<div class="markdown-heading"><h3 class="heading-element">截圖：手機直式儀表板</h3><a id="user-content-截圖手機直式儀表板" class="anchor" aria-label="Permalink: 截圖：手機直式儀表板" href="#截圖手機直式儀表板"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<blockquote>
+<p>（請貼上截圖）</p>
+</blockquote>
+<div class="markdown-heading"><h3 class="heading-element">截圖：桌機橫式儀表板</h3><a id="user-content-截圖桌機橫式儀表板" class="anchor" aria-label="Permalink: 截圖：桌機橫式儀表板" href="#截圖桌機橫式儀表板"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<blockquote>
+<p>（請貼上截圖）</p>
+</blockquote>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：通用原子組件 (Atomic Data Component)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：UI 系統設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>類別/函式宣告</strong>：在 <code>components/Gauge.js</code> 中定義組件類別。</li>
-                    <li><strong>屬性 (Props) 處理</strong>：實作 <code>render()</code> 函式，根據傳入的 <code>this.props.value</code>
-                        動態改變 CSS 類名（例如：數值 > 100 報警紅）。</li>
-                    <li><strong>多實例化測試</strong>：在 <code>index.html</code> 中同時呼叫三次組件，分別顯示「電池」、「轉速」、「溫度」。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>封裝完整度</strong>：組件的樣式是否會意外「溢出」影響到頁面其他按鈕？</li>
-                    <li>[ ] <strong>代碼複用力</strong>：是否只需透過修改參數即可產生截然不同的顯示效果？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：事件發射器 (Joystick Event Emitter)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：交互開發專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>Canvas 封裝</strong>：將原本寫在全域的搖桿代碼移入 <code>Joystick</code> 類別中。</li>
-                    <li><strong>自定義事件 (Custom Events)</strong>：當 <code>pointermove</code> 觸發時，發射包含 <code>{x, y}</code> 的
-                        <code>'joystick:change'</code> 事件。</li>
-                    <li><strong>父子通訊測試</strong>：在 <code>app.js</code> 監聽該事件，並呼叫藍牙發送模組。</li>
-                    <li><strong>Push Final</strong>：提交具備「關注點分離」架構的控制核心。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>架構層次感</strong>：搖桿組件內部是否真的「不含有」任何關於藍牙發送的代碼？</li>
-                    <li>[ ] <strong>事件解耦力</strong>：更換父層邏輯後（例如改為儲存數據而非發送），搖桿組件是否能不經修改直接運行？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：響應式佈局重構 (Responsive Dashboard Refactor)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：佈局工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>Grid 系統建立</strong>：設計 <code>.dashboard-grid</code>，在手機版使用 <code>1fr</code>，電腦版使用
-                        <code>repeat(3, 1fr)</code>。</li>
-                    <li><strong>狀態驅動樣式</strong>：當連線成功時，給予 <code><body></code> 一個 <code>.is-connected</code> 類名，全局 CSS
-                        自動切換背景色調。</li>
-                    <li><strong>提交截圖報告</strong>：在 README 中貼上橫屏與豎屏的對比截圖。</li>
-                    <li><strong>Push Final</strong>：完成具備生產環境等級的遙控儀表板。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>適配精確度</strong>：在不同寬度下，組件是否會發生嚴重的重疊或破圖？</li>
-                    <li>[ ] <strong>視覺專業感</strong>：配色與間距是否符合 Vibe Coding 的 Premium 審美標準？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：讓學生體驗「宣告式 UI」相對於「指令式 DOM 操作」的維護優勢。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-emerald-600">重點 1：封裝思維</strong> - 學生常習慣把所有代碼寫在 <code>app.js</code>。必須強制練習將介面拆分為獨立的組件檔案。</li>
-                <li><strong class="text-emerald-600">重點 2：資料流向</strong> - 明確區分 Data (Props) 進與 Signaling (Events) 出的單向循環。</li>
-                <li><strong class="text-emerald-600">重點 3：響應式基礎</strong> - 雖然有 Tailwind，但理解原生 CSS Grid 與 Flexbox 的原理對未來掌握 React 元件庫至關重要。</li>
-            </ol>
-        </div>
+<div class="markdown-heading"><h1 class="heading-element">導師指南：adv-07-unit-ui-framework (UI 框架與元件化設計)</h1><a id="user-content-導師指南adv-07-unit-ui-framework-ui-框架與元件化設計" class="anchor" aria-label="Permalink: 導師指南：adv-07-unit-ui-framework (UI 框架與元件化設計)" href="#導師指南adv-07-unit-ui-framework-ui-框架與元件化設計"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>針對 <strong><code>adv-07-unit-ui-framework</code> (UI 框架與元件化設計)</strong> 單元，這是一個從「面段式編程」轉向「物件導向/組件化開發」的關鍵轉折點。它模仿了 React/Vue 等主流前端框架的核心哲學：<strong>封裝、複用、狀態驅動</strong>。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>理解組件化架構需要清晰的目錄規範與「基底類別」，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>components/BaseComponent.js</code></strong>：組件基類。定義統一的 <code>render()</code> 與 <code>updateProps()</code> 介面，讓學員繼承並擴展。</li>
+<li>
+<strong>📂 <code>components/Gauge.js</code></strong>：待實作的數據顯示原子組件。</li>
+<li>
+<strong>📂 <code>components/Joystick.js</code></strong>：待封裝的互動控制組件。</li>
+<li>
+<strong>📂 <code>css/modules/</code></strong>：模組化樣式目錄。鼓勵學員將樣式按組件分類，避免樣式污染 (Global CSS Pollution)。</li>
+<li>
+<strong>📂 <code>tests/component.test.js</code></strong>：自動化評分脚本。專門測試組件的「隔離性」——檢核改變一個組件的 Props 是否會錯誤地影響到另一個同類型組件。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：通用原子組件 (Atomic Data Component)</h4><a id="user-content-任務-1通用原子組件-atomic-data-component" class="anchor" aria-label="Permalink: 任務 1：通用原子組件 (Atomic Data Component)" href="#任務-1通用原子組件-atomic-data-component"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：學會透過 <code>Props</code> 驅動視覺呈現，落實「數據為王」的宣告式 UI 思維。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>渲染邏輯檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：根據 Props 反映狀態</span>
+<span class="pl-en">render</span><span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+    <span class="pl-smi">this</span><span class="pl-kos">.</span><span class="pl-c1">container</span><span class="pl-kos">.</span><span class="pl-c1">innerHTML</span> <span class="pl-c1">=</span> <span class="pl-s">`&lt;h3&gt;<span class="pl-s1"><span class="pl-kos">${</span><span class="pl-smi">this</span><span class="pl-kos">.</span><span class="pl-c1">props</span><span class="pl-kos">.</span><span class="pl-c1">label</span><span class="pl-kos">}</span></span>&lt;/h3&gt;`</span><span class="pl-kos">;</span>
+    <span class="pl-k">if</span> <span class="pl-kos">(</span><span class="pl-smi">this</span><span class="pl-kos">.</span><span class="pl-c1">props</span><span class="pl-kos">.</span><span class="pl-c1">value</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">20</span><span class="pl-kos">)</span> <span class="pl-smi">this</span><span class="pl-kos">.</span><span class="pl-c1">container</span><span class="pl-kos">.</span><span class="pl-c1">classList</span><span class="pl-kos">.</span><span class="pl-en">add</span><span class="pl-kos">(</span><span class="pl-s">'bg-red-500'</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
+</li>
+<li>
+<strong>Autograding</strong>：初始化三個 <code>Gauge</code> 元件，檢核它們是否能同時顯示「不同」的數值與標籤。</li>
+<li>
+<strong>視覺驗證</strong>：要求提交截圖：當電池組件數值改為 15 時，該組件是否自動變為高品質的警示色。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：事件發射器 (Joystick Event Emitter)</h4><a id="user-content-任務-2事件發射器-joystick-event-emitter" class="anchor" aria-label="Permalink: 任務 2：事件發射器 (Joystick Event Emitter)" href="#任務-2事件發射器-joystick-event-emitter"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作強解耦 (Decoupling) 架構。組件只負責交互，業務邏輯交由父層處理。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>關注點分離檢核</strong>：學員必須將 Canvas 繪圖邏輯封裝在組件內，並透過 <code>CustomEvent</code> 向外拋出座標資訊。</li>
+<li>
+<strong>PR 深度核核</strong>：<strong>這是一個陷阱題</strong>。如果導師在 <code>Joystick.js</code> 檔案中發現了 <code>ble.send()</code> 這種通訊代碼，則評定為「違反架構原則」需要重構。</li>
+<li>
+<strong>驗證方式</strong>：在 <code>app.js</code> (父層) 中監聽 <code>joystick:move</code> 事件並印出日誌。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：響應式佈局重構 (Responsive Dashboard Refactor)</h4><a id="user-content-任務-3響應式佈局重構-responsive-dashboard-refactor" class="anchor" aria-label="Permalink: 任務 3：響應式佈局重構 (Responsive Dashboard Refactor)" href="#任務-3響應式佈局重構-responsive-dashboard-refactor"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：利用 CSS Grid 與狀態標籤實現具備「專業感」的多端適配儀表板。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>佈局技術檢核</strong>：學員需在 <code>dashboard.css</code> 中實作 <code>@media</code> 查詢，調整 Grid 欄位數量。</li>
+<li>
+<strong>狀態驅動佈局</strong>：當藍牙連線成功時，學員需給 <code>body</code> 加上 <code>.is-connected</code>，並讓所有子組件透過 CSS 變數自動切換主題（如：從灰階變為流光彩繪）。</li>
+<li>
+<strong>數據提交</strong>：要求在 README 中分別貼出「手機直式」與「電腦橫式」的儀表板排版結果。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 前端架構導師點評標準 (UI Architecture Benchmarks)</h3><a id="user-content-3-前端架構導師點評標準-ui-architecture-benchmarks" class="anchor" aria-label="Permalink: 3. 前端架構導師點評標準 (UI Architecture Benchmarks)" href="#3-前端架構導師點評標準-ui-architecture-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「代碼的組織能力與可維護性」</strong>：</p>
+<ul>
+<li>[ ] <strong>封裝程度 (Encapsulation)</strong>：組件是否具備獨立的邏輯？如果換一個專案，這個 <code>Gauge.js</code> 是否能直接複製貼上後正常運作？</li>
+<li>[ ] <strong>通訊規範度</strong>：父子組件傳值是否嚴格遵守 <code>Props In / Events Out</code> 的原則？</li>
+<li>[ ] <strong>視覺執行力</strong>：響應式斷點 (Breakpoints) 設置是否合理？在 4K 螢幕與手機小螢幕上是否都能優雅閱讀遙測數據？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── components/
+│   ├── BaseComponent.js    # 優良實踐：組件基類
+│   ├── Gauge.js            # 作業：待填寫數據驅動渲染邏輯
+│   └── Joystick.js         # 作業：待填寫事件發射機制
+├── css/
+│   └── dashboard.css       # 作業：寫入 Grid 佈局與連線狀態樣式
+├── index.html              # 入口：在此宣告組件掛載點
+└── README.md               # 專案報告：我如何實現 UI 組件化並適配跨載具環境
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「像搭建積木一樣構建系統」</strong>。掌握組件化思維後，學員將擁有一套工業級的前端開發邏輯，能輕鬆應對未來更複雜、更多模組的自動駕駛監控系統開發。</p>
+<hr>
+<p>至此，我們已經完成了 <strong><code>adv-01</code> 到 <code>adv-07</code></strong> 所有核心單元的 GitHub Classroom 部署策略指南。這一套完整的「全棧式教育架構」，將帶領你的學員從單純的代碼執行者轉變為具備 <strong>系統架構思維</strong> 的硬體導向開發者。</p>
+<div class="markdown-heading"><h3 class="heading-element">4. 自動化測試與評分 (Automated Testing)</h3><a id="user-content-4-自動化測試與評分-automated-testing" class="anchor" aria-label="Permalink: 4. 自動化測試與評分 (Automated Testing)" href="#4-自動化測試與評分-automated-testing"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本專案整合了 Vitest 測試框架。在提交前，請確保通過以下測試：</p>
+<ul>
+<li>
+<strong>執行測試</strong>：<code>npm install &amp;&amp; npm test</code>
+</li>
+<li>
+<strong>測試內容</strong>：
+<ol>
+<li>
+<strong>Gauge Isolation</strong>：驗證組件間狀態是否獨立。</li>
+<li>
+<strong>BaseComponent Methods</strong>：驗證基類方法（render, updateProps, emit）是否正確繼承。</li>
+<li>
+<strong>Joystick Emission</strong>：驗證 Joystick 是否正確發射自定義事件。</li>
+</ol>
+</li>
+</ul>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-emerald-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── components/          # 學員需在此目錄創建各類組件
-│   ├── Component.js     # 組件基類 (Base Class)
-│   └── index.js         # 組件匯出入口
-├── js/app.js            # 主控邏輯：負責初始化組件並裝配
-└── css/layout.css       # 佈局：定義 Grid 與 Responsive 斷點
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5">觀看「Lego vs. UI Components」概念短片。完成基本 CSS Grid 佈局練習。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能正確辨識 UI 頁面中的「最小重複單元」。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify">領取作業 (Repo)，執行代碼大重構。將原本混雜的 HTML 標籤轉化為由 JS 類別驅動的動態標籤。</td>
-                        <td class="px-6 py-5 text-left"><strong>技術教練:</strong> 排除 Props 傳遞錯誤，指導如何偵錯 (Debug) 元件內部狀態。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5">上傳跨載具測試截圖報告並 Push PR。閱讀教師對「元件邊界設計」的專業回饋。</td>
-                        <td class="px-6 py-5 text-left"><strong>Feedback PR:</strong> 點評對「響應式設計」的執行細膩度，表揚能主動優化 UI 穩定性的學員。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

@@ -337,135 +337,237 @@
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify text-left">BLE
-            廣播與連線實驗室：自定義身份封包、Server 監聽與 RSSI 實戰</h2>
+<div class="markdown-heading"><h1 class="heading-element">BLE 廣播機制與連線流程實驗</h1><a id="user-content-ble-廣播機制與連線流程實驗" class="anchor" aria-label="Permalink: BLE 廣播機制與連線流程實驗" href="#ble-廣播機制與連線流程實驗"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本實驗旨在引導學員掌握 BLE (Bluetooth Low Energy) 的核心運作機制，包括設備廣播、連線事件處理以及 RSSI 信號感知。透過本實驗，你將學習如何讓硬體根據連線狀態做出反應，並理解無線信號在空間中的傳播規律。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 實驗目標</h2><a id="user-content--實驗目標" class="anchor" aria-label="Permalink: 🎯 實驗目標" href="#-實驗目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>自定義廣播封包</strong>：修改設備名稱與 UUID，並使用偵錯工具驗證。</li>
+<li>
+<strong>實作連線回呼 (Callbacks)</strong>：處理連線與斷開事件，確保設備具備自動恢復廣播的能力。</li>
+<li>
+<strong>RSSI 空間交互</strong>：記錄不同距離下的信號強度，並實作基於強度的近場互動。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">🛠 實驗任務</h2><a id="user-content--實驗任務" class="anchor" aria-label="Permalink: 🛠 實驗任務" href="#-實驗任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：「改名大師」自定義廣播封包</h3><a id="user-content-任務-1改名大師自定義廣播封包" class="anchor" aria-label="Permalink: 任務 1：「改名大師」自定義廣播封包" href="#任務-1改名大師自定義廣播封包"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：修改 <code>include/ble_app.h</code> 中的 <code>DEVICE_NAME</code> 為 <code>Vibe-Student-XX</code> (XX 為你的座號)。</li>
+<li>
+<strong>驗證</strong>：使用手機 App（如 nRF Connect）掃描到你的設備，並記錄其 MAC 地址。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：「連線守門員」Server 回呼機制</h3><a id="user-content-任務-2連線守門員server-回呼機制" class="anchor" aria-label="Permalink: 任務 2：「連線守門員」Server 回呼機制" href="#任務-2連線守門員server-回呼機制"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：在 <code>src/main.cpp</code> 中補全 <code>BLEServerCallbacks</code> 的 <code>onConnect</code> 與 <code>onDisconnect</code> 邏輯。
+<ul>
+<li>
+<strong>連線時</strong>：板載 LED 恆亮。</li>
+<li>
+<strong>斷開時</strong>：板載 LED 閃爍，且必須調用 <code>pServer-&gt;startAdvertising()</code> 以重啟廣播。</li>
+</ul>
+</li>
+<li>
+<strong>驗證</strong>：測試連線後再斷開，手機是否能立即再次搜尋到該設備。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：「距離強度」RSSI 測距實驗</h3><a id="user-content-任務-3距離強度rssi-測距實驗" class="anchor" aria-label="Permalink: 任務 3：「距離強度」RSSI 測距實驗" href="#任務-3距離強度rssi-測距實驗"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：在 10cm, 50cm, 150cm 處分別記錄 RSSI 值。</li>
+<li>
+<strong>加分題</strong>：實作當 RSSI 大於 <code>-50dBm</code> 時，觸發 LED 快速閃爍。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📝 學員實驗報表 (Student Lab Report)</h2><a id="user-content--學員實驗報表-student-lab-report" class="anchor" aria-label="Permalink: 📝 學員實驗報表 (Student Lab Report)" href="#-學員實驗報表-student-lab-report"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">1. 設備基本資訊</h3><a id="user-content-1-設備基本資訊" class="anchor" aria-label="Permalink: 1. 設備基本資訊" href="#1-設備基本資訊"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>自定義名稱 (Device Name)</strong>: <code>Vibe-Student-XX</code>
+</li>
+<li>
+<strong>MAC 位址</strong>: <code>[在此填寫你的設備 MAC 地址]</code>
+</li>
+<li>
+<strong>Service UUID</strong>: <code>[在此填寫你的 Service UUID]</code>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">2. RSSI 距離測量實驗 (Task 3)</h3><a id="user-content-2-rssi-距離測量實驗-task-3" class="anchor" aria-label="Permalink: 2. RSSI 距離測量實驗 (Task 3)" href="#2-rssi-距離測量實驗-task-3"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請在不同距離下測量 10 組 RSSI 並取其平均值：</p>
+<table>
+<thead>
+<tr>
+<th align="left">距離 (cm)</th>
+<th align="left">RSSI 平均值 (dBm)</th>
+<th align="left">備註 (是否有遮擋物)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">10 cm</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">50 cm</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">150 cm</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
+<div class="markdown-heading"><h3 class="heading-element">3. 生命週期觀察 (Task 2)</h3><a id="user-content-3-生命週期觀察-task-2" class="anchor" aria-label="Permalink: 3. 生命週期觀察 (Task 2)" href="#3-生命週期觀察-task-2"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>斷開連線後的行為</strong>: [描述手機斷開後，板子 LED 的變化以及手機是否能立即重新掃描到設備]</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">4. 實驗截圖</h3><a id="user-content-4-實驗截圖" class="anchor" aria-label="Permalink: 4. 實驗截圖" href="#4-實驗截圖"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請將 <code>nRF Connect</code> 或相關掃描工具的截圖存放在 <code>assets/nrf_scan.jpg</code> 並在此連結：
+<a target="_blank" rel="noopener noreferrer" href="assets/nrf_scan.jpg"><img src="assets/nrf_scan.jpg" alt="Scan Screenshot" style="max-width: 100%;"></a></p>
+<div class="markdown-heading"><h3 class="heading-element">5. 心得與發現</h3><a id="user-content-5-心得與發現" class="anchor" aria-label="Permalink: 5. 心得與發現" href="#5-心得與發現"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>[在此描述你對 RSSI 隨距離衰減的觀察，以及為何遮擋物會影嚮信號強度]</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：「改名大師」：自定義廣播封包 (Name Master)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：設備工程師</span> | <span>難度：⭐️</span> | <span>估計時長：30 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 建立個人作業程式庫。</li>
-                    <li><strong>身份設定</strong>：修改廣播名稱含座號。</li>
-                    <li><strong>掃描驗證</strong>：紀錄 MAC 地址與 UUID。</li>
-                    <li><strong>報告內容</strong>：README 彙整偵錯截圖。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>識別正確</strong>：名稱唯一且符合規範？</li>
-                    <li>[ ] <strong>參數掌握</strong>：正確回傳 MAC 與特徵？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：「連線守門員」：Server 回呼機制 (Connection Guard)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：通訊工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>回呼實作</strong>：繼承 BLEServerCallbacks 實作 Connect 事件。</li>
-                    <li><strong>視覺回饋</strong>：連線亮綠，斷線亮紅亮。</li>
-                    <li><strong>韌體修復</strong>：斷開後自動 restartAdvertising。</li>
-                    <li><strong>提交</strong>：Push 穩定代碼。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>狀態同步</strong>：LED 狀態高度同步？</li>
-                    <li>[ ] <strong>系統健全</strong>：自動重新廣播？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：「距離強度」：RSSI 測距實驗 (RSSI Distance Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：感知工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>採樣</strong>：記錄不同距離下的 RSSI 均值數據。</li>
-                    <li><strong>警示</strong>：強度 > -50dBm 則閃爍提示「近場」。</li>
-                    <li><strong>彙整</strong>：README 彙整信號衰減表。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>數據趨勢</strong>：數據反應信號隨距離衰減律？</li>
-                    <li>[ ] <strong>邏輯觸發</strong>：近場指示運作準確？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify text-left">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：掌握 BLE 核心生命週期。</p>
-            <ol class="space-y-4 text-slate-600 text-justify text-left">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：身份宣告</strong> - 理解廣播的實體意義。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：主動維護</strong> - 斷線後的重啟機制。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：無線感知</strong> - RSSI 受環境遮擋認知。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>basic-05-unit-advertising-connection</code> (BLE 廣播機制與連線流程)</strong> 單元，這是學員從「有線控制」轉向「無線物聯網 (IoT)」的物理與邏輯門檻。它要求學員具備 <strong>事件驅動編程 (Event-Driven Programming)</strong> 的思維，學習設備如何宣告自身身份、如何透過硬體（如 LED）即時反映連線狀態，以及如何將抽象的信號強度 (RSSI) 轉化為具備感知能力的 <strong>「近場偵測」</strong> 應用。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本程式庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" href="#1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>BLE 作業的核心在於「狀態管理」與「無線感知」，範本應包含完整的 BLE 框架，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/main.cpp</code></strong>：<strong>回呼函數 (Callbacks) 實作區</strong>。學員需在此繼承並實作 <code>BLEServerCallbacks</code> 類別，補全 <code>onConnect</code> 與 <code>onDisconnect</code> 邏輯，特別是斷開後的 <strong>「自動重啟廣播」</strong> 機制。</li>
+<li>
+<strong>📂 <code>include/ble_identity.h</code></strong>：引腳與標識定義中心。提供宏定義供學員填寫自定義的 <code>DEVICE_NAME</code>（要求包含座號）與 <code>SERVICE_UUID</code>。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>無線實驗報表</strong>。提供表格範本讓學員記錄：「距離 (cm)」 vs 「RSSI 平均值 (dBm)」。並貼上掃描工具（如 nRF Connect）偵測到自身設備的截圖。</li>
+<li>
+<strong>📂 <code>docs/STATE_MACHINE.md</code></strong>：<strong>生命週期說明書</strong>。要求學員以文字描述 BLE 設備從「廣播 -&gt; 被發現 -&gt; 連線 -&gt; 斷開 -&gt; 重新廣播」的狀態轉換過程。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「改名大師」自定義廣播封包 (Name Master Lab)</h4><a id="user-content-任務-1改名大師自定義廣播封包-name-master-lab" class="anchor" aria-label="Permalink: 任務 1：「改名大師」自定義廣播封包 (Name Master Lab)" href="#任務-1改名大師自定義廣播封包-name-master-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：建立對 BLE 身份宣告 (Advertising) 的直覺，學會使用專業偵錯工具驗證無線資產。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>唯一性挑戰</strong>：要求學員修改名稱為 <code>Vibe-Student-XX</code> (XX 為座號)。</li>
+<li>
+<strong>封包審計</strong>：使用手機 APP 掃描並回傳該設備的 MAC 地址。</li>
+<li>
+<strong>驗證要點</strong>：README 中必須清楚標註 MAC 地址與對應的 Service UUID。這是證明學生能「正確宣告存在」的第一步。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：「連線守門員」Server 回呼機制 (Connection Guard Lab)</h4><a id="user-content-任務-2連線守門員server-回呼機制-connection-guard-lab" class="anchor" aria-label="Permalink: 任務 2：「連線守門員」Server 回呼機制 (Connection Guard Lab)" href="#任務-2連線守門員server-回呼機制-connection-guard-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握異步事件處理，確保系統具備硬體層級的狀態回饋與故障恢復能力 (Self-healing)。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>狀態同步顯像</strong>：連線時，板載 LED 恆亮綠燈；斷線時，LED 閃爍。</li>
+<li>
+<strong>魯棒性 (Robustness) 實作</strong>：<strong>核心考點</strong>。學員必須在 <code>onDisconnect</code> 回呼中加入 <code>pServer-&gt;startAdvertising()</code>。</li>
+<li>
+<strong>驗證要點</strong>：測試「連線後再斷開」，手機是否能立即再次搜尋到該設備？（若無法搜尋即代表未實作重啟機制）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：「距離強度」RSSI 測距實驗 (RSSI Distance Lab)</h4><a id="user-content-任務-3距離強度rssi-測距實驗-rssi-distance-lab" class="anchor" aria-label="Permalink: 任務 3：「距離強度」RSSI 測距實驗 (RSSI Distance Lab)" href="#任務-3距離強度rssi-測距實驗-rssi-distance-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：體會無線信號隨物理空間衰減的非線性規律，實作基於信號強度的「空間交互」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>數據採樣量測</strong>：分別在 10cm, 50cm, 150cm 處記錄 10 組 RSSI 平均值。</li>
+<li>
+<strong>近場提示 (Proximity Recall)</strong>：撰寫邏輯，當 RSSI 大於 <code>-50dBm</code> 時（代表極近距離），觸發 LED 快速閃爍作為感知互動。</li>
+<li>
+<strong>驗證要點</strong>：在報告中描述：為何手機放很近時 RSSI 是 -40 而非 0？並說明遮擋物（如手掌）對 RSSI 的影嚮。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 無線通訊與生命週期點評標準 (Wireless Lifecycle &amp; UX Standards)</h3><a id="user-content-3-無線通訊與生命週期點評標準-wireless-lifecycle--ux-standards" class="anchor" aria-label="Permalink: 3. 無線通訊與生命週期點評標準 (Wireless Lifecycle &amp; UX Standards)" href="#3-無線通訊與生命週期點評標準-wireless-lifecycle--ux-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對無線物理特性的掌握與連線魯棒性的設計」</strong>：</p>
+<ul>
+<li>[ ] <strong>連線自癒能力</strong>：斷開連線後，設備是否能不需要重開機就自動重新進入廣播模式？</li>
+<li>[ ] <strong>硬體同步意識</strong>：LED 的視覺回饋是否精準對應了藍牙內部的狀態機 (State Machine)？</li>
+<li>[ ] <strong>信號洞察力</strong>：RSSI 實驗日誌是否呈現出了信號隨距離增加而對數衰減的趨勢？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/main.cpp         # 核心：BLE Server 回呼邏輯與 RSSI 閾值處理
+├── include/ble_app.h    # 配置：UUID 產生器與設備名稱 Macro 定義
+├── docs/LifeCycle.png   # 文檔：學員繪製的 BLE 連線生命週期流程圖
+├── README.md            # 總結：我如何透過 RSSI 建立空間感知並確保連線韌性
+└── assets/nrf_scan.jpg  # 照片：手機 App 成功掃描到自定義封包的證據截圖
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的物聯網工程師，是能將看不見的無線電波轉化為可視化的硬體行為，並在混亂的頻段中為設備建立起穩健通訊協定的系統設計師」</strong>。掌握廣播與連線機制後，學員將擁有了開發「智慧 Beacon、近場支付感應、自動解鎖門禁」最核心也最具未來感的無線開發能力！_</p>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🛠 學員實驗報表 (Student Lab Report)</h2><a id="user-content--學員實驗報表-student-lab-report" class="anchor" aria-label="Permalink: 🛠 學員實驗報表 (Student Lab Report)" href="#-學員實驗報表-student-lab-report"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">1. 設備基本資訊</h3><a id="user-content-1-設備基本資訊" class="anchor" aria-label="Permalink: 1. 設備基本資訊" href="#1-設備基本資訊"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>自定義名稱 (Device Name)</strong>: <code>Vibe-Student-99</code>
+</li>
+<li>
+<strong>MAC 位址</strong>: <code>AA:BB:CC:DD:EE:FF</code>
+</li>
+<li>
+<strong>Service UUID</strong>: <code>4fafc201-1fb5-459e-8fcc-c5c9c331914b</code>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">2. RSSI 距離測量實驗 (Task 3)</h3><a id="user-content-2-rssi-距離測量實驗-task-3" class="anchor" aria-label="Permalink: 2. RSSI 距離測量實驗 (Task 3)" href="#2-rssi-距離測量實驗-task-3"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請在不同距離下測量 10 組 RSSI 並取其平均值：</p>
+<table>
+<thead>
+<tr>
+<th align="left">距離 (cm)</th>
+<th align="left">RSSI 平均值 (dBm)</th>
+<th align="left">備註 (是否有遮擋物)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">10 cm</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">50 cm</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">150 cm</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
+<div class="markdown-heading"><h3 class="heading-element">3. 生命週期觀察 (Task 2)</h3><a id="user-content-3-生命週期觀察-task-2" class="anchor" aria-label="Permalink: 3. 生命週期觀察 (Task 2)" href="#3-生命週期觀察-task-2"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>斷開連線後的行為</strong>: [描述手機斷開後，板子 LED 的變化以及手機是否能立即重新掃描到設備]</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">4. 實驗截圖</h3><a id="user-content-4-實驗截圖" class="anchor" aria-label="Permalink: 4. 實驗截圖" href="#4-實驗截圖"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請將 <code>nRF Connect</code> 或相關掃描工具的截圖存放在 <code>assets/nrf_scan.jpg</code> 並在此連結：
+<a target="_blank" rel="noopener noreferrer" href="assets/nrf_scan.jpg"><img src="assets/nrf_scan.jpg" alt="Scan Screenshot" style="max-width: 100%;"></a></p>
+<div class="markdown-heading"><h3 class="heading-element">5. 心得與發現</h3><a id="user-content-5-心得與發現" class="anchor" aria-label="Permalink: 5. 心得與發現" href="#5-心得與發現"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>[在此描述你對 RSSI 隨距離衰減的觀察，以及為何遮擋物會影嚮信號強度]</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify uppercase tracking-widest font-black border border-slate-700 text-left">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300 text-justify uppercase tracking-widest font-black text-left">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm text-justify uppercase tracking-widest font-black border border-slate-100">
-.
-├── src/main.cpp      # (必修) Callback 遺補
-└── README.md         # 紀錄 RSSI 衰減表與截圖
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify uppercase tracking-widest font-black">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-center text-justify font-black text-left">
-            <table class="w-full text-left border-collapse border border-slate-100 text-justify font-black text-left">
-                <thead>
-                    <tr class="bg-slate-100 border border-slate-100 text-justify font-black">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest border border-slate-100">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest border border-slate-100">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest border border-slate-100">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600 border border-slate-100 text-justify font-black">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「藍牙廣播原理」影片。</td>
-                        <td class="px-6 py-5 text-justify border border-slate-100"><strong>Dashboard:</strong> 確認偵錯工具備齊。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify border border-slate-100 text-left">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify text-left">領取 Repo，測量 RSSI 並亮燈。</td>
-                        <td class="px-6 py-5 text-left text-justify border border-slate-100 font-black"><strong>技術提醒:</strong> 解釋 Wi-Fi 擁擠干擾原因。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black">總結 RSSI 門檻調整心得。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評重連Callback完整度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

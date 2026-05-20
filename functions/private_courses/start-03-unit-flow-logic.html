@@ -365,188 +365,169 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>控制流節奏工程師</h2>
+<div class="markdown-heading"><h1 class="heading-element">指令流邏輯 — 單次觸發與重複發送</h1><a id="user-content-指令流邏輯--單次觸發與重複發送" class="anchor" aria-label="Permalink: 指令流邏輯 — 單次觸發與重複發送" href="#指令流邏輯--單次觸發與重複發送"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到 <strong>指令流邏輯 (Temporal Logic &amp; Safety)</strong> 單元！</p>
+<p>在這個單元中，你將學習如何將「單次的點擊指令」轉化為「連續的動態節奏」。這對於開發高頻控制系統（如賽道競技、機械臂控制或自動化終端）至關重要。你將掌握 <code>setInterval</code> 的精準管理、多按鍵狀態聚合，以及最重要的「失效安全 (Fail-safe)」機制。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>掌握 <code>setInterval</code> 與 <code>clearInterval</code> 的生命週期管理。</li>
+<li>實作「狀態機」概念處理多按鍵同時輸入的衝突。</li>
+<li>建立安全防護意識，實作「死人開關 (Dead Man's Switch)」機制。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">✍️ 作業任務 (Assignment Tasks)</h2><a id="user-content-️-作業任務-assignment-tasks" class="anchor" aria-label="Permalink: ✍️ 作業任務 (Assignment Tasks)" href="#️-作業任務-assignment-tasks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請按照以下步驟在 <code>js/logic.js</code> 中完成開發：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 實作指令流控制</h3><a id="user-content-1-實作指令流控制" class="anchor" aria-label="Permalink: 1. 實作指令流控制" href="#1-實作指令流控制"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>完成 <code>startFlow</code> 與 <code>stopFlow</code> 函式。</li>
+<li>
+<strong>關鍵要點</strong>：確保在連點按鈕或快速按鍵時，不會產生定時器堆疊（Timer Leak）。在啟動新的定時器前，必須確保舊的已被清除。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">2. 實作多鍵並發邏輯</h3><a id="user-content-2-實作多鍵並發邏輯" class="anchor" aria-label="Permalink: 2. 實作多鍵並發邏輯" href="#2-實作多鍵並發邏輯"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>使用 <code>keysActive</code> 物件記錄所有按鍵的狀態。</li>
+<li>確保當同時按下多個按鍵（例如：前進 + 右轉）時，日誌能正確顯示組合後的指令（如：<code>ArrowUp + ArrowRight</code>）。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">3. 實作失效安全機制 (Dead Man's Switch)</h3><a id="user-content-3-實作失效安全機制-dead-mans-switch" class="anchor" aria-label="Permalink: 3. 實作失效安全機制 (Dead Man's Switch)" href="#3-實作失效安全機制-dead-mans-switch"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>監聽 <code>window.blur</code> (失去焦點) 或 <code>visibilitychange</code> (切換分頁) 事件。</li>
+<li>當使用者離開網頁視窗時，系統必須立即執行 <code>emergencyStop</code>，停止所有指令並送出 <code>STOP</code> 命令。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📊 系統穩定性分析錄 (Stability Analysis Log)</h2><a id="user-content--系統穩定性分析錄-stability-analysis-log" class="anchor" aria-label="Permalink: 📊 系統穩定性分析錄 (Stability Analysis Log)" href="#-系統穩定性分析錄-stability-analysis-log"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在完成實作後，請調整不同的發送頻率 (Interval)，觀察日誌並填寫下表：</p>
+<table>
+<thead>
+<tr>
+<th align="left">Interval (ms)</th>
+<th align="left">操作感描述 (順暢度/延遲)</th>
+<th align="left">硬體端模擬反應 (預期)</th>
+<th align="left">備註</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">10ms</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">50ms</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">100ms</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">500ms</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">✅ 安全機制測試報告</h2><a id="user-content--安全機制測試報告" class="anchor" aria-label="Permalink: ✅ 安全機制測試報告" href="#-安全機制測試報告"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請在提交前確認以下項目：</p>
+<ul>
+<li>[ ] <strong>Mouse Leave</strong>: 當滑鼠滑出按鈕範圍時，指令是否正確停止？</li>
+<li>[ ] <strong>Window Blur</strong>: 當按下 <code>Alt+Tab</code> 或點擊視窗外時，是否觸發緊急停機？</li>
+<li>[ ] <strong>Timer Leak</strong>: 連續快速點擊按鈕，指令發送頻率是否依然穩定（無疊加現象）？</li>
+</ul>
+<hr>
+<p><em>祝開發順利！讓機器人的節奏掌握在你手中。</em></p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title">任務 1：找出指令發送的甜蜜點 (Interval Tuning)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統性能工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>接受作業</strong>：從 GitHub Classroom 建立單元程式庫並定位控制邏輯檔。</li>
-                    <li><strong>建立發送迴圈</strong>：使用 <code>setInterval</code> 或等效方案，實作按住就持續送指令的流程。</li>
-                    <li><strong>量測頻率</strong>：比較 10ms、50ms、100ms、500ms 等不同設定下的操控手感與穩定性。</li>
-                    <li><strong>提交結論</strong>：將你選定的頻率與觀察原因整理進 README 後推送到 GitHub。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>定時器控制</strong>：是否能正確啟動與停止持續發送流程？</li>
-                    <li>[ ] <strong>頻率判斷</strong>：選定的間隔是否兼顧即時性與裝置負載？</li>
-                    <li>[ ] <strong>實驗紀錄</strong>：是否有清楚記錄不同頻率下的差異與結論？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 2：解決多按鍵同時輸入的衝突 (Multi-Key Logic)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：控制演算法工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立狀態表</strong>：用 <code>keysActive</code> 或類似物件記錄目前所有按鍵狀態。</li>
-                    <li><strong>組合指令</strong>：把前進、後退、左右等多按鍵組合轉成單一可送出的控制命令。</li>
-                    <li><strong>測試切換</strong>：驗證快速交替按鍵與同時按鍵時，系統不會卡住或輸出錯誤狀態。</li>
-                    <li><strong>提交邏輯</strong>：把多鍵處理邏輯與測試說明一起提交。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>組合正確</strong>：多鍵同時按下時，輸出是否符合預期行為？</li>
-                    <li>[ ] <strong>過渡平滑</strong>：按住 A 再按 B，或放開其中一鍵時，狀態切換是否順？</li>
-                    <li>[ ] <strong>邏輯穩定</strong>：是否避免按鍵黏滯、殘留狀態或錯誤覆蓋？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 3：做出失控時會自動停機的保護 (Dead Man's Switch)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：安全防護專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>監聽危險事件</strong>：處理 <code>blur</code>、手指滑出控制區、右鍵選單或連線中斷等情境。</li>
-                    <li><strong>觸發停機</strong>：一旦發生危險狀態，立即停止 timer 並送出 <code>STOP</code> 指令。</li>
-                    <li><strong>壓力驗證</strong>：模擬視窗切換、網路抖動或操作中斷，確認車子能迅速回到安全狀態。</li>
-                    <li><strong>提交成果</strong>：將安全保護邏輯與測試結果推送到 GitHub。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>停機即時性</strong>：危險事件發生後，是否能迅速讓控制輸出歸零？</li>
-                    <li>[ ] <strong>資源釋放</strong>：是否正確清除 timer 與暫存狀態，避免殘留流程？</li>
-                    <li>[ ] <strong>安全意識</strong>：是否理解為什麼控制系統必須有 Dead Man's Switch？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2>指令流邏輯與安全機制 教學引導指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>上傳框架代碼到 Repo 並勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
+<p>針對 <strong><code>start-03-unit-flow-logic</code> (指令流邏輯：單次觸發與重複發送)</strong> 單元，這是學員從「靜態指令」進化到「動態節奏」的進階課程。它要求學員具備 <strong>時序邏輯 (Temporal Logic)</strong> 與 <strong>失效安全 (Fail-safe)</strong> 的意識，學習如何利用 <code>setInterval</code> 構建穩定的控制循環，處理多按鍵衝突，並實作極其重要的「死人開關 (Dead Man's Switch)」安全機制。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>控制流作業的核心在於「時序精準度、狀態一致性與安全防護」，範本應包含指令流偵錯工具與事件監控框架，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>index.html</code></strong>：<strong>指令流可視化監控器</strong>。預設包含一個「事件日誌 (Event Logger)」，學員在開發時能即時看到 <code>setInterval</code> 觸發的頻率與具體送出的指令。</li>
+<li>
+<strong>📂 <code>logic.js</code></strong>：<strong>核心控制邏輯區</strong>。學員在此實作定時器啟動/停止、多鍵狀態聚合與安全監聽器。預留 <code>// TODO</code> 引導學員處理定時器記憶體洩漏問題。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>系統穩定性分析錄</strong>。提供模板要求學員紀錄：在不同的 <code>interval</code>（如 10ms vs 100ms）下，機器人的反應與穩定性有何差異？</li>
+<li>
+<strong>📂 <code>tests/</code></strong>：<strong>邏輯邊界測試</strong>。使用 Actions 或腳本自動驗證：當視窗失去焦點 (Blur) 時，系統是否真的送出了 <code>STOP</code> 指令？</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：指令發送「甜蜜點」實驗 (Interval Tuning Lab)</h4><a id="user-content-任務-1指令發送甜蜜點實驗-interval-tuning-lab" class="anchor" aria-label="Permalink: 任務 1：指令發送「甜蜜點」實驗 (Interval Tuning Lab)" href="#任務-1指令發送甜蜜點實驗-interval-tuning-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：尋找效率與穩定的平衡點。掌握非同步迴圈的正確生命週期管理（預防重複啟動定時器）。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>定時器實作挑戰</strong>：撰寫一個穩健的 <code>startFlow</code> 函式，確保在連發過程中，不會因為重複點擊而產生定時器堆疊。</li>
+<li>
+<strong>頻率測試實驗</strong>：在 README 中詳細紀錄 10ms、50ms、100ms 下的操作感，並說明為什麼過快的頻率（如 1ms）會導致硬體端潰散。</li>
+<li>
+<strong>驗證要點</strong>：<strong>資源管理審核</strong>。學員是否在啟動前檢查了 <code>flowInterval</code> 是否已存在？選定的頻率是否能兼顧順暢與安全？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：多按鍵同時輸入衝突解決 (Multi-Key Logic Lab)</h4><a id="user-content-任務-2多按鍵同時輸入衝突解決-multi-key-logic-lab" class="anchor" aria-label="Permalink: 任務 2：多按鍵同時輸入衝突解決 (Multi-Key Logic Lab)" href="#任務-2多按鍵同時輸入衝突解決-multi-key-logic-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作「平行指令處理」。確保當使用者同時按下「前進」與「左轉」時，系統能產生合併指令，而非讓機器人在兩者間跳動或鎖死。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>狀態機設計實作</strong>：使用一個物件（如 <code>keysActive</code>）記錄所有按鍵的真假值，並在每個循環中根據該物件內容合成最終 Payload。</li>
+<li>
+<strong>複雜狀態驗證</strong>：模擬快速交替按鍵的操作，驗證是否有按鍵被「黏死」或狀態未正確重置的現象。</li>
+<li>
+<strong>驗證要點</strong>：組合指令的輸出是否符合物理直覺？代碼邏輯是否清晰且易於擴展到更多按鍵？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：斷訊安全停機機制 (Dead Man's Switch Lab)</h4><a id="user-content-任務-3斷訊安全停機機制-dead-mans-switch-lab" class="anchor" aria-label="Permalink: 任務 3：斷訊安全停機機制 (Dead Man's Switch Lab)" href="#任務-3斷訊安全停機機制-dead-mans-switch-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作「失效安全」。確保在極端狀況下（網頁當機、切換分頁、用戶分心），機器人具備自動歸零、防衝撞的自我保護能力。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>危險事件監聽實作</strong>：監聽 <code>window.blur</code> 或 <code>visibilitychange</code> 事件，並在觸發時立即執行 <code>stopFlow</code> 並送出 <code>STOP</code> 命令。</li>
+<li>
+<strong>模擬失控測試</strong>：在 README 中錄製或截圖證明：當按住按鈕時切換到別的視窗，系統日誌是否顯示了自動停機。</li>
+<li>
+<strong>驗證要點</strong>：安全機制的優先權是否足夠高？是否徹底清除了所有掛載的定時器以釋放系統資源？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 時序健壯性與安全意識點評標準 (Temporal Robustness &amp; Safety Standards)</h3><a id="user-content-3-時序健壯性與安全意識點評標準-temporal-robustness--safety-standards" class="anchor" aria-label="Permalink: 3. 時序健壯性與安全意識點評標準 (Temporal Robustness &amp; Safety Standards)" href="#3-時序健壯性與安全意識點評標準-temporal-robustness--safety-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對非同步流程的絕對掌控力與對防護邏輯的工程嚴謹力」</strong>：</p>
+<ul>
+<li>[ ] <strong>資源釋放嚴謹度</strong>：定時器是否在所有預期路徑（放開按鍵、安全停機）中都被正確 <code>clearInterval</code>？</li>
+<li>[ ] <strong>狀態聚合準確性</strong>：多鍵並發時，生成的指令是否能精準反映最後一個綜合的操作意圖？</li>
+<li>[ ] <strong>安全防護覆蓋率</strong>：除了正常的 <code>mouseup</code>，是否考慮到了滑鼠滑出視窗、視窗失去焦點等異常邊界情境？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── index.html           # 結構：包含控制按鍵與實時指令日誌區域
+├── js/logic.js          # 核心：練習 setInterval 管理、多鍵合成與 Fail-safe 監聽
+├── README.md            # 總結：定義指令發送頻率甜點與安全偵測觸發心得
+├── test/                # 測試：自動化偵測定時器洩漏與 Blur 安全反應
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的全端工程師，不僅是會寫邏輯的人，而是能掌控代碼跳動的節奏、能預見系統可能的失控瞬間、並在每一毫秒的循環中，為真實世界的機器人築起一道安全防火牆的操作邏輯大師」</strong>。掌握指令流邏輯與安全機制技術後，學員將擁有了開發「高頻賽道競技系統、遠程作業機械臂、以及關鍵防護自動化終端」最核心也最資深的系統工程開發實力！</p>
 
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>建立作業並連結範本，建議設定 <strong>"Enable feedback pull requests"</strong> 以糾正 Timer 洩漏與重複觸發問題。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，實作雙向 <code>setInterval</code> 指令流與安全停機邏輯。</li>
-                <li>本地開發後 <strong>Push 代碼</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>打開 Feedback PR，檢查學生是否有妥善處理「按住按鈕後滑出熱區」或「切換視窗」的停機機制（Dead Man's Switch）。</li>
-            </ol>
-        </div>
-
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元引導學生實作穩固的指令流與安全停機機制 (Dead Man's Switch)，建議範本倉庫設置如下：</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── index.html       # 包含控制按鈕與日誌區域
-├── js/logic.js      # (重點) 需實作計時器與安全停機邏輯
-└── README.md        # 穩定性設計規範與指令頻率分析</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>logic.js (指令流控制)</strong></p>
-        <pre><code>let flowInterval = null;
-
-function startFlow() {
-  if (flowInterval) return; // 防止重複啟動
-  // 每 100ms 發送一次指令 (Task 3-1)
-  flowInterval = setInterval(() => {
-    sendBuffer(new Uint8Array([0x01])); 
-  }, 100);
-}
-
-function stopFlow() {
-  if (flowInterval) {
-    clearInterval(flowInterval);
-    flowInterval = null;
-  }
-  sendBuffer(new Uint8Array([0x00])); // 停止指令
-}</code></pre>
-
-        <p><strong>safety.js (斷訊自動停止)</strong></p>
-        <pre><code>// 模擬斷訊安全機制 (Task 3-3)
-window.addEventListener('blur', () => {
-    console.warn("視窗失去焦點，觸發安全停機");
-    stopFlow();
-});</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>關鍵字檢查：</strong> 檢查 <code>logic.js</code> 是否包含 <code>setInterval</code> 與
-                <code>clearInterval</code>。</li>
-            <li><strong>頻率驗證：</strong> 透過 Actions 模擬點擊，檢查指令發送的時間間隔是否符合設定（如 100ms ± 20%）。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody style="color: #4b5563;">
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">觀看計時器原理講義，觀察本頁 Lab 中的指令日誌跳動頻率。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>Dashboard：</strong>確認學生已初步理解「指令連發」的需求與風險。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作指令流發送 (3-1) 並修正狀態機衝突 (3-2) 後更新代碼。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>助教角色：</strong>協助解決計時器堆疊引發的「指令暴衝」或硬體當機問題。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">優化斷訊安全機制 (3-3) 並提交最後一次 Commit 與筆記。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>檢視邏輯邊界狀況（如視窗切換、按鈕黏滯）的處理是否嚴謹。</td>
-                </tr>
-            </tbody>
-        </table>
     </section>
 </body>
 

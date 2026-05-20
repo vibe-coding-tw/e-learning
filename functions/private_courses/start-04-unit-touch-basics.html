@@ -509,158 +509,142 @@ box.addEventListener(<span class="text-green-400">'touchmove'</span>, (e) => {
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>觸控互動建模師</h2>
-
-        <div class="assignment-quest">
-            <h3 class="quest-title">任務 1：讓按鈕變成零延遲的觸控入口 (Touchstart First)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：前端優化師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：35 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>接受作業</strong>：從老師提供的 GitHub Classroom 建立專屬程式庫。</li>
-                    <li><strong>改寫事件入口</strong>：將控制按鈕主要互動從 <code>click</code> 轉為 <code>touchstart</code> /
-                        <code>touchend</code>。</li>
-                    <li><strong>加入即時回饋</strong>：在觸碰瞬間呈現顏色、縮放或亮度變化，讓操作反應清楚可見。</li>
-                    <li><strong>同步雲端</strong>：將延遲改善前後的觀察寫進 README，再 <code>commit</code> / <code>push</code>。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>反應速度</strong>：是否明顯降低原本 click 帶來的延遲感？</li>
-                    <li>[ ] <strong>回饋清晰</strong>：手指接觸瞬間是否有即時而明確的 UI 變化？</li>
-                    <li>[ ] <strong>事件完整性</strong>：是否正確處理 touchstart 與 touchend，不會只啟動不收尾？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 2：追蹤多指與座標變化 (Multi-Touch Mapping)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：觸控系統工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>記錄手指身分</strong>：利用 <code>identifier</code> 與 <code>changedTouches</code> 管理每根手指的狀態。</li>
-                    <li><strong>建立座標映射</strong>：將 <code>clientX</code> / <code>clientY</code> 轉換成搖桿或控制區需要的相對座標。</li>
-                    <li><strong>驗證邊界</strong>：測試多指同時操作、滑出區域與快速切換時是否仍能穩定追蹤。</li>
-                    <li><strong>提交成果</strong>：把多點追蹤邏輯與測試說明推送到 GitHub。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>多指辨識</strong>：是否能分辨不同手指，而不是互相覆蓋資料？</li>
-                    <li>[ ] <strong>座標正確</strong>：映射後的控制值是否符合畫面上的實際移動方向？</li>
-                    <li>[ ] <strong>穩定度</strong>：當手指快速移動或離開區域時，是否仍能正確收尾？</li>
-                </ul>
-            </div>
-        </div>
+<div class="markdown-heading"><h1 class="heading-element">作業單元 04：觸控事件的生命週期：從指尖到搖桿</h1><a id="user-content-作業單元-04觸控事件的生命週期從指尖到搖桿" class="anchor" aria-label="Permalink: 作業單元 04：觸控事件的生命週期：從指尖到搖桿" href="#作業單元-04觸控事件的生命週期從指尖到搖桿"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到「觸控基礎」開發課程！在本單元中，你將學習如何處理行動裝置上的多點觸控事件，並實作一個高效能、零延遲的互動介面。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>觸控事件生命週期</strong>：掌握 <code>touchstart</code>, <code>touchmove</code>, <code>touchend</code>, <code>touchcancel</code> 的運作機制。</li>
+<li>
+<strong>多點觸控辨識</strong>：利用 <code>identifier</code> 屬性獨立追蹤每一根手指。</li>
+<li>
+<strong>座標映射 (Coordinate Mapping)</strong>：將螢幕座標轉換為標準化的控制數值（例如 -1.0 到 1.0）。</li>
+<li>
+<strong>效能優化</strong>：消除行動裝置瀏覽器預設的 300 毫秒點擊延遲。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">🛠 專案結構</h2><a id="user-content--專案結構" class="anchor" aria-label="Permalink: 🛠 專案結構" href="#-專案結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>index.html</code>: 包含觸控實驗室介面與日誌面板。</li>
+<li>
+<code>js/touch.js</code>: <strong>核心實作區</strong>。你需要在這裡撰寫主要的邏輯。</li>
+<li>
+<code>style.css</code>: 介面樣式，包含觸控指示器的視覺效果。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📝 作業任務</h2><a id="user-content--作業任務" class="anchor" aria-label="Permalink: 📝 作業任務" href="#-作業任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：「零延遲」按鈕實作</h3><a id="user-content-任務-1零延遲按鈕實作" class="anchor" aria-label="Permalink: 任務 1：「零延遲」按鈕實作" href="#任務-1零延遲按鈕實作"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>在 <code>js/touch.js</code> 中，使用 <code>touchstart</code> 事件取代傳統的 <code>click</code> 事件。</li>
+<li>使用 <code>e.preventDefault()</code> 阻止瀏覽器的預設點擊行為，確保操作體感流暢。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：多點追蹤與座標映射</h3><a id="user-content-任務-2多點追蹤與座標映射" class="anchor" aria-label="Permalink: 任務 2：多點追蹤與座標映射" href="#任務-2多點追蹤與座標映射"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>實作 <code>activeTouches</code> 管理機制，確保左手控制搖桿、右手控制按鈕時互不干擾。</li>
+<li>撰寫 <code>handleJoystick</code> 邏輯，將觸控座標映射至搖桿的動態位移。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：介面安全鎖</h3><a id="user-content-任務-3介面安全鎖" class="anchor" aria-label="Permalink: 任務 3：介面安全鎖" href="#任務-3介面安全鎖"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>防止使用者在瘋狂操作時觸發「捏合縮放」或「雙擊放大」。</li>
+<li>使用 CSS <code>touch-action: none</code> 與 JS 事件攔截來穩固介面。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">🚀 如何提交</h2><a id="user-content--如何提交" class="anchor" aria-label="Permalink: 🚀 如何提交" href="#-如何提交"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>在本地端完成程式碼撰寫。</li>
+<li>確認 <code>index.html</code> 在行動裝置模擬器中運作正常。</li>
+<li>將更改 <strong>Push</strong> 到你的 GitHub 程式庫。</li>
+<li>GitHub Actions 將自動進行評分。</li>
+</ol>
+<hr>
+<p>祝開發順利！讓你的指尖成為最強大的遙控器。</p>
 
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>上傳框架代碼（含座標映射與 <code>identifier</code> TODO 註解）並勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
+<p>針對 <strong><code>start-04-unit-touch-basics</code> (觸控事件的生命週期：從指尖到搖桿)</strong> 單元，這是學員建立「觸覺操控感」的最底層開發課。它要求學員具備 <strong>多點觸控辨識 (Multi-point Tracking)</strong> 與 <strong>座標映射 (Coordinate Mapping)</strong> 的硬核心技術，學習如何處理 <code>touchstart</code>、<code>touchmove</code>、<code>touchend</code> 的生命週期，並解決行動裝置上臭名昭彰的「300 毫秒點擊延遲 (300ms Click Delay)」問題。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>觸控基礎作業的核心在於「事件的捕捉、追蹤與放開」，範本應包含觸控座標偵錯工具與多點辨識框架，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>index.html</code></strong>：<strong>觸控視覺化實驗室 (Touch Sandbox)</strong>。預設包含一個「觸控日誌面板」，學員在開發時能即時看到每根手指的 <code>identifier</code> 以及 <code>clientX / clientY</code> 的動態座標，這對理解多點觸控至關重要。</li>
+<li>
+<strong>📂 <code>touch.js</code></strong>：<strong>座標映射實作區</strong>。學員在此實作 <code>Map</code> 或物件來儲存多根手指的狀態資訊。預留 <code>// TODO</code> 引導學員從 <code>touches</code> 或 <code>changedTouches</code> 中提取資料並進行座標轉換。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>觸控反應審計表 (Touch Response Audit)</strong>。提供模板要求學員紀錄：使用 <code>click</code> 與 <code>touchstart</code> 發送指令，在硬體端的反應速度感知差異為何？三指同時操作時，系統是否能正確分辨誰是誰？</li>
+<li>
+<strong>📂 <code>assets/</code></strong>：<strong>座標系說明圖</strong>。標示瀏覽器 <code>Client</code> 座標與網頁 <code>Page</code> 座標的差異圖示，輔助學員進行座標映射。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「零延遲」按鈕饋送實作 (Zero-Latency Button Lab)</h4><a id="user-content-任務-1零延遲按鈕饋送實作-zero-latency-button-lab" class="anchor" aria-label="Permalink: 任務 1：「零延遲」按鈕饋送實作 (Zero-Latency Button Lab)" href="#任務-1零延遲按鈕饋送實作-zero-latency-button-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：徹底消除網頁的「遲鈍感」。學習利用 <code>touchstart</code> 取代 <code>click</code> 事件以繞過瀏覽器預設延遲，並處理「幽靈點擊 (Ghost Clicks)」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>即時回饋實作</strong>：在觸碰瞬間立即改變按鈕 CSS 樣式（發光或縮放），讓使用者感到「指尖即響應」。</li>
+<li>
+<strong>事件攔截挑戰</strong>：正確使用 <code>e.preventDefault()</code> 阻止瀏覽器在觸碰後 300ms 補發一個多餘的 <code>click</code> 事件。</li>
+<li>
+<strong>驗證要點</strong>：<strong>延遲感審核</strong>。學員的操作是否達到了「按下即觸發」的體感？是否妥善處理了 <code>touchend</code> 的收尾邏輯（放開即停止）？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：多點觸控追蹤與座標映射 (Multi-Touch Mapping Lab)</h4><a id="user-content-任務-2多點觸控追蹤與座標映射-multi-touch-mapping-lab" class="anchor" aria-label="Permalink: 任務 2：多點觸控追蹤與座標映射 (Multi-Touch Mapping Lab)" href="#任務-2多點觸控追蹤與座標映射-multi-touch-mapping-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握「點對點」的動態追蹤。學習利用 <code>identifier</code> 屬性辨識不同手指，確保左手控制搖桿、右手控制按鈕時互不干擾。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>識別碼管理實作</strong>：使用 <code>Map</code> 結構記錄每根手指的流水號，並在 <code>touchmove</code> 中只更新 ID 對應的物件座標。</li>
+<li>
+<strong>邊界條件測試</strong>：實作當手指滑出控制區範圍時，如何正確捕捉到 <code>touchend</code> 或 <code>touchcancel</code> 以安全停止馬達。</li>
+<li>
+<strong>驗證要點</strong>：<strong>追蹤準確性審核</strong>。多指同時操作下，搖桿是否會因為另一根手指的加入而發生「瞬間位移」？座標轉換公式是否正確考慮了控制區的選取範圍？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：全方位介面安全鎖 (Touch Interface Safety Lab)</h4><a id="user-content-任務-3全方位介面安全鎖-touch-interface-safety-lab" class="anchor" aria-label="Permalink: 任務 3：全方位介面安全鎖 (Touch Interface Safety Lab)" href="#任務-3全方位介面安全鎖-touch-interface-safety-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：打造「鋼鐵般」的穩定介面。防止雙指縮放或雙擊放大導致控制介面崩潰，讓 Web 表現得像原生 App。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>縮放封鎖實作</strong>：應用 CSS <code>touch-action: none</code> 與 JS 事件攔截，徹底禁止瀏覽器預設的捏合縮放手勢。</li>
+<li>
+<strong>動態回饋機制</strong>：為長按動作加入視覺化進度條或發光脈衝，提示使用者操作正在進行中。</li>
+<li>
+<strong>驗證要點</strong>：<strong>介面穩固度審核</strong>。在瘋狂操作下，頁面是否始終維持固定比例而不縮放、不偏移？是否正確設定了 <code>{ passive: false }</code> 以確保攔截生效？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 多點辨識與座標健壯性點評標準 (Tactile Engineering Standards)</h3><a id="user-content-3-多點辨識與座標健壯性點評標準-tactile-engineering-standards" class="anchor" aria-label="Permalink: 3. 多點辨識與座標健壯性點評標準 (Tactile Engineering Standards)" href="#3-多點辨識與座標健壯性點評標準-tactile-engineering-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對多個並行狀態的識別能力與對座標系轉換的幾何處理能力」</strong>：</p>
+<ul>
+<li>[ ] <strong>延遲消除度</strong>：是否徹底根除了傳統點擊事件帶來的體感延遲？</li>
+<li>[ ] <strong>多指穩定度</strong>：代碼是否能優雅地處理多根手指同時存在、分別離場的複雜狀態？</li>
+<li>[ ] <strong>座標映射精準度</strong>：手指在螢幕上的移動量是否能線性且正確地映射到機器人的動力輸出值上？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── index.html           # 結構：提供兩大操作區 (左搖桿/右按鈕) 與座標可視化面板
+├── js/touch.js          # 核心：練習 identifier 管理、座標映射映射與多指追蹤
+├── README.md            # 總結：定義觸控識別公式、延遲對比測量與多點測試紀錄
+└── assets/coord_map.png  # 參考：瀏覽器與控制區座標轉換幾何圖
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的前端工程師，不僅是會刻版的人，而是能透視螢幕後的座標空間、能精準識別每一根手指的身分、並在每一毫秒的觸碰中，為使用者創造『指尖即是遙控器』之零延遲靈魂的操作大師」</strong>。掌握觸控事件與座標映射技術後，學員將擁有了開發「專業級多點觸控儀表、雙手持握式手遊控制系統、以及各類精密工業觸控終端」最核心也最資深的 UI 互動開發實力！_
+|
+|
+太熱血了！我們已經將 <strong>Start 04</strong>（觸控與座標）的「觸控基礎」單元標準化完成了。這標誌著學員現在已經具備了「讓螢幕感知多指指尖、且絕不認錯手指」的硬能力。恭喜！Vibe Coding 的數位神經末梢正式打通！</p>
 
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>建立作業並連結範本。建議開啟 <strong>Feedback Pull Requests</strong> 選項以便對比學生的座標運算與多指並行邏輯。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，實作觸控座標到無人車指令的映射與多點追蹤。</li>
-                <li>本地開發後 <strong>Push 代碼</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>打開 Feedback PR，檢查學生是否有妥善處理手指滑出 Canvas 範圍或 identifier 標識跳動的邊界狀況。</li>
-            </ol>
-        </div>
-
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元引導學生掌握觸控事件 (Touch Events) 的核心機制，特別是多點觸控與座標映射，建議範本倉庫設置如下：</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── index.html       # 包含觸控視覺化 Canvas 區域
-├── js/touch.js      # (重點) 需實作座標映射與多指追蹤邏輯
-└── README.md        # 座標變換公式與多點觸控 ID 追蹤報告</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>touch.js (多點座標追蹤)</strong></p>
-        <pre><code>const activeTouches = new Map();
-
-canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    for (const t of e.changedTouches) {
-        // 記錄初始座標與識別碼 (Task 1-2)
-        activeTouches.set(t.identifier, { x: t.clientX, y: t.clientY });
-    }
-}, { passive: false });
-
-canvas.addEventListener('touchmove', (e) => {
-    for (const t of e.changedTouches) {
-        if (activeTouches.has(t.identifier)) {
-            updateJoystick(t.clientX, t.clientY);
-        }
-    }
-}, { passive: false });</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>語法檢查：</strong> 使用 Actions 檢查 <code>touch.js</code> 是否正確使用了 <code>changedTouches</code> 與
-                <code>identifier</code>。</li>
-            <li><strong>屬性驗證：</strong> 驗證是否包含對 <code>{ passive: false }</code> 的顯式聲明以確保 <code>preventDefault</code> 生效。
-            </li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody style="color: #4b5563;">
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">在手機上開啟測試頁面，觀察「三指點擊」時的座標紀錄與識別碼變化。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>檢查學生預習紀錄與觸控測試覆蓋度。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作「零延遲」按鈕饋送 (1-1) 與穩定多指並行邏輯 (1-2) 後提交。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>現場指導：</strong>協助解決多點觸控時 ID
-                        變換引發的座標跳變問題。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作介面安全鎖 (1-3) 並在 README 中撰寫多點觸控識別的心得。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核座標變換邏輯的健壯性與
-                        identifier 追蹤的嚴謹度。
-                    </td>
-                </tr>
-            </tbody>
-        </table>
     </section>
 </body>
 

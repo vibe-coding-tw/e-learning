@@ -333,137 +333,177 @@
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">有限狀態機基礎實驗室：enum 狀態管理、子狀態轉移與安全救援實戰
-        </h2>
+<div class="markdown-heading"><h1 class="heading-element">作業單元 10：有限狀態機 (FSM) — 機器人大腦的邏輯架構</h1><a id="user-content-作業單元-10有限狀態機-fsm--機器人大腦的邏輯架構" class="anchor" aria-label="Permalink: 作業單元 10：有限狀態機 (FSM) — 機器人大腦的邏輯架構" href="#作業單元-10有限狀態機-fsm--機器人大腦的邏輯架構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到本程式庫！本單元的目標是學習如何從單純的「功能堆疊」進化到「系統架構設計」。你將使用 <strong>有限狀態機 (Finite State Machine, FSM)</strong> 的概念，為機器人構建一個穩定、可預測且具備異常處理能力的邏輯架構。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>掌握 <strong>確定性運算 (Deterministic Computing)</strong> 的思維。</li>
+<li>學習將混亂的 <code>if-else</code> 嵌套結構重構成清晰的 <code>switch-case</code> 狀態轉移邏輯。</li>
+<li>實作具備最高優先權的「強制救援」邏輯，確保系統安全性。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🛠️ 任務內容</h2><a id="user-content-️-任務內容" class="anchor" aria-label="Permalink: 🛠️ 任務內容" href="#️-任務內容"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：基礎控制狀態機 (Core FSM Architecture)</h3><a id="user-content-任務-1基礎控制狀態機-core-fsm-architecture" class="anchor" aria-label="Permalink: 任務 1：基礎控制狀態機 (Core FSM Architecture)" href="#任務-1基礎控制狀態機-core-fsm-architecture"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：建立三模式切換骨幹。</li>
+<li>
+<strong>實作內容</strong>：
+<ul>
+<li>定義 <code>IDLE</code> (紅燈)、<code>REMOTE</code> (藍燈)、<code>AUTO</code> (綠燈) 三種狀態。</li>
+<li>按下 <strong>按鍵 A</strong> 切換至下一個狀態。</li>
+<li>按下 <strong>按鍵 B</strong> 無論目前為何種狀態，立即回歸 <code>IDLE</code>（除非在 EMERGENCY 狀態）。</li>
+</ul>
+</li>
+<li>
+<strong>驗證</strong>：確保使用 <code>enum</code> 定義狀態，代碼中不出現魔術數字。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：避障邏輯子狀態機 (Obstacle Logic Sub-FSM)</h3><a id="user-content-任務-2避障邏輯子狀態機-obstacle-logic-sub-fsm" class="anchor" aria-label="Permalink: 任務 2：避障邏輯子狀態機 (Obstacle Logic Sub-FSM)" href="#任務-2避障邏輯子狀態機-obstacle-logic-sub-fsm"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：在 <code>AUTO</code> 模式內實作非阻塞的子狀態管理。</li>
+<li>
+<strong>實作內容</strong>：
+<ul>
+<li>定義子狀態：<code>SEARCH</code> (掃描)、<code>BACKUP</code> (後退)、<code>TURN</code> (轉向)。</li>
+<li>當偵測到障礙物時，觸發轉移：<code>SEARCH</code> -&gt; <code>BACKUP</code> (持續 500ms) -&gt; <code>TURN</code> (持續 300ms) -&gt; <code>SEARCH</code>。</li>
+</ul>
+</li>
+<li>
+<strong>驗證</strong>：確保使用 <code>millis()</code> 進行計時，不使用 <code>delay()</code>，以維持系統的響應性。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：緊急救援模式 (Emergency Failsafe)</h3><a id="user-content-任務-3緊急救援模式-emergency-failsafe" class="anchor" aria-label="Permalink: 任務 3：緊急救援模式 (Emergency Failsafe)" href="#任務-3緊急救援模式-emergency-failsafe"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：打造最高優先權的安全防線。</li>
+<li>
+<strong>實作內容</strong>：
+<ul>
+<li>新增 <code>EMERGENCY</code> 狀態（特徵：紅燈閃爍、馬達停止）。</li>
+<li>模擬異常觸發（如感測器超時或特定錯誤訊號），系統必須能瞬間跳轉至 <code>EMERGENCY</code>。</li>
+</ul>
+</li>
+<li>
+<strong>驗證</strong>：確認救援模式能接管所有其他狀態，且回應迅速。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構說明</h2><a id="user-content--程式庫結構說明" class="anchor" aria-label="Permalink: 📂 程式庫結構說明" href="#-程式庫結構說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong><code>src/main.cpp</code></strong>：主程式邏輯與狀態機調度區。</li>
+<li>
+<strong><code>include/FSM_Definitions.h</code></strong>：定義所有的 <code>enum</code> 狀態類型。</li>
+<li>
+<strong><code>docs/state_map.md</code></strong>：邏輯架構圖，建議使用 Mermaid 語法繪製你的狀態轉移流程。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🚀 如何開始</h2><a id="user-content--如何開始" class="anchor" aria-label="Permalink: 🚀 如何開始" href="#-如何開始"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>複製 (Clone)</strong> 此程式庫至本地。</li>
+<li>使用 <strong>Visual Studio Code</strong> 開啟專案（需安裝 PlatformIO 擴充功能）。</li>
+<li>在 <code>include/FSM_Definitions.h</code> 中定義你的狀態。</li>
+<li>在 <code>src/main.cpp</code> 的 <code>handleStateTransitions()</code> 與 <code>executeStateLogic()</code> 中實作邏輯。</li>
+<li>點擊下方工具列的 <strong>PlatformIO: Build</strong> 進行編譯，<strong>PlatformIO: Upload</strong> 進行上傳。</li>
+</ol>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📝 繳交要求</h2><a id="user-content--繳交要求" class="anchor" aria-label="Permalink: 📝 繳交要求" href="#-繳交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>[ ] 代碼需結構清晰，邏輯嚴密。</li>
+<li>[ ] 所有的狀態轉移必須符合預期，無死鎖。</li>
+<li>[ ] 提交前請確保 <code>docs/state_map.md</code> 已更新，反映你的最終邏輯設計。</li>
+</ul>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：基礎控制狀態機 (Core FSM Architecture)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：架構工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫。</li>
-                    <li><strong>定義</strong>：使用 <code>enum</code> 定義三模式。</li>
-                    <li><strong>核心實作</strong>：構建 <code>switch...case</code> 判定。</li>
-                    <li><strong>視覺反饋</strong>：根據狀態控制 RGB LED。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>命名規範</strong>：捨棄魔術數字，改採 <code>enum</code>？</li>
-                    <li>[ ] <strong>邏輯一致</strong>：硬體動作與燈號同步？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：避障邏輯狀態機 (Obstacle Logic Sub-FSM)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：演算法工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>細分</strong>：細化為 SEARCH 到 TURN。</li>
-                    <li><strong>非阻塞計時</strong>：利用 <code>millis()</code> 設定轉場。</li>
-                    <li><strong>攤平重構</strong>：移除嵌套 if-else。</li>
-                    <li><strong>閉環實測</strong>：驗證閃避動作閉環。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>計時精準</strong>：延遲準確執行且未對主循環造成阻塞？</li>
-                    <li>[ ] <strong>覆蓋率</strong>：考慮周全，不存在死鎖？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：異常救援模式：最高優先權 (Emergency Recovery & Failsafe)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：安全工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>救援接入</strong>：新增 <code>EMERGENCY_STOP</code>。</li>
-                    <li><strong>失效轉移</strong>：偵測異常立即強行鎖死。</li>
-                    <li><strong>解鎖設計</strong>：實作防誤觸解鎖。</li>
-                    <li><strong>報告提交</strong>：評估緊急狀態響應時間。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>搶佔時效</strong>：緊急觸發是否能瞬間（<20ms）接管？< /li>
-                    <li>[ ] <strong>安全嚴密</strong>：解鎖機制能否防止故障未排除時意外啟動？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify text-left">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：從功能導向進化至「狀態」導向建模。</p>
-            <ol class="space-y-4 text-slate-600 text-justify text-left">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：可視化</strong> - 繪製轉移圖。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：switch-case 優雅性</strong> - 解決麵條代碼。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：救援機制</strong> - 異常時進入穩定狀態。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>basic-10-unit-fsm</code> (有限狀態機 FSM：機器人大腦的邏輯架構)</strong> 單元，這是學員從「寫功能」進化到「設計架構」的關鍵課程。它要求學員具備 <strong>確定性運算 (Deterministic Computing)</strong> 的思維，學習如何將混亂的 <code>if-else</code> 巢狀結構重構成優雅的 <code>switch-case</code> 狀態轉移圖，並確保機器人在面對異常（如斷線）時具備「強制救援」的最高優先權邏輯。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本程式庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" href="#1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>FSM 作業的核心在於「語義化狀態管理」與「邏輯地圖」，範本應包含狀態結構定義與狀態圖範本，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/main.cpp</code></strong>：<strong>狀態機調度區</strong>。學員在此定義 <code>enum State</code> 並構建核心的 <code>switch(currentState)</code> 結構，處理不同模式間的轉換。</li>
+<li>
+<strong>📂 <code>docs/STATE_DIAGRAM.md</code></strong>：<strong>邏輯架構圖</strong>。要求學員使用 Mermaid 語法或流程圖工具繪製其狀態轉移邏輯，包含轉移條件（Event）。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>狀態驗證日誌</strong>。提供表格讓學員記錄：從「待機 (IDLE)」切換到「遙控 (REMOTE)」的觸發條件，以及 RGB LED 的對應顏色反饋。</li>
+<li>
+<strong>📂 <code>include/FSM_Definitions.h</code></strong>：<strong>狀態語義標頭檔</strong>。強制要求學員在此集中定義所有狀態，杜絕魔術數字 (Magic Numbers)。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：基礎控制狀態機 (Core FSM Architecture Lab)</h4><a id="user-content-任務-1基礎控制狀態機-core-fsm-architecture-lab" class="anchor" aria-label="Permalink: 任務 1：基礎控制狀態機 (Core FSM Architecture Lab)" href="#任務-1基礎控制狀態機-core-fsm-architecture-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：建立三模式切換骨幹，掌握「語義化編程」以提升代碼的可讀性與穩定性。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>三模架構實作</strong>：定義 <code>IDLE</code> (紅燈)、<code>REMOTE</code> (藍燈)、<code>AUTO</code> (綠燈)。</li>
+<li>
+<strong>轉移觸發器</strong>：實作按下按鍵 A 切換至次一狀態，按下按鍵 B 回歸 <code>IDLE</code>。</li>
+<li>
+<strong>驗證要點</strong>：<strong>關鍵工程審核</strong>。學員是否使用了 <code>enum</code>？代碼中是否還存在 <code>state == 1</code> 這種數字判斷？（應使用 <code>state == REMOTE</code>）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：避障邏輯狀態機 (Obstacle Logic Sub-FSM Lab)</h4><a id="user-content-任務-2避障邏輯狀態機-obstacle-logic-sub-fsm-lab" class="anchor" aria-label="Permalink: 任務 2：避障邏輯狀態機 (Obstacle Logic Sub-FSM Lab)" href="#任務-2避障邏輯狀態機-obstacle-logic-sub-fsm-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：在 <code>AUTO</code> 模式內實作「子狀態機 (Sub-FSM)」，學習如何在非阻塞架構下管理具備時間窗口的有序動作。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>行為原子化</strong>：定義子狀態 <code>SEARCH</code> (掃描障礙)、<code>BACKUP</code> (後退 500ms)、<code>TURN</code> (轉向 300ms)。</li>
+<li>
+<strong>精密轉場</strong>：結合 <code>millis()</code>。例如：當進入 <code>BACKUP</code> 時記錄起點，時間到自動轉移至 <code>TURN</code>。</li>
+<li>
+<strong>驗證要點</strong>：避障動作是否流暢？是否因使用 <code>delay</code> 而導致狀態切換過程中無法取消任務？（應維持 Loop 的非阻塞運行）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：異常救援模式：最高優先權 (Emergency Failsafe Lab)</h4><a id="user-content-任務-3異常救援模式最高優先權-emergency-failsafe-lab" class="anchor" aria-label="Permalink: 任務 3：異常救援模式：最高優先權 (Emergency Failsafe Lab)" href="#任務-3異常救援模式最高優先權-emergency-failsafe-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：打造「搶佔式 (Preemptive)」安全防線。當偵測到極端異常時，系統必須能跨越目前所有狀態，強制進入安全鎖定。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>救援轉移實作</strong>：新增 <code>EMERGENCY</code> 狀態（特徵：紅燈全快閃、馬達鎖死）。</li>
+<li>
+<strong>異常捕捉器</strong>：例如監視通訊心跳，若 2 秒無訊號，無論目前處於 <code>AUTO</code> 還是 <code>REMOTE</code>，必須瞬間轉移至 <code>EMERGENCY</code>。</li>
+<li>
+<strong>解鎖機制設計</strong>：實作嚴謹的解鎖序列。</li>
+<li>
+<strong>驗證要點</strong>：救援模式是否具備最高執行權限？其轉移響應是否在 20ms 以內？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 邏輯嚴密性與確定性架構點評標準 (Logic Architecture &amp; Deterministic Standards)</h3><a id="user-content-3-邏輯嚴密性與確定性架構點評標準-logic-architecture--deterministic-standards" class="anchor" aria-label="Permalink: 3. 邏輯嚴密性與確定性架構點評標準 (Logic Architecture &amp; Deterministic Standards)" href="#3-邏輯嚴密性與確定性架構點評標準-logic-architecture--deterministic-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對系統狀態的穷舉能力與對行為邊界條件的嚴格定義」</strong>：</p>
+<ul>
+<li>[ ] <strong>狀態窮舉性</strong>：是否考慮了所有可能的狀態變化？是否有狀態「死鎖」的情況？</li>
+<li>[ ] <strong>代碼架構優雅度</strong>：是否完全消滅了麵條式的 <code>if-else</code> 嵌套，改由清晰的 <code>switch-case</code> 驅動？</li>
+<li>[ ] <strong>失效安全性 (Failsafe)</strong>：緊急狀態是否能在任何時刻可靠接管控制權？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/main.cpp         # 核心：狀態機跳轉邏輯與主調度器
+├── docs/state_map.md    # 文檔：Mermaid 繪製的邏輯戰略地圖
+├── README.md            # 總結：我如何透過 FSM 設計出「冷靜且可預測」的機器人大腦
+├── assets/logic_proof.gif # 證據：展示模式切換與 LED 連動的實際操作影片
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的韌體工程師，不僅是會寫功能的人，而是能預見所有系統邊界狀態、用清晰的邏輯圖定義機器人靈魂、並在混亂環境中依然能依靠確定性架構守護系統穩定與安全的邏輯架構師」</strong>。掌握 FSM 與狀態架構技術後，學員將擁有了開發「自動駕駛避障演算法、多模式工業控制系統、以及高複雜度智慧家電」最穩固也最專業的底層開發實力！_
+|
+|
+太給力了！我們已經將 <strong>基礎 10</strong>（邏輯架構）的第一個核心單元完成了。這標誌著學員終於具備了設計「智慧靈魂」的架構力。恭喜！教學地圖的邏輯板塊已經正式開展！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify uppercase tracking-widest font-black border border-slate-700">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300 text-justify uppercase tracking-widest font-black text-left">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm text-justify uppercase tracking-widest font-black border border-slate-100">
-.
-├── src/main.cpp       # (必修) 調度 switch-case 核心
-├── docs/state_map.md  # 邏輯圖
-└── README.md          # 報告：響應時耗分析
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify uppercase tracking-widest font-black">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-center text-justify font-black">
-            <table class="w-full text-left border-collapse border border-slate-100 text-justify font-black">
-                <thead>
-                    <tr class="bg-slate-100 border border-slate-100 text-justify font-black">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600 border border-slate-100 text-justify font-black">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看設計靈魂動畫並畫出販賣機邏輯。</td>
-                        <td class="px-6 py-5 text-justify border border-slate-100"><strong>Dashboard:</strong> 測試區分狀態與事件。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify border border-slate-100 text-left">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify text-left">領取 Repo，對應圖面邏輯至語法。</td>
-                        <td class="px-6 py-5 text-left text-justify border border-slate-100 font-black"><strong>巡場引導:</strong> 演示利用打印狀態標籤除錯。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black">實作記憶恢復擴充。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價狀態窮舉性。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

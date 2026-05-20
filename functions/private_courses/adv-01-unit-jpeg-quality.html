@@ -250,87 +250,78 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">影像實驗室：JPEG 壓縮、品質權衡與動態優化</h2>
+<div class="markdown-heading"><h1 class="heading-element">Assignment: 影像品質參數的權衡 (adv-01-unit-jpeg-quality)</h1><a id="user-content-assignment-影像品質參數的權衡-adv-01-unit-jpeg-quality" class="anchor" aria-label="Permalink: Assignment: 影像品質參數的權衡 (adv-01-unit-jpeg-quality)" href="#assignment-影像品質參數的權衡-adv-01-unit-jpeg-quality"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本單元探討在嵌入式視覺系統中，影像品質（JPEG Quality）、通訊頻寬與演算法穩定性之間的權衡關係。你將使用 ESP32-CAM 進行實驗，並透過數據分析找出最佳的系統參數。</p>
+<div class="markdown-heading"><h2 class="heading-element">任務目標</h2><a id="user-content-任務目標" class="anchor" aria-label="Permalink: 任務目標" href="#任務目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>量化影響</strong>：了解 JPEG 品質參數如何影響影像檔案大小與傳輸幀率 (FPS)。</li>
+<li>
+<strong>穩定性測試</strong>：觀察低品質影像對視覺演算法（如質心計算）產生的雜訊干擾。</li>
+<li>
+<strong>動態策略</strong>：實作一個能根據場景需求（如運動狀態）自動切換品質的控制邏輯。</li>
+</ol>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">專案結構</h2><a id="user-content-專案結構" class="anchor" aria-label="Permalink: 專案結構" href="#專案結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>📂 <code>firmware/</code>: ESP32-CAM 韌體原始碼。</li>
+<li>📂 <code>web/</code>: 網頁端視覺處理邏輯 (<code>vision-logic.js</code>)。</li>
+<li>📂 <code>analysis/</code>: 實驗數據存放處。
+<ul>
+<li>
+<code>results.csv</code>: 記錄品質、大小與 FPS 的標定數據。</li>
+<li>
+<code>jitter-log.json</code>: 記錄質心座標的抖動數據。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">作業任務</h2><a id="user-content-作業任務" class="anchor" aria-label="Permalink: 作業任務" href="#作業任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：品質、大小與 FPS 關聯標定 (Scaling Lab)</h3><a id="user-content-任務-1品質大小與-fps-關聯標定-scaling-lab" class="anchor" aria-label="Permalink: 任務 1：品質、大小與 FPS 關聯標定 (Scaling Lab)" href="#任務-1品質大小與-fps-關聯標定-scaling-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>操作</strong>：手動調整 JPEG 品質參數（從 10 到 90），記錄對應的影像檔案大小與平均 FPS。</li>
+<li>
+<strong>繳交</strong>：將測量結果填入 <code>analysis/results.csv</code>。</li>
+<li>
+<strong>思考</strong>：在 README 中說明你觀察到的「邊際效益遞減」點在哪裡？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：演算法抗噪測試 (Centroid Jitter Lab)</h3><a id="user-content-任務-2演算法抗噪測試-centroid-jitter-lab" class="anchor" aria-label="Permalink: 任務 2：演算法抗噪測試 (Centroid Jitter Lab)" href="#任務-2演算法抗噪測試-centroid-jitter-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>操作</strong>：在不同品質下執行質心偵測演算法。</li>
+<li>
+<strong>繳交</strong>：
+<ul>
+<li>記錄 100 幀內的質心座標，存入 <code>analysis/jitter-log.json</code>。</li>
+<li>在 README 中上傳兩張對比圖：Q=90 與 Q=10 的質心標記圖，觀察低品質下的座標跳動。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：動態品質切換策略 (Adaptive Strategy)</h3><a id="user-content-任務-3動態品質切換策略-adaptive-strategy" class="anchor" aria-label="Permalink: 任務 3：動態品質切換策略 (Adaptive Strategy)" href="#任務-3動態品質切換策略-adaptive-strategy"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>實作</strong>：在 <code>web/vision-logic.js</code> 中實作品質切換邏輯。
+<ul>
+<li>
+<strong>策略</strong>：靜止時使用高品質 (Q=80) 以獲取細節；移動時（<code>motorSpeed &gt; 0</code>）使用低品質 (Q=20) 以換取流暢度。</li>
+</ul>
+</li>
+<li>
+<strong>挑戰</strong>：加入「抖動保護 (Debounce)」機制，避免品質切換過於頻繁。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">繳交方式</h2><a id="user-content-繳交方式" class="anchor" aria-label="Permalink: 繳交方式" href="#繳交方式"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>完成程式碼實作與數據採集。</li>
+<li>將實驗數據與對比圖更新至此 <strong>程式庫</strong>。</li>
+<li>
+<code>git commit</code> 並 <code>git push</code> 回 GitHub Classroom。</li>
+</ol>
+<blockquote>
+<p><strong>提示</strong>：沒有最好的參數，只有最適合場景的權衡。祝實驗順利！</p>
+</blockquote>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：品質、大小與 FPS 關聯標定 (Quality Scaling Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：效能優化工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>測試計畫</strong>：在 Web 介面循環切換 Quality (10, 30, 60, 90)。</li>
-                    <li><strong>數據採集</strong>：紀錄各等級的「平均幀大小 (KB)」與「實際傳輸 FPS」。</li>
-                    <li><strong>Push Final</strong>：提交包含「品質-頻寬關聯曲線」的數據分析報告。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>拐點識別</strong>：能否指出 Q > 80 後檔案大小劇增 but 畫質提升不明顯的物理現象？</li>
-                    <li>[ ] <strong>數據完整性</strong>：README 中是否包含了所有測試點的量化對比？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：演算法抗噪測試 (Artifacts Sensitivity Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：AI 視覺工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>極限觀測</strong>：在 Quality 80 與 Quality 5 兩種極端下計算同一條循跡線的質心 x 座標。</li>
-                    <li><strong>噪聲記錄</strong>：觀察方塊效應 (Blocking Artifacts) 是否導致質心座標產生 Jitter (跳動)。</li>
-                    <li><strong>穩定性優化</strong>：嘗試在低品質下透過軟體濾波 (Blur) 減少假邊緣干擾。</li>
-                    <li><strong>Push Final</strong>：提交具備「抗噪韌性」的視覺分析模組。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>干擾分析</strong>：是否能說明「方塊邊緣」如何被誤判為物理特徵？</li>
-                    <li>[ ] <strong>實驗嚴謹度</strong>：是否上傳了不同品質下的質心跳動對比影片或數據？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：動態品質切換策略 (Adaptive Quality Algorithm)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統架構分析師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>邏輯開發</strong>：實作偵測邏輯：當車輛「靜止」時自動切換至 Q=80，當「加速」時降至 Q=20。</li>
-                    <li><strong>雙模驗證</strong>：在 README 展示在不同駕駛狀態下，系統如何自動平衡「細節」與「流暢度」。</li>
-                    <li><strong>Push Final</strong>：交付具備「感知自適應」能力的最終影像控制器。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>平滑過渡</strong>：品質切換瞬間，連線是否保持穩定（無斷開現象）？</li>
-                    <li>[ ] <strong>工程實用性</strong>：策略是否能有效在移動過程中顯著降低影像延遲？</li>
-                </ul>
-            </div>
-        </div>
     </section>
     <script>
         // Define Resources - Used by course-shared.js?v=2026.04.05.FINAL_V6
@@ -343,56 +334,88 @@
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：掌握「工程權衡 (Trade-off)」的靈魂。讓學生理解沒有完美的畫質，只有最適合場景的壓縮率。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：量化誤差</strong> - 透過方塊效應任務，讓學生看見數位化過程中的「資訊損失」如何演變成「控制噪聲」。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：資源敏感度</strong> - 加深對頻寬與延遲連鎖反應的理解。高品質影像 = 高延遲。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：自適應思維</strong> - 工業級產品會根據環境動態調整，引導學生寫出具備「情境感知」的代碼。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-01-unit-jpeg-quality</code> (影像品質參數的權衡)</strong> 單元，這是一個涉及「嵌入式運算」、「網路傳輸」與「電腦視覺演算法」三者交集的進階課題。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本程式庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" href="#1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>進階單元的範本應更具「工具化」，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>firmware/</code></strong>：提供 ESP32-CAM 韌體，需包含一個可透過 REST API 動態修改 <code>config.jpeg_quality</code> 的介面。</li>
+<li>
+<strong>📂 <code>analysis/results.csv</code></strong>：預置一個效能對照表，讓學員填入不同 Q 值下的 $FPS$ 與 $KB/Frame$ 數據。</li>
+<li>
+<strong>📂 <code>web/vision-core.js</code></strong>：核心視覺處理腳本，將質心計算 (Centroid) 與品質切換邏輯留給學員實作。</li>
+<li>
+<strong>📂 <code>.github/workflows/grading.yml</code></strong>：設置自動化檢查，驗證學員是否有按時回傳實驗數據。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：品質、大小與 FPS 關聯標定 (Scaling Lab)</h4><a id="user-content-任務-1品質大小與-fps-關聯標定-scaling-lab" class="anchor" aria-label="Permalink: 任務 1：品質、大小與 FPS 關聯標定 (Scaling Lab)" href="#任務-1品質大小與-fps-關聯標定-scaling-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：量化影像品質對通訊頻寬的具體影響，尋找傳輸「拐點」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>自動化評分 (Autograding)</strong>：檢查 <code>analysis/results.csv</code> 是否已被正確填充且符合「品質上升 -&gt; 大小上升 -&gt; FPS 下降」的物理規律。</li>
+<li>
+<strong>挑戰項</strong>：要求學員在 README 中標出「邊際效益遞減」的 Q 值點（通常在 80 以上檔案激增但畫質提升有限）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：演算法抗噪測試 (Centroid Jitter Lab)</h4><a id="user-content-任務-2演算法抗噪測試-centroid-jitter-lab" class="anchor" aria-label="Permalink: 任務 2：演算法抗噪測試 (Centroid Jitter Lab)" href="#任務-2演算法抗噪測試-centroid-jitter-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：觀察 JPEG 「方塊效應」對影像邊緣偵測的干擾。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>驗證方式</strong>：學員需在 README 中上傳兩張對比圖：一張是 Q=90 時穩定的質心標記，另一張是 Q=10 時質心因雜訊產生的「座標跳動 (Jitter)」。</li>
+<li>
+<strong>數據提交</strong>：要求學員將 100 幀內的質心 X 座標偏差值存入 <code>jitter-log.json</code> 並上傳。導師核閱其偏差值是否在低畫質下顯著增加。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：動態品質切換策略 (Adaptive Strategy)</h4><a id="user-content-任務-3動態品質切換策略-adaptive-strategy" class="anchor" aria-label="Permalink: 任務 3：動態品質切換策略 (Adaptive Strategy)" href="#任務-3動態品質切換策略-adaptive-strategy"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：開發「情境感知」的畫質切換邏輯。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>邏輯檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 核心邏輯：靜態細節優先，動態流暢優先</span>
+<span class="pl-k">if</span> <span class="pl-kos">(</span><span class="pl-s1">motorSpeed</span> <span class="pl-c1">===</span> <span class="pl-c1">0</span><span class="pl-kos">)</span> <span class="pl-en">setQuality</span><span class="pl-kos">(</span><span class="pl-c1">80</span><span class="pl-kos">)</span><span class="pl-kos">;</span> 
+<span class="pl-k">else</span> <span class="pl-en">setQuality</span><span class="pl-kos">(</span><span class="pl-c1">20</span><span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div>
+</li>
+<li>
+<strong>驗證方式</strong>：導師在 PR 中核對此條件判斷是否正確實作，並確認學員是否考慮了切換時的「抖動保護 (Debounce)」，防止畫質頻繁閃爍。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 進階單元導師點評標準 (Advanced Benchmarks)</h3><a id="user-content-3-進階單元導師點評標準-advanced-benchmarks" class="anchor" aria-label="Permalink: 3. 進階單元導師點評標準 (Advanced Benchmarks)" href="#3-進階單元導師點評標準-advanced-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此階段評分應側重於 <strong>「工程數據的詮釋能力」</strong>：</p>
+<ul>
+<li>[ ] <strong>數據敏感度</strong>：學員是否能解釋為什麼 10 Mbps 的網路在 Q=90 時會導致影像嚴重延遲？</li>
+<li>[ ] <strong>雜訊處理思維</strong>：面對 Q=10 的馬賽克，學員是否提出使用「模糊濾波 (Blur)」來減少假邊緣？</li>
+<li>[ ] <strong>系統整合度</strong>：動態切換策略是否能與馬達控制信號無縫同步？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── firmware/              # ESP32 韌體 (支援動態 Q 值 API)
+├── web/                   
+│   └── vision-logic.js    # 學員實作質心與動態切換處
+├── analysis/              
+│   ├── results.csv        # 效能採集數據表
+│   └── jitter-log.json    # 質心座標穩定性紀錄
+└── README.md              # 影像實驗報告 (含數據圖表)
+</code></pre>
+<p>透過這種部署方式，學生能切身體會到 <strong>「沒有最好的參數，只有最適合場景的權衡」</strong>。這對於培養解決真實世界複雜問題的架構思維極有幫助。</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── firmware/        # 核心：帶有遠端修改 Q 值 API 的韌體
-├── analysis/        # 數據：學員需填寫的 CSV 效能對照表
-└── README.md        # 報告：記錄 Q 值對邊緣偵測演算法的干擾分析
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                <tr>
-                    <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                    <td class="px-6 py-5 text-left text-justify">觀看「JPEG 視覺欺騙原理」短片。理解 DCT 如何捨棄人類看不見的高頻資訊。</td>
-                    <td class="px-6 py-5 text-left text-justify"><strong>Dashboard:</strong> 測試學員是否能預估 Quality=10 時的邊緣效應。</td>
-                </tr>
-                <tr>
-                    <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                    <td class="px-6 py-5 text-left text-justify">領取作業 (Repo)，執行 3-1 壓力測試與 3-2 抗噪實驗。找出特定頻寬下的最佳 Q 值。</td>
-                    <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 強調 Q > 80 與 Q < 20 的物理特性與邊際效應。</td>
-                </tr>
-                <tr>
-                    <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                    <td class="px-6 py-5 text-left text-justify">提交具備「動態品質切換」邏輯的最終專案。閱讀導師對「VNN 卷積神經網絡」在壓縮影像上表現的補充。</td>
-                    <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「畫質 vs 延遲」權衡策略的深度。</td>
-                </tr>
-            </tbody>
-        </table>
-        </div>
     </section>
 </body>
 

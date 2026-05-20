@@ -287,144 +287,181 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">數據實驗室：結構化協議與容錯性處理</h2>
+<div class="markdown-heading"><h1 class="heading-element">ADV-07：JSON 解析與物件解構</h1><a id="user-content-adv-07json-解析與物件解構" class="anchor" aria-label="Permalink: ADV-07：JSON 解析與物件解構" href="#adv-07json-解析與物件解構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<blockquote>
+<p><strong>課程單元</strong>：adv-07-unit-json-parsing
+<strong>難度等級</strong>：進階 ⚡</p>
+</blockquote>
+<div class="markdown-heading"><h2 class="heading-element">📖 作業說明</h2><a id="user-content--作業說明" class="anchor" aria-label="Permalink: 📖 作業說明" href="#-作業說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在自駕車系統中，Web 介面與 ESP32 控制器之間透過 <strong>JSON</strong> 交換數據。本次作業的目標是讓你學會如何<strong>安全解析</strong> JSON 封包、<strong>優雅處理</strong>格式錯誤的資料，以及用 ES6 進階語法<strong>高效提取</strong>巢狀物件中的數值。</p>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>使用 <code>try-catch</code> 實作<strong>防禦性解析</strong>，避免程式因壞封包而崩潰</li>
+<li>掌握 ES6 <strong>解構賦值 (Destructuring)</strong> 與<strong>預設值 (Default Values)</strong> 語法</li>
+<li>理解 JSON Payload 大小對藍牙 MTU 頻寬的影響，並進行精簡優化</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📂 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── js/
+│   ├── decoder_app.js     # 🔧 Task 1：實作封包解碼與錯誤處理邏輯
+│   ├── config_manager.js  # 🔧 Task 2：實作巢狀解構與安全預設值
+│   └── size_calculator.js # 📏 工具：測量 JSON 字串的 Byte 大小
+├── docs/
+│   └── protocol_spec.md   # 📝 Task 3：定義你的 JSON 縮寫協議規範
+├── tests/
+│   └── json_robustness.test.js  # 自動評分測試腳本
+└── index.html             # 動態資訊看板介面
+</code></pre>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">✅ 作業任務</h2><a id="user-content--作業任務" class="anchor" aria-label="Permalink: ✅ 作業任務" href="#-作業任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">Task 1：封包解碼器 (<code>js/decoder_app.js</code>)</h3><a id="user-content-task-1封包解碼器-jsdecoder_appjs" class="anchor" aria-label="Permalink: Task 1：封包解碼器 (js/decoder_app.js)" href="#task-1封包解碼器-jsdecoder_appjs"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>開啟 <code>js/decoder_app.js</code>，找到 <code>TODO</code> 標記，完成以下實作：</p>
+<ol>
+<li>使用 <code>JSON.parse()</code> 解析傳入的原始字串 <code>rawString</code>
+</li>
+<li>用 <code>try-catch</code> 包覆解析邏輯，捕捉格式錯誤的封包</li>
+<li>解構提取 <code>v_bat</code> 與 <code>rpm</code> 欄位並更新 UI</li>
+<li>若解析失敗，保留上一次成功的數值（不得顯示 <code>undefined</code>）</li>
+</ol>
+<p><strong>驗收標準</strong>：系統在收到「半截字串」或「缺少欄位」的封包時，看板仍能穩定顯示最後一次正確值。</p>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">Task 2：配置管理器 (<code>js/config_manager.js</code>)</h3><a id="user-content-task-2配置管理器-jsconfig_managerjs" class="anchor" aria-label="Permalink: Task 2：配置管理器 (js/config_manager.js)" href="#task-2配置管理器-jsconfig_managerjs"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>開啟 <code>js/config_manager.js</code>，找到 <code>TODO</code> 標記，完成以下實作：</p>
+<ol>
+<li>使用巢狀解構語法提取 PID 參數（具備雙重預設值保障）：
+<div class="highlight highlight-source-js"><pre><span class="pl-k">const</span> <span class="pl-kos">{</span> <span class="pl-c1">pid</span>: <span class="pl-kos">{</span> p <span class="pl-c1">=</span> <span class="pl-c1">1.0</span><span class="pl-kos">,</span> i <span class="pl-c1">=</span> <span class="pl-c1">0</span><span class="pl-kos">,</span> d <span class="pl-c1">=</span> <span class="pl-c1">0</span> <span class="pl-kos">}</span> <span class="pl-c1">=</span> <span class="pl-kos">{</span><span class="pl-kos">}</span> <span class="pl-kos">}</span> <span class="pl-c1">=</span> <span class="pl-s1">config</span><span class="pl-kos">;</span></pre></div>
+</li>
+<li>在 UI 調整參數後，將物件序列化為符合協議的 JSON 字串</li>
+<li>確保任何欄位缺失時，系統套用預設值而非回傳 <code>undefined</code>
+</li>
+</ol>
+<p><strong>驗收標準</strong>：刪除 JSON 中任一非必填欄位後，系統仍能正確顯示預設值。</p>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">Task 3：協議精簡文件 (<code>docs/protocol_spec.md</code>)</h3><a id="user-content-task-3協議精簡文件-docsprotocol_specmd" class="anchor" aria-label="Permalink: Task 3：協議精簡文件 (docs/protocol_spec.md)" href="#task-3協議精簡文件-docsprotocol_specmd"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在 <code>docs/protocol_spec.md</code> 中完成以下內容：</p>
+<ol>
+<li>設計一套縮寫版 JSON Key 對照表（例如：<code>battery_voltage</code> → <code>bv</code>）</li>
+<li>記錄優化前後的 <code>Blob.size</code> 數據（可使用 <code>js/size_calculator.js</code> 測量）</li>
+<li>說明你在「<strong>可讀性 vs 效能</strong>」之間的取捨理由</li>
+</ol>
+<p><strong>驗收標準</strong>：對照表清晰完整，並附上量化的 Byte 節省數據。</p>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🚀 開始作業</h2><a id="user-content--開始作業" class="anchor" aria-label="Permalink: 🚀 開始作業" href="#-開始作業"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="highlight highlight-source-shell"><pre><span class="pl-c"><span class="pl-c">#</span> 安裝依賴套件</span>
+npm install
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：封包拆解員 (JSON Packet Decoder Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：數據通訊工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
+<span class="pl-c"><span class="pl-c">#</span> 執行自動評分測試</span>
+npm <span class="pl-c1">test</span></pre></div>
+<p>在瀏覽器中開啟 <code>index.html</code> 查看動態資訊看板的執行效果。</p>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📬 繳交方式</h2><a id="user-content--繳交方式" class="anchor" aria-label="Permalink: 📬 繳交方式" href="#-繳交方式"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>完成三個 Task 後，將所有修改 <strong>commit</strong> 到你的作業程式庫</li>
+<li>確認 GitHub Actions 自動評分通過（顯示綠色 ✅）</li>
+<li>在 <code>docs/protocol_spec.md</code> 補充你的心得與 Payload 優化數據</li>
+</ol>
+<blockquote>
+<p>💡 <strong>提示</strong>：遇到問題時，先查閱 <code>docs/protocol_spec.md</code> 的協議規範，再參考 <code>tests/json_robustness.test.js</code> 了解評分邏輯。</p>
+</blockquote>
 
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>數據源連接</strong>：訂閱來自傳感器的模擬數據流（字串格式）。</li>
-                    <li><strong>健壯解析實作</strong>：撰寫 <code>decodePayload(raw)</code> 函式。使用 <code>try-catch</code> 攔截 JSON
-                        語法錯誤。</li>
-                    <li><strong>看板渲染</strong>：利用 ES6 解構提取 <code>{ speed, temp }</code>，並動態更新至看板 HTML。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>崩潰測試</strong>：當手動傳入破壞性的惡意字串（如 "abc"）時，網頁是否能正常報錯而非卡死？</li>
-                    <li>[ ] <strong>解構語法成熟度</strong>：代碼中是否正確運用了 ES6 解構而非傳統的 <code>data.x.y.z</code> 鏈式寫法？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：配置管理器 (Nested Config Manager)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統架構師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>深層協議設計</strong>：建立一個巢狀配置物件 <code>{ pid: { p: 1.2, i: 0 }, ... }</code>。</li>
-                    <li><strong>安全提取邏輯</strong>：在解構時賦予 Default Values，如 <code>const { kp = 1.0 } = data.pid;</code>。
-                    </li>
-                    <li><strong>即時序列化</strong>：當使用者調整滑桿後，自動調用 <code>JSON.stringify</code> 並顯示輸出的字串。</li>
-                    <li><strong>Push Final</strong>：提交具備「配置一致性檢查」能力的管理器。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>預設值健壯性</strong>：當刪除 JSON 中某個非必填欄位時，系統顯示的預設數據是否正確？</li>
-                    <li>[ ] <strong>協議擴展力</strong>：若要增加一個「馬達電平」欄位，學員是否能在不破壞舊有解析架構下完成？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：數據壓縮挑戰 (Payload Slimming Challenge)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：帶寬優化專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>指標建立</strong>：計算初始 JSON 封包的 Byte 長度。</li>
-                    <li><strong>重構 Key 命名</strong>：將冗長的 <code>battery_voltage</code> 替換為 <code>bv</code>。</li>
-                    <li><strong>數據截斷</strong>：將 <code>3.1415926</code> 處理為 <code>3.14</code>。</li>
-                    <li><strong>對比數據提交</strong>：在 README 中列出優化前後的位元組減少比例。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>壓縮效率</strong>：封包大小是否至少減少了 30% 以上？</li>
-                    <li>[ ] <strong>可讀性權衡</strong>：縮寫後的 Key 是否依然具備足夠的語意辨識度（或有完整的 Documentation 對應表）？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：讓學生掌握「數據契約 (Data Contract)」的概念。這是專業通訊與前後端分離的基礎。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：安全性優先</strong> - 學生往往會直接 <code>JSON.parse</code> 數據。必須強迫他們使用 <code>try-catch</code>，因為通訊過程中的亂碼是常態。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：寫得少做得多</strong> - 重點展示解構語法 (Destructuring) 的美學。讓程式碼更具備「聲明式 (Declarative)」的質感。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：頻寬意識</strong> - 尤其在藍牙 BLE 這種窄頻通訊中，Key 名稱的長度直接影響發送頻率。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-07-unit-json-parsing</code> (JSON 解析與物件解構)</strong> 單元，這是一個將「原始字串」轉化為「語意化數據」的過程。在自駕車系統中，JSON 是 Web 與 ESP32 之間的通用語言，掌握其解析與優化是開發專業通訊協議的基石。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>理解數據交換需要「破壞性測試」與「語法規範」，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>js/packet_decoder.js</code></strong>：封包解碼器。提供一個模擬數據流產生器，故意夾雜「格式錯誤」或「欄位缺失」的 JSON 字串，留下 <code>decode()</code> 與 <code>try-catch</code> 的 <code>TODO</code>。</li>
+<li>
+<strong>📂 <code>js/config_handler.js</code></strong>：配置管理器。預置多層次物件架構，留下 ES6 解構語法 (Destructuring) 與「預設值 (Safe Fallbacks)」的實作空間。</li>
+<li>
+<strong>📂 <code>docs/protocol_spec.md</code></strong>：協議規範文件。要求學員在此定義新設計的「精簡版 JSON 協議」映射表。</li>
+<li>
+<strong>📂 <code>tests/json_robustness.test.js</code></strong>：自動化評分脚本。專門測試邊界情況（如：空字串、巢狀深度過大），檢核學員的代碼是否具備足夠的健壯性 (Robustness)。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「封包拆解員」：動態資訊看板 (JSON Packet Decoder Lab)</h4><a id="user-content-任務-1封包拆解員動態資訊看板-json-packet-decoder-lab" class="anchor" aria-label="Permalink: 任務 1：「封包拆解員」：動態資訊看板 (JSON Packet Decoder Lab)" href="#任務-1封包拆解員動態資訊看板-json-packet-decoder-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：學會防禦性編程 (Defensive Programming)，確保通訊異常時系統不崩潰。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>健壯解析檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：try-catch 與解構提取</span>
+<span class="pl-k">try</span> <span class="pl-kos">{</span>
+    <span class="pl-k">const</span> <span class="pl-kos">{</span> v_bat<span class="pl-kos">,</span> rpm <span class="pl-kos">}</span> <span class="pl-c1">=</span> <span class="pl-c1">JSON</span><span class="pl-kos">.</span><span class="pl-en">parse</span><span class="pl-kos">(</span><span class="pl-s1">rawString</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-en">updateUI</span><span class="pl-kos">(</span><span class="pl-s1">v_bat</span><span class="pl-kos">,</span> <span class="pl-s1">rpm</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span> <span class="pl-k">catch</span> <span class="pl-kos">(</span><span class="pl-s1">e</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+    <span class="pl-smi">console</span><span class="pl-kos">.</span><span class="pl-en">error</span><span class="pl-kos">(</span><span class="pl-s">"Packet Corrupted"</span><span class="pl-kos">)</span><span class="pl-kos">;</span> <span class="pl-c">// 防止網頁報錯停止運行</span>
+<span class="pl-kos">}</span></pre></div>
+</li>
+<li>
+<strong>Autograding</strong>：餵入一組包含「半截字串」的樣本，檢核學員的程式是否能跳過錯誤封包並維持 UI 顯示最後一次的正確值。</li>
+<li>
+<strong>視覺驗證</strong>：要求提交看板成功顯示 <code>v_bat</code> 與 <code>rpm</code> 的即時刷新截圖。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：多層次配置管理器 (Nested Config Manager)</h4><a id="user-content-任務-2多層次配置管理器-nested-config-manager" class="anchor" aria-label="Permalink: 任務 2：多層次配置管理器 (Nested Config Manager)" href="#任務-2多層次配置管理器-nested-config-manager"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握 ES6 進階語法，寫出具備「專業感」且強健的數據提取代碼。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>巢狀提取檢核</strong>：要求學員實作 <code>const { pid: { p = 1.0, i = 0 } = {} } = config;</code> 這種具備「雙重保險」的解構寫法。</li>
+<li>
+<strong>序列化測試</strong>：學員需在 UI 調整參數後，生成一個符合協議的 JSON 字串。</li>
+<li>
+<strong>Autograding</strong>：模擬刪除 JSON 中某個非必填欄位，檢核系統是否能正確套用「預設值」而非顯示 <code>undefined</code>。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：數據壓縮挑戰：精簡 JSON Payload (Payload Slimming Challenge)</h4><a id="user-content-任務-3數據壓縮挑戰精簡-json-payload-payload-slimming-challenge" class="anchor" aria-label="Permalink: 任務 3：數據壓縮挑戰：精簡 JSON Payload (Payload Slimming Challenge)" href="#任務-3數據壓縮挑戰精簡-json-payload-payload-slimming-challenge"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：在高頻電感通訊中，透過縮減字節提升系統反應速度。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>優化指標</strong>：要求學員將 Key 名稱縮寫（如 <code>battery_voltage</code> → <code>bv</code>），並將浮點數四捨五入。</li>
+<li>
+<strong>量化分析</strong>：要求在 README 中列出優化前後的 <code>Blob.size</code> 數據。</li>
+<li>
+<strong>PR 深度核核</strong>：點評其對「可讀性 vs 效能」的權衡思維。是否在 <code>docs/protocol_spec.md</code> 中留下了清晰的縮寫對應表？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 通訊協議導師點評標準 (Data Protocol Benchmarks)</h3><a id="user-content-3-通訊協議導師點評標準-data-protocol-benchmarks" class="anchor" aria-label="Permalink: 3. 通訊協議導師點評標準 (Data Protocol Benchmarks)" href="#3-通訊協議導師點評標準-data-protocol-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「數據契約 (Data Contract) 的嚴謹度」</strong>：</p>
+<ul>
+<li>[ ] <strong>容錯能力</strong>：代碼是否能優雅地處理「髒數據」而不拋出未捕獲的異常？</li>
+<li>[ ] <strong>語法現代化程度</strong>：是否拋棄了舊式的 <code>obj.a.b.c</code> 寫法，改用更簡潔、具備預設值保障的解構語法？</li>
+<li>[ ] <strong>頻寬意識</strong>：是否理解 JSON Key 的長度會直接佔用藍牙 MTU 空間？（這是判斷是否具備嵌入式開發思維的關鍵）。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── js/
+│   ├── decoder_app.js     # 核心：待填寫 Parse 與毀壞封包處理邏輯
+│   ├── config_manager.js  # 邏輯：待填寫巢狀解構與預設值
+│   └── size_calculator.js # 工具：輔助測量 JSON 字串的 Byte 大小
+├── docs/
+│   └── protocol_spec.md   # 作業：定義你的 JSON 縮寫與數據類型規範
+└── README.md              # 專案心得：我如何優化通訊協議並保證解析安全性
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的數據結構是系統成功的一半」</strong>。掌握 JSON 解析與優化後，他們在後續單元進行多感測器融合或雲端數據同步時，將擁有一套更穩健、更專業的數據交換框架。</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── mock/data_stream.txt # 原始數據：包含壞損、不完整、與正確的 JSON 範本
-├── js/decoder.js        # 核心：待填寫 Parse 與 Destructure 邏輯
-└── tests/packet.test.js # 單元測試：提供多種 Schema 的驗證基準
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5">觀看「物件解構語法」快節奏短片。練習基本的 Key 提取小測驗。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 觀察學員對深層巢狀物件 (Depth > 2) 的提取準確率。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900">領取作業 (Repo)，挑戰對抗傳輸壓力測試。修正因解析錯誤導致的畫面閃爍問題。</td>
-                        <td class="px-6 py-5 text-left"><strong>技術架構師:</strong> 巡場指導如何撰寫健壯的 JSON 驗證器 (Validator)。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify">完成 Payload 壓縮比挑戰並提交 PR。閱讀教師關於「數據序列化性能」的進階回饋。</td>
-                        <td class="px-6 py-5 text-justify text-left"><strong>Feedback PR:</strong> 點評對「數據契約」一致性的維護程度，表揚命名規範嚴謹的學員。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

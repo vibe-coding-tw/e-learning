@@ -320,89 +320,119 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">視覺特徵實驗室：從像素輪廓到幾何辨識</h2>
+<p>針對 <strong><code>adv-05-unit-feature-extraction</code> (數位影像的特徵提取)</strong> 單元，這是一個讓機器「從看見像素到理解語義」的轉折單元，重點在於數學描述符 (Descriptor) 與幾何邏輯的整合。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本倉庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本倉庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本倉庫 (Template Repo) 配置建議" href="#1-範本倉庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>特徵提取涉及較複雜的矩陣運算與 OpenCV.js 的調用，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/vision_pipeline.js</code></strong>：影像處理流水線，預置 OpenCV.js 的載入與基礎灰階化、模糊化處理，留下 <code>cv.Canny()</code> 與 <code>cv.findContours()</code> 的核心實作空間。</li>
+<li>
+<strong>📂 <code>src/feature_logic.js</code></strong>：特徵判定模組。預置一個 <code>calculateRoundness(contour)</code> 函數骨架，讓學員實作圓度公式。</li>
+<li>
+<strong>📂 <code>assets/standard_signs/</code></strong>：一組標準的特徵測試圖（圓形交通標誌、橫向矩形停車線、亂七八糟的背景雜訊圖），用於離線開發與驗證。</li>
+<li>
+<strong>📂 <code>tests/feature_test.js</code></strong>：自動化評分脚本。餵入特定幾何圖案，檢核學員的感知演算法是否能回傳正確的特徵分類標籤（如：<code>{type: "circle", confidence: 0.95}</code>）。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「邊緣獵人」：Canny 參數動態調校 (Edge Hunter Lab)</h4><a id="user-content-任務-1邊緣獵人canny-參數動態調校-edge-hunter-lab" class="anchor" aria-label="Permalink: 任務 1：「邊緣獵人」：Canny 參數動態調校 (Edge Hunter Lab)" href="#任務-1邊緣獵人canny-參數動態調校-edge-hunter-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握邊緣偵測的物理意義，並學習透過預處理（降噪）提升特徵品質。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>參數紀錄要求</strong>：學員需在 <code>TUNING.md</code> 中紀錄其在「光線不足」與「雜亂背景」下，為了提取完整輪廓所設定的最佳雙門檻值 (Threshold 1 &amp; 2)。</li>
+<li>
+<strong>Autograding</strong>：檢查代碼中是否包含了 <code>cv.GaussianBlur()</code>。這展現了學員是否理解「邊緣偵測對高頻雜訊極其敏感」的工程實務。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：「幾何篩選器」：形狀識別實戰 (Geometry Filter Lab)</h4><a id="user-content-任務-2幾何篩選器形狀識別實戰-geometry-filter-lab" class="anchor" aria-label="Permalink: 任務 2：「幾何篩選器」：形狀識別實戰 (Geometry Filter Lab)" href="#任務-2幾何篩選器形狀識別實戰-geometry-filter-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：將抽象的輪廓點集轉化為具備物理意義的幾何描述符。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>幾何公式檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：圓度計算 logic</span>
+<span class="pl-k">let</span> <span class="pl-s1">area</span> <span class="pl-c1">=</span> <span class="pl-s1">cv</span><span class="pl-kos">.</span><span class="pl-en">contourArea</span><span class="pl-kos">(</span><span class="pl-s1">contour</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-k">let</span> <span class="pl-s1">perimeter</span> <span class="pl-c1">=</span> <span class="pl-s1">cv</span><span class="pl-kos">.</span><span class="pl-en">arcLength</span><span class="pl-kos">(</span><span class="pl-s1">contour</span><span class="pl-kos">,</span> <span class="pl-c1">true</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-k">let</span> <span class="pl-s1">roundness</span> <span class="pl-c1">=</span> <span class="pl-kos">(</span><span class="pl-c1">4</span> <span class="pl-c1">*</span> <span class="pl-v">Math</span><span class="pl-kos">.</span><span class="pl-c1">PI</span> <span class="pl-c1">*</span> <span class="pl-s1">area</span><span class="pl-kos">)</span> <span class="pl-c1">/</span> <span class="pl-kos">(</span><span class="pl-s1">perimeter</span> <span class="pl-c1">*</span> <span class="pl-s1">perimeter</span><span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div>
+</li>
+<li>
+<strong>驗證方式</strong>：在網頁畫面上即時標註（Bounding Box）出所有圓度大於 0.85 的物體。</li>
+<li>
+<strong>Autograding</strong>：餵入一個圓形與一個五角星形。學員的 <code>isCircle()</code> 函式必須能正確區分兩者。這能檢驗學員對「特徵不變性（Invariant Feature）」的理解。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：特徵提取與決策連動 (Feature-Based Decision)</h4><a id="user-content-任務-3特徵提取與決策連動-feature-based-decision" class="anchor" aria-label="Permalink: 任務 3：特徵提取與決策連動 (Feature-Based Decision)" href="#任務-3特徵提取與決策連動-feature-based-decision"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實現從「感知」到「控制」的端到端連動。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>行為邏輯檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：視覺觸發行為</span>
+<span class="pl-k">if</span> <span class="pl-kos">(</span><span class="pl-en">detectParkingLine</span><span class="pl-kos">(</span><span class="pl-s1">features</span><span class="pl-kos">)</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+    <span class="pl-s1">ble</span><span class="pl-kos">.</span><span class="pl-en">send</span><span class="pl-kos">(</span><span class="pl-kos">{</span> <span class="pl-c1">command</span>: <span class="pl-s">'STOP'</span><span class="pl-kos">,</span> <span class="pl-c1">duration</span>: <span class="pl-c1">3000</span> <span class="pl-kos">}</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
+</li>
+<li>
+<strong>穩定性測試</strong>：要求學員實作「防抖邏輯」（例如：連續 3 幀偵測到停車線才觸發）。</li>
+<li>
+<strong>Tutor View (PR 審核)</strong>：導師点評其對「虛警 (False Alarm)」的處理。當背景出現類似長方形的雜訊時，學員是否有加入面積門檻 (Area Threshold) 來進行二次過濾？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 感知邏輯導師點評標準 (Vision Logic Benchmarks)</h3><a id="user-content-3-感知邏輯導師點評標準-vision-logic-benchmarks" class="anchor" aria-label="Permalink: 3. 感知邏輯導師點評標準 (Vision Logic Benchmarks)" href="#3-感知邏輯導師點評標準-vision-logic-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「從混亂中提取穩定資訊的能力」</strong>：</p>
+<ul>
+<li>[ ] <strong>特徵魯棒性 (Robustness)</strong>：設定的圓度或長寬比門檻值是否具備容錯空間？（即：物體歪一點、遠一點是否還能認出來？）。</li>
+<li>[ ] <strong>運算效率意識</strong>：是否對大量的小輪廓進行了初步過濾（<code>cv.contourArea</code>）以節省後續複雜計算的 CPU 資源？</li>
+<li>[ ] <strong>語義化整合</strong>：是否成功將「數學特徵（$Roundness &gt; 0.8$）」與「物理語義（它是個球）」進行了邏輯掛鉤？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/
+│   ├── edge_processor.js   # 核心：待填寫帶有降噪的 Canny 處理流水線
+│   ├── contour_analyzer.js # 邏輯：待填寫圓度與形狀分類演算法
+│   └── behavior_action.js  # 決策：待填寫從形狀識別到 BLE 控制的映射
+├── tests/
+│   └── feature_check.js    # 自動化：比對不同幾何圖形的回傳結果
+└── README.md               # 專案心得：我如何利用「圓度」讓機器區分皮球與磚塊
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「像機器一樣看見世界」</strong> 的成就感。這不只是在寫幾行 OpenCV 代碼，而是在實作一個真正的 <strong>視覺感知節點</strong>，這是自動駕駛汽車、工業分檢機器人最核心的技術模塊。</p>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">🛠️ 本地測試 (Local Testing)</h3><a id="user-content-️-本地測試-local-testing" class="anchor" aria-label="Permalink: 🛠️ 本地測試 (Local Testing)" href="#️-本地測試-local-testing"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在提交作業前，你可以透過以下命令在本地驗證你的邏輯：</p>
+<ol>
+<li>
+<strong>執行所有測試</strong>：<code>npm test</code>
+</li>
+<li>
+<strong>針對特定任務測試</strong>：
+<ul>
+<li>降噪驗證：<code>node tests/feature_check.js --check-denoise</code>
+</li>
+<li>圓度公式驗證：<code>node tests/feature_check.js --check-roundness</code>
+</li>
+<li>穩定性邏輯驗證：<code>node tests/feature_check.js --check-stability</code>
+</li>
+</ul>
+</li>
+</ol>
+<hr>
+<p>至此，我們已經完成了 <strong><code>adv-01</code> 到 <code>adv-05</code></strong> 所有進階單元的 GitHub Classroom 部署策略建議。這套系統將確保學員在具備「極致視覺美感」的教材引導下，進行最紮實的「硬核工程實踐」。</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：「邊緣獵人」：Canny 參數動態調校 (Edge Hunter Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：視覺演算法工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>演算法實作</strong>：在 <code>edge.js</code> 中實作 Canny 邊緣偵測，並建立 Threshold 1 & 2 的動態調校滑桿。</li>
-                    <li><strong>預處理整合</strong>：加入「高斯模糊」預處理層，對比不同模糊強度對雜訊邊緣剔除的有效性。</li>
-                    <li><strong>Push Final</strong>：提交具備「高度抗噪能力」的可調式邊緣提取模組。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>輪廓完整性</strong>：在複雜背景下，是否能通過調參提取出目標物體（如賽道邊界）的完整閉合輪廓？</li>
-                    <li>[ ] <strong>參數理解度</strong>：README 中是否記錄了兩段門檻值 (Hysteresis Thresholding) 對邊緣連續性的具體影響？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：「幾何篩選器」：形狀識別實戰 (Geometry Filter Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：自動化檢測工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>輪廓層級檢索</strong>：實作 <code>findContours</code> 邏輯，並對所有檢索到的輪廓進行循環遍歷。</li>
-                    <li><strong>幾何特徵運算</strong>：實作圓度公式 <code>Roundness = (4π * Area) / (Perimeter^2)</code>，並過濾出目標形狀。
-                    </li>
-                    <li><strong>視覺化標註</strong>：在畫面上為識別出的「圓形標誌」繪製專屬的綠色外框，實現對特定形狀的鎖定。</li>
-                    <li><strong>Push Final</strong>：提交具備「精確幾何篩選」能力的視覺感知模組。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>識別準確率</strong>：系統是否能準確區分「皮球（高圓度）」與「磚塊（低圓度）」，有無誤判？</li>
-                    <li>[ ] <strong>異常處理</strong>：對於極小面積（雜訊）的輪廓，是否有設置適當的 <code>Area</code> 門檻進行初步剔除？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：特徵提取與決策連動 (Feature-Based Decision)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：機器人系統架構師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>特徵邏輯組合</strong>：結合面積比與長寬比特徵，定義一個「橫向長方形（停車線）」的特徵指紋。</li>
-                    <li><strong>行為觸發實作</strong>：當畫面中出現符合特徵的物件時，自動調用 BLE API 發送 <code>{command: 'STOP'}</code> 指令。</li>
-                    <li><strong>現場聯調</strong>：驗證無人車在行駛途中看見模擬停車線時，是否能產生即時且正確的制動反應。</li>
-                    <li><strong>Push Final</strong>：提交具備「語義辨識與決策連動」能力的感知-動作系統。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>決策穩定性</strong>：停車指令的觸發是否具備連續性（如連續 3 幀偵測到才觸發），以防止閃爍雜訊誤導？</li>
-                    <li>[ ] <strong>端到端整合度</strong>：是否成功打通了從「封裝像素輪廓」到「發送物理行為指令」的全鏈路開發？</li>
-                </ul>
-            </div>
-        </div>
     </section>
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
 

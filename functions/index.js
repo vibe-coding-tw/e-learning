@@ -2463,6 +2463,7 @@ exports.getDashboardData = onCall(async (request) => {
 
                             const guideContent = extractHiddenSectionContent(html, 'tutor-guide');
                             const attachContent = extractHiddenSectionContent(html, 'attachment-guide');
+                            const assignmentContent = extractHiddenSectionContent(html, 'assignment-guide');
 
                             if (attachContent) {
                                 if (!aggregatedGuides.attachment) aggregatedGuides.attachment = {};
@@ -2477,6 +2478,14 @@ exports.getDashboardData = onCall(async (request) => {
                                 console.log(`[getDashboardData] ❌ No Tutor Guide match for ${file} in ${cid}`);
                             }
 
+                            if (assignmentContent) {
+                                if (!aggregatedGuides.assignment) aggregatedGuides.assignment = {};
+                                aggregatedGuides.assignment[file] = assignmentContent;
+                                console.log(`[getDashboardData] ✅ Found Assignment Guide for ${file} in ${cid}`);
+                            } else {
+                                console.log(`[getDashboardData] ❌ No Assignment Guide match for ${file} in ${cid}`);
+                            }
+
                         }
 
                         if (Object.keys(aggregatedGuides).length > 0) {
@@ -2487,6 +2496,9 @@ exports.getDashboardData = onCall(async (request) => {
                             }
                             if (aggregatedGuides.attachment) {
                                 courseGuideIndex[cid].attachmentGuide = Object.assign({}, courseGuideIndex[cid].attachmentGuide || {}, aggregatedGuides.attachment);
+                            }
+                            if (aggregatedGuides.assignment) {
+                                courseGuideIndex[cid].assignmentGuide = Object.assign({}, courseGuideIndex[cid].assignmentGuide || {}, aggregatedGuides.assignment);
                             }
                         }
                     }

@@ -298,141 +298,154 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">視覺實驗室：座標正規化與誤差量化</h2>
+<div class="markdown-heading"><h1 class="heading-element">adv-08-unit-error-calculation (誤差計算)</h1><a id="user-content-adv-08-unit-error-calculation-誤差計算" class="anchor" aria-label="Permalink: adv-08-unit-error-calculation (誤差計算)" href="#adv-08-unit-error-calculation-誤差計算"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>這是一個將「視覺幾何」轉化為「控制學」的核心橋樑單元。你將學習如何量化偏差，並引進控制增益與濾波的概念，這是邁向 PID 調控的關鍵基礎。</p>
+<div class="markdown-heading"><h2 class="heading-element">學習目標</h2><a id="user-content-學習目標" class="anchor" aria-label="Permalink: 學習目標" href="#學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>掌握座標空間映射，解決「硬體解析度依賴」問題。</li>
+<li>理解「比例控制 (Proportional Control)」的物理意義。</li>
+<li>透過數據隊列處理傳感器雜訊，建立穩定的控制輸出。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">任務清單</h2><a id="user-content-任務清單" class="anchor" aria-label="Permalink: 任務清單" href="#任務清單"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：座標提取與正規化</h3><a id="user-content-任務-1座標提取與正規化" class="anchor" aria-label="Permalink: 任務 1：座標提取與正規化" href="#任務-1座標提取與正規化"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>實作跨平台誤差映射公式，將座標映射至 $[-1, 1]$ 區間。</li>
+<li>
+<strong>預期結果</strong>：系統能夠正確將畫面中心點誤差標示為 0，最左側為 -1，最右側為 1。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：動態補償映射與增益調校</h3><a id="user-content-任務-2動態補償映射與增益調校" class="anchor" aria-label="Permalink: 任務 2：動態補償映射與增益調校" href="#任務-2動態補償映射與增益調校"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>實作控制映射邏輯：<code>steering = normError * gain;</code>
+</li>
+<li>處理輸出上限（飽和處理，確保轉向力道不超過 100%）。</li>
+<li>
+<strong>實驗紀錄</strong>：觀察並記錄當 $K_p$ 增益過大時（如 &gt;500），系統產生的震盪現象。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：移動平均濾波</h3><a id="user-content-任務-3移動平均濾波" class="anchor" aria-label="Permalink: 任務 3：移動平均濾波" href="#任務-3移動平均濾波"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>實作 5 幀的滑動窗口平均，透過數據隊列處理傳感器雜訊。</li>
+<li>
+<strong>預期結果</strong>：訊號抖動程度顯著降低，控制曲線變得更加平滑。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">檔案結構說明</h2><a id="user-content-檔案結構說明" class="anchor" aria-label="Permalink: 檔案結構說明" href="#檔案結構說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>js/error_app.js</code>：核心邏輯，請在此實作正規化與平均濾波。</li>
+<li>
+<code>js/gain_control.js</code>：實作 $K_p$ 滑桿與輸出映射邏輯。</li>
+<li>
+<code>data/mock_noise.json</code>：測試用的模擬座標雜訊流。</li>
+<li>
+<code>tests/math.test.js</code>：自動化測試腳本。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">提交要求</h2><a id="user-content-提交要求" class="anchor" aria-label="Permalink: 提交要求" href="#提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>完成上述所有程式碼實作 (<code>TODO</code> 標註處)。</li>
+<li>通過所有的 Github Actions 自動化測試。</li>
+<li>提交一份包含「十字準星」與 UI 顯示 Normalized Error 的畫面截圖。</li>
+</ol>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：座標提取與正規化 (Coordinate Extraction Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：視覺演算法開發者</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-tighter font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>視覺對齊實作</strong>：在 Canvas 繪製十字中心線，並實作 <code>findCenter()</code> 提取目標物幾何邊界的質心。</li>
-                    <li><strong>誤差正規化</strong>：實作公式 $E_n = (X_{obj} - W/2) / (W/2)$，將座標轉換為 $[-1, 1]$ 純數字。</li>
-                    <li><strong>看板更新</strong>：在 UI 下方即時印出解析度、原始像素、與正規化誤差，並在 README 貼上測試截圖。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>映射正確性</strong>：當目標移至最左緣時，正規化值是否精確顯示為 -1.0？</li>
-                    <li>[ ] <strong>視算穩定度</strong>：當畫面中出現複數物體時，座標提取是否能穩定鎖定「最大面積」的目標？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：動態補償映射 (Control Mapping Challenge)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：自動駕駛教練</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>線性映射設計</strong>：撰寫 <code>errorToSteer(en)</code> 函式。將誤差線性轉換為馬達轉速差。</li>
-                    <li><strong>增益調校介面</strong>：建立一個 $K_p$ 滑桿，範圍 0-500。用於控制「看到誤差後的反應力道」。</li>
-                    <li><strong>物理實證</strong>：錄製一段「手持目標物移動」的錄影，展示虛擬車頭（或數據流）如何跟隨目標物偏轉。</li>
-                    <li><strong>Push Final</strong>：提交具備即時調校能力的控制邏輯。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>邏輯一致性</strong>：當誤差為正時，输出的轉向指令是否正確導向右側（或左側，視馬達極性而定）？</li>
-                    <li>[ ] <strong>動態範圍</strong>：當誤差達到最大值時，馬達輸出是否能正確觸發「全速補償」而不發生數據溢位？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：移動平均濾波 (Signal Smoothing Filter)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：濾波架構師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>隊列緩衝實作</strong>：建立一個長度為 5 的 Array 儲存最近 5 次的誤差值。</li>
-                    <li><strong>滑動窗口運算</strong>：實作 <code>smoothError()</code> 函式，每次計算後的輸出為該 Array 的平均值。</li>
-                    <li><strong>對比數據分析</strong>：在 README 中說明濾波器帶來的「反應延遲」與「畫面平滑度」之間的權衡細節。</li>
-                    <li><strong>Push Final</strong>：提交具備抗噪能力的穩健視覺核心。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>雜訊抑制效果</strong>：開啟濾波後，控制指令的跳動頻率是否顯著降低？</li>
-                    <li>[ ] <strong>延遲控制</strong>：5 幀的平均窗口是否產生了肉眼可見的「追蹤滯後」？如何優化此參數？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：讓學生掌握「從感知到行動」的量化橋樑。這不只是數學，更是控制理論在視覺上的落實。</p>
-            <ol class="space-y-4 text-slate-600 text-justify">
-                <li><strong class="text-blue-600 font-bold uppercase tracking-widest text-justify">重點 1：座標系的衝突</strong> - 學生常死記硬背 $(0,0)$ 在左上。必須讓他們畫圖，自行導出「中心點為 0」的變換公式。</li>
-                <li><strong class="text-blue-600 font-bold text-justify uppercase tracking-widest">重點 2：正規化的威力</strong> - 強調正規化後，代碼就不再受「相機換成高清」或「螢幕變大」的硬體綁架。</li>
-                <li><strong class="text-blue-600 font-bold text-justify uppercase tracking-tighter">重點 3：沒濾波就沒平滑</strong> - 展示真實世界感測器有多「髒」。教導移動平均法作為通向 Kalman Filter 的基礎。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-08-unit-error-calculation</code> (誤差計算)</strong> 單元，這是一個將「視覺幾何」轉化為「控制學」的核心橋樑。它教會學員如何量化偏差，並引進控制增益與濾波的概念，是邁向 PID 調控的關鍵基礎課。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>理解誤差計算需要「座標變換與數據緩衝」的邏輯，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>js/error_engine.js</code></strong>：核心誤差處理組件。提供 <code>findCentroid()</code> 的虛擬數據源，留下正規化公式與平均濾波的 <code>TODO</code>。</li>
+<li>
+<strong>📂 <code>js/control_dashboard.js</code></strong>：交互式儀表板。預置 $K_p$ (增益) 調控滑桿與即時誤差曲線圖 (Error Chart)。</li>
+<li>
+<strong>📂 <code>data/noisy_coordinates.json</code></strong>：包含一組真實模擬的「帶雜訊目標點」，用於測試學員在任務 3 中的濾波器平滑效果。</li>
+<li>
+<strong>📂 <code>tests/coordinate_math.test.js</code></strong>：自動化評分脚本。專門測試正規化公式在「不同解析度（如 $160 \times 120$ vs $320 \times 240$）」下的通用性，檢核結果是否嚴格維持在 $[-1, 1]$ 區間。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：座標提取與正規化 (Coordinate Extraction Lab)</h4><a id="user-content-任務-1座標提取與正規化-coordinate-extraction-lab" class="anchor" aria-label="Permalink: 任務 1：座標提取與正規化 (Coordinate Extraction Lab)" href="#任務-1座標提取與正規化-coordinate-extraction-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握座標空間映射，解決「硬體解析度依賴」問題。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>正規化公式檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：跨平台誤差映射</span>
+<span class="pl-k">const</span> <span class="pl-s1">normError</span> <span class="pl-c1">=</span> <span class="pl-kos">(</span><span class="pl-s1">targetX</span> <span class="pl-c1">-</span> <span class="pl-s1">canvasWidth</span><span class="pl-c1">/</span><span class="pl-c1">2</span><span class="pl-kos">)</span> <span class="pl-c1">/</span> <span class="pl-kos">(</span><span class="pl-s1">canvasWidth</span><span class="pl-c1">/</span><span class="pl-c1">2</span><span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div>
+</li>
+<li>
+<strong>Autograding</strong>：餵入邊界像素（例如 X=0 或 X=Width），檢核輸出的 <code>normError</code> 是否精確對齊 -1.0 與 1.0。</li>
+<li>
+<strong>視覺驗證</strong>：學員需提交桌面上帶有「十字準星」標註目標物，且 UI 顯示 Normalized Error 的截圖。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：動態補償映射與增益調校 (Control Mapping Challenge)</h4><a id="user-content-任務-2動態補償映射與增益調校-control-mapping-challenge" class="anchor" aria-label="Permalink: 任務 2：動態補償映射與增益調校 (Control Mapping Challenge)" href="#任務-2動態補償映射與增益調校-control-mapping-challenge"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：理解「比例控制 (Proportional Control)」的物理意義。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>映射邏輯檢核</strong>：學員需實作 <code>steering = normError * gain;</code> 邏輯。</li>
+<li>
+<strong>飽和處理 (Saturation)</strong>：檢核代碼中是否處理了輸出上限（例如：轉向力道不得超過 100%）。</li>
+<li>
+<strong>實驗紀錄</strong>：學員需在 README 中記錄：當 $K_p$ 過大（例如 &gt;500）時，系統對微小位移產生的激烈反應現象（這就是 PID 調機中常見的震盪現象預演）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：移動平均濾波 (Signal Smoothing Filter)</h4><a id="user-content-任務-3移動平均濾波-signal-smoothing-filter" class="anchor" aria-label="Permalink: 任務 3：移動平均濾波 (Signal Smoothing Filter)" href="#任務-3移動平均濾波-signal-smoothing-filter"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過數據隊列處理傳感器雜訊，建立穩定的控制輸出。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>隊列處理檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：5 幀滑動窗口平均</span>
+<span class="pl-s1">errorHistory</span><span class="pl-kos">.</span><span class="pl-en">push</span><span class="pl-kos">(</span><span class="pl-s1">newError</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-k">if</span> <span class="pl-kos">(</span><span class="pl-s1">errorHistory</span><span class="pl-kos">.</span><span class="pl-c1">length</span> <span class="pl-c1">&gt;</span> <span class="pl-c1">5</span><span class="pl-kos">)</span> <span class="pl-s1">errorHistory</span><span class="pl-kos">.</span><span class="pl-en">shift</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-k">const</span> <span class="pl-s1">smoothedError</span> <span class="pl-c1">=</span> <span class="pl-en">sum</span><span class="pl-kos">(</span><span class="pl-s1">errorHistory</span><span class="pl-kos">)</span> <span class="pl-c1">/</span> <span class="pl-s1">errorHistory</span><span class="pl-kos">.</span><span class="pl-c1">length</span><span class="pl-kos">;</span></pre></div>
+</li>
+<li>
+<strong>Autograding</strong>：餵入 <code>noisy_coordinates.json</code>。透過計算學員輸出數值的「標準差」，檢核其抖動程度是否成功降低 50% 以上。</li>
+<li>
+<strong>延遲討論</strong>：引導學員在 PR 中討論：為什麼移動平均視窗不能開得太大（例如 50 幀）？（答案：會產生不可接受的反應遲滯）。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 控制工程導師點評標準 (Control Ops Benchmarks)</h3><a id="user-content-3-控制工程導師點評標準-control-ops-benchmarks" class="anchor" aria-label="Permalink: 3. 控制工程導師點評標準 (Control Ops Benchmarks)" href="#3-控制工程導師點評標準-control-ops-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「數據的標準化與系統的即時性」</strong>：</p>
+<ul>
+<li>[ ] <strong>誤差量化正確性</strong>：正規化後的數值是否具備清晰的物理意義？（0 是否真的代表正中央？負號是否代表左側？）。</li>
+<li>[ ] <strong>抗噪優化度</strong>：開啟濾波後，控制曲線是否明顯變「絲滑」？</li>
+<li>[ ] <strong>參數敏感度認識</strong>：是否理解 $K_p$ 增益對「反應速度 vs 穩定性」的權衡關係。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── js/
+│   ├── error_app.js        # 核心：待填寫正規化與平均濾波邏輯
+│   ├── gain_control.js     # 邏輯：實作 $K_p$ 滑桿與輸出映射
+│   └── chart_painter.js    # UI：繪製 Error 隨時間變化的波形圖
+├── data/
+│   └── mock_noise.json     # 測試：輸入用的模擬座標雜訊流
+├── README.md               # 專案心得：我如何精確量化視覺誤差並解決訊號抖動問題
+└── tests/
+    └── math.test.js        # 自動化：檢核映射關係與溢位飽和檢查
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「代碼如何賦予動作靈魂」</strong>。掌握誤差計算與濾波後，學員在後續單元整合 PID 控制器時，將會發現原本深奧的自動控制原理，其實就是一連串優雅的數據變換與平滑處理。_
+|
+|
+至此，我們已經完成了 <strong><code>adv-01</code> 到 <code>adv-08</code></strong> 系列所有感知與數據處理單元的部署策略規劃。這套教材體系，將為你的學員建立起極其紮實的自駕系統工程背景。</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-blue-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── js/vision_utils.js  # 核心：待學員實作正規化與平均濾波邏輯
-├── js/motor_control.js # 集成：負責將誤差轉化為模擬馬達訊號
-└── samples/data_log.js # 紀錄：提供一組帶雜訊的目標物追蹤座標作為測試源
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5">練習「區間映射」數學小考。理解正規化的物理意義。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能推導出 $(200 - 160) / 160$ 代表的空間象限。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black">領取作業 (Repo)，調教 Gain 模型。實施移動平均濾波並肉眼觀察控制抖動的變化。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 指導如何透過 Chrome 錄製數據流 (Canvas Capture) 以便分析誤差收斂。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black">提交針對不同雜訊強度 (Noise Intensity) 的濾波方案並 Push。閱讀教師對「反饋系統延遲」的回饋。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「誤差正負號」物理意義的解釋準用度，表揚具備嚴謹濾波調校思維的學員。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

@@ -306,136 +306,101 @@
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">VS Code
-            工程化開發環境實驗室：編譯上傳、依賴管理與環境分流實戰</h2>
+<div class="markdown-heading"><h1 class="heading-element">Unit: PlatformIO 環境搭建 (學生作業指引)</h1><a id="user-content-unit-platformio-環境搭建-學生作業指引" class="anchor" aria-label="Permalink: Unit: PlatformIO 環境搭建 (學生作業指引)" href="#unit-platformio-環境搭建-學生作業指引"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎使用本程式庫！本單元將帶領你從 Arduino IDE 轉移到專業的 <strong>VS Code + PlatformIO</strong> 開發環境。這不僅是換一個編輯器，更是學習現代軟體工程的專案管理思維。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 作業目標</h2><a id="user-content--作業目標" class="anchor" aria-label="Permalink: 🎯 作業目標" href="#-作業目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>完成本單元後，你應能：</p>
+<ol>
+<li>配置 <code>platformio.ini</code> 以管理硬體環境與第三方程式庫。</li>
+<li>修正 C++ 編譯錯誤並理解 <code>#include</code> 邏輯。</li>
+<li>使用 PlatformIO 的自動化依賴管理功能。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">🚀 執行步驟</h2><a id="user-content--執行步驟" class="anchor" aria-label="Permalink: 🚀 執行步驟" href="#-執行步驟"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：修正 <code>src/main.cpp</code>
+</h3><a id="user-content-任務-1修正-srcmaincpp" class="anchor" aria-label="Permalink: 任務 1：修正 src/main.cpp" href="#任務-1修正-srcmaincpp"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>打開 <code>src/main.cpp</code>。</li>
+<li>修正紅字報錯，確保引用了必要的標頭檔（提示：PlatformIO 需要手動引用 <code>Arduino.h</code>）。</li>
+<li>點擊狀態列的 <code>✔</code> (Compile) 確保出現 <code>SUCCESS</code>。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：管理程式庫依賴</h3><a id="user-content-任務-2管理程式庫依賴" class="anchor" aria-label="Permalink: 任務 2：管理程式庫依賴" href="#任務-2管理程式庫依賴"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>編輯 <code>platformio.ini</code>。</li>
+<li>在 <code>lib_deps</code> 中加入 <code>bblanchon/ArduinoJson</code>。</li>
+<li>重新編譯並觀察 PlatformIO 如何自動下載依賴。</li>
+<li>取消 <code>src/main.cpp</code> 中 <code>ArduinoJson</code> 相關代碼的註解並通過編譯。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：解決串口亂碼與進階配置</h3><a id="user-content-任務-3解決串口亂碼與進階配置" class="anchor" aria-label="Permalink: 任務 3：解決串口亂碼與進階配置" href="#任務-3解決串口亂碼與進階配置"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>在 <code>platformio.ini</code> 中設定 <code>monitor_speed = 115200</code>。</li>
+<li>新增一個名為 <code>[env:release]</code> 的區塊，並將 <code>upload_speed</code> 提高到 <code>921600</code>。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📝 提交清單</h2><a id="user-content--提交清單" class="anchor" aria-label="Permalink: 📝 提交清單" href="#-提交清單"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>[ ] 完成 <code>docs/ENV_CHECK.md</code> 中的所有檢核項目。</li>
+<li>[ ] 將「編譯成功」與「IntelliSense 提示」截圖存入 <code>assets/</code>。</li>
+<li>[ ] 將變更 <code>git commit</code> 並 <code>push</code> 到 GitHub。</li>
+</ul>
+<hr>
+<p><em>詳細的導師指引請參考 <a href=".github/tutor_guide.md">.github/tutor_guide.md</a></em></p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：新環境的首航 (First Voyage in PlatformIO)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：韌體開發實習生</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 建立個人作業程式庫教 Clone 到本地。</li>
-                    <li><strong>專案初始化</strong>：建立全新專案，選擇 <code>ESP32 Dev Module</code> 與 <code>Arduino</code>。</li>
-                    <li><strong>代碼移植與修正</strong>：搬移代碼，手動加上 <code>#include &lt;Arduino.h&gt;</code>。</li>
-                    <li><strong>驗證繳交</strong>：在 README 貼上 IntelliSense 正常運作截圖。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>編譯成功率</strong>：PIO 終端機是否顯示綠色 SUCCESS 狀態？</li>
-                    <li>[ ] <strong>專案結構掌握</strong>：理解 <code>src/main.cpp</code> 是主程式入口。</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：函式庫管家 (Library Manager Implementation)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：軟體套件管理員</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>依賴聲明實作</strong>：在 <code>lib_deps</code> 欄位加入 <code>ArduinoJson</code>。</li>
-                    <li><strong>自動化安裝驗證</strong>：觀察 PIO 如何自動從網路抓取函式庫。</li>
-                    <li><strong>技術報告</strong>：在 README 中比較 PIO 管家模式與手動下載優劣。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>配置導向思維</strong>：掌握透過配置文件管理依賴的核心規範。</li>
-                    <li>[ ] <strong>版本控制意識</strong>：能說明 <code>^</code> 符號在版本控制中的意義。</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：多環境並行配置 (Multi-Environment Configuration)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：自動化工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>通訊參數優化</strong>：設定 <code>monitor_speed = 115200</code> 解決亂碼。</li>
-                    <li><strong>環境 Profile 分流</strong>：建立 <code>[env:release]</code> 設定極速燒錄。</li>
-                    <li><strong>切換演練</strong>：使用狀態列選單針對不同 Profile 進行編譯與上傳。</li>
-                    <li><strong>最終 Commit</strong>：整理 <code>platformio.ini</code> 並 Push。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>環境抽象化理解</strong>：體會上傳速度配置對效率的影響。</li>
-                    <li>[ ] <strong>排障能力</strong>：能自動調整相應速率參數以恢復數據可讀性。</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：引導學員建立「代碼即配置」的專業工程思維。</p>
-            <ol class="space-y-4 text-slate-600 text-justify text-left">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：告別小打小鬧</strong> - 體驗生產力工具的威力。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：依賴隔離</strong> - 引導 PIO 局部依賴管理避免衝突。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：工作流自動化</strong> - 展現開發流程微調的可能性。</li>
-            </ol>
-        </div>
+<div class="markdown-heading"><h1 class="heading-element">Unit: PlatformIO 環境搭建 (VS Code + PlatformIO Setup)</h1><a id="user-content-unit-platformio-環境搭建-vs-code--platformio-setup" class="anchor" aria-label="Permalink: Unit: PlatformIO 環境搭建 (VS Code + PlatformIO Setup)" href="#unit-platformio-環境搭建-vs-code--platformio-setup"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到專業硬體開發的第一步！在本單元中，你將學習如何從 Arduino IDE 轉移到更強大的 <strong>VS Code + PlatformIO</strong> 開發環境。這不僅是換一個編輯器，更是學習現代軟體工程的專案管理思維。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>掌握 PlatformIO 的專案結構與 <code>platformio.ini</code> 配置。</li>
+<li>理解 C++ 代碼規範與 <code>#include</code> 邏輯。</li>
+<li>學會使用 <code>lib_deps</code> 自動化管理第三方庫。</li>
+<li>掌握多環境配置與調速技巧。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">📂 專案結構說明</h2><a id="user-content--專案結構說明" class="anchor" aria-label="Permalink: 📂 專案結構說明" href="#-專案結構說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>platformio.ini</code>: 核心配置文件，負責硬體定義與依賴管理。</li>
+<li>
+<code>src/main.cpp</code>: 你的原始碼存放在這裡。</li>
+<li>
+<code>docs/ENV_CHECK.md</code>: 你的環境報告書，完成任務後請在此記錄。</li>
+<li>
+<code>assets/</code>: 請將你的實驗截圖存放在此。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">🚀 任務清單</h2><a id="user-content--任務清單" class="anchor" aria-label="Permalink: 🚀 任務清單" href="#-任務清單"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：PlatformIO 首航與語法修正</h3><a id="user-content-任務-1platformio-首航與語法修正" class="anchor" aria-label="Permalink: 任務 1：PlatformIO 首航與語法修正" href="#任務-1platformio-首航與語法修正"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>打開 <code>src/main.cpp</code>。</li>
+<li>你會發現代碼有紅字報錯。請修正它，讓 PlatformIO 能夠識別 Arduino 的核心函式。</li>
+<li>
+<strong>驗證</strong>：按下下方狀態列的 <code>✔</code> (Compile) 按鈕，直到出現綠色的 <code>SUCCESS</code>。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：自動化依賴管家</h3><a id="user-content-任務-2自動化依賴管家" class="anchor" aria-label="Permalink: 任務 2：自動化依賴管家" href="#任務-2自動化依賴管家"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>在 <code>platformio.ini</code> 中加入 <code>bblanchon/ArduinoJson</code> 庫。</li>
+<li>再次點擊編譯，觀察 PlatformIO 如何自動下載並安裝庫檔案。</li>
+<li>
+<strong>驗證</strong>：取消 <code>src/main.cpp</code> 中關於 <code>ArduinoJson</code> 的註解，確保編譯通過。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：解決亂碼與多環境配置</h3><a id="user-content-任務-3解決亂碼與多環境配置" class="anchor" aria-label="Permalink: 任務 3：解決亂碼與多環境配置" href="#任務-3解決亂碼與多環境配置"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>在 <code>platformio.ini</code> 中設定 <code>monitor_speed = 115200</code> 以解決串口亂碼。</li>
+<li>建立一個名為 <code>[env:release]</code> 的新區塊，並將 <code>upload_speed</code> 提高到 <code>921600</code>。</li>
+<li>
+<strong>驗證</strong>：提交最終的 <code>platformio.ini</code> 檔案。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📝 提交要求</h2><a id="user-content--提交要求" class="anchor" aria-label="Permalink: 📝 提交要求" href="#-提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>完成 <code>docs/ENV_CHECK.md</code> 中的所有勾選。</li>
+<li>在 <code>assets/</code> 中存入「IntelliSense 常數提示」與「編譯成功」的截圖。</li>
+<li>將所有變更 <code>git commit</code> 並 <code>push</code> 到 GitHub。</li>
+</ol>
+<blockquote>
+<p>「好的工程師，是能配置出最強大武器的人，讓代碼自己去管理依賴，讓環境自己去適應板子。」</p>
+</blockquote>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
-.
-├── platformio.ini   # (練習點) 故意將 monitor_speed 置空供補全
-├── src/main.cpp      # 基本框架，包含 Serial Print 待啟動
-└── README.md         # 紀錄首次成功編譯的心得
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse border border-slate-100">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看影片了解「工具鏈」。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 確認所有人的環境「👽」圖標啟動成功。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify">領取作業 (Repo)，挑戰移植並呼叫安裝。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>現場指導:</strong> 解決第一次編譯下載時可能遇到的網路問題。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify">實作多重 Profile 並 Push 代碼。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對 PIO 各項屬性的理解準確度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

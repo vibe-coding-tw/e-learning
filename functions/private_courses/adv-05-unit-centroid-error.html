@@ -281,144 +281,161 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">視覺感知實驗室：質心運算與導航誤差量化</h2>
+<div class="markdown-heading"><h1 class="heading-element">質心計算與視覺誤差 (Centroid Calculation &amp; Vision Error)</h1><a id="user-content-質心計算與視覺誤差-centroid-calculation--vision-error" class="anchor" aria-label="Permalink: 質心計算與視覺誤差 (Centroid Calculation &amp; Vision Error)" href="#質心計算與視覺誤差-centroid-calculation--vision-error"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本專案是一個關於自動駕駛視覺系統核心算法的練習。你將學習如何從原始像素數據中提取「質心」(Centroid)，並將其轉換為導航系統可以使用的「誤差」(Error) 訊號。</p>
+<div class="markdown-heading"><h2 class="heading-element">學習目標</h2><a id="user-content-學習目標" class="anchor" aria-label="Permalink: 學習目標" href="#學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>實作空間加權平均算法來計算物體質心。</li>
+<li>實作誤差正規化 (Normalization) 與死區 (Deadzone) 邏輯。</li>
+<li>處理空視野與雜訊等例外狀況，提高系統魯棒性。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">任務說明</h2><a id="user-content-任務說明" class="anchor" aria-label="Permalink: 任務說明" href="#任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：質心提取器 (Centroid Extractor)</h3><a id="user-content-任務-1質心提取器-centroid-extractor" class="anchor" aria-label="Permalink: 任務 1：質心提取器 (Centroid Extractor)" href="#任務-1質心提取器-centroid-extractor"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在 <code>src/vision_math.js</code> 中實作 <code>calculateCentroid</code> 函式：</p>
+<ul>
+<li>遍歷影像像素。</li>
+<li>計算所有「開啟」像素 (像素值 &gt; 128) 的 X 與 Y 座標總和。</li>
+<li>回傳質心的平均座標。</li>
+<li>
+<strong>重要</strong>：必須處理 <code>totalPixels === 0</code> 的情況（例如回傳畫面中心點），以避免除以零導致的系統崩潰。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：誤差量化與正規化 (Error Normalization &amp; Deadzone)</h3><a id="user-content-任務-2誤差量化與正規化-error-normalization--deadzone" class="anchor" aria-label="Permalink: 任務 2：誤差量化與正規化 (Error Normalization &amp; Deadzone)" href="#任務-2誤差量化與正規化-error-normalization--deadzone"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在 <code>src/vision_math.js</code> 中實作 <code>normalizeError</code> 函式：</p>
+<ul>
+<li>將質心的 X 座標轉換為相對於中心點的偏移量。</li>
+<li>將偏移量縮放至 <code>[-1.0, 1.0]</code> 的範圍（左側為負，右側為正）。</li>
+<li>實作「死區」邏輯：當偏移量絕對值小於門檻值（預設為 5）時，回傳 0，以避免在中心附近的微小抖動。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：環境干擾下的魯棒性</h3><a id="user-content-任務-3環境干擾下的魯棒性" class="anchor" aria-label="Permalink: 任務 3：環境干擾下的魯棒性" href="#任務-3環境干擾下的魯棒性"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>確保你的算法能處理 <code>data/</code> 中的各種模擬情況，包括空視野與帶有雜訊的畫面。</p>
+<div class="markdown-heading"><h2 class="heading-element">如何開始</h2><a id="user-content-如何開始" class="anchor" aria-label="Permalink: 如何開始" href="#如何開始"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>複製此程式庫到你的本地環境。</li>
+<li>使用瀏覽器開啟 <code>ui/dashboard.html</code> 以查看視覺化儀表板。</li>
+<li>在 <code>src/vision_math.js</code> 中撰寫你的實作邏輯。</li>
+<li>執行測試以驗證你的程式碼。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">測試指令</h2><a id="user-content-測試指令" class="anchor" aria-label="Permalink: 測試指令" href="#測試指令"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>你可以分別執行以下測試腳本：</p>
+<div class="highlight highlight-source-shell"><pre>node tests/coordinate.test.js
+node tests/deadzone.test.js</pre></div>
+<div class="markdown-heading"><h2 class="heading-element">程式庫結構</h2><a id="user-content-程式庫結構" class="anchor" aria-label="Permalink: 程式庫結構" href="#程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>src/vision_math.js</code>: 核心數學邏輯（你主要工作的檔案）。</li>
+<li>
+<code>ui/dashboard.html</code>: 視覺化偵錯工具。</li>
+<li>
+<code>tests/</code>: 自動化測試腳本。</li>
+<li>
+<code>data/</code>: 模擬影像數據。</li>
+</ul>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：「質心提取器」：從像素到座標 (Centroid Extractor Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：影像處理工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>演算法實作</strong>：在 <code>centroid.js</code> 中撰寫遍歷邏輯，統計目標像素的 $X, Y$ 分佈與總點數 $N$。</li>
-                    <li><strong>除零保護</strong>：特別實作針對 $N=0$（無目標）情境的保護邏輯，確保程式在空視野下不會發生崩潰。</li>
-                    <li><strong>Push Final</strong>：提交具備「高度精確」且運作穩定的質心提取模組。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>座標換算精度</strong>：輸出的 $(\bar{x}, \bar{y})$ 是否能隨物體移動即時更新且無明顯殘影？</li>
-                    <li>[ ] <strong>程式魯棒性</strong>：面對「斷線」或「物體消失」情境時，後端代碼是否能平穩處理例外？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：誤差量化與動態儀表板 (Visual Error Dashboard)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：UI/UX 數據工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>誤差定義</strong>：實作偏差值公式 $Error = \bar{x} - Center_{image}$，並完成 $[-1, 1]$ 區間的正規化。</li>
-                    <li><strong>儀表板開發</strong>：建立具備即時指針或進度條的監控頁面，將偏差量轉化為直觀的視覺反饋。</li>
-                    <li><strong>死區設計</strong>：加入軟體死區 (Deadzone) 邏輯，減少物體在中心微小晃動時引發的過度修正。</li>
-                    <li><strong>Push Final</strong>：提交具備「極低時延」且具備直觀反饋的誤差監控介面。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>正規化準確度</strong>：當物體位於影像最右緣時，輸出的 Error 是否穩定顯示為 $1.0$？</li>
-                    <li>[ ] <strong>回應平滑度</strong>：視覺化組件是否能流暢呈現誤差變化，且標識出正確的轉向修正方向？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：環境干擾下的抗性測試 (Noise Robustness Challenge)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統魯棒性測試員</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>雜訊注入</strong>：在測試環境中刻意加入隨機的小亮點雜訊，觀察其對質心計算的干擾規律。</li>
-                    <li><strong>閾值過濾</strong>：實作基於「連通點數」或「區域權重」的過濾方案，剔除無意義的環境背景噪聲。</li>
-                    <li><strong>實驗報告</strong>：在 README 中對比過濾前後的誤差值穩定度，並分析不同雜訊強度下的失效臨界點。</li>
-                    <li><strong>Push Final</strong>：提交具備「環境適應能力」且抗干擾的高階質心測量方案。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>抗干擾成效</strong>：在背景存在雜訊點的情境下，質心輸出是否仍能穩定鎖定在主體目標上？</li>
-                    <li>[ ] <strong>邏輯分區思考</strong>：是否考慮到了將影像切割為不同 ROI（關注區域）來降低非必要區域的噪音影響？</li>
-                </ul>
-            </div>
-        </div>
     </section>
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：從「看見」到「量化」。理解質心的數學物理本質，並掌握導航誤差的正交化定義。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：座標系與參考點</strong> - 讓學生體會「中心點」作為相對參考的重要性，這是閉迴路控制的核心起點。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：正規化的價值</strong> - 強調將像素距離轉換為 $[-1, 1]$ 比例，是為了實現跨解析度的通用控制器邏輯。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：除以零的災難與預防</strong> - 透過 2-1 任務中的空視野情境，培養學生在寫入物理感測代碼時必須具備的例外處理思維。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-05-unit-centroid-error</code> (質心計算與視覺誤差)</strong> 單元，這是一個將「混亂像素」轉化為「精確座標」的數學核心課，對於開發穩定、精準的自駕循跡系統具有決定性意義。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (程式庫範本) 配置建議</h3><a id="user-content-1-範本程式庫-程式庫範本-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (程式庫範本) 配置建議" href="#1-範本程式庫-程式庫範本-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>質心運算需要穩定的數據來源來測試「邊界與極端情況」，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/centroid.js</code></strong>：核心運算檔案，提供影像遍歷的 Boilerplate，留下 $\sum x_i$ 與 $\bar{x}$ 計算的 <code>TODO</code>。</li>
+<li>
+<strong>📂 <code>data/mock_frames.json</code></strong>：提供一組 $320 \times 240$ 的模擬二值化影像。包含：
+<ul>
+<li>
+<strong>正中心圓點</strong>（驗證 Error 為 0）。</li>
+<li>
+<strong>極右側線條</strong>（驗證正規化後 Error 為 1.0）。</li>
+<li>
+<strong>空視野</strong>（驗證「除以零」保護）。</li>
+<li>
+<strong>帶雜訊點的視野</strong>（驗證抗干擾能力）。</li>
+</ul>
+</li>
+<li>
+<strong>📂 <code>ui/dashboard.html</code></strong>：視覺化儀表板。學員寫好邏輯後，網頁端會顯示一個「誤差指針」隨著物體位置擺動。</li>
+<li>
+<strong>📂 <code>tests/math_accuracy.test.js</code></strong>：自動化評分腳本，精確比對座標計算值與理論值的誤差。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「質心提取器」：從像素到座標 (Centroid Extractor Lab)</h4><a id="user-content-任務-1質心提取器從像素到座標-centroid-extractor-lab" class="anchor" aria-label="Permalink: 任務 1：「質心提取器」：從像素到座標 (Centroid Extractor Lab)" href="#任務-1質心提取器從像素到座標-centroid-extractor-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握空間加權平均的基本算法，並落實安全編程（例外處理）。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>核心代碼檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：遍歷像素並計算質心</span>
+<span class="pl-k">if</span> <span class="pl-kos">(</span><span class="pl-s1">totalPixels</span> <span class="pl-c1">===</span> <span class="pl-c1">0</span><span class="pl-kos">)</span> <span class="pl-k">return</span> <span class="pl-kos">{</span> <span class="pl-c1">x</span>: <span class="pl-s1">centerImageX</span><span class="pl-kos">,</span> <span class="pl-c1">y</span>: <span class="pl-s1">centerImageY</span><span class="pl-kos">,</span> <span class="pl-c1">error</span>: <span class="pl-c1">0</span> <span class="pl-kos">}</span><span class="pl-kos">;</span>
+<span class="pl-k">let</span> <span class="pl-s1">centroidX</span> <span class="pl-c1">=</span> <span class="pl-s1">sumX</span> <span class="pl-c1">/</span> <span class="pl-s1">totalPixels</span><span class="pl-kos">;</span></pre></div>
+</li>
+<li>
+<strong>Autograding</strong>：餵入一個 $4 \times 4$ 的像素陣列測試案例，檢核回傳的 $(\bar{x}, \bar{y})$ 是否與手算結果一致。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：誤差量化與正規化 (Error Normalization &amp; Deadzone)</h4><a id="user-content-任務-2誤差量化與正規化-error-normalization--deadzone" class="anchor" aria-label="Permalink: 任務 2：誤差量化與正規化 (Error Normalization &amp; Deadzone)" href="#任務-2誤差量化與正規化-error-normalization--deadzone"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：將物理位移轉化為通用的導航參數（誤差係數）。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>正規化公式檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：將誤差值縮放至 [-1.0, 1.0]</span>
+<span class="pl-k">let</span> <span class="pl-s1">error</span> <span class="pl-c1">=</span> <span class="pl-kos">(</span><span class="pl-s1">centroidX</span> <span class="pl-c1">-</span> <span class="pl-s1">imageMidPoint</span><span class="pl-kos">)</span> <span class="pl-c1">/</span> <span class="pl-s1">imageMidPoint</span><span class="pl-kos">;</span>
+<span class="pl-c">// 加入死區 (Deadzone) 邏輯</span>
+<span class="pl-k">if</span> <span class="pl-kos">(</span><span class="pl-v">Math</span><span class="pl-kos">.</span><span class="pl-en">abs</span><span class="pl-kos">(</span><span class="pl-s1">centroidX</span> <span class="pl-c1">-</span> <span class="pl-s1">imageMidPoint</span><span class="pl-kos">)</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">5</span><span class="pl-kos">)</span> <span class="pl-s1">error</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span><span class="pl-kos">;</span></pre></div>
+</li>
+<li>
+<strong>驗證方式</strong>：在儀表板上模擬物體在中心微小擺動，檢核「死區」是否能有效抑制指針抖動。這展現了軟體對硬體抖動的控制策略。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：環境干擾下的抗性測試 (Noise Robustness Challenge)</h4><a id="user-content-任務-3環境干擾下的抗性測試-noise-robustness-challenge" class="anchor" aria-label="Permalink: 任務 3：環境干擾下的抗性測試 (Noise Robustness Challenge)" href="#任務-3環境干擾下的抗性測試-noise-robustness-challenge"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：設計過濾機制，確保質心不會被背景雜訊「拉走」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>魯棒性實作</strong>：要求學員實作一個「區域權重」或「最小像素門檻」。例如：若偵測到的點數 $N &lt; 10$，則視為雜訊並維持上一幀的質心。</li>
+<li>
+<strong>實驗報告</strong>：學員需在 README 中記錄：當背景出現「散點雜訊」時，其質心計算值偏離主體的最大百分比。</li>
+<li>
+<strong>Tutor View (PR 審核)</strong>：導師点評學員是否考慮到了 ROI（感興趣區域）的概念，例如只計算畫面下半部的質心以提高循跡穩定性。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 量化感知導師點評標準 (Vision Quantization Benchmarks)</h3><a id="user-content-3-量化感知導師點評標準-vision-quantization-benchmarks" class="anchor" aria-label="Permalink: 3. 量化感知導師點評標準 (Vision Quantization Benchmarks)" href="#3-量化感知導師點評標準-vision-quantization-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對底層數據處理的嚴謹度」</strong>：</p>
+<ul>
+<li>[ ] <strong>例外防護意識</strong>：代碼中是否包含了對「全黑視野（$N=0$）」的顯式判斷，以防止 <code>NaN</code> 導致系統連鎖崩潰？</li>
+<li>[ ] <strong>數學轉換能力</strong>：輸出的 Error 是否具備線性特徵？（即：位移一倍，Error 是否也隨之翻倍）。</li>
+<li>[ ] <strong>控制靈敏度權衡</strong>：設定的「死區大小」是否兼顧了「抑制抖動」與「及時回正」？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/
+│   ├── vision_math.js      # 核心：待填寫質心、誤差與正規化函式
+│   └── dashboard_ui.js     # 介面：呈現誤差指針的 Canvas 繪圖
+├── tests/
+│   ├── coordinate.test.js  # 自動化：比對預設 Frame 的座標結果
+│   └── deadzone.test.js    # 自動化：檢核微小位移時的 Error 歸零邏輯
+└── README.md               # 專案心得：從像素到導航誤差，我如何處理「除以零」的災難
+</code></pre>
+<p>透過這種部署方式，學生能明白 <strong>「看見只是第一步，精確的量化才是控制的靈魂」</strong>。這對於將視覺轉化為車速控制（PID）、舵機轉角（Servo Control）等閉迴路系統是基石級的深度演練。</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── js/vision_core.js    # 核心：待填寫質心與正規化誤差計算邏輯
-├── js/dashboard.js      # 視覺化：誤差儀表板組件
-├── tests/centroid.test.js# 自動化：檢查輸出的座標與預期 math result 吻合度
-└── README.md            # 指引：要求記錄針對雜訊點的「抗拉扯」門檻設定
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5">觀看「槓桿原理與影像中心」比喻。完成手寫 4x4 矩陣質心計算預習單。</td>
-                        <td class="px-6 py-5"><strong>Dashboard:</strong> 觀察學員對「(0,0) 位置定義（左上角）」的認知是否正確。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900">領取作業 (Repo)，挑戰在「目標突然消失」與「多個目標並存」情境下的誤差平滑處理。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 協助學員調試誤差儀表板的 FPS 瓶頸，解釋 DOM 與 Canvas 渲染效率。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
-                        <td class="px-6 py-5">提交包含「區域加權」算法的質心提取代碼並 Push，閱讀 PR 回饋。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價對「資料邊緣剔除」與「高頻震動抑制」策略的有效性。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

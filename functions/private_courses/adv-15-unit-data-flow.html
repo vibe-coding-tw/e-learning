@@ -328,144 +328,178 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none text-justify;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">系統診斷實驗室：數據全鏈路追蹤與解析韌性</h2>
+<div class="markdown-heading"><h1 class="heading-element">數據流分析 (Data Flow Analysis)</h1><a id="user-content-數據流分析-data-flow-analysis" class="anchor" aria-label="Permalink: 數據流分析 (Data Flow Analysis)" href="#數據流分析-data-flow-analysis"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<blockquote>
+<p><strong>「好的架構師，是能像觀測心電圖一樣，看穿數據流中每一毫秒跳動背後的工程邏輯。」</strong></p>
+</blockquote>
+<p>歡迎來到進階單元 15。在本單元中，你將不再只是開發功能，而是要像「系統診斷醫師」一樣，深入觀察數據在感知層、傳輸層到解析層之間的每一分傳遞、變形與損耗。你的目標是定義出系統的生命脈動，並在高壓與干擾環境下確保系統的絕對穩定。</p>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>全鏈路觀測 (Full-Stack Observability)</strong>：實作高性能埋點工具，量化端到端的延遲 (RTT)。</li>
+<li>
+<strong>性能極限定義</strong>：透過壓力測試找出系統的崩潰臨界點，並定義 SLA 規格。</li>
+<li>
+<strong>系統韌性設計 (Resilience Design)</strong>：重構固件解析器，使其具備在髒數據環境下自動同步與復位的能力。</li>
+</ol>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🛠️ 任務說明</h2><a id="user-content-️-任務說明" class="anchor" aria-label="Permalink: 🛠️ 任務說明" href="#️-任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：端到端數據流追蹤分析</h3><a id="user-content-任務-1端到端數據流追蹤分析" class="anchor" aria-label="Permalink: 任務 1：端到端數據流追蹤分析" href="#任務-1端到端數據流追蹤分析"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：找出數據在跨平台傳遞時「消失的毫秒數」。</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>在網頁前端點擊到馬達響應的完整路徑上，設定至少 3 個觀測點。</li>
+<li>量化並記錄各層級（感知、傳輸、解析）的精確耗時。</li>
+<li>
+<strong>產出</strong>：在 <code>docs/LINK_AUDIT.md</code> 中提交審計報告，並定位目前的性能瓶頸。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：通訊頻寬與延遲極限壓測</h3><a id="user-content-任務-2通訊頻寬與延遲極限壓測" class="anchor" aria-label="Permalink: 任務 2：通訊頻寬與延遲極限壓測" href="#任務-2通訊頻寬與延遲極限壓測"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過科學實驗定義系統的「官方規格」。</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>逐步提升發送頻率（從 10Hz 至 100Hz），記錄丟包率與 Serial 緩衝區狀態。</li>
+<li>
+<strong>產出</strong>：在 <code>docs/Performance_Map.md</code> 中繪製性能曲線圖，並在 <code>README.md</code> 的結案報告中給出具體的硬體配置建議。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：髒數據注入與自動復位解析器</h3><a id="user-content-任務-3髒數據注入與自動復位解析器" class="anchor" aria-label="Permalink: 任務 3：髒數據注入與自動復位解析器" href="#任務-3髒數據注入與自動復位解析器"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：在電磁干擾或亂碼注入下，確保系統「永不當機」。</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>重構 <code>src/robust_parser.cpp</code>，實作「同步標記搜索 (Sync Marker Search)」功能。</li>
+<li>使用混沌測試工具，驗證系統在封包損毀後能否在 50ms 內恢復控制。</li>
+<li>
+<strong>產出</strong>：提交加固後的代碼與測試日誌 <code>tests/chaos_monkey.log</code>。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📁 程式庫結構說明</h2><a id="user-content--程式庫結構說明" class="anchor" aria-label="Permalink: 📁 程式庫結構說明" href="#-程式庫結構說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>📂 <code>src/telemetry_audit.js</code></strong>：實作端到端時戳追蹤邏輯。</li>
+<li>
+<strong>📂 <code>src/robust_parser.cpp</code></strong>：加固後的固件解析器實作。</li>
+<li>
+<strong>📂 <code>docs/Performance_Map.md</code></strong>：記錄性能對照表與曲線。</li>
+<li>
+<strong>📂 <code>tests/chaos_monkey.log</code></strong>：系統抵禦干擾的運行證據。</li>
+<li>
+<strong>📂 <code>.github/tutor_guide.md</code></strong>：導師評分標準與部署指引（學生僅供參考）。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">✅ 結案與提交</h2><a id="user-content--結案與提交" class="anchor" aria-label="Permalink: ✅ 結案與提交" href="#-結案與提交"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>完成所有任務後，請確保你的程式碼已通過測試，並更新以下內容：</p>
+<ol>
+<li>在 <code>README.md</code> (本文件) 的結案報告區塊，說明你如何透過數據監控定義系統性能極限。</li>
+<li>將變更 push 至此 <strong>程式庫</strong>。</li>
+</ol>
+<blockquote>
+<p><strong>提示</strong>：助教將會依據你的診斷嚴謹度、解析器防護力以及規格承諾的一致性進行點評。加油！</p>
+</blockquote>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：端到端數據流追蹤分析 (E2E Data Flow Trace Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統效能整合專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>全鏈路埋點實施</strong>：在 <code>dashboard.js</code> 發送前與 <code>vehicle_main.cpp</code>
-                        接收解析後各記錄一組基準時間。</li>
-                    <li><strong>映射精確度驗證</strong>：發送特定測試向量（如：0.500, -1.000），量測 ESP32 端產生的 PWM 數值是否嚴格對齊預期公式。</li>
-                    <li><strong>Push Final</strong>：提交包含「全鏈路耗時分析圖」與「數據映射誤差表」的完整實驗日誌。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>測量嚴謹度</strong>：分析報告中的耗時結構是否清晰？（區分出傳輸耗時與各端的處理耗時）。</li>
-                    <li>[ ] <strong>對齊完整性</strong>：映射公式是否考慮了浮點數轉整數時的捨入 (Rounding) 偏差問題？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：通訊頻寬與延遲極限壓測 (Throughput & Latency Stress Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：通訊性能工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-tighter font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>變壓測試場景建立</strong>：動態調整 <code>setInterval</code> 頻率，逐步降低延遲，記錄系統首個封包丟失的時間點。</li>
-                    <li><strong>頻率/丟包曲線繪製</strong>：收集不同控制指令頻率下的成功接收率數據。</li>
-                    <li><strong>系統 SLA 定義</strong>：基於數據定義你的系統「最優控制頻率」其當下之總延遲（End-to-End Latency）。</li>
-                    <li><strong>Push Final</strong>：推送具備「工業性能規格」價值的性能評測報告。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>性能洞察深度</strong>：能否指出系統主要的延時發生在哪個層級？（Radio 層、Serial 層或解析層）。</li>
-                    <li>[ ] <strong>建議科學性</strong>：給出的優化頻率參數是否能保證控制手感與連線穩定度的視覺平衡？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：髒數據注入與自動復位解析器 (Dirty Data Injection & Auto-Resettable Parser Lab)
-            </h3>
-            <div class="quest-meta">
-                <span>角色扮演：安全與韌性開發工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>混沌工程實踐</strong>：實做一段隨機產生損毀 JSON 封包的注入代碼。</li>
-                    <li><strong>固件解析器重構</strong>：重寫固件解析邏輯。實作「緩衝區同步點搜索」，確保在亂碼之後能立即找回下一組有效封包。</li>
-                    <li><strong>恢復時序測量</strong>：紀錄從注入亂碼到系統重新找回控制權的「平均復原時間」。</li>
-                    <li><strong>Push Final</strong>：提交具備「極高通訊容錯率」的加固版固件代碼與壓力測試結果。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>解析器健壯性</strong>：在連續注入非法封包時，ESP32 是否依然能維持主迴圈運行且不發生看門狗 (WDT) 重啟？</li>
-                    <li>[ ] <strong>系統自癒力</strong>：遇到損毀數據後，系統是否真正落實了「安靜丟棄、迅速同步」的原則？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none text-justify;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify text-left">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：透過「數據流」建立全棧 (Full-stack) 工程觀。讓學員學會像診斷醫師一樣看穿系統內部的每一毫秒數據脈動。</p>
-            <ol class="space-y-4 text-slate-600 text-justify text-left">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：端到端思維</strong> - 引導學員排除「只看固件/只看網頁」的片面視野，轉向關注整體「連結 (Link)」的健康度。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：量化與性能監控</strong> - 工程師不應說「好像慢了點」，要要求學員產出「平均延遲、RTT 值」等專業數值。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter text-justify">重點 3：通訊是不安全的設計預期</strong> - 讓學員建立「防禦性解析」習慣。通訊亂碼、截斷是現實世界的常態，系統必須具備自癒力。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-15-unit-data-flow</code> (數據流分析)</strong> 單元，這是建立「全疊堆系統工程觀」的核心單元。它要求學員不再只關注單一特徵，而是具備像「診斷醫師」一樣觀察數據在各層級傳遞、變形與損耗的能力，從而定義出系統的生命脈動（延遲、吞吐量與韌性）。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>系統分析需要高精度的埋點工具與回報框架，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/latency_tracer.js</code></strong>：發送端高性能埋點工具。預置時間戳計算法，自動追蹤每一筆指令發出與回傳的精確耗時。</li>
+<li>
+<strong>📂 <code>src/naive_parser.cpp</code></strong>：<strong>重構手術對象</strong>。一個「天真」的固件解析器（遇到亂碼會卡住或延遲），學員需將其升級為具備「自癒能力」的高級解析器。</li>
+<li>
+<strong>📂 <code>docs/LINK_AUDIT.md</code></strong>：全鏈路審計報告。要求學員記錄：<code>感知層耗時 | 傳輸層耗時 | 解析層耗時 | 最終執行延遲</code>。</li>
+<li>
+<strong>📂 <code>tests/chaos_injections.js</code></strong>：混沌工程注入器。這是一個自動化腳本，會隨機發送「損毀的 JSON」或「超長無效字串」，用來檢測系統的崩潰臨界點。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：端到端數據流追蹤分析 (E2E Data Flow Trace Lab)</h4><a id="user-content-任務-1端到端數據流追蹤分析-e2e-data-flow-trace-lab" class="anchor" aria-label="Permalink: 任務 1：端到端數據流追蹤分析 (E2E Data Flow Trace Lab)" href="#任務-1端到端數據流追蹤分析-e2e-data-flow-trace-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：看穿數據在跨平台傳遞時隱形的耗時分景。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>數據路徑量測</strong>：學員需在網頁點擊到馬達轉動的完整路徑上設定 3 個以上的觀測點，量化總延遲 (RTT)。</li>
+<li>
+<strong>映射精確度驗證</strong>：比對網頁端 Normalized 資料 (0<del>1.0) 轉換為 C 語言 Uint8 (0</del>255) 過程中的數據損耗。</li>
+<li>
+<strong>驗證要點</strong>：分析報告是否能清楚定位「哪一層」是目前的性能瓶頸？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：通訊頻寬與延遲極限壓測 (Throughput &amp; Latency Stress Lab)</h4><a id="user-content-任務-2通訊頻寬與延遲極限壓測-throughput--latency-stress-lab" class="anchor" aria-label="Permalink: 任務 2：通訊頻寬與延遲極限壓測 (Throughput &amp; Latency Stress Lab)" href="#任務-2通訊頻寬與延遲極限壓測-throughput--latency-stress-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過實驗找出系統的「崩潰臨界點」，並定義其 SLA 規格。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>頻率/丟包曲線</strong>：逐步將發送頻率從 10Hz 拉升至 100Hz，紀錄系統開始出現丟包或 Serial 緩衝區溢位的臨界點。</li>
+<li>
+<strong>官方規格定義</strong>：學員需在 README 中定義：「在此硬體配置下，系統的最佳控制頻率為 XX Hz，延遲保證在 XX ms 內」。</li>
+<li>
+<strong>PR 提交內容</strong>：提交具備「工業背書強度」的性能曲線圖與規格建議書。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：髒數據注入與自動復位解析器 (Dirty Data &amp; Robust Parser Lab)</h4><a id="user-content-任務-3髒數據注入與自動復位解析器-dirty-data--robust-parser-lab" class="anchor" aria-label="Permalink: 任務 3：髒數據注入與自動復位解析器 (Dirty Data &amp; Robust Parser Lab)" href="#任務-3髒數據注入與自動復位解析器-dirty-data--robust-parser-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：在現實世界的電磁干擾環境中，確保系統「永不當機」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>韌性重構</strong>：優化固件端解析器，使其具備「同步標記搜索 (Sync Marker Search)」能力。即使前一個封包損毀，也能在下一毫秒立即找回有效的數據開頭。</li>
+<li>
+<strong>復位速度挑戰</strong>：利用混沌工具注入亂碼，量測系統「恢復控制」所需的平均毫秒數。目標應小於 50ms。</li>
+<li>
+<strong>Push Final</strong>：提交具備「高度通訊韌性、不因亂碼崩潰」的最終加固版解析代碼與測試 log。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 全鏈路系統工程師導師點評標準 (Full-Stack Observability Standards)</h3><a id="user-content-3-全鏈路系統工程師導師點評標準-full-stack-observability-standards" class="anchor" aria-label="Permalink: 3. 全鏈路系統工程師導師點評標準 (Full-Stack Observability Standards)" href="#3-全鏈路系統工程師導師點評標準-full-stack-observability-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對全系統脈動的科學觀察力與抗壓設計」</strong>：</p>
+<ul>
+<li>[ ] <strong>診斷嚴謹度</strong>：報告是否揭示了延遲產生的物理原因（如：BLE 跳頻、Serial 波特率限制）？</li>
+<li>[ ] <strong>解析器防護力</strong>：面對連續的非法字串注入，ESP32 是否依然能穩定運行且不丟失後續的有效控制？</li>
+<li>[ ] <strong>規格承諾一致性</strong>：測量出的數據是否能在 PR 審查現場被導師複現？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/telemetry_audit.js   # 核心：學員需在此實作端到端時戳追蹤
+├── src/robust_parser.cpp    # 實作：加固後的固件解析器（具備自動復位功能）
+├── docs/Performance_Map.md  # 數據：各種連線場景下的頻率/丟包對照表
+├── README.md                # 結案：我如何透過數據監控定義系統性能極限
+├── tests/chaos_monkey.log  # 證據：系統成功抵禦損毀封包注入的運行日誌
+└── .github/tutor_guide.md   # 本導師指引文件
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的架構師，是能像觀測心電圖一樣，看穿數據流中每一毫秒跳動背後的工程邏輯」</strong>。掌握數據流分析後，學員將擁有了開發「衛星遙測系統」、「高性能自動交易平臺」或「大規模無人機集群控制」必備的頂層系統工程師底氣！</p>
+<hr>
+<p>完美！至此我們已經將 <strong>進階 15</strong> 的所有核心單元（連線優化、數據流分析）全部體系化定義完成。整個進階 15 系列的 GitHub Classroom 部署建議已全部圓滿具備。恭喜！這是一個完整的工程師成長地圖！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── src/dashboard_tracer.js # 發送端高性能埋點測試機
-├── src/parser_surgery.cpp  # 診斷對象：一個脆弱、遇到亂碼會卡住的解析器
-└── docs/Link_Audit.md      # 實驗日誌模板：包含耗時分佈柱狀圖與韌性測試結論
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse border-justify">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify text-left">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「跨越邊界的數據：從 JS 類型到 C 語言類型映射」影片。預習 Serial 波特率與延時關係。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員能否分析為何高頻發送下，緩衝區溢位會導致指令大規模延遲跳躍。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify">領取作業 (Repo)，執行「極限頻寬測驗」與「數據損毀模擬」。在 Classroom 的 Issue 面板回報自己定位到的第一手瓶頸點。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>系統工程師:</strong> 指導學員解讀「延遲分佈散佈圖」。利用示波器揭示數據封包在無線頻譜中的真實撞擊與延遲感。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify text-justify">提交詳盡的端到端審計報告與加固後的固件代碼。更新 README 定義你的系統性能 SLA 承諾。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「數據完整性」的處理層次。表揚數據分析具備科學邏輯、且能提出具建設性優化方案的「全鏈路專家」。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

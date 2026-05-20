@@ -318,136 +318,146 @@
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">PWM 占空比與能量控制實驗室：類比虛擬、Gamma
-            校正與死區補償實戰</h2>
+<div class="markdown-heading"><h1 class="heading-element">ESP32 PWM 基礎：占空比的魔法 (basic-04-unit-pwm-basics)</h1><a id="user-content-esp32-pwm-基礎占空比的魔法-basic-04-unit-pwm-basics" class="anchor" aria-label="Permalink: ESP32 PWM 基礎：占空比的魔法 (basic-04-unit-pwm-basics)" href="#esp32-pwm-基礎占空比的魔法-basic-04-unit-pwm-basics"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到本單元！在這個練習中，你將學習如何利用 <strong>PWM (脈衝寬度調變)</strong> 來控制能量輸出。這不僅是讓 LED 變暗或讓馬達轉動，更重要的是學習如何透過軟體補償來克服物理世界的阻力與人類感知的死角。</p>
+<div class="markdown-heading"><h2 class="heading-element">任務目標</h2><a id="user-content-任務目標" class="anchor" aria-label="Permalink: 任務目標" href="#任務目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>脈衝波形觀測 (Pulse Audit Lab)</strong>：理解占空比 (Duty Cycle) 與平均電壓的物理關係。</li>
+<li>
+<strong>Gamma 校正呼吸燈 (Lighting UX Lab)</strong>：認識人眼的非線性感知，並利用數學公式優化視覺體驗。</li>
+<li>
+<strong>克服靜摩擦力 (SmartDrive Lab)</strong>：測量馬達啟動死區 (Dead-zone)，並實作具備補償功能的驅動邏輯。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">作業要求</h2><a id="user-content-作業要求" class="anchor" aria-label="Permalink: 作業要求" href="#作業要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">1. 數據測量與紀錄</h3><a id="user-content-1-數據測量與紀錄" class="anchor" aria-label="Permalink: 1. 數據測量與紀錄" href="#1-數據測量與紀錄"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在進行實驗時，請務必將你的觀察與數據紀錄在 <code>docs/Report.md</code> 中。這包含：</p>
+<ul>
+<li>不同占空比下的預期電壓值。</li>
+<li>線性與 Gamma 校正呼吸燈的視覺差異感受。</li>
+<li>測量到的馬達啟動最小值 (<code>MOTOR_START_OFFSET</code>)。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">2. 程式碼實作</h3><a id="user-content-2-程式碼實作" class="anchor" aria-label="Permalink: 2. 程式碼實作" href="#2-程式碼實作"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請依序完成以下檔案中的任務：</p>
+<ul>
+<li>
+<strong><code>include/constants.h</code></strong>：在測量完馬達死區後，更新 <code>MOTOR_START_OFFSET</code> 的數值。</li>
+<li>
+<strong><code>src/main.cpp</code></strong>：
+<ul>
+<li>觀察並實作 <code>breathingLinear()</code> 與 <code>breathingGamma()</code>。</li>
+<li>確保 <code>smartDrive(int speed)</code> 的死區補償邏輯正確無誤。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">3. 提交作業</h3><a id="user-content-3-提交作業" class="anchor" aria-label="Permalink: 3. 提交作業" href="#3-提交作業"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>完成實驗後，請確保：</p>
+<ul>
+<li>所有量測數據已填入 <code>docs/Report.md</code>。</li>
+<li>程式碼已通過測試並能正常運作。</li>
+<li>將更改 <strong>Commit</strong> 並 <strong>Push</strong> 回你的 <strong>程式庫</strong>。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">如何開始</h2><a id="user-content-如何開始" class="anchor" aria-label="Permalink: 如何開始" href="#如何開始"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>克隆此 <strong>程式庫</strong> 到你的電腦。</li>
+<li>使用 VS Code + PlatformIO 開啟此專案。</li>
+<li>依照各檔案中的 <code>TODO</code> 註解開始實作。</li>
+<li>遇到困難時，可以參考 <code>docs/</code> 資料夾下的補充文件。</li>
+</ol>
+<p>祝你實驗順利，享受用數學微調物理世界的樂趣！</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：「捕捉脈衝」：波形觀測實驗 (Pulse Audit)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：訊號分析工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>能量步進</strong>：占空比階梯式增加。</li>
-                    <li><strong>低頻測試</strong>：調降展示抽搐。</li>
-                    <li><strong>報告撰寫</strong>：列出平均電壓數據。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>訊號直覺</strong>：描述 Duty Cycle 與強度關係？</li>
-                    <li>[ ] <strong>物理極限</strong>：理解慣性對平滑度影響？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：「視覺平衡」：Gamma 校正呼吸燈 (Lighting UX)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：燈光設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>線性實作</strong>：純線性呼吸燈。</li>
-                    <li><strong>Gamma 映射</strong>：引入平方公式。</li>
-                    <li><strong>視覺分析</strong>：對比轉換平滑度。</li>
-                    <li><strong>最終提交</strong>：Push 平方映射專案。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>感知優底度</strong>：均勻亮度演變？</li>
-                    <li>[ ] <strong>邏輯嚴謹</strong>：處理數據類型與邊界？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：「啟動突破」：克服靜摩擦力 (Motor Break)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：動力系統工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>死區量測</strong>：紀錄開始轉動數值。</li>
-                    <li><strong>補償封裝</strong>：撰寫 smartDrive 函式加上 Offset。</li>
-                    <li><strong>平滑驗證</strong>：實測低速指令。</li>
-                    <li><strong>最終 Commit</strong>：封裝動力補償 Push。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>補償精確</strong>：Offset 精準補償阻力？</li>
-                    <li>[ ] <strong>邊界處理</strong>：排除靜止指令？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：掌握「硬體不完美，軟體來救」的設計心理。</p>
-            <ol class="space-y-4 text-slate-600 text-justify text-left">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：波形即能量</strong> - 理解「平均電壓」。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：感知校準</strong> - UI/UX 非線性補償。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：物理補償</strong> - 克服摩擦力死區。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>basic-04-unit-pwm-basics</code> (ESP32 PWM 基礎：占空比的魔法)</strong> 單元，這是學員從「恆定輸出」轉向「按需分配能量」的認知轉折。它要求學員具備 <strong>能量調變 (Energy Modulation)</strong> 的概念，學習如何利用高頻開關模擬類比效果，並解決物理世界中如 <strong>「靜摩擦力 (Static Friction)」</strong> 與生物世界中 <strong>「人眼非線性感知 (Visual Non-linearity)」</strong> 的補償問題。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本程式庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" href="#1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>PWM 基礎作業的核心在於「公式對應」與「補償實作」，範本應包含實驗性的數據記錄模板，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/main.cpp</code></strong>：<strong>核心實作區</strong>。學員需在此實作一個具備「死區補償 (Dead-zone Compensation)」的馬達驅動函式 <code>smartDrive(int power)</code>，以及兩種模式的呼吸燈演算法（線性 vs. Gamma 校正）。</li>
+<li>
+<strong>📂 <code>include/params.h</code></strong>：參數配置中心。供學員填寫實驗後得出的數據，如 <code>MOTOR_START_OFFSET</code> (馬達起步門檻)。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>實驗量測報告</strong>。提供表格範本讓學員記錄：「占空比 (%)」 vs 「計算出的平均電壓 (V)」。並撰寫「Gamma 校正」前後的視覺差異觀察。</li>
+<li>
+<strong>📂 <code>docs/CALIBRATION.md</code></strong>：<strong>死區量測紀錄</strong>。學員需詳細描述如何找到馬達開始克服摩擦力「轉動瞬間」的 PWM 最小值，並以此作為軟體補償的依據。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「捕捉脈衝」波形觀測實驗 (Pulse Audit Lab)</h4><a id="user-content-任務-1捕捉脈衝波形觀測實驗-pulse-audit-lab" class="anchor" aria-label="Permalink: 任務 1：「捕捉脈衝」波形觀測實驗 (Pulse Audit Lab)" href="#任務-1捕捉脈衝波形觀測實驗-pulse-audit-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過數據換算建立「平均電壓」的物理直覺，理解 PWM 能量傳遞的本質。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>公式驗證</strong>：要求學員在不同占空比 (0%, 25%, 50%, 75%, 100%) 下計算理應得到的平均電壓值 $V_{avg} = 3.3V \times Duty%$。</li>
+<li>
+<strong>現象觀察</strong>：讓學員將 PWM 頻率調低至 1Hz，觀察 LED 閃爍與馬達「抽搐」的現象，理解高頻切換的必要性。</li>
+<li>
+<strong>驗證要點</strong>：在 README 中彙整完整數據表，建立對於「寬度 = 能量」的深刻映射。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：「視覺平衡」Gamma 校正呼吸燈 (Lighting UX Lab)</h4><a id="user-content-任務-2視覺平衡gamma-校正呼吸燈-lighting-ux-lab" class="anchor" aria-label="Permalink: 任務 2：「視覺平衡」Gamma 校正呼吸燈 (Lighting UX Lab)" href="#任務-2視覺平衡gamma-校正呼吸燈-lighting-ux-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：認識人眼的非線性感知特性，學習如何用數學公式（Gamma 校正）提升使用者體驗。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>呼吸燈對比</strong>：實作兩組呼吸燈。A 組為「線性增加 (0-255)」，B 組為「平方增加 (i*i/255)」。</li>
+<li>
+<strong>感知分析</strong>：觀察 A 組是否在亮區停頓感過長？而 B 組是否感覺更均勻平滑？</li>
+<li>
+<strong>驗證要點</strong>：提交一份簡報或 Markdown 描述，說明非線性映射在「細膩 UI 燈效設計」中的不可替代性。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：「啟動突破」克服靜摩擦力 (Motor Power Break &amp; SmartDrive Lab)</h4><a id="user-content-任務-3啟動突破克服靜摩擦力-motor-power-break--smartdrive-lab" class="anchor" aria-label="Permalink: 任務 3：「啟動突破」克服靜摩擦力 (Motor Power Break &amp; SmartDrive Lab)" href="#任務-3啟動突破克服靜摩擦力-motor-power-break--smartdrive-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作專業的韌體補償，解決硬體「起步死區」問題，這是開發「平滑啟動無人車」的核心技術。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>死區尋找</strong>：逐步增加 PWM，直到馬達發出低鳴並「開始克服摩擦力轉動」瞬間，紀錄該數值 (例如為 40)。</li>
+<li>
+<strong>補償封裝</strong>：撰寫 <code>smartDrive(int speed)</code>。公式為 <code>finalPWM = Offset + speed * (255 - Offset) / 255</code>。</li>
+<li>
+<strong>效果驗證</strong>：確保當下達「速度 1%」指令時，馬達能立即以極低速穩定轉動，而非卡死發燙。</li>
+<li>
+<strong>最終 Commit</strong>：封裝完整的動力補償邏輯並 Push。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 動力補償與感知專家點評標準 (Perception &amp; Power Compensation Standards)</h3><a id="user-content-3-動力補償與感知專家點評標準-perception--power-compensation-standards" class="anchor" aria-label="Permalink: 3. 動力補償與感知專家點評標準 (Perception &amp; Power Compensation Standards)" href="#3-動力補償與感知專家點評標準-perception--power-compensation-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對硬體物理偏差與人因工程的軟體修復能力」</strong>：</p>
+<ul>
+<li>[ ] <strong>數據分析嚴謹性</strong>：是否準確測量並應用了馬達的起步 Offset？</li>
+<li>[ ] <strong>數學轉換邏輯</strong>：Gamma 校正與死區補償的公式實作是否考慮了邊界條件（如 speed 為 0 時必須停止輸出）？</li>
+<li>[ ] <strong>工程品質感知</strong>：呼吸燈的轉變是否流暢自然？馬達的低速表現是否優化？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/main.cpp         # 核心：實現 smartDrive 補償與 Gamma 呼吸燈邏輯
+├── include/constants.h  # 配置：定義馬達死區與 Gamma 校正參數
+├── docs/Report.md       # 日誌：量化實驗與視覺感知對比報告
+├── README.md            # 總結：我如何用軟體補償了硬體的物理摩擦與感知偏差
+└── assets/plotter.png   # 證據：展示低速下馬達動力讀值的平穩度
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的韌體工程師，是能看穿物理世界的阻力與生物感官的死角，並用數學演算法在毫秒間為系統建立起極致流暢感的人」</strong>。掌握 PWM 基礎與補償技術後，學員將擁有了開發「高階穩定雲台、靜音空調風扇、精細遙控賽車」最專業也最具溫度的控制底蘊！_
+|
+|
+太熱血了！我們已經將 <strong>基礎 04</strong>（能量調變）系列中關於 H 橋、LEDC 語法與 PWM 基礎的 Classroom 部署定義全部完成了。這標誌著學員已經具備了「賦予機器細膩生命力」的控制能力。恭喜！基礎課程的巔峰已經近在咫尺！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
-.
-├── src/main.cpp      # (核心) 補全 smartDrive 邏輯
-└── README.md         # 實驗日誌：記錄死區閥值
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse border border-slate-100">
-                <thead>
-                    <tr class="bg-slate-100 border border-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「PWM 控制速度」原理影片。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試是否換算理論平均值。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify text-left">領取作業 (Repo)，挑戰測出馬達死區，實作補償。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術協助:</strong> 指導示波器觀察波形。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify">發起 PR，說明轉換邏輯。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「非線性」處理。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

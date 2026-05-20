@@ -327,88 +327,73 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">濾波演算法實驗室：數據平滑與抗干擾實戰</h2>
+<div class="markdown-heading"><h1 class="heading-element">adv-04-unit-filter-algorithms (數據抖動與數位濾波演算法)</h1><a id="user-content-adv-04-unit-filter-algorithms-數據抖動與數位濾波演算法" class="anchor" aria-label="Permalink: adv-04-unit-filter-algorithms (數據抖動與數位濾波演算法)" href="#adv-04-unit-filter-algorithms-數據抖動與數位濾波演算法"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到數據濾波演算法實作單元！在這個練習中，你將學習如何處理來自感測器的原始「髒數據」，並透過不同的數學演算法將其提純為平滑且準確的物理訊號。這對於打造穩定的自動駕駛系統、遙控機器人或任何感測器應用都至關重要。</p>
+<div class="markdown-heading"><h2 class="heading-element">任務目標</h2><a id="user-content-任務目標" class="anchor" aria-label="Permalink: 任務目標" href="#任務目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>你需要實作並優化以下三種核心濾波器：</p>
+<ol>
+<li>
+<strong>線性平均濾波 (Moving Average)</strong>：掌握基礎的時域濾波，理解視窗大小對平滑度與延遲的影響。</li>
+<li>
+<strong>中值濾波器 (Median Filter)</strong>：學習如何剔除極端的離群值（Spikes），保護系統不受突發噪音干擾。</li>
+<li>
+<strong>自適應濾波 (Adaptive Alpha Filter)</strong>：實作智能係數調整邏輯，在「靈敏反應」與「極致平穩」之間找到完美的動態平衡。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">專案結構</h2><a id="user-content-專案結構" class="anchor" aria-label="Permalink: 專案結構" href="#專案結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong><code>src/</code></strong>：核心演算法存放處。
+<ul>
+<li>
+<code>MovingAverage.js</code>：線性平均邏輯。</li>
+<li>
+<code>MedianFilter.js</code>：排序取中值邏輯。</li>
+<li>
+<code>AdaptiveFilter.js</code>：自適應係數邏輯。</li>
+</ul>
+</li>
+<li>
+<strong><code>simulator/</code></strong>：視覺化工具。你可以直接開啟 <code>index.html</code> 觀看你的演算法在真實感測器數據上的表現。</li>
+<li>
+<strong><code>data/</code></strong>：包含一組包含高頻雜訊與突發尖峰的模擬感測器數據 <code>sensor_noise.json</code>。</li>
+<li>
+<strong><code>test/</code></strong>：自動化評分與性能測試腳本。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">如何開始</h2><a id="user-content-如何開始" class="anchor" aria-label="Permalink: 如何開始" href="#如何開始"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<p><strong>安裝依賴</strong>（如果你需要執行本地測試）：</p>
+<div class="highlight highlight-source-shell"><pre>npm install</pre></div>
+</li>
+<li>
+<p><strong>實作演算法</strong>：
+依序打開 <code>src/</code> 下的檔案，根據註解完成實作。</p>
+</li>
+<li>
+<p><strong>開啟模擬器</strong>：
+使用瀏覽器打開 <code>simulator/index.html</code>。</p>
+<ul>
+<li>你可以切換不同的演算法。</li>
+<li>調整參數（如 Window Size 或 Alpha 值）。</li>
+<li>即時觀察「原始數據」與「濾波後數據」的波形對比。</li>
+</ul>
+</li>
+<li>
+<p><strong>執行測試</strong>：
+執行以下命令來檢查你的演算法是否符合品質標準：</p>
+<div class="highlight highlight-source-shell"><pre>npm <span class="pl-c1">test</span></pre></div>
+<p>此測試會評估你的濾波器在消除噪音方面的有效性以及造成的相位延遲（Phase Lag）。</p>
+</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">提交準則</h2><a id="user-content-提交準則" class="anchor" aria-label="Permalink: 提交準則" href="#提交準則"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>確保你的濾波器在面對突發尖峰（Spikes）時具有足夠的魯棒性。</li>
+<li>試著找到最優的參數配置，使得信號既平滑又不會產生過大的反應延遲。</li>
+<li>提交前請確保所有測試皆能通過。</li>
+</ul>
+<hr>
+<p><em>這是一個教學專用的程式庫，旨在幫助你理解演算法在物理世界中的實際應用。</em></p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：濾波器實驗室實作 (Filter Lab Implementation)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：數據視覺化工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>演算法開發</strong>：在 <code>filters.js</code> 中實作標準的均值濾波（Moving Average）邏輯。</li>
-                    <li><strong>視覺化整合</strong>：利用 Chart.js 將原始數據與各類濾波曲線進行疊加顯示，並提供動態參數調整介面。</li>
-                    <li><strong>Push Final</strong>：提交具備「平滑數據處理」能力的 Web 視覺化專案。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>Buffer 管理</strong>：FIFO 邏輯是否正確？當資料填滿視窗後是否能正確彈出舊數據？</li>
-                    <li>[ ] <strong>曲線平滑度</strong>：均值濾波是否能有效消除高頻噪聲而不導致嚴重的數據失真？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：中值濾波抗干擾挑戰 (Median Filter Spike Protection)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：訊號處理專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>排序演算法</strong>：實作中值濾波器（Median Filter），針對特定視窗內的數據進行排序並取中位數。</li>
-                    <li><strong>尖峰對抗</strong>：模擬產生「尖峰雜訊」，對比均值濾波（會被拉走）與中值濾波（能剔除異值）的表現差異。</li>
-                    <li><strong>分析撰寫</strong>：在 README 中解釋為何中值濾波在處理突發干擾時比線性濾波更具優勢。</li>
-                    <li><strong>Push Final</strong>：提交具備「抗脈衝干擾」能力的強健數據處理模組。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>異常剔除效能</strong>：面對突發的極大/極小異值時，輸出曲線是否能穩定維持在有效數據區間？</li>
-                    <li>[ ] <strong>計算開銷考量</strong>：代碼中是否包含了基本的排序效率考量（如適當的視窗大小選擇）？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：動態 α 濾波器：靈敏與平穩的平衡 (Adaptive Alpha Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：自駕車演算法工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>適應性推導</strong>：設計 <code>AdaptiveAlpha = f(Error)</code> 公式，使 α 隨原始數據與濾波後的偏差動態縮放。</li>
-                    <li><strong>收斂實驗</strong>：模擬「急變」與「穩態」情境，觀察系統在快速回應與極致平穩間的自動權衡。</li>
-                    <li><strong>時延補償</strong>：觀測動態 α 對濾波器相位滯後（Phase Lag）現象的具體改善。</li>
-                    <li><strong>Push Final</strong>：提交具備「智能強度縮放」能力的高階數位濾波方案。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>回應動態性</strong>：在大位移發生時，α 是否能即時調大以縮短系統追隨時間？</li>
-                    <li>[ ] <strong>穩態精度</strong>：在進入穩定區間後，α 是否能調小以消除剩餘的微小震盪？</li>
-                </ul>
-            </div>
-        </div>
     </section>
     <script>
         window.RESOURCES = {
@@ -519,57 +504,94 @@
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：數據抖動的處理哲學。從簡單的平均到具有靈魂的動態權重，理解其物理意義與代價。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：平滑與延遲的零和博弈</strong> - 讓學生親手調整參數，看見「數據越穩，反應越慢」的真實物理代價。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：從線性到非線性</strong> - 透過中值濾波引入非線性處理概念，應對均值濾波無法處理的尖峰脈衝雜訊。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：適應性控制器</strong> - 引導學生思考如何讓代碼具備辨識場景的能力，實作自動化的參數切換邏輯。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-04-unit-filter-algorithms</code> (數據抖動與數位濾波演算法)</strong> 單元，這是一個將「原始物理訊號」進行數學提純的進階技術課，對於打造穩定的自駕系統或傳感器終端至關重要。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本程式庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" href="#1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>濾波演算法需要大量的「髒數據」來測試有效性，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/filters.js</code></strong>：核心演算法檔案，預置 <code>MovingAverage</code>, <code>MedianFilter</code>, <code>AdaptiveLPF</code> 三個類別的空架構。</li>
+<li>
+<strong>📂 <code>data/sensor_noise.json</code></strong>：提供一組「真實感測器噪音」數據，包含高頻振動雜訊、突發性尖峰脈衝 (Spikes) 以及階躍信號 (Step signals)。</li>
+<li>
+<strong>📂 <code>simulator/index.html</code></strong>：視覺化儀表板。學員只需在 <code>filters.js</code> 寫好邏輯，網頁端會自動引用並畫出「原始 vs. 濾波後」的波形動態對比圖。</li>
+<li>
+<strong>📂 <code>tests/snr_evaluator.js</code></strong>：自動化評分腳本，計算濾波後的「信噪比 (SNR)」提升度，以及相對於原始信號的「相位延遲 (Phase Lag)」。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：線性濾波器設計 (Moving Average &amp; LPF)</h4><a id="user-content-任務-1線性濾波器設計-moving-average--lpf" class="anchor" aria-label="Permalink: 任務 1：線性濾波器設計 (Moving Average &amp; LPF)" href="#任務-1線性濾波器設計-moving-average--lpf"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握最基礎的線性時域濾波，理解「時間換取穩定度」的代價。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>核心代碼檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：低通濾波公式</span>
+<span class="pl-smi">this</span><span class="pl-kos">.</span><span class="pl-c1">currentValue</span> <span class="pl-c1">=</span> <span class="pl-smi">this</span><span class="pl-kos">.</span><span class="pl-c1">alpha</span> <span class="pl-c1">*</span> <span class="pl-s1">newValue</span> <span class="pl-c1">+</span> <span class="pl-kos">(</span><span class="pl-c1">1</span> <span class="pl-c1">-</span> <span class="pl-smi">this</span><span class="pl-kos">.</span><span class="pl-c1">alpha</span><span class="pl-kos">)</span> <span class="pl-c1">*</span> <span class="pl-smi">this</span><span class="pl-kos">.</span><span class="pl-c1">lastValue</span><span class="pl-kos">;</span></pre></div>
+</li>
+<li>
+<strong>Autograding</strong>：給予一組階躍輸入，測量輸出的「上升時間 (Rise Time)」。如果學員的 $\alpha$ 設得太小，卻沒發現數據反應變得過於遲鈍，則需提供回饋提示。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：中值濾波抗干擾挑戰 (Median Filter Spike Protection)</h4><a id="user-content-任務-2中值濾波抗干擾挑戰-median-filter-spike-protection" class="anchor" aria-label="Permalink: 任務 2：中值濾波抗干擾挑戰 (Median Filter Spike Protection)" href="#任務-2中值濾波抗干擾挑戰-median-filter-spike-protection"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：處理線性濾波器無法解決的「離群值 (Outliers)」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>異常測試</strong>：在測試數據中插入一個極大的錯誤值（如：正常值 10，突然變成 1000）。</li>
+<li>
+<strong>驗證方式</strong>：檢核輸出曲線。均值濾波會被 1000 拉起一個大斜坡，而正確的中值濾波應該能「完全無視」這個尖峰，維持在 10 附近。這能帶給學員極大的成功感。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：動態 α 濾波器 (Adaptive Alpha Lab)</h4><a id="user-content-任務-3動態-α-濾波器-adaptive-alpha-lab" class="anchor" aria-label="Permalink: 任務 3：動態 α 濾波器 (Adaptive Alpha Lab)" href="#任務-3動態-α-濾波器-adaptive-alpha-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：設計具備「智能」的濾波強度，解決靈敏度與平穩度的零和博弈。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>權衡邏輯設計</strong>：要求學員實作一個根據「誤差值 (Error)」自動調整 $\alpha$ 的函式。
+<ul>
+<li>當 $Error$ 很大時（代表發生真位移），調大 $\alpha$ 以求快速追隨。</li>
+<li>當 $Error$ 很小時（代表只是雜訊），調小 $\alpha$ 以求極致平穩。</li>
+</ul>
+</li>
+<li>
+<strong>Tutor View (PR 審核)</strong>：導師在 PR 中點評學員的公式曲線。是否有設置「死區 (Deadband)」以避免在平衡點產生微小震盪？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 演算法導師點評標準 (Algorithm Benchmarks)</h3><a id="user-content-3-演算法導師點評標準-algorithm-benchmarks" class="anchor" aria-label="Permalink: 3. 演算法導師點評標準 (Algorithm Benchmarks)" href="#3-演算法導師點評標準-algorithm-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對數據背後物理意義的理解」</strong>：</p>
+<ul>
+<li>[ ] <strong>延遲感知力</strong>：學員是否能解釋為什麼視窗 $N$ 不能無限加大？（提示：無人車會因為濾波延遲而撞牆）。</li>
+<li>[ ] <strong>排序效率考量</strong>：在實作中值濾波時，是否因頻繁的 <code>Array.sort()</code> 導致瀏覽器運算負載過重？</li>
+<li>[ ] <strong>場景自適應性</strong>：README 是否說明了：在「靜態測速」與「高速避障」時，濾波器參數應如何動態切換？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/
+│   ├── MovingAverage.js    # 任務 1：線性平均
+│   ├── MedianFilter.js     # 任務 2：排序取中值
+│   └── AdaptiveFilter.js   # 任務 3：適應性係數邏輯
+├── simulator/
+│   └── chart_app.js        # 視覺化邏輯 (使用 Chart.js)
+├── test/
+│   └── accuracy_test.js    # 自動化：SNR 與 Lag 測算
+└── README.md               # 專案報告：我如何找到平滑與回應的黃金分割點
+</code></pre>
+<p>透過這種部署方式，學生能明白 <strong>「演算法不是冰冷的公式，而是應對物理世界雜訊的盾牌」</strong>。這對於未來開發高精度遙控系統或自駕演算法是絕對核心的底層實力。</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── js/filters_logic.js  # 核心：待填寫均值、中值與動態 α 算法
-├── assets/data_source/  # 測試：包含高頻噪聲、尖峰噪聲與階躍訊號的 CSV
-├── test/benchmark.js    # 自動化：檢查輸出的信噪比 (SNR) 提升度
-└── README.md            # 引導：要求學生繪製不同濾波器的延遲對比圖
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5">觀看「LFP 低通濾波公式與權重」影片。完成預習測驗：α 與係數的物理關聯。</td>
-                        <td class="px-6 py-5"><strong>Dashboard:</strong> 觀察學員對「相位滯後」概念的初步認知狀況。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900">領取作業 (Repo)，挑戰在「尖峰噪聲環境」下，如何不透過增加延遲就剔除壞點。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 引導學生討論中值濾波器在數組過大時的性能瓶頸。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
-                        <td class="px-6 py-5">提交包含適應性係數邏輯的濾波引擎。撰寫對比實驗摘要。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價對「動態 α 設計」的對稱性與穩定性考量。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

@@ -309,141 +309,149 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">即時感測實驗室：硬體中斷與事件驅動架構</h2>
+<div class="markdown-heading"><h1 class="heading-element">硬體中斷實驗 (Hardware Interrupts Lab)</h1><a id="user-content-硬體中斷實驗-hardware-interrupts-lab" class="anchor" aria-label="Permalink: 硬體中斷實驗 (Hardware Interrupts Lab)" href="#硬體中斷實驗-hardware-interrupts-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">專案簡介</h2><a id="user-content-專案簡介" class="anchor" aria-label="Permalink: 專案簡介" href="#專案簡介"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到 <strong>adv-11-unit-hardware-interrupts</strong> 實驗！在這個單元中，我們將學習如何讓微處理器具備「本能反應」。硬體中斷是嵌入式系統處理緊急或高頻事件的關鍵技術。</p>
+<p>本程式庫提供了一個基礎框架，讓你體驗「輪詢 (Polling)」與「中斷 (Interrupt)」在效能上的巨大落差。</p>
+<div class="markdown-heading"><h2 class="heading-element">學習目標</h2><a id="user-content-學習目標" class="anchor" aria-label="Permalink: 學習目標" href="#學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>理解硬體中斷的觸發機制 (Rising, Falling, Change)。</li>
+<li>掌握 <code>volatile</code> 關鍵字在多執行緒環境（ISR 與 Loop）中的重要性。</li>
+<li>實作 ISR (Interrupt Service Routine) 並進行微秒級的去彈跳 (Debouncing) 處理。</li>
+<li>體驗 <code>IRAM_ATTR</code> 如何優化中斷響應速度。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">實驗任務</h2><a id="user-content-實驗任務" class="anchor" aria-label="Permalink: 實驗任務" href="#實驗任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：實作去彈跳邏輯</h3><a id="user-content-任務-1實作去彈跳邏輯" class="anchor" aria-label="Permalink: 任務 1：實作去彈跳邏輯" href="#任務-1實作去彈跳邏輯"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在 <code>src/main.ino</code> 中，你需要完善 <code>handleButtonInterrupt</code> 函式。目前它僅有基本的骨架，你需要：</p>
+<ul>
+<li>使用 <code>millis()</code> 或 <code>micros()</code> 判斷兩次中斷之間的時間差。</li>
+<li>只有當時間差大於 <code>DEBOUNCE_DELAY</code> (20ms) 時，才增加 <code>interruptCount</code>。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：響應對比觀察</h3><a id="user-content-任務-2響應對比觀察" class="anchor" aria-label="Permalink: 任務 2：響應對比觀察" href="#任務-2響應對比觀察"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>觀察序列號監視器 (Serial Monitor) 的輸出。</li>
+<li>注意 <code>loop()</code> 函式中有一個 <code>delay(100)</code> 的忙碌迴圈。</li>
+<li>嘗試在忙碌期間點擊按鈕，觀察中斷是否依然能精準捕捉到每一次點擊（相較於傳統的 <code>digitalRead</code> 輪詢）。</li>
+</ol>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：效能分析報告</h3><a id="user-content-任務-3效能分析報告" class="anchor" aria-label="Permalink: 任務 3：效能分析報告" href="#任務-3效能分析報告"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>完成實驗後，請將你的觀察結果記錄在 <code>docs/latency_report.md</code> 中。</p>
+<div class="markdown-heading"><h2 class="heading-element">開發指南</h2><a id="user-content-開發指南" class="anchor" aria-label="Permalink: 開發指南" href="#開發指南"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">核心檔案結構</h3><a id="user-content-核心檔案結構" class="anchor" aria-label="Permalink: 核心檔案結構" href="#核心檔案結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>src/main.ino</code>: 主要邏輯實作位置。</li>
+<li>
+<code>include/interrupt_cfg.h</code>: 腳位配置與共享變數宣告。</li>
+<li>
+<code>docs/latency_report.md</code>: 實驗結果記錄表。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">重要提示</h3><a id="user-content-重要提示" class="anchor" aria-label="Permalink: 重要提示" href="#重要提示"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>不要在 ISR 中使用 Serial.print() 或 delay()</strong>：這會導致系統不穩定甚至崩潰。</li>
+<li>
+<strong>共享變數必須宣告為 <code>volatile</code></strong>：確保編譯器不會過度優化這些在主迴圈外被修改的變數。</li>
+</ul>
+<hr>
+<p>祝你在硬體中斷的世界中探索愉快！</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：響應對比實驗 (Reaction Battle Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：效能對比實驗員</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>忙碌模擬</strong>：在 <code>loop()</code> 中實作一個 100ms 阻塞任務（Busy-wait）。</li>
-                    <li><strong>輪詢漏失觀測</strong>：實測在 Polling 模式下，手動快速連按按鈕的「失能率」。</li>
-                    <li><strong>中斷重構</strong>：導入 <code>attachInterrupt</code>，證明即使 CPU 100% 忙碌，也能「強行截斷」執行流。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>事件劫持驗證</strong>：是否能在 README 清楚描述中斷與輪詢在反應時間上的級別差異？</li>
-                    <li>[ ] <strong>ISR 安全規範</strong>：確認處理函式中是否確實「沒有」使用 Serial.print 或任何 Delay。</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：中斷去彈跳 (Interrupt Debouncing Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：韌體濾波工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-tighter font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>抖動觀測</strong>：故意不加防抖，記錄按一次開關產生的「幽靈觸發」次數。</li>
-                    <li><strong>計時濾波實作</strong>：在 ISR 中實作基於 <code>millis()</code> 的窗口過濾邏輯。</li>
-                    <li><strong>原子性操作</strong>：正確應用 <code>volatile</code> 關鍵字，確保主程式能讀取到最新計數。</li>
-                    <li><strong>Push Final</strong>：提交具備「訊號清洗」能力的中斷驅動框架。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>感知一致性</strong>：按下 10 次是否確實產生 10 次計數？</li>
-                    <li>[ ] <strong>變數同步</strong>：是否正確宣告了 <code>volatile</code> 屬性以支持跨上下文通信？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：高頻壓力感知 (High-Speed Stress Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統可靠性專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>高頻脈衝接入</strong>：將馬達全速轉動時的編碼器訊號接入中斷埠（>1k Hz）。</li>
-                    <li><strong>IRAM 優化</strong>：為 ISR 添加 <code>IRAM_ATTR</code> 屬性，加速調度反應。</li>
-                    <li><strong>數據完整性校驗</strong>：在長時間運作（1 分鐘）後，驗證計數結果是否與理論轉速一致。</li>
-                    <li><strong>Push Final</strong>：提交具備「工業級即時性」的高速感知專案。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>高性能框架</strong>：是否正確使用了 <code>IRAM_ATTR</code> 以提高 ISR 執行優先級及速度？</li>
-                    <li>[ ] <strong>壓力穩定性</strong>：在高頻脈衝下，系統是否發生過崩潰或重啟現象？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：將處理器從「忙綠輪詢」轉向「事件驅動」。讓學生理解「優先級搶佔」的微軟系統核心觀念。</p>
-            <ol class="space-y-4 text-slate-600 text-justify">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest">重點 1：搶佔的威力</strong> - 透過 busy-loop 的失敗，凸顯中斷作為「神經反射」的必要性。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：ISR 的簡潔美學</strong> - 強調「ISR 不是寫邏輯的地方，是標記事件的地方」。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：內存調度最佳化</strong> - 解釋 <code>IRAM_ATTR</code> 對於減少 CPU 指令跳轉延遲的意義。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-11-unit-hardware-interrupts</code> (硬體中斷)</strong> 單元，這是嵌入式系統開發從「初階」邁向「專業」的分水嶺。它要求學員掌握 <strong>事件驅動架構 (Event-Driven Architecture)</strong>，並理解如何透過中斷服務函式 (ISR) 處理微秒級的緊急事件（如高速編碼器或緊急停機）。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本程式庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" href="#1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>中斷程式碼對執行時間與記憶體配置極其敏感，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>include/interrupt_handlers.h</code></strong>：中斷配置檔。定義 <code>volatile</code> 全域變數與 ISR 函式原型，留下 <code>IRAM_ATTR</code> 實作與邏輯 <code>TODO</code>。</li>
+<li>
+<strong>📂 <code>src/latency_test.ino</code></strong>：效能對比實驗。預置一個 100ms 的「忙碌迴圈 (Busy Loop)」，讓學員在同步執行的 <code>loop</code> 中體驗輪詢與中斷的反應落差。</li>
+<li>
+<strong>📂 <code>tests/isr_sanity.test.js</code></strong>：自動化檢查腳本。使用正則表達式檢核 ISR 內部是否「誤用」了 <code>delay()</code> 或 <code>Serial.print()</code> 等阻塞式函式（這會導致系統崩潰）。</li>
+<li>
+<strong>📂 <code>ANALYSIS.md</code></strong>：效能分析報告模板。提供對比表格，讓學員記錄在不同 CPU 負載下，中斷法的「事件不漏失率」。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：響應對比實驗 (Reaction Battle Lab)</h4><a id="user-content-任務-1響應對比實驗-reaction-battle-lab" class="anchor" aria-label="Permalink: 任務 1：響應對比實驗 (Reaction Battle Lab)" href="#任務-1響應對比實驗-reaction-battle-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：證明中斷能「搶佔」CPU 執行權，解決低頻輪詢的感知盲區。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>忙碌模擬檢核</strong>：學員必須在 <code>loop</code> 中加入長延遲，觀測輪詢法完全漏失快速點選的情況。</li>
+<li>
+<strong>事件劫持實作</strong>：使用 <code>attachInterrupt(pin, ISR, RISING)</code>，證明即使 CPU 在忙碌，計數器依然能精準跳動。</li>
+<li>
+<strong>Autograding</strong>：透過程式模擬高負載環境，核測計數器是否能在 <code>loop</code> 阻塞時依然維持正常。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：中斷去彈跳演算法 (Interrupt Debouncing Lab)</h4><a id="user-content-任務-2中斷去彈跳演算法-interrupt-debouncing-lab" class="anchor" aria-label="Permalink: 任務 2：中斷去彈跳演算法 (Interrupt Debouncing Lab)" href="#任務-2中斷去彈跳演算法-interrupt-debouncing-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：解決機械彈跳產生的「幽靈觸發」，建立純淨的數位訊號。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>計時濾波實作</strong>：學員需在 ISR 中加入基於 <code>millis()</code> 的時間窗口判斷。
+<div class="highlight highlight-source-c++"><pre><span class="pl-c"><span class="pl-c">//</span> 學生需實作：微秒級防抖</span>
+<span class="pl-k">void</span> IRAM_ATTR <span class="pl-en">handleButton</span>() {
+    <span class="pl-k">if</span> (<span class="pl-c1">millis</span>() - lastTime &gt; <span class="pl-c1">20</span>) {
+        count++;
+        lastTime = <span class="pl-c1">millis</span>();
+    }
+}</pre></div>
+</li>
+<li>
+<strong>原子性與同步</strong>：要求學員在 <code>README.md</code> 中說明為什麼共享變數必須宣告為 <code>volatile</code>。</li>
+<li>
+<strong>感知一致性驗證</strong>：手動點擊 20 次，檢核計數器是否確實回報 20（不多不少）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：高頻壓力測試 (High-Speed Stress Lab)</h4><a id="user-content-任務-3高頻壓力測試-high-speed-stress-lab" class="anchor" aria-label="Permalink: 任務 3：高頻壓力測試 (High-Speed Stress Lab)" href="#任務-3高頻壓力測試-high-speed-stress-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：因應馬達全速運作下的編碼器計數，驗證系統的極限響應能力。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>IRAM 優化要求</strong>：學員必須為 ISR 添加 <code>IRAM_ATTR</code>，將代碼強制存放於高速內存。</li>
+<li>
+<strong>計數完整性報告</strong>：全速轉動馬達 1 分鐘，記錄計數器的數值並與公式推導的轉速進行對比。</li>
+<li>
+<strong>PR 深度核核</strong>：點評其對「中斷嵌套限制」的理解。中斷程式碼是否足夠簡潔？是否在 10 微秒內執行完畢？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 即時系統工程導師點評標準 (Real-Time Engineering Benchmarks)</h3><a id="user-content-3-即時系統工程導師點評標準-real-time-engineering-benchmarks" class="anchor" aria-label="Permalink: 3. 即時系統工程導師點評標準 (Real-Time Engineering Benchmarks)" href="#3-即時系統工程導師點評標準-real-time-engineering-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對 CPU 執行流的深度控制力」</strong>：</p>
+<ul>
+<li>[ ] <strong>ISR 潔淨度</strong>：是否完全排除了 slow I/O（如 Serial）？執行路徑是否最短化？</li>
+<li>[ ] <strong>資料競爭防護</strong>：變數宣告是否考慮到了多執行緒環境（ISR vs. Loop）？</li>
+<li>[ ] <strong>系統穩定性</strong>：在高頻脈衝下，ESP32 是否發生過 Watchdog Timer (WDT) 重啟？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── include/interrupt_cfg.h  # 核心：定義 volatile 變數與中斷腳位映射
+├── src/main.ino             # 實作：學員需在此實作 IRAM_ATTR ISR 與去彈跳邏輯
+├── docs/latency_report.md   # 分析：紀錄 Polling vs Interrupt 的統計數據
+├── README.md                # 專案報告：我如何建立高精準度的事件驅動感知
+└── tests/static_checks.js   # 自動化：檢核 ISR 是否有阻塞式代碼違規
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的程式碼不僅要對，還要快得像本能」</strong>。掌握硬體中斷後，學員將擁有了開發「反應靈敏且省電」的工業級機器人（如自動急停系統、高精度無人機平衡控制）的核心工程基因。
+|
+|
+完美！我們已經定義了 <strong>進階 11</strong> 的即時響應單元配置方案。這為整個 Vibe Coding 體系增加了一個極具深度的韌體架構新層次。</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── src/main.ino          # 核心：學員需實作 IRAM_ATTR ISR
-├── include/interrupt.h   # 介面：定義 volatile 變數與 ISR 原型
-└── docs/performance.md   # 報告：記錄 Polling vs Interrupt 的響應落差分析
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「中斷 vs 輪詢：生活化案例」短片。理解 Volatile 關鍵字意義。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員能否指出：在中斷中寫 <code>delay(100)</code> 會發生什麼事？</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black">領取作業 (Repo)，挑戰「軟體去彈跳」濾波演算法。實測高頻脈衝下的計數穩定度。</td>
-                        <td class="px-6 py-5 text-left text-justify text-justify"><strong>技術教練:</strong> 指導如何使用 <code>attachInterrupt</code> 正確綁定 RISING/FALLING 邊緣。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify">提交具備「IRAM 優化」的最終版代碼。閱讀教師對「巢狀中斷 (Nested Interrupts)」的補充思維。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「即時操作系統 (RTOS)」精確度與中斷安全性的實踐深度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

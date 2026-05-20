@@ -266,89 +266,67 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">影像實驗室：解剖 MJPEG 串流與 HTTP 協議</h2>
+<div class="markdown-heading"><h1 class="heading-element">MJPEG 編碼與 HTTP Boundary 原理 (adv-01-unit-mjpeg-stream)</h1><a id="user-content-mjpeg-編碼與-http-boundary-原理-adv-01-unit-mjpeg-stream" class="anchor" aria-label="Permalink: MJPEG 編碼與 HTTP Boundary 原理 (adv-01-unit-mjpeg-stream)" href="#mjpeg-編碼與-http-boundary-原理-adv-01-unit-mjpeg-stream"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">課程目標</h2><a id="user-content-課程目標" class="anchor" aria-label="Permalink: 課程目標" href="#課程目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本單元的目標是讓學員從「函式庫使用者」進化為「協議理解者」。你將學習如何不依賴高階影像串流庫，手動透過 TCP Socket 實作符合 HTTP 標準的 MJPEG 影像串流。</p>
+<div class="markdown-heading"><h2 class="heading-element">任務說明</h2><a id="user-content-任務說明" class="anchor" aria-label="Permalink: 任務說明" href="#任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：封包解剖師 (Packet Analysis Lab)</h3><a id="user-content-任務-1封包解剖師-packet-analysis-lab" class="anchor" aria-label="Permalink: 任務 1：封包解剖師 (Packet Analysis Lab)" href="#任務-1封包解剖師-packet-analysis-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過觀察真實流量，理解 MJPEG 在 HTTP 層級的運作機制。</li>
+<li>
+<strong>要求</strong>：
+<ol>
+<li>使用瀏覽器開發者工具 (F12) 或 Wireshark 擷取 HTTP 串流。</li>
+<li>找出 <code>Content-Type: multipart/x-mixed-replace; boundary=...</code> 這一行。</li>
+<li>在 <code>docs/protocol_report.md</code> 中解釋 <code>boundary</code> 的具體作用。</li>
+<li>找出單張 JPEG 的 SOI (<code>0xFFD8</code>) 與 EOI (<code>0xFFD9</code>) 在二進位流中的位置並紀錄。</li>
+</ol>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：手動拼接 MJPEG 數據流 (Manual Streamer Implementation)</h3><a id="user-content-任務-2手動拼接-mjpeg-數據流-manual-streamer-implementation" class="anchor" aria-label="Permalink: 任務 2：手動拼接 MJPEG 數據流 (Manual Streamer Implementation)" href="#任務-2手動拼接-mjpeg-數據流-manual-streamer-implementation"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：不依賴第三方庫，手動透過 <code>WiFiClient</code> 物件推送影像流。</li>
+<li>
+<strong>要求</strong>：
+<ol>
+<li>在 <code>src/mjpeg_driver.cpp</code> (或指定檔案) 中實作 HTTP 多部份 (Multipart) 數據包的發送邏輯。</li>
+<li>確保正確使用 <strong>CRLF (<code>\r\n</code>)</strong> 換行符。</li>
+<li>正確封裝每張影像的標頭 (Boundary, Content-Type, Content-Length)。</li>
+</ol>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：串流穩定性與 MTU 優化 (Stream Stability Lab)</h3><a id="user-content-任務-3串流穩定性與-mtu-優化-stream-stability-lab" class="anchor" aria-label="Permalink: 任務 3：串流穩定性與 MTU 優化 (Stream Stability Lab)" href="#任務-3串流穩定性與-mtu-優化-stream-stability-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：解決高解析度下的影像撕裂 (Tearing) 問題。</li>
+<li>
+<strong>要求</strong>：
+<ol>
+<li>在 VGA 解析度下測試傳輸穩定性。</li>
+<li>紀錄調整傳輸參數前後的流暢度差異。</li>
+<li>將測試數據紀錄於 <code>test/stability_test.csv</code> 中。</li>
+</ol>
+</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">提交要求</h2><a id="user-content-提交要求" class="anchor" aria-label="Permalink: 提交要求" href="#提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>完成 <code>src/</code> 中的程式碼實作。</li>
+<li>完成 <code>docs/protocol_report.md</code> 的分析報告。</li>
+<li>確保你的程式庫程式碼乾淨且包含必要的註解。</li>
+<li>將所有更改提交並推送到 GitHub 程式庫。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">評分標準</h2><a id="user-content-評分標準" class="anchor" aria-label="Permalink: 評分標準" href="#評分標準"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>協議嚴謹度</strong>：HTTP 標頭與邊界封裝是否完全符合規範？</li>
+<li>
+<strong>故障排除能力</strong>：是否能正確診斷串流失敗的原因？</li>
+<li>
+<strong>穩定性</strong>：影像串流是否平滑且無撕裂現象？</li>
+</ul>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：封包解剖師 (Packet Analysis Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：網路通訊工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>協議觀測</strong>：在網頁端使用 F12 開發者工具，觀察 MJPEG 串流的 Response Header。</li>
-                    <li><strong>標記定位</strong>：精確找出 <code>multipart/x-mixed-replace</code> 下的 <code>boundary</code> 字串。
-                    </li>
-                    <li><strong>Push Final</strong>：提交一份關於「HTTP 持久連線與邊界標籤」的分析報告。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>原理理解</strong>：能否準確描述瀏覽器如何利用 Boundary 識別單幀影像的起訖？</li>
-                    <li>[ ] <strong>Header 識別</strong>：報告中是否正確截取了 <code>Content-Type</code> 的完整參數？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：手動拼接 MJPEG 數據流 (Manual Streamer)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：韌體開發工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>框架填充</strong>：棄用現成庫，使用 <code>client.print()</code> 手動發送 HTTP Header。</li>
-                    <li><strong>數據推送</strong>：精確計算 <code>Content-Length</code> 並手動推送影像二進位數據。</li>
-                    <li><strong>邊界封裝</strong>：在每幀結尾正確補上 <code>\r\n</code> 與 Boundary 符號。</li>
-                    <li><strong>Push Final</strong>：提交具備「零依賴 (Dependency-free)」特性的 MJPEG 發送器代碼。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>渲染正確性</strong>：影像能否在網頁端正常顯示且不產生畫面斷裂或綠屏？</li>
-                    <li>[ ] <strong>協議嚴謹度</strong>：HTTP 格式是否完全符合標準（特別是換行符號 `\r\n`）？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：串流穩定性與 MTU 優化 (Stream Stability Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：性能優化專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>負載測試</strong>：在高解析度 (VGA) 下觀察影像撕裂 (Tearing) 現象。</li>
-                    <li><strong>緩衝優化</strong>：調整 TCP 緩衝區大小與 MTU (最大傳輸單元) 配置。</li>
-                    <li><strong>對比實驗</strong>：紀錄優化前後的「幀間延遲」變動曲線。</li>
-                    <li><strong>Push Final</strong>：提交最終版具備「高穩定度、低延遲」的影像串流方案。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>流動性分析</strong>：提交的數據是否反映了 TCP 阻塞對串流品質的具體影響？</li>
-                    <li>[ ] <strong>優化成效</strong>：在高負載場景下，影像撕裂現象是否得到明顯改善？</li>
-                </ul>
-            </div>
-        </div>
     </section>
     <script>
         // Define Resources - Used by course-shared.js?v=2026.04.05.FINAL_V6
@@ -361,56 +339,91 @@
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：讓學生從「調庫俠」進化為「協議理解者」。掌握 HTTP 1.1 的持久連線 (Keep-Alive) 脈絡。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：無聲的對話</strong> - 透過 2-1 任務，讓學生看見 Header 是如何指揮瀏覽器渲染行為的。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：位元級精確度</strong> - MJPEG 拼接中，哪怕少一個 <code>\n</code> 都會導致串流崩潰。鍛鍊學生的嚴謹度。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：底層性能調校</strong> - 影像撕裂不只是 FPS 問題，更是網路層的隊列問題。引導學生思考 TCP 窗口與緩衝。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-01-unit-mjpeg-stream</code> (MJPEG 編碼與 HTTP Boundary 原理)</strong> 單元，這是一個讓學生從「調包俠 (Library User)」進化為「協議理解者 (Protocol Implementer)」的關鍵進階課程。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>進階協議單元的範本應強調「零依賴 (Dependency-free)」的實作，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/mjpeg_server.cpp</code></strong>：故意移除高階影像串流庫，僅保留原始的 <code>WiFiClient</code> 物件。學員需在此實作手動拼接 HTTP 多部份 (Multipart) 數據包的邏輯。</li>
+<li>
+<strong>📂 <code>analysis/packet_dump.md</code></strong>：預置一個報告模板，讓學員貼入瀏覽器開發者工具 (F12) 擷取的 HTTP 標頭 (Header) 分析。</li>
+<li>
+<strong>📂 <code>web/stream_test.html</code></strong>：一個極簡的前端頁面，用於驗證學員實作的串流是否能被標準 <code>&lt;img&gt;</code> 標籤解析。</li>
+<li>
+<strong>📂 <code>.github/workflows/protocol_checker.yml</code></strong>：自動化腳本，初步檢查原始碼中是否包含正確的 <code>\r\n</code> (CRLF) 換行邏輯。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：封包解剖師 (Packet Analysis Lab)</h4><a id="user-content-任務-1封包解剖師-packet-analysis-lab" class="anchor" aria-label="Permalink: 任務 1：封包解剖師 (Packet Analysis Lab)" href="#任務-1封包解剖師-packet-analysis-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過觀察真實流量，理解 MJPEG 在 HTTP 層級的運作機制。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>要求</strong>：學員需擷取 <code>Content-Type: multipart/x-mixed-replace; boundary=...</code> 這一行，並解釋 <code>boundary</code> 的具體作用。</li>
+<li>
+<strong>驗證方式</strong>：在 <code>analysis/packet_dump.md</code> 中檢查學員是否能正確計算出單張 JPEG 的 SOI (<code>0xFFD8</code>) 與 EOI (<code>0xFFD9</code>) 在二進位流中的位置。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：手動拼接 MJPEG 數據流 (Manual Streamer Implementation)</h4><a id="user-content-任務-2手動拼接-mjpeg-數據流-manual-streamer-implementation" class="anchor" aria-label="Permalink: 任務 2：手動拼接 MJPEG 數據流 (Manual Streamer Implementation)" href="#任務-2手動拼接-mjpeg-數據流-manual-streamer-implementation"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：不依賴第三方庫，手動透過 TCP Socket 推送影像流。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>核心代碼檢核</strong>：
+<div class="highlight highlight-source-c++"><pre><span class="pl-c"><span class="pl-c">//</span> 學生需實作：手動傳送邊界與長度標頭</span>
+client.print(<span class="pl-s"><span class="pl-pds">"</span>--<span class="pl-pds">"</span></span> + boundary + <span class="pl-s"><span class="pl-pds">"</span><span class="pl-cce">\r\n</span><span class="pl-pds">"</span></span>);
+client.print(<span class="pl-s"><span class="pl-pds">"</span>Content-Type: image/jpeg<span class="pl-cce">\r\n</span><span class="pl-pds">"</span></span>);
+client.print(<span class="pl-s"><span class="pl-pds">"</span>Content-Length: <span class="pl-pds">"</span></span> + String(fb-&gt;len) + <span class="pl-s"><span class="pl-pds">"</span><span class="pl-cce">\r\n\r\n</span><span class="pl-pds">"</span></span>);
+client.write(fb-&gt;buf, fb-&gt;len);
+client.print(<span class="pl-s"><span class="pl-pds">"</span><span class="pl-cce">\r\n</span><span class="pl-pds">"</span></span>);</pre></div>
+</li>
+<li>
+<strong>核核重點</strong>：導師應在 PR 中檢查學員是否正確使用了 <strong>CRLF (<code>\r\n</code>)</strong>。在 HTTP 協議中，少一個位元組都會導致瀏覽器渲染失敗（出現破碎畫面或綠屏）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：串流穩定性與 MTU 優化 (Stream Stability Lab)</h4><a id="user-content-任務-3串流穩定性與-mtu-優化-stream-stability-lab" class="anchor" aria-label="Permalink: 任務 3：串流穩定性與 MTU 優化 (Stream Stability Lab)" href="#任務-3串流穩定性與-mtu-優化-stream-stability-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：解決高解析度下的影像撕裂 (Tearing) 問題。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>數據採集</strong>：要求學員紀錄在 VGA 解析度下，調整 <code>CONFIG_TCP_MSS</code> (最大報文段大小) 前後，影像傳輸的流暢度差異。</li>
+<li>
+<strong>成果展示</strong>：上傳一段錄影或截圖，對比「優化前（影像腰斬/撕裂）」與「優化後（完整幀平滑切換）」的視覺效果。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 進階協議單元導師點評標準 (Advanced Benchmarks)</h3><a id="user-content-3-進階協議單元導師點評標準-advanced-benchmarks" class="anchor" aria-label="Permalink: 3. 進階協議單元導師點評標準 (Advanced Benchmarks)" href="#3-進階協議單元導師點評標準-advanced-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對數位邊界的精確控制」</strong>：</p>
+<ul>
+<li>[ ] <strong>協議嚴謹度</strong>：手動封裝的 HTTP 流是否完全符合規範，且不依賴任何外部渲染輔助？</li>
+<li>[ ] <strong>故障排除能力</strong>：當瀏覽器無法連線時，學員是否能透過 F12 工具診斷出是 Boundary 名稱不匹配還是換行符出錯？</li>
+<li>[ ] <strong>性能直覺</strong>：學員是否理解為什麼在頻寬受限時，MJPEG 的表現會優於/劣於其他編碼格式？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/
+│   └── mjpeg_driver.cpp    # 核心：學員需在此實作位元組級別的發送邏輯
+├── docs/
+│   └── protocol_report.md  # 協議解剖報告 (含 Header 截圖)
+├── test/
+│   └── stability_test.csv  # 穩定性測試數據 (解析度 vs. 撕裂次數)
+└── README.md               # 專案總結：從 Socket 層面看影像連線
+</code></pre>
+<p>透過這種部署方式，學生能從「會寫程式碼」提升到「<strong>理解數據流動規律</strong>」的高度，這是成為資深物聯網或影音工程師的必經之路。</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── src/server.cpp    # 核心：學員需在此手動實作 MJPEG 拼接邏輯
-├── src/web_assets.h  # 前端：包含接收串流的 HTML/JS
-└── README.md         # 紀錄：串流協議分析與穩定性測試數據
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                <tr>
-                    <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                    <td class="px-6 py-5 text-left text-justify">觀看「MJPEG 每一幀都是主角」短片。理解 JPEG 身份證明 (SOI/EOI)。</td>
-                    <td class="px-6 py-5 text-left text-justify"><strong>Dashboard:</strong> 確認學員是否理解為何 MJPEG 不適合慢速網路。</td>
-                </tr>
-                <tr>
-                    <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                    <td class="px-6 py-5 text-left text-justify">領取作業 (Repo)，手動拼接 HTTP 流。挑戰在 30 FPS 下維持畫面不撕裂。</td>
-                    <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 探討 CPU Fin/Rst 斷開機制與記憶體回收。</td>
-                </tr>
-                <tr>
-                    <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                    <td class="px-6 py-5 text-left text-justify">提交穩定性優化後的最終版本。閱讀導師對「WebRTC」與「MJPEG」延遲特性的深度對比。</td>
-                    <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價對 <code>Content-Length</code> 精確控制的邏輯。</td>
-                </tr>
-            </tbody>
-        </table>
-        </div>
     </section>
 </body>
 

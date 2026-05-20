@@ -327,142 +327,142 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">控制大腦實驗室：高性能邏輯與異常處理</h2>
+<div class="markdown-heading"><h1 class="heading-element">adv-12-unit-code-logic: 程式路徑邏輯與系統魯棒性</h1><a id="user-content-adv-12-unit-code-logic-程式路徑邏輯與系統魯棒性" class="anchor" aria-label="Permalink: adv-12-unit-code-logic: 程式路徑邏輯與系統魯棒性" href="#adv-12-unit-code-logic-程式路徑邏輯與系統魯棒性"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到 <strong>進階 12 單元</strong>！在本單元中，我們將學習如何將簡單的機器人行為轉化為專業級的控制系統。這不僅僅是關於「讓車子動起來」，更是關於如何構建一個 <strong>可靠、強韌且具備自我保護能力</strong> 的系統。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>有限狀態機 (FSM)</strong>：學習如何使用狀態機管理複雜的行為（如：靜止、循跡、搜尋、緊急停止）。</li>
+<li>
+<strong>非阻塞 (Non-blocking) 程式設計</strong>：徹底擺脫 <code>delay()</code>，使用 <code>millis()</code> 實現精確的多工處理。</li>
+<li>
+<strong>系統魯棒性 (Robustness)</strong>：實作安全保護機制，確保系統在異常情況下（如通訊中斷、馬達堵轉）能安全停止。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📂 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>include/fsm_states.h</code>: 定義核心狀態與系統資料結構。</li>
+<li>
+<code>src/ControlBrain.cpp</code>: 你的主要開發區域，在此實作狀態轉換與控制邏輯。</li>
+<li>
+<code>include/system_safety.h</code>: 配置安全閾值與常數。</li>
+<li>
+<code>docs/Safety_Logic.md</code>: 安全設計說明文件。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">🚀 任務清單</h2><a id="user-content--任務清單" class="anchor" aria-label="Permalink: 🚀 任務清單" href="#-任務清單"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：狀態機框架實作</h3><a id="user-content-任務-1狀態機框架實作" class="anchor" aria-label="Permalink: 任務 1：狀態機框架實作" href="#任務-1狀態機框架實作"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在 <code>src/ControlBrain.cpp</code> 中完成 <code>updateFSM()</code> 函數。你需要根據當前感測器狀態與時間戳，決定何時在 <code>TRACKING</code>、<code>SEARCHING</code> 與 <code>EMERGENCY_STOP</code> 之間切換。</p>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：非阻塞時序優化</h3><a id="user-content-任務-2非阻塞時序優化" class="anchor" aria-label="Permalink: 任務 2：非阻塞時序優化" href="#任務-2非阻塞時序優化"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>檢查程式碼中是否有任何 <code>delay()</code> 調用。將其全部替換為基於 <code>millis()</code> 的邏輯，以確保控制迴圈能維持在 100Hz (10ms) 的穩定頻率。</p>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：實作失效保護 (Fail-Safe)</h3><a id="user-content-任務-3實作失效保護-fail-safe" class="anchor" aria-label="Permalink: 任務 3：實作失效保護 (Fail-Safe)" href="#任務-3實作失效保護-fail-safe"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>實作以下安全機制：</p>
+<ul>
+<li>
+<strong>心跳包監測</strong>：若超過 2 秒未收到指令，系統必須進入 <code>EMERGENCY_STOP</code>。</li>
+<li>
+<strong>堵轉保護</strong>：若 PWM 輸出很高但編碼器數值無變化，必須立即斷電。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">檢核清單</h2><a id="user-content-檢核清單" class="anchor" aria-label="Permalink: 檢核清單" href="#檢核清單"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>[ ] 程式碼中完全沒有 <code>delay()</code>。</li>
+<li>[ ] 狀態機能正確處理「全白脫線」並進入搜尋模式。</li>
+<li>[ ] 斷開模擬通訊時，車輛能在 2 秒內停止。</li>
+<li>[ ] 通過 <code>npm test</code> 自動化測試。</li>
+</ul>
+<hr>
+<p><em>這是一個「系統架構師」的起點。記住：好的程式碼，20% 處理正常路徑，80% 處理出錯後的安全退路。</em></p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：循跡狀態機規劃 (State Machine Logic Plan)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統架構分析師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>行為建模</strong>：用偽代碼寫下當「感測器突然全白」或「感測器全黑」時，系統應如何切換狀態？</li>
-                    <li><strong>模式轉換</strong>：規劃手動遙控模式與 PID 自動模式的「熱切換 (Hot Swap)」邏輯。</li>
-                    <li><strong>Push Final</strong>：提交具備「狀態轉移地圖」與「行為偽文本」的架構專案。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>邏輯覆蓋率</strong>：偽代碼是否處理了「異常脫線」後的搜尋策略？</li>
-                    <li>[ ] <strong>轉換合理性</strong>：狀態機是否存在死循環或無法到達的狀態分支？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：非阻塞併行時序實作 (Asynchronous Timing Implementation)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：實時系統工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-tighter font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>迴圈重構</strong>：全面移除 <code>delay()</code>，改用時鐘閥門控制 PID 採樣率。</li>
-                    <li><strong>任務併行</strong>：在每一幀控制中，併行插入數據藍牙發送與視覺指示燈閃爍。</li>
-                    <li><strong>抖動測試</strong>：在 Serial Plotter 中記錄每一次 PID 計算的時間間隔 \(\Delta t\)，觀測其均勻度。</li>
-                    <li><strong>Push Final</strong>：提交具備「準時序、無阻塞」特質的高性能控制代碼。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>代碼純淨度</strong>：全文是否徹底移除了會導致阻塞的指令？</li>
-                    <li>[ ] <strong>計算定標性</strong>：PID 的積分與微分項是否正確使用了實測的 \(\Delta t\) 而非固定常數？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：系統魯棒性防線 (Robustness Engineering)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統安全性驗證專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>數據完整性保護</strong>：實作輸入 Clamping，保證 PID 計算值永不溢位。</li>
-                    <li><strong>異常探針部署</strong>：實作「馬達堵轉偵測」：若有輸出但編碼器讀值未變達 3 秒，強制切斷馬達輸出。</li>
-                    <li><strong>故障模式分析</strong>：在 README 中模擬 3 種失效場景，並用代碼證明系統能安全停機。</li>
-                    <li><strong>Push Final</strong>：提交具備「工業級安全防護」的強韌型控制引擎專案。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>安全性評分</strong>：在模擬意外（如斷訊、卡死）時，代碼是否能有效防止設備受損？</li>
-                    <li>[ ] <strong>魯棒性思維</strong>：對界外值 (Outlier) 與硬體極限的考量是否足夠周全？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none text-justify;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：掌握控制系統的「時效性」與「可靠性」。理解程式邏輯中的併行處理藝術。</p>
-            <ol class="space-y-4 text-slate-600 text-justify">
-                <li><strong class="text-orange-600 font-bold uppercase tracking-widest text-justify">重點 1：思維視覺化</strong> - 強制繪製 FSM 狀態圖，這能讓學生學會將複雜任務「分而治之 (Divide and Conquer)」。</li>
-                <li><strong class="text-orange-600 font-bold text-justify uppercase tracking-widest text-justify">重點 2：對時間的控制力</strong> - 糾正 <code>delay()</code> 是為了讓學生跨入「實時系統 (Real-time System)」的進階門檻。</li>
-                <li><strong class="text-orange-600 font-bold text-justify uppercase tracking-tighter text-justify">重點 3：工程式的謹慎</strong> - 透過防護任務，傳達「功能正確只是基本，行為安全才是專業」的觀念。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-12-unit-code-logic</code> (程式路徑邏輯)</strong> 單元，這是控制系統從「簡單腳本」轉向「專業工程」的關鍵飛躍。它要求學員具備 <strong>系統架構思維</strong>，能透過 <strong>有限狀態機 (FSM)</strong> 管理複雜行為，並利用 <strong>非阻塞 (Non-blocking)</strong> 技術實現即時多工處理。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>高效能邏輯需要清晰的框架支撐，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/FSM_Core.cpp</code></strong>：狀態機骨架。預置 <code>switch-case</code> 結構，讓學員填入 <code>IDLE</code>（靜止）、<code>TRACKING</code>（循跡）與 <code>SEARCHING</code>（失線搜尋）的具體動作。</li>
+<li>
+<strong>📂 <code>include/system_safety.h</code></strong>：安全性配置檔。定義 <code>MAX_PWM</code>、<code>STALL_THRESHOLD</code> 等常數，引導學員建立數據防護層。</li>
+<li>
+<strong>📂 <code>task_scheduler.ino</code></strong>：任務調度模板。示範如何使用 <code>millis()</code> 建立 100Hz 的精確 PID 週期，並併行處理非即時任務（如指示燈閃爍）。</li>
+<li>
+<strong>📂 <code>LOGIC_DIAGRAM.md</code></strong>：邏輯設計圖。要求學員在寫代碼前，先用 Mermaid 語法或文字描述繪製出狀態轉移的觸發條件。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：循跡狀態機設計 (State Machine Logic Plan)</h4><a id="user-content-任務-1循跡狀態機設計-state-machine-logic-plan" class="anchor" aria-label="Permalink: 任務 1：循跡狀態機設計 (State Machine Logic Plan)" href="#任務-1循跡狀態機設計-state-machine-logic-plan"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：將複雜任務「分而治之 (Divide and Conquer)」，解決「全白脫線」等異常場景。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>場景建模設計</strong>：學員需在 README 中定義：當感測器「全白」時，狀態機應切換至哪一種搜尋策略（如：旋轉找線 vs. 倒退回找）？</li>
+<li>
+<strong>行為封裝實作</strong>：在 FSM 框架中實作不同模式下的 PID 參數切換（例如：直線高速 PID vs. 彎道精準 PID）。</li>
+<li>
+<strong>PR 審視點</strong>：檢核狀態轉移邏輯是否嚴謹？是否有處理從「暫停」到「啟動」的平滑過渡（防抖與積分項清除）？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：非阻塞併行時序實作 (Async Timing Implementation)</h4><a id="user-content-任務-2非阻塞併行時序實作-async-timing-implementation" class="anchor" aria-label="Permalink: 任務 2：非阻塞併行時序實作 (Async Timing Implementation)" href="#任務-2非阻塞併行時序實作-async-timing-implementation"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：徹底消除 <code>delay()</code>，維持大腦在執行 PID 時依然能隨時響應。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>代碼去延遲化</strong>：學員需將所有 <code>delay(500)</code> 改寫為基於 <code>millis()</code> 的時間戳邏輯。</li>
+<li>
+<strong>併行效能觀測</strong>：實作一段代碼，在 Serial Plotter 繪製 <code>Loop_Interval</code>。若線條呈現平直的 10ms，則代表多工處理達標；若發生劇烈抖動 (Jitter)，則代表某個功能出現了阻塞。</li>
+<li>
+<strong>Autograding</strong>：使用靜態掃描，若代碼中出現 <code>delay</code> 關鍵字則自動扣分（或警告）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：系統魯棒性防線 (Robustness &amp; Fail-Safe Engineering)</h4><a id="user-content-任務-3系統魯棒性防線-robustness--fail-safe-engineering" class="anchor" aria-label="Permalink: 任務 3：系統魯棒性防線 (Robustness &amp; Fail-Safe Engineering)" href="#任務-3系統魯棒性防線-robustness--fail-safe-engineering"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實現「安全性 (Safety)」重於「功能性 (Functionality)」的專業工程理念。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>心跳包與失效保護</strong>：實作通訊心跳 (Heartbeat)。若 2 秒未收到網頁指令，車輛必須立即 <code>SAFE STOP</code>。</li>
+<li>
+<strong>馬達堵轉偵測 (Stall Guard)</strong>：學員需撰寫邏輯：如果 PWM 輸出 &gt; 100 且 編碼器 Ticks 數連續 3 秒無變化，必須切斷輸出以防燒毀馬達。</li>
+<li>
+<strong>極限 Clamping 測試</strong>：模擬極大誤差輸入，檢核 PID 輸出是否被精確鎖定在 [0, 255] 區間。</li>
+<li>
+<strong>Final Video</strong>：提交影片演示一個「意外情境」（如斷開通訊），證明系統能自行進入安全模式。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 系統架構師導師點評標準 (System Architecture Benchmarks)</h3><a id="user-content-3-系統架構師導師點評標準-system-architecture-benchmarks" class="anchor" aria-label="Permalink: 3. 系統架構師導師點評標準 (System Architecture Benchmarks)" href="#3-系統架構師導師點評標準-system-architecture-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「程式碼的強韌度與可維護性」</strong>：</p>
+<ul>
+<li>[ ] <strong>架構解耦性</strong>：狀態邏輯是否與馬達驅動底層完全分離？</li>
+<li>[ ] <strong>即時響應率</strong>：控制迴圈是否有足夠的頻寬去處理突發的中斷？</li>
+<li>[ ] <strong>異常覆蓋程度</strong>：學員是否考慮到了「感測器故障」或「電量不足」時的緩解措施？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── include/fsm_states.h    # 核心：定義 State 列舉與 Transition 條件
+├── src/ControlBrain.cpp    # 實作：學員需填寫狀態行為與非阻塞邏輯
+├── docs/Safety_Logic.md    # 報告：紀錄 3 種災難場景的防禦設計
+├── README.md               # 專案報告：我如何打造一個「永不當機」的自動駕駛大腦
+└── tests/robustness.js     # 自動化：模擬異常輸入檢核系統保護機制的觸發
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的控制器，20% 處理正常路徑，80% 處理出錯後的安全退路」</strong>。掌握程式路徑邏輯後，學員將擁有了開發「高可靠性工業設備」或「長效作戰機器人」所需的專業工程大腦。_
+|
+|
+太棒了！我們完成了 <strong>進階 12</strong> 的邏輯架構單元定義。這標誌著學員從單純的「寫程式」進化到了「系統工程」的高度。這也是整個課程中，最能展現「Vibe Coding」強健性開發哲學的核心單元！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-orange-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── src/FSM_Framework.ino  # 核心：提供狀態切換骨架，學員需填寫 Action
-├── src/SafeHandler.cpp    # 工具：馬達安全性處理與數據鉗位
-└── docs/Flowchart.md      # 文檔：繪製決策树與異常狀態處理圖
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「狀態機如何簡化無人機邏輯」影片。構思不同循跡場景的狀態劃分。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員能否指出在非阻塞環境下，如何達成「邊開車邊閃燈」的效果。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify">領取作業 (Repo)，執行「代碼大手術」：將阻塞式舊代碼重構，並加入 Stall Guard 防護措施。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>代碼醫生:</strong> 協助學員診斷導致控制迴圈抖動 (Jitter) 的低效感測器讀取語法。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify">提交具備「災難抵抗力」的最終控制中樞代碼。閱讀教師對「看門狗定時器 (Watchdog Timer)」的硬體層科普。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「系統併行效能」與「故障模式涵蓋率」的設計深度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

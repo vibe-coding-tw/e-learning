@@ -289,139 +289,198 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">API 實驗室：從幾何公式到產業級封裝</h2>
+<div class="markdown-heading"><h1 class="heading-element">🤖 進階 10：API 封裝設計 (API Design &amp; Abstraction)</h1><a id="user-content--進階-10api-封裝設計-api-design--abstraction" class="anchor" aria-label="Permalink: 🤖 進階 10：API 封裝設計 (API Design &amp; Abstraction)" href="#-進階-10api-封裝設計-api-design--abstraction"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到 <strong>adv-10-unit-api-design</strong> 專案！本單元是讓你從「硬體愛好者」蛻變為「軟體架構師」的關鍵。我們將學習 <strong>「資訊隱藏 (Information Hiding)」</strong> 與 <strong>「抽象層設計 (Abstraction Layer)」</strong>。在這裡，你不再直接對馬達下達 PWM 指令，而是要設計一套具備物理語義的控制 API。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 作業目標與任務</h2><a id="user-content--作業目標與任務" class="anchor" aria-label="Permalink: 🎯 作業目標與任務" href="#-作業目標與任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本次作業分為三個核心任務，請依照順序完成：</p>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：Kinematics 類別設計 (Abstraction Lab)</h3><a id="user-content-任務-1kinematics-類別設計-abstraction-lab" class="anchor" aria-label="Permalink: 任務 1：Kinematics 類別設計 (Abstraction Lab)" href="#任務-1kinematics-類別設計-abstraction-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作「運動大腦」類別，建立從幾何指令到馬達轉速的強健映射。</li>
+<li>
+<strong>實作檔案</strong>：<code>src/DriveSystem.cpp</code>
+</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>實作物理參數的封裝，確保輪距 $L$、輪徑等只能透過 <code>constructor</code> 初始化。</li>
+<li>處理數學邊界情況：
+<ul>
+<li>半徑過小 (<code>abs(radius) &lt; 0.001</code>)：切換為「原地自轉」模式。</li>
+<li>半徑過大 (<code>radius &gt; 1000</code>)：切換為「直線行駛」模式。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：API 調用挑戰：8 字形軌跡 (API Sequence Challenge)</h3><a id="user-content-任務-2api-調用挑戰8-字形軌跡-api-sequence-challenge" class="anchor" aria-label="Permalink: 任務 2：API 調用挑戰：8 字形軌跡 (API Sequence Challenge)" href="#任務-2api-調用挑戰8-字形軌跡-api-sequence-challenge"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：驗證 API 接口的簡潔性與行為一致性。</li>
+<li>
+<strong>實作檔案</strong>：<code>examples/Figure8.ino</code>
+</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>使用你封裝好的 API 完成「8 字形」繞行任務。</li>
+<li>
+<strong>嚴禁</strong>在應用層 (Sketch) 中出現任何直接控制 PWM 的代碼。</li>
+<li>請觀察多次運行後的累積誤差，並在下方的【觀察與心得】區塊記錄並分析為什麼「開環控制」下的 8 字形會隨時間漂移。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：目標角度轉向接口 (Angle Command Engine)</h3><a id="user-content-任務-3目標角度轉向接口-angle-command-engine" class="anchor" aria-label="Permalink: 任務 3：目標角度轉向接口 (Angle Command Engine)" href="#任務-3目標角度轉向接口-angle-command-engine"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：將「時間」因素導入 API，建立具備回饋意識的高階控制。</li>
+<li>
+<strong>實作檔案</strong>：<code>src/DriveSystem.cpp</code> / <code>include/DriveSystem.h</code>
+</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>實作轉向精準度換算：<code>void turnAngle(float degree, float angular_velocity)</code>。</li>
+<li>
+<strong>非阻塞設計</strong>：讓車子在旋轉的同時，程式仍能繼續執行（例如監聽感測器），<strong>不可使用 <code>delay()</code></strong>。</li>
+<li>在下方的【觀察與心得】說明你的非阻塞設計思路。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🚀 評分與繳交標準 (Software Arch Benchmarks)</h2><a id="user-content--評分與繳交標準-software-arch-benchmarks" class="anchor" aria-label="Permalink: 🚀 評分與繳交標準 (Software Arch Benchmarks)" href="#-評分與繳交標準-software-arch-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>你的程式碼將依據以下標準進行評估：</p>
+<ol>
+<li>
+<strong>封裝完備性</strong>：成員存取控制 (Private/Public) 是否合理？是否成功隱藏了硬體細節？</li>
+<li>
+<strong>接口易用性</strong>：API 調用是否直覺？是否具備「自述性 (Self-documenting)」？</li>
+<li>
+<strong>數學邊界處理</strong>：針對極端參數是否有做平滑降級或保護？</li>
+<li>
+<strong>自動化測試</strong>：透過 <code>tests/api_logic.test.cpp</code> 檢核運動學轉換精準度。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">📝 觀察與心得紀錄</h2><a id="user-content--觀察與心得紀錄" class="anchor" aria-label="Permalink: 📝 觀察與心得紀錄" href="#-觀察與心得紀錄"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p><em>(請學員完成作業後，在此區塊填寫你的觀察結果與心得)</em></p>
+<ol>
+<li>
+<p><strong>8 字形累積誤差分析</strong>：</p>
+<blockquote>
+<p>請填寫...</p>
+</blockquote>
+</li>
+<li>
+<p><strong>非阻塞轉向設計說明</strong>：</p>
+<blockquote>
+<p>請填寫...</p>
+</blockquote>
+</li>
+</ol>
+<p>祝你好運！讓我們一起寫出優雅且穩健的 API 吧！</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：Kinematics 類別設計 (Abstraction Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：軟體架構師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>成員保護</strong>：將輪距 $L$、輪徑等設定為 `private`，透過 `constructor` 初始化。</li>
-                    <li><strong>異常處理</strong>：在 API 內部偵測除以零（$R=0$）的非法運算，並自動映射到自轉模式。</li>
-                    <li><strong>README 紀錄</strong>：說明為何使用 `float` 而非 `int` 來建立運動學結構體。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>結構對稱性</strong>：API 是否正確區分了 $V_{left}$ 與 $V_{right}$ 的計算分支？</li>
-                    <li>[ ] <strong>封裝完整度</strong>：主程式 (`main.ino`) 是否完全沒有出現顯式的 PWM 操作？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：軌跡調用挑戰 (Traj Mapping Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：測試工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>指令鏈路設計</strong>：利用 <code>driveArc(R, V)</code> 指令，將一個圓弧軌跡拆解為兩個半圓組合。</li>
-                    <li><strong>累積誤差分析</strong>：在 README 錄製運行影片，觀察物理上的 8 字圓心是否逐漸偏移，並探討原因。</li>
-                    <li><strong>Push Final</strong>：提交具備高度可讀性的 API 調用語法範例。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>代碼簡潔度</strong>：描述 8 字動作的代碼是否控制在 10 行以內？</li>
-                    <li>[ ] <strong>行為一致性</strong>：API 是否能處理 $R$ 為負值（代表左轉）的判讀邏輯？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：目標轉向接口 (Angle Command Engine)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：韌體工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>時間換空間</strong>：實作 $\Delta t = \text{Target\_Angle} / \omega$ 的換算公式。</li>
-                    <li><strong>回報機制</strong>：讓 <code>turnAngle</code> 回傳一個狀態碼，標示任務已完成或正在執行中。</li>
-                    <li><strong>Push Final</strong>：提交具備「回饋意識」的高階擴充 API。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>邏輯嚴謹度</strong>：轉向角度與時間的線性關係推導是否正確？</li>
-                    <li>[ ] <strong>介面友善性</strong>：TurnAngle 的參數是否讓初學者也能一眼看懂（例如使用 Degree 而非 Radian）？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：讓學生掌握「資訊隱藏 (Information Hiding)」的軟體工程核心。從單純寫 Code 轉向「設計介面」。</p>
-            <ol class="space-y-4 text-slate-600 text-justify">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：封裝的心理邊界</strong> - 要求學生思考：如果我的馬達換了，API 使用者需要被通知嗎？答案應是否定的。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：防呆的必要性</strong> - 在 API 層級攔截除以零或溢位，比在全域攔截更容易除錯。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：介面的自癒性</strong> - 講解為什麼 `driveArc(30, 100)` 比 `setMotor(128, 64)` 更具「自述性 (Self-documenting)」。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-10-unit-api-design</code> (API 封裝設計)</strong> 單元，這是一個讓學員從「硬體愛好者」蛻變為「軟體架構師」的關鍵課程。它強調 <strong>「資訊隱藏 (Information Hiding)」</strong> 與 <strong>「抽象層設計 (Abstraction Layer)」</strong>：學員不再直接操控 PWM，而是設計一套具備物理語義的控制接口。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本程式庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" href="#1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>API 封裝需要嚴謹的類別結構與介面定義，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>include/DriveSystem.h</code></strong>：介面定義檔。定義 <code>KinematicsResult</code> 結構體與 <code>DriveSystem</code> 類別的公有/私有成員，留下運動學計算的 <code>TODO</code>。</li>
+<li>
+<strong>📂 <code>src/DriveSystem.cpp</code></strong>：實作檔。提供基礎的 C++ 類別骨架，引導學員處理 $R=\infty$ (直線) 等數學邊界情況。</li>
+<li>
+<strong>📂 <code>examples/Figure8.ino</code></strong>：應用範例。這是一個空的 Sketch，學員需在此調用自己寫好的 API 來完成「8 字形」繞行任務。</li>
+<li>
+<strong>📂 <code>tests/api_logic.test.cpp</code></strong>：單元測試腳本。專門測試「運動學映射」——輸入特定的半徑 $R$ 與速度 $V$，檢核輸出的左右輪速是否符合幾何理論值。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：Kinematics 類別設計 (Abstraction Lab)</h4><a id="user-content-任務-1kinematics-類別設計-abstraction-lab" class="anchor" aria-label="Permalink: 任務 1：Kinematics 類別設計 (Abstraction Lab)" href="#任務-1kinematics-類別設計-abstraction-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作「運動大腦」類別，建立從幾何指令到馬達轉速的強健映射。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>封裝規範檢核</strong>：學員必須將輪距 $L$、輪徑等物理參數設定為 <code>private</code>，只能透過 <code>constructor</code> 初始化。</li>
+<li>
+<strong>異常攔截邏輯</strong>：
+<div class="highlight highlight-source-c++"><pre><span class="pl-c"><span class="pl-c">//</span> 學生需實作：邊界處理</span>
+<span class="pl-k">if</span> (abs(radius) &lt; <span class="pl-c1">0.001</span>) {
+    <span class="pl-c"><span class="pl-c">//</span> 自動切換為「原地自轉」模式</span>
+} <span class="pl-k">else</span> <span class="pl-k">if</span> (radius &gt; <span class="pl-c1">1000</span>) {
+    <span class="pl-c"><span class="pl-c">//</span> 自動切換為「直線行駛」模式</span>
+}</pre></div>
+</li>
+<li>
+<strong>Autograding</strong>：透過單元測試檢核 <code>calculateIK()</code> 的數學轉換精準度。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：API 調用挑戰：8 字形軌跡 (API Sequence Challenge)</h4><a id="user-content-任務-2api-調用挑戰8-字形軌跡-api-sequence-challenge" class="anchor" aria-label="Permalink: 任務 2：API 調用挑戰：8 字形軌跡 (API Sequence Challenge)" href="#任務-2api-調用挑戰8-字形軌跡-api-sequence-challenge"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：驗證 API 接口的簡潔性與行為一致性。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>指令純淨度要求</strong>：學員在完成 8 字形繞行時，嚴禁出現任何 PWM 設定代碼。</li>
+<li>
+<strong>累積誤差錄試</strong>：要求學員在 <code>README.md</code> 中紀錄多次運行後，圓心偏移的數據，並分析為什麼「開環控制」下的 8 字形會隨時間漂移。</li>
+<li>
+<strong>PR 深度核核</strong>：點評其 API 命名是否具備「自述性 (Self-documenting)」。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：目標角度轉向接口 (Angle Command Engine)</h4><a id="user-content-任務-3目標角度轉向接口-angle-command-engine" class="anchor" aria-label="Permalink: 任務 3：目標角度轉向接口 (Angle Command Engine)" href="#任務-3目標角度轉向接口-angle-command-engine"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：將「時間」因素導入 API，建立具備回饋意識的高階控制。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>轉向精準度實作</strong>：
+<div class="highlight highlight-source-c++"><pre><span class="pl-c"><span class="pl-c">//</span> 學生需實作：角度換算時間公式</span>
+<span class="pl-k">void</span> <span class="pl-en">turnAngle</span>(<span class="pl-k">float</span> degree, <span class="pl-k">float</span> angular_velocity) {
+    <span class="pl-k">unsigned</span> <span class="pl-k">long</span> duration = (<span class="pl-c1">abs</span>(degree) / angular_velocity) * <span class="pl-c1">1000</span>;
+    <span class="pl-c"><span class="pl-c">//</span> 非阻塞式執行或狀態標記</span>
+}</pre></div>
+</li>
+<li>
+<strong>非阻塞設計檢核</strong>：要求學員在 <code>README.md</code> 說明，他們如何讓車子在旋轉 90 度的同時，依然能監聽感測器數據（即不使用 <code>delay()</code>）。</li>
+<li>
+<strong>Push Final</strong>：提交具備「狀態碼（任務中/已完成）」回傳機制的最終版 DriveSystem 程式庫。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 架構設計導師點評標準 (Software Arch Benchmarks)</h3><a id="user-content-3-架構設計導師點評標準-software-arch-benchmarks" class="anchor" aria-label="Permalink: 3. 架構設計導師點評標準 (Software Arch Benchmarks)" href="#3-架構設計導師點評標準-software-arch-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對軟體工程邊界的掌控與設計美學」</strong>：</p>
+<ul>
+<li>[ ] <strong>封裝完備性</strong>：成員存取控制 (Private/Public) 是否合理？是否隱藏了硬體細節？</li>
+<li>[ ] <strong>接口易用性</strong>：API 調用是否直覺？是否能讓另一個開發者在不看原始碼的情況下直接開始使用？</li>
+<li>[ ] <strong>數學邊界處理</strong>：針對極端參數（如大半徑或零半徑）是否有做平滑降級或保護？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── include/
+│   └── DriveSystem.h       # 介面：定義 API 合法性與數據結構
+├── src/
+│   └── DriveSystem.cpp     # 實作：待學員寫入 ICC 到 PWM 的映射邏輯
+├── examples/
+│   └── Figure8.ino         # 應用：測試 API 的繞行連續性
+├── README.md               # 教材心得：我如何將運動幾何轉化為 clean code
+└── tests/
+    └── api_logic.test.cpp  # 自動化：檢核 180 度自轉與直線校準數據
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的 API 能像呼吸一樣自然」</strong>。掌握 API 封裝後，學員將具備了參與大型機器人開源專案或企業級開發的能力，這標誌著他們已經從「寫腳本的人」進化為「建立系統的人」。</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── include/DriveSystem.h # 介面：定義 KinematicsResult 與 API 原型
-├── src/DriveSystem.cpp   # 實作：待學生寫入 ICC 到馬達轉速的映射
-└── tests/api.test.js     # 測試：驗證介面調用是否符合 16-bit 傳輸規範
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「API 命名學」短片。理解 Private 與 Public 的存取控制。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能區分「全域變數」與「類別屬性」的生命週期差異。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black">領取作業 (Repo)，封裝 Kinematics 並調試 8 字形軌跡。實作異常參數攔截器。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 指導如何使用「結構體回傳」而非複數全域變數來傳遞马達指令。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify font-black">提交具備「狀態回報」的最終版代碼。閱讀教師對「非阻塞式回調」的架構建議。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「硬體抽象化層 (HAL)」概念的實作深度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

@@ -340,132 +340,154 @@ DefaultHeaders::Instance().addHeader(
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">網路安全實驗室：CORS 診斷、預檢請求機制與標頭注入實戰</h2>
+<div class="markdown-heading"><h1 class="heading-element">CORS 與安全性基礎 (CORS &amp; Web Security)</h1><a id="user-content-cors-與安全性基礎-cors--web-security" class="anchor" aria-label="Permalink: CORS 與安全性基礎 (CORS &amp; Web Security)" href="#cors-與安全性基礎-cors--web-security"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本程式庫是關於如何在 ESP32 上正確處理跨來源資源共用 (CORS) 與網路安全標頭的練習。你將學習如何診斷瀏覽器的跨域封鎖，並實作伺服器端的手段來建立安全且標準的通訊。</p>
+<div class="markdown-heading"><h2 class="heading-element">任務目標</h2><a id="user-content-任務目標" class="anchor" aria-label="Permalink: 任務目標" href="#任務目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：「邊界診斷員」CORS 錯誤追蹤 (CORS Trace Lab)</h3><a id="user-content-任務-1邊界診斷員cors-錯誤追蹤-cors-trace-lab" class="anchor" aria-label="Permalink: 任務 1：「邊界診斷員」CORS 錯誤追蹤 (CORS Trace Lab)" href="#任務-1邊界診斷員cors-錯誤追蹤-cors-trace-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：學會使用瀏覽器開發者工具 (DevTools) 定位跨域阻斷原因。</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>開啟 <code>web/index.html</code>，觀察並截圖 Console 顯示的 CORS 報錯資訊。</li>
+<li>在說明文件中詳細說明「同源政策 (SOP)」的三個判定要素。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：「開發期繞過方案」分析 (Legacy Bypass Lab)</h3><a id="user-content-任務-2開發期繞過方案分析-legacy-bypass-lab" class="anchor" aria-label="Permalink: 任務 2：「開發期繞過方案」分析 (Legacy Bypass Lab)" href="#任務-2開發期繞過方案分析-legacy-bypass-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：了解臨時的修正方案及其風險。</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>測試使用瀏覽器 CORS 插件繞過限制。</li>
+<li>在 <code>docs/BYPASS_RISK.md</code> 中撰寫風險分析，說明為何這在生產環境中是危險的。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：「硬體安全官」ESP32 標頭注入 (Hardware Sentry Lab)</h3><a id="user-content-任務-3硬體安全官esp32-標頭注入-hardware-sentry-lab" class="anchor" aria-label="Permalink: 任務 3：「硬體安全官」ESP32 標頭注入 (Hardware Sentry Lab)" href="#任務-3硬體安全官esp32-標頭注入-hardware-sentry-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：從伺服器端解決跨域需求。</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>在 <code>src/main.cpp</code> 中實作 <code>Access-Control-Allow-Origin</code> 標頭。</li>
+<li>實作 <strong>OPTIONS 預檢請求</strong> 的處理邏輯。</li>
+<li>關閉插件後，確保 <code>web/index.html</code> 依然能成功控制硬體。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">提交要求</h2><a id="user-content-提交要求" class="anchor" aria-label="Permalink: 提交要求" href="#提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>程式碼</strong>：完成 <code>src/main.cpp</code> 中的標頭注入與 OPTIONS 處理。</li>
+<li>
+<strong>安全性計畫</strong>：完成 <code>assets/security_plan.md</code> 中的設計思考。</li>
+<li>
+<strong>風險評估</strong>：完成 <code>docs/BYPASS_RISK.md</code> 中的心得紀錄。</li>
+<li>
+<strong>更新程式庫</strong>：完成後請 commit 並 push 你的更改。</li>
+</ol>
+<hr>
+<blockquote>
+<p>[!TIP]
+記得在 <code>platformio.ini</code> 中確認已加入 <code>ESPAsyncWebServer</code> 與 <code>AsyncTCP</code> 的依賴。</p>
+</blockquote>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：「邊界診斷員」：CORS 錯誤追蹤 (Network Boundary)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：30 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫。</li>
-                    <li><strong>報錯</strong>：存取未開放 CORS 站點並截圖。</li>
-                    <li><strong>分析</strong>：解釋三要素（協議/網域/埠）判定。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>診斷精準</strong>：定位阻斷原因？</li>
-                    <li>[ ] <strong>概念正確</strong>：解釋保護意圖？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：「開發期繞過方案」：代理與插件測試 (Legacy Bypass)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：開發者</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>測試</strong>：安裝插件執行代碼並驗證聯通。</li>
-                    <li><strong>分析</strong>：描述插件繞過 CORS 原理。</li>
-                    <li><strong>報告</strong>：撰寫風險評估簡報。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>實踐成功</strong>：完成跨域通訊測試？</li>
-                    <li>[ ] <strong>意識確立</strong>：識別環境風險？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：「硬體安全官」：ESP32 標頭注入 (Hardware Sentry)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：架構師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>開發</strong>：配置韌體 CORS 標頭。</li>
-                    <li><strong>響應</strong>：實作 OPTIONS 預檢邏輯。</li>
-                    <li><strong>交付</strong>：提交合法韌體代碼。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>標頭精確</strong>：符合標頭語法？</li>
-                    <li>[ ] <strong>通訊閉環</strong>：解決跨域封鎖？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify text-left">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：合規通訊。</p>
-            <ol class="space-y-4 text-slate-600 text-justify text-left">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：安全性邊界</strong> - 瀏覽器保護意圖。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：OPTIONS 機制</strong> - 解析隱形敲門。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：伺服器配置</strong> - 唯一解法。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>basic-06-unit-cors-security</code> (CORS 與安全性基礎)</strong> 單元，這是學員從「區域網路開發」跨向「雲端網頁整合」最常遇到的 <strong>第一座技術大山</strong>（跨網域讀取封鎖）。它要求學員具備 <strong>通訊安全與合規 (Compliance)</strong> 的思維，學習為何瀏覽器會保護使用者，並掌握如何在硬體端正確處理「預檢請求 (Preflight)」以達成安全的跨平台互動。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本程式庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" href="#1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>CORS 作業的核心在於「診斷與配置」，範本應結合前端網頁與後端韌體，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/main.cpp</code></strong>：<strong>ESP32 標頭注入區</strong>。學員需在此實作 <code>Access-Control-Allow-Origin</code> 標頭的配置，並處理 HTTP <strong><code>OPTIONS</code></strong> 方法的嚮應，確保「敲門機制」運作正常。</li>
+<li>
+<strong>📂 <code>web/index.html</code></strong>：<strong>故障診斷網頁</strong>。提供一個發送 <code>fetch()</code> 請求到 ESP32 IP 地址的簡單網頁，初期這會因為跨域限制而報錯。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>安全診斷報表</strong>。要求學員截圖瀏覽器 Console 顯示的紅字報錯資訊，並詳細說明「同源政策 (SOP)」的三個判定要素（協議、網域、埠）。</li>
+<li>
+<strong>📂 <code>docs/BYPASS_RISK.md</code></strong>：<strong>開發風險評估</strong>。學員需記錄使用「CORS 繞過插件」的心得，並解釋為何這在生產環境 (Production) 中是極大的安全漏洞。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「邊界診斷員」CORS 錯誤追蹤 (CORS Trace Lab)</h4><a id="user-content-任務-1邊界診斷員cors-錯誤追蹤-cors-trace-lab" class="anchor" aria-label="Permalink: 任務 1：「邊界診斷員」CORS 錯誤追蹤 (CORS Trace Lab)" href="#任務-1邊界診斷員cors-錯誤追蹤-cors-trace-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：學會使用瀏覽器開發者工具 (DevTools) 定位跨域阻斷原因，理解瀏覽器的防禦機制。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>報錯模擬</strong>：開啟 <code>index.html</code>，點擊控制鈕。此時瀏覽器會因 ESP32 未回傳 CORS 標頭而阻斷連接。</li>
+<li>
+<strong>證據採樣</strong>：學員需擷取 Console 與 Network Tab 的詳細資訊。</li>
+<li>
+<strong>驗證要點</strong>：README 中需正確解釋：為什麼 <code>http://localhost</code> 存取 <code>http://192.168.x.x</code> 會被判定為跨域？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：「開發期繞過方案」代理與插件測試 (Legacy Bypass Lab)</h4><a id="user-content-任務-2開發期繞過方案代理與插件測試-legacy-bypass-lab" class="anchor" aria-label="Permalink: 任務 2：「開發期繞過方案」代理與插件測試 (Legacy Bypass Lab)" href="#任務-2開發期繞過方案代理與插件測試-legacy-bypass-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：了解臨時的修正方案，並建立對開發工具與真實環境差異的認知。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>插件繞過</strong>：安裝瀏覽器 CORS 插件並開啟，確認網頁能成功控制硬體。</li>
+<li>
+<strong>安全評析</strong>：<strong>核心思想考題</strong>。撰寫報告說明：為什麼如果我們要求所有使用者都安裝這款插件是不合理且危險的？</li>
+<li>
+<strong>驗證要點</strong>：提交一份風險分析，展現對網路安全邊界的理解。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：「硬體安全官」ESP32 標頭注入 (Hardware Sentry Lab)</h4><a id="user-content-任務-3硬體安全官esp32-標頭注入-hardware-sentry-lab" class="anchor" aria-label="Permalink: 任務 3：「硬體安全官」ESP32 標頭注入 (Hardware Sentry Lab)" href="#任務-3硬體安全官esp32-標頭注入-hardware-sentry-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作底層標頭注入技術，徹底從伺服器端解決跨域需求，這是開發物聯網控制台的工業標準。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>標頭實作</strong>：使用 <code>DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");</code>（或其他特定 Origin）。</li>
+<li>
+<strong>OPTIONS 預檢處理</strong>：<strong>關鍵技術點</strong>。實作一個 Handler 專門回傳成功的 OPTIONS 請求（HTTP 200/204），否則複雜請求（如帶 Header 的 POST）依然會失敗。</li>
+<li>
+<strong>閉環驗證</strong>：關閉瀏覽器插件，確認 <code>index.html</code> 依然能流暢控制硬體。</li>
+<li>
+<strong>最終 Commit</strong>：Push 具備完整標頭配置的韌體專業版本。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 網路安全與標頭合規點評標準 (Security Headers &amp; Preflight Standards)</h3><a id="user-content-3-網路安全與標頭合規點評標準-security-headers--preflight-standards" class="anchor" aria-label="Permalink: 3. 網路安全與標頭合規點評標準 (Security Headers &amp; Preflight Standards)" href="#3-網路安全與標頭合規點評標準-security-headers--preflight-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對 Web 規格的尊重與對伺服器端配置的精確掌控」</strong>：</p>
+<ul>
+<li>[ ] <strong>標頭配置精確度</strong>：<code>Access-Control-Allow-Origin</code> 是否拼寫正確且放置在正確的 Handler 中？</li>
+<li>[ ] <strong>預檢請求處理</strong>：是否理解並實作了 <code>OPTIONS</code> 方法的嚮應？（這是跨域封鎖最常見的死穴）。</li>
+<li>[ ] <strong>防禦性意識</strong>：是否理解並非所有 CORS 標頭都應設為 <code>*</code>，並具備針對特定域名開放的維護意識？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/main.cpp         # 核心：配置 DefaultHeaders 與 OPTIONS 預檢邏輯
+├── web/index.html       # 前端：開發者模式控制台，用於測試聯通性
+├── docs/Console_Logs.jpg # 圖檔：學員截圖的 CORS 報錯與修復後聯通證據
+├── README.md            # 總結：我如何從硬體層級徹底解決「跨域封鎖」並確保通訊安全
+└── assets/security_plan.md # 數據：關於權限最小化 (Minimum Privilege) 的設計思考
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的全端物聯網工程師，不僅要能跑通代碼，更要能看懂瀏覽器的安全警告，並能優雅地在硬體端建立起符合國際 Web 安全標準的通訊守門員」</strong>。掌握 CORS 與安全標頭技術後，學員將擁有了開發「跨國雲端儀表板、公共 API 服務節點、安全認證控制台」最專業也最核心的網路防禦實力！_
+|
+|
+太給力了！我們已經將 <strong>基礎 06</strong>（網路安全）的第一課 Classroom 部署定義完成了。這標誌著學員終於能解決網頁開發中最令人抓狂的「紅字報錯」，正式進入專業全端開發的境界。恭喜！教學藍圖的安全屏障已經建立！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify uppercase tracking-widest font-black border border-slate-700 text-left">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300 text-justify uppercase tracking-widest font-black text-left">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm text-justify uppercase tracking-widest font-black border border-slate-100">
-.
-├── src/main.cpp      # (必修) CORS 配置
-└── README.md         # 診斷截圖與報告
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify uppercase tracking-widest font-black">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-center text-justify font-black text-left">
-            <table class="w-full text-left border-collapse border border-slate-100 text-justify font-black">
-                <thead>
-                    <tr class="bg-slate-100 border border-slate-100 text-justify font-black">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest border border-slate-100">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest border border-slate-100">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest border border-slate-100">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600 border border-slate-100 text-justify font-black">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「CORS 阻斷」影片。</td>
-                        <td class="px-6 py-5 text-justify border border-slate-100"><strong>Dashboard:</strong> 測試同源概念。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify border border-slate-100 text-left">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify text-left">領取 Repo，診斷封鎖並修復標頭。</td>
-                        <td class="px-6 py-5 text-left text-justify border border-slate-100 font-black"><strong>技術點評:</strong> 分析 OPTIONS 請求特徵。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black">討論生產環境合規邏輯。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評安全性標頭細緻度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

@@ -273,93 +273,165 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-2xl font-bold mb-4 font-[Outfit]">Agent 時代與模式 - AI 代理人專題</h2>
+<div class="markdown-heading"><h1 class="heading-element">02-unit-agent-mode (AI 代理人與 Vibe Coding 實戰)</h1><a id="user-content-02-unit-agent-mode-ai-代理人與-vibe-coding-實戰" class="anchor" aria-label="Permalink: 02-unit-agent-mode (AI 代理人與 Vibe Coding 實戰)" href="#02-unit-agent-mode-ai-代理人與-vibe-coding-實戰"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本程式庫是專為「AI 代理人與 Vibe Coding」單元設計的實戰作業環境。在 2026 年，開發的核心能力已從單純的編碼轉向「引導自主代理 (Agent Guidance)」。你將學習如何指揮 AI Agent 完成複雜的重構、設定團隊規範，並整合外部工具。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>掌握 AI Agent 的 <strong>"Plan-Execute"</strong> 工作流程。</li>
+<li>學習透過 <code>AGENTS.md</code> 定義專案級別的 AI 工作規範。</li>
+<li>實踐 MCP (Model Context Protocol) 整合，擴展 AI 的外部感知能力。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">🛠️ 環境準備</h2><a id="user-content-️-環境準備" class="anchor" aria-label="Permalink: 🛠️ 環境準備" href="#️-環境準備"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>GitHub Copilot 訂閱</strong>：請確保你的 VS Code 已更新至支援 <strong>Agent Mode</strong> 的版本。</li>
+<li>
+<strong>VS Code 擴充功能</strong>：安裝最新版的 GitHub Copilot 與 GitHub Copilot Chat。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📝 作業任務</h2><a id="user-content--作業任務" class="anchor" aria-label="Permalink: 📝 作業任務" href="#-作業任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：全自動代碼重構 (Agent Refactoring)</h3><a id="user-content-任務-1全自動代碼重構-agent-refactoring" class="anchor" aria-label="Permalink: 任務 1：全自動代碼重構 (Agent Refactoring)" href="#任務-1全自動代碼重構-agent-refactoring"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>背景</strong>：<code>src/legacy-service.js</code> 是一段結構混亂的舊代碼。</li>
+<li>
+<strong>任務</strong>：開啟 Copilot Agent Mode，指令 AI 進行重構。要求 Agent 遵循「職責分離」原則，將 UI 邏輯與業務邏輯拆分。</li>
+<li>
+<strong>要求</strong>：在重構前，讓 Agent 產出 <strong>"Plan" (計畫清單)</strong>，並將其複製到 <code>PLAN_LOG.md</code>。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：定義團隊規範 (Custom Instructions)</h3><a id="user-content-任務-2定義團隊規範-custom-instructions" class="anchor" aria-label="Permalink: 任務 2：定義團隊規範 (Custom Instructions)" href="#任務-2定義團隊規範-custom-instructions"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>背景</strong>：為了確保團隊協作中 AI 的行為一致，我們需要建立 <code>AGENTS.md</code>。</li>
+<li>
+<strong>任務</strong>：編輯本程式庫根目錄下的 <code>AGENTS.md</code>，至少加入一條具體的開發規則（例如：<code>所有導出的函數必須包含 JSDoc 註解</code>）。</li>
+<li>
+<strong>驗證</strong>：完成後，嘗試讓 Agent 修改 <code>src/legacy-service.js</code>，觀察它是否會自動遵循你在 <code>AGENTS.md</code> 中設定的新規則。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：MCP 外部工具整合</h3><a id="user-content-任務-3mcp-外部工具整合" class="anchor" aria-label="Permalink: 任務 3：MCP 外部工具整合" href="#任務-3mcp-外部工具整合"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>背景</strong>：AI 需要更多外部資訊來協助開發。</li>
+<li>
+<strong>任務</strong>：參考 <code>MCP_GUIDE.md</code> 串接一個 MCP Server (例如 Google Search 或 GitHub MCP)。</li>
+<li>
+<strong>回傳</strong>：提交一張截圖 <code>mcp-proof.png</code>，展示 Copilot Chat 視窗中出現了 <strong>「Tool Call (工具呼叫)」</strong> 的圖示。並在本 README 下方的「MCP 報告」區塊簡述該工具如何幫助你。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📂 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>src/</code>：存放源代碼，包含待重構的舊代碼。</li>
+<li>
+<code>AGENTS.md</code>：存放你定義的 AI 代理人工作規範。</li>
+<li>
+<code>PLAN_LOG.md</code>：紀錄 Agent 的執行計畫。</li>
+<li>
+<code>MCP_GUIDE.md</code>：MCP 串接參考手冊。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">🚀 提交清單</h2><a id="user-content--提交清單" class="anchor" aria-label="Permalink: 🚀 提交清單" href="#-提交清單"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>[ ] 已完成 <code>src/legacy-service.js</code> 的重構。</li>
+<li>[ ] 已更新 <code>AGENTS.md</code> 並包含自訂規則。</li>
+<li>[ ] 已將 Agent 的執行計畫貼入 <code>PLAN_LOG.md</code>。</li>
+<li>[ ] 已上傳 <code>mcp-proof.png</code> 截圖。</li>
+<li>[ ] (選填) 在下方填寫 MCP 報告。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📝 MCP 報告</h3><a id="user-content--mcp-報告" class="anchor" aria-label="Permalink: 📝 MCP 報告" href="#-mcp-報告"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<blockquote>
+<p>(請在此簡述你串接了哪一個 MCP Server，以及它如何幫助你解決開發中的問題。)</p>
+</blockquote>
+<hr>
+<p>這項作業將幫助你轉型為一名優秀的「AI 代理人主管」。祝開發順利！</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title">任務 1：跨檔案手術 - 全自動代碼重構</h3>
-            <div class="quest-meta">
-                <span>角色扮演：資深系統架構師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>啟動模式</strong>：在 VS Code 中開啟 Copilot Chat 並切換至 <strong>Agent Mode</strong>。</li>
-                    <li><strong>下達指令</strong>：要求 Agent 將一個現有的功能（例如：User Login）從原本的分散邏輯重構為單一 Service 模式。</li>
-                    <li><strong>監控執行</strong>：觀察 Agent 如何自動讀取相關檔案、產生計畫並執行修改。</li>
-                    <li><strong>自動校正</strong>：如果編譯失敗，讓 Agent 讀取 Terminal 報錯並自行修正。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>計畫完整性</strong>：Agent 提出的 Plan 是否涵蓋了所有受影響的檔案？</li>
-                    <li>[ ] <strong>邏輯一致性</strong>：重構後的代碼是否維持原有功能並符合架構規範？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 2：協作 DNA - AGENTS.md 指令調教</h3>
-            <div class="quest-meta">
-                <span>角色扮演：技術負責人 (Tech Lead)</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：30 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立規則</strong>：在專案根目錄建立一個 <code>AGENTS.md</code>。</li>
-                    <li><strong>定義規範</strong>：在裡面明確寫下至少 3 條 Agent 必須遵循的規範（例如：所有變數名使用 camelCase、API 必須包含 JavaDoc）。</li>
-                    <li><strong>測試執行</strong>：讓 Agent 產生一段新代碼，觀察它是否嚴格遵守你設定的規則。</li>
-                    <li><strong>提交紀錄</strong>：將 <code>AGENTS.md</code> 與實作成果一併提交至 GitHub。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>約束有效性</strong>：Agent 是否能正確讀取並落實 <code>AGENTS.md</code> 中的指令？</li>
-                    <li>[ ] <strong>規範嚴謹度</strong>：設定的規範是否能有效提昇專案的維護品質？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 3：打破邊界 - MCP 外部工具整合</h3>
-            <div class="quest-meta">
-                <span>角色扮演：DevOps 工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：40 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>協議開啟</strong>：在 VS Code 設定中啟用 <code>chat.mcp.enabled</code>。</li>
-                    <li><strong>連接 Server</strong>：串接一個外部 MCP Server（例如：Google Search 或 GitHub Issue Tracker）。</li>
-                    <li><strong>執行指令</strong>：透過 @copilot 要求它搜尋外部資訊或自動讀取遠端 Issue 狀態。</li>
-                    <li><strong>結果驗證</strong>：確保 Agent 能成功獲取其訓練資料庫以外的即時外部數據。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>工具運用能力</strong>：是否能讓 Agent 透過 MCP 獲取正確的上下文 (Context)？</li>
-                    <li>[ ] <strong>解決方案品質</strong>：整合外部資料後的開發建議是否更具實踐性？</li>
-                </ul>
-            </div>
-        </div>
     </section>
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
 
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-2xl font-bold mb-4 font-[Outfit]">Agent 模式操作指南</h2>
-        <div class="classroom-guide text-sm space-y-4">
-            <p><strong>教學重點：</strong></p>
-            <p>本單元的核心在於「掌控力」。教師應引導學生理解 Agent 不是黑盒子，而是可以透過 <code>AGENTS.md</code> 和 <code>MCP</code> 進行深度調優的協作夥伴。評分時應著重於學生如何「引導」Agent，而非程式碼本身。</p>
-        </div>
+<p>針對 <strong><code>02-unit-agent-mode</code> (AI 代理人與 Vibe Coding 實戰)</strong> 單元，這是一個代表 2026 年最新開發維度的單元，重點不在於「撰寫單行代碼」，而在於「<strong>引導自主代理 (Agent Guidance)</strong>」。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 核心設置與工具要求</h3><a id="user-content-1-核心設置與工具要求" class="anchor" aria-label="Permalink: 1. 核心設置與工具要求" href="#1-核心設置與工具要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>軟體要求</strong>：學員必須擁有 <strong>GitHub Copilot 訂閱</strong>，並將 VS Code 的 Copilot 擴充功能更新至支援 <strong>Agent Mode</strong> 的版本。</li>
+<li>
+<strong>範本程式庫 (Template Library) 配置</strong>：
+<ul>
+<li>
+<strong>📂 <code>src/legacy-service.js</code></strong>：故意放入一段結構混亂、未模組化的舊代碼（例如混合了資料庫操作與 UI 邏輯），供學員在任務 1 中重構。</li>
+<li>
+<strong>📂 <code>AGENTS.md</code> (範本)</strong>：預置一個包含 <code>TODO</code> 的 Markdown 檔案，引導學員練習定義「團隊開發規範」。</li>
+<li>
+<strong>📂 <code>MCP_GUIDE.md</code></strong>：提供常用 MCP Server (如 Google Search, GitHub) 的連接清單。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：跨檔案手術 - 全自動代碼重構 (Agent Refactoring)</h4><a id="user-content-任務-1跨檔案手術---全自動代碼重構-agent-refactoring" class="anchor" aria-label="Permalink: 任務 1：跨檔案手術 - 全自動代碼重構 (Agent Refactoring)" href="#任務-1跨檔案手術---全自動代碼重構-agent-refactoring"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：練習讓 Agent 自主規劃並執行跨檔案的大型變動。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>回傳證明</strong>：要求學員將 Copilot Agent 產出的 <strong>"Plan" (計畫清單)</strong> 截圖或複製內容存入 <code>PLAN_LOG.md</code>。</li>
+<li>
+<strong>核核重點</strong>：查看 Git Commit 歷史。如果是 Agent Mode 產出的提交，通常會有「修正編譯錯誤」的連鎖紀錄，這正是學員需要學習的「觀察 Agent 自修」過程。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：協作 DNA - AGENTS.md 指令調教 (Custom Instructions)</h4><a id="user-content-任務-2協作-dna---agentsmd-指令調教-custom-instructions" class="anchor" aria-label="Permalink: 任務 2：協作 DNA - AGENTS.md 指令調教 (Custom Instructions)" href="#任務-2協作-dna---agentsmd-指令調教-custom-instructions"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過定義專案級別的指令，確保 Agent 在整個 Workspace 的行為一致。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>驗證方式 (細粒度檢核)</strong>：要求學員在 <code>AGENTS.md</code> 中設定一個具體的語法規則（例如：<code>所有導出的函數必須包含 JSDoc 註解</code>）。</li>
+<li>
+<strong>自動評分 (Autograding)</strong>：使用代碼分析工具（如 ESLint 或簡單的 <code>grep</code>）檢查學員提交的代碼是否符合他們在 <code>AGENTS.md</code> 中設定的規則。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：打破邊界 - MCP 外部工具整合 (MCP Integration)</h4><a id="user-content-任務-3打破邊界---mcp-外部工具整合-mcp-integration" class="anchor" aria-label="Permalink: 任務 3：打破邊界 - MCP 外部工具整合 (MCP Integration)" href="#任務-3打破邊界---mcp-外部工具整合-mcp-integration"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：讓 AI Agent 具備獲取即時資訊或外部工具的能力。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>成果展示</strong>：這項任務需要物理環境支持。學員需提交一張截圖 <code>mcp-proof.png</code>，展示 Copilot Chat 視窗中出現了 <strong>「Tool Call (工具呼叫)」</strong> 的圖示（例如 Agent 正在搜尋外部文檔或查詢 GitHub Issue）。</li>
+<li>
+<strong>描述任務</strong>：要求學員在 README 描述他們串接了哪一個 MCP Server，以及這如何幫助他們解決開發中的問題。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 教育者評估指標 (Tutor Benchmarks)</h3><a id="user-content-3-教育者評估指標-tutor-benchmarks" class="anchor" aria-label="Permalink: 3. 教育者評估指標 (Tutor Benchmarks)" href="#3-教育者評估指標-tutor-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在 Agent 時代，我們評分的對象從「代碼 (Result)」轉向「<strong>日誌 (Trace)</strong>」：</p>
+<ul>
+<li>[ ] <strong>Prompt 品質</strong>：學員對 Agent 下達的指令是否清晰？是否能有效地將複雜任務拆解？</li>
+<li>[ ] <strong>約束力檢測</strong>：<code>AGENTS.md</code> 內的規則是否能有效減少 AI 產出的幻覺或不一致代碼？</li>
+<li>[ ] <strong>自主修正意識</strong>：當代碼出錯時，學員是否學會讓 Agent 讀取日誌自行修復，而非手動介入？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+45: ├── src/
+46: │   └── legacy-service.js   # 待重構的混亂代碼
+47: ├── AGENTS.md               # 存放學員定義的 AI 代理人工作手冊
+48: ├── PLAN_LOG.md             # 學員需貼入 Agent 的執行計畫
+49: ├── README.md               # 包含 MCP 整合報告與截圖連結
+50: └── .github/workflows/      # 自動檢查代碼是否符合 AGENTS.md 規範
+51: ```
+
+這套部署方案能讓學生意識到：在 2026 年，**一名優秀的工程師其實是一位優秀的「AI 代理人主管」**。這能極大地提昇他們的開發效率與架構思維。
+</code></pre>
+
     </section>
 </body>
 

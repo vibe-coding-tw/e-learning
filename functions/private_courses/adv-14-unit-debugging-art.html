@@ -339,142 +339,166 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none text-justify;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">除錯劇場：命案現場與防禦性設計</h2>
+<div class="markdown-heading"><h1 class="heading-element">adv-14-unit-debugging-art (除錯藝術)</h1><a id="user-content-adv-14-unit-debugging-art-除錯藝術" class="anchor" aria-label="Permalink: adv-14-unit-debugging-art (除錯藝術)" href="#adv-14-unit-debugging-art-除錯藝術"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到「除錯藝術」單元！在這個單元中，你將學習如何從「只是修好 Bug」轉變為建立一套嚴謹的 <strong>科學除錯流程</strong> 與 <strong>防禦性程式設計 (Defensive Design)</strong> 體系。這是在開發複雜系統時不可或缺的核心技能。</p>
+<div class="markdown-heading"><h2 class="heading-element">學習目標</h2><a id="user-content-學習目標" class="anchor" aria-label="Permalink: 學習目標" href="#學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>掌握科學定位 Bug 的方法：現象 ➡ 假說 ➡ 隔離驗證 ➡ 證偽/證實。</li>
+<li>學習使用專業除錯工具：代碼斷點、網路檢視器、抓包工具。</li>
+<li>實作防禦性重構，讓你的程式庫具備更高的韌性與免疫力。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">任務說明</h2><a id="user-content-任務說明" class="anchor" aria-label="Permalink: 任務說明" href="#任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：命案現場：代碼陷阱偵查 (Crime Scene Forensics Lab)</h3><a id="user-content-任務-1命案現場代碼陷阱偵查-crime-scene-forensics-lab" class="anchor" aria-label="Permalink: 任務 1：命案現場：代碼陷阱偵查 (Crime Scene Forensics Lab)" href="#任務-1命案現場代碼陷阱偵查-crime-scene-forensics-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在 <code>src/main.ino</code> 中有幾個精心設計的陷阱（如整數溢位、變數作用域問題）。</p>
+<ul>
+<li>
+<strong>目標</strong>：不要憑感覺修復，請使用「科學方法」定位故障點。</li>
+<li>
+<strong>要求</strong>：在 <code>docs/Investigation_Log.md</code> 中詳細紀錄你的除錯過程。重點在於：你觀察到什麼現象？你的假說是什麼？你是如何驗證或推翻該假說的？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：通訊黑盒診斷與抓包 (Full-Link Packet Sniffing)</h3><a id="user-content-任務-2通訊黑盒診斷與抓包-full-link-packet-sniffing" class="anchor" aria-label="Permalink: 任務 2：通訊黑盒診斷與抓包 (Full-Link Packet Sniffing)" href="#任務-2通訊黑盒診斷與抓包-full-link-packet-sniffing"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>診斷前後端通訊協議中的隱形錯誤。</p>
+<ul>
+<li>
+<strong>目標</strong>：掌握數據鏈路的觀測能力。</li>
+<li>
+<strong>要求</strong>：利用瀏覽器的 Network 面板或 WebSerial 工具進行封包比對，找出發送端的 JSON 字串與接收端的解析期待之間的落差。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：防禦性重構實戰 (Defensive Hardening Lab)</h3><a id="user-content-任務-3防禦性重構實戰-defensive-hardening-lab" class="anchor" aria-label="Permalink: 任務 3：防禦性重構實戰 (Defensive Hardening Lab)" href="#任務-3防禦性重構實戰-defensive-hardening-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>加固你的代碼，從根本上消滅 Bug 產生的土壤。</p>
+<ul>
+<li>
+<strong>目標</strong>：寫出具備「免疫力」的程式碼。</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>
+<strong>前端</strong>：實作 <code>try-catch</code> 捕捉異常，並加入 UI 層級的異常警告 (Toast)。</li>
+<li>
+<strong>韌體端</strong>：在 <code>include/hard_logic.h</code> 中實作安全防護閥，確保馬達指令永遠在安全範圍內（例如 0-255）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">程式庫結構</h2><a id="user-content-程式庫結構" class="anchor" aria-label="Permalink: 程式庫結構" href="#程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>src/main.ino</code>: 韌體主要邏輯與 Bug 修復。</li>
+<li>
+<code>include/hard_logic.h</code>: 韌體端的防禦性邏輯加固。</li>
+<li>
+<code>web/</code>: 控制介面，需實作具備容錯檢查的高強度 UI。</li>
+<li>
+<code>docs/Investigation_Log.md</code>: <strong>必填</strong>，詳列你的除錯日誌。</li>
+<li>
+<code>tests/</code>: 壓力測試工具，用來檢核你加固後的代碼韌性。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">繳交方式</h2><a id="user-content-繳交方式" class="anchor" aria-label="Permalink: 繳交方式" href="#繳交方式"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>完成所有程式碼修復與重構。</li>
+<li>確保 <code>docs/Investigation_Log.md</code> 紀錄完整。</li>
+<li>將所有更改 <code>git commit</code> 並 <code>git push</code> 到你的程式庫中。</li>
+</ol>
+<hr>
+<p>掌握除錯藝術後，你將擁有了應對「生命攸關」或「大規模複雜系統」開發的最核心工程師直覺！加油！</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：犯罪現場偵查實錄 (Crime Scene Investigation Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：軟體鑑識偵探</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>故障重現</strong>：運行專案，記錄：在何種極端參數下馬達會發生反轉或死機？</li>
-                    <li><strong>假設定位</strong>：利用 <code>console.log()</code> 或斷點追蹤追蹤變數。判斷是「型別轉換錯誤」還是「變數作用域污染」。</li>
-                    <li><strong>Push Final</strong>：提交包含「詳細偵調報告」的 README。記錄從發現、假說、證偽到最終修正的全過程。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>邏輯洞察力</strong>：是否正確找出了專案中預埋的 3 個邏輯陷阱（如負值映射溢位）？</li>
-                    <li>[ ] <strong>排查完整性</strong>：日誌是否呈現了找到答案之前的「證偽」過程？（證明使用了科學方法而非盲目猜測）。</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：通訊黑盒診斷 (Communication Blackbox Analysis Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：全鏈路通訊專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-tighter font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>數據抓包</strong>：利用 DevTools Network 面板捕捉點擊按鈕時的 fetch / ws 請求包。</li>
-                    <li><strong>封包校驗</strong>：比對 Web 發出的 JSON 欄位與 ESP32 解析器預期的變數名，找出拼寫或大小寫不一致的「隱形錯誤」。</li>
-                    <li><strong>故障隔離</strong>：撰寫診斷，判斷問題發生在「前端發送」、「傳輸協議」還是「後端解析」層次。</li>
-                    <li><strong>Push Final</strong>：提交包含「抓包數據比對圖」與「隔離修復代碼」的 PR。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>工具熟練度</strong>：能否從 Network 面板中準確提取出傳輸 Payload 並解讀其結構？</li>
-                    <li>[ ] <strong>推論嚴謹性</strong>：給出的故障定位是否具備充分的「數據證據」支持？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：防禦性重構實戰 (Defensive Refactoring Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統健壯性工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>脆弱性掃描</strong>：對 PID 運算模組進行單元測試：輸入 NaN 或極大值時，系統是否會崩潰？</li>
-                    <li><strong>加固代碼</strong>：部署 Clamping 防護、型別強制校驗與逾時自動復位機制。</li>
-                    <li><strong>回報機制實作</strong>：在前端實作 Toast 警告通知，當捕獲到異常數據時，主動告知操作者具體原因而非沈默失靈。</li>
-                    <li><strong>Push Final</strong>：提交具備「自我防護、感知異常」的最終版高階控制庫。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>防護廣度</strong>：代碼是否考慮了所有可能的非法輸入（負值、空值、非法字串）？</li>
-                    <li>[ ] <strong>用戶告知力</strong>：當系統進入失效保護 (Fail-Safe) 狀態時，介面是否提供了清晰的診斷訊息引導？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none text-justify;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：將「Debug」視為一種嚴謹的科學實驗。由「隨機修改」進化為「邏輯觀察」。</p>
-            <ol class="space-y-4 text-slate-600 text-justify">
-                <li><strong class="text-pink-600 font-bold uppercase tracking-widest text-justify">重點 1：重現是修復的前題</strong> - 強調沒有被重現的 Bug 是無法被徹底消滅的。指導學生建立重現步驟紀錄。</li>
-                <li><strong class="text-pink-600 font-bold text-justify uppercase tracking-widest">重點 2：工具是延伸的感官</strong> - 指導學生使用 Breakpoints 與 Network 面板代替盲目的 console.log，獲取更完整的「時空上下文」。</li>
-                <li><strong class="text-pink-600 font-bold text-justify uppercase tracking-tighter text-justify">重點 3：免疫比治療更划算</strong> - 透過「防禦性重構」任務，讓學員體認到預防錯誤代碼比排查錯誤更快。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-14-unit-debugging-art</code> (除錯藝術)</strong> 單元，這是從「學生」邁向「高階工程師」的最終心態轉型。它不只是教如何修好 Bug，更是教如何建立一套嚴謹的 <strong>科學除錯流程</strong> 以及 <strong>防禦性程式設計 (Defensive Design)</strong> 體系。這是在複雜系統（如 Vibe Coding 的前後端無線控制）中生存的必備技能。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫配置建議</h3><a id="user-content-1-範本程式庫配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫配置建議" href="#1-範本程式庫配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>除錯教學需要「模擬真實犯罪現場」，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/BuggyCore.ino</code></strong>：<strong>故障現場專案</strong>。預埋 3 個精心設計的 Bug：一個是「整數溢位 (Integer Overflow)」、一個是「變數作用域污染」、一個是「隱形通訊協議拼寫不一致」。</li>
+<li>
+<strong>📂 <code>docs/INVESTIGATION_LOG.md</code></strong>：除錯偵調日誌模板。強制學員依照「現象 ➡ 假說 ➡ 隔離驗證 ➡ 證偽/證實」的科學循環紀錄心路歷程。</li>
+<li>
+<strong>📂 <code>web/js/defensive_shield.js</code></strong>：防禦重構區域。學員需在此實作 <code>try-catch</code> 與 UI 層級的異常警告彈窗 (Toast)。</li>
+<li>
+<strong>📂 <code>tests/stress_injector.js</code></strong>：壓力注入工具。自動發送 <code>NaN</code>、<code>null</code> 與非法字元，用來檢核學員加固代碼後的防禦力。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：命案現場：代碼陷阱偵查 (Crime Scene Forensics Lab)</h4><a id="user-content-任務-1命案現場代碼陷阱偵查-crime-scene-forensics-lab" class="anchor" aria-label="Permalink: 任務 1：命案現場：代碼陷阱偵查 (Crime Scene Forensics Lab)" href="#任務-1命案現場代碼陷阱偵查-crime-scene-forensics-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：練習「非經驗主義」的科學定位法。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>故障重現紀錄</strong>：學員需紀錄在何種輸入下系統會崩潰（例如：當 PID Target 設定為 0 時是否發生除零錯誤？）。</li>
+<li>
+<strong>橡皮鴨報告遞交</strong>：在 README 中提交日誌。重點在於：你嘗試過哪些「錯誤的猜測」？你是如何透過二分搜尋法 (Binary Search) 縮小故障範圍的？</li>
+<li>
+<strong>PR 核核</strong>：點評其找出的 Bug 是否準確命中根因，而非只是暫時修飾現象。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：通訊黑盒診斷與抓包 (Full-Link Packet Sniffing)</h4><a id="user-content-任務-2通訊黑盒診斷與抓包-full-link-packet-sniffing" class="anchor" aria-label="Permalink: 任務 2：通訊黑盒診斷與抓包 (Full-Link Packet Sniffing)" href="#任務-2通訊黑盒診斷與抓包-full-link-packet-sniffing"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握「數據鏈路」的透明化觀測能力。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>抓包證據收集</strong>：利用瀏覽器 Network 面板或 WebSerial 進行「封包比對」。學員需截圖展示發送端的 JSON 字串與接收端的解析期待，找出那個「隱形的拼寫錯誤」。</li>
+<li>
+<strong>故障隔離分析</strong>：判斷 Bug 是發生在「前端封包封裝」、「頻寬丟包」還是「韌體 JSON 段落解析」？</li>
+<li>
+<strong>提交結果</strong>：提交修復後的通訊解析代碼以及抓包證據圖。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：防禦性重構實戰 (Defensive Hardening Lab)</h4><a id="user-content-任務-3防禦性重構實戰-defensive-hardening-lab" class="anchor" aria-label="Permalink: 任務 3：防禦性重構實戰 (Defensive Hardening Lab)" href="#任務-3防禦性重構實戰-defensive-hardening-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：寫出具備「免疫力」的代碼，從根本上消滅 Bug 產生的土壤。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>加固加載實作</strong>：重構 PID 與馬達寫入函式。
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：防禦性邏輯</span>
+<span class="pl-k">try</span> <span class="pl-kos">{</span>
+    <span class="pl-k">if</span> <span class="pl-kos">(</span><span class="pl-en">isNaN</span><span class="pl-kos">(</span><span class="pl-s1">input</span><span class="pl-kos">)</span><span class="pl-kos">)</span> <span class="pl-k">throw</span> <span class="pl-s">"Input Error!"</span><span class="pl-kos">;</span>
+    <span class="pl-k">let</span> <span class="pl-s1">safeVal</span> <span class="pl-c1">=</span> <span class="pl-v">Math</span><span class="pl-kos">.</span><span class="pl-en">min</span><span class="pl-kos">(</span><span class="pl-c1">255</span><span class="pl-kos">,</span> <span class="pl-v">Math</span><span class="pl-kos">.</span><span class="pl-en">max</span><span class="pl-kos">(</span><span class="pl-c1">0</span><span class="pl-kos">,</span> <span class="pl-s1">input</span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-en">sendToRobot</span><span class="pl-kos">(</span><span class="pl-s1">safeVal</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span> <span class="pl-k">catch</span> <span class="pl-kos">(</span><span class="pl-s1">e</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+    <span class="pl-en">showToast</span><span class="pl-kos">(</span><span class="pl-s">"⚠️ 偵測到非法指令："</span> <span class="pl-c1">+</span> <span class="pl-s1">e</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
+</li>
+<li>
+<strong>感知型報錯 UX</strong>：在網頁端實作 Alert。當機器人偵測到異常重啟或數據損毀時，UI 面板需主動變成紅色警告色，而非讓操作者對著毫無反應的車子發呆。</li>
+<li>
+<strong>最終推送</strong>：完成具備「健壯門檻、主動申告」特質的全鏈路代碼優化。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 工程師素養導師點評標準 (Scientific Debugging Benchmarks)</h3><a id="user-content-3-工程師素養導師點評標準-scientific-debugging-benchmarks" class="anchor" aria-label="Permalink: 3. 工程師素養導師點評標準 (Scientific Debugging Benchmarks)" href="#3-工程師素養導師點評標準-scientific-debugging-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「解決問題的邏輯與代碼的韌度」</strong>：</p>
+<ul>
+<li>[ ] <strong>除錯科學性</strong>：偵調日誌是否有邏輯地排除了各種干擾項，而非不斷地打掉重練？</li>
+<li>[ ] <strong>工具應用力</strong>：是否能在 PR 中正確使用代碼斷點或網路檢視器作為故障定位的證據？</li>
+<li>[ ] <strong>邊界防護力</strong>：重構後的代碼是否能擋住惡意字串（如 "abc" 代替轉數）的衝擊？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── include/hard_logic.h    # 核心：學員需在此植入硬體防護閥
+├── src/main.ino            # 實作：修復預埋 Bug 並實作韌體端防禦
+├── docs/Investigation_Log.md # 報告：詳列「發現、假設、驗證」的三部曲除錯法
+├── web/vui_hardened.html   # 介面：具備 Toast 診斷與容錯檢查的高強度 UI
+├── README.md               # 結案：我如何透過科學方法讓系統不再崩潰
+└── tests/malicious.test.js # 自動化：檢核系統面對非法輸入的存活率
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的工程師，是能看穿代碼迷霧中的邏輯漏洞，並主動建起高牆不讓錯誤發生的建築師」</strong>。掌握除錯藝術後，學員將擁有了應對「百萬級別複雜專案」或「生命攸關醫療設備」開發的最核心工程師直覺！</p>
+<hr>
+<p>完美！至此我們已經將 <strong>進階 14</strong> 的除錯單元完成了體系化定義。這不僅是技術的結束，更是專業工程思維的開始。恭喜！Vibe Coding 進階課程的全線 GitHub Classroom 部署建議已至此全部圓滿。</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-pink-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── src/CrimeScene.cpp     # 高階 Bug 挑戰區：內含 3 個隱藏的邏輯與通訊 Bug
-├── src/Hardened.h         # 重構加固區：預留邊界檢查介面
-└── docs/Case_Report.md    # 調查日誌模板：包含現象、假說、驗證三個章節
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse border-justify">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「如何讀懂 Stack Trace 與除錯心理學」影片。預習二分搜尋法定位錯誤的原理。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員能否分析出一張 Network 面板截圖中的欄位拼寫錯誤。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify">領取作業 (Repo)，挑戰「命案現場」。利用專業抓包工具比對，並執行系統代碼的防禦性重構。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>鑑識教官:</strong> 扮演「橡皮鴨」，讓學員對其解釋修法邏輯。當面檢核學員對「競態條件 (Race Condition)」的理解。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify text-justify">提交除錯偵查日誌。閱讀教師針對「單元測試 (Unit Test)」如何預防回歸错误的補充導讀。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「非法輸入」的考量範圍是否足夠。表彰邏輯推導具備科學嚴謹性的學員日誌。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

@@ -246,147 +246,178 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">雲端數據實驗室：JSON 標準化與 RESTful API 實戰</h2>
+<div class="markdown-heading"><h1 class="heading-element">adv-04-unit-json-rest (JSON 數據打包與 RESTful 回傳)</h1><a id="user-content-adv-04-unit-json-rest-json-數據打包與-restful-回傳" class="anchor" aria-label="Permalink: adv-04-unit-json-rest (JSON 數據打包與 RESTful 回傳)" href="#adv-04-unit-json-rest-json-數據打包與-restful-回傳"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本單元將帶領你將底層硬體（ESP32）接入現代網際網路生態。你將學習如何使用標準化的 JSON 格式封裝數據，並透過 RESTful API 與 Web 客端進行通訊。</p>
+<div class="markdown-heading"><h2 class="heading-element">學習目標</h2><a id="user-content-學習目標" class="anchor" aria-label="Permalink: 學習目標" href="#學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>掌握 JSON 序列化與反序列化 (ArduinoJson)。</li>
+<li>實作符合 RESTful 規範的 HTTP 端點 (Endpoints)。</li>
+<li>理解 HTTP 狀態碼 (200, 400, 500) 的語義。</li>
+<li>評估 API 效能與 Payload 大小對傳輸效率的影響。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">任務說明</h2><a id="user-content-任務說明" class="anchor" aria-label="Permalink: 任務說明" href="#任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：標準化封包產生器 (GET /api/telemetry)</h3><a id="user-content-任務-1標準化封包產生器-get-apitelemetry" class="anchor" aria-label="Permalink: 任務 1：標準化封包產生器 (GET /api/telemetry)" href="#任務-1標準化封包產生器-get-apitelemetry"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>實作一個 <code>GET</code> 請求處理器，回傳設備的即時數據。</p>
+<ul>
+<li>
+<strong>URL</strong>: <code>/api/telemetry</code>
+</li>
+<li>
+<strong>回傳格式</strong>: JSON</li>
+<li>
+<strong>必要欄位</strong>:
+<ul>
+<li>
+<code>device_id</code>: 設備唯一識別碼。</li>
+<li>
+<code>sensors</code>: 包含各項感測器數值的物件。</li>
+<li>
+<code>timestamp</code>: 數據採集的時間戳。</li>
+</ul>
+</li>
+<li>
+<strong>評分標準</strong>: Header 必須包含 <code>Content-Type: application/json</code>。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：指令接收器 (POST Command Receiver)</h3><a id="user-content-任務-2指令接收器-post-command-receiver" class="anchor" aria-label="Permalink: 任務 2：指令接收器 (POST Command Receiver)" href="#任務-2指令接收器-post-command-receiver"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>實作一個 <code>POST</code> 請求處理器，接收外部指令並控制硬體。</p>
+<ul>
+<li>
+<strong>URL</strong>: <code>/api/control</code>
+</li>
+<li>
+<strong>處理邏輯</strong>:
+<ul>
+<li>解析傳入的 JSON Payload。</li>
+<li>驗證是否包含 <code>cmd</code> 欄位。</li>
+<li>如果格式錯誤，應回傳 <code>400 Bad Request</code> 並附帶錯誤訊息。</li>
+<li>如果成功執行，回傳 <code>200 OK</code>。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：API 效能與壓力測試</h3><a id="user-content-任務-3api-效能與壓力測試" class="anchor" aria-label="Permalink: 任務 3：API 效能與壓力測試" href="#任務-3api-效能與壓力測試"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>分析通訊協議的開銷。</p>
+<ul>
+<li>
+<strong>量化測試</strong>: 比較「詳細版 Key」與「精簡版 Key」的數據包大小。</li>
+<li>
+<strong>報告撰寫</strong>: 在 <code>docs/api_performance_report.md</code> 中記錄不同負載下的延遲數據 (RTT)。</li>
+<li>
+<strong>反思</strong>: 在什麼情況下應該優先考慮開發者可讀性？什麼時候必須追求極致的傳輸效率？</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">程式庫結構</h2><a id="user-content-程式庫結構" class="anchor" aria-label="Permalink: 程式庫結構" href="#程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/
+│   ├── api_routes.cpp      # 定義 API 路由與動詞處理
+│   └── json_logic.cpp      # 處理 JSON 序列化與校驗
+├── web_test/
+│   ├── dashboard.html      # 前端監控面板
+│   └── stress_tester.js    # 壓力測試腳本
+├── docs/
+│   └── api_performance_report.md # 效能測試報告
+└── README.md               # 學生作業指引
+</code></pre>
+<div class="markdown-heading"><h2 class="heading-element">提交要求</h2><a id="user-content-提交要求" class="anchor" aria-label="Permalink: 提交要求" href="#提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>確保所有 <code>TODO</code> 已完成並通過本地測試。</li>
+<li>撰寫完整效能報告。</li>
+<li>將代碼推送至你的 <strong>程式庫</strong>。</li>
+</ol>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：標準化封包產生器 (Standardized Payload Generator)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：後端 API 開發者</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>數據建模</strong>：設計一個包含 <code>device_info</code>, <code>sensors</code>, <code>status</code>
-                        的巢狀 JSON 物件模板。</li>
-                    <li><strong>接口實作</strong>：在 ESP32 上實作 <code>GET /api/telemetry</code> 路由，將感測器數據動態序列化後回傳。</li>
-                    <li><strong>Push Final</strong>：提交具備「高層次結構清晰」且符合標準 Web 規範的數據源接口。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>語義化命名</strong>：JSON 中的 Key 是否具備高度可讀性？（例如 <code>temp_c</code> 而非 <code>t1</code>）
-                    </li>
-                    <li>[ ] <strong>層級合理性</strong>：物件嵌套是否逻辑一致？相關聯的數據是否被正確歸類在同一個 Parent 物件下？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：指令接收器 (POST Command Receiver)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統整合工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>路由配置</strong>：實作 <code>POST /api/control</code> 接口，接收來自網頁端的 JSON 格式操控指令。</li>
-                    <li><strong>解析與執行</strong>：使用 ArduinoJson 解析 <code>cmd</code> 與 <code>val</code>，並即時轉換為對應的硬體控制信號。
-                    </li>
-                    <li><strong>異常防禦</strong>：針對格式錯誤或內容損毀的 JSON Payload，實作 <code>400 Bad Request</code> 的錯誤攔截機制。</li>
-                    <li><strong>Push Final</strong>：提交具備「高度魯棒性」且具備錯誤處理回饋的指令接收模組。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>防崩潰校驗</strong>：在接收異常 JSON 時，系統是否能穩定返回錯誤碼而非導致硬體重新啟動？</li>
-                    <li>[ ] <strong>通訊對話感</strong>：Response 中是否包含了執行結果的狀態碼與具體的原因描述？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：API 效能與壓力測試 (Payload Benchmark)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：雲端效能優化工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>封包瘦身</strong>：對比「冗長語義」與「極致精簡」兩種不同 Key 長度的封包，測量其序列化耗時與體積差異。</li>
-                    <li><strong>高頻壓力測試</strong>：模擬每秒 10 次以上的並發請求，紀錄 ESP32 的 CPU 負載與 API 回應延遲變化。</li>
-                    <li><strong>優化報告</strong>：在 README 中提出在有限頻寬情境下，對 JSON 結構設計的折衷與優化建議。</li>
-                    <li><strong>Push Final</strong>：提交經過「量化分析」且兼顧性能與可維護性的 API 最終版本。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>數據權衡能力</strong>：報告中是否能清晰指出「Key 長度」對序列化速度的具體影響？</li>
-                    <li>[ ] <strong>架構思考度</strong>：是否考慮到了縮寫 Key 對後端資料庫索引與前端維護的易讀性損失？</li>
-                </ul>
-            </div>
-        </div>
     </section>
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：數據與接口的標準化。掌握 RESTful 設計美學與 HTTP 狀態碼的禮儀。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：資源導向路徑 (Resource-Oriented)</strong> - 強調路徑應代表「名詞」，而行為應代表「動詞」（GET/POST），打破以往用路徑寫邏輯的習慣。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：防禦性的反序列化</strong> - 透過 3-2 任務引入校驗機制，讓學生看見在開放式網路中，不信任任何外部輸入的重要性。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：邊緣運算的計算開銷</strong> - 透過壓力測試，讓學生實際體驗在 ESP32 這類微型裝置上，複雜的 JSON 處理對 CPU 與延遲的影響。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-04-unit-json-rest</code> (JSON 數據打包與 RESTful 回傳)</strong> 單元，這是一個將「底層硬體」接入「現代網際網路生態」的關鍵課程，重點在於通訊協議的標準化與語義化。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repository) 配置建議</h3><a id="user-content-1-範本程式庫-template-repository-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repository) 配置建議" href="#1-範本程式庫-template-repository-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>RESTful API 的開發涉及「請求 (Request)」與「回應 (Response)」的精準對接，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/rest_server.ino</code></strong>：提供 ESP32 Web Server 的基礎框架，預置 WiFi 連線代碼，留下 <code>on("/api/telemetry", ...)</code> 與 <code>on("/api/control", ...)</code> 的路由 <code>TODO</code>。</li>
+<li>
+<strong>📂 <code>web_client/api_test.js</code></strong>：一個基於 <code>fetch</code> 的 JS 測試工具。學員只需在本地瀏覽器打開，即可向其 ESP32 發送各種 REST 指令，觀察狀態碼與結果。</li>
+<li>
+<strong>📂 <code>docs/status_map.md</code></strong>：一份 HTTP 狀態碼對照表。要求學員定義在其系統中，什麼情況下回傳 <code>200</code>, <code>400</code> 或 <code>500</code>。</li>
+<li>
+<strong>📂 <code>tests/api_validator.test.js</code></strong>：自動化評分腳本。模擬不同的 JSON Payload，檢核 API 是否能正確解析並回傳符合格式的 Response。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：標準化封包產生器 (Standardized Payload Generator)</h4><a id="user-content-任務-1標準化封包產生器-standardized-payload-generator" class="anchor" aria-label="Permalink: 任務 1：標準化封包產生器 (Standardized Payload Generator)" href="#任務-1標準化封包產生器-standardized-payload-generator"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握 REST 的「資源導向 (Resource-Oriented)」建模與 JSON 序列化。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>數據結構檢核</strong>：要求學員實作一個包含 <code>device_id</code> (串列號), <code>sensors</code> (物件), <code>timestamp</code> (時間戳) 的層次化 JSON。</li>
+<li>
+<strong>Autograding</strong>：透過腳本請求 <code>GET /api/telemetry</code>，驗證 Header 是否包含 <code>Content-Type: application/json</code>，且 Body 的 JSON 欄位是否齊全。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：指令接收器 (POST Command Receiver)</h4><a id="user-content-任務-2指令接收器-post-command-receiver" class="anchor" aria-label="Permalink: 任務 2：指令接收器 (POST Command Receiver)" href="#任務-2指令接收器-post-command-receiver"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：處理具有「副作用 (Side Effects)」的 API 指令，並強化異常報錯機制。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>邏輯魯棒性檢核</strong>：
+<div class="highlight highlight-source-c++"><pre><span class="pl-c"><span class="pl-c">//</span> 學生需實作：POST 請求解析與錯誤回饋</span>
+<span class="pl-k">if</span> (!doc.containsKey(<span class="pl-s"><span class="pl-pds">"</span>cmd<span class="pl-pds">"</span></span>)) {
+    server.<span class="pl-c1">send</span>(<span class="pl-c1">400</span>, <span class="pl-s"><span class="pl-pds">"</span>application/json<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>{<span class="pl-cce">\"</span>error<span class="pl-cce">\"</span>:<span class="pl-cce">\"</span>Missing cmd field<span class="pl-cce">\"</span>}<span class="pl-pds">"</span></span>);
+    <span class="pl-k">return</span>;
+}</pre></div>
+</li>
+<li>
+<strong>除錯任務</strong>：導師提供幾組錯誤的指令格式（如：參數超限、格式損毀），學員需實作對應的處理邏輯，確保硬體不會因為髒數據而重啟。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：API 效能與壓力測試 (Payload Benchmark)</h4><a id="user-content-任務-3api-效能與壓力測試-payload-benchmark" class="anchor" aria-label="Permalink: 任務 3：API 效能與壓力測試 (Payload Benchmark)" href="#任務-3api-效能與壓力測試-payload-benchmark"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：直觀感受「序列化開銷」與「通訊延遲」的關聯。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>量化對比</strong>：學員需在 <code>BENCHMARK.md</code> 中提交數據。
+<ul>
+<li>測試「冗長版 Key」(如 <code>power_consumption_mw</code>) vs 「精簡版 Key」(如 <code>p_mw</code>) 在每秒 10 次連續請求下的平均 RTT (Round Trip Time)。</li>
+</ul>
+</li>
+<li>
+<strong>架構思考度</strong>：要求學員在 PR (Pull Request) 中回答：在什麼情境下應該優先考慮開發者可讀性（冗長 Key），什麼情境下必須考慮傳輸效率（精簡 Key）？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. REST API 導師點評標準 (RESTful Benchmarks)</h3><a id="user-content-3-rest-api-導師點評標準-restful-benchmarks" class="anchor" aria-label="Permalink: 3. REST API 導師點評標準 (RESTful Benchmarks)" href="#3-rest-api-導師點評標準-restful-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對 Web 標準通訊禮儀的內化」</strong>：</p>
+<ul>
+<li>[ ] <strong>語義化路徑設計</strong>：路由命名是否使用了「名詞代表資源」？（例如 <code>/api/car/status</code> 而非 <code>/api/getCarStatusNow</code>）。</li>
+<li>[ ] <strong>狀態碼準確性</strong>：當參數無效時，是否正確使用了 <code>400</code> 而不是隱瞞錯誤的 <code>200</code>？或者是內部崩潰時的 <code>500</code>？</li>
+<li>[ ] <strong>封包原子性</strong>：返回的 JSON 是否具有「自我描述性」？（即：單看這一串文字，就知道它是什麼設備、在什麼狀態）。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/
+│   ├── api_routes.cpp      # 核心：定義地圖路由與動詞處理邏輯
+│   └── json_logic.cpp      # 邏輯：處理 ArduinoJson 序列化與校驗
+├── web_test/
+│   ├── dashboard.html      # 前端：用於互動測試的簡易監控面板
+│   └── stress_tester.js    # 工具：執行頻寬壓力測試的腳本
+├── docs/
+│   └── api_performance_report.md # 報告：不同 Payload 大小下的時延數據
+└── README.md               # 專案總結：我如何設計出一個優雅且健壯的 REST 接口
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「硬體與互聯網無縫接軌」</strong> 的快感。這不只是在寫 C++，而是在構建一個符合現代軟體工程規範的 <strong>IoT 端點 (Endpoint)</strong>，為未來的雲端大數據整合打下堅實基礎。_</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── src/server_routes.cpp  # 核心：待填寫 RESTful 路由分發邏輯
-├── src/json_parser.cpp    # 邏輯：實作安全的反序列化與欄位檢查
-├── web_test/index.html    # 測試：內建 fetch API 用於學員本機調試接口
-└── README.md              # 報告：記錄壓力測試條件與 Payload 優化成果
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5">觀看「HTTP 的四個動詞與溝通禮節」影片。理解 200 vs 404 vs 500 的物理意義。</td>
-                        <td class="px-6 py-5"><strong>Dashboard:</strong> 測試學員是否能理解為什麼感測器數據不適合用 POST 索取。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900">領取作業 (Repo)，挑戰在 API 路由中實作身份驗證（或簡易檢查碼）與數據截斷功能。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 現場示範 Chrome DevTools 抓包，分析 Response Header 中的 Content-Type 屬性。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
-                        <td class="px-6 py-5">提交壓力測試與 Payload 報告。在 PR 討論中嘗試解決同源政策 (CORS) 帶來的跨域問題。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價對「數據冪等性」與「冗餘欄位精簡」設計的合理性與前瞻性。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

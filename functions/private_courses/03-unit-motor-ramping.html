@@ -473,92 +473,146 @@
     </script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>馬達 Ramping 調校</h2>
+<div class="markdown-heading"><h1 class="heading-element">馬達 Ramping 組態設定 (Motor Ramping Configuration)</h1><a id="user-content-馬達-ramping-組態設定-motor-ramping-configuration" class="anchor" aria-label="Permalink: 馬達 Ramping 組態設定 (Motor Ramping Configuration)" href="#馬達-ramping-組態設定-motor-ramping-configuration"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到本單元！在這個練習中，你將學習如何透過網頁介面與硬體進行「二進位通訊協議 (Binary Protocol)」的對接，並實作關鍵的物理安全控制邏輯。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>前端安全防護</strong>：學習如何在 UI 層級進行數值驗證，防止非法參數導致硬體損毀。</li>
+<li>
+<strong>二進位資料處理</strong>：熟練使用 JavaScript 的 <code>DataView</code> 與 <code>ArrayBuffer</code> 來封裝二進位封包。</li>
+<li>
+<strong>通訊協議對齊</strong>：確保網頁端封包與硬體端 (ESP32) 的記憶體結構完全吻合（28 Bytes, Little-Endian）。</li>
+<li>
+<strong>物理安全驗證</strong>：理解並驗證硬體端的超時保護 (Fail-Safe) 機制。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">🛠️ 任務說明</h2><a id="user-content-️-任務說明" class="anchor" aria-label="Permalink: 🛠️ 任務說明" href="#️-任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：軟體保險絲 - 前端輸入驗證</h3><a id="user-content-任務-1軟體保險絲---前端輸入驗證" class="anchor" aria-label="Permalink: 任務 1：軟體保險絲 - 前端輸入驗證" href="#任務-1軟體保險絲---前端輸入驗證"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請在 <code>ramping-app.html</code> 中實作輸入驗證邏輯：</p>
+<ul>
+<li>
+<strong>油門限制 (PWM Limit)</strong>：數值必須在合法範圍內。</li>
+<li>
+<strong>驗證機制</strong>：若輸入非法數值，應禁用「傳送」按鈕或顯示警告紅框。</li>
+<li>
+<strong>重要性</strong>：這是防止馬達因非法輸入（如設為 999）而燒毀的第一道防線。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：二進位橋樑 - 資料結構映射</h3><a id="user-content-任務-2二進位橋樑---資料結構映射" class="anchor" aria-label="Permalink: 任務 2：二進位橋樑 - 資料結構映射" href="#任務-2二進位橋樑---資料結構映射"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>你需要實作二進位封包的填充邏輯：</p>
+<ul>
+<li>
+<strong>目標檔案</strong>：<code>ramping-app.html</code> 中的 <code>// TODO</code> 區塊。</li>
+<li>
+<strong>規格</strong>：
+<ul>
+<li>總長度：<strong>28 Bytes</strong>。</li>
+<li>編碼格式：<strong>Little-Endian</strong>。</li>
+<li>
+<strong>關鍵偏移量</strong>：例如 <code>pwmStartKickT</code> 應位於偏移量 <code>12</code> 的位置。</li>
+</ul>
+</li>
+<li>
+<strong>驗證方式</strong>：執行 <code>verify-bytes.js</code>（如有提供）或查看序列埠輸出的十六進位字串。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：物理安全保護驗證</h3><a id="user-content-任務-3物理安全保護驗證" class="anchor" aria-label="Permalink: 任務 3：物理安全保護驗證" href="#任務-3物理安全保護驗證"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>驗證硬體的「安全停車」機制：</p>
+<ol>
+<li>將 <code>controlTimeoutMs</code> 設定為 <code>500ms</code>。</li>
+<li>啟動馬達後，立即關閉控制網頁。</li>
+<li>
+<strong>截圖證明</strong>：從序列埠日誌中截圖，證明馬達在 0.5 秒內自動停止（應出現 <code>[SAFETY] Timeout - Motor Stop</code> 訊息）。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📂 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>ramping-app.html</code>：主要的網頁控制程式（需完成 UI 驗證與 DataView 邏輯）。</li>
+<li>
+<code>test-protocol.js</code>：用於本地測試二進位解析的腳本。</li>
+<li>
+<code>firmware/</code>：對應的 ESP32 韌體源碼（供參考與實機測試）。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📝 繳交規範</h2><a id="user-content--繳交規範" class="anchor" aria-label="Permalink: 📝 繳交規範" href="#-繳交規範"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>確保 <code>ramping-app.html</code> 已通過自動評分測試。</li>
+<li>提交包含所有程式碼修改的 Commit。</li>
+<li>（選繳）上傳任務 3 的安全停車截圖。</li>
+</ol>
+<hr>
+<p><em>祝你在二進位通訊的世界中探索愉快！</em></p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title">任務 1：軟體保險絲 - UI 安全限流與驗證</h3>
-            <div class="quest-meta">
-                <span>角色扮演：嵌入式系統測試員</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：30 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立防呆</strong>：在網頁前端 Input 加入 <code>min/max</code> 屬性限制（例如：PWM 不可超過 255）。</li>
-                    <li><strong>實作警告</strong>：使用 JavaScript 實作：當輸入無效數值時，輸入框變紅並禁止按下「傳送」按鈕。</li>
-                    <li><strong>邊界測試</strong>：測試輸入極端值（如 -1 或 999），確保系統能正確攔截。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>安全性</strong>：是否能有效防止使用者因誤輸入而導致馬達燒毀？</li>
-                    <li>[ ] <strong>使用者排錯</strong>：前端是否有提供直觀的錯誤提示？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 2：二進位橋樑 - 資料結構映射 (DataView)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：韌體驅動開發者</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>定義結構</strong>：在 JavaScript 中根據 C++ <code>struct</code> 的定義建立 <code>ArrayBuffer</code> 與
-                        <code>DataView</code>。</li>
-                    <li><strong>封裝位元組</strong>：確保使用 <strong>Little-Endian</strong> 格式正確寫入 28 Bytes 的二進位數值。</li>
-                    <li><strong>逆向驗證</strong>：實作從裝置讀取 (Read) 二進位資料並正確解析回網頁 Input 的邏輯。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>對齊正確性</strong>：Offset (偏移量) 是否與 C++ 的 28 Bytes 結構體完全一致？</li>
-                    <li>[ ] <strong>通訊效率</strong>：是否能成功透過二進位通訊完成雙向資料同步？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 3：失聯保護 - 心跳包與故障安全 (Fail-Safe)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：硬體安全專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：40 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>設定超時</strong>：調整 <code>controlTimeoutMs</code> 並測試藍牙斷線後，馬達是否能在指定時間內自動停車。</li>
-                    <li><strong>EEPROM 回復</strong>：測試裝置斷電重啟後，設定的 Ramping 參數是否能從 NVS (Flash) 中正確載入。</li>
-                    <li><strong>穩定性測試</strong>：在馬達運作期間連續傳送不同參數，觀察裝置是否發生 Crash 或數值位移。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>故障排除能力</strong>：當連線中斷時，系統是否展現出預期的安全性行為？</li>
-                    <li>[ ] <strong>數據持久性</strong>：是否能正確驗證 NVS 的讀寫邏輯？</li>
-                </ul>
-            </div>
-        </div>
     </section>
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
 
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2>馬達控制教學引導指南</h2>
-        <div class="classroom-guide text-sm space-y-4">
-            <p><strong>教學重點：</strong></p>
-            <p>本單元結合了「物理安全」與「二進位協議」。教師應強調為什麼使用 Binary 而非 JSON（效能、記憶體），並引導學生處理 C/C++ 結構體對齊 (Memory Alignment) 帶來的位移挑戰。
-            </p>
-        </div>
+<p>針對 <strong><code>03-unit-motor-ramping</code> (馬達 Ramping 組態設定)</strong> 單元，這是一個結合了「二進位通訊協議 (Binary Protocol)」與「物理安全控制」的高難度單元。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫配置建議</h3><a id="user-content-1-範本程式庫配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫配置建議" href="#1-範本程式庫配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>由於此單元涉及精確的位元組對齊（28 Bytes），建議範本中包含：</p>
+<ul>
+<li>
+<strong>📂 <code>ramping-app.html</code></strong>：提供 UI 骨架，但將 <code>DataView</code> 的讀寫邏輯改為 <code>// TODO</code>。</li>
+<li>
+<strong>📂 <code>test-protocol.js</code></strong>：預置一個單元測試，模擬一組 28 位元組的二進位數據，讓學生練習是否能正確解析回數值。</li>
+<li>
+<strong>📂 <code>firmware/main.cpp</code></strong>：提供對應的 ESP32 韌體源碼，讓有硬體的學生能進行真實測試。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：軟體保險絲 - 前端輸入驗證 (UI Validation)</h4><a id="user-content-任務-1軟體保險絲---前端輸入驗證-ui-validation" class="anchor" aria-label="Permalink: 任務 1：軟體保險絲 - 前端輸入驗證 (UI Validation)" href="#任務-1軟體保險絲---前端輸入驗證-ui-validation"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：防止非法數值（如 PWM 限制設為 999）導致馬達損毀。</li>
+<li>
+<strong>Classroom 部署建議</strong>：</li>
+<li>
+<strong>自動評分 (Autograding)</strong>：使用無頭瀏覽器測試（如 Playwright）。</li>
+<li>
+<strong>測試案例</strong>：嘗試在油門限制欄位輸入 <code>999</code>。如果「傳送」按鈕沒有被禁用 (Disabled) 或沒有出現紅框警告，則自動評分失敗。這能訓練學生重視「前端第一線安全控管」。</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：二進位橋樑 - 資料結構映射 (DataView Lab)</h4><a id="user-content-任務-2二進位橋樑---資料結構映射-dataview-lab" class="anchor" aria-label="Permalink: 任務 2：二進位橋樑 - 資料結構映射 (DataView Lab)" href="#任務-2二進位橋樑---資料結構映射-dataview-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：精確操作位元組偏移量 (Offset) 與位元編碼格式 (Little-Endian)。</li>
+<li>
+<strong>Classroom 部署建議</strong>：</li>
+<li>
+<strong>核心代碼檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：偏移量 12 應對應到 pwmStartKickT</span>
+<span class="pl-s1">view</span><span class="pl-kos">.</span><span class="pl-en">setInt32</span><span class="pl-kos">(</span><span class="pl-c1">12</span><span class="pl-kos">,</span> <span class="pl-en">parseInt</span><span class="pl-kos">(</span><span class="pl-s1">inputs</span><span class="pl-kos">.</span><span class="pl-c1">pwmStartKickT</span><span class="pl-kos">.</span><span class="pl-c1">value</span><span class="pl-kos">)</span><span class="pl-kos">,</span> <span class="pl-c1">true</span><span class="pl-kos">)</span><span class="pl-kos">;</span> </pre></div>
+</li>
+<li>
+<strong>驗證方式</strong>：學生需撰寫一個 <code>verify-bytes.js</code>，將填充好的 <code>ArrayBuffer</code> 轉換為十六進位字串（Hex String）並與導師提供的預期結果比對。</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：斷電與超時保護驗證 (Fail-Safe Check)</h4><a id="user-content-任務-3斷電與超時保護驗證-fail-safe-check" class="anchor" aria-label="Permalink: 任務 3：斷電與超時保護驗證 (Fail-Safe Check)" href="#任務-3斷電與超時保護驗證-fail-safe-check"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：驗證韌體的「安全停車」機制。</li>
+<li>
+<strong>Classroom 部署建議</strong>：</li>
+<li>
+<strong>操作證明</strong>：由於這涉及物理行為，要求學生提交一段 <strong>GIF 錄影</strong> 或 <strong>序列埠日誌截圖</strong>。</li>
+<li>
+<strong>任務內容</strong>：設定 <code>controlTimeoutMs</code> 為 <code>500ms</code>，啟動馬達後關閉網頁。截圖需證明馬達在半秒內自動停止（終端機出現 <code>[SAFETY] Timeout - Motor Stop</code>）。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 翻轉教室與導師評估指標</h3><a id="user-content-3-翻轉教室與導師評估指標" class="anchor" aria-label="Permalink: 3. 翻轉教室與導師評估指標" href="#3-翻轉教室與導師評估指標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>教學重難點</strong>：</li>
+<li>
+<strong>Endians (位元組序)</strong>：很多學生會卡在為什麼數據讀出來是亂碼（因為沒設 <code>true</code> 開啟 Little-Endian）。</li>
+<li>
+<strong>Struct Alignment (記憶體對齊)</strong>：引導學生思考為什麼 <code>uint32</code> 佔 4 個位元組。</li>
+<li>
+<strong>評語建議 (Tutor Benchmarks)</strong>：</li>
+<li>[ ] <strong>封裝正確性</strong>：DataView 寫入時是否使用了正確的整數型別 (<code>Int32</code> vs <code>Uint32</code>)？</li>
+<li>[ ] <strong>容錯邏輯</strong>：是否處理了「空值」或「非數字」輸入的例外狀況？</li>
+<li>[ ] <strong>協議文件化</strong>：是否在 README 中清楚標註了 28 Bytes 分別代表哪些資料項？</li>
+</ul>
+<p>這套部署方案能將原本抽象的「二進位協議」轉化為「可測試、可觀察」的具體任務，讓學生在學習 Web 控制硬體時，建立起極致效能與物理安全性併重的觀念。</p>
+
     </section>
 </body>
 

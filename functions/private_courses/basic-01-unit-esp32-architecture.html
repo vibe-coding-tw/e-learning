@@ -272,133 +272,129 @@
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">ESP32 SoC 生態實驗室：硬體連通性、偵探遊戲與熱傳導監測</h2>
+<div class="markdown-heading"><h1 class="heading-element">實驗單元：ESP32 架構導覽與 DNA 提取</h1><a id="user-content-實驗單元esp32-架構導覽與-dna-提取" class="anchor" aria-label="Permalink: 實驗單元：ESP32 架構導覽與 DNA 提取" href="#實驗單元esp32-架構導覽與-dna-提取"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本單元是進入 ESP32 開發世界的第一步。你將從硬體觀察開始，深入了解這顆「電子大腦」的實體佈局，並透過程式碼提取其獨一無二的「數位 DNA」（晶片資訊），最後完成經典的摩斯密碼閃爍測試。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>掌握 ESP32 硬體佈局與核心按鍵（RESET/BOOT）的功能。</li>
+<li>學習使用 ESP-IDF API 提取晶片型號、核心數及 MAC 地址。</li>
+<li>實作基礎 GPIO 控制，透過摩斯密碼進行狀態反饋。</li>
+<li>解析 Bootloader 啟動日誌，理解系統啟動參數。</li>
+</ol>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🛠️ 任務說明</h2><a id="user-content-️-任務說明" class="anchor" aria-label="Permalink: 🛠️ 任務說明" href="#️-任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：硬體觀察 (Hardware Observation)</h3><a id="user-content-任務-1硬體觀察-hardware-observation" class="anchor" aria-label="Permalink: 任務 1：硬體觀察 (Hardware Observation)" href="#任務-1硬體觀察-hardware-observation"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請觀察你的開發板，並完成以下動作：</p>
+<ul>
+<li>拍攝一張你的開發板照片，存放在 <code>assets/</code> 資料夾中。</li>
+<li>在照片中標註出 <strong>RESET</strong> 與 <strong>BOOT</strong> 鍵的位置。</li>
+<li>思考：在什麼情況下你需要手動按住 BOOT 鍵？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：數位 DNA 提取 (DNA Extraction)</h3><a id="user-content-任務-2數位-dna-提取-dna-extraction" class="anchor" aria-label="Permalink: 任務 2：數位 DNA 提取 (DNA Extraction)" href="#任務-2數位-dna-提取-dna-extraction"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在 <code>src/main.cpp</code> 中實作晶片資訊提取邏輯。</p>
+<ul>
+<li>使用 <code>esp_chip_info()</code> 獲取晶片型號與核心數量。</li>
+<li>使用 <code>esp_read_mac()</code> 讀取唯一的硬體 MAC 地址。</li>
+<li>將結果格式化輸出至串口監控器 (Serial Monitor)。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：摩斯密碼測試 (Morse Code Lab)</h3><a id="user-content-任務-3摩斯密碼測試-morse-code-lab" class="anchor" aria-label="Permalink: 任務 3：摩斯密碼測試 (Morse Code Lab)" href="#任務-3摩斯密碼測試-morse-code-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>利用板載 LED 實作 SOS 閃爍。</p>
+<ul>
+<li>
+<code>.</code> (Dot) 代表短閃，<code>-</code> (Dash) 代表長閃。</li>
+<li>確保閃爍時序符合標準（例如：Dash 是 Dot 的 3 倍長）。</li>
+<li>上傳一段演示影片或 GIF 到 <code>assets/</code>。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 4：啟動日誌分析 (Bootloader Analysis)</h3><a id="user-content-任務-4啟動日誌分析-bootloader-analysis" class="anchor" aria-label="Permalink: 任務 4：啟動日誌分析 (Bootloader Analysis)" href="#任務-4啟動日誌分析-bootloader-analysis"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>重置設備並觀察 Serial Monitor 最開始輸出的訊息。</p>
+<ul>
+<li>記錄 Flash Mode (DIO/QIO) 與 Crystal Frequency。</li>
+<li>將分析結果填寫至 <code>docs/BootAnalysis.md</code>。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📁 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📁 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── platformio.ini       # 專案配置文件
+├── src/main.cpp         # 核心實作：DNA 提取與摩斯密碼邏輯
+├── include/soc_report.h # 定義報告結構體
+├── docs/BootAnalysis.md # 啟動日誌分析報告
+├── assets/              # 存放照片與影片
+└── README.md            # 本文件
+</code></pre>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">✅ 提交要求</h2><a id="user-content--提交要求" class="anchor" aria-label="Permalink: ✅ 提交要求" href="#-提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>確保程式碼能正確編譯並執行。</li>
+<li>完成 <code>src/main.cpp</code> 中的所有 <code>TODO</code> 標記。</li>
+<li>更新 <code>docs/BootAnalysis.md</code> 中的實驗數據。</li>
+<li>將更改 push 回你的 GitHub 程式庫以進行自動評分。</li>
+</ol>
+<hr>
+<blockquote>
+<p>「理解你的硬體，是成為嵌入式系統大師的第一步。」</p>
+</blockquote>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：硬體連通性與燒錄測試 (Hardware Connectivity & Flashing)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：韌體工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>環境建立</strong>：完成安裝並通過編譯。</li>
-                    <li><strong>物理閃爍</strong>：實作閃爍程式。修改 <code>delay()</code> 閃出「SOS」摩斯密碼。</li>
-                    <li><strong>驗證提交</strong>：在 README 貼上 SUCCESS 內容與閃爍照片。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>引腳配置正確性</strong>：是否能找出板載 LED 引腳？</li>
-                    <li>[ ] <strong>燒錄時機掌握</strong>：是否能在超時前操作 BOOT 鈕？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：串口通訊的偵探遊戲 (Serial Communication Detective)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統分析師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>系統 API 調用</strong>：引入 <code>esp_system.h</code> 獲取晶片核心數。</li>
-                    <li><strong>數位指紋提取</strong>：透過 <code>ESP.getEfuseMac()</code> 打印唯一 MAC。</li>
-                    <li><strong>觀察亂碼特徵</strong>：調低速率，截圖記錄並描述「失步」原因。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>數據完整性</strong>：README 是否包含核心數與 Flash 報表？</li>
-                    <li>[ ] <strong>同步理解</strong>：解釋速率不一為何導致無法閱讀亂碼？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：電源與發熱量監測 (Power & Thermal Monitoring)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：硬體測試專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>冷啟動日誌分析</strong>：監看 Bootloader 日誌識別 Flash Mode。</li>
-                    <li><strong>負載溫升感測</strong>：執行 WiFi 掃描。記錄運作前後溫差感受。</li>
-                    <li><strong>元件佈局圖解</strong>：上傳照片並標示 RESET/BOOT 物理位置。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>日誌解讀深度</strong>：能否從日誌識別啟動頻率訊息？</li>
-                    <li>[ ] <strong>供電安全意識</strong>：是否理解 Brownout Detector 觸發原因？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify text-left">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：建立抽象代碼與物理硬體間的感知。</p>
-            <ol class="space-y-4 text-slate-600 text-justify text-left">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：基礎燒錄</strong> - 確保學員解決驅動與 COM 埠問題。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：資源邊界探索</strong> - 理解每顆 SoC 核心可能大不相同。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：供電穩定性</strong> - 埋下未來除錯「穩定性」種子。</li>
-            </ol>
-        </div>
+<div class="markdown-heading"><h1 class="heading-element">ESP32 架構導覽與 DNA 提取報告</h1><a id="user-content-esp32-架構導覽與-dna-提取報告" class="anchor" aria-label="Permalink: ESP32 架構導覽與 DNA 提取報告" href="#esp32-架構導覽與-dna-提取報告"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>這是你與 ESP32 「電子大腦」的第一次親密接觸。本單元要求你從觀察硬體佈局開始，進而透過程式碼提取晶片的「數位 DNA」，並完成第一次摩斯密碼閃爍測試。</p>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">1. 硬體觀察 (Hardware Observation)</h2><a id="user-content-1-硬體觀察-hardware-observation" class="anchor" aria-label="Permalink: 1. 硬體觀察 (Hardware Observation)" href="#1-硬體觀察-hardware-observation"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請在 <code>assets/</code> 資料夾中存放一張你的開發板照片，並在此處展示。</p>
+<p><a target="_blank" rel="noopener noreferrer" href="assets/board_map.jpg"><img src="assets/board_map.jpg" alt="開發板標註圖" style="max-width: 100%;"></a></p>
+<blockquote>
+<p><strong>任務</strong>：請在照片中標註出 <strong>RESET</strong> 與 <strong>BOOT</strong> 鍵的位置。</p>
+</blockquote>
+<p><strong>燒錄自檢</strong>：</p>
+<ul>
+<li>在燒錄過程中，你是否需要手動按住 BOOT 鍵？ [ 是 / 否 ]</li>
+<li>你的開發板型號是：________________</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">2. 數位 DNA 提取 (DNA Extraction)</h2><a id="user-content-2-數位-dna-提取-dna-extraction" class="anchor" aria-label="Permalink: 2. 數位 DNA 提取 (DNA Extraction)" href="#2-數位-dna-提取-dna-extraction"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請將 <code>src/main.cpp</code> 執行後的串口輸出截圖或文字貼在此處。</p>
+<pre lang="text"><code>// Paste your DNA Report here
+</code></pre>
+<p><strong>驗證點</strong>：</p>
+<ul>
+<li>你的 MAC 地址與開發板標籤（如有）是否一致？</li>
+<li>你的 ESP32 是單核 (Single-core) 還是雙核 (Dual-core)？</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">3. 摩斯密碼測試 (Morse Code Lab)</h2><a id="user-content-3-摩斯密碼測試-morse-code-lab" class="anchor" aria-label="Permalink: 3. 摩斯密碼測試 (Morse Code Lab)" href="#3-摩斯密碼測試-morse-code-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請上傳一段 SOS 閃爍的影片或 GIF 到 <code>assets/</code>，並在此連結。</p>
+<p><a href="assets/sos_demo.mp4">SOS 閃爍演示影片</a></p>
+<p><strong>時序記錄</strong>：</p>
+<ul>
+<li>Dot (點) 持續時間：______ ms</li>
+<li>Dash (橫) 持續時間：______ ms</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">4. 啟動日誌分析 (Bootloader Analysis)</h2><a id="user-content-4-啟動日誌分析-bootloader-analysis" class="anchor" aria-label="Permalink: 4. 啟動日誌分析 (Bootloader Analysis)" href="#4-啟動日誌分析-bootloader-analysis"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>詳細分析請見 <a href="docs/BootAnalysis.md">docs/BootAnalysis.md</a>。</p>
+<p><strong>快速總結</strong>：</p>
+<ul>
+<li>Flash Mode: ______</li>
+<li>Crystal Frequency: ______</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">5. 熱傳導觀測 (Thermal Audit)</h2><a id="user-content-5-熱傳導觀測-thermal-audit" class="anchor" aria-label="Permalink: 5. 熱傳導觀測 (Thermal Audit)" href="#5-熱傳導觀測-thermal-audit"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>啟動 WiFi 掃描循環 5 分鐘後，觸摸晶片屏蔽蓋的感覺：</p>
+<blockquote>
+<p>[ ] 無感 (Cool)
+[ ] 微溫 (Warm)
+[ ] 燙手 (Hot)</p>
+</blockquote>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">導師點評 (Instructor Feedback)</h3><a id="user-content-導師點評-instructor-feedback" class="anchor" aria-label="Permalink: 導師點評 (Instructor Feedback)" href="#導師點評-instructor-feedback"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>[ ] 代碼完整性</li>
+<li>[ ] 時間邏輯準確度</li>
+<li>[ ] 細節觀察力</li>
+</ul>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
-.
-├── src/main.cpp      # (核心) 需填寫 chip_info 與 SOS 邏輯
-├── include/soc_info.h# 資料結構定義
-└── README.md         # 繳交報告：SOS 與晶片照片
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse border border-slate-100">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看影片，了解 3.3V 供電原則。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試是否理解「3.3V vs 5V」禁區。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify">領取作業 (Repo)，進行 SOS 摩斯密碼開發。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術導師:</strong> 協助演示如何捕捉開機微秒日誌。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify">撰寫「佈局分析」並 Push。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對架構參數讀取。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

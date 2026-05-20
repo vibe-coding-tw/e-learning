@@ -224,144 +224,171 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">硬體通訊實驗室：I2C/SPI 協議深論與整合</h2>
+<div class="markdown-heading"><h1 class="heading-element">adv-04-unit-i2c-spi: 通訊協議與硬體實戰</h1><a id="user-content-adv-04-unit-i2c-spi-通訊協議與硬體實戰" class="anchor" aria-label="Permalink: adv-04-unit-i2c-spi: 通訊協議與硬體實戰" href="#adv-04-unit-i2c-spi-通訊協議與硬體實戰"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到「通訊協議與硬體實戰」單元！在這個單元中，你將深入學習 I2C 與 SPI 這兩種最常見的硬體通訊協議。你將不再只是單純地呼叫 Library，而是直接與晶片對話，理解物理訊號的邊界。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>掌握 I2C 協議</strong>：理解地址 (Address) 與應答 (ACK) 的物理過程。</li>
+<li>
+<strong>理解 SPI 性能</strong>：探索數據通訊的物理極限與訊號完整性。</li>
+<li>
+<strong>協議解析</strong>：學習將低階二進位數據 (Raw Data) 解析為具備語義的物理量 (JSON)。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">🚀 任務說明</h2><a id="user-content--任務說明" class="anchor" aria-label="Permalink: 🚀 任務說明" href="#-任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：I2C 設備大掃描 (I2C Scanner Lab)</h3><a id="user-content-任務-1i2c-設備大掃描-i2c-scanner-lab" class="anchor" aria-label="Permalink: 任務 1：I2C 設備大掃描 (I2C Scanner Lab)" href="#任務-1i2c-設備大掃描-i2c-scanner-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>內容</strong>：實作一個 I2C 掃描工具，偵測連接到 ESP32 的所有設備。</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>實作掃描迴圈與 ACK 狀態判斷。</li>
+<li>在 <code>README.md</code> (或指定報告中) 列出偵測到的設備地址（例如 OLED 的 <code>0x3C</code>）。</li>
+<li>能夠區分「無設備」與「總線異常」。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：SPI 刷新率挑戰 (SPI Speed Benchmark)</h3><a id="user-content-任務-2spi-刷新率挑戰-spi-speed-benchmark" class="anchor" aria-label="Permalink: 任務 2：SPI 刷新率挑戰 (SPI Speed Benchmark)" href="#任務-2spi-刷新率挑戰-spi-speed-benchmark"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>內容</strong>：測試不同 SPI 時脈頻率下的螢幕刷新表現。</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>分別測試 1MHz, 10MHz, 40MHz 的刷新 FPS。</li>
+<li>觀察並紀錄高頻下的訊號品質（是否有雪花或錯位）。</li>
+<li>確保 <code>SPI_MODE</code> (CPOL/CPHA) 配置正確。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：協議翻譯官：Raw to JSON</h3><a id="user-content-任務-3協議翻譯官raw-to-json" class="anchor" aria-label="Permalink: 任務 3：協議翻譯官：Raw to JSON" href="#任務-3協議翻譯官raw-to-json"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>內容</strong>：讀取感測器（如 MPU6050）的原始資料並轉換。</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>將 High/Low Bytes 正確拼接為 16-bit 整數。</li>
+<li>根據量程換算為物理單位（如 $m/s^2$）。</li>
+<li>輸出格式化後的 JSON 字串。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📂 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>src/main.cpp</code>: 整合專案核心邏輯。</li>
+<li>
+<code>src/bus_scanner.cpp</code>: I2C 掃描實作。</li>
+<li>
+<code>include/ic_driver.h</code>: SPI 驅動參數配置。</li>
+<li>
+<code>include/sensor_map.h</code>: 暫存器映射與比例換算。</li>
+<li>
+<code>docs/</code>: 實驗報告與參考文件。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📝 提交要求</h2><a id="user-content--提交要求" class="anchor" aria-label="Permalink: 📝 提交要求" href="#-提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>完成所有 <code>TODO</code> 標記的程式碼。</li>
+<li>確保程式碼符合位元運算的正確性（注意 Big-endian/Little-endian）。</li>
+<li>更新 <code>docs/scope_results.md</code> 紀錄實驗結果。</li>
+<li>將程式碼 push 到你的程式庫。</li>
+</ol>
+<hr>
+<p>祝開發順利！</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：I2C 設備大掃描 (I2C Scanner Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：韌體除錯工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>掃描實作</strong>：在 ESP32 上實作地址掃描迴圈（1-127），對每個地址發送 Start Signal。</li>
-                    <li><strong>設備對比</strong>：記錄所有回傳 ACK 的地址，並翻閱 Datasheet 確認與現有硬體（如 MPU6050, OLED）是否吻合。</li>
-                    <li><strong>Push Final</strong>：提交具備「硬體自動偵測」能力的總線掃描工具。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>地址準確性</strong>：是否能正確識別出 OLED (0x3C) 與 MPU6050 (0x68) 的實體通訊地址？</li>
-                    <li>[ ] <strong>除錯完備度</strong>：若掃描不到設備，是否在 README 中列出了可能的硬體故障對策（如接線、上拉電阻）？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：SPI 刷新率挑戰 (SPI Speed Benchmark)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：顯示驅動開發者</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>極限壓測</strong>：步進式提升 SPI 時鐘頻率（從 1MHz 直至硬體極限），觀察 OLED 螢幕刷新動態。</li>
-                    <li><strong>異常捕捉</strong>：紀錄在高頻（如 40MHz）通訊下是否出現影像雜訊、雪花或系統不穩定的現象。</li>
-                    <li><strong>性能分析</strong>：計算不同頻率下的每一幀像素寫入時間，並繪製成對比表格。</li>
-                    <li><strong>Push Final</strong>：提交具備「極致顯示效能」且穩定的 SPI 驅動代碼。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>性能提升顯著性</strong>：最終實踐的 FPS 是否相較於預設配置有顯著提升（> 50%）？</li>
-                    <li>[ ] <strong>專業實驗報告</strong>：README 中是否解釋了「導線長度」對高頻訊號完整性的具體影響？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：協議翻譯官：Raw to JSON (Protocol Converter)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：嵌入式系統架構師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>字節流解析</strong>：從 I2C/SPI 感測器讀取 Raw Binary Data，使用位元與或結構體進行解算。</li>
-                    <li><strong>數據封裝</strong>：整合 ArduinoJson，將解算後的物理量（如加速度、角速度）轉換為標準 JSON 格式。</li>
-                    <li><strong>通訊整合</strong>：將產出的 JSON 透過串列埠或藍牙發送，實現底層硬體與高層 Web 的無縫對接。</li>
-                    <li><strong>Push Final</strong>：提交具備「跨平台數據解耦」能力的通訊橋接包。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>數據換算精確度</strong>：轉換後的數值是否與 Datasheet 給出的 LSB/unit 比例完全吻合？</li>
-                    <li>[ ] <strong>Payload 優化</strong>：生成的 JSON 結構是否簡潔高效，具備良好的開發者可讀性？</li>
-                </ul>
-            </div>
-        </div>
     </section>
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：通訊協議的「硬漢實力」。掌握 I2C/SPI 的時序物理意義與現代化數據封裝流程。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：匯流排定址與專線選擇</strong> - 透過 1-1 掃描任務，強化學生對 Master-Slave 架構中設備辨識的底層認知。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：物理層的極限探索</strong> - 利用 1-2 任務探討時脈頻率對通訊質量的影響，理解數位訊號在高速下的物理變形與雜訊。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：二進制與語義化轉換</strong> - 教導學生如何將「冷冰冰的 Hex」轉換為「易懂的 JSON」，這是 IoT 全棧開發的關鍵能力。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-04-unit-i2c-spi</code> (通訊協議與硬體實戰)</strong> 單元，這是一個深入探討「機器之間的對話規範」與「物理訊號限界」的課程，是所有嵌入式系統開發的核心基本功。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本程式庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" href="#1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>硬體通訊單元的範本應強調「暫存器級別 (Register-level)」的理解，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/i2c_prober.cpp</code></strong>：提供基礎的 <code>Wire</code> 庫框架，留下掃描迴圈與 ACK 狀態判斷的 <code>TODO</code>。</li>
+<li>
+<strong>📂 <code>src/spi_driver.h</code></strong>：預置圖形顯示初始化邏輯，留下可調整的 <code>SPI_CLOCK_SPEED</code> 宏定義位元。</li>
+<li>
+<strong>📂 <code>include/registers.h</code></strong>：提供常見感測器（如 MPU6050）的暫存器地址表，讓學員練習定義「位元掩碼 (Bitmask)」。</li>
+<li>
+<strong>📂 <code>docs/logic_analyze_guide.md</code></strong>：一份圖文並茂的指南，教導學員如何截取串列訊號並進行解碼分析。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：I2C 設備大掃描 (I2C Scanner Lab)</h4><a id="user-content-任務-1i2c-設備大掃描-i2c-scanner-lab" class="anchor" aria-label="Permalink: 任務 1：I2C 設備大掃描 (I2C Scanner Lab)" href="#任務-1i2c-設備大掃描-i2c-scanner-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：理解地址 (Address) 與應答 (ACK) 的物理過程。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>驗證方式</strong>：學員需在 README 中提交其 ESP32 掃描到的設備地址列表（通常包含 OLED 的 <code>0x3C</code> 與 IMU 的 <code>0x68</code>）。</li>
+<li>
+<strong>Autograding</strong>：檢查掃描代碼是否具備基本的錯誤處理邏輯（例如：能區分「沒設備」與「總線被拉低」的錯誤狀態）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：SPI 刷新率挑戰 (SPI Speed Benchmark)</h4><a id="user-content-任務-2spi-刷新率挑戰-spi-speed-benchmark" class="anchor" aria-label="Permalink: 任務 2：SPI 刷新率挑戰 (SPI Speed Benchmark)" href="#任務-2spi-刷新率挑戰-spi-speed-benchmark"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：探索數據通訊的物理極限（訊號完整性）。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>極限測試</strong>：要求學員紀錄在 1MHz、10MHz、40MHz 下的螢幕刷新 FPS 與畫面品質。</li>
+<li>
+<strong>截圖提交</strong>：上傳一張一張在高頻通訊下產生「雪花」或「圖像錯位」的照片，並在報告中分析原因（如：導線過長產生的寄生電容影響）。</li>
+<li>
+<strong>性能核核</strong>：導師點評其對 <code>SPI_MODE</code> (CPOL/CPHA) 配置的理解是否正確。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：協議翻譯官：Raw to JSON (Protocol Converter)</h4><a id="user-content-任務-3協議翻譯官raw-to-json-protocol-converter" class="anchor" aria-label="Permalink: 任務 3：協議翻譯官：Raw to JSON (Protocol Converter)" href="#任務-3協議翻譯官raw-to-json-protocol-converter"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：將「低階二進位流」解讀為「高階語義化數據」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>核心代碼檢核</strong>：
+<div class="highlight highlight-source-c++"><pre><span class="pl-c"><span class="pl-c">//</span> 學生需實作：將 High/Low Bytes 拼接為 16-bit 整數</span>
+<span class="pl-c1">int16_t</span> rawAccX = (buf[<span class="pl-c1">0</span>] &lt;&lt; <span class="pl-c1">8</span>) | buf[<span class="pl-c1">1</span>];
+<span class="pl-k">float</span> realAccX = rawAccX / <span class="pl-c1">16384.0</span>; <span class="pl-c"><span class="pl-c">//</span> 依據敏感度量程換算</span></pre></div>
+</li>
+<li>
+<strong>Autograding</strong>：透過串列埠測試框架，餵入一組 Mock 的 Hex 數據，檢查學員產出的 JSON 字串是否精確對應物理量（例如：加速度是否正確換算為 $m/s^2$）。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 硬體通訊導師點評標準 (Hardware Protocol Benchmarks)</h3><a id="user-content-3-硬體通訊導師點評標準-hardware-protocol-benchmarks" class="anchor" aria-label="Permalink: 3. 硬體通訊導師點評標準 (Hardware Protocol Benchmarks)" href="#3-硬體通訊導師點評標準-hardware-protocol-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對硬體通訊細節的掌控力」</strong>：</p>
+<ul>
+<li>[ ] <strong>位元運算正確性</strong>：是否理解大端 (Big-endian) 與小端 (Little-endian) 的順序？</li>
+<li>[ ] <strong>異常排查能力</strong>：README 中是否紀錄了當 I2C 鎖死 (Bus Hang) 時的「手動重放時鐘 (Clock Replay)」解決方案？</li>
+<li>[ ] <strong>數據解耦意識</strong>：輸出的 JSON 是否簡潔？是否將「硬體換算係數」與「應用層邏輯」進行了有效分離？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/
+│   ├── main.cpp            # 整合專案：將感測器數據轉為 JSON 外傳
+│   └── bus_scanner.cpp     # 任務 1：自動導航設備偵測工具
+├── include/
+│   ├── ic_driver.h         # 任務 2：SPI 驅動參數最佳化位元
+│   └── sensor_map.h        # 任務 3：暫存器映射與比例換算
+├── docs/
+│   └── scope_results.md    # 實驗：訊號品質與頻率對比報告
+└── README.md               # 專案總結：我如何解決硬體與軟體間的語義隔閡
+</code></pre>
+<p>透過這種部署方式，學生能從「只會呼叫 Library」跨越到「<strong>能直接與晶片對話</strong>」的層次，這對於未來開發自定義硬體模組、自製顯示器驅動是不可或缺的深度練習。</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── src/bus_scanner.cpp  # 核心：待填寫 I2C 掃描邏輯與 ACK 檢測
-├── src/json_bridge.ino  # 整合：待補完從 Raw Data 到 JSON 的轉換邏輯
-├── include/registers.h  # 配置：定義感測器暫存器映射表
-└── README.md            # 指引：要求記錄不同 SPI 頻率下的穩定度表現
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5">閱讀「一條大馬路 vs 多條快速道路」比喻。掌握 I2C SDA/SCL 的時序起點特徵。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能正確計算 SPI 四種 Mode 的極性組合。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900">領取作業 (Repo)，挑戰在同一個總線上掛載不同地址的設備，並處理地址衝突情境。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 現場示範邏輯分析儀波形抓取，解釋「上拉電阻不足」導致的訊號緩慢上升現象。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
-                        <td class="px-6 py-5">提交具備協議轉換功能的最終專案並 Push。在 PR 中說明對 Endianness（大/小端）的處理方案。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價對「數據幀原子性」與「緩衝區溢位預防」的程式魯棒性考量。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

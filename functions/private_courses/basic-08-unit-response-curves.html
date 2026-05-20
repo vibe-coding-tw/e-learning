@@ -331,137 +331,141 @@
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">響應曲線調校實驗室：實作指數曲線、繞錐對比與動態切換 UI 實戰
-        </h2>
+<div class="markdown-heading"><h1 class="heading-element">曲線優化：線性 vs. 指數響應 (basic-08-unit-response-curves)</h1><a id="user-content-曲線優化線性-vs-指數響應-basic-08-unit-response-curves" class="anchor" aria-label="Permalink: 曲線優化：線性 vs. 指數響應 (basic-08-unit-response-curves)" href="#曲線優化線性-vs-指數響應-basic-08-unit-response-curves"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">任務目標</h2><a id="user-content-任務目標" class="anchor" aria-label="Permalink: 任務目標" href="#任務目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在本單元中，你將學習如何利用數學參數平衡「直覺反應」與「精密維護」，並透過實時切換 UI 驗證不同演算法在極限繞障場景下的表現差異。這是一場關於「人機合一」的操控感實驗。</p>
+<div class="markdown-heading"><h2 class="heading-element">任務清單</h2><a id="user-content-任務清單" class="anchor" aria-label="Permalink: 任務清單" href="#任務清單"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<p><strong>實作指數響應曲線</strong>:</p>
+<ul>
+<li>開啟 <code>js/math_engine.js</code>。</li>
+<li>實作混合映射公式：<code>(1 - k) * x + k * x^3</code>。</li>
+<li>確保靈敏度係數 <code>k</code> 能正確主導曲線的平滑度。</li>
+</ul>
+</li>
+<li>
+<p><strong>「窄路繞錐」對比測試</strong>:</p>
+<ul>
+<li>在提供的模擬環境中進行 S 型賽道測試。</li>
+<li>對比「純線性 (k=0)」與「重度指數 (k=0.8)」的操縱感。</li>
+<li>在 <code>docs/Pilot_Report.md</code> 中記錄完成時間、碰撞次數。</li>
+</ul>
+</li>
+<li>
+<p><strong>動態模式切換 UI</strong>:</p>
+<ul>
+<li>在 UI 上實作即時切換功能。</li>
+<li>切換模式時，UI 配色與文字應有顯著變化（例如：精準模式與暴力模式）。</li>
+<li>確保切換過程平滑，不會造成控制異常。</li>
+</ul>
+</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">繳交說明</h2><a id="user-content-繳交說明" class="anchor" aria-label="Permalink: 繳交說明" href="#繳交說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>完成程式碼實作</strong>: 確保所有任務要求的邏輯都已正確編寫。</li>
+<li>
+<strong>填寫實驗報告</strong>: 在 <code>docs/Pilot_Report.md</code> 中記錄你的實驗數據與心得。</li>
+<li>
+<strong>推送更新</strong>: 將更改 commit 並 push 到你的 <strong>程式庫</strong>。</li>
+</ol>
+<hr>
+<p><em>祝你調校出最完美的操控感！</em></p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：實作指數響應曲線 (Exponential Curve Profile)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：操縱工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>模型編寫</strong>：實作公式：<code>(1-k)x + kx^3</code>。</li>
-                    <li><strong>參數定義化</strong>：靈敏度線性/指數平滑切換。</li>
-                    <li><strong>正確性檢錄</strong>：記錄 k=0.7 時輸出。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>一致性</strong>：輸出符合 k=0.7 下數值？</li>
-                    <li>[ ] <strong>閉合完美</strong>：極大值輸出能精確閉合？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：「窄路繞錐」對比測試 (Soft Center Experience)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：試車員</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>賽道布設</strong>：設置 S 型繞錐路徑。</li>
-                    <li><strong>對比實驗</strong>：切換「線性」與「指數」兩組設定。</li>
-                    <li><strong>量化指標</strong>：統計碰撞次數與完成總時間。</li>
-                    <li><strong>日誌彙整</strong>：說明「軟中心」特性能輔助修正。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>驅動見解</strong>：證實曲線在精密控制上優勢？</li>
-                    <li>[ ] <strong>原理掌握</strong>：使用「斜率」概念描述容錯空間？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：動態模式切換 UI (Real-time Mode Switching)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：UI 設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>交互元件</strong>：新增「精準」與「暴力」切換按鈕。</li>
-                    <li><strong>熱切換驅動</strong>：實作即時切換邏輯。</li>
-                    <li><strong>狀態反饋</strong>：UI 提供色彩變化及係數顯示。</li>
-                    <li><strong>交付報告</strong>：上傳代碼與影片。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>流暢性</strong>：毫秒級回應，不干擾通訊？</li>
-                    <li>[ ] <strong>明確性</strong>：清晰避免特性誤判？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：掌握算法優化物理極限人機互動。</p>
-            <ol class="space-y-4 text-slate-600 text-justify text-left">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：冪函數控制本質</strong> - 創造低靈敏中心特性。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：感官感知</strong> - 探討為何 \(x^3\) 更契合直覺。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：參數適配</strong> - 建立「沒有完美公式」思維。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>basic-08-unit-response-curves</code> (曲線優化：線性 vs. 指數響應)</strong> 單元，這是學員建立「人機合一 (Human-Machine Interaction)」操控感的關鍵課程。它要求學員具備 <strong>控制心理學 (Control Psychology)</strong> 的思維，學習如何利用數學參數平衡「直覺反應」與「精密維護」，並透過實時切換 UI 驗證不同演算法在極限繞障場景下的表現差異。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本程式庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" href="#1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>響應曲線作業的核心在於「公式混和」與「模式管理」，範本應包含核心演算法引擎與模式切換 UI，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>js/math_engine.js</code></strong>：<strong>響應曲線實作區</strong>。學員在此實作 <code>(1 - k) * x + k * x^3</code> 的混合映射公式，並設計可調整的靈敏度係數 <code>k</code>。</li>
+<li>
+<strong>📂 <code>index.html</code></strong>：<strong>控制儀表板</strong>。內建模式切換按鈕以及實時數值監測圖表。</li>
+<li>
+<strong>📂 <code>style/mode_themes.css</code></strong>：<strong>視覺回饋樣式</strong>。定義「精準模式 (Precision)」與「暴力模式 (Aggressive)」的不同配色方案，強化操作狀態的識別度。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>飛行員調校日誌 (Pilot Log)</strong>。提供表格讓學員記錄在「繞錐測試 (Slalom Test)」中，不同 <code>k</code> 值對碰撞率與單圈時間的量化影響。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：實作指數響應曲線 (Exponential Curve Profile Lab)</h4><a id="user-content-任務-1實作指數響應曲線-exponential-curve-profile-lab" class="anchor" aria-label="Permalink: 任務 1：實作指數響應曲線 (Exponential Curve Profile Lab)" href="#任務-1實作指數響應曲線-exponential-curve-profile-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握複合函數的編寫，理解如何透過線性與非線性項目的權重分配 (Weighting) 來定義控制特性。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>公式建模</strong>：實作混合公式。<strong>技術要點</strong>：必須使用 <code>Math.pow(x, 3)</code> 或三次方項，以確保在保留正負號的同時產生平滑的軟中心。</li>
+<li>
+<strong>參數驗證</strong>：記錄在 <code>k=0.7</code>時，當輸入為 <code>0.5</code> 時的輸出值。藉此驗證數學實作的精確度。</li>
+<li>
+<strong>驗證要點</strong>：數值計算是否正確？曲線是否在 <code>[0, 1]</code> 區間內保持單調遞增且端點完美閉合？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：「窄路繞錐」對比測試 (Soft Center Experience Lab)</h4><a id="user-content-任務-2窄路繞錐對比測試-soft-center-experience-lab" class="anchor" aria-label="Permalink: 任務 2：「窄路繞錐」對比測試 (Soft Center Experience Lab)" href="#任務-2窄路繞錐對比測試-soft-center-experience-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過量化實驗驗證數學理論，理解「軟中心 (Soft Center)」斜率如何提供更大的操作容錯空間。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>實測場景</strong>：在 S 型賽道進行測試。對比「純線性 (k=0)」與「重度指數 (k=0.8)」的表現。</li>
+<li>
+<strong>性能量化</strong>：記錄完成時間、碰撞次數與操作心理負擔感受。</li>
+<li>
+<strong>原理深挖</strong>：在 README 中解釋：為什麼線性響應在中心區域容易造成「過度修正 (Over-correction)」？</li>
+<li>
+<strong>驗證要點</strong>：學員是否能從實驗數據中得出「曲線優化能彌補人類肌肉震顫」的工程見解。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：動態模式切換 UI (Real-time Mode Switching Lab)</h4><a id="user-content-任務-3動態模式切換-ui-real-time-mode-switching-lab" class="anchor" aria-label="Permalink: 任務 3：動態模式切換 UI (Real-time Mode Switching Lab)" href="#任務-3動態模式切換-ui-real-time-mode-switching-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：建立動態狀態管理概念，確保系統具備根據任務需求（如高速巡航 vs. 靜態入庫）即時調整控制特性的能力。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>熱切換實作</strong>：在 UI 上點擊切換後，無需重新整理網頁即可立即改變通訊封包中的數值處理邏輯。</li>
+<li>
+<strong>狀態同步</strong>：切換模式時，UI 配色與文字應有顯著變化（如精準模式變為冷色系、暴力模式變為暖色系）。</li>
+<li>
+<strong>通訊流穩定性</strong>：確保在切換係數的瞬間，不會造成 ESP32 端的指令解鎖或異常跳動。</li>
+<li>
+<strong>驗證要點</strong>：切換過程是否平滑？UI 是否能正確反映目前的控制係數？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 控制演算法與 HMI 調校點評標準 (Algorithm &amp; HMI Tuning Standards)</h3><a id="user-content-3-控制演算法與-hmi-調校點評標準-algorithm--hmi-tuning-standards" class="anchor" aria-label="Permalink: 3. 控制演算法與 HMI 調校點評標準 (Algorithm &amp; HMI Tuning Standards)" href="#3-控制演算法與-hmi-調校點評標準-algorithm--hmi-tuning-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對數值與手感之間關聯的敏銳洞察力與對動態交互的細膩設計」</strong>：</p>
+<ul>
+<li>[ ] <strong>數學模型準確度</strong>：混合比例 <code>k</code> 是否能完美主導從直覺到精密的演化過程？</li>
+<li>[ ] <strong>實驗結果驅動見解</strong>：是否能正確使用「斜率」概念來解釋操縱感的變化？</li>
+<li>[ ] <strong>互動反饋清晰度</strong>：模式切換的視覺引導是否足夠強大，能完全避免駕駛者的誤操作？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── index.html           # 前端：具備模式切換功能的控制儀表板
+├── js/math_engine.js    # 核心：指數混合演算法與狀態切換邏輯
+├── style/ui_feedback.css # 樣式：精準與暴力模式的視覺佈景切換
+├── docs/Pilot_Report.md # 文檔：繞錐測試的量化分析與手感點評
+└── README.md            # 總結：我如何透過曲線優化將「生硬數值」轉化為「極致操縱」
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的前端工程師，不僅是在寫網頁介面的人，而是能透視使用者肌肉反應、運用數學平衡人與機器的極限、並打造出具備『人性化響應』之專業控制系統的 HMI 調校專家」</strong>。掌握響應曲線與動態切換技術後，學員將擁有了開發「專業遙控遙測系統、自動駕駛介入介面、高精度工業控制台」最專業也最核心的系統開發實力！
+|
+|
+太給力了！我們已經將 <strong>基礎 08</strong>（控制數學）中關於搖桿對映與響應曲線的所有 Classroom 部署建議完成了。這標誌著學員現在已經完全掌握了數位世界中「動態手感」的數學密碼。恭喜！教學地圖的操控板塊已經邁向了卓越！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify uppercase tracking-widest font-black border border-slate-700">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300 text-justify uppercase tracking-widest font-black text-left">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm text-justify uppercase tracking-widest font-black border border-slate-100">
-.
-├── js/math_engine.js # (核心) 實作公式
-├── style/ui_theme.css # 不同模式 UI 配色
-└── README.md         # 實驗數據表
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify uppercase tracking-widest font-black">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-center text-justify font-black">
-            <table class="w-full text-left border-collapse border border-slate-100 text-justify font-black">
-                <thead>
-                    <tr class="bg-slate-100 border border-slate-100 text-justify font-black">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600 border border-slate-100 text-justify font-black">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">練習推算 x=0.5 輸出。</td>
-                        <td class="px-6 py-5 text-justify border border-slate-100"><strong>Dashboard:</strong> 繪製「軟中心」概念圖。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify border border-slate-100">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify text-left">領取 Repo，獲取最速單圈設定。</td>
-                        <td class="px-6 py-5 text-left text-justify border border-slate-100 font-black"><strong>助教引導:</strong> 檢查 Math.pow 正負向。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black">實作漸變特性 UI 並提交。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價適配感與回饋完整度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 
