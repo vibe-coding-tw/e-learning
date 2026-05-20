@@ -914,15 +914,90 @@ async function initFirebaseFeatures() {
 
             const learningState = details.learningState;
             
-            // Check where to render
-            const mainContainer = document.querySelector('main.container') || document.body;
-            let hubContainer = document.getElementById('student-interaction-hub');
-            if (!hubContainer) {
-                hubContainer = document.createElement('div');
-                hubContainer.id = 'student-interaction-hub';
-                hubContainer.className = 'bg-white rounded-3xl border border-slate-200 p-8 mt-12 mb-12 shadow-md max-w-4xl mx-auto';
-                mainContainer.appendChild(hubContainer);
+            // Check where to render (Floating Button + Modal Overlay)
+            let hubTrigger = document.getElementById('student-hub-trigger');
+            if (!hubTrigger) {
+                hubTrigger = document.createElement('div');
+                hubTrigger.id = 'student-hub-trigger';
+                hubTrigger.className = 'fixed bottom-6 right-6 z-50';
+                document.body.appendChild(hubTrigger);
             }
+
+            let hubModal = document.getElementById('student-hub-modal');
+            if (!hubModal) {
+                hubModal = document.createElement('div');
+                hubModal.id = 'student-hub-modal';
+                hubModal.className = 'fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-[60] p-4 transition-all duration-300';
+                hubModal.innerHTML = `
+                    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform scale-95 opacity-0 transition-all duration-300 relative border border-slate-100" id="student-hub-modal-content">
+                        <!-- Close Button -->
+                        <button onclick="toggleStudentHubModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 text-xl font-bold p-2 hover:bg-slate-100 rounded-full transition w-10 h-10 flex items-center justify-center">✕</button>
+                        
+                        <div id="student-hub-modal-body" class="p-8"></div>
+                    </div>
+                `;
+                document.body.appendChild(hubModal);
+
+                // Close modal when clicking outside
+                hubModal.addEventListener('click', (e) => {
+                    if (e.target === hubModal) {
+                        window.toggleStudentHubModal();
+                    }
+                });
+            }
+
+            // Define toggle function
+            if (!window.toggleStudentHubModal) {
+                window.toggleStudentHubModal = function() {
+                    const modal = document.getElementById('student-hub-modal');
+                    const content = document.getElementById('student-hub-modal-content');
+                    if (!modal || !content) return;
+                    
+                    if (modal.classList.contains('hidden')) {
+                        modal.classList.remove('hidden');
+                        setTimeout(() => {
+                            content.classList.remove('scale-95', 'opacity-0');
+                            content.classList.add('scale-100', 'opacity-100');
+                        }, 20);
+                    } else {
+                        content.classList.remove('scale-100', 'opacity-100');
+                        content.classList.add('scale-95', 'opacity-0');
+                        setTimeout(() => {
+                            modal.classList.add('hidden');
+                        }, 200);
+                    }
+                };
+            }
+
+            // Render floating trigger button based on status
+            let btnBg = 'from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700';
+            let icon = '🤝';
+            let pulseClass = '';
+            let badgeHtml = '';
+            
+            if (learningState === 'blocked') {
+                btnBg = 'from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700';
+                icon = '🚨';
+                pulseClass = 'animate-pulse';
+            } else if (learningState === 'coaching') {
+                btnBg = 'from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600';
+                icon = '🧑‍🏫';
+                pulseClass = 'animate-bounce';
+                badgeHtml = '<span class="absolute -top-1 -right-1 flex h-4 w-4"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-[10px] text-white items-center justify-center font-bold">!</span></span>';
+            } else if (learningState === 'resolved') {
+                btnBg = 'from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700';
+                icon = '🎉';
+            }
+            
+            hubTrigger.innerHTML = `
+                <button onclick="toggleStudentHubModal()" class="relative flex items-center gap-2.5 px-6 py-4 bg-gradient-to-r ${btnBg} text-white font-bold rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 active:scale-95 ${pulseClass}">
+                    <span class="text-xl">${icon}</span>
+                    <span class="text-sm tracking-wide font-bold">師生互動與卡點支援</span>
+                    ${badgeHtml}
+                </button>
+            `;
+
+            const hubContainer = document.getElementById('student-hub-modal-body');
 
             // Render current progress bar
             let steps = [
@@ -1126,8 +1201,10 @@ async function initFirebaseFeatures() {
             if (user) {
                 renderStudentInteractionHub(user);
             } else {
-                const hub = document.getElementById('student-interaction-hub');
-                if (hub) hub.remove();
+                const trigger = document.getElementById('student-hub-trigger');
+                if (trigger) trigger.remove();
+                const modal = document.getElementById('student-hub-modal');
+                if (modal) modal.remove();
             }
         });
 
