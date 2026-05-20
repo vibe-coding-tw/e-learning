@@ -1020,14 +1020,8 @@ async function upsertStudentUnitAssignment(db, studentUid, unitId, tutorEmail, a
 async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons = [], tutorMode = false) {
     const normalizedCourseId = normalizeLegacyId(courseId || '');
     const normalizedUnitId = normalizeLegacyId(unitId || '');
-    // 1. Fetch User Data and Security Role
-    const userDoc = await db.collection('users').doc(uid).get();
-    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
-    const isAdminRole = userData.role === 'admin';
-    const assignedTutorEmail = userData.unitAssignments?.[resolvedUnitFromInput] || null;
-    const assignedPromotionCode = userData.unitAssignmentMeta?.[resolvedUnitFromInput]?.promotionCode || null;
 
-    // 2. Resolve Canonical Context
+    // 1. Resolve Canonical Context
     let canonicalUnitId = resolveCanonicalUnitId(normalizedUnitId, lessons);
     const course = findCourseByPageOrUnit(normalizedCourseId, canonicalUnitId, lessons) || findCourseByPageOrUnit(normalizedCourseId, normalizedUnitId, lessons);
     const effectiveCourseId = course ? course.courseId : (normalizedCourseId || findParentCourseIdByUnit(canonicalUnitId, lessons));
@@ -1037,6 +1031,15 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
         canonicalUnitId = resolveCanonicalUnitId(course.courseUnits[0], lessons);
     }
     const isPhysicalProduct = !!(course && course.isPhysical === true);
+
+    // 2. Fetch User Data and Security Role
+    const userDoc = await db.collection('users').doc(uid).get();
+    const userData = userDoc.exists ? (userDoc.data() || {}) : {};
+    const isAdminRole = userData.role === 'admin';
+
+    const lookupUnitId = canonicalUnitId || normalizedUnitId || '';
+    const assignedTutorEmail = userData.unitAssignments?.[lookupUnitId] || null;
+    const assignedPromotionCode = userData.unitAssignmentMeta?.[lookupUnitId]?.promotionCode || null;
 
     // [V13.6] Special Physical Product Enforcement
     // Rule: Hardware sales ALWAYS prioritize purchase flow. No bypasses for ANYONE.
