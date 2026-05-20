@@ -296,136 +296,138 @@
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">ADC 解析度與量測實驗室：數位量尺、反轉映射與盲區補償實戰
-        </h2>
+<div class="markdown-heading"><h1 class="heading-element">類比感測與信號處理 — ADC 解析度與數據映射</h1><a id="user-content-類比感測與信號處理--adc-解析度與數據映射" class="anchor" aria-label="Permalink: 類比感測與信號處理 — ADC 解析度與數據映射" href="#類比感測與信號處理--adc-解析度與數據映射"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">任務目標</h2><a id="user-content-任務目標" class="anchor" aria-label="Permalink: 任務目標" href="#任務目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在本練習中，你將學習如何處理來自類比感測器（如電位計）的訊號。你將會實作：</p>
+<ol>
+<li>
+<strong>電壓採樣</strong>：了解 ESP32 ADC 的 12-bit 解析度與物理特性。</li>
+<li>
+<strong>移動平均濾波器 (Moving Average Filter)</strong>：消除信號雜訊，獲得穩定的數據。</li>
+<li>
+<strong>數據映射 (Mapping) 與死區 (Dead-zone) 補償</strong>：將原始數值轉換為具備物理意義的控制參數。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">硬體準備</h2><a id="user-content-硬體準備" class="anchor" aria-label="Permalink: 硬體準備" href="#硬體準備"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>ESP32 開發板</li>
+<li>可變電阻 (Potentiometer) x 1</li>
+<li>麵包板與跳線</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">實驗步驟</h2><a id="user-content-實驗步驟" class="anchor" aria-label="Permalink: 實驗步驟" href="#實驗步驟"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">1. 電壓採樣實驗 (Digital Ruler)</h3><a id="user-content-1-電壓採樣實驗-digital-ruler" class="anchor" aria-label="Permalink: 1. 電壓採樣實驗 (Digital Ruler)" href="#1-電壓採樣實驗-digital-ruler"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請參考 <code>include/sensor_id.h</code> 中的引腳配置，搭建電路。
+使用三用電表測量不同旋轉角度下的電壓，並將測得的電壓與 Serial Monitor 顯示的 ADC 原始值記錄在 <a href="docs/SENSING_REPORT.md">SENSING_REPORT.md</a> 中。</p>
+<div class="markdown-heading"><h3 class="heading-element">2. 實作移動平均濾波器</h3><a id="user-content-2-實作移動平均濾波器" class="anchor" aria-label="Permalink: 2. 實作移動平均濾波器" href="#2-實作移動平均濾波器"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在 <code>src/main.cpp</code> 中補全濾波算法。你需要：</p>
+<ul>
+<li>維護一個長度為 10 的取樣陣列。</li>
+<li>計算陣列內所有數值的平均值。</li>
+<li>對比濾波前後的數據波動情況。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">3. 數據映射與死區補償</h3><a id="user-content-3-數據映射與死區補償" class="anchor" aria-label="Permalink: 3. 數據映射與死區補償" href="#3-數據映射與死區補償"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>使用 <code>map()</code> 函式將濾波後的數值轉換為 0-100% 的亮度或 -90° 至 +90° 的轉向角。</li>
+<li>實作死區邏輯：當旋鈕在中位附近（例如 2048 ± 50）時，強制輸出中心值，防止數據微幅抖動造成的誤觸。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">繳交內容</h2><a id="user-content-繳交內容" class="anchor" aria-label="Permalink: 繳交內容" href="#繳交內容"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>完成後，請確保你的程式庫 (Program Library/Repository) 包含以下內容：</p>
+<ol>
+<li>修改後的 <code>src/main.cpp</code>。</li>
+<li>填寫完整的 <a href="docs/SENSING_REPORT.md">SENSING_REPORT.md</a>（包含實驗記錄與 Serial Plotter 截圖）。</li>
+<li>推送 (Push) 你的更新至 GitHub 程式庫。</li>
+</ol>
+<hr>
+<p><em>本課程為基礎單元 03：量化感知系列。</em></p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：「數位量尺」：電壓量測實驗 (Digital Ruler)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：測試工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>採樣量測</strong>：連接電位計，記錄 12-bit ADC 與三用電表讀值。</li>
-                    <li><strong>邊界分析</strong>：標註硬體非線性死區。</li>
-                    <li><strong>結果記錄</strong>：彙整對應表，說明讀值線性誤差。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>數據完整度</strong>：是否涵蓋全量程採樣？</li>
-                    <li>[ ] <strong>物理洞察力</strong>：能否描述極限電壓值附近的測量偏差？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：「自製感測器變量儀」 (Sensor Interactor)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：控制系統工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>映射開發</strong>：實作 <code>map()</code> 將 0-4095 映射到 0-255。</li>
-                    <li><strong>反轉邏輯</strong>：修改代碼，讓旋轉方向與亮度呈現反向。</li>
-                    <li><strong>雜訊抑制</strong>：實作平均算法，消除繪圖儀中的跳動。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>映射正確性</strong>：LED 亮度是否符合反向邏輯？</li>
-                    <li>[ ] <strong>濾波有效性</strong>：在 Serial Plotter 中跳動是否顯著減少？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：「精準轉向模擬器」 (Steering Simulator)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：運動控制專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>運動模型建立</strong>：對應到 -90° 至 +90° 轉向角。</li>
-                    <li><strong>盲區補償實作</strong>：在中心點附近設置 ±5 度死區。</li>
-                    <li><strong>速差計算</strong>：輸出左右馬達動態速差百分比。</li>
-                    <li><strong>最終提交</strong>：整併算法邏輯並 Push。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>算法邊界處理</strong>：死區補償是否過濾了中心點雜訊？</li>
-                    <li>[ ] <strong>系統策略</strong>：輪速計算是否符合差速轉向原則？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：處理實體感測雜訊與非線性。</p>
-            <ol class="space-y-4 text-slate-600 text-justify text-left">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：Bit 與解析度</strong> - 解析度權衡。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：資料濾波</strong> - 掌握基礎訊號處理。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：人機互動邏輯</strong> - 死區 (Dead-band) 用於 UX 思考。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>basic-03-unit-adc-resolution</code> (ESP32 ADC 解析度與對應)</strong> 單元，這是學員從「數位高低電壓」邁向「類比連續世界」的關鍵感官建立。它要求學員不僅是讀取數據，更要學會處理真實世界的 <strong>雜訊 (Noise)</strong>、<strong>非線性 (Non-linearity)</strong> 並利用 <strong>數據映射 (Mapping)</strong> 將電壓轉換為具備物理意義的控制參數（如轉速、亮度、轉角）。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>ADC 作業的核心在於「數據的清洗與轉換」，範本應包含完整的測試與記錄工具，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/main.cpp</code></strong>：<strong>算法實作核心</strong>。預設 <code>analogRead()</code> 框架，學員需在此補全 <code>map()</code> 比例轉換公式，並實作一個簡單的「移動平均濾波器 (Moving Average Filter)」。</li>
+<li>
+<strong>📂 <code>include/calibration.h</code></strong>：定義校準偏移量。學員需在此填入實驗測得的「死區」邊界值（例如：讀值低於 120 時視為 0V）。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>採樣數據報表</strong>。提供表格範本，讓學員記錄：「實測電壓 V」 vs 「ADC 原始讀值」。</li>
+<li>
+<strong>📂 <code>docs/SENSING_REPORT.md</code></strong>：包含 Serial Plotter 截圖區。學員需對比「濾波前」與「濾波後」的數據跳動狀況，證明算法的有效性。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「數位量尺」電壓量測實驗 (Digital Ruler: Voltage Sampling Lab)</h4><a id="user-content-任務-1數位量尺電壓量測實驗-digital-ruler-voltage-sampling-lab" class="anchor" aria-label="Permalink: 任務 1：「數位量尺」電壓量測實驗 (Digital Ruler: Voltage Sampling Lab)" href="#任務-1數位量尺電壓量測實驗-digital-ruler-voltage-sampling-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：建立對 12-bit 解析度的感官認知，並找出晶片底層的物理誤差。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>採樣記錄</strong>：學員需配合三用電表，記錄在 0.5V, 1.5V, 2.5V 時 ADC 的原始輸出值。</li>
+<li>
+<strong>誤差分析</strong>：觀察在電壓極低（接近 0V）與極高（接近 3.3V）時，讀值是否停止變化？（識別 ESP32 的非線性區）。</li>
+<li>
+<strong>驗證要點</strong>：README 中需包含完整的採樣對應表，並描述讀值與真實電壓的線性偏差。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：「感測器變量儀」反向映射與濾波 (Sensor Interactor &amp; Filtering Lab)</h4><a id="user-content-任務-2感測器變量儀反向映射與濾波-sensor-interactor--filtering-lab" class="anchor" aria-label="Permalink: 任務 2：「感測器變量儀」反向映射與濾波 (Sensor Interactor &amp; Filtering Lab)" href="#任務-2感測器變量儀反向映射與濾波-sensor-interactor--filtering-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握 <code>map()</code> 的靈活運用，並解決物聯網感測器常見的「數據抖動」問題。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>反向邏輯挑戰</strong>：實作「越轉越暗」控制，學員需將 <code>0–4095</code> 映射為 <code>255–0</code>（PWM 佔空比）。</li>
+<li>
+<strong>雜訊抑制實作</strong>：實作一個 10 次採樣取平均的濾波器。</li>
+<li>
+<strong>提交結果</strong>：在 Serial Plotter 中對比原始數據與濾波數據。要求：濾波後的曲線必須顯著平穩。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：「精準轉向模擬器」死區補償 (Steering Simulator &amp; Dead-band Lab)</h4><a id="user-content-任務-3精準轉向模擬器死區補償-steering-simulator--dead-band-lab" class="anchor" aria-label="Permalink: 任務 3：「精準轉向模擬器」死區補償 (Steering Simulator &amp; Dead-band Lab)" href="#任務-3精準轉向模擬器死區補償-steering-simulator--dead-band-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：為自動駕駛或機器人建立具備「容錯能力」的控制邏輯。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>轉角映射</strong>：將讀值轉換為 <code>-90°</code> 至 <code>+90°</code> 的轉向角，並在 Serial 中輸出。</li>
+<li>
+<strong>死區 (Dead-zone) 補償</strong>：設定中心點 ±5 度的死區。當旋鈕保持在中位附近時，穩定輸出 <code>0°</code> 防止馬達微顫。</li>
+<li>
+<strong>差速邏輯計算</strong>：根據轉角，輸出兩台馬達的速差比例（例如：左轉時，左輪 80%，右輪 100%）。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 量化感知專家導師點評標準 (Sensing &amp; Signal Processing Standards)</h3><a id="user-content-3-量化感知專家導師點評標準-sensing--signal-processing-standards" class="anchor" aria-label="Permalink: 3. 量化感知專家導師點評標準 (Sensing &amp; Signal Processing Standards)" href="#3-量化感知專家導師點評標準-sensing--signal-processing-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對原始數據的批判性處理與算法優化意識」</strong>：</p>
+<ul>
+<li>[ ] <strong>映射準確度</strong>：<code>map()</code> 函式的參數設定是否考慮了 12-bit (4095) 的邊界？</li>
+<li>[ ] <strong>濾波效率</strong>：採樣平均邏輯是否簡潔？是否有成功抑制高頻跳動感？</li>
+<li>[ ] <strong>UX 思考深度</strong>：死區 (Dead-zone) 的設定是否合理地解決了「實體手感」與「數位控制」的摩擦？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/main.cpp         # 核心：map 轉換、平均濾波器與差速控制算法
+├── include/sensor_id.h  # 配置：定義 ADC 引腳與校準參數
+├── docs/Plotter.png     # 證據：展示濾波前（抖動）與濾波後（平滑）的對比圖
+├── README.md            # 總結：我如何透過算法修正類比世界的硬體誤差
+└── assets/hardware.jpg  # 照片：學員搭建的電位計控制電路實體圖
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的韌體工程師，是能看穿數值背後的雜訊，並用算法為晶片建立起敏銳且穩定的物理感官系統的人」</strong>。掌握 ADC 解析度與濾波後，學員將擁有了開發「精準醫療設備、機器人運動控制、高階環境監測儀」最專業的數位處理基礎！_
+|
+|
+太精采了！我們已經將 <strong>基礎 03</strong>（量化感知）單元的第一課 Classroom 部署定義完成了。這標誌著課程進入了「數據處理」的高階領域。恭喜！教學地圖的深度又向下紮根了一大步！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
-.
-├── src/main.cpp      # (練習點) 提供 analogRead 框架，需製作 map 邏輯
-└── README.md         # 實驗日誌：描述數據抖動量與對應電壓
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse border border-slate-50">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看影片掌握 0-4095 概念。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 確認理解 12-bit 解析度數學意義。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify">領取作業 (Repo)，挑戰平均濾波。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>數據指導:</strong> 使用 Plotter 比對濾波前後波形。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify">實作校準並 Push。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評點「盲區補償」優化。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

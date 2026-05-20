@@ -334,136 +334,178 @@
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">HTTP 通訊診斷與路由實驗室：請求時序解析、RESTful
-            實作與效能優化實戰</h2>
+<div class="markdown-heading"><h1 class="heading-element">HTTP 協議與請求生命週期：從開發者到效能專家</h1><a id="user-content-http-協議與請求生命週期從開發者到效能專家" class="anchor" aria-label="Permalink: HTTP 協議與請求生命週期：從開發者到效能專家" href="#http-協議與請求生命週期從開發者到效能專家"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到 <strong>basic-07-unit-http-lifecycle</strong> 單元！在本練習中，你將從單純的「功能開發者」轉型為具備診斷能力的「效能工程師」。</p>
+<p>你將學習如何利用瀏覽器開發者工具 (F12) 將隱形的網路握手視覺化，並掌握「連線複用 (Keep-Alive)」技術，讓物聯網設備的反應速度顯著提升。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>通訊診斷 (Network Diagnostics)</strong>：利用 Chrome/Edge DevTools 分析 HTTP 請求的各個階段。</li>
+<li>
+<strong>RESTful API 實作</strong>：建立符合規範的 JSON 接口，掌握狀態碼與標頭配置。</li>
+<li>
+<strong>延遲優化 (Latency Optimization)</strong>：親手驗證 TCP 三向握手的成本，並實作 Keep-Alive 優化策略。</li>
+</ol>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🚀 作業任務</h2><a id="user-content--作業任務" class="anchor" aria-label="Permalink: 🚀 作業任務" href="#-作業任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：「封包捕手」F12 請求時序解析</h3><a id="user-content-任務-1封包捕手f12-請求時序解析" class="anchor" aria-label="Permalink: 任務 1：「封包捕手」F12 請求時序解析" href="#任務-1封包捕手f12-請求時序解析"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：識別「連線階段」與「資料傳輸階段」的性能界線。</li>
+<li>
+<strong>操作</strong>：
+<ol>
+<li>存取 ESP32 網頁。</li>
+<li>使用 F12 Network 面板截取 Waterfall (瀑布圖)。</li>
+<li>在 <code>docs/Waterfall_Log.md</code> 中記錄 DNS, TCP Connect, TTFB 等數據。</li>
+<li>附上截圖至 <code>assets/timing_screenshot.png</code>。</li>
+</ol>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：「自建路由」RESTful API 實作</h3><a id="user-content-任務-2自建路由restful-api-實作" class="anchor" aria-label="Permalink: 任務 2：「自建路由」RESTful API 實作" href="#任務-2自建路由restful-api-實作"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握 JSON 標頭配置與狀態碼語義。</li>
+<li>
+<strong>操作</strong>：
+<ol>
+<li>在 <code>src/main.cpp</code> 中實作 <code>/api/status</code> (GET) 回傳系統狀態 JSON。</li>
+<li>實作 <code>POST /api/command</code> 解析 Body 指令並控制硬體。</li>
+<li>確保回傳正確的 <code>Content-Type: application/json</code> 與 HTTP 狀態碼 (200, 400 等)。</li>
+</ol>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：「連線優化師」Keep-Alive 效能對比</h3><a id="user-content-任務-3連線優化師keep-alive-效能對比" class="anchor" aria-label="Permalink: 任務 3：「連線優化師」Keep-Alive 效能對比" href="#任務-3連線優化師keep-alive-效能對比"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：驗證長連線對高頻通訊的影響。</li>
+<li>
+<strong>操作</strong>：
+<ol>
+<li>對比「Connection: Close」與「Connection: Keep-Alive」下的 50 次請求總耗時。</li>
+<li>將測試數據填入 <code>docs/Performance.csv</code>。</li>
+<li>在報告中說明為什麼長連線能減少延遲。</li>
+</ol>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📂 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>src/main.cpp</code>: 核心 API 路由實作與連線標頭控制。</li>
+<li>
+<code>docs/Waterfall_Log.md</code>: F12 時序分析報告。</li>
+<li>
+<code>docs/Performance.csv</code>: Keep-Alive 效能對比數據表。</li>
+<li>
+<code>assets/</code>: 存放診斷截圖。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📥 提交規範</h2><a id="user-content--提交規範" class="anchor" aria-label="Permalink: 📥 提交規範" href="#-提交規範"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>完成所有任務後，請將變更 push 至你的 <strong>程式庫</strong>。</p>
+<ol>
+<li>實作完整的 <code>src/main.cpp</code>。</li>
+<li>填寫完整的 <code>docs/Waterfall_Log.md</code>。</li>
+<li>上傳 F12 時序截圖至 <code>assets/</code> 目錄。</li>
+<li>最後執行 <code>git push</code> 提交。</li>
+</ol>
+<hr>
+<blockquote>
+<p><strong>💡 核心思想</strong>：好的全端工程師不只是能傳送數據，而是能透視封包旅程、找出隱藏的延遲，並用最合適的策略讓設備反應「如絲般順滑」。加油！</p>
+</blockquote>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：「封包捕手」：F12 請求時序解析 (Network Diagnostic)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：診斷工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>時序監控</strong>：開啟 Network 面板捕獲請求。</li>
-                    <li><strong>拆解分析</strong>：記錄 DNS、TCP 與 TTFB 毫秒數。</li>
-                    <li><strong>瓶頸診斷</strong>：判斷延遲主因。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>準確度</strong>：區分連線階段並標註瓶頸？</li>
-                    <li>[ ] <strong>深度</strong>：提出專業優化假設？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：「自建路由」：RESTful API 實作 (API Architect)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：API 開發者</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>路由封裝</strong>：定義 /api/status 回傳 JSON。</li>
-                    <li><strong>命令開發</strong>：實作 POST/command 解析指令。</li>
-                    <li><strong>標準配置</strong>：配置 Content-Type 標頭。</li>
-                    <li><strong>代碼提交</strong>：附帶 API 定義規格。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>規範力</strong>：符合開發慣例？</li>
-                    <li>[ ] <strong>可用性</strong>：達成異步數據交換？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：「連線優化師」：Keep-Alive 效能對比 (Performance Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：效能優化專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>壓測搭建</strong>：對比 Close 與 Keep-Alive。</li>
-                    <li><strong>數據擷取</strong>：連發 50 次控制包，量化耗時。</li>
-                    <li><strong>優化筆記</strong>：彙整對比表且解釋原理。</li>
-                    <li><strong>正式提交</strong>：標註優化關鍵性。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>驅動結論</strong>：反應延遲改善程度？</li>
-                    <li>[ ] <strong>技術掌握</strong>：底層原理見解清晰？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：掌握 HTTP 通訊細節與可視化優化。</p>
-            <ol class="space-y-4 text-slate-600 text-justify text-left">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：信封與內容</strong> - Header 與 Body 職權分離。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：Waterfall 診斷</strong> - 量化診斷延遲。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：握手成本</strong> - Keep-Alive 具象化延遲。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>basic-07-unit-http-lifecycle</code> (HTTP 協議與請求生命週期)</strong> 單元，這是學員從「功能開發者」轉型為「效能工程師」的核心課程。它要求學員具備 <strong>通訊診斷 (Network Diagnostics)</strong> 與 <strong>延遲優化 (Latency Optimization)</strong> 的思維，學習如何利用瀏覽器開發者工具 (F12) 將隱形的網路握手視覺化，並掌握「連線複用 (Keep-Alive)」這類工業級技術如何顯著提升物聯網設備的反應速度。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫配置建議</h3><a id="user-content-1-範本程式庫配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫配置建議" href="#1-範本程式庫配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>通訊生命週期作業的核心在於「量化分析」與「標準實作」，範本應包含診斷工具說明與性能對比範本，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/main.cpp</code></strong>：<strong>RESTful API 實作區</strong>。學員需在此實作 <code>/api/status</code> (GET) 與 <code>/api/command</code> (POST) 路由，並學習如何手動控制 <code>Connection</code> 標頭以測試效能差異。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>網路時序診斷報告</strong>。提供「Waterfall (瀑布圖) 分析表」範本，要求學員填入：DNS 查詢、TCP 建立與 TTFB (首字節時間) 的具體毫秒數。</li>
+<li>
+<strong>📂 <code>docs/PERFORMANCE_DUEL.md</code></strong>：<strong>效能競賽紀錄</strong>。預設一個表格，讓學員記錄在「Connection: Close」與「Connection: Keep-Alive」兩種模式下，連續發送 50 次指令的總耗時對比。</li>
+<li>
+<strong>📂 <code>assets/timing_screenshot.png</code></strong>：要求學員附上 F12 Network 面板中的時序分佈截圖。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「封包捕手」F12 請求時序解析 (Network Diagnostic Lab)</h4><a id="user-content-任務-1封包捕手f12-請求時序解析-network-diagnostic-lab" class="anchor" aria-label="Permalink: 任務 1：「封包捕手」F12 請求時序解析 (Network Diagnostic Lab)" href="#任務-1封包捕手f12-請求時序解析-network-diagnostic-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過瀏覽器開發者工具將抽象的網路階層具象化，識別出「連線階段」與「資料傳輸階段」的性能界線。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>時序解剖</strong>：存取 ESP32 網頁並擷取時序圖。</li>
+<li>
+<strong>瓶頸診斷</strong>：<strong>核心關鍵點</strong>。學員必須識別出 TTFB 代表的是「ESP32 的處理時間」，而 TCP Connect 代表的是「連線握手開銷」。</li>
+<li>
+<strong>驗證要點</strong>：README 中是否準確標註了各階段的毫秒數並提出了延遲的主因假設？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：「自建路由」RESTful API 實作 (API Architect Lab)</h4><a id="user-content-任務-2自建路由restful-api-實作-api-architect-lab" class="anchor" aria-label="Permalink: 任務 2：「自建路由」RESTful API 實作 (API Architect Lab)" href="#任務-2自建路由restful-api-實作-api-architect-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：建立符合現代 Web 開發規範的通訊接口，掌握 JSON 標頭配置與狀態碼語義。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>規範實施</strong>：實作 <code>/api/status</code> 回傳 JSON（如 <code>{ "free_heap": 12345 }</code>）。</li>
+<li>
+<strong>命令接收</strong>：實作 <code>POST /api/command</code> 解析 Body 指令。</li>
+<li>
+<strong>標準化回應</strong>：成功時回傳 <code>200 OK</code>，若指令格式不對則回傳 <code>400 Bad Request</code>。</li>
+<li>
+<strong>驗證要點</strong>：藉由 Postman 或網頁測試，確認標頭中 <code>Content-Type</code> 是否正確宣告為 <code>application/json</code>。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：「連線優化師」Keep-Alive 效能對比 (Performance Lab)</h4><a id="user-content-任務-3連線優化師keep-alive-效能對比-performance-lab" class="anchor" aria-label="Permalink: 任務 3：「連線優化師」Keep-Alive 效能對比 (Performance Lab)" href="#任務-3連線優化師keep-alive-效能對比-performance-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：親手驗證 TCP 三向握手的成本，學習在「高頻通訊」場景下如何透過保持連線來節省超過 50% 的延遲。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>壓力測試</strong>：執行 50 次高頻控制封包。</li>
+<li>
+<strong>數據量化</strong>：對比「一發一斷」與「長連線」的總時間差。</li>
+<li>
+<strong>原理深挖</strong>：<strong>核心思想考題</strong>。請學員在報告中說明：為什麼長連線在第二次以後的請求中，不再出現 TCP Connect 的耗時？</li>
+<li>
+<strong>最終 Commit</strong>：封裝具備效能優化意識的通訊代碼並 Push。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 通訊診斷與效能優化點評標準 (Diagnostics &amp; Latency Standards)</h3><a id="user-content-3-通訊診斷與效能優化點評標準-diagnostics--latency-standards" class="anchor" aria-label="Permalink: 3. 通訊診斷與效能優化點評標準 (Diagnostics &amp; Latency Standards)" href="#3-通訊診斷與效能優化點評標準-diagnostics--latency-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對通訊細節的洞察力與對網路協定成本的量化控制能力」</strong>：</p>
+<ul>
+<li>[ ] <strong>時序解析正確性</strong>：是否能正確區分連線建立時間 (TCP) 與伺服器反應時間 (TTFB)？</li>
+<li>[ ] <strong>RESTful 專業度</strong>：路由設計是否簡潔？狀態碼的選用是否符合開發慣例？</li>
+<li>[ ] <strong>優化結論驅動</strong>：是否能從數據中得出「Keep-Alive 對即時控制（如遙控車）至關重要」的工程結論？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/main.cpp         # 核心：API 路由實作與 Connection 標頭控制
+├── docs/Waterfall_Log.md # 文檔：F12 時序分析數據與瓶頸解說
+├── docs/Performance.csv # 數據：Keep-Alive 開啟前後的耗時對比表
+├── README.md            # 總結：我如何透過網路診斷找出通訊瓶頸並完成效能優化
+└── assets/DevTools.png  # 證據：F12 Network 面板的時序截圖證據
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的全端工程師，不是能傳送數據的人，而是能透視封包旅程、找出那消失的 200ms 延遲、並用最合適的連線策略讓設備反應『如絲般順滑』的通訊診斷專家」</strong>。掌握 HTTP 生命週期與效能優化技術後，學員將擁有了開發「高反應遙控系統、高併發數據採集器、流暢網頁控制台」最專業也最核心的系統開發實力！_
+|
+|
+太精采了！我們已經將 <strong>基礎 07</strong>（通訊架構與生命週期）的所有 Classroom 部署建議總結完成了。這標誌著學員終於能「看見」網路的運行，並從最底層優化系統體驗。恭喜！基礎課程的通訊實力已經正式封頂！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify uppercase tracking-widest font-black">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300 text-justify uppercase tracking-widest font-black">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm text-justify uppercase tracking-widest font-black border border-slate-100">
-.
-├── src/main.cpp      # (核心) 包含 WebServer 路由
-└── README.md         # 壓測對比表
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify uppercase tracking-widest font-black">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse border border-slate-100">
-                <thead>
-                    <tr class="bg-slate-100 border border-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600 border border-slate-100 text-justify">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">看細解三向握手影片。</td>
-                        <td class="px-6 py-5 text-justify border border-slate-100"><strong>Dashboard:</strong> 測試辨別 Content-Type。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify text-left">領取作業 (Repo)，實施效能競賽。</td>
-                        <td class="px-6 py-5 text-left text-justify border border-slate-100 font-black"><strong>重點引導:</strong> 分析 TTFB 負載瓶頸。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify">彙整圖表並 Push。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價平衡點掌握度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

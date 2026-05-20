@@ -483,39 +483,85 @@
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2>WiFi 配置教學引導指南</h2>
-        <div class="classroom-guide text-sm space-y-4">
-            <p><strong>教學重點：</strong></p>
-            <p>本單元專注於「配網體驗」。重點在於讓學生理解 Web Bluetooth 如何扮演配置面板的角色。評分時應特別注意學生對 NVS 持久化儲存與非同步 JavaScript 操作的掌握度。</p>
-        </div>
+<p><strong><code>03-unit-wifi-setup</code> (WiFi 組態設定 - BLE 傳輸)</strong> 單元，這是一個將「網頁前端技術」應用於「嵌入式系統配網」的實戰單元。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本程式庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" href="#1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>由於本單元的核心在於 <strong>Web Bluetooth (BLE)</strong> 的非同步操作，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>wifi-config.html</code></strong>：提供穩定的 UI 框架，但在 <code>connectBtn</code> 與 <code>sendBtn</code> 的 <code>addEventListener</code> 中留下關鍵的非同步邏輯 <code>// TODO</code>。</li>
+<li>
+<strong>📂 <code>firmware/esp32-wifi-ble.ino</code></strong>：提供對應的 ESP32 韌體程式碼。這對學生理解「寫入特徵值 (Characteristic)」後硬體如何接收並重啟至關重要。</li>
+<li>
+<strong>📂 <code>test/validation.js</code></strong>：預置簡單的 JS 測試，驗證 SSID 與密碼的長度過濾邏輯。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：行動優先 - UX 反饋與連線狀態優化 (UX/UI Mastery)</h4><a id="user-content-任務-1行動優先---ux-反饋與連線狀態優化-uxui-mastery" class="anchor" aria-label="Permalink: 任務 1：行動優先 - UX 反饋與連線狀態優化 (UX/UI Mastery)" href="#任務-1行動優先---ux-反饋與連線狀態優化-uxui-mastery"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：提升藍牙連線時的透明度，解決使用者不知是否連線成功的痛點。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>要求</strong>：實作 <code>gattserverdisconnected</code> 事件監聽。</li>
+<li>
+<strong>自動評分 (Autograding)</strong>：檢查 <code>wifi-config.html</code> 中是否包含 <code>animate-pulse</code> (Tailwind) 或類似的 CSS 動畫類名，用於顯示連線中的狀態。</li>
+<li>
+<strong>手動核閱</strong>：導師在 PR 中檢查學生是否正確重置了「傳送按鈕」的啟用/禁用狀態。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：編碼偵錯 - UTF-8 協議與異常捕捉 (Protocol Debugging)</h4><a id="user-content-任務-2編碼偵錯---utf-8-協議與異常捕捉-protocol-debugging" class="anchor" aria-label="Permalink: 任務 2：編碼偵錯 - UTF-8 協議與異常捕捉 (Protocol Debugging)" href="#任務-2編碼偵錯---utf-8-協議與異常捕捉-protocol-debugging"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：確保資料能正確轉換為 Byte Stream 並處理傳輸錯誤。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>驗證方式</strong>：學生需在 <code>console.log</code> 記錄 <code>TextEncoder().encode(ssid)</code> 的輸出。</li>
+<li>
+<strong>Autograding</strong>：撰寫一個測試腳本，模擬呼叫學生的傳送函數，並檢查是否由 <code>try...catch</code> 捕捉到無效的藍牙特徵值寫入錯誤（例如模擬 <code>Characteristic not found</code>）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：永恆連結 - 硬體連線與 NVS 驗證 (Hardware Integration)</h4><a id="user-content-任務-3永恆連結---硬體連線與-nvs-驗證-hardware-integration" class="anchor" aria-label="Permalink: 任務 3：永恆連結 - 硬體連線與 NVS 驗證 (Hardware Integration)" href="#任務-3永恆連結---硬體連線與-nvs-驗證-hardware-integration"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：確保持久化儲存 (Non-volatile storage) 運作正常。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>證據提交</strong>：學生需將 ESP32 成功連線後的「序列埠日誌 (Serial Monitor Log)」內容複製到 <code>serial-output.log</code>。</li>
+<li>
+<strong>核核重點</strong>：日誌中必須出現 <code>WiFi Connected! IP: 192.168.x.x</code> 以及 <code>NVS Commit Success</code> 等關鍵字，證明資訊已正確存入硬體快閃記憶體。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 給導師的翻轉教室實施建議</h3><a id="user-content-3-給導師的翻轉教室實施建議" class="anchor" aria-label="Permalink: 3. 給導師的翻轉教室實施建議" href="#3-給導師的翻轉教室實施建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>技術挑戰提醒</strong>：
+<ul>
+<li>部分 iOS 使用者可能找不到設備，需提醒下載 <strong>Bluefy 瀏覽器</strong>。</li>
+<li>部分 Android 裝置有 MTU (Maximum Transmission Unit) 限制，若學生輸入超長 SSID 導致截斷，這是絕佳的通訊協議教學機會。</li>
+</ul>
+</li>
+<li>
+<strong>評分指標 (Rubric)</strong>：
+<ul>
+<li>[ ] <strong>非同步掌握度</strong>：是否正確使用 <code>await</code> 處理藍牙寫入？</li>
+<li>[ ] <strong>防呆機制</strong>：空值或超長字元是否在前端就被攔截？</li>
+<li>[ ] <strong>狀態機邏輯</strong>：UI 是否能根據「未連線、連線中、已連線、傳送中、成功」等狀態精確切換？</li>
+</ul>
+</li>
+</ul>
+<p>這種部署方式能讓學生理解，<strong>前端開發不僅是頁面排版，更是控制設備的核心介面</strong>，從而建立深厚的跨領域技術素養。</p>
 
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody style="color: #4b5563;">
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">學習 Web Bluetooth 的基本連接流程 (Request Device)。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學生是否能成功搜尋到開發板。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作配網狀態機，處理連線中、成功、失敗的三種 UI 反饋。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>助教角色：</strong>解決部分 Android 裝置 MTU 限制導致的字串截斷問題。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">優化自動重新連線邏輯，並撰寫穩定性測試心得。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>核發評語，確認其理解異步開發的錯誤捕捉。</td>
-                </tr>
-            </tbody>
-        </table>
     </section>
 </body>
 

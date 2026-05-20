@@ -319,135 +319,177 @@
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GATT 協議與階層架構實驗室：服務建模、雙向數據流與遙測實戰
-        </h2>
+<div class="markdown-heading"><h1 class="heading-element">BLE 核心架構：GATT 協議與階層 (basic-05-unit-gatt-structure)</h1><a id="user-content-ble-核心架構gatt-協議與階層-basic-05-unit-gatt-structure" class="anchor" aria-label="Permalink: BLE 核心架構：GATT 協議與階層 (basic-05-unit-gatt-structure)" href="#ble-核心架構gatt-協議與階層-basic-05-unit-gatt-structure"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到 BLE GATT 架構實作單元！在本課程中，你將從單一功能開發進化為<strong>通訊系統架構師</strong>。你將學習如何將複雜的硬體功能（動力、感測、資訊）邏輯性地解耦，建立層級分明的 <strong>GATT 服務樹</strong>。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>GATT 建模</strong>：學會設計 Service 與 Characteristic 的階層關係。</li>
+<li>
+<strong>UUID 管理</strong>：掌握 128-bit 隨機 UUID 的配置與應用。</li>
+<li>
+<strong>數據交互</strong>：實作 <code>onWrite</code> 指令解析與 <code>Read</code> 狀態回傳。</li>
+<li>
+<strong>主動推播</strong>：配置 <code>BLE2902</code> 描述符並實作 <code>Notify</code> 通訊機制。</li>
+</ol>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🚀 任務說明</h2><a id="user-content--任務說明" class="anchor" aria-label="Permalink: 🚀 任務說明" href="#-任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：「無人車通訊地圖」GATT 服務建模</h3><a id="user-content-任務-1無人車通訊地圖gatt-服務建模" class="anchor" aria-label="Permalink: 任務 1：「無人車通訊地圖」GATT 服務建模" href="#任務-1無人車通訊地圖gatt-服務建模"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：建立兩個獨立的 Service 以實現功能解耦。
+<ul>
+<li>
+<strong>動力服務 (Drive Service)</strong>：負責控制車輛移動。</li>
+<li>
+<strong>遙測服務 (Telemetry Service)</strong>：負責監測設備狀態。</li>
+</ul>
+</li>
+<li>
+<strong>要求</strong>：為每個 Service 與 Characteristic 生成唯一的 128-bit UUID。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：「雙向數據流」指令與狀態轉換</h3><a id="user-content-任務-2雙向數據流指令與狀態轉換" class="anchor" aria-label="Permalink: 任務 2：「雙向數據流」指令與狀態轉換" href="#任務-2雙向數據流指令與狀態轉換"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實現韌體與手機端的雙向數據交換。</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>實作 <code>onWrite</code>：接收手機端傳送的 "GO" 指令並觸發 LED。</li>
+<li>實作 <code>Read</code>：當手機讀取時，回傳設備啟動後的累計秒數 (Uptime)。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：「主動遙測器」Notify 實作</h3><a id="user-content-任務-3主動遙測器notify-實作" class="anchor" aria-label="Permalink: 任務 3：「主動遙測器」Notify 實作" href="#任務-3主動遙測器notify-實作"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握 BLE 的「非同步推播」機制。</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>為遙測特徵值正確掛載 <code>BLE2902</code> 描述符。</li>
+<li>每 500ms 自動推送一次感測數據（可先使用虛擬數值）。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📂 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>src/main.cpp</code>：BLE Server 核心邏輯與服務樹實作。</li>
+<li>
+<code>include/uuid_defs.h</code>：所有 128-bit UUID 的定義中心。</li>
+<li>
+<code>docs/GATT_Map.md</code>：在此紀錄你的 GATT 樹狀架構規劃。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📝 繳交規範</h2><a id="user-content--繳交規範" class="anchor" aria-label="Permalink: 📝 繳交規範" href="#-繳交規範"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>完成代碼</strong>：確保代碼能通過編譯並在 ESP32 上正確運行。</li>
+<li>
+<strong>通訊驗證</strong>：使用 nRF Connect 掃描並截圖你的 GATT 服務樹，貼至 <code>docs/GATT_Map.md</code>。</li>
+<li>
+<strong>Push 更新</strong>：完成後將代碼 Push 回 GitHub 程式庫以完成作業。</li>
+</ol>
+<hr>
+<blockquote>
+<p><strong>提示</strong>：一名專業的藍牙開發者，不僅是傳輸數據，更是能為複雜系統建立優美邏輯模型的規畫師。加油！</p>
+</blockquote>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：「無人車通訊地圖」：GATT 服務建模 (GATT Modeling)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統架構師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>架構編碼</strong>：實作動力與遙測獨立 Service (UUID)。</li>
-                    <li><strong>掛載特徵</strong>：UUID 使用 128-bit 隨機。</li>
-                    <li><strong>階層驗證</strong>：nRF Connect 確認樹狀圖。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>UUID 唯一</strong>：採用隨機 128-bit ID？</li>
-                    <li>[ ] <strong>建模合理</strong>：功能清晰解耦至不同服務？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：「雙向數據流」：字元與位元轉換 (Stream & Format)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：韌體開發員</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>指令解析</strong>：onWrite 偵測 "GO" 亮 LED。</li>
-                    <li><strong>狀態回饋</strong>：Read 時回傳累積秒數。</li>
-                    <li><strong>編解碼處理</strong>：控制數據類型轉換。</li>
-                    <li><strong>最終提交</strong>：雙向握手代碼 Push。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>控制穩健</strong>：成功觸發 LED 無遺落？</li>
-                    <li>[ ] <strong>格式對等</strong>：格式正確數值合理？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：「主動遙測器」：Descriptor 與 Notify 實作 (Active Telemetry)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：遙測工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>描述符注入</strong>：實作 BLE2902。</li>
-                    <li><strong>異步推送</strong>：500ms 定時 notify 虛擬值。</li>
-                    <li><strong>效能分析</strong>：分析推送對比請求優勢。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>機制配置</strong>：正確配置 Descriptor？</li>
-                    <li>[ ] <strong>通訊效率</strong>：展現連貫性？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：將硬體抽象化為「樹狀數據模型」。</p>
-            <ol class="space-y-4 text-slate-600 text-justify text-left">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：階層意識</strong> - 功能解耦。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest font-black text-justify text-left">重點 2：資料格式轉換</strong> - 韌體基本功。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：訂閱效能</strong> - Push 模式表現。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>basic-05-unit-gatt-structure</code> (BLE 核心架構：GATT 協議與階層)</strong> 單元，這是學員從「實作單一功能」轉向「通訊系統建模」的架構化課程。它要求學員具備 <strong>物件導向設計 (Object-Oriented Design)</strong> 的思維，學習如何將無人車的各項硬體功能（動力、感測、資訊）邏輯性地解耦為層級分明的 <strong>GATT 服務樹</strong>，並掌握與數據交換息息相關的 <strong>描述符 (Descriptor)</strong> 配置。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>GATT 架構作業的核心在於「建模能力」與「通訊握手」，範本應包含完整的框架結構，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/main.cpp</code></strong>：<strong>GATT 服務樹架構實作區</strong>。學員需在此建立多個 <code>BLEService</code> 物件，並在其中掛載對應的 <code>BLECharacteristic</code>，同時實作 <code>onWrite</code> 數據解析邏輯。</li>
+<li>
+<strong>📂 <code>include/ble_blueprint.h</code></strong>：協議藍圖定義中心。要求學員在此定義所有的 128-bit 隨機 UUID，並設定 Service 與 Characteristic 的對應關係。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>通訊藍圖規劃書</strong>。提供表格範本讓學員紀錄：「功能模組」 vs 「UUID」 vs 「權限 (Read/Write/Notify)」，並貼上 nRF Connect 掃描出的樹狀架構截圖。</li>
+<li>
+<strong>📂 <code>docs/DATA_FORMAT.md</code></strong>：<strong>資料格式定義文件</strong>。要求學員說明 "GO"、"STOP" 指令在 Byte Level 是如何被編碼與解析的。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「無人車通訊地圖」GATT 服務建模 (GATT Modeling Lab)</h4><a id="user-content-任務-1無人車通訊地圖gatt-服務建模-gatt-modeling-lab" class="anchor" aria-label="Permalink: 任務 1：「無人車通訊地圖」GATT 服務建模 (GATT Modeling Lab)" href="#任務-1無人車通訊地圖gatt-服務建模-gatt-modeling-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：學會將複雜系統功能進行邏輯分類，掌握 128-bit 隨機 UUID 的動態生成與配置。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>功能解耦挑戰</strong>：要求學員建立兩個獨立的 Service：一個是「動力服務 (Drive Service)」，另一個是「遙測服務 (Telemetry Service)」。</li>
+<li>
+<strong>層級驗證</strong>：在手機端 APP 中確認：Drive Service 下是否掛載了控制特徵，而 Telemetry 下是否掛載了監測特徵？</li>
+<li>
+<strong>驗證要點</strong>：README 中必須列出所有的 UUID 清單，並確保沒有使用重複的 ID。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：「雙向數據流」字元與位元轉換 (Stream &amp; Format Lab)</h4><a id="user-content-任務-2雙向數據流字元與位元轉換-stream--format-lab" class="anchor" aria-label="Permalink: 任務 2：「雙向數據流」字元與位元轉換 (Stream &amp; Format Lab)" href="#任務-2雙向數據流字元與位元轉換-stream--format-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握異步指令的解析技巧（從 Byte Array 到 String/Integer），實現韌體層級的雙向握手。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>指令解析</strong>：實作 <code>onWrite</code> 回呼，當手機發送字串 "GO" 時亮 LED。</li>
+<li>
+<strong>狀態回饋 (Read)</strong>：當手機發起 Read 請求時，回傳設備自啟動以來的累積秒數。</li>
+<li>
+<strong>封裝穩健性</strong>：處理資料轉換中的常見錯誤（如 Byte 陣列長度判斷）。</li>
+<li>
+<strong>驗證要點</strong>：提交一份測試紀錄，證明能從手機端成功「下令」與「查詢」。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：「主動遙測器」Descriptor 與 Notify 實作 (Active Telemetry Lab)</h4><a id="user-content-任務-3主動遙測器descriptor-與-notify-實作-active-telemetry-lab" class="anchor" aria-label="Permalink: 任務 3：「主動遙測器」Descriptor 與 Notify 實作 (Active Telemetry Lab)" href="#任務-3主動遙測器descriptor-與-notify-實作-active-telemetry-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握 BLE 特有的「推播 (Push)」機制，學習配置 <code>BLE2902</code> 描述符，這是專業藍牙開發的標配。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>描述符注入</strong>：<strong>核心技術考點</strong>。學員必須正確配置 <code>pCharacteristic-&gt;addDescriptor(new BLE2902())</code>。</li>
+<li>
+<strong>定時推播</strong>：撰寫一個定時器（或在 Loop 中），每 500ms 自動推送一組虛擬感測值給手機。</li>
+<li>
+<strong>效能對比</strong>：在報告中說明：為何「主動推播 (Notify)」比「輪詢讀取 (Read)」在監控感測器時更具優勢？</li>
+<li>
+<strong>最終 Commit</strong>：封裝完整的遙測系統代碼並 Push。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 通訊建模與階層規劃點評標準 (Architecture &amp; Protocol Standards)</h3><a id="user-content-3-通訊建模與階層規劃點評標準-architecture--protocol-standards" class="anchor" aria-label="Permalink: 3. 通訊建模與階層規劃點評標準 (Architecture &amp; Protocol Standards)" href="#3-通訊建模與階層規劃點評標準-architecture--protocol-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對通訊系統的階層化思維與對工業標準（如 2902）的遵循」</strong>：</p>
+<ul>
+<li>[ ] <strong>GATT 建模完整性</strong>：服務與特徵值的分類是否符合邏輯上的功能解耦？</li>
+<li>[ ] <strong>2902 描述符配置</strong>：是否正確配置了描述符以支持 Notify 權限？（這是最常見的失敗點，需重點確認）。</li>
+<li>[ ] <strong>編解碼穩健性</strong>：讀寫過程中的資料類型轉換（<code>getValue()</code>, <code>setValue()</code>）是否處理得當？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/main.cpp         # 核心：建立 BLE Server 樹狀架構與 Notify 推送流
+├── include/uuid_defs.h  # 配置：所有服務與特徵值的 128-bit UUID 清單
+├── docs/GATT_Map.png    # 圖檔：nRF Connect 顯示的 Service/Char 樹狀層級
+├── README.md            # 總結：我如何設計這套通訊協議以滿足遙測與控制需求
+└── assets/test_log.md   # 數據：測試 GO/STOP 指令響應與秒數讀取紀錄
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的藍牙開發者，不是在傳傳資料的人，而是能為複雜硬體建立出一套邏輯嚴密、分類清晰且符合階層美學的數據模型規劃師」</strong>。掌握 GATT 架構與 Notify 實作後，學員將擁有了開發「多功能遙控車、工業穿戴式設備、分散式數據採集節點」最底層也最專業的系統建模實力！_
+|
+|
+太熱血了！我們已經將 <strong>基礎 05</strong>（藍牙通訊）系列中關於廣播、屬性與階層架構的 Classroom 部署定義全部完成了。這標誌著學員已經正式從「開發者」進化為了「通訊系統架構師」。恭喜！藍牙課程板塊的教學拼圖已經大功告成！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
-.
-├── src/main.cpp      # (必修) GATT 初始化框架
-└── README.md         # 規劃書：UUID 表、心得
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse border border-slate-100">
-                <thead>
-                    <tr class="bg-slate-100 border border-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600 border border-slate-100">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">了解「通訊地圖：GATT 階層」影片。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 確保區分 Service。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify text-left">領取作業 (Repo)，挑戰 Notify 顯示。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>巡迴除錯:</strong> 解釋 Descriptor 必要性。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify">修改數值並提交 PR。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評 UUID 整潔度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

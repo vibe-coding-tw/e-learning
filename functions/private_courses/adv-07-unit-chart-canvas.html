@@ -292,143 +292,195 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">遙測實驗室：即時資料結構與高頻渲染</h2>
+<div class="markdown-heading"><h1 class="heading-element">adv-07-unit-chart-canvas｜即時數據視覺化</h1><a id="user-content-adv-07-unit-chart-canvas即時數據視覺化" class="anchor" aria-label="Permalink: adv-07-unit-chart-canvas｜即時數據視覺化" href="#adv-07-unit-chart-canvas即時數據視覺化"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<blockquote>
+<p><strong>單元目標</strong>：將感測器的原始數字流，透過 Chart.js 與原生 Canvas，轉化為能即時診斷系統狀態的視覺化工具。</p>
+</blockquote>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📋 作業說明</h2><a id="user-content--作業說明" class="anchor" aria-label="Permalink: 📋 作業說明" href="#-作業說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本次作業共分為三個任務，請依序完成。完成後，在本 README 最底部填寫「心得與反思」。</p>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🗂️ 程式庫結構</h2><a id="user-content-️-程式庫結構" class="anchor" aria-label="Permalink: 🗂️ 程式庫結構" href="#️-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── js/
+│   ├── chart_logic.js     # 核心：實作 Sliding Window 與 Chart 更新邏輯
+│   └── raw_canvas.js      # 原生：實作 lineTo 座標變換公式
+├── mock/
+│   └── data_sim.js        # 工具：動態模擬數據流（不需修改）
+├── docs/
+│   └── tuning_view.md     # 實驗報告：PID 同步監控圖的對比分析
+├── tests/
+│   └── sliding_window.test.js  # 自動化測試（不需修改）
+└── README.md              # 本檔案：作業說明與心得
+</code></pre>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">✅ 任務一：「滑動視窗」動態圖表</h2><a id="user-content--任務一滑動視窗動態圖表" class="anchor" aria-label="Permalink: ✅ 任務一：「滑動視窗」動態圖表" href="#-任務一滑動視窗動態圖表"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p><strong>目標</strong>：在 <code>js/chart_logic.js</code> 中實作滑動視窗（Sliding Window）緩衝邏輯，讓圖表始終只顯示最近 50 筆數據，並且不能隨著時間拉長而佔用更多記憶體。</p>
+<div class="markdown-heading"><h3 class="heading-element">需求規格</h3><a id="user-content-需求規格" class="anchor" aria-label="Permalink: 需求規格" href="#需求規格"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>呼叫 <code>updateBuffer(newValue)</code> 時，將新值加入 <code>dataBuffer</code> 陣列尾端。</li>
+<li>若陣列長度超過 50，移除最舊的一筆（使用 <code>shift()</code>）。</li>
+<li>呼叫 <code>chart.update('none')</code> 以<strong>關閉動畫</strong>，維持高更新頻率。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">提交驗證</h3><a id="user-content-提交驗證" class="anchor" aria-label="Permalink: 提交驗證" href="#提交驗證"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>[ ] 執行 <code>npm test</code>，<code>Sliding Window</code> 相關測試全部通過（陣列長度恆 ≤ 50）。</li>
+<li>[ ] 附上波形截圖：X 軸隨時間向右滾動，畫面維持流暢。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">✅ 任務二：多軸同步監控儀</h2><a id="user-content--任務二多軸同步監控儀" class="anchor" aria-label="Permalink: ✅ 任務二：多軸同步監控儀" href="#-任務二多軸同步監控儀"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p><strong>目標</strong>：在 <code>js/chart_logic.js</code> 中擴充圖表，同時顯示「目標值 (Setpoint)」與「回授值 (Feedback)」兩條曲線，讓 PID 追隨過程一目了然。</p>
+<div class="markdown-heading"><h3 class="heading-element">需求規格</h3><a id="user-content-需求規格-1" class="anchor" aria-label="Permalink: 需求規格" href="#需求規格-1"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>Y 軸範圍固定為 <code>0 ~ 255</code>，<strong>禁止</strong>使用 Chart.js 的自動縮放。</li>
+<li>兩條線的 <code>label</code> 須使用工程語意命名（如 <code>Setpoint</code>、<code>Feedback</code>），不得使用 <code>line1</code>、<code>data2</code> 等無意義名稱。</li>
+<li>啟用 Tooltip，讓滑鼠懸停時能同時顯示兩條線的當前值。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">提交驗證</h3><a id="user-content-提交驗證-1" class="anchor" aria-label="Permalink: 提交驗證" href="#提交驗證-1"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>[ ] 附上截圖或影片：手動模擬一個階躍輸入，展示目標線（方波）與回授線（響應曲線）在<strong>同一比例尺</strong>下的收斂過程。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">✅ 任務三：原生 Canvas 高頻示波器</h2><a id="user-content--任務三原生-canvas-高頻示波器" class="anchor" aria-label="Permalink: ✅ 任務三：原生 Canvas 高頻示波器" href="#-任務三原生-canvas-高頻示波器"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p><strong>目標</strong>：在 <code>js/raw_canvas.js</code> 中，不依賴任何圖表庫，直接以原生 Canvas API 繪製波形，並挑戰 100Hz 的刷新率。</p>
+<div class="markdown-heading"><h3 class="heading-element">需求規格</h3><a id="user-content-需求規格-2" class="anchor" aria-label="Permalink: 需求規格" href="#需求規格-2"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>使用 <code>requestAnimationFrame</code> 驅動渲染循環，<strong>禁止</strong>使用 <code>setInterval</code>。</li>
+<li>每幀呼叫 <code>clearRect</code> 清除舊畫面，再用 <code>lineTo</code> 重繪所有數據點。</li>
+<li>注意 Canvas 座標系：Y 軸<strong>向下</strong>為正，需進行翻轉換算：
+<div class="highlight highlight-source-js"><pre><span class="pl-k">let</span> <span class="pl-s1">y_pixel</span> <span class="pl-c1">=</span> <span class="pl-s1">canvasHeight</span> <span class="pl-c1">-</span> <span class="pl-kos">(</span><span class="pl-s1">value</span> <span class="pl-c1">/</span> <span class="pl-c1">255</span> <span class="pl-c1">*</span> <span class="pl-s1">canvasHeight</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-s1">ctx</span><span class="pl-kos">.</span><span class="pl-en">lineTo</span><span class="pl-kos">(</span><span class="pl-s1">x_pixel</span><span class="pl-kos">,</span> <span class="pl-s1">y_pixel</span><span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">提交驗證</h3><a id="user-content-提交驗證-2" class="anchor" aria-label="Permalink: 提交驗證" href="#提交驗證-2"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>[ ] 在 <code>docs/tuning_view.md</code> 中記錄：以 100Hz 刷新時，瀏覽器 FPS 表現為何？是否出現卡頓？</li>
+<li>[ ] 執行 <code>npm test</code>，<code>requestAnimationFrame</code> 相關檢核通過。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🧪 自動化測試</h2><a id="user-content--自動化測試" class="anchor" aria-label="Permalink: 🧪 自動化測試" href="#-自動化測試"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="highlight highlight-source-shell"><pre>npm install
+npm <span class="pl-c1">test</span></pre></div>
+<p>測試內容涵蓋：</p>
+<ol>
+<li>
+<strong>Sliding Window</strong>：連續寫入 100 筆數據後，<code>dataBuffer</code> 長度是否維持在 50。</li>
+<li>
+<strong>Canvas Rendering</strong>：是否使用 <code>requestAnimationFrame</code> 而非 <code>setInterval</code>。</li>
+</ol>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📝 心得與反思</h2><a id="user-content--心得與反思" class="anchor" aria-label="Permalink: 📝 心得與反思" href="#-心得與反思"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<blockquote>
+<p>完成所有任務後，請回答以下問題（每題至少 2 句）。</p>
+</blockquote>
+<p><strong>1. 為什麼要關閉 Chart.js 的動畫（<code>update('none')</code>）？關掉之後有什麼感受上的差異？</strong></p>
+<p>[請在此填寫]</p>
+<p><strong>2. <code>requestAnimationFrame</code> 相比 <code>setInterval</code> 有什麼優勢？對高頻渲染有何影響？</strong></p>
+<p>[請在此填寫]</p>
+<p><strong>3. 在本次作業中，你遇到最困難的地方是什麼？最後如何解決？</strong></p>
+<p>[請在此填寫]</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：滑動視窗 (Sliding Window) 實作</h3>
-            <div class="quest-meta">
-                <span>角色扮演：資料緩衝工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>隊列 (Queue) 邏輯實作</strong>：在 <code>DataStore.js</code> 中定義一個 Buffer 陣列。</li>
-                    <li><strong>原子性操作</strong>：確保每筆新數據進入時，同步執行 <code>push()</code> 與 <code>shift()</code>，並嚴格檢查
-                        <code>buffer.length</code> 是否恆定。</li>
-                    <li><strong>渲染更新</strong>：調用 <code>chart.update('none')</code> 並關閉動畫選項，在 README 中貼上平滑滾動的截圖。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>內存管理</strong>：資料陣列是否在長時間運行後依然保持在 50 個點內？</li>
-                    <li>[ ] <strong>視覺即時性</strong>：圖表移動是否具備「零延遲」的感覺？有無殘影或過渡動畫干擾？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：多軸同步監控儀 (Multi-axis PID Monitor)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：控制系統分析師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>多曲線配置</strong>：在 Chart.js 配置中新增兩個 DataSets，分別標註顏色與 Label。</li>
-                    <li><strong>座標對齊</strong>：設定 Y 軸範圍固定（如 0-255），確保兩組數據在同一比例尺下具備可比性。</li>
-                    <li><strong>聯通測試</strong>：手動擾動馬達，錄製影片上傳至 PR，展示實際速度如何緩步「追回」目標速度的過程。</li>
-                    <li><strong>Push Final</strong>：提交具備專業調教介面的監控面板。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>視覺辨識度</strong>：兩條曲線是否具備清晰的顏色對比？圖例 (Legend) 是否清楚？</li>
-                    <li>[ ] <strong>物理意義正確性</strong>：當馬達目標值改變時，圖表是否能即時反映出 Error 的收斂？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：原生 Canvas 高頻示波器 (Direct Canvas Rendering)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：高性能渲染專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>畫布重置邏輯</strong>：在每個框架開始時，正確執行 <code>clearRect()</code> 清空畫布。</li>
-                    <li><strong>路徑運算實作</strong>：利用網格映射公式：$y_{pixel} = height - (value / 255 * height)$，實作點對點的連線。</li>
-                    <li><strong>壓力測試紀錄</strong>：測試 100Hz 刷新頻率下瀏覽器的 CPU 佔用率，並記錄在 README 的 Performance Section。</li>
-                    <li><strong>Push Final</strong>：提交具備極致效能的裸機 (Bare-metal) 繪圖引擎。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>座標映射精確度</strong>：輸入 0 時，波形是否正確位於底部？輸入 255 時，是否對齊頂端？</li>
-                    <li>[ ] <strong>穩定性評估</strong>：高頻更新時，網頁是否會發生卡頓、閃爍或無響應狀況？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：讓學生掌握「即時系統」的數據流設計。這不只是繪圖，更是內存與效能管理的修煉。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：隊列思維</strong> - 學生常犯的錯誤是無限追加入數據導致崩潰。必須強制引導他們建立 Sliding Window。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：犧牲華麗換取真實</strong> - 在儀表板開發中，1ms 的動畫過渡可能導致你漏掉 10 筆關鍵數據。學會關閉動畫。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：底層渲染機制</strong> - 透過原生 Canvas 任務，讓他們理解圖表庫背後的像素座標變換原理。</li>
-            </ol>
-        </div>
+<div class="markdown-heading"><h1 class="heading-element">導師指南：adv-07-unit-chart-canvas (數據視覺化)</h1><a id="user-content-導師指南adv-07-unit-chart-canvas-數據視覺化" class="anchor" aria-label="Permalink: 導師指南：adv-07-unit-chart-canvas (數據視覺化)" href="#導師指南adv-07-unit-chart-canvas-數據視覺化"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>針對 <strong><code>adv-07-unit-chart-canvas</code> (數據視覺化)</strong> 單元，這是一個將「冷冰冰的數據」轉化為「直觀診斷工具」的關鍵單元。它不僅要求學員會用圖表庫，更要求他們理解「高性能渲染」與「記憶體管理（滑動視窗）」的底層邏輯。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>即時繪圖的性能調優是核心，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>js/telemetry_chart.js</code></strong>：即時遙測組件，包含 Chart.js 的核心配置，留下 <code>updateBuffer(newValue)</code> 與動畫關閉參數的 <code>TODO</code>。</li>
+<li>
+<strong>📂 <code>js/fast_scope.js</code></strong>：高性能原生示波器，提供基本的 Canvas 繪圖 Context，留下 <code>lineTo</code> 座標映射與 <code>clearRect</code> 的實作空間。</li>
+<li>
+<strong>📂 <code>mock/data_generator.js</code></strong>：模擬數據產生器。提供一個能以指定頻率（如 20ms）發送隨機正弦波或階躍波 (Step Wave) 的工具，確保學員在離線狀態下也能測試波形流暢度。</li>
+<li>
+<strong>📂 <code>docs/performance_log.md</code></strong>：效能分析紀錄。要求學員記錄在不同數據緩衝長度下，瀏覽器的 CPU 使用率與幀率 (FPS)。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「滑動視窗」動態圖表 (Sliding Window Motor Chart)</h4><a id="user-content-任務-1滑動視窗動態圖表-sliding-window-motor-chart" class="anchor" aria-label="Permalink: 任務 1：「滑動視窗」動態圖表 (Sliding Window Motor Chart)" href="#任務-1滑動視窗動態圖表-sliding-window-motor-chart"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握即時系統中數據流的「先進先出 (FIFO)」管理，防止記憶體洩漏。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>緩衝邏輯檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：Sliding Window</span>
+<span class="pl-s1">dataBuffer</span><span class="pl-kos">.</span><span class="pl-en">push</span><span class="pl-kos">(</span><span class="pl-s1">newVal</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-k">if</span> <span class="pl-kos">(</span><span class="pl-s1">dataBuffer</span><span class="pl-kos">.</span><span class="pl-c1">length</span> <span class="pl-c1">&gt;</span> <span class="pl-c1">50</span><span class="pl-kos">)</span> <span class="pl-s1">dataBuffer</span><span class="pl-kos">.</span><span class="pl-en">shift</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span> 
+<span class="pl-s1">chart</span><span class="pl-kos">.</span><span class="pl-en">update</span><span class="pl-kos">(</span><span class="pl-s">'none'</span><span class="pl-kos">)</span><span class="pl-kos">;</span> <span class="pl-c">// 禁止動畫以提升效能</span></pre></div>
+</li>
+<li>
+<strong>Autograding</strong>：透過腳本模擬連續寫入 100 筆數據，檢核學員的陣列長度是否依然保持在 50 個點。</li>
+<li>
+<strong>視覺驗證</strong>：要求提交一張波形截圖，展示 X 軸能隨時間平滑滾動。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：多軸同步監控儀 (Multi-axis PID Monitor)</h4><a id="user-content-任務-2多軸同步監控儀-multi-axis-pid-monitor" class="anchor" aria-label="Permalink: 任務 2：多軸同步監控儀 (Multi-axis PID Monitor)" href="#任務-2多軸同步監控儀-multi-axis-pid-monitor"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：設計專業級的調校介面，對比「目標值 (Setpoint)」與「回授值 (Feedback)」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>座標對齊檢核</strong>：學員必須將 Y 軸範圍固定（例如 <code>0-255</code>），否則 Chart.js 的自動縮放會讓調校誤差變得不可見。</li>
+<li>
+<strong>實戰場景模擬</strong>：要求提交影片。手動撥動馬達，展示「目標線（階躍）」與「實際線（響應）」在同一比例尺下的追隨與收斂過程。</li>
+<li>
+<strong>PR 深度核核</strong>：點評其對圖例 (Legend) 與標註 (Tooltips) 的命名是否具備工程語意。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：原生 Canvas 高頻示波器 (Direct Canvas Rendering)</h4><a id="user-content-任務-3原生-canvas-高頻示波器-direct-canvas-rendering" class="anchor" aria-label="Permalink: 任務 3：原生 Canvas 高頻示波器 (Direct Canvas Rendering)" href="#任務-3原生-canvas-高頻示波器-direct-canvas-rendering"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：捨棄抽象庫，理解像素級的座標變換與高頻渲染效能。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>數學映射檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：座標系轉換 (Canvas 的 Y 軸是反向的)</span>
+<span class="pl-k">let</span> <span class="pl-s1">y_pixel</span> <span class="pl-c1">=</span> <span class="pl-s1">canvasHeight</span> <span class="pl-c1">-</span> <span class="pl-kos">(</span><span class="pl-s1">value</span> <span class="pl-c1">/</span> <span class="pl-c1">255</span> <span class="pl-c1">*</span> <span class="pl-s1">canvasHeight</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-s1">ctx</span><span class="pl-kos">.</span><span class="pl-en">lineTo</span><span class="pl-kos">(</span><span class="pl-s1">x_pixel</span><span class="pl-kos">,</span> <span class="pl-s1">y_pixel</span><span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div>
+</li>
+<li>
+<strong>性能測試</strong>：要求學員挑戰 100Hz 刷新率，並在 README 中記錄網頁是否發生卡頓。</li>
+<li>
+<strong>Autograding</strong>：檢核代碼中是否使用了 <code>requestAnimationFrame</code> 而非 <code>setInterval</code>，這展現了學員對現代瀏覽器渲染機制的掌握程度。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 視覺化工程導師點評標準 (Visual Ops Benchmarks)</h3><a id="user-content-3-視覺化工程導師點評標準-visual-ops-benchmarks" class="anchor" aria-label="Permalink: 3. 視覺化工程導師點評標準 (Visual Ops Benchmarks)" href="#3-視覺化工程導師點評標準-visual-ops-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「數據的真實性與診斷的即時性」</strong>：</p>
+<ul>
+<li>[ ] <strong>渲染流暢度 (FPS)</strong>：在高頻數據下，介面是否依然響應靈敏？有沒有出現視覺上的掉幀？</li>
+<li>[ ] <strong>比例尺意識</strong>：圖表的 Y 軸是否設定合理？是否能一眼看出 1% 的微小殘餘誤差 (Steady-state Error)？</li>
+<li>[ ] <strong>工程除錯力</strong>：README 是否討論了「為什麼要關閉 Chart.js 動畫」？（掌握此點代表學員跨過了從「做網頁」到「做工程系統」的鴻溝）。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── js/
+│   ├── chart_logic.js     # 核心：待填寫 Sliding Window 與 Chart 更新邏輯
+│   └── raw_canvas.js      # 原生：待填寫 lineTo 座標變換公式
+├── mock/
+│   └── data_sim.js        # 工具：提供測試用的動態模擬數據流
+├── docs/
+│   └── tuning_view.md     # 實驗：提交 PID 同步監控圖的對比報告
+└── README.md              # 專案心得：我如何優化渲染效能並實作精密遙測
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「代碼賦予數據生命力」</strong>。掌握即時數據視覺化後，他們在後續單元調校 PID、Filter 或感知演算法時，將具備「透視眼」般的利器，這是邁向系統級開發者的重要里程碑。</p>
+<hr>
+<p>至此，我們已經完成了 <strong><code>adv-01</code> 到 <code>adv-07-unit-02</code></strong> 系列所有進階單元的部署策略規劃。這套教材體系，將引導學員從最底層的「像素與通訊」一路攀升至「系統整合與數據分析」，構建完整的自駕車工程師知識版圖。</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── js/chart_app.js     # 集成：封裝 Chart.js 的即時更新元件
-├── js/oscilloscope.js # 原生：待實作 Canvas lineTo 邏輯
-└── data/mock_stream.js # 工具：提供每 20ms 自動產生隨機數的模擬器
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5">觀看「股票交易系統的數據流」短片。理解資料陣列在記憶體中的先進先出規則。</td>
-                        <td class="px-6 py-5"><strong>Dashboard:</strong> 追蹤學員是否能解釋 `shift()` 在這裡的作用。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900">領取作業 (Repo)，調教 Y 軸座標與顏色。完成雙軸同步監控並解決閃爍問題。</td>
-                        <td class="px-6 py-5"><strong>技術教練:</strong> 指導如何配置 Chart.js 的 `update('none')` 選項。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
-                        <td class="px-6 py-5">上傳示波器壓力測試報告。閱讀導師對「渲染頻率 vs 系統穩定度」的深度評論。</td>
-                        <td class="px-6 py-5"><strong>Feedback PR:</strong> 點評對「高效能繪圖」的建模與實踐能力。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

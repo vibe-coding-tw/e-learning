@@ -318,87 +318,101 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">視覺實驗室：二值化門檻調校與數位濾波</h2>
+<p>針對 <strong><code>adv-06-unit-threshold-filter</code> (二值化與濾波)</strong> 單元，這是數位影像處理 (DIP) 的基礎，也是機器視覺的門檻。它要求學生理解如何將雜亂的色彩訊號「降維」成純粹的特徵數據。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本倉庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本倉庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本倉庫 (Template Repo) 配置建議" href="#1-範本倉庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>二值化與濾波是純粹的「矩陣運算」與「訊號處理」，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>js/image_engine.js</code></strong>：核心影像引擎，提供提取 Canvas 像素 Buffer 的框架，留下灰階轉換與二值化公式的 <code>TODO</code>。</li>
+<li>
+<strong>📂 <code>js/convolution_kernels.js</code></strong>：卷積過濾模組。預置 $3 \times 3$ 的滑動視窗迴圈邏輯，讓學員實作均值與中值的算法核心。</li>
+<li>
+<strong>📂 <code>assets/image_samples/</code></strong>：包含一組標準影像與一組「刻意加入噪點」的影像，用於檢驗濾波器的實際去噪效能。</li>
+<li>
+<strong>📂 <code>tests/filter_accuracy.test.js</code></strong>：自動化評分脚本。餵入一組 1D/2D 像素陣列，檢核學員的二值化邏輯（如：輸入 150 &gt; 門檻 100 是否輸出 255）與濾波數值計算是否正確。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：互動式二值化工具 (Interactive Threshold Tool)</h4><a id="user-content-任務-1互動式二值化工具-interactive-threshold-tool" class="anchor" aria-label="Permalink: 任務 1：互動式二值化工具 (Interactive Threshold Tool)" href="#任務-1互動式二值化工具-interactive-threshold-tool"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握亮度門檻對特徵提取的決定性影響。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>核心邏輯檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：灰階門檻判定</span>
+<span class="pl-k">let</span> <span class="pl-s1">gray</span> <span class="pl-c1">=</span> <span class="pl-kos">(</span><span class="pl-s1">r</span> <span class="pl-c1">*</span> <span class="pl-c1">0.299</span> <span class="pl-c1">+</span> <span class="pl-s1">g</span> <span class="pl-c1">*</span> <span class="pl-c1">0.587</span> <span class="pl-c1">+</span> <span class="pl-s1">b</span> <span class="pl-c1">*</span> <span class="pl-c1">0.114</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-s1">pixel</span> <span class="pl-c1">=</span> <span class="pl-kos">(</span><span class="pl-s1">gray</span> <span class="pl-c1">&gt;</span> <span class="pl-s1">threshold</span><span class="pl-kos">)</span> ? <span class="pl-c1">255</span> : <span class="pl-c1">0</span><span class="pl-kos">;</span></pre></div>
+</li>
+<li>
+<strong>Autograding</strong>：給定一個閾值與多個灰階像素值，檢核輸出的二元矩陣是否符合邏輯。</li>
+<li>
+<strong>數據提交</strong>：要求學員在不同光照下尋找「最優閾值」，並在 README 中記錄為何環境變暗時需要調低門檻量。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：「噪點消滅者」濾波器實驗 (Noise Killer Filter Lab)</h4><a id="user-content-任務-2噪點消滅者濾波器實驗-noise-killer-filter-lab" class="anchor" aria-label="Permalink: 任務 2：「噪點消滅者」濾波器實驗 (Noise Killer Filter Lab)" href="#任務-2噪點消滅者濾波器實驗-noise-killer-filter-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：理解卷積運算 (Convolution) 如何平滑訊號，並對比不同濾波器的優缺點。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>中值濾波實作</strong>：這是進階考點。學員需在 $3 \times 3$ 視窗中取出 9 個值並進行排序 (Sort)，取中間值。</li>
+<li>
+<strong>去噪效果對比</strong>：學員需在 README 中對比「均值（模糊）」與「中值（保留邊緣）」對胡椒鹽雜訊處理後的細節差異。</li>
+<li>
+<strong>Autograding</strong>：餵入一個帶有一個極大雜訊點的 9 宮格陣列，檢核學員的中值濾波函式是否能完美「剔除」該點。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：特徵中心點計算 (Feature Centroid Detection)</h4><a id="user-content-任務-3特徵中心點計算-feature-centroid-detection" class="anchor" aria-label="Permalink: 任務 3：特徵中心點計算 (Feature Centroid Detection)" href="#任務-3特徵中心點計算-feature-centroid-detection"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：將二值化結果轉換為具備導航意義的座標點。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>重心公式檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：座標降維累加</span>
+<span class="pl-s1">avgX</span> <span class="pl-c1">=</span> <span class="pl-s1">sumX</span> <span class="pl-c1">/</span> <span class="pl-s1">totalPixels</span><span class="pl-kos">;</span>
+<span class="pl-s1">avgY</span> <span class="pl-c1">=</span> <span class="pl-s1">sumY</span> <span class="pl-c1">/</span> <span class="pl-s1">totalPixels</span><span class="pl-kos">;</span></pre></div>
+</li>
+<li>
+<strong>邊界防護測試</strong>：餵入一個「全白（無目標）」的影像，檢核學員的代碼是否具備 <code>if (count &gt; 0)</code> 的除以零檢查。</li>
+<li>
+<strong>視覺化驗證</strong>：在 Canvas 上用 <code>context.fillRect</code> 繪製出計算出的重心中心點，並截圖提交。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. DIP 工程導師點評標準 (DIP Engineering Benchmarks)</h3><a id="user-content-3-dip-工程導師點評標準-dip-engineering-benchmarks" class="anchor" aria-label="Permalink: 3. DIP 工程導師點評標準 (DIP Engineering Benchmarks)" href="#3-dip-工程導師點評標準-dip-engineering-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「數據降維的準確性與程式效能」</strong>：</p>
+<ul>
+<li>[ ] <strong>特徵提取純淨度</strong>：二值化邊緣是否清晰？有沒有大量的散碎雜點？</li>
+<li>[ ] <strong>去噪與銳利的權衡</strong>：濾波器是否在去除雜訊的同時，過度模糊了賽道線的邊緣導致中心點偏移？</li>
+<li>[ ] <strong>運算效率意識</strong>：在 $3 \times 3$ 像素遍歷中，是否有加入邊界檢查防止 <code>Array Index Out of Bounds</code> 的崩潰？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── js/
+│   ├── binarizer.js        # 核心：待填寫灰階轉換與 Threshold 邏輯
+│   ├── noise_reduction.js  # 邏輯：待填寫中值與均值濾波卷積核
+│   └── tracker_utils.js    # 數學：待填寫重心座標計算公式
+├── tests/
+│   └── convolution.test.js # 自動化：比對濾波後的像素期望值
+└── README.md               # 專案心得：我如何透過中值濾波拔除噪點並鎖定目標
+</code></pre>
+<p>透過這種部署方式，學生能明白 <strong>「電腦如何從混亂中找到秩序」</strong>。掌握二值化與濾波，就是掌握了所有電腦視覺系統（如人臉識別、工業檢測、自動導航）的「眼睛清潔術」。_
+|
+|
+至此，我們已經完成了 <strong><code>adv-01</code> 到 <code>adv-06</code></strong> 全系列進階單元的部署策略規劃。這一系列的課程結構，將確保你的學員不僅在學習代碼，更是在學習如何成為一名真正的 <strong>機器人系統工程師</strong>。</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：互動式二值化工具 (Interactive Threshold Tool)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：影像處理工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>灰階轉換實作</strong>：在 <code>App.js</code> 中撰寫迴圈，利用加權公式將彩圖轉為灰階。</li>
-                    <li><strong>門檻邏輯串接</strong>：監聽 UI 滑桿事件，將灰階值與門檻比對，產出純黑白 (0/255) 的二值化結果。</li>
-                    <li><strong>截圖提交</strong>：在 README 中分別記錄「強光」與「暗處」環境下，取得最純淨黑線的最佳 Threshold 數值。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>轉換正確性</strong>：輸出的 Canvas 影像是否確實只有 0 與 255 兩種數值？</li>
-                    <li>[ ] <strong>UI 反饋一致性</strong>：滑桿拖動時，影像是否具備足夠流暢的即時刷新感？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：「噪點消滅者」濾波器實驗 (Noise Killer Filter Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：訊號處理專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>雜訊產生器</strong>：實作一個 Function，在影像中隨機撒入 2% 的白點雜訊 (Salt noise)。</li>
-                    <li><strong>卷積算法開發</strong>：撰寫 $3 \times 3$ 的滑動視窗逻辑。</li>
-                    <li><strong>比較分析</strong>：在同一雜訊來源下，對比「均值濾波」與「中值濾波」對黑白雜訊的抹除能力。</li>
-                    <li><strong>代碼提交</strong>：Push 效能最佳化的濾波函式，並附上處理前後的對比截圖。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>去噪質量評估</strong>：中值濾波是否能完美拔除「孤立噪點」而不同時模糊特徵邊緣？</li>
-                    <li>[ ] <strong>算法效率</strong>：在處理 $320 \times 240$ 影像時，是否能維持在 30 幀以上？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：特徵中心提取 (Feature Centroid Detection)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：視覺演算法開發者</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>重心公式應用</strong>：統計所有二值化後為「黑」點的 X, Y 總和除以總點數。</li>
-                    <li><strong>座標標註</strong>：在處理後的 Canvas 上，利用 <code>context.strokeRect</code> 標記出計算出的導航重心。</li>
-                    <li><strong>Push Final</strong>：提交具備「從雜亂背景中穩定定位黑線中心」能力的最終專案。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>中心點穩定度</strong>：在影像光暗微調時，計算出的中心座標是否發生劇烈跳變？</li>
-                    <li>[ ] <strong>邏輯嚴謹性</strong>：代碼中是否正確處理了「完全沒有目標物 (n=0)」時的除以零邊界情況？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->

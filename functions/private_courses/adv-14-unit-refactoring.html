@@ -354,144 +354,175 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none text-justify;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">重構實驗室：架構病態分析與精品組件設計</h2>
+<div class="markdown-heading"><h1 class="heading-element">軟體架構實踐：從 Spaghetti 到 Clean Code</h1><a id="user-content-軟體架構實踐從-spaghetti-到-clean-code" class="anchor" aria-label="Permalink: 軟體架構實踐：從 Spaghetti 到 Clean Code" href="#軟體架構實踐從-spaghetti-到-clean-code"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到 <strong><code>adv-14-unit-refactoring</code></strong> 程式庫。本單元是從「程式員 (Coder)」蛻變為「軟體架構師 (Architect)」的核心訓練。你將學習如何處理混亂的單體代碼，並將其重構為具備可維護性、可擴展性與美感的專業架構。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>關注點分離 (SoC)</strong>：將混亂的單體檔案拆解為具備單一職責的模組。</li>
+<li>
+<strong>OOP 封裝</strong>：透過類別 (Class) 隱藏底層複雜性，實現乾淨的介面隔離。</li>
+<li>
+<strong>開閉原則 (OCP)</strong>：打造具備擴展能力的數據管道 (Pipeline)，實踐「對擴展開放，對修改封閉」。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">🚀 任務說明</h2><a id="user-content--任務說明" class="anchor" aria-label="Permalink: 🚀 任務說明" href="#-任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：義大利麵代碼大手術 (Legacy Decoupling)</h3><a id="user-content-任務-1義大利麵代碼大手術-legacy-decoupling" class="anchor" aria-label="Permalink: 任務 1：義大利麵代碼大手術 (Legacy Decoupling)" href="#任務-1義大利麵代碼大手術-legacy-decoupling"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>對象</strong>：<code>src/legacy_monolith.js</code>
+</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>識別代碼中的「壞味道」(Code Smells)，如全域變數、深度巢狀、過長的函式。</li>
+<li>將邏輯拆解並搬移至 <code>src/modules/</code> 目錄下（例如：<code>Perception.js</code>, <code>Actuation.js</code>）。</li>
+<li>確保主程式邏輯變得像目錄一樣易讀。</li>
+</ul>
+</li>
+<li>
+<strong>記錄</strong>：請在 <code>docs/Migration_Diary.md</code> 中記錄你的重構日誌。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：通訊層 OOP 封裝</h3><a id="user-content-任務-2通訊層-oop-封裝" class="anchor" aria-label="Permalink: 任務 2：通訊層 OOP 封裝" href="#任務-2通訊層-oop-封裝"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>定義 <code>VibeBotComm</code> 類別，封裝底層通訊細節（如 Web Bluetooth API）。</li>
+<li>隱藏內部狀態（如 UUID、連線狀態），僅對外暴露必要的 API。</li>
+<li>證明其靈活性：如果未來要切換通訊協議，主程式邏輯應能保持不變。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：插件化處理管線 (Pipeline Framework)</h3><a id="user-content-任務-3插件化處理管線-pipeline-framework" class="anchor" aria-label="Permalink: 任務 3：插件化處理管線 (Pipeline Framework)" href="#任務-3插件化處理管線-pipeline-framework"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>設計一個數據處理管道 (Pipeline)，支持按序執行插件 (Middleware)。</li>
+<li>實作至少兩個插件（例如：平滑濾波、數值安全限制）。</li>
+<li>展示如何在不修改主框架的情況下，動態增加新功能。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📁 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📁 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>src/legacy_monolith.js</code>: 待重構的原始混亂代碼。</li>
+<li>
+<code>src/modules/</code>: 存放重構後的各類功能模組。</li>
+<li>
+<code>src/plugins/</code>: 存放符合 Pipeline 規範的插件。</li>
+<li>
+<code>docs/Migration_Diary.md</code>: 你的重構過程記錄。</li>
+<li>
+<code>tests/</code>: 自動化測試腳本，用於驗證重構後的架構品質。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📝 提交要求</h2><a id="user-content--提交要求" class="anchor" aria-label="Permalink: 📝 提交要求" href="#-提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>完成所有重構任務，確保程式碼能通過 <code>tests/</code> 中的架構檢核。</li>
+<li>更新 <code>docs/Migration_Diary.md</code>，詳細描述你解決了哪些壞味道，以及使用了哪些重構手法。</li>
+<li>確保 <code>README.md</code>（本檔案）最後包含你的結案感言。</li>
+</ol>
+<hr>
+<blockquote>
+<p>「任何傻瓜都能寫出電腦懂的代碼。好的工程師能寫出人類懂的代碼。」 — Martin Fowler</p>
+</blockquote>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：義大利麵代碼之大手術 (Legacy Decoupling Surgery Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：代碼重構專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>嗅覺掃描 (Smell Detection)</strong>：找出專案中「神之類別」或「魔法常數」，並將其標記為重構目標。</li>
-                    <li><strong>關注點分離 (SoC)</strong>：將原始單體 loop 拆解為 <code>Perception</code> 與 <code>Action</code>
-                        模組，確保邏輯流清晰且具備命名意義。</li>
-                    <li><strong>Push Final</strong>：提交具備「高度可讀性、職責單一」的重構後代碼與思路說明。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>命名精準度</strong>：變數與函式命名是否能「自我解釋 (Self-documenting)」，減少註解依賴？</li>
-                    <li>[ ] <strong>解耦成效</strong>：全域變數是否被有效限制？代碼的巢狀深度是否有顯著改善？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：軟體通訊層 OOP 封裝 (Communication Layer OOP Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：軟體架構組件開發者</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-tighter font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>介面定義</strong>：定義通訊模組 Class。封裝 Web Bluetooth API，對外僅暴露 <code>write(data)</code> 與
-                        <code>onMessage()</code>。</li>
-                    <li><strong>私有狀態保護</strong>：確保底層的特徵值 UUID 與連結 Buffer 隱藏在類別私有域中，防止外部非法篡改。</li>
-                    <li><strong>連線生命週期管理</strong>：在 Class 內部處理「重連指數退避 (Exponential Backoff)」邏輯，優化使用者控制體驗。</li>
-                    <li><strong>Push Final</strong>：推送具備「高穩定性、可重用性」的獨立通訊模組組件。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>封裝完整度</strong>：主邏輯檔案中是否完全不再直接呼叫瀏覽器原生 BLE API？</li>
-                    <li>[ ] <strong>API 簡潔性</strong>：設計的 Class 介面是否直觀易用，能否讓同學在 5 分鐘內學會調用？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：動態處理管線架構 (Dynamic Pipeline Framework Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：資深框架開發者</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>框架架構設計</strong>：實作一個 Pipeline 容器類別，具備線性執行各級插件 (Middleware) 的能力。</li>
-                    <li><strong>組件對接實施</strong>：撰寫「低通濾波插件」與「數值鉗位插件」，並證明在不重啟系統下可動態抽換順序。</li>
-                    <li><strong>擴展性驗證</strong>：撰寫一份 10 行以內的「新插件範本」，證明系統滿足「開閉原則 (OCP)」。</li>
-                    <li><strong>Push Final</strong>：提交具備「現代化軟體設計美感」的高階數據處理管線。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>架構優雅度</strong>：插件間的數據傳遞是否具備標準格式（Pipeline Contract）？</li>
-                    <li>[ ] <strong>OCP 達成率</strong>：當新增處理邏輯時，是否真正做到了「無須修改 Pipeline Host 代碼」？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none text-justify;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify text-left">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：引導學生從「程式員 (Coder)」轉型為「架構師 (Architect)」。將關注點從功能實現轉向維護性。</p>
-            <ol class="space-y-4 text-slate-600 text-justify">
-                <li><strong class="text-emerald-600 font-bold uppercase tracking-widest text-justify">重點 1：對抗認知負荷</strong> - 強調重構不是為了炫技，而是為了讓其他人能用更短的時間看懂代碼。</li>
-                <li><strong class="text-emerald-600 font-bold text-justify uppercase tracking-widest">重點 2：技術債的感知教育</strong> - 引導學員識別「代碼壞味道」。培養對魔術數字與重複邏輯的高敏感度。</li>
-                <li><strong class="text-emerald-600 font-bold text-justify uppercase tracking-tighter text-justify">重點 3：開閉原則 (OCP) 的力量</strong> - 讓學員理解為什麼現代工業級系統必須透過「插件化」來應對頻繁變動的需求。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-14-unit-refactoring</code> (代碼重構)</strong> 單元，這是從「程式員 (Coder)」蛻變為「軟體架構師 (Architect)」的核心訓練。它不再關注功能實現，而是關注代碼的 <strong>可維護性、可擴展性與閱讀美感</strong>。在 Vibe Coding 這種跨平台系統中，優雅的架構是防止系統隨功能增加而崩潰的唯一防線。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>重構教學需要一個「待手術」的正反面教材，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/legacy_monolith.js</code></strong>：<strong>重構手術對象</strong>。一個滿是「壞味道」的 500 行單體大檔案，裡面充斥著全域變數、深度巢狀的 <code>if-else</code> 以及職責不分的混亂 loop。</li>
+<li>
+<strong>📂 <code>src/modules/</code></strong>：目標組件目錄。學員需將拆解後的邏輯（如 <code>Perception.js</code>, <code>Actuation.js</code>）放置於此。</li>
+<li>
+<strong>📂 <code>docs/REFACTOR_LOG.md</code></strong>：重構手術日誌。記錄：<code>原始行號 ➡ 提取後的函式/類別 ➡ 解決的壞味道（如：消除全域依賴）</code>。</li>
+<li>
+<strong>📂 <code>tests/architecture.test.js</code></strong>：架構完整性測試。這不是測功能，而是檢核：1. 主程式是否還有超過 50 行的函式？ 2. 通訊層是否實現了真正的 OOP 封裝？</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：義大利麵代碼之大手術 (Legacy Decoupling Surgery Lab)</h4><a id="user-content-任務-1義大利麵代碼之大手術-legacy-decoupling-surgery-lab" class="anchor" aria-label="Permalink: 任務 1：義大利麵代碼之大手術 (Legacy Decoupling Surgery Lab)" href="#任務-1義大利麵代碼之大手術-legacy-decoupling-surgery-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：練習「關注點分離 (SoC)」手法，解決單體代碼的認知負荷問題。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>職責解構</strong>：學員需將 <code>legacy_monolith.js</code> 拆解為具備單一職責的純函數。</li>
+<li>
+<strong>介面合約化</strong>：確保子模組間透過引數傳遞而非共享全域變數。</li>
+<li>
+<strong>README 日誌</strong>：說明你用了哪些 Clean Code 技巧（如：函式提取、衛句取代巢狀結構）。</li>
+<li>
+<strong>驗證要點</strong>：主 loop 代碼是否變得像目錄一樣易讀？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：通訊層 OOP 封裝 (Communication Layer OOP Lab)</h4><a id="user-content-任務-2通訊層-oop-封裝-communication-layer-oop-lab" class="anchor" aria-label="Permalink: 任務 2：通訊層 OOP 封裝 (Communication Layer OOP Lab)" href="#任務-2通訊層-oop-封裝-communication-layer-oop-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過類別封裝，隱藏底層複雜性，實現「介面隔離」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>Class 封裝實作</strong>：定義 <code>VibeBotComm</code> 類別。封裝 Web Bluetooth API 的異步連接與特徵值讀寫。</li>
+<li>
+<strong>私有域保護</strong>：確保 UUID 與連線狀態對外部不可見。</li>
+<li>
+<strong>測試切換能力</strong>：要求學員證明：如果未來要切換到 WebSocket 傳輸，主程式邏輯是否「一字不改」？</li>
+<li>
+<strong>提交結果</strong>：提交一個乾淨的、可重用的通訊組件 JS 檔。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：插件化處理管線架構 (Dynamic Pipeline Framework Lab)</h4><a id="user-content-任務-3插件化處理管線架構-dynamic-pipeline-framework-lab" class="anchor" aria-label="Permalink: 任務 3：插件化處理管線架構 (Dynamic Pipeline Framework Lab)" href="#任務-3插件化處理管線架構-dynamic-pipeline-framework-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實踐「開閉原則 (OCP)」，打造具備擴展能力的數據管道。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>處理管道實作</strong>：設計一個載體，能按序執行 <code>Middleware</code>。</li>
+<li>
+<strong>插件注入演示</strong>：學員撰寫兩個對應插件（如：平滑濾波插件、數值安全鉗位插件）。</li>
+<li>
+<strong>動態擴展展示</strong>：在 PR 中展示如何只撰寫 10 行代碼新增一個功能，且不需要修改既有的 Pipeline 主框架。</li>
+<li>
+<strong>Final Push</strong>：提交具備「工業級彈性」的高階控制引擎架構。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 軟體架構組件導師點評標準 (Clean Code &amp; Architecture Standards)</h3><a id="user-content-3-軟體架構組件導師點評標準-clean-code--architecture-standards" class="anchor" aria-label="Permalink: 3. 軟體架構組件導師點評標準 (Clean Code &amp; Architecture Standards)" href="#3-軟體架構組件導師點評標準-clean-code--architecture-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對對抗代碼熵增的防禦深度」</strong>：</p>
+<ul>
+<li>[ ] <strong>封裝完備度</strong>：模組間是否做到了「知道的越少越好 (Least Knowledge)」？</li>
+<li>[ ] <strong>API 語意化</strong>：設計的類別介面是否自然流暢，能讓其他開發者快速上手而無需閱讀內部實作？</li>
+<li>[ ] <strong>架構彈性</strong>：系統是否支持「不修改原始碼即能增加功能」？（展現對 OCP 的理解）。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/core_engine.js      # 核心：精簡後的主控邏輯管道
+├── src/modules/            # 模組：解耦後的 Perception &amp; Actuation 類別
+├── src/plugins/            # 插件：符合 Pipeline 介面規範的各類處理組件
+├── docs/Migration_Diary.md # 筆記：從 Spaghetti Code 到 Clean Code 的演進筆記
+├── README.md               # 結案：我如何重構系統以對抗未來的需求變動
+└── tests/quality.test.js   # 檢核：檢測循環複雜度與模組依賴耦合度
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的工程師，是能寫出『讓人類讀懂』的代碼，並建立起可以建立起可以讓系統優雅生長的骨架」</strong>。掌握重構藝術後，學員將擁有了管理「長週期、多人協作、物聯網大規模開發」必備的高階架構師核心競爭力！</p>
+<hr>
+<p>完美！至此我們已經將 <strong>進階 14</strong> 的最後一個核心單元（重構藝術）完成了流程定義。這不僅是進階 14 的終點，更是整個進階課程體系化建設的圓滿結尾。恭喜！Vibe Coding 進階系列 GitHub Classroom 部署建議已全部完成！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-emerald-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── src/legacy_monolith.js # 操作對象：一個充滿壞味道的單體大檔案
-├── src/modules/           # 目標：將解構後的組件封裝於此
-└── docs/Migration.md      # 重構日誌：記錄重構前後的循環複雜度變化
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse border-justify">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify text-left">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「Clean Code 與技術債管理」影片。閱讀關於 OOP 類別設計的基本合約模式。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員能否分析出一張 UML 圖中，模組間的依賴關係是否合理。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify">領取作業 (Repo)，執行代碼大解構。在 GitHub Issue 中扮演「甲方」與同學交換模組，測試介面是否易用。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>架構教官:</strong> 挑戰學員的封裝深度：如果現在 API 簽名改動，有多少模組會發生「連鎖反應」而需要修正？</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify text-justify">將封裝好的精品類別集推送至 GitHub。閱讀關於「組件化與現代 Web 開發生態」的進階導讀。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「關注點分離」的落實深度。表揚模組邊界劃分極其優雅且具備通用性的報告。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

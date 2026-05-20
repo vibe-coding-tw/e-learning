@@ -315,135 +315,157 @@
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">人機介面安全實驗室：戰術面板佈局、真值同步與 E-Stop 交互實戰
-        </h2>
+<div class="markdown-heading"><h1 class="heading-element">basic-10-unit-ui-design (網頁端模式控制介面設計：打造戰術面板)</h1><a id="user-content-basic-10-unit-ui-design-網頁端模式控制介面設計打造戰術面板" class="anchor" aria-label="Permalink: basic-10-unit-ui-design (網頁端模式控制介面設計：打造戰術面板)" href="#basic-10-unit-ui-design-網頁端模式控制介面設計打造戰術面板"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到本單元的實作練習！在這裡，你將學習如何將後端邏輯具象化為專業的工業控制面板。這不僅僅是畫出漂亮的介面，更重要的是學習 <strong>使用者體驗 (UX)</strong> 與 <strong>交互安全性</strong> 的設計。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>視覺層級與權限隔離</strong>：透過 CSS 狀態切換，清晰區分系統模式，並防止人為誤觸。</li>
+<li>
+<strong>物理現實同步 (State Sync)</strong>：打破「樂觀 UI」假象，確保面板永遠反映機器人的真實物理狀態。</li>
+<li>
+<strong>多維度警報系統</strong>：利用視覺（遮罩）與觸覺（Web Vibrate API）傳達緊急狀態。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📂 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>src/UI_Controller.js</code>：處理按鈕點擊、CSS 切換與震動邏輯。</li>
+<li>
+<code>src/Sync_Observer.js</code>：監聽硬體狀態並強制修正 DOM。</li>
+<li>
+<code>docs/UX_Rationale.md</code>：關於安全佈局與視覺導引的設計決策解說。</li>
+<li>
+<code>index.html</code>：戰術面板的結構定義。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">🚀 任務說明</h2><a id="user-content--任務說明" class="anchor" aria-label="Permalink: 🚀 任務說明" href="#-任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：戰術面板狀態切換 (Tactical Panel &amp; Authority Lab)</h3><a id="user-content-任務-1戰術面板狀態切換-tactical-panel--authority-lab" class="anchor" aria-label="Permalink: 任務 1：戰術面板狀態切換 (Tactical Panel &amp; Authority Lab)" href="#任務-1戰術面板狀態切換-tactical-panel--authority-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>實作重點</strong>：設計具備高對比效果的模式選單（Manual / Pilot / E-Stop）。</li>
+<li>
+<strong>權限隔離</strong>：當進入 <code>Pilot</code> (自動駕駛) 模式時，必須將手動遙控區（如搖桿、微調鍵）鎖定（<code>pointer-events: none</code>），防止誤操作。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：雙向狀態同步 (Bi-directional State Sync Lab)</h3><a id="user-content-任務-2雙向狀態同步-bi-directional-state-sync-lab" class="anchor" aria-label="Permalink: 任務 2：雙向狀態同步 (Bi-directional State Sync Lab)" href="#任務-2雙向狀態同步-bi-directional-state-sync-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>實作重點</strong>：每 200ms 解析一次「虛擬硬體」回傳的狀態。</li>
+<li>
+<strong>強制一致性</strong>：若硬體狀態與網頁顯示不符（例如硬體因故跳回手動），網頁 UI 必須立即自動彈回正確位置。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：「E-Stop」緊急停機與警報 (Haptic &amp; Visual Alert Lab)</h3><a id="user-content-任務-3e-stop緊急停機與警報-haptic--visual-alert-lab" class="anchor" aria-label="Permalink: 任務 3：「E-Stop」緊急停機與警報 (Haptic &amp; Visual Alert Lab)" href="#任務-3e-stop緊急停機與警報-haptic--visual-alert-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>視覺警報</strong>：按下 E-Stop 後，顯示滿版紅色半透明遮罩。</li>
+<li>
+<strong>觸覺回饋</strong>：調用 <code>navigator.vibrate([200, 100, 200])</code> 產生警報脈衝。</li>
+<li>
+<strong>安全解鎖</strong>：實作「長按 2 秒」才能撤銷 E-Stop 狀態的機制，嚴禁單擊解除。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">🛠 如何開始</h2><a id="user-content--如何開始" class="anchor" aria-label="Permalink: 🛠 如何開始" href="#-如何開始"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>安裝依賴：
+<div class="highlight highlight-source-shell"><pre>npm install</pre></div>
+</li>
+<li>啟動開發伺服器：
+<div class="highlight highlight-source-shell"><pre>npm run dev</pre></div>
+</li>
+<li>執行測試驗證邏輯：
+<div class="highlight highlight-source-shell"><pre>npm run <span class="pl-c1">test</span></pre></div>
+</li>
+</ol>
+<p>完成所有任務後，請將你的代碼提交並 push 到程式庫。</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：戰術面板：CSS 狀態切換實作 (Tactical Panel & Authority)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：設計工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫。</li>
-                    <li><strong>設計</strong>：實作三模式切換選單。</li>
-                    <li><strong>動態反饋</strong>：利用 JS 切換發光及陰影。</li>
-                    <li><strong>隔離實施</strong>：Pilot 模式鎖死搖桿互動。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>層級清晰</strong>：激活模式具備極高對比？</li>
-                    <li>[ ] <strong>安全機制</strong>：自動模式確實攔截誤觸？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：雙向狀態同步與校正 (Bi-directional State Sync)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：全端工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>監聽層</strong>：監聽 <code>current_state</code> 心跳。</li>
-                    <li><strong>真值校正</strong>：回傳不符時，強制跳轉 UI。</li>
-                    <li><strong>一致性驗證</strong>：驗證重啟後自動恢復正確模式。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>真實版本</strong>：面板代表物理現狀而非使用紀錄？</li>
-                    <li>[ ] <strong>效能優化</strong>：解析邏輯未造成主線程卡頓？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：「E-Stop」緊急停機與警報 (Haptic & Visual E-Stop)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：安全設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>緊急遮罩</strong>：按下即封鎖全域權限。</li>
-                    <li><strong>震動接入</strong>：實作異常物理脈衝。</li>
-                    <li><strong>安全序列</strong>：設計長按解鎖機制。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>搶佔機制</strong>：遮罩優先於所有 UI 觸發？</li>
-                    <li>[ ] <strong>多維警示</strong>：震動顯著提升事件強度？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify text-left">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：從「展示型 UI」進化為控制面板。</p>
-            <ol class="space-y-4 text-slate-600 text-justify text-left">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：交互權限感</strong> - UI 是限制或賦予動作權力的樞紐。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：對抗認知假象</strong> - 物理同步勝過使用者意圖。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：多維警訊</strong> - 演示視覺與觸覺共同作用。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>basic-10-unit-ui-design</code> (網頁端模式控制介面設計：打造戰術面板)</strong> 單元，這是學員將「後端邏輯」具象化為「專業工具」的終點站。它要求學員具備 <strong>使用者體驗 (UX) 與安全設計</strong> 的意識，學習如何透過視覺層級、觸覺回饋（震動）以及嚴謹的「權限隔離」機制，打造一個既直覺又能防止人為誤觸的工業級控制面板。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>UI 設計作業的核心在於「交互安全性」與「狀態可視化」，範本應包含前端框架與通訊介面，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/PanelControls.js</code></strong>：<strong>交互邏輯實作區</strong>。學員在此實作按鈕點擊後的 CSS 類別切換，並調用 Web Vibrate API 實現物理報警。</li>
+<li>
+<strong>📂 <code>src/SyncEngine.js</code></strong>：<strong>DOM 同步引擎</strong>。學員在此實作監聽來自硬體的心跳報文，並強制將網頁 UI 修正為與實體一致的狀態。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>UX 設計論證與測評</strong>。提供表格讓學員記錄：為什麼選擇目前的配色方案？在自動駕駛模式下，如何確保搖桿不會被誤觸？</li>
+<li>
+<strong>📂 <code>docs/UI_STATES.md</code></strong>：<strong>介面狀態對照表</strong>。要求學員定義不同模式（Manual、Pilot、E-Stop）對應的視覺風格（光效、顏色、遮罩）。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：戰術面板：CSS 狀態切換實作 (Tactical Panel &amp; Authority Lab)</h4><a id="user-content-任務-1戰術面板css-狀態切換實作-tactical-panel--authority-lab" class="anchor" aria-label="Permalink: 任務 1：戰術面板：CSS 狀態切換實作 (Tactical Panel &amp; Authority Lab)" href="#任務-1戰術面板css-狀態切換實作-tactical-panel--authority-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過視覺層級區分系統狀態，並實施「功能權限隔離」以提升物理安全性。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>三模分段選單</strong>：設計具備高對比高亮效果的模式切換鈕。</li>
+<li>
+<strong>控制權隔離</strong>：<strong>核心關鍵點</strong>。當系統切換至 <code>Pilot</code> (自動駕駛) 時，手動遙控區（搖桿、微調鍵）必須變為灰色背景且 <code>pointer-events: none</code> 鎖死交互。</li>
+<li>
+<strong>驗證要點</strong>：視覺上是否一眼就能看出目前的模式？自動駕駛模式下，是否真的無法透過網頁遙控干擾機器人？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：雙向狀態同步與校正 (Bi-directional State Sync Lab)</h4><a id="user-content-任務-2雙向狀態同步與校正-bi-directional-state-sync-lab" class="anchor" aria-label="Permalink: 任務 2：雙向狀態同步與校正 (Bi-directional State Sync Lab)" href="#任務-2雙向狀態同步與校正-bi-directional-state-sync-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：打破「樂觀 UI」的假象。確保面板反映的是機器人的「物理現實」，而非使用者的「點擊紀錄」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>真值追蹤器</strong>：實作每 200ms 解析一次硬體回傳的 <code>current_mode</code>。</li>
+<li>
+<strong>強制一致性</strong>：若用戶點了「自動」，但硬體因電力不足跳回「手動」，網頁按鈕必須在收到心跳後立即自動彈回「手動」位置。</li>
+<li>
+<strong>驗證要點</strong>：重啟機器人後，網頁面板是否能自動恢復到與機器人一致的顯示狀態？「眼見是否即真實」？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：「E-Stop」緊急停機與警報 (Haptic &amp; Visual Alert Lab)</h4><a id="user-content-任務-3e-stop緊急停機與警報-haptic--visual-alert-lab" class="anchor" aria-label="Permalink: 任務 3：「E-Stop」緊急停機與警報 (Haptic &amp; Visual Alert Lab)" href="#任務-3e-stop緊急停機與警報-haptic--visual-alert-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：打造最高優先權的安全屏障。透過多維度（視覺、觸覺）的反饋告知使用者緊急狀態，並設計預防性的解鎖流程。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>全域緊急遮罩</strong>：按下 E-Stop 後，畫面上方出現滿版紅色半透明遮罩，封鎖所有正常的控制路徑。</li>
+<li>
+<strong>震動報警實作</strong>：調用 <code>navigator.vibrate([200, 100, 200])</code> 產生緊急物理脈衝。</li>
+<li>
+<strong>安全長按解鎖</strong>：<strong>技術細節</strong>。嚴禁單擊解除。必須實作「長按 2 秒」才能撤銷 E-Stop 狀態。</li>
+<li>
+<strong>驗證要點</strong>：遮罩是否優先於所有 UI 元件？震動回饋是否顯著提升了警報感知？長按機制是否能有效防止誤觸？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 介面設計與交互安全性點評標準 (UI Design &amp; Safety Standards)</h3><a id="user-content-3-介面設計與交互安全性點評標準-ui-design--safety-standards" class="anchor" aria-label="Permalink: 3. 介面設計與交互安全性點評標準 (UI Design &amp; Safety Standards)" href="#3-介面設計與交互安全性點評標準-ui-design--safety-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對使用者心智模型的理解與對物理安全的操作承諾」</strong>：</p>
+<ul>
+<li>[ ] <strong>視覺層級清晰度</strong>：緊急按鈕是否足夠顯眼？當前選中模式是否具備壓倒性的辨識度？</li>
+<li>[ ] <strong>交互防誤觸機制</strong>：是否在邏輯層面（而非僅是視覺）實施了權限鎖定？</li>
+<li>[ ] <strong>通訊同步透明度</strong>：面板數據是否始終與硬體真值保持一致，不產生短暫的「認知不對稱」？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/UI_Controller.js # 核心：處理按鈕點擊、CSS 切換與震動邏輯
+├── src/Sync_Observer.js # 核心：監聽硬體狀態並強制修正 DOM
+├── docs/UX_Rationale.md # 文檔：關於安全佈局與視覺導引的設計決策解說
+├── README.md            # 總結：我如何透過 UI 設計建立一個「零誤觸、全同步」的戰術控制台
+└── assets/ui_demo.mp4   # 證據：展示 E-Stop 觸發、自動模式鎖定與校正的動態過程
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的介面工程師，不僅是會畫漂亮畫面的人，而是能深刻理解人機交互的潛在危險、透過專業布局引導正確操作、並利用多感官反饋在千鈞一髮之際守護系統安全的控制面板大腦」</strong>。掌握 UI 安全設計技術後，學員將擁有了開發「專業遙控無人機地面站、工業機械臂操作台、以及高等級智慧監控系統」最核心也最資深的交互開發實力！_
+|
+|
+太給力了！我們已經將 <strong>基礎 10</strong>（架構與介面）的所有單元——從狀態機、一致性協議到最後的 UI 安全設計——全部標準化完成了。這標誌著學員現在已經具備了從底層架構到頂層面板的「全鏈條控制系統開發能力」。恭喜！「基礎課程」的馬拉松目標正式達成！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify uppercase tracking-widest font-black border border-slate-700">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300 text-justify uppercase tracking-widest font-black text-left">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm text-justify uppercase tracking-widest font-black border border-slate-100">
-.
-├── src/PanelControls.js # (重點) 震動 API 呼叫
-├── src/SyncEngine.js    # (必修) DOM 強制同步
-└── README.md            # UX 論證
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify uppercase tracking-widest font-black">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-center text-justify font-black text-left border border-slate-100">
-            <table class="w-full text-left border-collapse border border-slate-100 text-justify font-black">
-                <thead>
-                    <tr class="bg-slate-100 border border-slate-100 text-justify font-black">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600 border border-slate-100 text-justify font-black">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀察設計案例並預習視覺反饋。</td>
-                        <td class="px-6 py-5 text-justify border border-slate-100"><strong>Dashboard:</strong> 測試識別樂觀 UI 危險性。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify border border-slate-100 text-left">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify text-left">領取 Repo，美化遮罩。</td>
-                        <td class="px-6 py-5 text-left text-justify border border-slate-100 font-black"><strong>助教引導:</strong> 輔導 Vibrate API 使用。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black">將低電量自動鎖定整合提交。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評主導權平衡。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

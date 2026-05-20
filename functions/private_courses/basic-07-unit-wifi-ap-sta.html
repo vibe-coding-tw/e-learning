@@ -327,137 +327,158 @@
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">Wi-Fi 多元連線實驗室：AP 配置、STA 重連與混合備援實戰
-        </h2>
+<div class="markdown-heading"><h1 class="heading-element">ESP32 Wi-Fi 雙模式 (AP vs. STA) - 學生作業指南</h1><a id="user-content-esp32-wi-fi-雙模式-ap-vs-sta---學生作業指南" class="anchor" aria-label="Permalink: ESP32 Wi-Fi 雙模式 (AP vs. STA) - 學生作業指南" href="#esp32-wi-fi-雙模式-ap-vs-sta---學生作業指南"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">課程目標</h2><a id="user-content-課程目標" class="anchor" aria-label="Permalink: 課程目標" href="#課程目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>掌握 ESP32 的雙重通訊身分，學習如何處理不穩定的網路環境，並利用 <strong>事件驅動 (Event-Driven)</strong> 模式實作具備「自我修復能力 (Self-Healing)」與「配網備援 (Provisioning Fallback)」的強韌韌體架構。</p>
+<div class="markdown-heading"><h2 class="heading-element">作業任務</h2><a id="user-content-作業任務" class="anchor" aria-label="Permalink: 作業任務" href="#作業任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：「我的領地」AP 模式與 SSID 配置 (Access Point Lab)</h3><a id="user-content-任務-1我的領地ap-模式與-ssid-配置-access-point-lab" class="anchor" aria-label="Permalink: 任務 1：「我的領地」AP 模式與 SSID 配置 (Access Point Lab)" href="#任務-1我的領地ap-模式與-ssid-配置-access-point-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：建立私有網路控制段，理解 DHCP IP 分配機制，確保在無外部路由環境下依然具備控制權。</li>
+<li>
+<strong>實作要求</strong>：
+<ul>
+<li>在 <code>src/main.cpp</code> 中實作 <code>WiFi.softAP()</code>，設定個性化的 SSID（如 <code>MyCar_ID</code>）與加密密碼。</li>
+<li>
+<strong>驗證</strong>：手機能連入並獲取 IP (通常為 192.168.4.x)，且能成功開啟 ESP32 託管的簡單網頁。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：「智慧尋路」STA 模式與斷線重連 (Smart Reconnect Lab)</h3><a id="user-content-任務-2智慧尋路sta-模式與斷線重連-smart-reconnect-lab" class="anchor" aria-label="Permalink: 任務 2：「智慧尋路」STA 模式與斷線重連 (Smart Reconnect Lab)" href="#任務-2智慧尋路sta-模式與斷線重連-smart-reconnect-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握非同步事件監讀，學習如何在不干擾機器人主線程運行的情況下，自動修復網路連線。</li>
+<li>
+<strong>實作要求</strong>：
+<ul>
+<li>實作 <code>WiFi.onEvent()</code> 攔截 <code>ARDUINO_EVENT_WIFI_STA_DISCONNECTED</code>。</li>
+<li>實作自動重連邏輯（如：每 5 秒嘗試一次）。</li>
+<li>
+<strong>關鍵限制</strong>：<strong>禁止</strong> 在 <code>loop()</code> 函數中使用 <code>delay()</code> 等待連線。</li>
+<li>
+<strong>數據提交</strong>：在 <code>docs/Recovery_Log.md</code> 中記錄關掉路由器後，設備恢復連線所需的平均時間。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：「終極備援」AP + STA 自動切換 (Provisioning Fallback Lab)</h3><a id="user-content-任務-3終極備援ap--sta-自動切換-provisioning-fallback-lab" class="anchor" aria-label="Permalink: 任務 3：「終極備援」AP + STA 自動切換 (Provisioning Fallback Lab)" href="#任務-3終極備援ap--sta-自動切換-provisioning-fallback-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：打造「永不失聯」的產品級韌體架構。當 STA 無法加入網路時，自動降級為 AP 模式供使用者重新設定，避免設備「變磚」。</li>
+<li>
+<strong>實作要求</strong>：
+<ul>
+<li>開機先嘗試 STA 連線。若失敗，自動啟動 AP 模式。</li>
+<li>
+<strong>UI 指示設計</strong>：使用 LED 閃爍頻率標示模式（慢閃 = STA 連線中，快閃 = 已降級為 AP 模式）。</li>
+<li>
+<strong>恢復機制</strong>：在 AP 模式下，若偵測到環境中預設路由出現，應能自動切回 STA 模式。</li>
+<li>
+<strong>驗證要點</strong>：模擬路由器關機情境，確認設備是否能在 30 秒內自動開啟 AP 訊號供緊急存取。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">提交清單</h2><a id="user-content-提交清單" class="anchor" aria-label="Permalink: 提交清單" href="#提交清單"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>[ ] <strong>代碼實作</strong>：<code>src/main.cpp</code> 包含完整的事件監聽與切換邏輯。</li>
+<li>[ ] <strong>連線紀錄</strong>：<code>docs/Recovery_Log.md</code> 包含實測數據。</li>
+<li>[ ] <strong>架構圖</strong>：<code>docs/STATE_DIAGRAM.md</code> 使用 Mermaid 語法或截圖描述您的「備援切換邏輯」。</li>
+</ul>
+<hr>
+<p><em>本作業為自動化評分，請確保檔案路徑正確且代碼可編譯成功。</em></p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：「我的領地」：AP 模式與 SSID 配置 (Access Point Protocol)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：網路管理員</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>身份宣告</strong>：實作 WiFi.softAP() 配置 SSID。</li>
-                    <li><strong>連線壓測</strong>：驗證 IP 是否配發。</li>
-                    <li><strong>首頁通遞</strong>：確認能與 ESP32 握手。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>DHCP 成功</strong>：手機能取得 IP 控制權？</li>
-                    <li>[ ] <strong>獨立品質</strong>：維持毫秒級反應？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：「智慧尋路」：STA 模式與斷線重連 (STA: Smart Reconnect)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：測試工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>環境適配</strong>：實作 WiFi.begin()。</li>
-                    <li><strong>事件監聽</strong>：攔截 DISCONNECTED 訊號。</li>
-                    <li><strong>背景修復</strong>：實作指數退避重連。</li>
-                    <li><strong>日誌報告</strong>：記錄恢復耗時。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>恢復力</strong>：自動完成身分重塑？</li>
-                    <li>[ ] <strong>日誌透明</strong>：記錄事件流？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：「終極備援」：AP + STA 自動切換 (Provisioning Fallback)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：硬體架構師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>優先權實作</strong>：設定開機 STA 優先。</li>
-                    <li><strong>降級機制</strong>：STA 失敗啟動 AP。</li>
-                    <li><strong>狀態視覺</strong>：實行 LED 指示頻率。</li>
-                    <li><strong>正式提交</strong>：避免變磚設計。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>備援效力</strong>：正確退避到 AP？</li>
-                    <li>[ ] <strong>視覺明確</strong>：脈動反映狀態？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：掌握 ESP32 身分切換與強韌設計。</p>
-            <ol class="space-y-4 text-slate-600 text-justify text-left">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：主從關係</strong> - 理解 AP 與 STA 本質。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：事件驅動</strong> - 強調 <code>onEvent</code> 避免程式卡頓。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：產品思維</strong> - 透過配網理解智慧家具原理。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>basic-07-unit-wifi-ap-sta</code> (ESP32 Wi-Fi 雙模式：AP vs. STA)</strong> 單元，這是學員建立「產品級網路穩定性」的關鍵課程。它要求學員掌握 ESP32 的雙重通訊身分，學習如何處理不穩定的網路環境，並利用 <strong>事件驅動 (Event-Driven)</strong> 模式實作具備「自我修復能力 (Self-Healing)」與「配網備援 (Provisioning Fallback)」的強韌韌體架構。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本程式庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" href="#1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>Wi-Fi 模式作業的核心在於「狀態切換」與「非阻塞監控」，範本應包含事件框架與連線日誌範本，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/main.cpp</code></strong>：<strong>Wi-Fi 狀態機實作區</strong>。學員在此實作 <code>WiFi.onEvent()</code> 事件監聽器，建立 AP 與 STA 模式之間的自動轉換邏輯。</li>
+<li>
+<strong>📂 <code>include/wifi_secrets.h</code></strong>：<strong>憑證管理</strong>。引導學員將 SSID 與密碼分離，養成良好的資訊安全習慣。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>連線事件紀錄表</strong>。提供表格讓學員記錄：斷線發生時間、偵測到事件的時間，以及自動恢復連線的時間（毫秒級）。</li>
+<li>
+<strong>📂 <code>docs/STATE_DIAGRAM.md</code></strong>：<strong>狀態轉移圖</strong>。要求學員以 Mermaid 語法或手繪截圖繪製其「備援切換邏輯」。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「我的領地」AP 模式與 SSID 配置 (Access Point Lab)</h4><a id="user-content-任務-1我的領地ap-模式與-ssid-配置-access-point-lab" class="anchor" aria-label="Permalink: 任務 1：「我的領地」AP 模式與 SSID 配置 (Access Point Lab)" href="#任務-1我的領地ap-模式與-ssid-配置-access-point-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：學會建立私有網路控制段，理解 DHCP IP 分配機制，確保在無外部路由環境下依然具備控制權。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>領地宣告</strong>：實作 <code>WiFi.softAP()</code>，設定個性化的 SSID（如 <code>MyCar_ID</code>）與加密密碼。</li>
+<li>
+<strong>連通驗證</strong>：手機能連入並獲取 IP (通常為 192.168.4.x)，且能成功開啟 ESP32 託管的簡單網頁。</li>
+<li>
+<strong>驗證要點</strong>：是否能正確取得 IP？AP 模式下的網頁反應是否迅速？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：「智慧尋路」STA 模式與斷線重連 (Smart Reconnect Lab)</h4><a id="user-content-任務-2智慧尋路sta-模式與斷線重連-smart-reconnect-lab" class="anchor" aria-label="Permalink: 任務 2：「智慧尋路」STA 模式與斷線重連 (Smart Reconnect Lab)" href="#任務-2智慧尋路sta-模式與斷線重連-smart-reconnect-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握非同步事件監讀，學習如何在不干擾機器人主線程運行的情況下，自動修復網路連線。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>事件監聽</strong>：實作 <code>WiFi.onEvent()</code> 攔截 <code>ARDUINO_EVENT_WIFI_STA_DISCONNECTED</code>。</li>
+<li>
+<strong>背景修復</strong>：實作自動重連邏輯（如：每 5 秒嘗試一次）。</li>
+<li>
+<strong>驗證要點</strong>：<strong>關鍵工程審核</strong>。學員是否在 <code>loop()</code> 函數中使用 <code>delay()</code> 等待連線？（這是錯誤作法）。應在背景事件中自動修復。</li>
+<li>
+<strong>數據提交</strong>：在 README 中記錄關掉路由器後，設備恢復連線所需的平均時間。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：「終極備援」AP + STA 自動切換 (Provisioning Fallback Lab)</h4><a id="user-content-任務-3終極備援ap--sta-自動切換-provisioning-fallback-lab" class="anchor" aria-label="Permalink: 任務 3：「終極備援」AP + STA 自動切換 (Provisioning Fallback Lab)" href="#任務-3終極備援ap--sta-自動切換-provisioning-fallback-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：打造「永不失聯」的產品級韌體架構。當 STA 無法加入網路時，自動降級為 AP 模式供使用者重新設定，避免設備「變磚」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>優先權邏輯</strong>：開機先嘗試 STA 連線 N 次。若失敗，自動啟動 AP 模式。</li>
+<li>
+<strong>UI 指示設計</strong>：使用 LED 閃爍頻率標示模式（慢閃 = STA 連線中，快閃 = 已降級為 AP 模式）。</li>
+<li>
+<strong>恢復機制</strong>：在 AP 模式下，若偵測到環境中預設路由出現，是否能自動切回 STA 模式？</li>
+<li>
+<strong>驗證要點</strong>：模擬路由器關機情境，確認設備是否能在 30 秒內自動開啟 AP 訊號供緊急存取。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 事件效能與自我修復點評標準 (Event Performance &amp; Resilience Standards)</h3><a id="user-content-3-事件效能與自我修復點評標準-event-performance--resilience-standards" class="anchor" aria-label="Permalink: 3. 事件效能與自我修復點評標準 (Event Performance &amp; Resilience Standards)" href="#3-事件效能與自我修復點評標準-event-performance--resilience-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對通訊狀態的敏銳感知與對系統可用性的極致追求」</strong>：</p>
+<ul>
+<li>[ ] <strong>事件驅動執行力</strong>：是否完全摒棄了「阻塞式」的連線等待？</li>
+<li>[ ] <strong>備援機制完備性</strong>：降級為 AP 後，使用者是否能透過預設 IP 重新進入管理介面？</li>
+<li>[ ] <strong>視覺反饋清晰度</strong>：能否光憑 LED 燈號就判斷出設備目前處於哪種通訊身分？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/main.cpp         # 核心：Wi-Fi 事件監聽器與 AP/STA 切換邏輯
+├── include/secrets.h    # 配置：分離儲存的 Wi-Fi 帳號與密碼
+├── docs/Recovery_Log.md # 文檔：斷線自動恢復時間的實測數據報告
+├── README.md            # 總結：我如何設計這套「自我修復」的通訊備援系統
+└── assets/flowchart.png # 證據：AP+STA 雙模式切換流程圖證據
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的硬體工程師，不是能連上網路的人，而是能預見網路隨時會中斷、並寫出像變色龍一樣能根據環境自動切換身分、永不與使用者失聯的通訊架構師」</strong>。掌握 Wi-Fi 雙模式與備援技術後，學員將擁有了開發「智慧家電、工業網關、戶外作業機器人」最專業也最穩定的底層連網實力！_
+|
+|
+太熱血了！我們已經將 <strong>基礎 07</strong>（網路通訊架構）的所有模組——非同步伺服器、HTTP 生命週期、以及 WiFi 雙模式——的 Classroom 部署建議全部總結完成了。這標誌著學員現在已經具備了打造「工業級物聯網系統」的通訊全能量。恭喜！教學地圖的網路巔峰已經達成！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify uppercase tracking-widest font-black">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300 text-justify uppercase tracking-widest font-black">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm text-justify uppercase tracking-widest font-black border border-slate-100">
-.
-├── src/main.cpp      # (必修) 實作 Event Handler
-├── include/secrets.h # 分離帳密
-└── README.md         # 測試日誌
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify uppercase tracking-widest font-black">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse border border-slate-100">
-                <thead>
-                    <tr class="bg-slate-100 border border-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600 border border-slate-100 text-justify">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">看身分大解密影片。</td>
-                        <td class="px-6 py-5 text-justify border border-slate-100"><strong>Dashboard:</strong> 測試網段意義。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify text-left">領取作業 (Repo)，挑戰全自動修復 AP。</td>
-                        <td class="px-6 py-5 text-left text-justify border border-slate-100 font-black"><strong>技術點評:</strong> 解讀中間狀態。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify">整合 RSSI 入 README。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價重連演算法嚴謹度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

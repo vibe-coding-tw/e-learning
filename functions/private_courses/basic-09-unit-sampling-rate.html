@@ -310,136 +310,142 @@
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">數據流與信號處理實驗室：取樣率、數據瓶頸與滑動濾波實戰</h2>
+<div class="markdown-heading"><h1 class="heading-element">作業單元 09：數據流與取樣率 (Sampling Rate &amp; DSP)</h1><a id="user-content-作業單元-09數據流與取樣率-sampling-rate--dsp" class="anchor" aria-label="Permalink: 作業單元 09：數據流與取樣率 (Sampling Rate &amp; DSP)" href="#作業單元-09數據流與取樣率-sampling-rate--dsp"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到「數位訊號處理 (DSP)」的進階基礎課程！在這個單元中，你將學習如何掌握 <strong>取樣定理 (Nyquist-Shannon)</strong>，並透過頻率管理來平衡「操控流暢度」與「硬體頻寬限制」。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>取樣頻率與感官體驗</strong>：量化數位頻率對操控手感的影響。</li>
+<li>
+<strong>數位濾波實作</strong>：學習滑動平均濾波 (SMA) 的原理與 FIFO Buffer 實作。</li>
+<li>
+<strong>通訊優化</strong>：實作 Throttling (節流) 機制與 JSON 協定縮身。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📂 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>src/main.cpp</code>: ESP32 硬體濾波核心與 FIFO Buffer 實作。</li>
+<li>
+<code>src/DataHandler.js</code>: 控制端通訊節流與協定優化實作。</li>
+<li>
+<code>docs/Quality_Report.md</code>: 訊號品質實驗日誌與數據分析。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">🚀 任務說明</h2><a id="user-content--任務說明" class="anchor" aria-label="Permalink: 🚀 任務說明" href="#-任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：取樣頻率實驗</h3><a id="user-content-任務-1取樣頻率實驗" class="anchor" aria-label="Permalink: 任務 1：取樣頻率實驗" href="#任務-1取樣頻率實驗"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>動態調整發送頻率 (5Hz ~ 100Hz)。</li>
+<li>記錄不同頻率下的操控手感，找出系統的「黃金頻率」。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：滑動平均濾波 (Moving Average Filter)</h3><a id="user-content-任務-2滑動平均濾波-moving-average-filter" class="anchor" aria-label="Permalink: 任務 2：滑動平均濾波 (Moving Average Filter)" href="#任務-2滑動平均濾波-moving-average-filter"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>實作長度為 12 的循環緩衝區 (FIFO Buffer)。</li>
+<li>觀察 Buffer 長度對「訊號平滑度」與「反應延遲」的影響。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：通訊節流與協定優化</h3><a id="user-content-任務-3通訊節流與協定優化" class="anchor" aria-label="Permalink: 任務 3：通訊節流與協定優化" href="#任務-3通訊節流與協定優化"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>設定發送頻率上限 (Throttling)，確保通訊穩定。</li>
+<li>優化 JSON 封包格式，縮減數據負擔。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📝 繳交要求</h2><a id="user-content--繳交要求" class="anchor" aria-label="Permalink: 📝 繳交要求" href="#-繳交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>完成 <code>src/</code> 中的程式碼實作。</li>
+<li>在 <code>docs/Quality_Report.md</code> 中記錄實驗數據與分析結果。</li>
+<li>將更新後的程式碼 push 到 GitHub 程式庫。</li>
+</ol>
+<hr>
+<p><em>祝你在數位訊號的世界裡探索愉快！</em></p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：抖動測試：取樣頻率與手感 (Jitter & Control Feel)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：調校工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫。</li>
-                    <li><strong>控制器實作</strong>：在 App 加入滑桿動態切換頻率。</li>
-                    <li><strong>手感對比</strong>：記錄 5Hz 與 50Hz 操控差異。</li>
-                    <li><strong>探究邊界</strong>：記錄丟失封包臨界值。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>對比數據完整</strong>：README 量化展示影響？</li>
-                    <li>[ ] <strong>結論具體</strong>：得出「黃金頻率」值？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：感測器數據降噪：滑動平均濾波 (Moving Average Filter)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：數據專員</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>噪雜觀察</strong>：量化數據抖動範圍。</li>
-                    <li><strong>FIFO 實作</strong>：建立長度 8-16 循環 Buffer。</li>
-                    <li><strong>均值演算</strong>：對比處理前後信號平滑度。</li>
-                    <li><strong>延遲分析</strong>：權衡消噪與遲滯。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>濾波品質</strong>：成功消除 80% 以上隨機噪聲？</li>
-                    <li>[ ] <strong>邏輯抽像</strong>：索引環繞處理妥當？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：通訊節流與協定優化 (Throttling & Protocol Optimization)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：優化專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>壓力測試</strong>：觀察寫入過快是否當機。</li>
-                    <li><strong>節流機制</strong>：間隔不低於 20ms。</li>
-                    <li><strong>協定壓縮</strong>：重寫 JSON 壓縮 Key 名稱。</li>
-                    <li><strong>提交成果</strong>：推送具保護邏輯代碼。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>穩定性提升</strong>：操控頻率下保持不掉線？</li>
-                    <li>[ ] <strong>指標對比</strong>：展示瘦身對響應性的貢獻？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify text-left">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：轉化「原始數據」為「控制流」。</p>
-            <ol class="space-y-4 text-slate-600 text-justify text-left">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：奈奎斯特</strong> - 匹配物理動作頻率。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：平滑與延遲</strong> - 鼓勵找出環境最優解。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：協定効能與節流</strong> - 管理有限頻寬。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>basic-09-unit-sampling-rate</code> (數據流與取樣率 Sampling Rate)</strong> 單元，這是學員從「數位代碼」跨入「數位訊號處理 (DSP)」的進階基礎課程。它要求學員掌握 <strong>取樣定理 (Nyquist-Shannon)</strong> 的實務應用，學習如何透過頻率管理平衡「操控流暢度」與「硬體頻寬限制」，並利用「滑動平均濾波 (SMA)」在噪聲與延遲之間尋找工程最優解。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本倉庫 (範本程式庫) 配置建議</h3><a id="user-content-1-範本倉庫-範本程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本倉庫 (範本程式庫) 配置建議" href="#1-範本倉庫-範本程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>取樣率與訊號處理作業的核心在於「數據流控」與「平滑演算」，範本應包含通訊引擎與濾波框架，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/DataHandler.js</code></strong>：<strong>通訊節流實作區</strong>。學員在此實作控制端的 Throttling 機制，並練習「協定縮身 (Protocol Minification)」以優化頻寬。</li>
+<li>
+<strong>📂 <code>src/main.cpp</code></strong>：<strong>硬體濾波核心</strong>。學員在 ESP32 端實作 FIFO Buffer 與滑動平均演算法，處理來自感測器的原始抖動數據。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>訊號品質實驗日誌</strong>。提供表格讓學員記錄：不同取樣頻率下的「響應延遲感」評分，以及不同濾波長度對「穩定度 vs. 遲滯」的量化對比。</li>
+<li>
+<strong>📂 <code>docs/BANDWIDTH_ANALYSIS.md</code></strong>：<strong>頻寬負載分析</strong>。要求學員根據 JSON 封包大小與發送頻率，計算理論上的每秒數據負擔 (bps)，並解釋優化協定後的效益。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：抖動測試：取樣頻率與手感 (Jitter &amp; Control Feel Lab)</h4><a id="user-content-任務-1抖動測試取樣頻率與手感-jitter--control-feel-lab" class="anchor" aria-label="Permalink: 任務 1：抖動測試：取樣頻率與手感 (Jitter &amp; Control Feel Lab)" href="#任務-1抖動測試取樣頻率與手感-jitter--control-feel-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過主觀感官量化數位頻率的影響，找到控制系統的「黃金頻率」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>頻率滑動介面</strong>：在控制 App 中實作滑桿，可動態調整發送頻率 (例如 5Hz ~ 100Hz)。</li>
+<li>
+<strong>極效對比</strong>：記錄在 5Hz（嚴重頓挫、方向混疊）與 50Hz（絲般順滑）下的操控表現。</li>
+<li>
+<strong>驗證要點</strong>：README 中是否能量化描述低頻下的「控制斷裂感」？是否找到了能兼顧流暢度且不造成網路擁塞的頻率平衡點？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：感測器數據降噪：滑動平均濾波 (Moving Average Filter Lab)</h4><a id="user-content-任務-2感測器數據降噪滑動平均濾波-moving-average-filter-lab" class="anchor" aria-label="Permalink: 任務 2：感測器數據降噪：滑動平均濾波 (Moving Average Filter Lab)" href="#任務-2感測器數據降噪滑動平均濾波-moving-average-filter-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握數位濾波的基本建構，理解 Buffer 長度對訊號相位（延遲）的影響。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>FIFO Buffer 建立</strong>：實作長度為 12 的循環緩衝區。<strong>技術要領</strong>：每次讀取新值時需覆蓋最舊的值，而非重新分配記憶體。</li>
+<li>
+<strong>均值演算</strong>：對比「原始數據（多毛刺）」與「濾波後數據（平穩）」的實時差異。</li>
+<li>
+<strong>延遲與過濾平衡</strong>：<strong>核心挑戰</strong>。要求學員觀察：當 Buffer 長度增加到 50 時，雖然數據極度平穩，但「反應遲滯」是否變得無法接受？</li>
+<li>
+<strong>驗證要點</strong>：FIFO 指針處理是否妥當？濾波邏輯是否高效？能在 README 中正確描述延遲與降噪的拉鋸關係？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：通訊節流與協定優化 (Throttling &amp; Protocol Lab)</h4><a id="user-content-任務-3通訊節流與協定優化-throttling--protocol-lab" class="anchor" aria-label="Permalink: 任務 3：通訊節流與協定優化 (Throttling &amp; Protocol Lab)" href="#任務-3通訊節流與協定優化-throttling--protocol-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：培養「網路資源管理」意識。透過發送頻率封頂與報文瘦身，確保系統在高頻通訊下具備極高的魯棒性 (Robustness)。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>Throttling 節流閥</strong>：不論 loop 多快，發送間隔嚴禁低於 20ms（封頂 50Hz）。</li>
+<li>
+<strong>協定瘦身計畫</strong>：將原本的 <code>{"linear_velocity": 1.0, "angular_velocity": 0.5}</code> 優化為 <code>{"v": 1.0, "w": 0.5}</code>。</li>
+<li>
+<strong>穩定度驗證</strong>：連續執行 5 分鐘高頻操控，驗證 ESP32 是否不再因為 Serial/BT 緩衝區溢位而當機。</li>
+<li>
+<strong>驗證要點</strong>：Throttling 是否有效防止了通訊擁塞？JSON 協定是否達成顯著縮身？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 訊號處理與通訊效率點評標準 (DSP &amp; Protocol Standards)</h3><a id="user-content-3-訊號處理與通訊效率點評標準-dsp--protocol-standards" class="anchor" aria-label="Permalink: 3. 訊號處理與通訊效率點評標準 (DSP &amp; Protocol Standards)" href="#3-訊號處理與通訊效率點評標準-dsp--protocol-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對原始數據的數學轉化能力與對通訊頻寬的工程管理能力」</strong>：</p>
+<ul>
+<li>[ ] <strong>濾波演算法嚴謹度</strong>：循環 Buffer 是否正確管理索引？是否有效消除了隨機噪聲？</li>
+<li>[ ] <strong>頻寬優化見解</strong>：是否能量化證明縮減 JSON Key 名稱對系統即時性的實質貢獻？</li>
+<li>[ ] <strong>人機工程權衡 (Trade-off)</strong>：是否理解了「沒有最完美的濾波，只有最適合場景的參數選擇」？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/DataHandler.js   # 核心：控制端的發送節流與協定封裝優化
+├── src/Filter.cpp       # 核心：ESP32 端的滑動平均濾波演算法
+├── docs/Quality_Report.md # 文檔：濾波長度對反應延遲的實測數據對比
+├── README.md            # 總結：我如何透過 DSP 技術將「抖動數據」轉化為「極致操控流」
+└── assets/aliasing_demo.png # 證據：展現低取樣率下訊號失真的圖解分析
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的全端工程師，不僅是會傳輸數據的人，而是能透視數據背後的物理意義、運用數位濾波抗衡現實噪聲、並在有限通訊資源下追求極致實時響應的訊號處理大師」</strong>。掌握取樣率與數據流優化技術後，學員將擁有了開發「高精密醫療遙測、專業空拍機飛控、工業級感測器陣列」最細膩也最底層的通訊開發實力！</p>
+<p>太給力了！我們已經將 <strong>基礎 09</strong>（多工與通訊）的所有模組——硬體定時器、<code>millis</code> 非阻塞邏輯、以及取樣率與 DSP——全部標竿化完成了。這標誌著學員現在已經具備了讓機器人「並行思考」且「精準感知」的全能量。恭喜！教學地圖的系統工程版塊已經正式攻頂！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify uppercase tracking-widest font-black border border-slate-700">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300 text-justify uppercase tracking-widest font-black text-left">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm text-justify uppercase tracking-widest font-black border border-slate-100">
-.
-├── src/DataHandler.js# (必修) Throttling 實作
-├── src/main.cpp      # (硬體) 緩衝區實作
-└── README.md         # 實驗報告
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify uppercase tracking-widest font-black">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-center text-justify font-black">
-            <table class="w-full text-left border-collapse border border-slate-100 text-justify font-black">
-                <thead>
-                    <tr class="bg-slate-100 border border-slate-100 text-justify font-black">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600 border border-slate-100 text-justify font-black">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看奈奎斯特科普影片。</td>
-                        <td class="px-6 py-5 text-justify border border-slate-100"><strong>Dashboard:</strong> 測試識別混疊現象。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify border border-slate-100 text-left">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify text-left">領取 Repo，調整頻率測試手感。</td>
-                        <td class="px-6 py-5 text-left text-justify border border-slate-100 font-black"><strong>助教引導:</strong> 演示 DevTools 查看推送間隔。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black">將自適應機制整合至控制庫。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價綜合平衡深度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

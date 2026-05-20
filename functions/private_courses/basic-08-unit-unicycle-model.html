@@ -331,137 +331,153 @@
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">差速運動學與控制保護實驗室：Unicycle
-            Model、飽和處理與敏感度調校實戰</h2>
+<div class="markdown-heading"><h1 class="heading-element">差速轉換數學 (Unicycle Model)</h1><a id="user-content-差速轉換數學-unicycle-model" class="anchor" aria-label="Permalink: 差速轉換數學 (Unicycle Model)" href="#差速轉換數學-unicycle-model"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本單元的目標是學習如何將機器人的抽象運動指令（線速度 $v$ 與角速度 $\omega$）轉換為實體的左、右馬達輸出。這是一個關鍵的技術里程碑，你將學習如何處理硬體限制並守護操縱意圖。</p>
+<div class="markdown-heading"><h2 class="heading-element">任務目標</h2><a id="user-content-任務目標" class="anchor" aria-label="Permalink: 任務目標" href="#任務目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：基礎差速混合器實作 (Kinematics Mixer)</h3><a id="user-content-任務-1基礎差速混合器實作-kinematics-mixer" class="anchor" aria-label="Permalink: 任務 1：基礎差速混合器實作 (Kinematics Mixer)" href="#任務-1基礎差速混合器實作-kinematics-mixer"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作 Unicycle Model 到差速傳動的幾何映射。</li>
+<li>
+<strong>實作檔案</strong>：<code>src/mix_engine.cpp</code>
+</li>
+<li>
+<strong>公式</strong>：
+<ul>
+<li>$L = v - \omega$</li>
+<li>$R = v + \omega$</li>
+</ul>
+</li>
+<li>
+<strong>驗證</strong>：確保當 $\omega &gt; 0$（向右轉）時，右輪轉速降低，左輪轉速增加。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：飽和度處理與比例縮放 (Saturation Scaling)</h3><a id="user-content-任務-2飽和度處理與比例縮放-saturation-scaling" class="anchor" aria-label="Permalink: 任務 2：飽和度處理與比例縮放 (Saturation Scaling)" href="#任務-2飽和度處理與比例縮放-saturation-scaling"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：在馬達輸出達到上限時，透過等比例縮放來保護轉向意圖。</li>
+<li>
+<strong>挑戰</strong>：當 $v + \omega &gt; 1.0$ 時，直接裁切 (Clipping) 會導致轉向失效。</li>
+<li>
+<strong>解決方案</strong>：實作 <code>output = target / max(|L|, |R|, 1.0)</code>。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：轉向敏感度調教 (Dynamic Sensitivity)</h3><a id="user-content-任務-3轉向敏感度調教-dynamic-sensitivity" class="anchor" aria-label="Permalink: 任務 3：轉向敏感度調教 (Dynamic Sensitivity)" href="#任務-3轉向敏感度調教-dynamic-sensitivity"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：引入轉向係數 $K$，根據物理環境調整操縱感。</li>
+<li>
+<strong>公式</strong>：$\omega' = K \cdot \omega$</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">如何開始</h2><a id="user-content-如何開始" class="anchor" aria-label="Permalink: 如何開始" href="#如何開始"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>克隆此 <strong>程式庫</strong>。</li>
+<li>打開 <code>src/mix_engine.cpp</code>。</li>
+<li>根據 <code>include/mixer_def.h</code> 中的定義完成 <code>mix_unicycle</code> 函式。</li>
+<li>運行測試以驗證你的實作：
+<div class="highlight highlight-source-shell"><pre>pio <span class="pl-c1">test</span> -e native</pre></div>
+</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">交付清單</h2><a id="user-content-交付清單" class="anchor" aria-label="Permalink: 交付清單" href="#交付清單"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>[ ] 完成 <code>src/mix_engine.cpp</code> 中的混控邏輯。</li>
+<li>[ ] 通過所有的單元測試。</li>
+<li>[ ] (選修) 在不同的環境下測試並調整 $K$ 值。</li>
+</ul>
+<hr>
+<p>祝你在這趟機器人運動學之旅中收穫滿滿！</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：基礎差速混合機實作 (Kinematics Mixer)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：運動學工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>混控器編寫</strong>：在驅動代碼中實作 <code>L = v - ω</code> 與 <code>R = v + ω</code>。</li>
-                    <li><strong>原地自旋校準</strong>：輸入 <code>v=0, ω=0.5</code> 觀察。</li>
-                    <li><strong>直覺同步驗證</strong>：搖桿往右，右輪轉速應低於左輪。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>模型一致性</strong>：馬達轉向呼應指示？</li>
-                    <li>[ ] <strong>自旋對稱</strong>：PWM 數值嚴格對應？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：飽和度處理與比例縮放 (Saturation Scaling)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：優化專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>飽和診斷</strong>：全速前進急轉向，記錄控制失效現象。</li>
-                    <li><strong>限幅演算法</strong>：實作等比例縮放邏輯。</li>
-                    <li><strong>穩定度測試</strong>：極限場景執行蛇行。</li>
-                    <li><strong>模塊化交付</strong>：推送 <code>MotorMixer</code> 類別。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>控制韌性感</strong>：遵循角速度意圖進行偏轉？</li>
-                    <li>[ ] <strong>代碼穩健</strong>：處理極小分母異常值？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：轉向敏感度調教 (Dynamic Sensitivity)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：調校教練</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>權重係數</strong>：引入 <code>K</code> 敏感度參數。</li>
-                    <li><strong>環境適配測試</strong>：在不同地板測試響應。</li>
-                    <li><strong>日誌彙整</strong>：尋找黃金 K 值。</li>
-                    <li><strong>提交成果</strong>：將數據與心得 Push PR。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>架構靈活性</strong>：支持外部動態調校？</li>
-                    <li>[ ] <strong>調教實效</strong>：改善操控精確性？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：掌握差速模型與限幅思維。</p>
-            <ol class="space-y-4 text-slate-600 text-left text-justify">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：向量拆解</strong> - 理解幾何關係。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：Clipping vs Scaling</strong> - 強調等比例縮放重要性。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：數據驅動</strong> - 參數 K 是工程選擇。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>basic-08-unit-unicycle-model</code> (差速轉換數學：Unicycle Model)</strong> 單元，這是學員建立機器人運動控制邏輯的技術里程碑。它要求學員具備 <strong>機器人運動學 (Robotics Kinematics)</strong> 的思維，學習如何將抽象的「線速度 $v$」與「角速度 $\omega$」解構成左、右馬達的實體 PWM 輸出，並掌握「等比例縮放 (Saturation Scaling)」技術，以解決在硬體極限（全速行進）時發生的轉向失效問題。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>運動學轉換作業的核心在於「混控演算」與「飽和防護」，範本應包含核心混控類別與測試日誌範本，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/kinematics_mixer.cpp</code></strong>：<strong>混控核心實作區</strong>。學員在此撰寫 $L = v - \omega$ 與 $R = v + \omega$ 的基本公式，以及進階的「等比例縮放」保護邏輯。</li>
+<li>
+<strong>📂 <code>include/robot_config.h</code></strong>：<strong>機器人參數配置</strong>。定義最大轉速、轉向靈敏度係數 $K$ 等數值。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>混控器性能報告</strong>。提供表格讓學員記錄在不同 $v, \omega$ 指令下，左右輪的理論輸出 vs. 經過限幅後的真實輸出。</li>
+<li>
+<strong>📂 <code>docs/SCALING_LOGIC.md</code></strong>：<strong>縮放數學說明</strong>。要求學員推導為什麼使用 <code>max(|L|, |R|, 1.0)</code> 作為比例分母，能有效解決全速轉向時的「直行化 (Clipping)」問題。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：基礎差速混合器實作 (Kinematics Mixer Lab)</h4><a id="user-content-任務-1基礎差速混合器實作-kinematics-mixer-lab" class="anchor" aria-label="Permalink: 任務 1：基礎差速混合器實作 (Kinematics Mixer Lab)" href="#任務-1基礎差速混合器實作-kinematics-mixer-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握 Unicycle Model 到差速傳動的幾何映射，確保指令（要去哪）與執行（輪子轉速）的精確對齊。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>座標對齊</strong>：實作基礎混控。<strong>技術要領</strong>：當 $\omega &gt; 0$（向右轉）時，右輪轉速應降低，左輪轉速應增加。</li>
+<li>
+<strong>原地自旋驗證</strong>：輸入 $v=0$ 且 $\omega$ 不為零，確認機器人是否能繞幾何中心點進行完美的「坦克轉向」。</li>
+<li>
+<strong>驗證要點</strong>：馬達轉向方向是否與搖桿邏輯一致？原地自旋時左右輪轉速是否絕對對稱？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：飽和度處理與比例縮放 (Saturation Scaling Lab)</h4><a id="user-content-任務-2飽和度處理與比例縮放-saturation-scaling-lab" class="anchor" aria-label="Permalink: 任務 2：飽和度處理與比例縮放 (Saturation Scaling Lab)" href="#任務-2飽和度處理與比例縮放-saturation-scaling-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握「意圖導向」的控制策略，學習如何在硬體輸出溢出時，透過等比例縮小速度來保護轉向意圖。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>Clipping 現象觀察</strong>：在全速 $v=1.0$ 下輸入轉向指令，觀察單純裁切邏輯為何會造成「轉不動」的控制鎖死。</li>
+<li>
+<strong>縮放演算法實作</strong>：實作 <code>output = target / max(|L|, |R|, 1.0)</code>。</li>
+<li>
+<strong>極限操控實測</strong>：確保在馬達全開的情況下，機器人依然能執行流暢的「大轉彎」動作。</li>
+<li>
+<strong>驗證要點</strong>：<strong>關鍵技術審核</strong>。學員是否有處理分母為零的異常？當 $v, \omega$ 總和超過 1.0 時，機器人是否能維持轉彎弧度的比例而非直行？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：轉向敏感度調教 (Dynamic Sensitivity Lab)</h4><a id="user-content-任務-3轉向敏感度調教-dynamic-sensitivity-lab" class="anchor" aria-label="Permalink: 任務 3：轉向敏感度調教 (Dynamic Sensitivity Lab)" href="#任務-3轉向敏感度調教-dynamic-sensitivity-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：建立「環境感知」的調校思維，理解不同摩擦係數的地表需配合不同的 $K$ 值，以達成最佳操控感。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>引入係數 K</strong>：將角速度指令變更為 $K \cdot \omega$，並測試不同 $K$ 值對繞錐效率的影響。</li>
+<li>
+<strong>地表適配報告</strong>：分別在「地毯」、「磁磚」與「粗糙水泥地」測試，尋找各環境下的黃金 $K$ 值。</li>
+<li>
+<strong>交付報告</strong>：在 README 中說明：高摩擦力地表為何需要更大的轉向係數？</li>
+<li>
+<strong>驗證要點</strong>：代碼架構是否支持動態調整 $K$ 值？調校後的機器人是否在該地表下反應更加靈敏而不失控？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 動態混合與控制韌性點評標準 (Resilient Control &amp; Mixer Standards)</h3><a id="user-content-3-動態混合與控制韌性點評標準-resilient-control--mixer-standards" class="anchor" aria-label="Permalink: 3. 動態混合與控制韌性點評標準 (Resilient Control &amp; Mixer Standards)" href="#3-動態混合與控制韌性點評標準-resilient-control--mixer-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對硬體極限的數學預見力與對操縱意圖的物理保護力」</strong>：</p>
+<ul>
+<li>[ ] <strong>模型轉化準確度</strong>：馬達行為是否完美呼應幾何運動學定義？</li>
+<li>[ ] <strong>飽和保護智慧度</strong>：在極限動力下，系統是否選擇了「保轉向」而非「保速度」的專業工程取捨？</li>
+<li>[ ] <strong>調校實證力</strong>：是否能透過量化數據說明 $K$ 值與物理環境之間的連動關係？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/mix_engine.cpp   # 核心：Unicycle 轉換與飽和限幅保護邏輯
+├── include/mixer_def.h  # 定義：馬達混控數據結構與 K 係數常量
+├── docs/Saturation.md   # 文檔：飽和縮放前後的操控感量化對比
+├── README.md            # 總結：我如何建立強韌的運動學混合器並調校出黃金手感
+└── assets/clipping_vs_scaling.png # 證據：解釋 Scaling 演算法優勢的圖解
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的機器人工程師，不僅是讓輪子轉動的人，而是能透視公式背後的動態限制、在極限邊緣運用數學比例守護操控意圖、並根據物理世界不斷修正參數的控制架構師」</strong>。掌握差速模型與飽和調校技術後，學員將擁有了開發「無人搬運車 (AGV)、競賽級遙控車、自動導航載具」最專業也最底層的運動控制開發實力！
+|
+|
+太精采了！我們已經將 <strong>基礎 08</strong>（控制數學）中關於數據歸一化、響應曲線與 Unicycle 運動學模型的所有 Classroom 部署建議完成了。這標誌著學員現在已經具備了從「搖桿數據」到「輪胎轉速」的完整數學轉化能力。恭喜！基礎課程的數學體系已經完整入庫！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify uppercase tracking-widest font-black">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300 text-justify uppercase tracking-widest font-black text-left">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm text-justify uppercase tracking-widest font-black border border-slate-100">
-.
-├── src/kinematics_mix.cpp # (核心) 混控保護邏輯
-├── include/constants.h    # 感度定義
-└── README.md              # 實驗報告
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify uppercase tracking-widest font-black">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-center text-justify font-black">
-            <table class="w-full text-left border-collapse border border-slate-100 text-justify font-black">
-                <thead>
-                    <tr class="bg-slate-100 border border-slate-100 text-justify font-black">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify font-black uppercase tracking-widest">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600 border border-slate-100 text-justify font-black">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">練習預算轉速差。</td>
-                        <td class="px-6 py-5 text-justify border border-slate-100"><strong>Dashboard:</strong> 檢查預習理解。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify border border-slate-100">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify text-left">領取 Repo，實作線性混控。</td>
-                        <td class="px-6 py-5 text-left text-justify border border-slate-100 font-black"><strong>巡場點評:</strong> 演示 Clipping 鎖死現象。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black">將限幅擴增為類別提交。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 評價工程權衡嚴密度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

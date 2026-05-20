@@ -296,143 +296,165 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">影像實驗室：色彩空間轉換與穩健性過濾</h2>
+<div class="markdown-heading"><h1 class="heading-element">Adv-08: 顏色空間與機器視覺 (Color Spaces &amp; Computer Vision)</h1><a id="user-content-adv-08-顏色空間與機器視覺-color-spaces--computer-vision" class="anchor" aria-label="Permalink: Adv-08: 顏色空間與機器視覺 (Color Spaces &amp; Computer Vision)" href="#adv-08-顏色空間與機器視覺-color-spaces--computer-vision"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到 <strong>adv-08-unit-color-spaces</strong> 單元！這是從「看到圖片」進步到「分析光譜數據」的關鍵階段。理解 RGB、HSV 與 YUV 的數學本質，是打造具備環境魯棒性 (Robustness) 的自駕系統感知核心。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本專案旨在透過實作，讓你深入理解並應用不同的顏色空間：</p>
+<ol>
+<li>
+<strong>色彩獵人 (HSV Real-time Filtering Lab)</strong>：實作即時 HSV 過濾器，體悟 HSV 在光影變化下相對於 RGB 的穩定性優勢。</li>
+<li>
+<strong>記憶體瘦身計畫 (Memory Optimization Lab)</strong>：實作 RGB565 編碼，掌握嵌入式系統中資源受限下的數據壓縮思維。</li>
+<li>
+<strong>YUV 亮度自適應 (Auto-Exposure Leveling)</strong>：利用 YUV 的亮色分離特性，實作自動補償演算法。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">🚀 作業任務 (Assignments)</h2><a id="user-content--作業任務-assignments" class="anchor" aria-label="Permalink: 🚀 作業任務 (Assignments)" href="#-作業任務-assignments"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請依照以下步驟完成本次單元的實作任務：</p>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：「色彩獵人」：實作即時 HSV 過濾器</h3><a id="user-content-任務-1色彩獵人實作即時-hsv-過濾器" class="anchor" aria-label="Permalink: 任務 1：「色彩獵人」：實作即時 HSV 過濾器" href="#任務-1色彩獵人實作即時-hsv-過濾器"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>檔案</strong>：<code>js/color_logic.js</code>
+</li>
+<li>
+<strong>實作內容</strong>：在指定位置完成 HSV 範圍判定邏輯。給定一個「陰影下的紅像素」，設定適當的 <code>min</code> 與 <code>max</code> 範圍，將目標正確二值化 (Target為白，背景為黑)。</li>
+<li>
+<strong>繳交要求</strong>：完成程式碼後，請在本 README 下方提供截圖，展示如何透過一組參數，同時鎖定明亮區與陰影區的紅球特徵。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：RGB565 記憶體瘦身計畫</h3><a id="user-content-任務-2rgb565-記憶體瘦身計畫" class="anchor" aria-label="Permalink: 任務 2：RGB565 記憶體瘦身計畫" href="#任務-2rgb565-記憶體瘦身計畫"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>檔案</strong>：<code>js/color_logic.js</code>
+</li>
+<li>
+<strong>實作內容</strong>：完成 8-8-8 轉 5-6-5 的位元運算 (Bitwise operations)。</li>
+<li>
+<strong>繳交要求</strong>：請在本 README 下方回答：在 30FPS 的 QVGA 影像流中，從 24-bit 降至 16-bit 每秒能節省多少 MB 的頻寬？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：YUV 亮度自適應</h3><a id="user-content-任務-3yuv-亮度自適應" class="anchor" aria-label="Permalink: 任務 3：YUV 亮度自適應" href="#任務-3yuv-亮度自適應"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>檔案</strong>：<code>js/adaptive_algo.js</code>
+</li>
+<li>
+<strong>實作內容</strong>：提取 Y 頻道，計算全局平均亮度。若過低，自動按比例調高 V-Value 或 Y-Value 的輸出。注意處理補償後的數值上限 (Overflow)。</li>
+<li>
+<strong>繳交要求</strong>：錄製一段畫面，展示當環境突然變暗時，原有的追蹤輪廓是否能透過「自適應補償」維持穩定，而不發生丟失。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📝 繳交區 (Student Submission)</h2><a id="user-content--繳交區-student-submission" class="anchor" aria-label="Permalink: 📝 繳交區 (Student Submission)" href="#-繳交區-student-submission"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請在此處填寫你的任務成果：</p>
+<div class="markdown-heading"><h3 class="heading-element">任務 1 成果截圖</h3><a id="user-content-任務-1-成果截圖" class="anchor" aria-label="Permalink: 任務 1 成果截圖" href="#任務-1-成果截圖"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<blockquote>
+<p><em>(請將你的截圖貼在此處)</em></p>
+</blockquote>
+<div class="markdown-heading"><h3 class="heading-element">任務 2 頻寬節省計算</h3><a id="user-content-任務-2-頻寬節省計算" class="anchor" aria-label="Permalink: 任務 2 頻寬節省計算" href="#任務-2-頻寬節省計算"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<blockquote>
+<p><em>(請將你的計算過程與結果寫在此處)</em></p>
+</blockquote>
+<div class="markdown-heading"><h3 class="heading-element">任務 3 測試影片連結</h3><a id="user-content-任務-3-測試影片連結" class="anchor" aria-label="Permalink: 任務 3 測試影片連結" href="#任務-3-測試影片連結"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<blockquote>
+<p><em>(請附上你的影片連結或 GIF)</em></p>
+</blockquote>
+<hr>
+<p><em>「從 0 到 1 建構影像直覺」，掌握顏色空間後，你將能將肉眼看到的複雜畫面轉化為機器隨時可處理的穩定座標！</em></p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：HSV 色彩獵人 (HSV Filtering Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：影像識別工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-tighter font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>介面組件化</strong>：在網頁實作 6 組 <code>&lt;input type="range"&gt;</code> 滑桿。</li>
-                    <li><strong>空間轉換邏輯</strong>：實作 <code>RGBtoHSV()</code> 數學函數，將 <code>pointermove</code>
-                        取得的點陣像素色值進行即時轉換。</li>
-                    <li><strong>背景屏蔽 (Masking)</strong>：實作條件過濾，將不符合範圍的像素點設為 (0,0,0)，在 README 貼上成功屏蔽背景後「紅球」輪廓的截圖。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>過濾精確度</strong>：是否能成功分離紅球與周圍相似色（如橘色桌面）？</li>
-                    <li>[ ] <strong>邊界處理</strong>：Hue 值在 0°/360° 處的跨越邏輯是否正確處理？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：RGB565 位元壓縮 (Memory Optimization Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：嵌入式優化師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>位元運算實作</strong>：利用 <code>&gt;&gt;</code> 與 <code>&lt;&lt;</code> 運算子，將 8-8-8 RGB 映射為
-                        5-6-5 標準。</li>
-                    <li><strong>帶寬分析報告</strong>：在 README 中詳細計算 QVGA 解析度下，從 24bit 降至 16bit 每秒可節省的總字節數。</li>
-                    <li><strong>視覺品質評估</strong>：截圖並說明顏色斷層 (Banding) 在深色陰影區是否明顯。</li>
-                    <li><strong>Push Final</strong>：提交具備「空間意識」的高效傳輸引擎。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>位元映射正確性</strong>：轉出的 RGB565 是否在後端能被正確還原為視覺顏色？</li>
-                    <li>[ ] <strong>數學嚴謹度</strong>：報告中的頻寬計算是否排除了 Header 等冗餘開銷，反映真實 Payload 節省？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：YUV 亮度自適應 (Auto-Exposure Leveling)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：控制演算法工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>亮度提取</strong>：從模擬 YUV 流中僅提取 Y 頻道，繪製亮度直方圖。</li>
-                    <li><strong>動態增益補償</strong>：實作邏輯：若 Average(Y) < 50，則自動對所有像素進行 V-Value 的線性補償。</li>
-                    <li><strong>壓力測試</strong>：錄製影片展示從明亮區快速移入陰影區時，物體識別輪廓是否能瞬間「追回」穩定度。</li>
-                    <li><strong>Push Final</strong>：提交具備光影魯棒性的環境感知方案。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>反應即時性</strong>：亮度補償邏輯是否造成了嚴重的 FPS 下驚？</li>
-                    <li>[ ] <strong>算法魯棒性</strong>：在光影劇烈變化下，識別結果是否發生劇烈抖動？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：破解「影像只是圖片」的迷思。讓學生理解影像本質上是數組陣列，而顏色空間是觀察數組的「濾鏡」。</p>
-            <ol class="space-y-4 text-slate-600 text-justify">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：HSV 的神性</strong> - 在電腦視覺中，HSV 是識別的「救星」。必須讓學生親手調校滑桿，感受它在光影下比 RGB 穩定得多的特性。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：位元級思維</strong> - 嵌入式系統不再是無限容量。學習 RGB565 能讓學生對 0 與 1 的排列組合更有感。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：感知優先</strong> - 透過 YUV 的案例，教導學員「有選擇地捨棄數據」在大型通訊系統中的戰略價值。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-08-unit-color-spaces</code> (顏色空間)</strong> 單元，這是一個從「看到圖片」進步到「分析光譜數據」的關鍵階段。理解 RGB、HSV 與 YUV 的數學本質，是打造具備環境魯棒性 (Robustness) 的自駕系統感知核心。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本倉庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本倉庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本倉庫 (Template Repo) 配置建議" href="#1-範本倉庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>顏色空間轉換涉及大量的陣列遍歷與位元運算，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>js/color_converters.js</code></strong>：核心轉換組件。提供 <code>RGBtoHSV</code> 與 <code>RGBtoRGB565</code> 的函式骨架，留下數學公式與位元位移 (Bit-shifting) 的 <code>TODO</code>。</li>
+<li>
+<strong>📂 <code>js/vision_ui.js</code></strong>：視覺化除錯介面。自動產生 6 組 HSV 滑桿與即時直方圖 (Histogram)，讓學員專注於過濾算法邏輯。</li>
+<li>
+<strong>📂 <code>assets/test_scenes/</code></strong>：包含一組紅球在「強光」、「陰影」與「室內偏黃光」下的樣本圖檔，用於測試過濾器的穩定度。</li>
+<li>
+<strong>📂 <code>tests/bit_logic.test.js</code></strong>：自動化評分脚本。餵入特定 RGB 數值，檢核產出的 RGB565 (16-bit) 與 HSV 數值是否符合數學預期。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「色彩獵人」：實作即時 HSV 過濾器 (HSV Real-time Filtering Lab)</h4><a id="user-content-任務-1色彩獵人實作即時-hsv-過濾器-hsv-real-time-filtering-lab" class="anchor" aria-label="Permalink: 任務 1：「色彩獵人」：實作即時 HSV 過濾器 (HSV Real-time Filtering Lab)" href="#任務-1色彩獵人實作即時-hsv-過濾器-hsv-real-time-filtering-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：體悟 HSV 在光影變化下相對於 RGB 的穩定性優勢。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>過濾邏輯檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：HSV 範圍判定邏輯</span>
+<span class="pl-k">const</span> <span class="pl-s1">isMatch</span> <span class="pl-c1">=</span> <span class="pl-kos">(</span><span class="pl-v">H</span> <span class="pl-c1">&gt;=</span> <span class="pl-s1">minH</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-v">H</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">maxH</span><span class="pl-kos">)</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-kos">(</span><span class="pl-v">S</span> <span class="pl-c1">&gt;=</span> <span class="pl-s1">minS</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-v">S</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">maxS</span><span class="pl-kos">)</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-kos">(</span><span class="pl-v">V</span> <span class="pl-c1">&gt;=</span> <span class="pl-s1">minV</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-v">V</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">maxV</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-s1">pixel</span> <span class="pl-c1">=</span> <span class="pl-s1">isMatch</span> ? <span class="pl-c1">255</span> : <span class="pl-c1">0</span><span class="pl-kos">;</span> <span class="pl-c">// 二值化：目標為白，背景為黑</span></pre></div>
+</li>
+<li>
+<strong>Autograding</strong>：給定一個「陰影下的紅像素」，檢核學員的過濾範圍是否能正確將其識別為 Target。</li>
+<li>
+<strong>截圖提交</strong>：學員需在 README 中展示如何透過一組參數，同時鎖定明亮區與陰影區的紅球特徵。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：RGB565 記憶體瘦身計畫 (Memory Optimization Lab)</h4><a id="user-content-任務-2rgb565-記憶體瘦身計畫-memory-optimization-lab" class="anchor" aria-label="Permalink: 任務 2：RGB565 記憶體瘦身計畫 (Memory Optimization Lab)" href="#任務-2rgb565-記憶體瘦身計畫-memory-optimization-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握嵌入式系統中資源受限下的數據壓縮思維。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>位元運算檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：8-8-8 轉 5-6-5</span>
+<span class="pl-s1">uint16_t</span> <span class="pl-s1">rgb565</span> <span class="pl-c1">=</span> <span class="pl-kos">(</span><span class="pl-kos">(</span><span class="pl-s1">r</span> <span class="pl-c1">&amp;</span> <span class="pl-c1">0xF8</span><span class="pl-kos">)</span> <span class="pl-c1">&lt;&lt;</span> <span class="pl-c1">8</span><span class="pl-kos">)</span> <span class="pl-c1">|</span> <span class="pl-kos">(</span><span class="pl-kos">(</span><span class="pl-s1">g</span> <span class="pl-c1">&amp;</span> <span class="pl-c1">0xFC</span><span class="pl-kos">)</span> <span class="pl-c1">&lt;&lt;</span> <span class="pl-c1">3</span><span class="pl-kos">)</span> <span class="pl-c1">|</span> <span class="pl-kos">(</span><span class="pl-s1">b</span> <span class="pl-c1">&gt;&gt;</span> <span class="pl-c1">3</span><span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div>
+</li>
+<li>
+<strong>優化報告</strong>：學員需在 <code>README.md</code> 中計算：在 30FPS 的 QVGA 影像流中，從 24-bit 降至 16-bit 每秒能節省多少 MB 的頻寬。</li>
+<li>
+<strong>PR 深度核核</strong>：點評其對「位元運算 (Bitwise)」的理解度。是否理解為什麼 G 頻道分配了 6 個位元？（人眼對綠色解析度最高）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：YUV 亮度自適應 (Auto-Exposure Leveling)</h4><a id="user-content-任務-3yuv-亮度自適應-auto-exposure-leveling" class="anchor" aria-label="Permalink: 任務 3：YUV 亮度自適應 (Auto-Exposure Leveling)" href="#任務-3yuv-亮度自適應-auto-exposure-leveling"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：利用 YUV 的亮色分離特性，實作自動補償演算法。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>自適應邏輯檢核</strong>：提取 Y 頻道，計算全局平均亮度。若過低，則自動按比例調高 V-Value 或 Y-Value 的輸出。</li>
+<li>
+<strong>魯棒性測試</strong>：學員需錄製一段畫面。展示當環境突然變暗時，原有的追蹤輪廓是否能透過「自適應補償」維持穩定，而不發生丟失。</li>
+<li>
+<strong>溢位檢查</strong>：檢核代碼中是否正確處理了補償後的數值上限（必須 <code>Math.min(val, 255)</code> 防止報錯）。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 感知工程導師點評標準 (Perception Benchmarks)</h3><a id="user-content-3-感知工程導師點評標準-perception-benchmarks" class="anchor" aria-label="Permalink: 3. 感知工程導師點評標準 (Perception Benchmarks)" href="#3-感知工程導師點評標準-perception-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「數據的強健性與傳輸效率」</strong>：</p>
+<ul>
+<li>[ ] <strong>色彩過濾魯棒性</strong>：設定的 HSV 範圍是否具備普適性？在不同光影下是否依然能「抓到球」？</li>
+<li>[ ] <strong>位元級操作精準度</strong>：RGB565 的運算是否精確？有無發生嚴重的偏色現象？</li>
+<li>[ ] <strong>感知優化意識</strong>：是否理解「捨棄不必要的色彩細節」是為了換取「更高的幀率 (FPS)」與「更快的控制響應」？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── js/
+│   ├── color_logic.js      # 核心：待填寫轉換與位元封裝邏輯
+│   ├── adaptive_algo.js    # 演算法：待填寫亮度補償公式
+│   └── tracker_view.js     # UI：渲染二值化與原圖對比畫面
+├── README.md               # 專案心得：我如何利用顏色空間建立具備光影韌性的感知引擎
+└── tests/
+    └── bitwise.test.js     # 自動化：檢核 5-6-5 位元對齊正確性
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「從 0 到 1 建構影像直覺」</strong>。掌握顏色空間後，學員將擁有一套科學的工具箱，能將肉眼看到的「複雜畫面」轉化為機器隨時可處理的「穩定座標」，這是邁向高階自駕控制的生命線。_
+|
+|
+至此，我們已經完成了 <strong><code>adv-01</code> 到 <code>adv-08</code></strong> 系列課程的 GitHub Classroom 部署策略指南。這一套極致專業、極具視覺衝擊力的課程體系，將為你的學員打造出無與倫比的 <strong>Engineering Learning Vibe</strong>。</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── js/color_spaces.js # 核心：實作 RGB, HSV, YUV 的轉換邏輯
-├── js/gui_ranges.js   # 工具：自動建立滑桿與二值化預覽畫面
-└── samples/           # 樣本：提供過曝、低亮度、與強對比的測試圖檔
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「為什麼藍色在陰影下還是藍色」科普影片。理解 HSV 的物理意義。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能預測在光照增強時，RGB 各頻道的數值變化趨勢。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black">領取作業 (Repo)，調校滑桿對抗「反光」。實作 RGB565 位元封裝並在模擬器上驗證顏色正確性。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>影像教練:</strong> 指導如何使用直方圖 (Histogram) 分析二值化過慮的「切割點」是否準確。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black">提交「亮度自適應」演算法報告並 Push PR。閱讀教師對「高頻像素運算優化」的回饋。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「數據映射」與「位元效率」的理解深度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

@@ -347,142 +347,150 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none text-justify;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">視覺實驗室：硬體加速傳輸與雙緩衝精品架構</h2>
+<div class="markdown-heading"><h1 class="heading-element">影像處理與 DMA 優化 (Image Processing &amp; DMA Optimization)</h1><a id="user-content-影像處理與-dma-優化-image-processing--dma-optimization" class="anchor" aria-label="Permalink: 影像處理與 DMA 優化 (Image Processing &amp; DMA Optimization)" href="#影像處理與-dma-優化-image-processing--dma-optimization"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到 <strong>Vibe Coding 進階系列</strong>。在本單元中，你將挑戰硬體底層優化的極限。你將學會如何利用 ESP32-S3 的 <strong>GDMA (通用直接記憶體存取)</strong> 與 <strong>LCD_CAM</strong> 硬體加速引擎，打造一個高效、低延遲且無撕裂感的「精品視覺驅動」。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>掌握 DMA 原理</strong>：理解如何讓硬體自動搬運數據，釋放 CPU 算力。</li>
+<li>
+<strong>優化影像傳輸</strong>：實作雙緩衝 (Double Buffering) 機制，消除影像撕裂 (Tearing)。</li>
+<li>
+<strong>量化性能分析</strong>：透過 Web 端工具分析影像品質、FPS 與頻寬占用。</li>
+<li>
+<strong>解決硬體邊界問題</strong>：處理記憶體對齊 (Alignment) 與硬體描述符鏈路。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">🛠️ 任務說明</h2><a id="user-content-️-任務說明" class="anchor" aria-label="Permalink: 🛠️ 任務說明" href="#️-任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：硬體加速擷取器實作 (Hardware Accelerated Image Capture)</h3><a id="user-content-任務-1硬體加速擷取器實作-hardware-accelerated-image-capture" class="anchor" aria-label="Permalink: 任務 1：硬體加速擷取器實作 (Hardware Accelerated Image Capture)" href="#任務-1硬體加速擷取器實作-hardware-accelerated-image-capture"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>配置 GDMA 描述符鏈路，實現影像數據從感知器到記憶體的「零 CPU 介入」搬運。</p>
+<ul>
+<li>
+<strong>關鍵檔案</strong>：<code>src/cam_dma_optimized.cpp</code>
+</li>
+<li>
+<strong>驗證要點</strong>：提交 CPU 負載分析，證明在影像傳輸期間 CPU 仍能穩定執行其他任務。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：頻寬與品質權衡優化 (Bandwidth &amp; Quality Trade-off)</h3><a id="user-content-任務-2頻寬與品質權衡優化-bandwidth--quality-trade-off" class="anchor" aria-label="Permalink: 任務 2：頻寬與品質權衡優化 (Bandwidth &amp; Quality Trade-off)" href="#任務-2頻寬與品質權衡優化-bandwidth--quality-trade-off"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>透過量化數據，找到影像解析度、品質與延遲之間的平衡點。</p>
+<ul>
+<li>
+<strong>工具</strong>：使用 <code>public/stream_analyzer/</code> 進行監測。</li>
+<li>
+<strong>驗證要點</strong>：完成 <code>docs/PERFORMANCE_AUDIT.md</code> 中的審計報告。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：消滅撕裂之雙緩衝架構 (Tear-Free Double Buffering)</h3><a id="user-content-任務-3消滅撕裂之雙緩衝架構-tear-free-double-buffering" class="anchor" aria-label="Permalink: 任務 3：消滅撕裂之雙緩衝架構 (Tear-Free Double Buffering)" href="#任務-3消滅撕裂之雙緩衝架構-tear-free-double-buffering"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>實作「乒乓緩存 (Ping-Pong Buffering)」機制，確保 WiFi 讀取與 DMA 寫入不發生競態。</p>
+<ul>
+<li>
+<strong>驗證要點</strong>：在 <code>docs/Tear_Free_Report.md</code> 中提交優化前後的影像對比截圖。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📁 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📁 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>src/</code>：包含核心驅動實作代碼。</li>
+<li>
+<code>public/</code>：包含偵測工具與分析介面。</li>
+<li>
+<code>docs/</code>：存放你的性能審計與優化報告。</li>
+<li>
+<code>tests/</code>：包含硬體驗證測試腳本。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📝 繳交要求</h2><a id="user-content--繳交要求" class="anchor" aria-label="Permalink: 📝 繳交要求" href="#-繳交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>完成所有代碼實作並通過 <code>tests/dma_alignment.test.js</code> 測試。</li>
+<li>填寫完整的 <code>docs/PERFORMANCE_AUDIT.md</code> 與 <code>docs/Tear_Free_Report.md</code>。</li>
+<li>將所有更改 push 到你的 GitHub 程式庫。</li>
+</ol>
+<hr>
+<p>祝你在硬體底層的世界中探索愉快！</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：LCD_CAM DMA 描述符鏈路配置 (DMA Descriptor Chain Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：底層驅動架構師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>DMA 控制器激活</strong>：初始化 ESP32-S3 的 GDMA 子系統。指定 Descriptors 負責邊緣對齊。</li>
-                    <li><strong>感測器同步診斷</strong>：監視 <code>VSYNC</code> 與 <code>HREF</code> 訊號。確認數據搬運完全繞過 CPU 控制。</li>
-                    <li><strong>Push Final</strong>：提交具備「零 CPU 介入」數據軌跡分析的開發日誌。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>硬體利用率</strong>：影像傳輸期間 CPU 負載是否顯著降低？（透過定時任務的穩定性判斷）。</li>
-                    <li>[ ] <strong>對齊嚴密性</strong>：PSRAM 中的像素緩衝區是否存在跨頁存取衝突導致的數據損毀？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：影像品質與頻寬權衡監測 (Quality vs Bandwidth Trade-off Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：通訊性能優化專家</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-tighter font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>JPEG 二進制嗅探</strong>：實作 Javascript 標頭解析。提取 QF (品質係數) 並建立性能映射表。</li>
-                    <li><strong>通訊帶寬壓壓測</strong>：每秒計算一次流進網頁數據量，實現 Mbps 即時動態計。</li>
-                    <li><strong>最優配置尋優</strong>：測試在 QF=30 到 QF=85 之間，系統識別率與控制延遲的黃金平衡點。</li>
-                    <li><strong>Push Final</strong>：推送具備數據驅動決策力的「影像性能白皮書」。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>分析視角深度</strong>：報告是否能分析出 Quality Factor 如何非線性地影響封包大小與延遲？</li>
-                    <li>[ ] <strong>監測準度</strong>：顯示的延遲與 FPS 是否具備 5ms 以內的測量精確度？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：全方位消滅撕裂之雙緩衝架構 (Tear-Free Double Buffering Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：資深影像算法工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>雙重 FrameBuffer 部署</strong>：修改固件配製 <code>fb_count = 2</code>。實作 Ping-Pong 指針輪替邏輯。</li>
-                    <li><strong>競爭條件消除</strong>：利用原子鎖 (Atomic) 確保 WiFi 正在發送的影幀絕不被 DMA 意外覆蓋。</li>
-                    <li><strong>高速運動壓力測試</strong>：在 180 度急轉彎場景下，驗證影像邊緣是否完全消除了「斷層感」。</li>
-                    <li><strong>Push Final</strong>：提交具備「極致流暢、無殘影」特質的最終影像驅動代碼。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>架構健壯性</strong>：雙緩衝切換邏輯是否能在長時間運行下維持幀序正確，無影影影框積補？</li>
-                    <li>[ ] <strong>效能提升顯著性</strong>：對比單緩衝模式，實測 FPS 是否有達成 20% 以上的增益？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none text-justify;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify text-left">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：掌握嵌入式 SoC 的硬體加速深度優化。讓學員利用 DMA 與雙緩衝區在資源受限定實現專業效能。</p>
-            <ol class="space-y-4 text-slate-600 text-justify text-left">
-                <li><strong class="text-cyan-600 font-bold uppercase tracking-widest text-justify">重點 1：釋放 CPU 的搬運哲學</strong> - DMA 不是讓 CPU 變快，而是讓它「不用再做苦力」。這是嵌入式系統開發的黃金準則。</li>
-                <li><strong class="text-cyan-600 font-bold text-justify uppercase tracking-widest">重點 2：記憶體架構的空間代價</strong> - 讓學員體認到 PSRAM 在處理大數據（影像）時的工程必要性與存取延遲權衡。</li>
-                <li><strong class="text-cyan-600 font-bold text-justify uppercase tracking-tighter text-justify">重點 3：消滅隨機的不安定感</strong> - 雙緩衝區與 V-Sync 觀念是為了消滅影像撕裂，這是高品質視覺產品與玩具的分水嶺。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-15-unit-image-dma</code> (影像處理與 DMA)</strong> 單元，這是硬體底層優化與高效大數據搬運的頂尖課題。它要求學員突破「用 CPU 做所有事」的初階思維，學會利用 ESP32-S3 的 <strong>GDMA (通用直接記憶體存取)</strong> 與 <strong>LCD_CAM</strong> 硬體加速引擎，打造出可支撐 AI 避障與遠程低延遲串流的「精品視覺驅動」。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Program Library) 配置建議</h3><a id="user-content-1-範本程式庫-template-program-library-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Program Library) 配置建議" href="#1-範本程式庫-template-program-library-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>影像驅動開發需要極高的可見性來除錯與量化優化成效，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/basic_camera_driver.cpp</code></strong>：<strong>重構手術對象</strong>。一個「單緩衝、重度依賴 CPU 輪詢」的基礎驅動，存在顯著的影像撕裂 (Tearing) 與低影格率問題。</li>
+<li>
+<strong>📂 <code>public/stream_analyzer/</code></strong>：Web 端二進制串流分析計。內置 JPEG 標頭解析工具，自動量測 FPS、數據率 (Mbps) 與壓縮品質。</li>
+<li>
+<strong>📂 <code>docs/PERFORMANCE_AUDIT.md</code></strong>：影像性能審計報告。要求學員填寫：<code>優化前 FPS | 優化後 FPS | CPU 佔用率下降 % | 撕裂現象觀測結論</code>。</li>
+<li>
+<strong>📂 <code>tests/dma_alignment.test.js</code></strong>：數據對齊測試。檢核 PSRAM 緩衝區是否滿足 16-byte 或 32-byte 的硬體對齊要求（這在 S3 DMA 中是關鍵）。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：硬體加速擷取器實作 (Hardware Accelerated Image Capture Lab)</h4><a id="user-content-任務-1硬體加速擷取器實作-hardware-accelerated-image-capture-lab" class="anchor" aria-label="Permalink: 任務 1：硬體加速擷取器實作 (Hardware Accelerated Image Capture Lab)" href="#任務-1硬體加速擷取器實作-hardware-accelerated-image-capture-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：配置 GDMA 描述符鏈路，實現影像數據從感知器到記憶體的「零 CPU 介入」搬運。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>DMA 鏈路配置</strong>：學員需實作 DMA Descriptors 的鏈式初始化，讓硬體自動處理數據跨頁存取。</li>
+<li>
+<strong>中斷回呼調度</strong>：僅在 <code>FRAME_DONE</code> 事件發生時喚醒 CPU。</li>
+<li>
+<strong>驗證要點</strong>：提交一份 CPU 負載分析。證明在影像傳輸期間，主核心依然能以 100Hz 頻率穩定執行控制任務。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：頻寬權衡權優化分析 (Bandwidth &amp; Quality Trade-off Lab)</h4><a id="user-content-任務-2頻寬權衡權優化分析-bandwidth--quality-trade-off-lab" class="anchor" aria-label="Permalink: 任務 2：頻寬權衡權優化分析 (Bandwidth &amp; Quality Trade-off Lab)" href="#任務-2頻寬權衡權優化分析-bandwidth--quality-trade-off-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過量化數據，找到「影像解析度/品質」與「傳輸延遲」之間的黃金平衡。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>JPEG 二進制嗅探</strong>：在網頁端撰寫代碼解析 JPEG Quality Factor (QF)。建立一套 Mbps 實時計算儀表。</li>
+<li>
+<strong>性能回報</strong>：測試在 QF=30, 50, 85 下的總體系統延遲變動曲線。</li>
+<li>
+<strong>官方手冊編撰</strong>：學員需在 README 中給出「針對 Vibe-Car 避障場景的最優視覺配置建議」。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：消滅撕裂之雙緩衝架構 (Tear-Free Double Buffering Lab)</h4><a id="user-content-任務-3消滅撕裂之雙緩衝架構-tear-free-double-buffering-lab" class="anchor" aria-label="Permalink: 任務 3：消滅撕裂之雙緩衝架構 (Tear-Free Double Buffering Lab)" href="#任務-3消滅撕裂之雙緩衝架構-tear-free-double-buffering-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作工業級的「乒乓緩存 (Ping-Pong Buffering)」機制，徹底消除影像斷層。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>fb_count = 2 部署</strong>：修改固件並在 PSRAM 中分配雙重 FrameBuffer。</li>
+<li>
+<strong>原子性切換鎖定</strong>：確保 WiFi 讀取指標與 DMA 寫入指標永不發生競態 (Race Condition)。</li>
+<li>
+<strong>對比證據展示</strong>：要求提交一張在「快速移動」環境下的對比圖。左邊是優化前的斷層 (Tearing)，右邊是優化後的完美影格。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 底層驅動工程師導師點評標準 (Hardware Acceleration Standards)</h3><a id="user-content-3-底層驅動工程師導師點評標準-hardware-acceleration-standards" class="anchor" aria-label="Permalink: 3. 底層驅動工程師導師點評標準 (Hardware Acceleration Standards)" href="#3-底層驅動工程師導師點評標準-hardware-acceleration-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對 SoC 硬體邊界功能的極致壓榨」</strong>：</p>
+<ul>
+<li>[ ] <strong>DMA 鏈路穩健度</strong>：在長時間（30 分鐘以上）的串流環境下，是否會產生數據位移或記憶體洩漏？</li>
+<li>[ ] <strong>資源利用藝術</strong>：是否成功將 PSRAM 的延遲與 DMA 的速度完美結合，釋放出 CPU 算力？</li>
+<li>[ ] <strong>架構思維深度</strong>：提交的代碼是否考慮了「影格跳過 (Frame Skip)」邏輯以因應無線網路抖動？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/cam_dma_optimized.cpp # 核心：實作 GDMA 與 雙緩衝的終極驅動
+├── public/debug_ui/         # 工具：視覺化監測 FPS 與 接收緩衝區指標
+├── docs/Tear_Free_Report.md # 報告：影像穩定性分析與 Before/After 截圖證據
+├── README.md                # 結案：我如何利用 DMA 賦予機器人絲滑般的視覺感知
+└── tests/stress_test.log    # 證據：在 720P/30FPS 極限測試下的通訊穩定日誌
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的底層工程師，不僅是在寫代碼，更是在指揮矽片內的硬體大軍協同作戰」</strong>。掌握影像 DMA 優化後，學員將擁有了開發「邊緣 AI 視覺網關」、「高速工業檢測相機」或「精密醫療影像傳輸系統」必備的頂層核心驅動能力！</p>
+<p>太驚人了！至此我們已經將 <strong>進階 15</strong> 的三大技術支柱（連線優化、數據流分析、影像 DMA）完整標準化。這張圖譜已經不僅是教學，而是 <strong>「從電子愛好者到專業嵌入式架構師」</strong> 的完整蛻變路徑。恭喜！Vibe Coding 的進階系列已具備最頂級的 Classroom 部署規範！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-cyan-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── src/driver_optimized.cpp # 操作對象：一個待優化、單緩衝的影像適配器
-├── public/debug_monitor/    # 工具：具備像素分析能力的 Web 監測端
-└── docs/Performance_Log.md  # 日誌模板：包含撕裂分析與 QF 延遲數據表
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse border-justify">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify text-left text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「DMA 搬運工：硬體層級的數據傳輸奧秘」影片。學習 JPEG 硬體加速器配置參數。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 提供案例分析：如果影像頻寬超過 WiFi 1/3，對控制指令會有什麼延遲影響？</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black text-justify">領取作業 (Repo)，執行「雙緩衝輪替」優化任務。在 GitHub Classroom 分享捕捉到的「撕裂影像」截圖與修復成果。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>影像教官:</strong> 協助學員解讀 PSRAM 存取衝突報錯。引導學員建立「性能基準 (Benchmark)」來量化優化成效。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black text-justify">提交具備數據支持的性能審計報告。閱讀關於「DMA 分散聚合模式 (Scatter-Gather)」的進階硬體導讀。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「競爭條件」的預防邏輯。表揚影像穩定、且能動態調整壓縮比以適應網絡抖動的「視覺轉家」。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

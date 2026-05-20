@@ -294,143 +294,151 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">影像處理實驗室：Canvas 像素級操控實戰</h2>
+<div class="markdown-heading"><h1 class="heading-element">Assignment: HTML5 Canvas 影像處理與即時標註系統</h1><a id="user-content-assignment-html5-canvas-影像處理與即時標註系統" class="anchor" aria-label="Permalink: Assignment: HTML5 Canvas 影像處理與即時標註系統" href="#assignment-html5-canvas-影像處理與即時標註系統"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">1. 任務目標</h2><a id="user-content-1-任務目標" class="anchor" aria-label="Permalink: 1. 任務目標" href="#1-任務目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本單元旨在引導學員掌握 Web 前端底層影像處理的核心技術。你將學習如何直接操控 <code>HTML5 Canvas</code> 的像素數據，並實現即時的濾鏡效果與視覺標註系統。</p>
+<div class="markdown-heading"><h2 class="heading-element">2. 核心技術點</h2><a id="user-content-2-核心技術點" class="anchor" aria-label="Permalink: 2. 核心技術點" href="#2-核心技術點"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>像素操作</strong>：使用 <code>getImageData()</code> 與 <code>putImageData()</code> 進行高效像素處理。</li>
+<li>
+<strong>濾鏡算法</strong>：實作灰階 (Grayscale)、鏡像 (Mirror)、反轉 (Invert) 等經典演算法。</li>
+<li>
+<strong>圖層解耦</strong>：學習將「原始影像層」與「UI/標註層」分離，避免數據污染。</li>
+<li>
+<strong>ROI 提取</strong>：實作區域感興趣區域 (Region of Interest) 的截取與數據轉換。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">3. 專案結構</h2><a id="user-content-3-專案結構" class="anchor" aria-label="Permalink: 3. 專案結構" href="#3-專案結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>index.html</code>: 主頁面結構，包含視訊與雙層畫布。</li>
+<li>
+<code>src/filters.js</code>: 存放你的像素處理演算法（需實作部分）。</li>
+<li>
+<code>src/interaction.js</code>: 負責 UI 標註與滑鼠互動邏輯。</li>
+<li>
+<code>tests/</code>: 自動化測試腳本，用於驗證你的演算法是否正確。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">4. 開始作業</h2><a id="user-content-4-開始作業" class="anchor" aria-label="Permalink: 4. 開始作業" href="#4-開始作業"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>安裝依賴</strong>：
+<div class="highlight highlight-source-shell"><pre>npm install</pre></div>
+</li>
+<li>
+<strong>啟動開發伺服器</strong>：
+<div class="highlight highlight-source-shell"><pre>npm run serve</pre></div>
+</li>
+<li>
+<strong>實作任務</strong>：
+<ul>
+<li>打開 <code>src/filters.js</code> 並根據註釋實作 <code>applyGrayscale</code> 與 <code>applyMirror</code> 函式。</li>
+<li>在 <code>src/interaction.js</code> 中實作座標映射邏輯，確保準星能準確鎖定像素。</li>
+</ul>
+</li>
+<li>
+<strong>執行測試</strong>：
+<div class="highlight highlight-source-shell"><pre>npm <span class="pl-c1">test</span></pre></div>
+</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">5. 提交要求</h2><a id="user-content-5-提交要求" class="anchor" aria-label="Permalink: 5. 提交要求" href="#5-提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>確保所有測試項目通過。</li>
+<li>將你的代碼推送到 GitHub 程式庫。</li>
+<li>在 PR 中附上你實作的濾鏡效果截圖。</li>
+</ul>
+<hr>
+<p>祝開發順利！</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：即時濾鏡開發師 (Filter Development Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：前端影像工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>擷取影像</strong>：實作 30 FPS 的影像循環，從 <code>&lt;video&gt;</code> 擷取幀至 Canvas。</li>
-                    <li><strong>像素運算</strong>：實作 $(R+G+B)/3$ 灰階化，並嘗試「反相」與「亮白」濾鏡效果。</li>
-                    <li><strong>Push Final</strong>：提交具備「三種濾鏡切換功能」的即時處理模組。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>索引正確性</strong>：能否正確計算一個像素點的 RGBA 索引偏移？</li>
-                    <li>[ ] <strong>渲染效能</strong>：處理一幀影像的時間是否穩定維持在 33ms (30 FPS) 內？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：視覺準星與動態標註 (Visual Overlay System)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：UI/UX 互動設計師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>分層渲染</strong>：建立第二層透明 Canvas 用於繪製 UI，避免污染原始影像數據。</li>
-                    <li><strong>互動追蹤</strong>：實現一個隨 滑鼠/觸控 移動的「十字準星」，並在準星旁即時顯示該點像素的 RGBA 數值。</li>
-                    <li><strong>網格標註</strong>：疊加 $8 \times 8$ 的輔助觀測網格線。</li>
-                    <li><strong>Push Final</strong>：交付高度整合的「視覺標註系統」。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>圖層解耦</strong>：原圖處理與標註繪製是否在邏輯上徹底分離？</li>
-                    <li>[ ] <strong>座標運算</strong>：準星位置與底層像素點的映射是否毫秒級同步？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：鏡像修正與 ROI 提取 (Mirroring & ROI)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：視覺導航工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>水平鏡像</strong>：解決自拍鏡頭帶來的左右相反問題，利用 $x_{new} = Width - 1 - x_{old}$ 進行像素搬移。</li>
-                    <li><strong>ROI 捕獲</strong>：實作從中央區域提取 $100 \times 100$ 的像素區塊並「局部放大」顯示在畫面角落。</li>
-                    <li><strong>數據封裝</strong>：將 ROI 數據轉換為 Base64 格式並模擬上傳流程。</li>
-                    <li><strong>Push Final</strong>：交付「具備感知前處理能力」的視覺處理器。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>空間變換</strong>：鏡像變換後的座標映射是否準確無誤？</li>
-                    <li>[ ] <strong>局部處理</strong>：ROI 提取的邊界檢查是否嚴謹（防止寬高越界導致的崩潰）？</li>
-                </ul>
-            </div>
-        </div>
     </section>
     <script src="/js/course-shared.js?v=2026.05.19.V20.ASSIGNMENT_CTA_BUTTON"></script>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：掌握「影像主權」。讓學生明白網頁端如何接管影像數據並加上 UI 回饋。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：Blob 到 ImageBitmap</strong> - 強調 MJPEG 只針對一張圖，而 H.264 針對「時間軸上的差異」。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：ROI (Region of Interest) 的座標映射</strong> - 實驗 2-2 是最有感的，讓學生看見演算法「預測」需要代價（延測）。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：低延遲標記</strong> - 引導學生不只看技術參數，要從「使用者需求（遙控 vs 存擋）」出發做技術選型。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-02-unit-canvas-image</code> (HTML5 Canvas 影像繪製與處理)</strong> 單元，這是一個將 Web 技術轉化為「視覺處理引擎」的關鍵課程，重點在於底層像素的直接操控與高效渲染。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本倉庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本倉庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本倉庫 (Template Repo) 配置建議" href="#1-範本倉庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>Canvas 處理需要一個穩定的「前端沙盒」，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>index.html</code></strong>：預置雙層畫布結構（底層影像 + 頂層 UI 標註），這是工業級影像處理的標準配置，避免 UI 繪製損壞原始數據。</li>
+<li>
+<strong>📂 <code>src/vision-engine.js</code></strong>：提供 <code>requestAnimationFrame</code> 的循環框架，並預置 <code>applyFilter(imageData)</code> 等空函式，讓學員專注於填充內部的像素運算邏輯。</li>
+<li>
+<strong>📂 <code>tests/vision_test.js</code></strong>：使用單元測試檢核學員的濾鏡公式。例如：輸入紅色 <code>(255, 0, 0)</code>，檢查灰階化後是否正確輸出約 <code>(85, 85, 85)</code>。</li>
+<li>
+<strong>📂 <code>.github/workflows/ui_snapper.yml</code></strong>：設置一個簡單的工作流，自動截取學員提交後的網頁畫面並貼在 PR 評論中，方便導師一眼看出濾鏡與準星是否正常。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：即時濾鏡開發師 (Filter Development Lab)</h4><a id="user-content-任務-1即時濾鏡開發師-filter-development-lab" class="anchor" aria-label="Permalink: 任務 1：即時濾鏡開發師 (Filter Development Lab)" href="#任務-1即時濾鏡開發師-filter-development-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握 <code>Uint8ClampedArray</code> 的一維索引規律。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>核心代碼檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：(R+G+B)/3 的灰階變換</span>
+<span class="pl-k">for</span> <span class="pl-kos">(</span><span class="pl-k">let</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span><span class="pl-kos">;</span> <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">data</span><span class="pl-kos">.</span><span class="pl-c1">length</span><span class="pl-kos">;</span> <span class="pl-s1">i</span> <span class="pl-c1">+=</span> <span class="pl-c1">4</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+    <span class="pl-k">let</span> <span class="pl-s1">avg</span> <span class="pl-c1">=</span> <span class="pl-kos">(</span><span class="pl-s1">data</span><span class="pl-kos">[</span><span class="pl-s1">i</span><span class="pl-kos">]</span> <span class="pl-c1">+</span> <span class="pl-s1">data</span><span class="pl-kos">[</span><span class="pl-s1">i</span><span class="pl-c1">+</span><span class="pl-c1">1</span><span class="pl-kos">]</span> <span class="pl-c1">+</span> <span class="pl-s1">data</span><span class="pl-kos">[</span><span class="pl-s1">i</span><span class="pl-c1">+</span><span class="pl-c1">2</span><span class="pl-kos">]</span><span class="pl-kos">)</span> <span class="pl-c1">/</span> <span class="pl-c1">3</span><span class="pl-kos">;</span>
+    <span class="pl-s1">data</span><span class="pl-kos">[</span><span class="pl-s1">i</span><span class="pl-kos">]</span> <span class="pl-c1">=</span> <span class="pl-s1">data</span><span class="pl-kos">[</span><span class="pl-s1">i</span><span class="pl-c1">+</span><span class="pl-c1">1</span><span class="pl-kos">]</span> <span class="pl-c1">=</span> <span class="pl-s1">data</span><span class="pl-kos">[</span><span class="pl-s1">i</span><span class="pl-c1">+</span><span class="pl-c1">2</span><span class="pl-kos">]</span> <span class="pl-c1">=</span> <span class="pl-s1">avg</span><span class="pl-kos">;</span> <span class="pl-c">// 固定 Alpha 不動</span>
+<span class="pl-kos">}</span></pre></div>
+</li>
+<li>
+<strong>Autograding</strong>：透過 headless browser 測試，讀取 Canvas 的數據值，驗證像素變換是否精確符合數學公式。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：視覺準星與動態標註 (Visual Overlay System)</h4><a id="user-content-任務-2視覺準星與動態標註-visual-overlay-system" class="anchor" aria-label="Permalink: 任務 2：視覺準星與動態標註 (Visual Overlay System)" href="#任務-2視覺準星與動態標註-visual-overlay-system"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：練習座標空間映射 (Coordinate Mapping) 與圖層解耦思維。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>核核重點</strong>：導師應檢查學員是否將 UI 繪製在「正確的畫布層級」。如果是直接繪製在處理過後的影像層，會導致後續 AI 偵測時「誤把準星當特徵」，這是常見的工程失誤。</li>
+<li>
+<strong>互動性驗證</strong>：要求學員實作即時顯示移動座標旁的像素 $R, G, B$ 原生數據，這能驗證學員是否有成功「反推」回一維陣列的正確索引。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：鏡像修正與 ROI 提取 (Mirroring &amp; ROI)</h4><a id="user-content-任務-3鏡像修正與-roi-提取-mirroring--roi" class="anchor" aria-label="Permalink: 任務 3：鏡像修正與 ROI 提取 (Mirroring &amp; ROI)" href="#任務-3鏡像修正與-roi-提取-mirroring--roi"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：練習空間幾何變換與局部數據封裝。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>空間變換檢核</strong>：實作水平鏡像。這需要雙重 $for$ 迴圈或 $O(N)$ 的陣列搬移，這能測試學員對「記憶體配置」與「座標對稱性」的理解。</li>
+<li>
+<strong>ROI 提交</strong>：要求學員將提取出的 $100 \times 100$ 局部特徵區塊（ROI），使用 <code>canvas.toDataURL()</code> 轉為 Base64 格式並印在 Console。這能模擬未來將「特徵小圖」上傳至雲端 AI 的真實場景。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 前端影像導師點評標準 (Frontend Vision Benchmarks)</h3><a id="user-content-3-前端影像導師點評標準-frontend-vision-benchmarks" class="anchor" aria-label="Permalink: 3. 前端影像導師點評標準 (Frontend Vision Benchmarks)" href="#3-前端影像導師點評標準-frontend-vision-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對影像主權的操控」</strong>：</p>
+<ul>
+<li>[ ] <strong>效能韌性</strong>：在開啟濾鏡的狀態下，FPS 是否仍能維持在「準時重繪 (30-60 FPS)」？</li>
+<li>[ ] <strong>索引精確度</strong>：濾鏡處理是否發生「顏色偏移」或「邊界溢漏」（例如：不小心修改了最後一列像素）？</li>
+<li>[ ] <strong>架構優雅度</strong>：是否理解「分離圖層 (Layer Separation)」的重要性？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── index.html              # 前端頁面 (含視訊串流區與畫布圖層)
+├── src/
+│   ├── filters.js          # 核心：像素濾鏡算法實作位元
+│   └── interaction.js      # UI：準星與數據標註繪製邏輯
+├── tests/
+│   └── pixel_logic.test.js # 自動化測試：檢核色彩空間轉換公式
+└── README.md               # 專案報告：我如何優化影像渲染延遲
+</code></pre>
+<p>透過這種部署方式，學生能將「冷冰冰的數據流」轉化為「可視化、可操作的軟體介面」，這是開發 AI 監控系統、遙控機器人儀表板的必備核心技能。_</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── src/codec_switch.cpp  # 核心：學員實作 MJPEG/H.264 切換邏輯
-├── tools/latency_calc.py # 工具：協助測算 End-to-End 延遲
-└── README.md             # 紀錄：編碼延遲與畫質殘影對比報告
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「H.264 I/P 幀動態演示」短片。理解運動補償 (Motion Vector) 概念。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員能否預判 H.264 在靜態畫面下的頻寬優勢。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black">領取作業 (Repo)，執行 2-1 壓力測試與 2-2 延遲觀測。優化解碼器緩衝區配置。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 現場拆解馬賽克殘影產生的數據丟包成因。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black">提交最終場景編碼方案。閱讀導師對「H.265 與 AV1」在物聯網邊緣端應用前景的補充。</td>
-                        <td class="px-6 py-5 text-left text-justify border-justify"><strong>Feedback PR:</strong> 點評對「編碼複雜度 vs 頻寬節省」的成本合算。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

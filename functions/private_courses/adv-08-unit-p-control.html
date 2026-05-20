@@ -287,143 +287,188 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">控制實驗室：負回饋系統與增益調校</h2>
+<div class="markdown-heading"><h1 class="heading-element">🚗 adv-08-unit-p-control (P 控制)</h1><a id="user-content--adv-08-unit-p-control-p-控制" class="anchor" aria-label="Permalink: 🚗 adv-08-unit-p-control (P 控制)" href="#-adv-08-unit-p-control-p-控制"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到「P 控制 (Proportional Control)」單元！這是從「數據計算」邁向「物理控制」的關鍵一步。它要求你將視覺誤差轉化為馬達指令，並親身體驗控制系統中最經典的權衡：<strong>「反應速度 vs. 系統穩定性」</strong>。</p>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📂 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong><code>controllers/PController.js</code></strong>：核心控制組件。提供 P 控制器的類別骨架，你需要完成 <code>update(error)</code> 函式與 <code>Saturation (飽和限幅)</code> 的實作。</li>
+<li>
+<strong><code>js/telemetry_plotter.js</code></strong>：遙測波形繪圖工具。即時繪製「誤差曲線 (Error)」與「馬達輸出曲線 (PWM Output)」，讓看不見的控制邏輯可視化。</li>
+<li>
+<strong><code>js/car_simulator.js</code></strong>：提供帶有摩擦力與延遲的物理環境。</li>
+<li>
+<strong><code>tests/control_math.test.js</code></strong>：自動化評分脚本。專門測試比例關係及「限幅 (Clamping)」。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🚀 作業任務</h2><a id="user-content--作業任務" class="anchor" aria-label="Permalink: 🚀 作業任務" href="#-作業任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：P 控制核心實作 (P-Controller Core)</h3><a id="user-content-任務-1p-控制核心實作-p-controller-core" class="anchor" aria-label="Permalink: 任務 1：P 控制核心實作 (P-Controller Core)" href="#任務-1p-控制核心實作-p-controller-core"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p><strong>目標</strong>：將抽象數學公式 $U = Kp \times e$ 落實為強健的程式碼。</p>
+<ol>
+<li>打開 <code>controllers/PController.js</code>。</li>
+<li>實作比例運算與限幅處理，確保計算結果超過 255 或低於 -255 時能穩定「限幅 (Clamping)」。</li>
+<li>
+<strong>📝 簡短說明</strong>：請在下方列出你對「溢位處理/限幅」重要性的簡短說明。
+<blockquote>
+<p><strong>[請在此填寫你的說明]</strong></p>
+</blockquote>
+</li>
+</ol>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：臨界增益調音師 (Kp Tuning Lab)</h3><a id="user-content-任務-2臨界增益調音師-kp-tuning-lab" class="anchor" aria-label="Permalink: 任務 2：臨界增益調音師 (Kp Tuning Lab)" href="#任務-2臨界增益調音師-kp-tuning-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p><strong>目標</strong>：透過實驗觀察「震盪 (Oscillation)」現象，尋找系統穩定邊界。</p>
+<ol>
+<li>調整 $Kp$ 滑桿，偵測出虛擬車體剛好開始進入「等幅蛇行」的 $Kp$ 臨界值。</li>
+<li>
+<strong>📸 波形截圖</strong>：請在下方貼上兩張波形截圖：
+<ul>
+<li>
+<strong>過小 $Kp$</strong>（收斂極慢且無法克服摩擦力）：
+<blockquote>
+<p><strong>[請貼上圖片]</strong></p>
+</blockquote>
+</li>
+<li>
+<strong>臨界 $Kp$</strong>（呈現規律正弦波震盪）：
+<blockquote>
+<p><strong>[請貼上圖片]</strong></p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li>
+<strong>📝 物理分析</strong>：為什麼系統會發生「蛇行 / 震盪」？
+<blockquote>
+<p><strong>[請在此填寫你的分析]</strong></p>
+</blockquote>
+</li>
+</ol>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：閉迴路視覺追蹤壓力測試 (Visual Servoing Integration)</h3><a id="user-content-任務-3閉迴路視覺追蹤壓力測試-visual-servoing-integration" class="anchor" aria-label="Permalink: 任務 3：閉迴路視覺追蹤壓力測試 (Visual Servoing Integration)" href="#任務-3閉迴路視覺追蹤壓力測試-visual-servoing-integration"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p><strong>目標</strong>：實作全系統閉迴路 (Closed-loop) 控制，觀察「穩態誤差」。</p>
+<ol>
+<li>將影像座標誤差串接到 P 控制器的輸入。</li>
+<li>移動追蹤目標，並觀察追蹤停止時的表現。</li>
+<li>
+<strong>📝 數據記錄與分析</strong>：
+<ul>
+<li>當追蹤停止時，最終產生的「穩態偏移量 (Steady-State Error)」是多少像素？
+<blockquote>
+<p><strong>[請在此填寫數值]</strong></p>
+</blockquote>
+</li>
+<li>理論思考：為什麼單純的 P 控制無法完全歸零誤差？
+<blockquote>
+<p><strong>[請在此填寫你的想法]</strong></p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ol>
+<hr>
+<p>💡 <strong>完成任務後，請將本程式庫的變更 Commit 並 Push 至 GitHub 繳交作業！</strong></p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：P 控制核心實作 (P-Controller Core)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：控制演算法工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>負回饋公式實作</strong>：在 <code>controllers/Proportional.js</code> 撰寫計算邏輯。</li>
-                    <li><strong>飽和限幅 (Saturation)</strong>：實作 <code>clamp()</code> 防止馬達輸出超越電氣上限 (255) 導致變數溢位。</li>
-                    <li><strong>測試代碼</strong>：在 README 中列出三組不同的誤差輸入與轉出的 PWM 計算結果對照表。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>數學轉換精準度</strong>：代碼是否正確展現了「線性比例」關係？</li>
-                    <li>[ ] <strong>限幅魯棒性</strong>：當 $Kp \times Error$ 遠大於極限（如 1000）時，輸出是否穩定保持在 255？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：臨界增益調音師 (Kp Tuning Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統穩定性診斷師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：75 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>調試 UI 建立</strong>：連接 $Kp$ 滑桿到即時控制變數。</li>
-                    <li><strong>臨界點偵測</strong>：逐步放大增益，錄製車體各個階段的動態（緩慢修正 -> 快速到位 -> 劇烈震盪）。</li>
-                    <li><strong>數據紀錄</strong>：找出當前的「黃金 $Kp$」，並在 README 撰寫對「蛇行現象」發生原因的物理分析。</li>
-                    <li><strong>Push Final</strong>：提交具備參數調優報告的控制方案。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>實驗嚴謹度</strong>：學員是否能定義出「何時算震盪」？（例如透過波形圖顯示正負向反覆切換）。</li>
-                    <li>[ ] <strong>參數優化能力</strong>：提出的黃金值是否能在測試彎道中維持平滑且快速的追蹤？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：閉迴路視覺追蹤 (Visual Servoing Integration)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：無人駕駛集成師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>系統裝配</strong>：將 `Image_Error` 串接到 `P_Controller` 輸入。</li>
-                    <li><strong>動態干擾測試</strong>：快速移動手持物。錄製波形圖，觀察誤差 $e(t)$ 的收斂曲線。</li>
-                    <li><strong>穩態誤差分析</strong>：在畫面上測量當追蹤停止時，最終座標與中線的偏移像素距離。</li>
-                    <li><strong>Push Final</strong>：完成具備「視覺回饋」能力的閉迴路控制核心。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>整合流暢度</strong>：影像偵測頻率與馬達指令發送是否對齊？若不對齊，系統是否產生了不必要的控制抖動？</li>
-                    <li>[ ] <strong>缺陷辨識力</strong>：學員能否正確指認出 P 控制在處理「動態移動」時的相位滯後問題？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：讓學生體驗「控制」不是魔法，而是感知（影像）與執行（馬達）之間的比例橋樑。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-blue-600">重點 1：震盪的代價</strong> - 許多學員會追求極速修正。必須讓他們看到大 Kp 造成的蛇行 (Oscillation) 如何浪費能量並損害機械壽命。</li>
-                <li><strong class="text-blue-600">重點 2：數據視覺化</strong> - 強力推薦學生使用 Chrome 控制台繪製 `console.log` 的曲線，讓看不見的「增益」變成看得見的「軌跡」。</li>
-                <li><strong class="text-blue-600">重點 3：埋下伏筆</strong> - P 控制是 PID 的 1/3。不必追求完美，重點在於發現 P 的缺陷（穩態誤差），為下一單元引出積分 (I) 做好準備。</li>
-            </ol>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-blue-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
+<p>針對 <strong><code>adv-08-unit-p-control</code> (P 控制)</strong> 單元，這是從「數據計算」邁向「物理控制」的關鍵一步。它要求學員將視覺誤差轉化為馬達指令，並親身體驗控制系統中最經典的權衡：<strong>「反應速度 vs. 系統穩定性」</strong>。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本程式庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" href="#1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>比例控制的實作與調校高度依賴波形回饋，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>controllers/PController.js</code></strong>：核心控制組件。提供 P 控制器的類別骨架，留下 <code>update(error)</code> 函式與 <code>Saturation (飽和限幅)</code> 的 <code>TODO</code>。</li>
+<li>
+<strong>📂 <code>js/telemetry_plotter.js</code></strong>：遙測波形繪圖工具。預置一個即時 Canvas 繪圖引擎，能同步繪製「誤差曲線 (Error)」與「馬達輸出曲線 (PWM Output)」，讓看不見的控制邏輯可視化。</li>
+<li>
+<strong>📂 <code>tests/p_logic.test.js</code></strong>：自動化評分脚本。專門測試比例關係——檢核學員的輸出是否與誤差成線性比例，並確保當計算結果超過 255 時能穩定「限幅 (Clamping)」。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：P 控制核心實作 (P-Controller Core)</h4><a id="user-content-任務-1p-控制核心實作-p-controller-core" class="anchor" aria-label="Permalink: 任務 1：P 控制核心實作 (P-Controller Core)" href="#任務-1p-控制核心實作-p-controller-core"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：將抽象數學公式 $U = Kp \times e$ 落實為強健的代碼。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>代碼邏輯檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：比例運算與限幅處理</span>
+<span class="pl-en">calculate</span><span class="pl-kos">(</span><span class="pl-s1">error</span><span class="pl-kos">)</span><span class="pl-kos"></span> <span class="pl-kos">{</span>
+    <span class="pl-k">let</span> <span class="pl-s1">output</span> <span class="pl-c1">=</span> <span class="pl-s1">error</span> <span class="pl-c1">*</span> <span class="pl-smi">this</span><span class="pl-kos">.</span><span class="pl-c1">kp</span><span class="pl-kos">;</span>
+    <span class="pl-k">return</span> <span class="pl-v">Math</span><span class="pl-kos">.</span><span class="pl-en">max</span><span class="pl-kos">(</span><span class="pl-c1">-</span><span class="pl-c1">255</span><span class="pl-kos">,</span> <span class="pl-v">Math</span><span class="pl-kos">.</span><span class="pl-en">min</span><span class="pl-kos">(</span><span class="pl-c1">255</span><span class="pl-kos">,</span> <span class="pl-s1">output</span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span> <span class="pl-c">// 防止變數溢位</span>
+<span class="pl-kos">}</span></pre></div>
+</li>
+<li>
+<strong>Autograding</strong>：餵入一組誤差與 $Kp$，檢核輸出的 PWM 數值是否精確對應。</li>
+<li>
+<strong>驗證報告</strong>：要求學員在 README 中列出其對「溢位處理」重要性的簡短說明。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：臨界增益調音師 (Kp Tuning Lab)</h4><a id="user-content-任務-2臨界增益調音師-kp-tuning-lab" class="anchor" aria-label="Permalink: 任務 2：臨界增益調音師 (Kp Tuning Lab)" href="#任務-2臨界增益調音師-kp-tuning-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過實驗觀察「震盪 (Oscillation)」現象，尋找系統穩定邊界。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>實驗流程要求</strong>：學員需調整 $Kp$ 滑桿，偵測出虛擬車體剛好開始進入「等幅蛇行」的 $Kp$ 臨界值。</li>
+<li>
+<strong>波形提交</strong>：要求學員在 README 中貼上兩張波形截圖：
+<ol>
+<li>
+<strong>過小 $Kp$</strong>：收斂極慢且無法克服摩擦力的波形。</li>
+<li>
+<strong>臨界 $Kp$</strong>：呈現規律正弦波震盪的波形。</li>
+</ol>
+</li>
+<li>
+<strong>PR 深度核核</strong>：點評其對「為什麼系統會蛇行」的物理分析（答案：相位延遲與過度補償）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：閉迴路視覺追蹤壓力測試 (Visual Servoing Integration)</h4><a id="user-content-任務-3閉迴路視覺追蹤壓力測試-visual-servoing-integration" class="anchor" aria-label="Permalink: 任務 3：閉迴路視覺追蹤壓力測試 (Visual Servoing Integration)" href="#任務-3閉迴路視覺追蹤壓力測試-visual-servoing-integration"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作全系統閉迴路 (Closed-loop) 控制，觀察「穩態誤差」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>系統裝配檢核</strong>：學員需成功將影像座標誤差串接到 P 控制器的輸入。</li>
+<li>
+<strong>誤差平衡測試</strong>：要求學員移動追蹤目標，並在 README 中記錄：當追蹤停止時，最終產生的「穩態偏移量 (Steady-State Error)」是多少像素？</li>
+<li>
+<strong>理論思考</strong>：引導學員討論「為什麼 P 控制無法完全歸零誤差？」。這為下單元引進 <strong>I (Integral) 積分控制</strong> 埋下伏筆。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 控制系統導師點評標準 (Feedback System Benchmarks)</h3><a id="user-content-3-控制系統導師點評標準-feedback-system-benchmarks" class="anchor" aria-label="Permalink: 3. 控制系統導師點評標準 (Feedback System Benchmarks)" href="#3-控制系統導師點評標準-feedback-system-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對回饋循環的感知與預測能力」</strong>：</p>
+<ul>
+<li>[ ] <strong>數學實作準確度</strong>：代碼是否準確執行了比例運算？是否具備「限幅」這種工程保護意識？</li>
+<li>[ ] <strong>實驗嚴謹度</strong>：是否能透過觀察波形來定義「臨界穩定性」？</li>
+<li>[ ] <strong>缺陷洞察力</strong>：是否理解 P 控制在靜態摩擦力面前的無力感？（這標誌著學員具備了向 PID 高階調控邁進的資格）。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
 ├── controllers/
-│   └── PController.js   # 核心：待填寫 calculate(err) 逻辑
-├── js/telemetry.js      # 工具：即時繪製誤差 vs 輸出的波形曲線圖
-└── README.md            # 引導：提供 Kp 調優的標準實驗流程紀錄表
-            </pre>
-        </div>
+│   └── PController.js      # 核心：待填寫比例控制與限幅邏輯
+├── js/
+│   ├── telemetry_app.js    # 繪圖：負責將控制數據轉化為即時波形
+│   └── car_simulator.js    # 環境：提供帶有摩擦力與延遲的物理環境
+├── README.md               # 報告：記錄我的 Kp 調優過程與穩態誤差分析
+└── tests/
+    └── control_math.test.js # 自動化：檢核比例線性與極限值處理
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「控制不只是寫程式，是與物理規律對話」</strong>。掌握 P 控制後，學員將擁有了處理動態系統的第一把鑰匙，這不僅適用於無人車，更是所有自動化、無人機與機器人技術的基石。_
+|
+|
+至此，我們已經完整規劃了 <strong>進階 01 到 08</strong> 所有課程單元的 GitHub Classroom 部署全案。這標誌著你的教學系統已經具備了工業級的 <strong>標準化、自動化與專業化</strong> 特質。</p>
 
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5">觀看「彈簧阻尼系統」類比影片。理解「負回饋」趨向平衡的直觀規律。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能預測 Kp 加倍後系統反應速度的理論變化。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify tracking-tighter">領取作業 (Repo)，調教模型參數對抗摩擦力。實施系統裝配並提交臨界穩定點分析。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 排除馬達極性 (Polarity) 錯誤造成的正回饋爆炸（發散）問題。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
-                        <td class="px-6 py-5 text-justify">提交針對「穩態誤差」的觀察日記並 Push。閱讀教師對「系統魯棒性」的高階建議。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「震盪臨界值」的實驗精準度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

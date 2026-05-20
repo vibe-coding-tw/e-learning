@@ -310,141 +310,166 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">閉迴路控制實驗室：測速演算法與數據整合</h2>
+<div class="markdown-heading"><h1 class="heading-element">速度演算法 (Speed Algorithms)</h1><a id="user-content-速度演算法-speed-algorithms" class="anchor" aria-label="Permalink: 速度演算法 (Speed Algorithms)" href="#速度演算法-speed-algorithms"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">課程目標</h2><a id="user-content-課程目標" class="anchor" aria-label="Permalink: 課程目標" href="#課程目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本單元旨在學習如何在機器人控制中，透過數位訊號處理技術精確測量速度。你將實作工業界常用的兩種核心演算法：<strong>頻率法 (M-Method)</strong> 與 <strong>週期法 (T-Method)</strong>，並設計一個<strong>混合切換邏輯 (Hybrid Crossover)</strong>，以實現在全速域下的平滑速度回饋。</p>
+<div class="markdown-heading"><h2 class="heading-element">任務說明</h2><a id="user-content-任務說明" class="anchor" aria-label="Permalink: 任務說明" href="#任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：頻率法 (M-Method) 實作</h3><a id="user-content-任務-1頻率法-m-method-實作" class="anchor" aria-label="Permalink: 任務 1：頻率法 (M-Method) 實作" href="#任務-1頻率法-m-method-實作"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：理解在固定時間視窗內計算脈衝數的方法。</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>在指定的取樣視窗（如 100ms）內結算編碼器 Ticks。</li>
+<li>觀察在低速狀態下的「量化誤差」（數據呈階梯狀跳變）。</li>
+<li>在專案報告中說明為何低速時頻率法表現不佳。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：週期法 (T-Method) 實作與逾時保護</h3><a id="user-content-任務-2週期法-t-method-實作與逾時保護" class="anchor" aria-label="Permalink: 任務 2：週期法 (T-Method) 實作與逾時保護" href="#任務-2週期法-t-method-實作與逾時保護"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過測量脈衝間隔時間來獲取高解析度的低速數據。</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>使用 <code>micros()</code> 記錄相鄰脈衝的時間差 $\Delta t$。</li>
+<li>
+<strong>失效保護 (Watchdog)</strong>：實作超時邏輯。若超過 500ms 未收到脈衝，速度值必須強行歸零。</li>
+<li>驗證在馬達停止時，速度讀數是否能正確歸零，而非停留在最後一個計算值。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：混合測速演算法 (Hybrid M/T Crossover)</h3><a id="user-content-任務-3混合測速演算法-hybrid-mt-crossover" class="anchor" aria-label="Permalink: 任務 3：混合測速演算法 (Hybrid M/T Crossover)" href="#任務-3混合測速演算法-hybrid-mt-crossover"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：結合 M 法與 T 法的優點，打造全速域平滑的測速引擎。</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>設計一個切換門檻（如 200 RPM）。</li>
+<li>低於門檻時使用 T-Method，高於門檻時使用 M-Method。</li>
+<li>實作「遲滯區塊 (Hysteresis)」或濾波邏輯，防止在切換點附近發生數據頻繁跳變。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">專案結構</h2><a id="user-content-專案結構" class="anchor" aria-label="Permalink: 專案結構" href="#專案結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>src/SpeedEngine.cpp</code>: 測速核心邏輯實作。</li>
+<li>
+<code>include/speed_math.h</code>: 參數定義與類別宣告。</li>
+<li>
+<code>src/main.ino</code>: 主程式，包含中斷處理與數據輸出。</li>
+<li>
+<code>tests/</code>: 自動化測試腳本。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">如何開始</h2><a id="user-content-如何開始" class="anchor" aria-label="Permalink: 如何開始" href="#如何開始"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>複製此<strong>程式庫</strong>到你的本地環境。</li>
+<li>使用 Arduino IDE 或 PlatformIO 開啟專案。</li>
+<li>依序完成 <code>src/SpeedEngine.cpp</code> 中的 TODO 項目。</li>
+<li>開啟 <strong>Serial Plotter</strong> 觀察三種速度曲線（M法、T法、混合法）的表現。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">繳交要求</h2><a id="user-content-繳交要求" class="anchor" aria-label="Permalink: 繳交要求" href="#繳交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>完成程式碼實作並通過所有本地測試 (<code>npm test</code>)。</li>
+<li>在 <code>reports/</code> 資料夾下存放你的實驗截圖與數據分析。</li>
+<li>將所有更改 <strong>push</strong> 回你的 GitHub 專屬<strong>程式庫</strong>。</li>
+</ol>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：頻率法實作 (Frequency Counting Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：高速控制分析師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black">🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>定時器部署</strong>：實作 100ms 定時中斷，獲取脈衝累計增量。</li>
-                    <li><strong>數值定標</strong>：寫入 RPM 換算公式，注意計數器的同步清除與變數鎖存。</li>
-                    <li><strong>Push Final</strong>：提交具備「高速背景計數」能力的穩定法程式。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>換算嚴謹性</strong>：輸出的 RPM 是否隨視窗時間準確變動？</li>
-                    <li>[ ] <strong>物理直覺</strong>：README 是否記錄了低速下數據產生「階梯化」的具體 PWM 數值？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：週期法標定 (Period Measurement Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：低速精度工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-tighter font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>中斷捕捉</strong>：在 ISR 中利用 <code>micros()</code> 捕捉瞬時時戳 \(\Delta t\)。</li>
-                    <li><strong>倒數演算</strong>：實作 1/\(\Delta t\) 的反比例運算，並處理分母為零的例外。</li>
-                    <li><strong>超時失效陷阱</strong>：開發 watchdog 邏輯：超時 500ms 無脈衝則強制歸零。</li>
-                    <li><strong>Push Final</strong>：提交具備「超低速細膩感知」能力的週期法專案。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>溢位處理</strong>：在馬達轉速極低或停止時，代碼是否會因為 \(\Delta t\) 過大而報錯？</li>
-                    <li>[ ] <strong>啟動敏捷度</strong>：T 法測得的初速是否比 M 法更接近物理真相？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：M/T 混合演算法 (Hybrid M/T Engine Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統架構分析師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>雙規演算法集成</strong>：在一個專案中同時運作兩種算法模組。</li>
-                    <li><strong>自動換手邏輯</strong>：找出兩種算法誤差曲線的交叉點，實作動態閾值切換。</li>
-                    <li><strong>數據濾波</strong>：引入加權平均，確保切換後的控制量不發生階躍突變。</li>
-                    <li><strong>Push Final</strong>：交付「全域時速傳感中心」最終成果。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>過渡平滑度</strong>：演算法切換時，速度曲線是否保持連續（無垂直跳變）？</li>
-                    <li>[ ] <strong>架構設計感</strong>：代碼是否具備良好的模組化設計，易於移植到其他機器人平台？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：掌握數據處理的「取捨」藝術。學會根據物理特性（轉速）選擇最佳的數據解釋框架。</p>
-            <ol class="space-y-4 text-slate-600 text-justify">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：量化誤差觀測</strong> - 讓學生看到 M 法低速時的階梯狀數據，理解「數位化」帶來的離散代價。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：精密時序的意義</strong> - T 法能捕捉單個脈衝的微秒差，這是 PID 高精準度控制的基礎。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：混合決策思維</strong> - 工業級算法從不完美，但透過混合調度可以實現「工程上的接近完美」。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-11-unit-speed-algorithms</code> (速度演算法)</strong> 單元，這是數位訊號處理在機器人控制中的集大成之作。它要求學員不僅會「讀取數據」，還要能根據物理特性（低速 vs. 高速）選擇最佳的數學解釋模型：<strong>頻率法 (M-Method)</strong> 與 <strong>週期法 (T-Method)</strong>。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本程式庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" href="#1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>測速演算法需要精確的定時器與中斷捕捉，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/SpeedEngine.cpp</code></strong>：測速核心類別。定義 <code>calculateM()</code> 與 <code>calculateT()</code> 兩個私有方法，留下一個 <code>getIntegratedSpeed()</code> 供學員實作混合邏輯。</li>
+<li>
+<strong>📂 <code>include/algorithm_cfg.h</code></strong>：演算法參數定義。預置 M 法的取樣視窗（例如 100ms）與 T 法的逾時歸零（Timeout）參數。</li>
+<li>
+<strong>📂 <code>plots/</code></strong>：數據圖表保存區。學員需在此存放 Serial Plotter 的截圖，對比不同算法在相同轉速下的跳變情況。</li>
+<li>
+<strong>📂 <code>tests/speed_logic.test.js</code></strong>：自動化評分脚本。專門模擬「馬達停轉」情境，檢核學員的週期法是否具備正確的「逾時重置」邏輯。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：頻率法 (M-Method) 實作與量化誤差</h4><a id="user-content-任務-1頻率法-m-method-實作與量化誤差" class="anchor" aria-label="Permalink: 任務 1：頻率法 (M-Method) 實作與量化誤差" href="#任務-1頻率法-m-method-實作與量化誤差"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：觀測「階梯狀數據」現象（量化誤差），理解高速穩定的代價。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>定時器任務實作</strong>：學員需在 100ms 的週期任務中結算 Ticks 增量。</li>
+<li>
+<strong>量化現象記錄</strong>：要求學員在低速（PWM &lt; 15%）下紀錄數據。他們必須看到速度值呈「階梯狀」跳變，並在 README 說明這是因為 100ms 內格數變化太小導致的解析度不足。</li>
+<li>
+<strong>Autograding</strong>：透過模擬脈衝流，檢核 RPM 換算公式中分母與時間單位的正確性。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：週期法 (T-Method) 實作與逾時保護</h4><a id="user-content-任務-2週期法-t-method-實作與逾時保護" class="anchor" aria-label="Permalink: 任務 2：週期法 (T-Method) 實作與逾時保護" href="#任務-2週期法-t-method-實作與逾時保護"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實現低速的高解析度感知，並解決「無限週期」的溢位問題。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>捕捉邏輯實作</strong>：學員需使用 <code>micros()</code> 紀錄相鄰脈衝的間距 $\Delta t$。</li>
+<li>
+<strong>失效保護 (Watchdog)</strong>：學員必須實作一個邏輯：若超過 500ms 沒有收到脈衝，速度值必須強行歸零，防止「車子停了但速度讀數還停留在轉動那一刻」的 Bug。</li>
+<li>
+<strong>Push Final</strong>：提交具備「平滑低速數據」的週期法單行引擎。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：混合測速演算法 (Hybrid M/T Crossover)</h4><a id="user-content-任務-3混合測速演算法-hybrid-mt-crossover" class="anchor" aria-label="Permalink: 任務 3：混合測速演算法 (Hybrid M/T Crossover)" href="#任務-3混合測速演算法-hybrid-mt-crossover"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：設計「算法換手」邏輯，打造全速域平滑的速度回饋中心。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>動態切換閾值</strong>：學員需找出一個轉速閾值（例如 200 RPM），低於此值用 T 法，高於此值用 M 法。</li>
+<li>
+<strong>切換平滑化 (Hysteresis)</strong>：為防止在門檻點兩側發生數據頻繁跳變，學員需嘗試實作「遲滯區塊」或「移動平均濾波」。</li>
+<li>
+<strong>PR 深度核核</strong>：點評其「換手邏輯」的設計。切換瞬間的速度曲線是否連續？是否有處理切換時導致的數據跳變？</li>
+<li>
+<strong>即時儀表板驗證</strong>：在網頁儀表板上展示從 0 到 100% 功率的完美速度爬升曲線。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 控制工程導師點評標準 (Control Engineering Benchmarks)</h3><a id="user-content-3-控制工程導師點評標準-control-engineering-benchmarks" class="anchor" aria-label="Permalink: 3. 控制工程導師點評標準 (Control Engineering Benchmarks)" href="#3-控制工程導師點評標準-control-engineering-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對數位離散現象與物理連續性的橋接能力」</strong>：</p>
+<ul>
+<li>[ ] <strong>時間精度感知</strong>：學員是否理解了 <code>millis()</code> 與 <code>micros()</code> 在不同算法中的適用性？</li>
+<li>[ ] <strong>例外條件防護</strong>：馬達剛起步與剛停止時，代碼是否會產生無意義的極大值或過期舊值？</li>
+<li>[ ] <strong>系統統合感</strong>：兩種算法整合後，介面調用是否統一？是否能讓上層 PID 演算法無感地獲取最優速度？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── include/speed_math.h     # 核心：定義兩種測速算法的計算原型
+├── src/main.ino             # 實作：學員需在此實作 M/T 切換決策樹
+├── reports/error_curve.md   # 分析：紀錄兩種算法在不同速域的偏差對比
+├── README.md                # 專案報告：我如何建立工業級的全速域測速引擎
+└── tests/crossover.test.js  # 自動化：模擬加速過程檢核切換點的連續性
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的工程師從不迷信單一方法」</strong>。掌握測速演算法後，學員將擁有了開發「高精準度定速」、「精細位移控制」或「動態負載補償」系統的頂層算法地基。_
+|
+|
+完美！我們已經將 <strong>進階 11</strong> 三大支柱（中斷響應、傳感解析、測速算法）全部完成了 GitHub Classroom 體系化定義。這標誌著 Vibe Coding 在底層韌體與訊號處理領域的教學深度達到了新的高峰！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── src/speed_hybrid.cpp  # 核心：學員需在此實作 M 與 T 切換
-├── include/algorithms.h  # 定義：提供測速演算法的抽象介面
-└── plots/response.png    # 結果：學員需截圖展示混合算法後的 RPM 曲線圖
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「M 法 vs T 法：演算法大戰」短片。理解週期與頻率的倒數關係。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能預測在 PWM=10% 時哪種算法更穩定。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black">領取作業 (Repo)，挑戰「混合測速引擎」。調教算法換手點 (Threshold)，優化數據平滑度。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 協助演示如何在 Serial Plotter 觀察兩種算法在臨界點的「無縫接軌」。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black">提交具備「混合自我優化」的最終版代碼。閱讀教師對「卡爾曼濾波 (Kalman Filter)」於速度估計的進階展望。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「數據動態權重」與「物理量一致性」的理解深度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

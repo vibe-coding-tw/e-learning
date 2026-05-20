@@ -292,143 +292,167 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">AI 實驗室：輕量化模型部屬與數據驅動決策</h2>
+<div class="markdown-heading"><h1 class="heading-element">進階單元 08: MobileNet-SSD (AI 模型)</h1><a id="user-content-進階單元-08-mobilenet-ssd-ai-模型" class="anchor" aria-label="Permalink: 進階單元 08: MobileNet-SSD (AI 模型)" href="#進階單元-08-mobilenet-ssd-ai-模型"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>這是一個從「手寫算法」邁向「神經網路推論」的里程碑。本單元要求你掌握如何在高延遲、資源受限的環境下，利用深度學習模型進行正確的空間決策。</p>
+<div class="markdown-heading"><h2 class="heading-element">任務目標</h2><a id="user-content-任務目標" class="anchor" aria-label="Permalink: 任務目標" href="#任務目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：「模型效能診斷」：MobileNet 分類測試 (Inference Benchmarking Lab)</h3><a id="user-content-任務-1模型效能診斷mobilenet-分類測試-inference-benchmarking-lab" class="anchor" aria-label="Permalink: 任務 1：「模型效能診斷」：MobileNet 分類測試 (Inference Benchmarking Lab)" href="#任務-1模型效能診斷mobilenet-分類測試-inference-benchmarking-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：理解硬體加速（WebGL vs CPU）對即時系統的影響。</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>
+<strong>效能剖析檢核</strong>：實作程式碼記錄 <code>Inference Time</code>。正確使用 <code>performance.now()</code> 來獲取數據。</li>
+<li>
+<strong>報告提交</strong>：請在下方填寫一份效能對比表格。內容需包括：WebGL 模式下的 FPS vs CPU 模式下的 FPS，並分析為什麼自動駕駛不能接受低於 10 FPS 的速度。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：SSD 數據過濾器 (Detection ROI Filter)</h3><a id="user-content-任務-2ssd-數據過濾器-detection-roi-filter" class="anchor" aria-label="Permalink: 任務 2：SSD 數據過濾器 (Detection ROI Filter)" href="#任務-2ssd-數據過濾器-detection-roi-filter"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：學會清洗 AI 產出的「髒數據」，定義虛擬警戒區域 (ROI)。</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>
+<strong>ROI 邏輯實作</strong>：在 <code>js/post_process.js</code> 中實作幾何入域判定。</li>
+<li>
+<strong>視覺化要求</strong>：在 Canvas 上繪製出偵測框 (Bounding Box)，當物件進入自定義的「虛擬 ROI 矩形」時，邊框需變更顏色以示意觸發。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：導航行為樹預演 (Behavior Decision Logic)</h3><a id="user-content-任務-3導航行為樹預演-behavior-decision-logic" class="anchor" aria-label="Permalink: 任務 3：導航行為樹預演 (Behavior Decision Logic)" href="#任務-3導航行為樹預演-behavior-decision-logic"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實現「安全優先」的 AI 驅動控制邏輯。</li>
+<li>
+<strong>要求</strong>：
+<ul>
+<li>
+<strong>優先級權重實作</strong>：在 <code>js/car_control.js</code> 定義 <code>Person &gt; Obstacle &gt; Empty</code> 的層級。</li>
+<li>
+<strong>應急停擋測試</strong>：實作距離佔位預估，利用寬度反推距離，若為 <code>person</code> 且距離過近則停止馬達。</li>
+<li>
+<strong>防呆處理</strong>：實作平滑器或計數器處理「偵測閃爍 (Flickering)」，防止單一幀的誤判導致車體急剎。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">評分標準</h2><a id="user-content-評分標準" class="anchor" aria-label="Permalink: 評分標準" href="#評分標準"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>推論效能意識</strong>：是否理解「模型預熱 (Warm-up)」的重要性？是否懂得利用 GPU 加速推演？</li>
+<li>
+<strong>空間轉換精準度</strong>：Bounding Box 是否準確對準物體？映射到控制指令的比例尺是否合理？</li>
+<li>
+<strong>安全性優先級</strong>：程式碼是否展現了「行人保護優先」的邏輯？面對多對象偵測時，能否正確給出路徑規劃建議？</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">專案報告：我如何利用 MobileNet-SSD 建立實時避障邏輯</h2><a id="user-content-專案報告我如何利用-mobilenet-ssd-建立實時避障邏輯" class="anchor" aria-label="Permalink: 專案報告：我如何利用 MobileNet-SSD 建立實時避障邏輯" href="#專案報告我如何利用-mobilenet-ssd-建立實時避障邏輯"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p><em>(請在此處填寫你的報告與效能分析結果)</em></p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：MobileNet 效能診斷 (Inference Benchmarking Lab)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：AI 優化工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>環境預熱 (Warming-up)</strong>：載入 TensorFlow.js，並先進行一次空推論以喚醒 GPU。</li>
-                    <li><strong>信心閾值分析</strong>：測試至少 5 種日常物品。記錄信心分數。在剖析報告中說明「背景雜訊」如何影響 Top-1 分類正確率。</li>
-                    <li><strong>提交報告</strong>：在 README 中彙整 WebGL vs CPU 在同一個物體辨識下的延遲 (Latency) 數據對比。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>效能理解度</strong>：學員是否能正確辨識出硬體加速帶來的效能提升量級？</li>
-                    <li>[ ] <strong>判斷嚴謹性</strong>：針對誤判 (False Positive) 案例是否提出了合理的視覺環境解釋？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：SSD 數據過濾器 (Detection ROI Filter)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：視覺邏輯開發者</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>數據清洗</strong>：實作一個過濾函式，剔除信心門檻低於 0.6 的雜訊框。</li>
-                    <li><strong>ROI (Region of Interest)</strong>：在 Canvas 中心繪製一個矩形警戒區。</li>
-                    <li><strong>幾何碰撞檢測</strong>：計算 SSD 回傳的 Bounding Box 中心點是否位於 ROI 矩形內部。</li>
-                    <li><strong>Push Final</strong>：提交具備「目標鎖定」與「入域警報」功能的偵測框架。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>數據處理力</strong>：學員是否展現了處理 Array 數據流（多個偵測框）的高效邏輯？</li>
-                    <li>[ ] <strong>座標轉換精準度</strong>：Bounding Box 的幾何計算是否正確地對應了畫面的像素座標？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：導航行為樹預演 (Behavior Decision Logic)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統決策工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>狀態機設計</strong>：根據偵測標籤（Person, Obstacle, Empty）定義無人車的三種狀態。</li>
-                    <li><strong>誤差映射</strong>：將 <code>box.x_center</code> 映射為轉向修正 $X_e$。將 <code>box.width</code> 映射為距離預估
-                        $d$。</li>
-                    <li><strong>應急停擋實作</strong>：當偵測到「Person」且 $d$ 小於閾值時，強制馬達輸出 0（停止）。</li>
-                    <li><strong>Push Final</strong>：提交具備安全優先權的 AI 避障邏輯。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>決策穩定性</strong>：當模型快速閃爍 (Flicker) 時，控制邏輯是否有防止車體頻繁抖動的平滑技術？</li>
-                    <li>[ ] <strong>優先級賦予</strong>：是否正確實作了「行人絕對優先」的避讓規則？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：讓學生跨越「影像處理」進入「人工智慧推論」。強調模型不是魔法，而是機率與統計的疊加結果。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-emerald-600">重點 1：速度是關鍵</strong> - 無論模型多準，如果推論需要 2 秒，在移動中的車端就是不可用的。必須強調 30 FPS 的實戰意義。</li>
-                <li><strong class="text-emerald-600">重點 2：數據的質感</strong> - 教導學員如何解析 <code>[x, y, w, h]</code> 陣列。物件偵測回傳的是空間資訊，而非單純的類別。</li>
-                <li><strong class="text-emerald-600">重點 3：決策邊界</strong> - 信心分數 0.5 跟 0.9 的差別在哪？引導學員建立自己的過濾原則。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-08-unit-mobilenet-ssd</code> (AI 模型)</strong> 單元，這是一個從「手寫算法」邁向「神經網路推論」的里程碑。它要求學員掌握如何在高延遲、資源受限的環境下，利用深度學習模型進行正確的空間決策。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>AI 作業的關鍵在於「權重加載與數據後處理」，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>models/</code></strong>：預置輕量化 MobileNet V2 或 SSD-Lite 的權重與設定檔，確保學員能直接透過 TensorFlow.js 載入。</li>
+<li>
+<strong>📂 <code>js/ai_inference.js</code></strong>：AI 核心模組。提供 <code>loadAndRun()</code> 的非同步骨架，留下 <code>Confidence Threshold</code> 過濾與 <code>Non-Max Suppression (NMS)</code> 概念實作。</li>
+<li>
+<strong>📂 <code>js/safety_node.js</code></strong>：行為決策節點。設計一個空狀態機，讓學員將辨識到的 <code>Label</code> 轉化為避障動作。</li>
+<li>
+<strong>📂 <code>tests/bbox_math.test.js</code></strong>：自動化評分脚本。專門測試座標轉換邏輯——檢核學員是否能正確將模型回傳的「0~1 正規化座標」映射回畫面的「像素座標」。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「模型效能診斷」：MobileNet 分類測試 (Inference Benchmarking Lab)</h4><a id="user-content-任務-1模型效能診斷mobilenet-分類測試-inference-benchmarking-lab" class="anchor" aria-label="Permalink: 任務 1：「模型效能診斷」：MobileNet 分類測試 (Inference Benchmarking Lab)" href="#任務-1模型效能診斷mobilenet-分類測試-inference-benchmarking-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：理解硬體加速（WebGL vs CPU）對即時系統的影響。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>效能剖析檢核</strong>：學員需實作程式碼記錄 <code>Inference Time</code>。</li>
+<li>
+<strong>Autograding</strong>：在 CI 流程中檢核學員是否正確使用 <code>performance.now()</code> 來獲取數據。</li>
+<li>
+<strong>報告提交</strong>：學員需在 <code>README.md</code> 中填寫一份效能對比表格。內容包括：WebGL 模式下的 FPS vs CPU 模式下的 FPS，並分析為什麼自動駕駛不能接受低於 10 FPS 的速度。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：SSD 數據過濾器 (Detection ROI Filter)</h4><a id="user-content-任務-2ssd-數據過濾器-detection-roi-filter" class="anchor" aria-label="Permalink: 任務 2：SSD 數據過濾器 (Detection ROI Filter)" href="#任務-2ssd-數據過濾器-detection-roi-filter"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：學會清洗 AI 產出的「髒數據」，定義虛擬警戒區域 (ROI)。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>ROI 邏輯檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：幾何入域判定</span>
+<span class="pl-k">if</span> <span class="pl-kos">(</span><span class="pl-s1">target</span><span class="pl-kos">.</span><span class="pl-c1">label</span> <span class="pl-c1">===</span> <span class="pl-s">'person'</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">target</span><span class="pl-kos">.</span><span class="pl-c1">confidence</span> <span class="pl-c1">&gt;</span> <span class="pl-c1">0.6</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+    <span class="pl-k">if</span> <span class="pl-kos">(</span><span class="pl-en">isPointInRect</span><span class="pl-kos">(</span><span class="pl-s1">target</span><span class="pl-kos">.</span><span class="pl-c1">box</span><span class="pl-kos">.</span><span class="pl-c1">center</span><span class="pl-kos">,</span> <span class="pl-s1">dangerZone</span><span class="pl-kos">)</span><span class="pl-kos">)</span> <span class="pl-en">triggerAlarm</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
+</li>
+<li>
+<strong>視覺化要求</strong>：學員需在 Canvas 上繪製出偵測框 (Bounding Box)，且當物件進入自定義的「虛擬 ROI 矩形」時，邊框需變更顏色以示意觸發。</li>
+<li>
+<strong>Autograding</strong>：餵入一組預設的 <code>Detection Array</code>，檢核學員的過濾函式是否能精確回傳位於特定座標內的物件。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：導航行為樹預演 (Behavior Decision Logic)</h4><a id="user-content-任務-3導航行為樹預演-behavior-decision-logic" class="anchor" aria-label="Permalink: 任務 3：導航行為樹預演 (Behavior Decision Logic)" href="#任務-3導航行為樹預演-behavior-decision-logic"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實現「安全優先」的 AI 驅動控制邏輯。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>優先級權重實作</strong>：定義 <code>Person &gt; Obstacle &gt; Empty</code> 的層級。</li>
+<li>
+<strong>應急停擋測試</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：距離佔位預估</span>
+<span class="pl-k">const</span> <span class="pl-s1">distanceRef</span> <span class="pl-c1">=</span> <span class="pl-c1">1</span> <span class="pl-c1">/</span> <span class="pl-s1">box</span><span class="pl-kos">.</span><span class="pl-c1">width</span><span class="pl-kos">;</span> <span class="pl-c">// 利用寬度反推距離</span>
+<span class="pl-k">if</span> <span class="pl-kos">(</span><span class="pl-s1">label</span> <span class="pl-c1">===</span> <span class="pl-s">'person'</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">distanceRef</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">safeLimit</span><span class="pl-kos">)</span> <span class="pl-en">haltMotors</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div>
+</li>
+<li>
+<strong>PR 深度核核</strong>：導師需檢查學員如何處理「偵測閃爍 (Flickering)」——學員是否有實作平滑器或計數器，防止單一幀的誤判導致車體急剎。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. AI 系統工程導師點評標準 (AI Ops Benchmarks)</h3><a id="user-content-3-ai-系統工程導師點評標準-ai-ops-benchmarks" class="anchor" aria-label="Permalink: 3. AI 系統工程導師點評標準 (AI Ops Benchmarks)" href="#3-ai-系統工程導師點評標準-ai-ops-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對機率性數據的掌控能力」</strong>：</p>
+<ul>
+<li>[ ] <strong>推論效能意識</strong>：是否理解「模型預熱 (Warm-up)」的重要性？是否懂得利用 GPU 加速推演？</li>
+<li>[ ] <strong>空間轉換精準度</strong>：Bounding Box 是否準確對準物體？映射到控制指令的比例尺是否合理？</li>
+<li>[ ] <strong>安全性優先級</strong>：代碼是否展現了「行人保護優先」的邏輯？面對多對象偵測時，能否正確給出路徑規劃建議？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── models/             # 重要：預置權重確保環境一致
+├── js/
+│   ├── ai_model.js     # 核心：負責推論呼叫與 GPU 設置
+│   ├── post_process.js # 邏輯：待填寫邊框過濾與 ROI 計算
+│   └── car_control.js  # 行為：待填寫根據辨識結果映射轉向指令
+├── README.md           # 專案報告：我如何利用 MobileNet-SSD 建立實時避障邏輯
+└── tests/
+    └── bbox.test.js    # 自動化：檢核正規化座標映射
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「讓機器學會看世界」</strong>。掌握 AI 模型應用後，學員將擁有一套將「視覺語義」轉化為「操作動作」的高階工程技能，這正是現代自動駕駛與工業 4.0 機器人的靈魂所在。_
+|
+|
+至此，我們已經完整規劃了 <strong>進階 01 到 08</strong> 所有單元的 GitHub Classroom 部署方案。這構建了一個極其專業、層次分明的「軟硬整合開發者進修路徑」。</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-emerald-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── models/             # 存放：MobileNet-SSD 的靜態權重與配置 JSON
-├── js/inference_core.js# 處理：模型的 Load 與 Run 基本呼叫
-└── js/decision_node.js # 提供：空函式待學員填入物體避讓判斷邏輯
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「卷積神經網路 (CNN) 基礎」概念短片。理解特徵提取的概念。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能區分「影像分類」與「物件定位」的輸出差異。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter">領取作業 (Repo)，執行 GPU 壓力測試。實作 ROI 過濾與狀態機導航邏輯。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>AI 教練:</strong> 指導如何解讀「置信度」分佈，並調整 NMS 參數優化視覺流。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
-                        <td class="px-6 py-5 text-justify">上傳針對極端角度下物體誤判的分析報告並 Push。閱讀教師對「邊緣運算優化」的回饋。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>Feedback PR:</strong> 點評對「決策代價」的思考，表揚能主動為系統添加「容錯機制」的學員。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

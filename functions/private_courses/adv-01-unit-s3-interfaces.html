@@ -260,88 +260,59 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">影像實驗室：ESP32-S3 硬體架構與 PSRAM 優化</h2>
+<div class="markdown-heading"><h1 class="heading-element">adv-01-unit-s3-interfaces: ESP32-S3 感測器介面與 PSRAM</h1><a id="user-content-adv-01-unit-s3-interfaces-esp32-s3-感測器介面與-psram" class="anchor" aria-label="Permalink: adv-01-unit-s3-interfaces: ESP32-S3 感測器介面與 PSRAM" href="#adv-01-unit-s3-interfaces-esp32-s3-感測器介面與-psram"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本程式庫提供 ESP32-S3 核心開發練習，重點在於硬體資源調度與底層記憶體管理。</p>
+<div class="markdown-heading"><h2 class="heading-element">課程目標</h2><a id="user-content-課程目標" class="anchor" aria-label="Permalink: 課程目標" href="#課程目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>掌握 ESP32-S3 的記憶體分層架構（SRAM vs PSRAM）。</li>
+<li>實作高效能的影像緩衝區管理技術。</li>
+<li>觀察高速匯流排競爭對訊號品質的影響。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">作業任務</h2><a id="user-content-作業任務" class="anchor" aria-label="Permalink: 作業任務" href="#作業任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：PSRAM 初始化與壓力測試 (Memory Stress Test)</h3><a id="user-content-任務-1psram-初始化與壓力測試-memory-stress-test" class="anchor" aria-label="Permalink: 任務 1：PSRAM 初始化與壓力測試 (Memory Stress Test)" href="#任務-1psram-初始化與壓力測試-memory-stress-test"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>內容</strong>：實作 <code>heap_caps_malloc</code> 指令申請 PSRAM，並撰寫計時器測量寫入速度。</li>
+<li>
+<strong>目標</strong>：理解為何在邊緣 AI 運算中需要 PSRAM 以及其效能物理極限。</li>
+<li>
+<strong>提交</strong>：將數據紀錄於 <code>docs/hardware_bench.md</code> 中。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：影像緩衝區管理 - ROI 提取 (Pointer Arithmetic Lab)</h3><a id="user-content-任務-2影像緩衝區管理---roi-提取-pointer-arithmetic-lab" class="anchor" aria-label="Permalink: 任務 2：影像緩衝區管理 - ROI 提取 (Pointer Arithmetic Lab)" href="#任務-2影像緩衝區管理---roi-提取-pointer-arithmetic-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>內容</strong>：在 <code>src/roi_math.h</code> 中實作指針運算邏輯。</li>
+<li>
+<strong>目標</strong>：學會如何在不進行記憶體拷貝的情況下，利用步幅 (Stride) 存取影像特定區域 (ROI)。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：感測器與 PSRAM 聯動除錯 (Signal Integrity Lab)</h3><a id="user-content-任務-3感測器與-psram-聯動除錯-signal-integrity-lab" class="anchor" aria-label="Permalink: 任務 3：感測器與 PSRAM 聯動除錯 (Signal Integrity Lab)" href="#任務-3感測器與-psram-聯動除錯-signal-integrity-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>內容</strong>：觀察 PSRAM 在 80MHz 與 40MHz 下，對感測器 I2C 訊號或影像雜訊的影響。</li>
+<li>
+<strong>目標</strong>：培養對硬體系統級干擾的偵錯與權衡能力。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">專案結構</h2><a id="user-content-專案結構" class="anchor" aria-label="Permalink: 專案結構" href="#專案結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>platformio.ini</code>: 核心硬體配置 (啟用 PSRAM 支援)。</li>
+<li>
+<code>src/</code>: 核心程式碼，包含壓測腳本與指針運算。</li>
+<li>
+<code>docs/</code>: 存放實驗報告 <code>hardware_bench.md</code>。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">評分標準</h2><a id="user-content-評分標準" class="anchor" aria-label="Permalink: 評分標準" href="#評分標準"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>內存安全</strong>：是否正確檢查 Heap 容量。</li>
+<li>
+<strong>指針嚴謹度</strong>：ROI 計算是否考慮了對齊與越界。</li>
+<li>
+<strong>實驗完整度</strong>：報告中是否如實紀錄物理現象並給出合理解釋。</li>
+</ol>
+<hr>
+<p><em>本課程為邊緣 AI 系列單元之一。</em></p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：PSRAM 初始化與壓力測試 (Memory Stress Test)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：硬體工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>啟用檢查</strong>：撰寫代碼檢測當前硬體是否有 8MB PSRAM 並輸出類型。</li>
-                    <li><strong>分配對比</strong>：實作 <code>heap_caps_malloc</code> 與 <code>malloc</code> 的對比測試。</li>
-                    <li><strong>Push Final</strong>：提交包含「內部 RAM vs PSRAM 讀寫速度對比」的實驗報告。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>分配正確性</strong>：是否正確使用 <code>MALLOC_CAP_SPIRAM</code> 標籤？</li>
-                    <li>[ ] <strong>穩定性回報</strong>：README 中是否記錄了分配失敗時的錯誤處理邏輯？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：影像緩衝區 management (Frame Buffer ROI)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：系統架構師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>空間申請</strong>：在 PSRAM 中申請一個 640x480x2 的 VGA 影像 Buffer。</li>
-                    <li><strong>數據封裝</strong>：實作指針運算，從大 Buffer 中精確提取中央 100x100 的 ROI 區域。</li>
-                    <li><strong>內存監控</strong>：使用 <code>esp_get_free_heap_size()</code> 監控是否有洩漏。</li>
-                    <li><strong>Push Final</strong>：提交具備「空間敏感」特性的影像緩衝區管理模組。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>指針嚴謹度</strong>：ROI 提取邏輯是否考慮了邊界檢查（避免指針越界）？</li>
-                    <li>[ ] <strong>性能表現</strong>：提取過程是否保證了 O(1) 或極低複雜度的指針偏移？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：感測器與 PSRAM 聯動除錯 (Resource Competition)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：韌體除錯工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>頻率測試</strong>：對比 40MHz 與 80MHz PSRAM 時鐘對影像雜訊的具體影響。</li>
-                    <li><strong>中斷分析</strong>：觀察大量 PSRAM 讀寫是否會干擾 I2C/SCCB 的響應延遲。</li>
-                    <li><strong>報告撰寫</strong>：在 README 總結硬體競爭下「頻率 vs 穩定性」的甜點區。</li>
-                    <li><strong>Push Final</strong>：提交經過「時序優化」的最終硬體配置檔。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>衝突識別</strong>：能否準確描述 PSRAM 與其他週邊在匯流排上的競爭關係？</li>
-                    <li>[ ] <strong>優化建議</strong>：報告中是否提出了合理的降低資源衝突的軟體策略？</li>
-                </ul>
-            </div>
-        </div>
     </section>
     <script>
         // Define Resources - Used by course-shared.js?v=2026.04.05.FINAL_V6
@@ -354,57 +325,87 @@
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4 text-justify">GitHub Classroom 詳細操作指南</h2>
+<p>針對 <strong><code>adv-01-unit-s3-interfaces</code> (ESP32-S3 感測器介面與 PSRAM)</strong> 單元，這是一個深入探討「硬體資源調度」與「底層記憶體管理」的課程，是實施邊緣 AI 運算的物理基礎。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本倉庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本倉庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本倉庫 (Template 程式庫) 配置建議" href="#1-範本倉庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>進階硬體單元的範本應模擬一個「小型作業系統」的環境，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>platformio.ini</code></strong>：預置關鍵的編譯選項，如 <code>-DBOARD_HAS_PSRAM</code>，並正確設定 <code>memory_type</code>（如 <code>qio_opi</code>），確保學員能直接調用 PSRAM。</li>
+<li>
+<strong>📂 <code>src/mem_lab.cpp</code></strong>：提供一個測試框架，內含精確到微秒 ($\mu s$) 的計時器，用於測量 SRAM 與 PSRAM 的效能差異。</li>
+<li>
+<strong>📂 <code>src/roi_processor.h</code></strong>：定義影像處理結構體，將「指針運算 (Pointer Math)」邏輯留給學員補完。</li>
+<li>
+<strong>📂 <code>docs/hardware_report.md</code></strong>：預置結構化的實驗報告，用於紀錄不同時鐘頻率下的訊號表現。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：PSRAM 初始化與壓力測試 (Memory Stress Test)</h4><a id="user-content-任務-1psram-初始化與壓力測試-memory-stress-test" class="anchor" aria-label="Permalink: 任務 1：PSRAM 初始化與壓力測試 (Memory Stress Test)" href="#任務-1psram-初始化與壓力測試-memory-stress-test"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：理解 ESP32-S3 的記憶體分層架構，掌握特殊分配指令。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>關鍵代碼檢核</strong>：
+<div class="highlight highlight-source-c++"><pre><span class="pl-c"><span class="pl-c">//</span> 學生需實作：使用正確的 Capability 標籤申請 PSRAM</span>
+<span class="pl-c1">uint8_t</span>* buf = (<span class="pl-c1">uint8_t</span>*) heap_caps_malloc(<span class="pl-c1">1024</span>*<span class="pl-c1">1024</span>, MALLOC_CAP_SPIRAM);</pre></div>
+</li>
+<li>
+<strong>數據提交</strong>：學員需在 <code>hardware_report.md</code> 中填入百萬次單次 1MB 的寫入時間。導師核閱其數據是否展現出「SRAM 快、PSRAM 慢」的物理特徵。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：影像緩衝區管理 - ROI 提取 (Pointer Arithmetic Lab)</h4><a id="user-content-任務-2影像緩衝區管理---roi-提取-pointer-arithmetic-lab" class="anchor" aria-label="Permalink: 任務 2：影像緩衝區管理 - ROI 提取 (Pointer Arithmetic Lab)" href="#任務-2影像緩衝區管理---roi-提取-pointer-arithmetic-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：在不複製數據的情況下，利用指針偏移技術存取影像特定區域。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>驗證方式</strong>：學員需實作一個函數，計算給定 $(x, y)$ 座標後，在寬度為 640 的 RGB565 Buffer 中的指針地址。</li>
+<li>
+<strong>Autograding</strong>：撰寫一個模擬單元測試，提供一組 mock 的 Buffer 並檢核學員提取的 ROI 數值是否與預期一致。這能強化學生對「步幅 (Stride)」與「像素格式」的理解。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：感測器與 PSRAM 聯動除錯 (Signal Integrity Lab)</h4><a id="user-content-任務-3感測器與-psram-聯動除錯-signal-integrity-lab" class="anchor" aria-label="Permalink: 任務 3：感測器與 PSRAM 聯動除錯 (Signal Integrity Lab)" href="#任務-3感測器與-psram-聯動除錯-signal-integrity-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：觀察高速匯流排競爭對類比訊號（影像雜訊）的影響。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>證據提交</strong>：學員需將 PSRAM 設定在 80MHz (Octal SPI) 下產生的影像雜訊截圖上傳。</li>
+<li>
+<strong>分析任務</strong>：在報告中描述當 PSRAM 全速讀寫時，I2C 感測器（如陀螺儀）是否出現數據丟失或延遲現象。這能培養學員對「硬體系統級除錯」的直覺。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 進階硬體單元導師點評標準 (Advanced Benchmarks)</h3><a id="user-content-3-進階硬體單元導師點評標準-advanced-benchmarks" class="anchor" aria-label="Permalink: 3. 進階硬體單元導師點評標準 (Advanced Benchmarks)" href="#3-進階硬體單元導師點評標準-advanced-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對硬體物理邊界的認知」</strong>：</p>
+<ul>
+<li>[ ] <strong>內存安全意識</strong>：學員在申請大容量 Buffer 前是否檢查了 <code>heap_caps_get_free_size</code>？</li>
+<li>[ ] <strong>指針嚴謹度</strong>：ROI 計算是否考慮了邊界對齊（Alignment）與越界檢查？</li>
+<li>[ ] <strong>資源權衡能力</strong>：是否能解釋為什麼在某些場景下需要手動調降 PSRAM 頻率以獲得更乾淨的影像？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── platformio.ini         # 核心硬體配置 (啟用 PSRAM 支援)
+├── src/
+│   ├── memory_benchmark.cpp # 壓測腳本
+│   └── roi_math.h         # 指針運算邏輯實作位元
+├── docs/
+│   └── hardware_bench.md  # 實驗報告 (含 SRAM/PSRAM 對比數據)
+└── README.md              # 系統架構心得：從 MCU 到小型電腦
+</code></pre>
+<p>透過這種部署方式，學生能從「單純寫程式」跨越到「<strong>操控硬體靈魂</strong>」的層次，這對於未來開發無人機、工業相機等複雜系統是不可或缺的深度練習。_</p>
 
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8 text-justify">
-            <p class="font-bold text-slate-700 mb-4 ">本單元教學重點：開啟「硬體開發者的眼」。讓學生理解 S3 不只是一顆晶片，而是一個具備記憶體分層架構的小型電腦。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600 font-bold uppercase tracking-widest text-justify">重點 1：記憶體分工思維</strong> - 在 1-1 中，強調 SRAM 是「金錢」，PSRAM 是「倉庫」。學會把頻繁訪問的數據留在金錢區。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-widest">重點 2：指針的藝術</strong> - 1-2 的核心是 ROI，這是視覺演算法降低運算量的第一步。學生必須掌握指針偏移。</li>
-                <li><strong class="text-indigo-600 font-bold text-justify uppercase tracking-tighter">重點 3：時序與競爭</strong> - 1-3 帶著學生進入「類比與數位交界」。理解時鐘頻率如何影響訊號完整性。</li>
-            </ol>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 text-justify">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3 text-justify">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── src/mem_test.cpp      # 核心：學員需填寫 PSRAM 壓力測試代碼
-├── src/platformio.ini    # 配置：啟用 -DBOARD_HAS_PSRAM 選項
-└── README.md             # 紀錄：PSRAM 分配數據與 Heap 管理心得
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-justify">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm text-justify">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700 text-justify">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5 text-justify">觀看「ESP32-S3 雙緩衝與 DMA 原理」短片。理解數據搬運不佔 CPU 的重要性。</td>
-                        <td class="px-6 py-5 text-justify"><strong>Dashboard:</strong> 測試學員是否能預估 VGA RGB565 影像的內存佔用。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30 text-justify">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900 text-justify uppercase tracking-tighter font-black">領取作業 (Repo)，執行 PSRAM 分配與 ROI 提取。觀察並解決指針偏移導致的當機。</td>
-                        <td class="px-6 py-5 text-left text-justify"><strong>技術教練:</strong> 現場示範如何透過 VSYNC 中斷來同步緩衝區。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50 text-justify border-justify">課後精進</td>
-                        <td class="px-6 py-5 text-justify text-left text-justify font-black">提交包含硬體競爭分析的最終專案。閱讀導師對「OPI 相位延遲」在高頻 PSRAM 下的補充。</td>
-                        <td class="px-6 py-5 text-left text-justify border-justify"><strong>Feedback PR:</strong> 點評對「內存映射 (MMU)」概念的理解度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

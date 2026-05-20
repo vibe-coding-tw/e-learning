@@ -484,153 +484,136 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>二進位資料調校師</h2>
-
-        <div class="assignment-quest">
-            <h3 class="quest-title">任務 1：封裝雙通道馬達指令 (Binary Encoder)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：通訊協定設計師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：35 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>接受作業</strong>：從 GitHub Classroom 建立專屬程式庫，確認範本已含 <code>parser.js</code> 或等效檔案。</li>
-                    <li><strong>撰寫封裝函式</strong>：建立將左右馬達速度寫入 <code>Uint8Array</code> 的函式，確保值限制在 0 到 255。</li>
-                    <li><strong>驗證輸出</strong>：在頁面或測試檔中印出 Hex 結果，確認索引順序與預期一致。</li>
-                    <li><strong>提交成果</strong>：將測試方式與封包格式說明寫入 README，再 <code>commit</code> / <code>push</code>。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>封包格式</strong>：左右通道位元組順序是否正確且穩定？</li>
-                    <li>[ ] <strong>範圍控制</strong>：是否有處理超出 1 Byte 範圍的輸入值？</li>
-                    <li>[ ] <strong>驗證紀錄</strong>：README 或測試輸出是否能證明封裝結果正確？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 2：還原感測器的 16-bit 數值 (Data Decoder)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：數據逆向工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立測試 Buffer</strong>：先準備一組 2-byte 範例資料，明確標出高位與低位。</li>
-                    <li><strong>使用 DataView 解碼</strong>：用 <code>getUint16()</code> 還原數值，並比較 Big-Endian 與 Little-Endian
-                        的差異。</li>
-                    <li><strong>寫下觀察</strong>：在註解或 README 說明為什麼同一組位元組在不同端序下會得到不同結果。</li>
-                    <li><strong>同步到雲端</strong>：提交解碼函式、測試案例與說明文件。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>端序理解</strong>：是否能正確說明並切換 Big-Endian / Little-Endian？</li>
-                    <li>[ ] <strong>API 使用</strong>：<code>DataView</code> 的 offset 與參數是否使用正確？</li>
-                    <li>[ ] <strong>測試品質</strong>：是否用具體例子驗證解碼結果，而不是只相信直覺？</li>
-                </ul>
-            </div>
-        </div>
+<div class="markdown-heading"><h1 class="heading-element">數據解析與類型化陣列 (Typed Arrays) 作業指南</h1><a id="user-content-數據解析與類型化陣列-typed-arrays-作業指南" class="anchor" aria-label="Permalink: 數據解析與類型化陣列 (Typed Arrays) 作業指南" href="#數據解析與類型化陣列-typed-arrays-作業指南"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到 <strong><code>start-02-unit-typed-arrays</code></strong> 單元！</p>
+<p>在這個單元中，我們將從「標籤化數據 (JSON)」邁向「位元級操作 (Binary Data Manipulation)」，這是一個前端工程師邁向底層與硬體通訊的重要里程碑。你將學習如何利用 <code>ArrayBuffer</code> 與 <code>TypedArray</code> 進行記憶體級別的操作，並掌握「位元組順序 (Endianness)」這項跨平台通訊的必備知識。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 作業目標</h2><a id="user-content--作業目標" class="anchor" aria-label="Permalink: 🎯 作業目標" href="#-作業目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本次作業包含兩個核心實驗，你需要完成通訊解析器框架的實作與邊界測試：</p>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：雙通道馬達指令封裝 (Binary Encoder Lab)</h3><a id="user-content-任務-1雙通道馬達指令封裝-binary-encoder-lab" class="anchor" aria-label="Permalink: 任務 1：雙通道馬達指令封裝 (Binary Encoder Lab)" href="#任務-1雙通道馬達指令封裝-binary-encoder-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>將抽象的速度指令封裝為硬體可理解的 2-byte Payload，並掌握 <code>Uint8</code> 範圍限制與索引順序。</p>
+<ul>
+<li>
+<strong>實作封包邏輯</strong>：在 <code>parser.js</code> 建立函式，將左右馬達速度 (0-255) 依序寫入一個 <code>Uint8Array(2)</code>。</li>
+<li>
+<strong>數值範圍保護</strong>：實作「鉗位 (Clamping)」邏輯，處理輸入負數或大於 255 的例外狀況（如強制降為 0 或升為 255），確保系統安全。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：還原感測器的 16-bit 數值 (Data Decoder &amp; Endianness Lab)</h3><a id="user-content-任務-2還原感測器的-16-bit-數值-data-decoder--endianness-lab" class="anchor" aria-label="Permalink: 任務 2：還原感測器的 16-bit 數值 (Data Decoder &amp; Endianness Lab)" href="#任務-2還原感測器的-16-bit-數值-data-decoder--endianness-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>破解跨平台通訊的核心陷阱，學會利用 <code>DataView</code> 處理高低位元組並應對不同的端序 (Endianness)。</p>
+<ul>
+<li>
+<strong>解碼器實作挑戰</strong>：將一個 16-bit 的十六進位值（如 <code>0x03E8</code>）還原成十進位整數。</li>
+<li>
+<strong>端序切換練習</strong>：分別讀取大端序 (Big-Endian) 與小端序 (Little-Endian) 下的數值，並觀察結果的差異。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📁 專案檔案結構</h2><a id="user-content--專案檔案結構" class="anchor" aria-label="Permalink: 📁 專案檔案結構" href="#-專案檔案結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong><code>index.html</code></strong>：數據視覺化偵錯介面。你可以在此調整滑桿，即時看到記憶體中的 Byte 變化。</li>
+<li>
+<strong><code>parser.js</code></strong>：核心作業區。請在此實作 <code>encodeMotorSpeed()</code> 與 <code>decodeSensorData()</code> 函式。</li>
+<li>
+<strong><code>test/</code></strong>：自動化單元測試。用來驗證你的實作是否符合規格要求。</li>
+<li>
+<strong><code>assets/</code></strong>：參考資源。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📝 提交要求</h2><a id="user-content--提交要求" class="anchor" aria-label="Permalink: 📝 提交要求" href="#-提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>完成 <code>parser.js</code> 中所有 <code>// TODO</code> 的部分。</li>
+<li>確保所有的自動化測試都能通過。</li>
+<li>在下方定義你的通訊協定規範：</li>
+</ol>
+<div class="markdown-heading"><h3 class="heading-element">我的機器人通訊協定規範</h3><a id="user-content-我的機器人通訊協定規範" class="anchor" aria-label="Permalink: 我的機器人通訊協定規範" href="#我的機器人通訊協定規範"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>馬達指令</strong>：
+<ul>
+<li>Index 0: [請填寫代表左輪或右輪]</li>
+<li>Index 1: [請填寫代表左輪或右輪]</li>
+</ul>
+</li>
+<li>
+<strong>端序實驗心得</strong>：
+<ul>
+<li>[請簡述你對大端序和小端序的理解，以及何時應該開啟 Little-Endian 模式]</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p>祝你在位元世界中探索愉快！完成本單元後，你將擁有了開發「高效能遙控駕駛倉、實時環境測繪系統、以及各類低延遲物聯網設備」的核心能力！</p>
 
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>上傳框架代碼（含 <code>parser.js</code> 註解框架）並勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
+<p>針對 <strong><code>start-02-unit-typed-arrays</code> (數據解析與類型化陣列 Typed Arrays)</strong> 單元，這是學員從「標籤化數據」邁向「位元級操作」的技術分水嶺。它要求學員具備 <strong>底層數據處理 (Binary Data Manipulation)</strong> 的意識，學習如何跳出 JSON 的舒適圈，利用 <code>ArrayBuffer</code> 與 <code>TypedArray</code> 進行記憶體級別的操作，並掌握「位元組順序 (Endianness)」這項跨平台通訊的必備知識。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>二進位資料作業的核心在於「協定封裝與數據還原」，範本應包含通訊解析器框架與邊界測試，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>index.html</code></strong>：<strong>數據視覺化偵錯介面</strong>。預設包含一個 Hex 預覽區塊，讓學員在調整滑桿時，能即時看到內存中的 Byte 變化。</li>
+<li>
+<strong>📂 <code>parser.js</code></strong>：<strong>封裝器與解碼器實作區</strong>。學員在此實作 <code>encodeMotorSpeed()</code> 與 <code>decodeSensorData()</code>。預留 <code>// TODO</code> 讓學員練習邊界補捉。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>自訂通訊協定規範 (Protocol Spec)</strong>。提供模板要求學員寫下：我的馬達指令中，Index 0 代表哪一輪？Index 1 代表哪一輪？</li>
+<li>
+<strong>📂 <code>test/</code></strong>：<strong>自動化單元測試</strong>。提供基礎測試腳本（如使用 Jest 或簡單 Assert），自動驗證學員產出的 Buffer 長度與內容是否符合規格。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：雙通道馬達指令封裝 (Binary Encoder Lab)</h4><a id="user-content-任務-1雙通道馬達指令封裝-binary-encoder-lab" class="anchor" aria-label="Permalink: 任務 1：雙通道馬達指令封裝 (Binary Encoder Lab)" href="#任務-1雙通道馬達指令封裝-binary-encoder-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：將抽象的速度指令封裝為硬體可理解的 2-byte Payload。掌握 Uint8 範圍限制與索引順序。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>封包邏輯實作</strong>：建立一個函式，將左右馬達速度 (0-255) 依序寫入一個 <code>Uint8Array(2)</code>。</li>
+<li>
+<strong>數值範圍保護</strong>：要求實作「鉗位 (Clamping)」邏輯，當輸入負數或大於 255 時，必須安全地處理（如強制降為 0 或升為 255）。</li>
+<li>
+<strong>驗證要點</strong>：<strong>關鍵字節審核</strong>。學員產出的 Buffer 是否精確為兩個位元組？左右輪的順序是否與其 README 紀錄的一致？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：還原感測器的 16-bit 數值 (Data Decoder &amp; Endianness Lab)</h4><a id="user-content-任務-2還原感測器的-16-bit-數值-data-decoder--endianness-lab" class="anchor" aria-label="Permalink: 任務 2：還原感測器的 16-bit 數值 (Data Decoder &amp; Endianness Lab)" href="#任務-2還原感測器的-16-bit-數值-data-decoder--endianness-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：破解跨平台通訊的核心陷阱。學會利用 <code>DataView</code> 同時處理高低位元組並應對不同的端序 (Endianness)。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>解碼器實作挑戰</strong>：給予一個 16-bit 的十六進位值（如 <code>0x03E8</code> 代表距離 1000mm），學員需實作代碼還原成十進位整數。</li>
+<li>
+<strong>端序切換練習</strong>：要求學員分別讀取大端序 (Big-Endian) 與小端序 (Little-Endian) 下的數值，並解釋其結果差異（如 1000 vs 59395）。</li>
+<li>
+<strong>驗證要點</strong>：是否正確使用了 <code>view.getUint16(0, true/false)</code>？學員是否能在報告中清楚說明什麼時候該開啟 Little-Endian 模式？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 位元組精準度與封包效率點評標準 (Binary Precision &amp; Efficiency Standards)</h3><a id="user-content-3-位元組精準度與封包效率點評標準-binary-precision--efficiency-standards" class="anchor" aria-label="Permalink: 3. 位元組精準度與封包效率點評標準 (Binary Precision &amp; Efficiency Standards)" href="#3-位元組精準度與封包效率點評標準-binary-precision--efficiency-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對數值位元的極致簡潔與對底層兼容性的判斷力」</strong>：</p>
+<ul>
+<li>[ ] <strong>封包穩定性</strong>：產出的 ArrayBuffer 格式是否穩定，沒有出現不必要的動態長度變化？</li>
+<li>[ ] <strong>邊界安全性</strong>：面對異常的輸入數據，封裝器是否展現出預期的健壯性（Clamping 或是報錯提示）？</li>
+<li>[ ] <strong>端序邏輯清晰度</strong>：學員對於「高位在前」還是「低位在前」是否有明確的設計思維而非猜測？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── index.html           # 結構：提供交互滑桿與即時 Hex 偵錯預覽區
+├── parser.js            # 核心：練習 Uint8Array 封裝、DataView 讀取與 Endianness 控制
+├── README.md            # 總結：定義我的機器人通訊協定規範與端序實驗心得
+├── test/                # 測試：自動化檢查 Byte 格式與範圍
+└── assets/memory_map.png # 參考：ArrayBuffer 與 Typed Array 的內存映射圖
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的前端工程師，不僅是會寫代碼的人，而是能透視內存底層、能用最少的 Byte 傳遞最精確的指令、並在與不同硬體架構對話時，能優雅地切換端序以達成完美同步的位元藝術家」</strong>。掌握類型化陣列技術後，學員將擁有了開發「高效能遙控駕駛倉、實時環境測繪系統、以及各類低延遲物聯網設備」最核心也最資深的二進位開發實力！
+|
+|
+太熱血了！我們已經將 <strong>Start 02</strong>（數據解析）的最硬核單元標準化完成了。這標誌著學員現在終於擁有了「將數字打包進記憶體」的能力。恭喜！從 Web 到硬體的最後一道數位牆已經被推倒！</p>
 
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>建立作業並定義自動評分測項，確保學生產出的 Byte 格式完全正確。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，實作 <code>Uint8Array</code> 封裝與 <code>DataView</code> 解碼邏輯。</li>
-                <li>本地開發後 <strong>Push 代碼</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>查看學生對 <strong>Endianness</strong> 參數、16-bit 合併邏輯與 <code>offset</code> 處理，針對代碼健壯性給予評價。</li>
-            </ol>
-        </div>
-
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元引導學生處理二進位底層數據，實作有效率的通訊協議，建議範本倉庫設置如下：</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── index.html       # 包含數據輸入與 Hex 預覽介面
-├── parser.js        # (核心) 學生需在此實作 encode/decode 函式
-└── test/            # 預置的基礎單元測試（檢查 Buffer 長度與數值正確性）</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>parser.js (數據封裝與解碼)</strong></p>
-        <pre><code>// 3-1: 馬達指令封裝 (Uint8Array)
-function encodeMotorSpeed(left, right) {
-  const buffer = new Uint8Array(2);
-  buffer[0] = Math.min(255, Math.max(0, left));
-  buffer[1] = Math.min(255, Math.max(0, right));
-  return buffer;
-}
-
-// 3-2: 感測器數據解碼 (DataView)
-function decodeSensorData(buffer) {
-  const view = new DataView(buffer);
-  // 使用 Big-Endian (預設) 或 Little-Endian
-  // return view.getUint16(0, false); 
-  return view.getUint16(0, true); 
-}</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>Buffer 長度檢查：</strong> 檢查 3-1 產出的 ArrayBuffer 長度是否精確為 2。</li>
-            <li><strong>數值測試：</strong> 傳入 <code>0x03E8</code> 緩衝區，檢查對應 Endianness 下的解碼結果是否符合預期。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody style="color: #4b5563;">
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">操作 Module 1 的對比實驗，理解「二進位封裝」對傳輸效率的影響。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>Dashboard：</strong>確認學生已體驗過數據壓縮帶來的效率提升。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">領取 Classroom 作業，實作封裝與解碼邏輯並更新代碼。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>現場觀察：</strong>在大螢幕展示不同學生的 Hex 結果，討論
-                        Endianness 陷阱與 NVS 映射。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">完成 3-2 解碼挑戰，撰寫個人對二進位通訊優勢的總結並提交 PR。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>核發最終評語，確認其具備處理二進位底層數據的能力。</td>
-                </tr>
-            </tbody>
-        </table>
     </section>
 </body>
 

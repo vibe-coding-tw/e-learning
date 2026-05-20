@@ -290,146 +290,145 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">色彩實驗室：HSV 數值分析與遮罩實作</h2>
+<div class="markdown-heading"><h1 class="heading-element">adv-06-unit-hsv-math (HSV 顏色空間的數學優勢)</h1><a id="user-content-adv-06-unit-hsv-math-hsv-顏色空間的數學優勢" class="anchor" aria-label="Permalink: adv-06-unit-hsv-math (HSV 顏色空間的數學優勢)" href="#adv-06-unit-hsv-math-hsv-顏色空間的數學優勢"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到 HSV 顏色空間的數學優勢單元！在這個單元中，我們將學習如何利用 HSV 色彩模型來處理電腦視覺中的顏色識別問題。</p>
+<div class="markdown-heading"><h2 class="heading-element">專案目標</h2><a id="user-content-專案目標" class="anchor" aria-label="Permalink: 專案目標" href="#專案目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本單元的核心在於理解 HSV 如何將「亮度」與「顏色」解耦，並學會處理色環（Hue）的循環邊界問題。你將完成以下任務：</p>
+<ol>
+<li>
+<strong>色彩空間壓力測試 (Color Stress Test)</strong>：量化證明 HSV 在變動環境下的穩定性。</li>
+<li>
+<strong>動態 HSV 遮罩與「紅色斷點」處理</strong>：處理色相在 0/360 度處的非線性邊界問題。</li>
+<li>
+<strong>紅綠燈行為優先權判定</strong>：將色彩感知轉化為具備安全性優先權的系統決策。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">任務說明</h2><a id="user-content-任務說明" class="anchor" aria-label="Permalink: 任務說明" href="#任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：色彩空間壓力測試</h3><a id="user-content-任務-1色彩空間壓力測試" class="anchor" aria-label="Permalink: 任務 1：色彩空間壓力測試" href="#任務-1色彩空間壓力測試"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請在 <code>docs/stress_test_report.md</code> 中記錄不同光照條件下的數據，並分析為什麼 HSV 模型比 RGB 更適合用於視覺追蹤。</p>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：動態 HSV 遮罩實作</h3><a id="user-content-任務-2動態-hsv-遮罩實作" class="anchor" aria-label="Permalink: 任務 2：動態 HSV 遮罩實作" href="#任務-2動態-hsv-遮罩實作"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在 <code>js/mask_logic.js</code> 中實作遮罩邏輯。特別注意「紅色」在色環上的斷點處理。</p>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：行為決策邏輯</h3><a id="user-content-任務-3行為決策邏輯" class="anchor" aria-label="Permalink: 任務 3：行為決策邏輯" href="#任務-3行為決策邏輯"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在 <code>js/decision_maker.js</code> 中實作決策引擎。當系統同時偵測到多種顏色時，應遵循「安全優先」的原則進行決策（例如：紅燈優先於綠燈）。</p>
+<div class="markdown-heading"><h2 class="heading-element">程式庫結構</h2><a id="user-content-程式庫結構" class="anchor" aria-label="Permalink: 程式庫結構" href="#程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>js/hsv_math.js</code>: 核心數學運算，包含 RGB 到 HSV 的轉換。</li>
+<li>
+<code>js/mask_logic.js</code>: 顏色遮罩判定邏輯。</li>
+<li>
+<code>js/decision_maker.js</code>: 行為決策邏輯。</li>
+<li>
+<code>docs/stress_test_report.md</code>: 實驗紀錄與分析報告。</li>
+<li>
+<code>tests/</code>: 自動化評分脚本，用於驗證你的程式碼正確性。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">如何測試</h2><a id="user-content-如何測試" class="anchor" aria-label="Permalink: 如何測試" href="#如何測試"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>你可以執行以下指令來執行自動化測試：</p>
+<div class="highlight highlight-source-shell"><pre>npm <span class="pl-c1">test</span></pre></div>
+<div class="markdown-heading"><h2 class="heading-element">提交指南</h2><a id="user-content-提交指南" class="anchor" aria-label="Permalink: 提交指南" href="#提交指南"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>完成所有任務後，請將你的更改推送到此程式庫：</p>
+<div class="highlight highlight-source-shell"><pre>git add <span class="pl-c1">.</span>
+git commit -m <span class="pl-s"><span class="pl-pds">"</span>完成 HSV 數學優勢作業<span class="pl-pds">"</span></span>
+git push</pre></div>
+<p>祝你學習愉快！</p>
 
-        <div class="assignment-quest">
-            <h3 class="quest-title text-justify">任務 1：色彩壓力測試 (Color Stress Test)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：光學感測工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫並 Clone 到本地。</li>
-                    <li><strong>環境變數紀錄</strong>：對同一目標（紅球）在陽光直射與陰影處分別截取 RGB 像素值與換算後的 HSV 值。</li>
-                    <li><strong>變異係數計算</strong>：在 README 中列出表格。計算 $\sigma / \mu$ (標準差/均值)，量化對比 RGB 的混亂度與 HSV 的穩定度。</li>
-                    <li><strong>診斷提交</strong>：在 PR 中論述為何在高動態光照下（如賽道反光）必須捨棄 RGB 模型。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>實驗數據嚴謹度</strong>：報告中是否明確包含不同照度下的數據對照？</li>
-                    <li>[ ] <strong>邏輯洞察力</strong>：能否指認出 RGB 中哪個通道受亮度 (Intensity) 影響最劇烈？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 2：動態 HSV 遮罩產生器 (HSV Mask Generator)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：視覺演算法開發者</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>數學轉換實作</strong>：在 <code>JS</code> 中實作 <code>rgbToHsv()</code> 函式。</li>
-                    <li><strong>互動控制建立</strong>：建立滑桿 (Sliders) 以定義 H_min, H_max, S_min 等參數。當 $H_{min} > H_{max}$ 時，自動轉換為
-                        OR 邏輯以應對紅色斷點。</li>
-                    <li><strong>Mask 即時渲染</strong>：將畫面上符合條件的像素塗白，不符合的塗黑，產出純淨的二值化遮罩。</li>
-                    <li><strong>Push PR</strong>：提交具備「紅色斷點處理能力」的強大遮罩產生器。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>算法邊界處理</strong>：當滑桿拉至 350-10 度區間（跨越 0 度）時，遮罩是否能正確顯現紅色區域而不消失？</li>
-                    <li>[ ] <strong>物件封裝性</strong>：<code>rgbToHsv</code> 函式是否足夠獨立且能被其他模組輕鬆調用？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title text-justify">任務 3：紅綠燈行為優先權判定 (Decision Logic)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：智慧系統架構師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🛠️ 執行技術流程 (Git Workflow)
-                </h4>
-                <ol>
-                    <li><strong>多色彩遮罩配置</strong>：定義紅燈 (H~0) 與 綠燈 (H~120) 兩組 HSV 設定。</li>
-                    <li><strong>決策引擎實作</strong>：撰寫
-                        <code>DecisionMaker()</code>。邏輯：<code>IF red_count > threshold THEN mode = STOP; ELSE IF green_count > threshold THEN mode = FOLLOW;</code>。
-                    </li>
-                    <li><strong>連通測試</strong>：在畫面中同時移動紅、綠板，錄製影片證明系統在「衝突情境」下依然能做出符合安全優先順序的判斷。</li>
-                    <li><strong>Push Final</strong>：提交具備視覺邏輯決策能力的專案。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4 class="text-justify uppercase tracking-widest font-black text-justify">🎯 教師點評標準 (Tutor Benchmarks)
-                </h4>
-                <ul>
-                    <li>[ ] <strong>邏輯完備性</strong>：當畫面上同時出現紅綠顏色時，是否能依照「安全優先」原則輸出停止指令？</li>
-                    <li>[ ] <strong>虛警率 (False Positives)</strong>：透過 S (飽和度) 過濾，是否能有效排除淺色背景引起的誤判？</li>
-                </ul>
-            </div>
-        </div>
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
-            <p class="font-bold text-slate-700 mb-4">本單元教學重點：破解「為什麼這顏色追不到」的迷思。引導學生從幾何學角度理解色彩空間的穩定性。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-emerald-600">重點 1：RGB 的光影陷阱</strong> - 引導學生動手實驗，讓他們親眼看見數值在影子下如何劇烈崩塌。</li>
-                <li><strong class="text-emerald-600">重點 2：色環的環狀性質</strong> - 強調 H 值是「角度」而非線性數值，解釋為什麼紅色追蹤通常最難（因為斷在 0/360）。</li>
-                <li><strong class="text-emerald-600">重點 3：決策者的思維</strong> - 將色彩偵測與「行為樹 (Behavior Tree)」初步掛鉤。顏色只是輸入，決策才是 AI。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>adv-06-unit-hsv-math</code> (HSV 顏色空間的數學優勢)</strong> 單元，這是一個從「視覺感官」跨越到「數位濾波與決策邏輯」的核心課程。重點在於理解 HSV 如何將「亮度」與「顏色」解耦，並處理色環（Hue）的循環邊界問題。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template 程式庫) 配置建議</h3><a id="user-content-1-範本程式庫-template-程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template 程式庫) 配置建議" href="#1-範本程式庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>色彩空間的轉換與二值化（Masking）對穩定性要求極高，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>js/hsv_core.js</code></strong>：核心數學檔案，提供 <code>ImageData</code> 操作框架，留下 <code>rgbToHsv()</code> 公式實作與 <code>inRange()</code> 判定邏輯的 <code>TODO</code>。</li>
+<li>
+<strong>📂 <code>js/decision_engine.js</code></strong>：決策引擎模組。用於 Task 3，讓學員實作基於像素數量的行為觸發（如紅燈停、綠燈行）。</li>
+<li>
+<strong>📂 <code>STRESS_TEST.md</code></strong>：實驗紀錄表。預置表格，要求學員填入同一目標在不同光照（陽光、陰影、強光）下的 RGB 與 HSV 對比數據。</li>
+<li>
+<strong>📂 <code>tests/hsv_conversion.test.js</code></strong>：自動化評分脚本。利用 Jest 驗證 <code>rgbToHsv()</code> 轉換函式的數學精確度（比對標準色碼轉換結果）。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：色彩空間壓力測試 (Color Stress Test)</h4><a id="user-content-任務-1色彩空間壓力測試-color-stress-test" class="anchor" aria-label="Permalink: 任務 1：色彩空間壓力測試 (Color Stress Test)" href="#任務-1色彩空間壓力測試-color-stress-test"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過實驗數據量化證明 HSV 在變動環境下的穩定性（抗噪性）。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>數據報告要求</strong>：學員需在 <code>STRESS_TEST.md</code> 中計算變異係數 ($\sigma / \mu$)。分析當環境變暗時，雖然 RGB 數值暴跌，但 HSV 的 $H$ 值是否依然保持穩定。</li>
+<li>
+<strong>PR 深度核核</strong>：導師點評其對「數值耦合 (Coupling)」概念的理解。是否能解釋為什麼 RGB 模型不適合用於戶外追蹤？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：動態 HSV 遮罩與「紅色斷點」處理 (Red Gap Handling)</h4><a id="user-content-任務-2動態-hsv-遮罩與紅色斷點處理-red-gap-handling" class="anchor" aria-label="Permalink: 任務 2：動態 HSV 遮罩與「紅色斷點」處理 (Red Gap Handling)" href="#任務-2動態-hsv-遮罩與紅色斷點處理-red-gap-handling"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：處理色環在 $0/360$ 度處的非線性邊界問題，這是開發者常犯錯的「天坑」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>邊界邏輯檢核</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：應對紅色斷點的邏輯 OR</span>
+<span class="pl-k">function</span> <span class="pl-en">isRed</span><span class="pl-kos">(</span><span class="pl-s1">h</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+    <span class="pl-k">return</span> <span class="pl-kos">(</span><span class="pl-s1">h</span> <span class="pl-c1">&gt;</span> <span class="pl-c1">350</span> <span class="pl-c1">||</span> <span class="pl-s1">h</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">10</span><span class="pl-kos">)</span><span class="pl-kos">;</span> <span class="pl-c">// 而不是簡單的 h &gt; h_min &amp;&amp; h &lt; h_max</span>
+<span class="pl-kos">}</span></pre></div>
+</li>
+<li>
+<strong>Autograding</strong>：餵入一個 H 值為 $358$ 的像素，檢核學員的遮罩函式是否能正確判定其為「紅色」。如果學員只用簡單區域判斷，此處會失效。</li>
+<li>
+<strong>互動 UI 實作</strong>：要求在網頁上建立 HSV 滑桿，並即時渲染出二值化（黑白）遮罩圖形，驗證提取品質。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：紅綠燈行為優先權判定 (Behavior Decision Logic)</h4><a id="user-content-任務-3紅綠燈行為優先權判定-behavior-decision-logic" class="anchor" aria-label="Permalink: 任務 3：紅綠燈行為優先權判定 (Behavior Decision Logic)" href="#任務-3紅綠燈行為優先權判定-behavior-decision-logic"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：將「感知」轉化為「語義化的系統決策」，並考慮安全性優先權。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>決策邏輯實作</strong>：
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// 學生需實作：安全優先的決策</span>
+<span class="pl-k">if</span> <span class="pl-kos">(</span><span class="pl-s1">redPixels</span> <span class="pl-c1">&gt;</span> <span class="pl-s1">threshold</span><span class="pl-kos">)</span> <span class="pl-k">return</span> <span class="pl-s">"STOP"</span><span class="pl-kos">;</span> 
+<span class="pl-k">else</span> <span class="pl-k">if</span> <span class="pl-kos">(</span><span class="pl-s1">greenPixels</span> <span class="pl-c1">&gt;</span> <span class="pl-s1">threshold</span><span class="pl-kos">)</span> <span class="pl-k">return</span> <span class="pl-s">"FOLLOW"</span><span class="pl-kos">;</span></pre></div>
+</li>
+<li>
+<strong>驗證方式</strong>：在畫面積前同時晃動紅板與綠板（模擬衝突情境）。系統必須能根據「安全優先」原則穩定輸出 <code>STOP</code>。</li>
+<li>
+<strong>Tutor View (PR 審核)</strong>：檢查學員是否加入了「飽和度 (S)」與「亮度 (V)」的過濾，以防止淺灰色背景或反光引起的「虛假觸發 (False Positive)」。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 色彩感知導師點評標準 (HSV Perception Benchmarks)</h3><a id="user-content-3-色彩感知導師點評標準-hsv-perception-benchmarks" class="anchor" aria-label="Permalink: 3. 色彩感知導師點評標準 (HSV Perception Benchmarks)" href="#3-色彩感知導師點評標準-hsv-perception-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對數位訊號物理特性的深刻理解」</strong>：</p>
+<ul>
+<li>[ ] <strong>邊界處理能力</strong>：代碼中是否正確處理了 Hue 的 $360 \to 0$ 循環特性？</li>
+<li>[ ] <strong>抗噪優化意識</strong>：是否利用 S (飽和度) 成功過濾掉了黑白灰等「無色」背景噪音？</li>
+<li>[ ] <strong>行為決策一致性</strong>：當數據發生閃動時，是否有實作濾波或計數確認，以防止控制指令頻繁切換產生的「抖動」？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── js/
+│   ├── hsv_math.js         # 核心：待填寫 RGB 到 HSV 的轉換公式
+│   ├── mask_logic.js       # 邏輯：待填寫應對紅色斷點的遮罩判定
+│   └── decision_maker.js   # 行為：待填寫基於色彩規模的行為樹邏輯
+├── docs/
+│   └── stress_test_report.md # 實驗：RGB vs HSV 穩定度量化表格
+└── README.md               # 專案心得：我如何解決色環邊界問題並實現穩定追蹤
+</code></pre>
+<p>透過這種部署方式，學生能明白 <strong>「電腦如何定義顏色」</strong>，並學會處理數位世界中特有的非線性邊界問題。這對於後續開發精準的視覺巡檢、特徵抓取等自動化系統是極為重要的數學鋪墊。</p>
+<hr>
+<p>至此，我們已經完成了 <strong><code>adv-01</code> 到 <code>adv-06</code></strong> 所有課程單元的 GitHub Classroom 部署策略指南。這些建議旨在將你的教材優勢（極致美感、硬核實踐）與 GitHub 的工程化工作流完美結合。</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-emerald-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm border-justify">
-.
-├── js/color_math.js    # 數學：待學員實作 rgbToHsv 公式
-├── js/decison.js       # 邏輯：待學員實作紅綠優先權判斷
-├── samples/red_ball.jpg# 素材：提供受控實驗用測試圖
-└── README.md           # 繳交報告：需包含壓力測試數據表格
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課前預習</td>
-                        <td class="px-6 py-5">觀看「HSV 甜甜圈模型」視覺化解釋。預習角度加法如何處理 359+1 的問題。</td>
-                        <td class="px-6 py-5"><strong>Dashboard:</strong> 追蹤學員是否能區分 Hue 與 Brightness 的定義。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold bg-blue-50/30">課中實作</td>
-                        <td class="px-6 py-5 text-slate-900">領取作業 (Repo)，執行壓力測試與遮罩開發。調校出能跨越 0 度線的紅色追蹤器。</td>
-                        <td class="px-6 py-5"><strong>技術導師:</strong> 協助演示如何在 `if` 判斷中用 `||` (或) 來整合紅色兩端的角度區間。</td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-5 font-bold text-slate-800 bg-slate-50/50">課後精進</td>
-                        <td class="px-6 py-5">提交 PR，包含對 S/V 門檻在抗噪上貢獻的分析報告。</td>
-                        <td class="px-6 py-5"><strong>Feedback PR:</strong> 點評對「極端光照」下 H 值漂移的補償策略，表揚數據分析詳實的報告。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 

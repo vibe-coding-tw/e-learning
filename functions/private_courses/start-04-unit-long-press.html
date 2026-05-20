@@ -403,164 +403,145 @@ btn.<span class="text-blue-400">addEventListener</span>(<span class="text-green-
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>長按控制守門員</h2>
-
-        <div class="assignment-quest">
-            <h3 class="quest-title">任務 1：做出穩定的長按連發流程 (Press and Hold Loop)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：互動邏輯工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：40 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>接受作業</strong>：從 GitHub Classroom 建立專屬程式庫並打開長按控制範本。</li>
-                    <li><strong>建立三段流程</strong>：分別實作 start、loop、stop 三個階段，讓按住時持續送指令、放開時立即停止。</li>
-                    <li><strong>防止 timer 疊加</strong>：在重新啟動前先清掉舊定時器，避免產生多個幽靈迴圈。</li>
-                    <li><strong>版本同步</strong>：將控制流程與測試結果整理後推送到 GitHub。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>流程正確</strong>：是否具備按下開始、持續連發、放開停止的完整生命週期？</li>
-                    <li>[ ] <strong>Timer 管理</strong>：是否有效避免重複長按造成定時器堆疊？</li>
-                    <li>[ ] <strong>停止可靠</strong>：放開按鈕後是否能立刻停止控制輸出？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 2：加上雙重保險的安全熔斷 (Safety Mechanisms)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：韌體安全工程師</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：35 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>加入超時保護</strong>：當長按超過 5 秒時，自動停止指令發送並切回安全狀態。</li>
-                    <li><strong>監看異常條件</strong>：額外處理網路不穩、連線中斷或畫面失焦時的故障保護。</li>
-                    <li><strong>驗證熔斷</strong>：模擬極端情況，確認系統會主動停機而不是一直送命令。</li>
-                    <li><strong>提交報告</strong>：在 README 記錄保護條件、觸發門檻與測試結果。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>保護邏輯</strong>：是否同時處理時間過長與異常中斷兩種風險？</li>
-                    <li>[ ] <strong>故障反應</strong>：出現異常時是否能自動停止，而不是依賴使用者手動處理？</li>
-                    <li>[ ] <strong>測試可信度</strong>：是否真的模擬了危險情境，而不是只停留在程式碼表面？</li>
-                </ul>
-            </div>
-        </div>
+<div class="markdown-heading"><h1 class="heading-element">長按邏輯的實現 —— 定時器的妙用</h1><a id="user-content-長按邏輯的實現--定時器的妙用" class="anchor" aria-label="Permalink: 長按邏輯的實現 —— 定時器的妙用" href="#長按邏輯的實現--定時器的妙用"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到第四單元！在本單元中，我們將學習如何從簡單的「點擊」進階到「長按連發」的控制邏輯。這對於開發流暢的機器人控制介面至關重要。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>定時器生命週期管理</strong>：學習如何使用 <code>setInterval</code> 與 <code>clearInterval</code>。</li>
+<li>
+<strong>防止定時器疊加</strong>：確保每次啟動新定時器前，舊的定時器已被正確清理。</li>
+<li>
+<strong>安全熔斷機制</strong>：實作 5 秒自動停止功能，確保操作安全。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">🚀 作業任務</h2><a id="user-content--作業任務" class="anchor" aria-label="Permalink: 🚀 作業任務" href="#-作業任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：穩定且不疊加的長按連發</h3><a id="user-content-任務-1穩定且不疊加的長按連發" class="anchor" aria-label="Permalink: 任務 1：穩定且不疊加的長按連發" href="#任務-1穩定且不疊加的長按連發"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：在 <code>timer.js</code> 中實作 <code>startMove</code> 與 <code>stopMove</code>。</li>
+<li>
+<strong>要求</strong>：按下按鈕時啟動 <code>setInterval</code>，放開時清除。關鍵在於啟動前必須先檢查並清除已存在的定時器，避免「幽靈定時器」導致速度疊加。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：5 秒強制熔斷的安全機制</h3><a id="user-content-任務-25-秒強制熔斷的安全機制" class="anchor" aria-label="Permalink: 任務 2：5 秒強制熔斷的安全機制" href="#任務-25-秒強制熔斷的安全機制"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作超時自動煞車。</li>
+<li>
+<strong>要求</strong>：當長按超過 5 秒時，系統應自動呼叫 <code>stopMove()</code> 強制停止，防止機器人無限衝撞。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：多按鈕並行測試</h3><a id="user-content-任務-3多按鈕並行測試" class="anchor" aria-label="Permalink: 任務 3：多按鈕並行測試" href="#任務-3多按鈕並行測試"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：確保不同方向的按鈕定時器互不干擾。</li>
+<li>
+<strong>要求</strong>：測試左轉與前進同時按壓時，兩者的定時器是否能各自獨立運作。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">🛠 開發與測試工具</h2><a id="user-content--開發與測試工具" class="anchor" aria-label="Permalink: 🛠 開發與測試工具" href="#-開發與測試工具"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本程式庫提供了一個<strong>定時器監控面板</strong>（在 <code>index.html</code> 中）。開發時請留意面板上的 Timer ID：</p>
+<ul>
+<li>
+<strong>正確行為</strong>：按下時出現 ID，放開時 ID 變回 <code>null</code>。</li>
+<li>
+<strong>錯誤行為</strong>：連續點擊導致 ID 持續跳動或增加，代表發生了定時器疊加。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📝 繳交檢查清單</h2><a id="user-content--繳交檢查清單" class="anchor" aria-label="Permalink: 📝 繳交檢查清單" href="#-繳交檢查清單"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>[ ] 按下按鈕時，動作是否流暢連發？</li>
+<li>[ ] 連續點擊時，Timer ID 是否保持穩定（不會無限累加）？</li>
+<li>[ ] 按住 5 秒後，動作是否會自動停止？</li>
+<li>[ ] 切換視窗或分頁時，機器人是否會自動煞車？</li>
+</ul>
+<hr>
+<p><em>本課程為 Vibe Coding 系列課程之一。</em></p>
 
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>上傳框架代碼（含 <code>timer.js</code> 註解框架）到 Repo 並勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
+<p>針對 <strong><code>start-04-unit-long-press</code> (長按邏輯的實現：定時器的妙用)</strong> 單元，這是學員從「靜態點擊」轉向「連續控制」的關鍵實作課。它要求學員具備 <strong>定時器生命週期管理 (Timer Lifecycle Management)</strong> 與 <strong>失效安全防護 (Operational Safety)</strong> 的深度認知，學習如何利用 <code>setInterval</code> 實作順滑的長按連發，並解決關鍵的「定時器疊加 (Timer Stacking)」Bug 以及 5 秒自動熔斷的安全機制。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>長按作業的核心在於「流程的開啟、持續與強制終止」，範本應包含定時器偵錯工具與安全狀態機框架，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>index.html</code></strong>：<strong>定時器監控開發面板</strong>。預設包含一個「定時器 ID 顯示器」，學員在開發時能即時看到目前有多少個活動定時器，藉此偵測「幽靈定時器」Bug。</li>
+<li>
+<strong>📂 <code>timer.js</code></strong>：<strong>長按核心邏輯區</strong>。學員在此實作 <code>startMove</code> (按下)、<code>stopMove</code> (放開) 與 <code>loop</code> (定時循環)。預留 <code>// TODO</code> 引導學員撰寫「先清除後啟動」的保險邏輯。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>安全協定紀錄錄 (Safety Protocol Log)</strong>。提供模板要求學員紀錄：當我連點 10 次按鈕時，我的 Timer ID 是否跳動而非堆疊？當我按著不放超過 5 秒，系統是否真的自動停止了？</li>
+<li>
+<strong>📂 <code>assets/</code></strong>：<strong>狀態機流程圖</strong>。提供一張長按邏輯的邏輯跳轉圖，幫助學員視覺化對應 <code>mousedown</code> -&gt; <code>setInterval</code> -&gt; <code>mouseup</code> -&gt; <code>clearInterval</code> 的過程。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：穩定且不疊加的長按連發 (Stable Press-and-Hold Lab)</h4><a id="user-content-任務-1穩定且不疊加的長按連發-stable-press-and-hold-lab" class="anchor" aria-label="Permalink: 任務 1：穩定且不疊加的長按連發 (Stable Press-and-Hold Lab)" href="#任務-1穩定且不疊加的長按連發-stable-press-and-hold-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：打造「零殘留」的控制迴圈。學會管理 <code>setInterval</code> 的回傳 ID，並在每次啟動前執行「防疊加清理」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>生命週期實作</strong>：配合 <code>touchstart</code> 與 <code>touchend</code> 事件，建立三段式流程。</li>
+<li>
+<strong>防疊加保險</strong>：學生必須在 <code>setInterval</code> 前一行寫入 <code>if (timer) clearInterval(timer)</code>。</li>
+<li>
+<strong>驗證要點</strong>：<strong>資源管理審核</strong>。學員是否理解了為什麼不清理計時器會導致「指令暴衝」？放開按鈕後，控制台是否還有殘留的發送日誌？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：5 秒強制熔斷的安全熔絲 (5s Safety Kill-switch Lab)</h4><a id="user-content-任務-25-秒強制熔斷的安全熔絲-5s-safety-kill-switch-lab" class="anchor" aria-label="Permalink: 任務 2：5 秒強制熔斷的安全熔絲 (5s Safety Kill-switch Lab)" href="#任務-25-秒強制熔斷的安全熔絲-5s-safety-kill-switch-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作「自動停止」保險。防止使用者長時間按壓不放或手機當機導致機器人無限衝撞。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>超時停止實作</strong>：在啟動長按的同時，設定一個 <code>setTimeout</code>，在 5 秒後無論是否放開都強制執行 <code>stopMove()</code>。</li>
+<li>
+<strong>異常情境處理</strong>：額外監聽 <code>window.blur</code> 或 <code>visibilitychange</code> 事件，確保切換 APP 時機器人能自動煞車。</li>
+<li>
+<strong>驗證要點</strong>：<strong>失效安全 (Fail-safe) 審核</strong>。超時保護是否真的生效？當學員在長按時「切換分頁」或「手機來電」，系統是否能自動切斷馬達輸出？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：多按鈕並行不干擾 (Multi-Button Concurrency Lab)</h4><a id="user-content-任務-3多按鈕並行不干擾-multi-button-concurrency-lab" class="anchor" aria-label="Permalink: 任務 3：多按鈕並行不干擾 (Multi-Button Concurrency Lab)" href="#任務-3多按鈕並行不干擾-multi-button-concurrency-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：處理「雙手並行操控」。確保左手轉向、右手拉油門時，兩組定時器能協同運作而不互相覆蓋 ID。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>獨立定時器管理</strong>：練習將不同按鈕的 Timer ID 分別存儲在物件或陣列中，而非共用單一變數。</li>
+<li>
+<strong>數據合併發送</strong>：嘗試將兩組狀態打包成單一 JSON 封包發送。</li>
+<li>
+<strong>驗證要點</strong>：多指操作下是否流暢？當其中一根手指放開時，另一個動作是否依然維持連發？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 計時器精準與熔斷安全性點評標準 (Temporal Reliability Standards)</h3><a id="user-content-3-計時器精準與熔斷安全性點評標準-temporal-reliability-standards" class="anchor" aria-label="Permalink: 3. 計時器精準與熔斷安全性點評標準 (Temporal Reliability Standards)" href="#3-計時器精準與熔斷安全性點評標準-temporal-reliability-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對非同步迴圈的極致潔癖與對機器失控的危機處理感」</strong>：</p>
+<ul>
+<li>[ ] <strong>幽靈定時器防禦率</strong>：代碼是否具備「啟動前必先清理」的良好習慣？</li>
+<li>[ ] <strong>自動熔斷有效性</strong>：是否具備 5 秒強制停止與畫面失焦自動煞車的實作能力？</li>
+<li>[ ] <strong>資源回收清潔度</strong>：當動作停止後，是否確實將 ID 變數設回 <code>null</code>，避免殘留的邏輯判斷錯誤？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── index.html           # 結構：提供控制按鈕與實時活動定時器計數器
+├── timer.js             # 核心：練習 setInterval 管理、防疊加邏輯與 5 秒安全熔斷
+├── README.md            # 總結：定義長按頻率、熔斷門檻與異常情境測試紀錄
+└── assets/logic_flow.png # 參考：長按狀態機轉換邏輯圖
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的前端工程師，不僅是會寫動畫的人，而是能掌控代碼的生命週期、能預判使用者的不正常操作、並在每一毫秒的循環中，為真實世界的機器人植入『主動煞車』靈魂的安全工程大師」</strong>。掌握長按邏輯與定時器技術後，學員將擁有了開發「高頻操控介面、關鍵任務重啟機制、以及各類具備物理風險之自動化終端」最核心也最資深的系統控制開發實力！_
+|
+|
+太熱血了！我們已經將 <strong>Start 04</strong>（計時與安全）的「長按控制」單元標準化完成了。這標誌著學員現在已經具備了「讓機器人持續運動，並在危險瞬間自動煞車」的硬技術。恭喜！Vibe Coding 的數位自動保險絲正式裝配完成！</p>
 
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>建立作業並連結範本，建議開啟 <strong>Feedback Pull Requests</strong> 選項以檢查計時器洩漏邏輯。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，實作計時器生命週期管理（含 <code>setInterval</code> 與 <code>clearInterval</code>）。</li>
-                <li>本地開發後 <strong>Push 代碼</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR，針對學生「計時器堆疊（Timer Stacking）」預防措施與安全熔斷邏輯給予具體回饋。</li>
-            </ol>
-        </div>
-
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元引導學生理解計時器 (Timer) 的生命週期，並實作安全的「長按連發」與「自動熔斷」機制，建議範本倉庫設置如下：</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── index.html       # 包含控制按鈕與日誌區
-├── js/timer.js      # (重點) 需加入計時器管理與熔斷邏輯
-└── README.md        # 計時器堆疊風險分析與熔斷門檻設定</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>timer.js (安全連發機制)</strong></p>
-        <pre><code>let moveTimer = null;
-
-function startMove() {
-  // 1. 防呆：先清除舊的，避免定時器堆疊 (Timer Stacking)
-  if (moveTimer) clearInterval(moveTimer);
-
-  // 2. 啟動新定時器
-  moveTimer = setInterval(() => {
-    sendCommand('FORWARD');
-  }, 100);
-
-  // 3. 自動熔斷 (Task 2-2)：5 秒後強制停止
-  setTimeout(() => {
-    if (moveTimer) stopMove();
-    console.warn("Safety Timeout Triggered");
-  }, 5000);
-}
-
-function stopMove() {
-  if (moveTimer) {
-      clearInterval(moveTimer);
-      moveTimer = null;
-  }
-  sendCommand('STOP');
-}</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>邏輯檢查：</strong> 使用 Actions 檢查 <code>timer.js</code> 是否在 <code>setInterval</code> 前調用了
-                <code>clearInterval</code>。</li>
-            <li><strong>超時驗證：</strong> 模擬長按事件，驗證 5 秒後是否產出了正確的停止日誌或狀態變更。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody style="color: #4b5563;">
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">研讀關於計時器堆疊（Timer Stacking）引發的安全風險。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>Dashboard：</strong>確認學生已體驗過「指令暴衝」的模擬場景。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">實作長按指令流 (2-1) 並開發雙重保險機制 (2-2) 後提交。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">
-                        <strong>助教角色：</strong>引導學生模擬不同故障場景（如斷線或視窗失去焦點）測試熔斷效果。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">挑戰多按鈕並行邏輯且互不干擾 (2-3) 並完成最後一個 Commit。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback PR：</strong>審核安全熔斷代碼的嚴謹度與資源釋放
-                        (Clean-up) 邏輯。
-                    </td>
-                </tr>
-            </tbody>
-        </table>
     </section>
 </body>
 

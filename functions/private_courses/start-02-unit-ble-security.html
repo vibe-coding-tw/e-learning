@@ -308,185 +308,164 @@
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2>BLE 安全守門員</h2>
-
-        <div class="assignment-quest">
-            <h3 class="quest-title">任務 1：建造不會爆炸的連線按鈕 (Permission Guard)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：異常處理工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：35 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>接受作業</strong>：從老師提供的 GitHub Classroom 連結建立專屬作業程式庫。</li>
-                    <li><strong>加入安全防線</strong>：在 <code>requestDevice()</code> 外層加上 <code>try...catch</code>，針對
-                        <code>NotFoundError</code> 與權限拒絕情境顯示友善提示。</li>
-                    <li><strong>重現錯誤</strong>：實際操作一次「按下連線後取消配對」，並確認頁面不會只剩 Console 紅字。</li>
-                    <li><strong>提交成果</strong>：將修正後的互動畫面與錯誤說明寫入 README，再 <code>commit</code> / <code>push</code>。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>錯誤攔截</strong>：是否能正確區分 <code>NotFoundError</code>、權限拒絕與其他未知錯誤？</li>
-                    <li>[ ] <strong>介面回饋</strong>：取消授權後是否有清楚的 UI 訊息，而不是只留在 Console？</li>
-                    <li>[ ] <strong>流程完整</strong>：README 是否交代重現步驟與修正前後差異？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 2：在多人教室中精準鎖定自己的設備 (Safe Filter)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：安全通訊專家</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>分析需求</strong>：先列出目前教室內可能同時出現的裝置名稱與服務 UUID。</li>
-                    <li><strong>設計過濾器</strong>：在 <code>requestDevice</code> 中加入
-                        <code>filters</code>、<code>namePrefix</code> 或 <code>services</code>，讓清單縮小到自己的設備。</li>
-                    <li><strong>實地測試</strong>：至少在多裝置同時開啟的情境下驗證一次，觀察是否還會掃到鄰座裝置。</li>
-                    <li><strong>版本提交</strong>：把過濾策略與原因整理到 README 或註解中，再推送到 GitHub。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>過濾精度</strong>：是否真的能在多裝置環境下只顯示目標設備？</li>
-                    <li>[ ] <strong>安全意識</strong>：是否理解瀏覽器要求 <code>filters</code> 的隱私保護目的？</li>
-                    <li>[ ] <strong>代碼清晰度</strong>：過濾條件是否易讀、易調整，而不是硬塞魔法字串？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 3：完成跨平台權限觀察報告 (Browser Audit)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：跨平台相容性測試員</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：30 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>選擇測試環境</strong>：至少使用兩種瀏覽器或裝置，例如 Android Chrome 與 iOS Bluefy。</li>
-                    <li><strong>紀錄差異</strong>：截圖保存權限彈窗、失敗提示與 HTTPS 限制畫面。</li>
-                    <li><strong>整理觀察</strong>：在 README 新增一段表格或條列，比較各平台在 BLE 權限流程上的差異。</li>
-                    <li><strong>提交報告</strong>：將截圖放入程式庫後提交，方便老師在 Feedback PR 中點評。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>測試覆蓋</strong>：是否至少完成兩個平台或瀏覽器的比較？</li>
-                    <li>[ ] <strong>觀察品質</strong>：是否清楚指出權限 UI、限制條件與錯誤訊息差異？</li>
-                    <li>[ ] <strong>文件整理</strong>：截圖命名、說明文字與 README 結構是否容易閱讀？</li>
-                </ul>
-            </div>
-        </div>
+<div class="markdown-heading"><h1 class="heading-element">Web BLE 安全機制與權限規範 (Web BLE Security &amp; Permissions)</h1><a id="user-content-web-ble-安全機制與權限規範-web-ble-security--permissions" class="anchor" aria-label="Permalink: Web BLE 安全機制與權限規範 (Web BLE Security &amp; Permissions)" href="#web-ble-安全機制與權限規範-web-ble-security--permissions"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到 <strong>Start 02 Unit: BLE Security</strong>！
+在這個單元中，我們將學習 Web Bluetooth API 在瀏覽器沙箱中的各項限制（如 HTTPS、User Gesture 與設備過濾），並學習如何在多人高干擾環境下保護使用者的通訊主權，進行防禦性編程與精準過濾。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 作業目標 (Assignment Objectives)</h2><a id="user-content--作業目標-assignment-objectives" class="anchor" aria-label="Permalink: 🎯 作業目標 (Assignment Objectives)" href="#-作業目標-assignment-objectives"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本作業分為三個主要任務，幫助你掌握 Web BLE 的安全機制：</p>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：「授權失敗」模擬與排除</h3><a id="user-content-任務-1授權失敗模擬與排除" class="anchor" aria-label="Permalink: 任務 1：「授權失敗」模擬與排除" href="#任務-1授權失敗模擬與排除"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>實作例外處理</strong>：使用 <code>try...catch</code> 包裹 <code>requestDevice()</code>，捕捉並處理不同的 Web BLE 錯誤碼（例如 <code>NotFoundError</code> 或是 <code>SecurityError</code>）。</li>
+<li>
+<strong>確保介面友善</strong>：當使用者拒絕授權或藍牙關閉時，網頁必須顯示「人類語言」的提示，而非在背景靜默失敗。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：多裝置環境下的「精準過濾」</h3><a id="user-content-任務-2多裝置環境下的精準過濾" class="anchor" aria-label="Permalink: 任務 2：多裝置環境下的「精準過濾」" href="#任務-2多裝置環境下的精準過濾"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>設定過濾條件</strong>：利用 <code>filters</code> (例如 <code>namePrefix</code> 或 <code>services</code> UUID) 取代 <code>acceptAllDevices: true</code>，確保只掃描並連線到你的目標設備。</li>
+<li>
+<strong>防止數位誤入</strong>：在多人同時操作的環境下，你的程式碼應該只顯示你專屬的設備，降低連線錯誤的風險。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：跨平台權限大調查</h3><a id="user-content-任務-3跨平台權限大調查" class="anchor" aria-label="Permalink: 任務 3：跨平台權限大調查" href="#任務-3跨平台權限大調查"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>多裝置與跨平台測試</strong>：使用不同的設備（Android、iOS、macOS、Windows 等）測試你的網頁。</li>
+<li>
+<strong>分析權限差異</strong>：觀察各個平台在請求藍牙與定位權限時的不同行為，將觀察到的現象與藍牙配對對話框的截圖記錄在你的報告中。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">📝 繳交說明 (Submission Guidelines)</h2><a id="user-content--繳交說明-submission-guidelines" class="anchor" aria-label="Permalink: 📝 繳交說明 (Submission Guidelines)" href="#-繳交說明-submission-guidelines"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請確保你的程式庫 (Repository) 包含以下內容，並完成對應的要求：</p>
+<ol>
+<li>
+<strong><code>app.js</code> 與 <code>index.html</code></strong>：
+<ul>
+<li>實作完整的例外處理機制，以及提供友善的使用者介面。</li>
+<li>設定精準的過濾條件，並移除不安全的 <code>acceptAllDevices: true</code> 除非必要。</li>
+</ul>
+</li>
+<li>
+<strong><code>screenshots/</code> 資料夾</strong>：
+<ul>
+<li>上傳你在不同平台（如 Android/Mac/iOS）測試的藍牙配對對話框截圖。</li>
+</ul>
+</li>
+<li>
+<strong>更新這份 <code>README.md</code></strong>：
+<ul>
+<li>在下方填寫你的安全審計與相容性報告。紀錄：
+<ol>
+<li>當你按下「取消配對」時，網頁發生了什麼事？</li>
+<li>你在不同手機/電腦上看見的權限視窗有何差異？iOS 上有什麼特殊限制嗎？</li>
+</ol>
+</li>
+</ul>
+</li>
+</ol>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🧑‍💻 學生報告區 (Student Report)</h2><a id="user-content-‍-學生報告區-student-report" class="anchor" aria-label="Permalink: 🧑‍💻 學生報告區 (Student Report)" href="#‍-學生報告區-student-report"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p><strong>姓名 / 學號：</strong> [請填寫你的姓名與學號]</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 授權失敗與例外處理觀察</h3><a id="user-content-1-授權失敗與例外處理觀察" class="anchor" aria-label="Permalink: 1. 授權失敗與例外處理觀察" href="#1-授權失敗與例外處理觀察"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li><em>(請描述你如何處理 <code>NotFoundError</code> 與 <code>SecurityError</code>，以及畫面如何引導使用者)</em></li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">2. 精準過濾實作</h3><a id="user-content-2-精準過濾實作" class="anchor" aria-label="Permalink: 2. 精準過濾實作" href="#2-精準過濾實作"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li><em>(請說明你使用了哪些 <code>filters</code> 條件，為什麼選擇這些條件)</em></li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">3. 跨平台權限與相容性調查</h3><a id="user-content-3-跨平台權限與相容性調查" class="anchor" aria-label="Permalink: 3. 跨平台權限與相容性調查" href="#3-跨平台權限與相容性調查"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li><em>(請附上各平台的測試結果，說明是否需要開啟定位、是否強制 HTTPS，以及截圖證據)</em></li>
+</ul>
 
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2>GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide">
-            <p><strong>第一步：準備範本倉庫 (Template Repo)</strong></p>
-            <ol>
-                <li>上傳基礎連線框架並勾選 <strong>"Template repository"</strong>。</li>
-            </ol>
+<p>針對 <strong><code>start-02-unit-ble-security</code> (Web BLE 安全機制與權限規範)</strong> 單元，這是學員從「能動就好」進化為「安全開發」的必經之路。它要求學員具備 <strong>網路安全與隱私保護 (Security &amp; Privacy)</strong> 的意識，理解 Web Bluetooth API 在瀏覽器沙箱中的各項限制（如 HTTPS、User Gesture 與設備過濾），並學習如何在多人高干擾環境下保護使用者的通訊主權。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repository) 配置建議</h3><a id="user-content-1-範本程式庫-template-repository-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repository) 配置建議" href="#1-範本程式庫-template-repository-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>安全作業的核心在於「異常防禦與精準過濾」，範本應包含連線安全框架與跨平台測試模板，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>index.html</code></strong>：<strong>具備安全導引的 UI</strong>。預設包含 HTTPS 檢測腳本，若環境不安全則顯示警告。</li>
+<li>
+<strong>📂 <code>app.js</code></strong>：<strong>安全實作區</strong>。學員在此練習 <code>requestDevice</code> 的過濾器設定，並實作完整的 <code>try...catch</code> 例外處理邏輯。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>安全審計與相容性報告</strong>。提供模板讓學員紀錄：當我按「取消配對」時發生了什麼？我在不同手機上看見的權限視窗有何差異？</li>
+<li>
+<strong>📂 <code>screenshots/</code></strong>：<strong>證據存放區</strong>。要求學員上傳不同平台（Android/Mac/iOS）的藍牙配對對話框截圖，進行跨平台設計對比。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：「授權失敗」模擬與排除 (Permission Error Handling Lab)</h4><a id="user-content-任務-1授權失敗模擬與排除-permission-error-handling-lab" class="anchor" aria-label="Permalink: 任務 1：「授權失敗」模擬與排除 (Permission Error Handling Lab)" href="#任務-1授權失敗模擬與排除-permission-error-handling-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實施防禦性編程。確保當使用者拒絕授權或藍牙關閉時，網頁能給出正確的「人類語言」提示，而非靜默失敗。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>例外處理實作</strong>：包裹 <code>requestDevice()</code>。針對特定的錯誤類型（如 <code>NotFoundError</code> 代表取消、<code>SecurityError</code> 代表非主動觸發）撰寫對應的 UI 提示。</li>
+<li>
+<strong>取消實驗重現</strong>：手動點擊連線後按下「取消」，驗證頁面是否能顯示「請選擇設備以繼續」。</li>
+<li>
+<strong>驗證要點</strong>：<strong>關鍵健壯性審核</strong>。代碼是否能區分不同的 Web BLE 錯誤碼？UI 回饋是否能引導使用者下一步該怎麼做？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：多裝置環境下的「精準過濾」 (Precision Filtering Lab)</h4><a id="user-content-任務-2多裝置環境下的精準過濾-precision-filtering-lab" class="anchor" aria-label="Permalink: 任務 2：多裝置環境下的「精準過濾」 (Precision Filtering Lab)" href="#任務-2多裝置環境下的精準過濾-precision-filtering-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實踐隱私最小化原則。在多台機器人同時廣播的環境下，透過過濾條件確保只連線到目標設備，防止「數位誤入」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>過濾字典設計</strong>：利用 <code>namePrefix</code> (如 <code>Car-</code>) 或特定的 <code>services</code> UUID 來過濾列表。</li>
+<li>
+<strong>多人情境模擬</strong>：全班同時開啟藍牙，學員需修改代碼使其「只顯示」標有自己編號的機器人。</li>
+<li>
+<strong>驗證要點</strong>：學員是否理解了 <code>acceptAllDevices: true</code> 的潛在風險？過濾器的實作是否能有效減少清單噪音？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：跨平台權限大調查 (Cross-platform Audit Lab)</h4><a id="user-content-任務-3跨平台權限大調查-cross-platform-audit-lab" class="anchor" aria-label="Permalink: 任務 3：跨平台權限大調查 (Cross-platform Audit Lab)" href="#任務-3跨平台權限大調查-cross-platform-audit-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：拓寬工程視野。理解 Web 標準在不同作業系統（Android vs iOS vs MacOS）與瀏覽器核心下的實作差異。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>多裝置對比</strong>：使用不同品牌的手機或電腦造訪專案，截下各平台的「設備選擇器」樣式。</li>
+<li>
+<strong>權限路徑分析</strong>：在 README 中紀錄哪些平台要求先開啟「定位」，哪些平台強制要求 HTTPS。</li>
+<li>
+<strong>驗證要點</strong>：提交的報告中是否有明確的平台差異觀察（如：iOS 必須透過專用 App 才能開啟 Web BLE）？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 安全合規與異常處理點評標準 (Security Compliance &amp; Handling Standards)</h3><a id="user-content-3-安全合規與異常處理點評標準-security-compliance--handling-standards" class="anchor" aria-label="Permalink: 3. 安全合規與異常處理點評標準 (Security Compliance &amp; Handling Standards)" href="#3-安全合規與異常處理點評標準-security-compliance--handling-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對 Web 安全約束的尊重與對用戶隱私操作的細膩處理」</strong>：</p>
+<ul>
+<li>[ ] <strong>沙箱理解深度</strong>：是否能正確解釋為什麼 Web BLE 禁止在背景自動連線（User Gesture 限制）？</li>
+<li>[ ] <strong>代碼健壯度</strong>：當硬體藍牙無預警關閉時，網頁前端是否具備自檢與自癒（給予重試指引）的能力？</li>
+<li>[ ] <strong>相容性敏感度</strong>：是否對「 Web BLE 在 iOS 上的局限性」有明確的認知與技術對策？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── index.html           # 結構：包含 HTTPS 狀態檢測與友好的錯誤提示視窗
+├── app.js               # 核心：練習精準 filters 設定與三層 try-catch 例外捕獲
+├── README.md            # 總結：我如何確保通訊的安全權限流程並解決跨平台相容性
+├── screenshots/         # 證據：Android、Mac、iOS 的配對彈窗差異截圖
+└── assets/security_flow.png # 參考：Web Bluetooth 安全握手流程圖
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的前端工程師，不僅是會寫通訊代碼的人，而是能透視瀏覽器的安全沙箱、能預見極端環境下的權限衝突、並在保護用戶隱私的前提下提供最專業且無懈可擊的硬體互動介面大師」</strong>。掌握 Web BLE 安全與權限技術後，學員將擁有了開發「醫療級監控儀表、銀行級智慧鎖控制台、以及高等級自動化管理系統」最核心也最資深的防禦開發實力！</p>
+<hr>
+<p>太熱血了！我們已經將 <strong>Start 02</strong>（JavaScript 與安全）的「安全守門員」單元標準化完成了。這標誌著學員現在已經具備了打造「不僅能動，而且極度安全可信」系統的素質。恭喜！通訊安全的防線已經全面佈防！</p>
 
-            <p style="margin-top: 1rem;"><strong>第二步：建立 Classroom 作業</strong></p>
-            <ol>
-                <li>連結範本倉庫並勾選 <strong>"Enable feedback pull requests"</strong> 以便進行設計點評與跨平台對比回饋。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第三步：學生端操作 (Flipped Workflow)</strong></p>
-            <ol>
-                <li>學生領取作業，實作 <code>requestDevice</code> 過濾器與安全沙箱例外處理。</li>
-                <li>本地開發後 <strong>Push 代碼</strong>。</li>
-            </ol>
-
-            <p style="margin-top: 1rem;"><strong>第四步：教師回饋 (Review)</strong></p>
-            <ol>
-                <li>進入 Feedback PR 查看 <code>screenshots/</code> 的跨平台對比，並針對錯誤處理邏輯、HTTPS 限制理解度給予回饋。</li>
-            </ol>
-        </div>
-
-        <h2>在 GitHub Classroom 的實戰部署建議</h2>
-        <p>此單元著重於 <strong>"BLE Security Implementation"</strong>，引導學生實作正確的設備過濾與錯誤處理，建議範本倉庫設置如下：</p>
-
-        <h3>A. 範本倉庫 (Template Repo) 結構</h3>
-        <pre><code>.
-├── index.html       # 附帶 GitHub Pages 部署設定
-├── app.js           # 留空讓學生填寫 requestDevice filters
-├── screenshots/     # 存放作業 1-3 要求的跨平台對比圖
-└── README.md        # 撰寫對 HTTPS 與 User Gesture 安全特性的心得</code></pre>
-
-        <h3>B. 參考範例代碼 (Reference Example Code)</h3>
-        <p><strong>app.js (精準設備過濾)</strong></p>
-        <pre><code>async function requestMyDevice() {
-  const options = {
-    filters: [{ namePrefix: 'VibeCar-' }], // 班級前綴，避免掃到鄰座
-    optionalServices: ['heart_rate']
-  };
-  const device = await navigator.bluetooth.requestDevice(options);
-  // ... 連線邏輯
-}</code></pre>
-
-        <p><strong>error-handling.js (授權異常處理)</strong></p>
-        <pre><code>try {
-  await requestMyDevice();
-} catch (error) {
-  if (error.name === 'NotFoundError') {
-    alert("❌ 未選擇設備或藍牙已關閉");
-  } else if (error.name === 'SecurityError') {
-    alert("❌ 必須點擊按鈕才能觸發藍牙視窗 (User Gesture)");
-  }
-}</code></pre>
-
-        <h3>C. 自動評分 (Autograding) 的設計</h3>
-        <ul>
-            <li><strong>關鍵字檢查：</strong> 檢查 <code>app.js</code> 是否包含 <code>filters</code> 或 <code>namePrefix</code>。</li>
-            <li><strong>例外處理：</strong> 驗證是否包含 <code>try...catch</code> 或對 <code>device.gatt.connect()</code> 的超時判定。</li>
-        </ul>
-
-        <h2>翻轉教室的實施策略</h2>
-        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="background-color: #f8fafc;">
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">階段</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">學生行動 (Git Workflow)</th>
-                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">教師/平台角色</th>
-                </tr>
-            </thead>
-            <tbody style="color: #4b5563;">
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課前 (預習)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">閱讀本頁的安全三鐵律，理解 HTTPS 與 User Gesture 的重要性。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Dashboard：</strong>確認學生已初步理解安全沙箱概念。
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課中 (實作)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">進行現場「大亂鬥連線」，修正過濾條件 (1-2) 並 Push 觸發部署。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>現場演示：</strong>對比沒寫 try...catch (1-1)
-                        導致 UI 崩潰的慘狀。</td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>課後 (精進)</strong></td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;">彙整 cross-platform 測試結果 (1-3) 寫入 README 並提交最後一次
-                        Commit。</td>
-                    <td style="padding: 12px; border: 1px solid #e2e8f0;"><strong>Feedback
-                            PR：</strong>評點截圖完整度與對安全機制理解的深度。</td>
-                </tr>
-            </tbody>
-        </table>
     </section>
 </body>
 

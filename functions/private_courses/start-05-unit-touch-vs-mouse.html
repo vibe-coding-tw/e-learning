@@ -379,144 +379,191 @@ function <span class="text-yellow-300">getPosition</span>(e) {
 
     <!-- Assignment Guide (Hidden) -->
     <section id="assignment-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">觸控交互實驗室</h2>
-
-        <div class="assignment-quest">
-            <h3 class="quest-title">任務 1：萬用按鈕 (Omni-Button Implementation)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：全平台架構師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：45 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>建立程式庫</strong>：從 GitHub Classroom 連結建立個人作業程式庫。</li>
-                    <li><strong>雙重監聽</strong>：同時為按鈕掛載 <code>mousedown</code> 與 <code>touchstart</code> 監聽器。</li>
-                    <li><strong>消除幽靈點擊</strong>：在 <code>touchstart</code> 中使用 <code>e.preventDefault()</code>，確保 300ms
-                        後不會觸發模擬的滑鼠事件。</li>
-                    <li><strong>同步提交</strong>：撰寫 README 紀錄在不同裝置（桌面 vs 行動端）上的測試結果，並 <code>push</code>。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>事件唯一性</strong>：在行動端輕觸按鈕時，是否僅觸發一次 <code>handleAction</code>？</li>
-                    <li>[ ] <strong>響應速度</strong>：觸控反應是否「零延遲」？有無感覺到 300ms 的等待？</li>
-                    <li>[ ] <strong>相容性</strong>：切換回桌面模式後，滑鼠點擊是否依然正常運作？</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 2：防抖滑桿 (Interaction Locking)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：用戶體驗研究員</span> | <span>難度：⭐️⭐️⭐️</span> | <span>估計時長：60 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>定義容器</strong>：製作一個橫向滑桿 UI，並監聽其 <code>touchmove</code> 事件。</li>
-                    <li><strong>鎖定視窗</strong>：手動設定 <code>{ passive: false }</code>，並在滑動時呼叫
-                        <code>e.preventDefault()</code>。</li>
-                    <li><strong>精確對位</strong>：實作 <code>getPosition(e)</code> 函數，確保滑塊中心點精確跟隨手指位置。</li>
-                    <li><strong>提交報告</strong>：將滑桿操作的錄影或截圖存入 README 後 <code>push</code>。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>視窗鎖定</strong>：操作滑桿時，網頁背景是否完全靜止（不發生上下捲動）？</li>
-                    <li>[ ] <strong>座標穩定度</strong>：手指快速滑動時，滑塊有無發生劇烈跳動或偏移？</li>
-                    <li>[ ] <strong>代碼穩健性</strong>：是否正確區分了 <code>e.touches</code> 與 <code>e.changedTouches</code> 的使用時機？
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="assignment-quest" style="margin-top: 2rem;">
-            <h3 class="quest-title">任務 3：原生級體驗 (Native Feel UX)</h3>
-            <div class="quest-meta">
-                <span>角色扮演：介面特效工程師</span> | <span>難度：⭐️⭐️</span> | <span>估計時長：30 min</span>
-            </div>
-
-            <div class="quest-workflow">
-                <h4>🛠️ 執行技術流程 (Git Workflow)</h4>
-                <ol>
-                    <li><strong>禁用預設</strong>：監聽 <code>contextmenu</code> 並回傳 false，禁止在長按時彈出系統選單。</li>
-                    <li><strong>視覺回饋</strong>：使用 CSS <code>-webkit-tap-highlight-color</code> 清除預設的藍色點擊框。</li>
-                    <li><strong>狀態管理</strong>：實作 `active` 狀態，模擬原生 App 按鈕被按下時的下沉感。</li>
-                    <li><strong>版本提交</strong>：紀錄如何優化觸控回饋的手感心得，推送到 GitHub。</li>
-                </ol>
-            </div>
-
-            <div class="tutor-benchmark">
-                <h4>🎯 教師點評標準 (Tutor Benchmarks)</h4>
-                <ul>
-                    <li>[ ] <strong>系統選單屏蔽</strong>：長按按鈕時是否確實不再彈出「複製/全選」選單？</li>
-                    <li>[ ] <strong>觸覺一致性</strong>：視覺縮放、文字選取等瀏覽器預設行為是否在控制區域內被妥善封鎖？</li>
-                    <li>[ ] <strong>代碼優雅度</strong>：是否使用了 CSS <code>user-select: none</code> 輔助提升體驗？</li>
-                </ul>
-            </div>
-        </div>
+<div class="markdown-heading"><h1 class="heading-element">觸控 vs. 滑鼠：打造全平台通用的操控體驗</h1><a id="user-content-觸控-vs-滑鼠打造全平台通用的操控體驗" class="anchor" aria-label="Permalink: 觸控 vs. 滑鼠：打造全平台通用的操控體驗" href="#觸控-vs-滑鼠打造全平台通用的操控體驗"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在本單元中，你將學習如何處理跨裝置的輸入差異，打造一個在桌面端（滑鼠）與行動端（觸控）都能流暢運行的 Web 介面。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>掌握 <strong>事件序列 (Event Sequencing)</strong>：理解 <code>touchstart</code> -&gt; <code>touchend</code> -&gt; <code>mousedown</code> -&gt; <code>click</code> 的觸發順序。</li>
+<li>攔截 <strong>幽靈點擊 (Ghost Clicks)</strong>：消除行動端 300ms 的點擊延遲。</li>
+<li>實作 <strong>輸入正規化 (Input Normalization)</strong>：撰寫通用的座標解析函數。</li>
+<li>優化 <strong>UX 體感</strong>：封鎖不必要的瀏覽器預設行為（如捲動鎖定、右鍵選單）。</li>
+</ol>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🚀 任務說明</h2><a id="user-content--任務說明" class="anchor" aria-label="Permalink: 🚀 任務說明" href="#-任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：打造全平台萬用按鈕 (Omni-Button)</h3><a id="user-content-任務-1打造全平台萬用按鈕-omni-button" class="anchor" aria-label="Permalink: 任務 1：打造全平台萬用按鈕 (Omni-Button)" href="#任務-1打造全平台萬用按鈕-omni-button"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：同時監聽 <code>mousedown</code> 與 <code>touchstart</code>，但確保在行動端點擊時僅觸發一次邏輯，且無延遲感。</li>
+<li>
+<strong>關鍵點</strong>：在 <code>touchstart</code> 事件中正確使用 <code>e.preventDefault()</code> 攔截後續的模擬事件。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：防抖滑動控制 (Interaction Locking)</h3><a id="user-content-任務-2防抖滑動控制-interaction-locking" class="anchor" aria-label="Permalink: 任務 2：防抖滑動控制 (Interaction Locking)" href="#任務-2防抖滑動控制-interaction-locking"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作一個滑動條，當使用者在滑動時，防止行動端瀏覽器發生意外的頁面捲動。</li>
+<li>
+<strong>關鍵點</strong>：實作通用的 <code>getPosition(e)</code> 輔助函數，並對觸控事件設定 <code>{ passive: false }</code> 以便進行攔截。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：原生 App 體感優化 (Native Feel UX)</h3><a id="user-content-任務-3原生-app-體感優化-native-feel-ux" class="anchor" aria-label="Permalink: 任務 3：原生 App 體感優化 (Native Feel UX)" href="#任務-3原生-app-體感優化-native-feel-ux"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：封鎖長按時的系統右鍵選單，並清除行動端預設的點擊高亮色，提升 Web App 質感。</li>
+<li>
+<strong>關鍵點</strong>：攔截 <code>contextmenu</code> 事件，並使用 CSS 調整觸控回饋視覺。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📂 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>index.html</code>: 包含萬用測試區域與即時事件監控日誌。</li>
+<li>
+<code>touch-logic.js</code>: <strong>核心開發區</strong>，你需要在此實作座標提取、事件攔截與滾動鎖定邏輯。</li>
+<li>
+<code>assets/</code>: 存放教學相關資源。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📝 相容性測試報告 (Compatibility Log)</h2><a id="user-content--相容性測試報告-compatibility-log" class="anchor" aria-label="Permalink: 📝 相容性測試報告 (Compatibility Log)" href="#-相容性測試報告-compatibility-log"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p><em>請在完成開發後，於下方紀錄你的測試結果，並將此報告隨程式碼一同提交。</em></p>
+<div class="markdown-heading"><h3 class="heading-element">1. 基礎事件流測試 (實作前)</h3><a id="user-content-1-基礎事件流測試-實作前" class="anchor" aria-label="Permalink: 1. 基礎事件流測試 (實作前)" href="#1-基礎事件流測試-實作前"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p><em>測試環境 (手機型號/瀏覽器)：</em> <code>__________</code></p>
+<table>
+<thead>
+<tr>
+<th align="left">事件類型</th>
+<th align="left">發生順序</th>
+<th align="left">是否觸發 Action</th>
+<th align="left">估計延遲 (ms)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>touchstart</code></td>
+<td align="left">1</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><code>touchend</code></td>
+<td align="left">2</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><code>mousedown</code></td>
+<td align="left">3</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><code>click</code></td>
+<td align="left">4</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
+<div class="markdown-heading"><h3 class="heading-element">2. 優化後結果 (實作後)</h3><a id="user-content-2-優化後結果-實作後" class="anchor" aria-label="Permalink: 2. 優化後結果 (實作後)" href="#2-優化後結果-實作後"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>是否成功攔截幽靈點擊？ <code>[ ] 是 / [ ] 否</code>
+</li>
+<li>滑動時背景是否鎖定？ <code>[ ] 是 / [ ] 否</code>
+</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">3. 心得與發現</h3><a id="user-content-3-心得與發現" class="anchor" aria-label="Permalink: 3. 心得與發現" href="#3-心得與發現"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>(請簡述你在實作 <code>preventDefault()</code> 之後，操控感有什麼具體的變化？)</p>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">🛠 如何提交</h2><a id="user-content--如何提交" class="anchor" aria-label="Permalink: 🛠 如何提交" href="#-如何提交"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>完成 <code>touch-logic.js</code> 中的任務。</li>
+<li>填寫上方的「相容性測試報告」。</li>
+<li>將更改 push 到你的 GitHub 程式庫。</li>
+</ol>
 
     </section>
 
     <!-- Tutor Guide (Hidden) -->
     <section id="tutor-guide" style="display: none;">
-        <h2 class="text-3xl font-bold mb-8 text-slate-800 border-b pb-4">GitHub Classroom 詳細操作指南</h2>
-        <div class="classroom-guide bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
-            <p class="font-bold text-slate-700 mb-4">本單元教學重點：掌握跨平台事件生成的順序與攔截機制。</p>
-            <ol class="space-y-4 text-slate-600">
-                <li><strong class="text-indigo-600">第一步：範本設置</strong> - 提供一個會產生「數據污染」的壞代碼範例（即重複觸發點擊），讓學生自行診斷。</li>
-                <li><strong class="text-indigo-600">第二步：發布作業</strong> - 在 Classroom 啟用專用測試環境，重點檢查對 <code>{ passive: false }</code> 的應用。</li>
-                <li><strong class="text-indigo-600">第三步：開發引導</strong> - 確保學生理解 <code>e.preventDefault()</code> 的真正作用：它切斷了「觸控」向「模擬滑鼠」轉換的鍊條。</li>
-                <li><strong class="text-indigo-600">第四步：驗收回饋</strong> - 檢查 <code>getPosition</code> 函數是否能跨環境穩定運行，這是未來所有複雜 UI 的基礎。</li>
-            </ol>
-        </div>
+<p>針對 <strong><code>start-05-unit-touch-vs-mouse</code> (觸控 vs. 滑鼠：打造全平台通用的操控體驗)</strong> 單元，這是學員建立「跨裝置相容性 (Cross-Device Compatibility)」認知的實戰課。它要求學員具備 <strong>事件序列管理 (Event Sequencing)</strong> 與 <strong>輸入正規化 (Input Normalization)</strong> 的能力，學習如何處理觸控特有的 300ms 延遲、攔截「幽靈點擊 (Ghost Clicks)」，並實作一個能同時應對滑鼠與指尖的萬用操控介面。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 配置建議</h3><a id="user-content-1-範本程式庫-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 配置建議" href="#1-範本程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>跨裝置作業的核心在於「事件攔截與統一座標解析」，範本應包含多種輸入情境的測試面板，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>index.html</code></strong>：<strong>萬用測試面板</strong>。預設包含一個大按鈕與一個滑動條，並內建「事件監控日誌」，讓學員能清楚看到在不同裝置（桌面 vs 行動端）下，事件發生的順序（如 <code>touchstart</code> -&gt; <code>mousedown</code> -&gt; <code>click</code>）。</li>
+<li>
+<strong>📂 <code>touch-logic.js</code></strong>：<strong>事件攔截實作區</strong>。學員在此實作「萬用座標解析器 (Universal Position Helper)」。預留 <code>// TODO</code> 引導學員撰寫邏輯來分辨 <code>e.clientX</code> 與 <code>e.touches[0].clientX</code>。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>相容性測試報告 (Compatibility Log)</strong>。提供模板要求學員錄製或紀錄：在沒加入 <code>preventDefault()</code> 之前，行動端點擊一次按鈕會觸發幾次 Action？延遲大約是多少毫秒？</li>
+<li>
+<strong>📂 <code>assets/</code></strong>：<strong>事件觸發順序流程圖</strong>。標示從 <code>touchstart</code> 到 <code>click</code> 的完整鍊條，輔助學員理解攔截的最佳切入點。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：打造全平台萬用按鈕 (Omni-Button Implementation Lab)</h4><a id="user-content-任務-1打造全平台萬用按鈕-omni-button-implementation-lab" class="anchor" aria-label="Permalink: 任務 1：打造全平台萬用按鈕 (Omni-Button Implementation Lab)" href="#任務-1打造全平台萬用按鈕-omni-button-implementation-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握「事件競態條件 (Race Condition)」。同時監聽 <code>mousedown</code> 與 <code>touchstart</code>，但確保在行動端僅觸發一次執行邏輯，徹底消除 300ms 延遲。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>幽靈點擊攔截實作</strong>：在 <code>touchstart</code> 事件中使用 <code>e.preventDefault()</code> 斬斷後續模擬的 <code>mousedown</code> 鍊條。</li>
+<li>
+<strong>異步處理挑戰</strong>：確保按鈕在快速連續點擊下，依然維持高度的穩定性。</li>
+<li>
+<strong>驗證要點</strong>：<strong>唯一性與速度感審核</strong>。在手機上點擊時，後台日誌是否僅出現一筆 Action？延遲是否感覺「歸零」？當切換回電腦滑鼠時，功能是否依然正常？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：防抖滑動控制 (Interaction Locking Lab)</h4><a id="user-content-任務-2防抖滑動控制-interaction-locking-lab" class="anchor" aria-label="Permalink: 任務 2：防抖滑動控制 (Interaction Locking Lab)" href="#任務-2防抖滑動控制-interaction-locking-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握「被動監聽器 (Passive Listener) 攔截術」。製作一個橫向滑動條，確保使用者在拖曳時，行動端網頁不會發生「意外的上下捲動」。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>視窗滾動鎖定實作</strong>：對滑桿容器設定 <code>{ passive: false }</code>，並在 <code>touchmove</code> 中精確執行 <code>preventDefault()</code>。</li>
+<li>
+<strong>統一座標輔助函數</strong>：實作一個 <code>getPosition(e)</code> 函數，能自動適應滑鼠物件或觸控物件的座標提取路徑。</li>
+<li>
+<strong>驗證要點</strong>：<strong>操作流暢度審核</strong>。拖曳滑桿時，背景頁面是否完全靜止？手指快速滑動是否有位移或跳動感？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：原生 App 體感優化 (Native Feel UX Lab)</h4><a id="user-content-任務-3原生-app-體感優化-native-feel-ux-lab" class="anchor" aria-label="Permalink: 任務 3：原生 App 體感優化 (Native Feel UX Lab)" href="#任務-3原生-app-體感優化-native-feel-ux-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：掌握「瀏覽器行為防禦」。封鎖長按時的系統右鍵選單 (Context Menu) 與預設的點擊高亮色，讓 Web App 質感升級。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>系統選單屏蔽實作</strong>：監聽 <code>contextmenu</code> 事件並回傳 <code>false</code> (或執行 <code>preventDefault</code>)，消除所有阻礙操控的對話框。</li>
+<li>
+<strong>視覺質感清潔實作</strong>：使用 CSS 清除行動端預設的藍色 Tap 框，並防止在激烈操作中誤選取文字。</li>
+<li>
+<strong>驗證要點</strong>：<strong>APP 質感模擬審核</strong>。長按按鈕是否不再跳出「複製/儲存圖片」？按鈕按下時是否有自定義的物理回饋（如震動感或 CSS 陰影變化）？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 跨平台邏輯健壯性與 UX 潔淨度點評標準 (Hybrid Input Standards)</h3><a id="user-content-3-跨平台邏輯健壯性與-ux-潔淨度點評標準-hybrid-input-standards" class="anchor" aria-label="Permalink: 3. 跨平台邏輯健壯性與 UX 潔淨度點評標準 (Hybrid Input Standards)" href="#3-跨平台邏輯健壯性與-ux-潔淨度點評標準-hybrid-input-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對底層事件生成的理解深度與對跨平台差異的適配精準度」</strong>：</p>
+<ul>
+<li>[ ] <strong>事件防重處理精確度</strong>：是否能正確使用攔截機制防止雙重觸發？</li>
+<li>[ ] <strong>座標解析通用性</strong>：封裝的輔助函數是否能無縫處理所有主流瀏覽器的滑鼠與觸控物件？</li>
+<li>[ ] <strong>介面穩定性</strong>：是否成功消除了所有會中斷硬體控制的瀏覽器預設行為（如捲動、縮放、選單）？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── index.html           # 結構：包含萬用測試區域與即時事件監控日誌
+├── touch-logic.js       # 核心：練習萬用座標提取、幽靈點擊攔截與滾動鎖定
+├── README.md            # 總結：定義事件觸發鍊、延遲對比數據與跨平台兼容報告
+└── assets/event_flow.png # 參考：流動化的事件順序圖解（Touch to Click）
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的前端工程師，不僅是會刻版的人，而是能洞悉各類裝置的輸入差異、能編排各類事件的優先權順序、並在每一行 preventDefault 中，為使用者創造『跨越裝置障礙、始終如一』之頂級原生操控體驗的相容性大師」</strong>。掌握觸控與滑鼠的雙重操控技術後，學員將擁有了開發「全平台通用遊戲控制器、跨裝置工業控制介面、以及各類高品質 Web-App」最核心也最資深的跨平台適配技術實力！</p>
 
-        <h2 class="text-2xl font-bold mb-4 text-slate-800">在 GitHub Classroom 的實戰部署建議</h2>
-        <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-300">
-            <h3 class="text-indigo-400 font-bold mb-3">範本倉庫 (Template Repo) 結構建議</h3>
-            <pre class="bg-black/50 p-4 rounded-lg font-mono text-sm">
-.
-├── index.html        # 包含觸控測試區與日誌面板
-├── touch-logic.js    # (核心) 實作萬用座標解析與事件攔截
-└── README.md         # 紀錄 300ms 延遲解決方案與測試報告
-            </pre>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-6 text-slate-800">教學實施策略 (Flipped Workflow)</h2>
-        <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-100">
-                        <th class="p-4 border-b font-bold text-slate-700">階段</th>
-                        <th class="p-4 border-b font-bold text-slate-700">學生行動 (Git Workflow)</th>
-                        <th class="p-4 border-b font-bold text-slate-700">教師/平台引導</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-slate-600">
-                    <tr>
-                        <td class="p-4 border-b font-bold bg-slate-50/50">課前預習</td>
-                        <td class="p-4 border-b">使用行動裝置操作本頁測試區，截圖紀錄 <code>click</code> 的具體延遲毫秒數。</td>
-                        <td class="p-4 border-b"><strong>Dashboard:</strong> 確認學生已體驗過 300ms 延遲的「不適感」。</td>
-                    </tr>
-                    <tr>
-                        <td class="p-4 border-b font-bold bg-slate-50/50">課中實作</td>
-                        <td class="p-4 border-b">領取作業 (Repo)，完成萬用按鈕 (Quest 1) 與防抖滑桿 (Quest 2) 並 Push。</td>
-                        <td class="p-4 border-b"><strong>現場展示:</strong> 比較「原生 vs 模擬」事件的差異。</td>
-                    </tr>
-                    <tr>
-                        <td class="p-4 font-bold bg-slate-50/50">課後精進</td>
-                        <td class="p-4">挑戰 contextmenu 屏蔽與 Tap Highlight 優化 (Quest 3)，撰寫跨平台交互心得。</td>
-                        <td class="p-4"><strong>Feedback PR:</strong> 點評對 `passive` 機制的理解與 UI 流暢度。</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </body>
 
