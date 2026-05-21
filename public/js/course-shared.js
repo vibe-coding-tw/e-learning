@@ -981,7 +981,7 @@ async function initFirebaseFeatures() {
             if (!hubModal) {
                 hubModal = document.createElement('div');
                 hubModal.id = 'unified-support-panel';
-                hubModal.className = 'fixed bottom-24 right-6 w-[420px] max-w-[calc(100vw-2rem)] max-h-[75vh] bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-y-auto z-50 transition-all duration-300 transform scale-95 opacity-0 origin-bottom-right hidden';
+                hubModal.className = 'fixed bottom-20 sm:bottom-24 right-4 sm:right-6 left-4 sm:left-auto w-auto sm:w-[420px] max-h-[65vh] sm:max-h-[75vh] bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-y-auto z-50 transition-all duration-300 transform scale-95 opacity-0 origin-bottom-right hidden';
                 hubModal.innerHTML = `
                     <!-- Close Button -->
                     <button onclick="toggleUnifiedSupportPanel()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg font-bold p-1.5 hover:bg-slate-100 rounded-full transition w-8 h-8 flex items-center justify-center">✕</button>
