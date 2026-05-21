@@ -28,6 +28,42 @@ function normalizeEmail(email) {
     return String(email).trim().toLowerCase();
 }
 
+function normalizeGuideTitleText(text = '') {
+    let value = String(text || '').trim();
+    if (!value) return value;
+
+    // Remove unit slug prefix like "03-unit-github-classroom：" / "adv-12-unit-pid-math:"
+    value = value.replace(/^(?:[a-z]+-\d{2}-)?unit-[a-z0-9-]+\s*[：:]\s*/i, '');
+    // Remove simple unit slug prefix like "03-unit-github-classroom："
+    value = value.replace(/^[a-z0-9]+-unit-[a-z0-9-]+\s*[：:]\s*/i, '');
+    // Normalize tutor-guide title patterns and remove slug tail
+    value = value.replace(/^(導師指南|Tutor Guide)\s*[-：:|｜]\s*[a-z0-9-]+\s*/i, '$1：');
+    // Remove trailing slug in parentheses
+    value = value.replace(/\s*\(([a-z0-9]+-unit-[a-z0-9-]+)\)\s*$/i, '');
+
+    return value.trim();
+}
+
+function normalizeGuideHeadingStyles(rootEl) {
+    if (!rootEl) return;
+    const headings = rootEl.querySelectorAll('h1, h2, h3');
+    headings.forEach((heading, index) => {
+        const normalizedText = normalizeGuideTitleText(heading.textContent);
+        if (normalizedText && normalizedText !== heading.textContent.trim()) {
+            heading.textContent = normalizedText;
+        }
+
+        if (heading.tagName.toLowerCase() === 'h1') {
+            heading.classList.add('text-2xl', 'md:text-3xl', 'font-black', 'leading-tight', 'tracking-tight');
+            if (index === 0) heading.classList.add('mb-4');
+        } else if (heading.tagName.toLowerCase() === 'h2') {
+            heading.classList.add('text-xl', 'md:text-2xl', 'font-extrabold', 'leading-snug');
+        } else {
+            heading.classList.add('text-lg', 'md:text-xl', 'font-bold', 'leading-snug');
+        }
+    });
+}
+
 // DOM Elements
 const loadingState = document.getElementById('loading-state');
 const dashboardContent = document.getElementById('dashboard-content');
@@ -1387,6 +1423,7 @@ window.renderAssignments = window.renderAssignments || function(assignments = []
                 ${guideContent}
             </div>
         `;
+        normalizeGuideHeadingStyles(guideDiv);
         possibleContainers.forEach(container => {
             if (container) {
                 // Ensure no duplicates
@@ -1591,6 +1628,7 @@ async function vibeRefreshReadmeContent(filterUnitId) {
             // Final Injection
             if (markdownHtml && !markdownHtml.includes('無法讀取')) {
                 placeholder.innerHTML = markdownHtml;
+                normalizeGuideHeadingStyles(placeholder);
                 placeholder.classList.remove('hidden');
                 console.log(`[V17.0.5] Content successfully injected into: ${placeholder.id}`);
             } else {
@@ -1633,6 +1671,7 @@ async function renderAssignmentsGuideMain(filterUnitId) {
             const extracted = extractSection(html, 'assignment-guide');
             if (extracted) {
                 placeholder.innerHTML = extracted;
+                normalizeGuideHeadingStyles(placeholder);
                 placeholder.classList.remove('hidden');
                 return;
             }
@@ -1645,6 +1684,7 @@ async function renderAssignmentsGuideMain(filterUnitId) {
     const embeddedAssignmentGuide = getEmbeddedGuideByUnit(filterUnitId, 'assignment');
     if (embeddedAssignmentGuide) {
         placeholder.innerHTML = embeddedAssignmentGuide;
+        normalizeGuideHeadingStyles(placeholder);
         placeholder.classList.remove('hidden');
         return;
     }
@@ -1657,6 +1697,7 @@ async function renderAssignmentsGuideMain(filterUnitId) {
     const markdownHtml = await loadMarkdown(readmeUrl);
     if (markdownHtml && !markdownHtml.includes('無法讀取')) {
         placeholder.innerHTML = markdownHtml;
+        normalizeGuideHeadingStyles(placeholder);
     } else {
         placeholder.innerHTML = `<div class="text-red-500 text-sm">⚠️ 無法載入 assignment-guide / README</div>`;
     }
