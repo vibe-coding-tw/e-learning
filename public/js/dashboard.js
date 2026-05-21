@@ -930,7 +930,7 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
     // Tutor Mode ON = teacher view for qualified tutors and admins.
     // Tutor Mode OFF = student-like view within the current unit context.
-    // Settings & Assignments switch according to rules.md.
+    // Settings & Assignments switch according to AGENT.md.
     // Settings & Earnings are only accessible within a specific UNIT context
     const showSettingsTab = canCurrentUserViewSettingsTab();
 
