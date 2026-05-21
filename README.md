@@ -5,7 +5,7 @@
 ---
 
 ## 📖 相關文件 (Documentation)
-- **[⚖️ 開發與營運規範 (Project Rules)](rules.md)**：包含零元帳單規範、權限模型、ID 歸一化準則與開發 SOP。
+- **[⚖️ 開發與營運規範 (Project Rules)](AGENT.md)**：包含零元帳單規範、權限模型、ID 歸一化準則與開發 SOP。
 - **[🗄️ Firestore 結構文件](docs/database.md)**：集合、欄位與遷移備註（以實作為準）。
 - **[✉️ Email 通知規格](docs/email-notifications.md)**：通知觸發條件、收件者、深連結與異常告警規範。
 - **[📘 學生操作指南](public/students.html)**：包含付款、導師指派、作業提交及師資申請流程。
@@ -69,7 +69,7 @@
 - **`users`**: 核心使用者文件，角色僅 `admin` 與 `user`。
   - `unitAssignments`: 學生各單元對應導師 Email。
   - `tutorConfigs`: 單元授權狀態 (Status)，非全域角色。比對時強制執行 **ID 歸一化** (移除 `.html`)。
-  - `tutorMode`: 管理員專用開關，開啟時模擬導師視角，關閉時模擬學員視角（遵循 `rules.md` 規範）。
+  - `tutorMode`: 管理員專用開關，開啟時模擬導師視角，關閉時模擬學員視角（遵循 `AGENT.md` 規範）。
 - **`orders`**: 訂單紀錄。
   - `items[itemId]` 為購買項目本身（導師綁定不在購物車階段處理）。
   - `fulfillmentStatus` / `logistics`（硬體出貨狀態與物流資訊）。
