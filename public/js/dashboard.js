@@ -484,6 +484,43 @@ function getCourseGuideConfig(courseId) {
     return dashboardData?.courseGuideIndex?.[courseId] || {};
 }
 
+function getEmbeddedGuideByUnit(unitId, guideType = 'assignment') {
+    if (!unitId || !dashboardData?.courseGuideIndex) return "";
+    const candidates = getEquivalentUnitIds(unitId);
+
+    const pickFromConfig = (cfg) => {
+        if (!cfg) return "";
+        const guideData = robustExtractGuideSegments(cfg.tutorGuide, cfg.assignmentGuide);
+        if (guideType === 'tutor') {
+            for (const cid of candidates) {
+                const hit = guideData?.segments?.[cid];
+                if (typeof hit === 'string' && hit.trim()) return hit;
+            }
+            return "";
+        }
+        for (const cid of candidates) {
+            const hit = guideData?.assignmentGuides?.[cid];
+            if (typeof hit === 'string' && hit.trim()) return hit;
+        }
+        return "";
+    };
+
+    // 1) prioritize current course mapping
+    const currentCourseId = findParentCourseIdByUnit(unitId);
+    if (currentCourseId) {
+        const primary = pickFromConfig(getCourseGuideConfig(currentCourseId));
+        if (primary) return primary;
+    }
+
+    // 2) global fallback across all course guide configs
+    for (const cfg of Object.values(dashboardData.courseGuideIndex || {})) {
+        const hit = pickFromConfig(cfg);
+        if (hit) return hit;
+    }
+
+    return "";
+}
+
 function hasQualifiedTutorAccessForUnit(fileName, courseId, email) {
     if (!email || !fileName || !courseId) return false;
 
@@ -1517,14 +1554,8 @@ async function vibeRefreshReadmeContent(filterUnitId) {
     try {
         const repoName = filterUnitId.replace(/\.html$/, '');
         const GITHUB_ORG = 'vibe-coding-template';
-        const { filterCourseId } = getCurrentDashboardContext();
-        const currentCourseId = filterCourseId || findParentCourseIdByUnit(filterUnitId);
-        const guideConfig = getCourseGuideConfig(currentCourseId);
-        const guideData = robustExtractGuideSegments(guideConfig?.tutorGuide, guideConfig?.assignmentGuide);
-        const embeddedAssignmentGuide = guideData?.assignmentGuides?.[filterUnitId] || "";
-        const embeddedTutorGuide = guideData?.segments?.[filterUnitId]
-            || guideData?.segments?.[filterUnitId.replace(/\.html$/, '')]
-            || "";
+        const embeddedAssignmentGuide = getEmbeddedGuideByUnit(filterUnitId, 'assignment');
+        const embeddedTutorGuide = getEmbeddedGuideByUnit(filterUnitId, 'tutor');
 
         for (const placeholder of readmePlaceholders) {
             const isSettingsTab = placeholder.id === 'github-readme-placeholder-settings';
@@ -1747,10 +1778,7 @@ window.switchTab = function (tabName) {
 
         let assignmentGuideContent = "";
         if (filterUnitId) {
-            const currentCourseId = filterCourseId || findParentCourseIdByUnit(filterUnitId);
-            const guideConfig = getCourseGuideConfig(currentCourseId);
-            const guideData = robustExtractGuideSegments(guideConfig.tutorGuide, guideConfig.assignmentGuide);
-            assignmentGuideContent = guideData.assignmentGuides[filterUnitId] || "";
+            assignmentGuideContent = getEmbeddedGuideByUnit(filterUnitId, 'assignment');
         }
         renderAssignments(displayAssignments, assignmentGuideContent, { showGuide: !!assignmentGuideContent });
     }
