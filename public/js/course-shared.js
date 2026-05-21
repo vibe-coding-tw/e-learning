@@ -14,11 +14,122 @@ window.__courseSharedLoaded = true;
 function init() {
     console.log("[CourseShared] Initializing...");
     applyHideTabsPreference();
+    applyStartUnitModernTheme();
     injectMediaOverlay();
     initAnimations();
     enhanceAssignmentEntryButtons();
     initFirebaseFeatures(); // [NEW] Start Firebase (Tracking + Assignments)
     initGithubReadme(); // [V8.2] Fetch and render GitHub README if applicable
+}
+
+function applyStartUnitModernTheme() {
+    try {
+        const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
+        if (!/^start-\d{2}-unit-.*\.html$/.test(file)) return;
+        if (document.getElementById('start-unit-modern-theme')) return;
+
+        const style = document.createElement('style');
+        style.id = 'start-unit-modern-theme';
+        style.textContent = `
+            :root {
+                --vc-bg: #f8fbff;
+                --vc-surface: #ffffff;
+                --vc-text: #0f172a;
+                --vc-sub: #475569;
+                --vc-line: #dbe6f4;
+                --vc-brand: #2563eb;
+                --vc-brand-2: #0ea5e9;
+                --vc-radius: 16px;
+                --vc-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            }
+            body {
+                background: radial-gradient(circle at 10% 0%, #eef4ff 0%, var(--vc-bg) 45%, #f9fbff 100%) !important;
+                color: var(--vc-text) !important;
+            }
+            .ms-topnav {
+                background: linear-gradient(135deg, var(--vc-brand) 0%, var(--vc-brand-2) 100%) !important;
+                box-shadow: 0 8px 20px rgba(37, 99, 235, 0.24) !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+            }
+            .ms-sidebar {
+                background: rgba(255, 255, 255, 0.92) !important;
+                backdrop-filter: blur(10px) !important;
+                border-right: 1px solid var(--vc-line) !important;
+            }
+            .ms-content,
+            .unit-content,
+            .ms-breadcrumb {
+                background: transparent !important;
+            }
+            .unit-content {
+                max-width: 920px !important;
+            }
+            .ms-unit-item.active {
+                border-left-color: var(--vc-brand) !important;
+                background: #eef4ff !important;
+            }
+            .unit-content h1,
+            .unit-content h2,
+            .unit-content h3,
+            .unit-content h4 {
+                color: #0b2a55 !important;
+                letter-spacing: -0.01em;
+            }
+            .ms-note, .ms-tip, .ms-warning, .ms-important,
+            .ms-scenario, .ms-lab-card,
+            .ms-video-embed, .ms-code,
+            .workflow-steps, .skill-row,
+            .unit-nav, .task-section-header,
+            .ms-resource-link {
+                border-radius: var(--vc-radius) !important;
+            }
+            .ms-note, .ms-tip, .ms-warning, .ms-important,
+            .ms-scenario, .ms-lab-card,
+            .ms-resource-link {
+                box-shadow: var(--vc-shadow) !important;
+                border: 1px solid var(--vc-line) !important;
+            }
+            .ms-lab-card {
+                background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
+                margin: 16px 0 !important;
+            }
+            .unit-nav {
+                background: rgba(255, 255, 255, 0.88) !important;
+                border: 1px solid var(--vc-line) !important;
+                margin-top: 20px !important;
+            }
+            .ms-btn,
+            .nav-btn-next {
+                background: linear-gradient(135deg, var(--vc-brand) 0%, var(--vc-brand-2) 100%) !important;
+                border: none !important;
+                border-radius: 12px !important;
+                box-shadow: 0 6px 16px rgba(37, 99, 235, 0.22) !important;
+            }
+            .ms-btn:hover,
+            .nav-btn-next:hover {
+                filter: brightness(1.04);
+            }
+            .ms-btn-ghost,
+            .nav-btn-prev {
+                border-radius: 12px !important;
+                border-color: #bfdbfe !important;
+                color: #1d4ed8 !important;
+                background: #eff6ff !important;
+            }
+            .ms-breadcrumb {
+                border-bottom: 1px solid var(--vc-line) !important;
+                color: var(--vc-sub) !important;
+            }
+            @media (max-width: 768px) {
+                .unit-content {
+                    padding: 20px 14px 36px !important;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    } catch (e) {
+        console.warn('[CourseShared] applyStartUnitModernTheme failed:', e);
+    }
 }
 
 function applyHideTabsPreference() {
