@@ -623,6 +623,7 @@ function initAnimations() {
 
 async function initFirebaseFeatures() {
     console.log("[Firebase] Injecting Firebase SDK...");
+    const ENABLE_UNIFIED_SUPPORT_HUB = false;
 
     const { initializeApp } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js");
     const { getAuth } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js");
@@ -882,6 +883,15 @@ async function initFirebaseFeatures() {
         };
 
         async function renderStudentInteractionHub(user) {
+            if (!ENABLE_UNIFIED_SUPPORT_HUB) {
+                const trigger = document.getElementById('unified-support-trigger');
+                if (trigger) trigger.remove();
+                const modal = document.getElementById('unified-support-panel');
+                if (modal) modal.remove();
+                const hideFabStyle = document.getElementById('hide-dashboard-fab-style');
+                if (hideFabStyle) hideFabStyle.remove();
+                return;
+            }
             const pathParts = window.location.pathname.split('/');
             const fileName = pathParts[pathParts.length - 1];
             const unitId = fileName.replace('.html', '');
