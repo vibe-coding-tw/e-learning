@@ -1528,7 +1528,6 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
 async function vibeRefreshReadmeContent(filterUnitId) {
     refreshDashboardExternalGuideLinks();
     const readmePlaceholders = [
-        document.getElementById('github-readme-placeholder-main'),
         document.getElementById('github-readme-placeholder-settings'),
         document.getElementById('github-readme-placeholder-student'),
         document.getElementById('github-readme-placeholder-admin-overview')
@@ -1620,6 +1619,29 @@ async function renderAssignmentsGuideMain(filterUnitId) {
         return;
     }
 
+    const extractSection = (html, sectionId) => {
+        const m = html.match(new RegExp(`<section\\b[^>]*id=["']${sectionId}["'][^>]*>([\\s\\S]*?)<\\/section>`, 'i'));
+        return m && m[1] ? m[1].trim() : '';
+    };
+
+    // Priority 1: Directly from unit page hidden section (#assignment-guide)
+    try {
+        const unitUrl = `${window.location.origin}/${filterUnitId}`;
+        const resp = await fetch(unitUrl, { cache: 'no-store' });
+        if (resp.ok) {
+            const html = await resp.text();
+            const extracted = extractSection(html, 'assignment-guide');
+            if (extracted) {
+                placeholder.innerHTML = extracted;
+                placeholder.classList.remove('hidden');
+                return;
+            }
+        }
+    } catch (e) {
+        console.warn('[AssignmentsGuide] direct unit section fetch failed:', e);
+    }
+
+    // Priority 2: backend aggregated guide from getDashboardData
     const embeddedAssignmentGuide = getEmbeddedGuideByUnit(filterUnitId, 'assignment');
     if (embeddedAssignmentGuide) {
         placeholder.innerHTML = embeddedAssignmentGuide;
@@ -1627,6 +1649,7 @@ async function renderAssignmentsGuideMain(filterUnitId) {
         return;
     }
 
+    // Priority 3: template repo README fallback
     const repoName = filterUnitId.replace(/\.html$/, '');
     const readmeUrl = `https://raw.githubusercontent.com/vibe-coding-template/${repoName}/main/README.md`;
     placeholder.classList.remove('hidden');
