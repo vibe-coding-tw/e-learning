@@ -51,6 +51,11 @@
         // Initial Load
         const urlParams = new URLSearchParams(window.location.search);
         const initialTab = urlParams.get('tab');
+        const hideTabs = ['1', 'true'].includes((urlParams.get('hideTabs') || '').toLowerCase());
+        if (hideTabs) {
+            const tabsWrapper = document.querySelector('.unit-tabs-wrapper');
+            if (tabsWrapper) tabsWrapper.style.display = 'none';
+        }
 
         if (initialTab === 'motor') {
             switchTab('motor');
