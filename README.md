@@ -1,4 +1,4 @@
-# Vibe Coding - 學習管理系統 (E-Learning System)
+# Vibe Coding - 網路教學平台 (E-Learning System)
 
 本專案是一個基於 Firebase 的現代化程式教學平台，結合了互動式課程、作業自動化、綠界金流 (ECPay)、硬體出貨管理以及多層級分潤架構。
 
@@ -17,11 +17,13 @@
 - **[🤝 導師與學生的互動層 MVP](docs/tutor-student-interaction-mvp.md)**：自動評分之外的教學互動設計（卡點、提示階梯、成長軌跡、介入任務）。
 - **[🧩 單元 Repo 協作改善流程](docs/unit-repo-collaboration-workflow.md)**：學生、導師、管理員共同迭代 README、tutor-guide 與測試/流程設定的提案與審核流程。
 - **[🤖 Autograde 全自動化](docs/autograde-full-automation.md)**：批次設定 `userId+unitId` 對應、workflow 觸發策略與分數回寫模式。
-- **[🔄 Classroom 同步 PR 流程](docs/classroom-sync-pr-workflow.md)**：當單元 template 更新後，批次對學生作業 repo 開同步 PR（含 dry-run 與衝突處理）。
+- **[🔄 Classroom 學生 Repo 同步 PR 流程](docs/classroom-sync-pr-workflow.md)**：template 更新後，批次對學生作業 repo 開同步 PR（含 dry-run 與衝突處理）。
 - **[🧱 Classroom 中間層同步流程](docs/classroom-bridge-sync-workflow.md)**：批次將 `vibe-coding-classroom-*` 中間層 repo 從 canonical template repo 同步更新。
 - **[🛡️ Classroom 安全檢查](docs/classroom-safety-preflight.md)**：發佈前檢查 starter repo 是否含解答/教師專用檔案，避免外洩。
-- **[🧭 Dashboard Legacy 遷移計畫](docs/dashboard-legacy-migration-plan.md)**：舊欄位相容、ID 歸一化與遷移策略。
-- **[🧹 Firestore Legacy ID 遷移](docs/legacy-id-migration.md)**：舊課程/單元 ID 批次轉換為新 canonical ID（含 dry-run / apply 報表流程）。
+
+### 📦 Archive / 歷史遷移文件
+- **[🧭 Dashboard Legacy 遷移計畫](docs/dashboard-legacy-migration-plan.md)**：舊欄位相容、ID 歸一化與遷移策略（歷史遷移紀錄）。
+- **[🧹 Firestore Legacy ID 遷移](docs/legacy-id-migration.md)**：舊課程/單元 ID 批次轉換為新 canonical ID（歷史遷移紀錄）。
 
 ---
 
