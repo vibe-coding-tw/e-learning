@@ -51,6 +51,11 @@
         // [V20.1] Support tab selection from URL
         const urlParams = new URLSearchParams(window.location.search);
         const requestedTab = urlParams.get('tab') || 'identity';
+        const hideTabs = ['1', 'true'].includes((urlParams.get('hideTabs') || '').toLowerCase());
+        if (hideTabs) {
+            const tabsWrapper = document.querySelector('.unit-tabs-wrapper');
+            if (tabsWrapper) tabsWrapper.style.display = 'none';
+        }
         
         // Initial Load
         switchTab(requestedTab);
