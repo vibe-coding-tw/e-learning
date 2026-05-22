@@ -27,7 +27,7 @@ It is the source of truth for:
 | Tutor linked to student | `upsertStudentUnitAssignment` flow | Tutor | `sendTutorLinkedToStudentEmail` | `/dashboard.html?unitId=...&tab=assignments` |
 | New tutor application | `applyForTutorRole` / `submitTutorRecommendationInviteLink` | Admin | `sendAdminNewApplicationEmail` | `/dashboard.html?unitId=...&tab=admin` |
 | Tutor application result | `decideTutorApplication` | Applicant | `sendApplicationResultEmail` | `/dashboard.html?unitId=...&tab=assignments` |
-| Admin pending assignment reminder | Daily schedule | Admin | `sendAdminAssignmentReminder` | `/dashboard.html?tab=admin` |
+| Pending tutor-binding reminder | Daily schedule | Student | `sendStudentPendingTutorAssignmentReminder` | `/dashboard.html?tab=assignments` |
 | Admin pending shipment reminder | Daily schedule | Admin | `sendAdminShipmentReminder` | `/dashboard.html?tab=shipments` |
 | Autograde result (student) | `ingestGithubAutograde` success | Student | `sendAutogradeResultToStudent` | `/dashboard.html?unitId=...&tab=assignments` |
 | Autograde result (tutor) | `ingestGithubAutograde` success | Assigned tutor | `sendAutogradeResultToTutor` | `/dashboard.html?unitId=...&tab=assignments` |
@@ -40,7 +40,7 @@ It is the source of truth for:
 2. Assignment emails must prefer `unitId + tab=assignments` deep links to reduce navigation friction.
 3. Autograde writeback failures must notify admin with payload preview to speed incident triage.
 4. Notification send failures should not block business transaction completion (current behavior: best-effort send with error logging).
-5. Admin pending assignment reminder only lists `未指派老師的課程單元`（paid course units only），排除硬體項目與免費課程項目。
+5. Pending tutor-binding reminder only targets students with paid course units that still have no tutor assignment; hardware items and free courses are excluded.
 
 ## 4. Deprecated / Legacy Notes
 1. `sendGradingNotification` currently exists as a legacy template from manual grading flow.
