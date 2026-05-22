@@ -83,7 +83,7 @@
     - `markOrderShipped`: 管理員手動標記已出貨。
   - **定時任務 (Scheduled Functions)**:
     - `calculateMonthlySharing`: 每月 1 號結算分潤。
-    - `remindAdminPendingAssignments`: 每日提醒未完成導師指派的訂單。
+    - `remindAdminPendingAssignments`: 每日提醒「學生本人」尚未完成導師綁定的付費單元（不再寄給 admin）。
     - `remindAdminPendingShipments`: 每日提醒待出貨硬體訂單。
     - `checkTrialExpiration` / `checkCourseExpiration`: 權限到期自動檢核與提醒。
 
