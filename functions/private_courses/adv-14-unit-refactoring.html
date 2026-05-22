@@ -4,359 +4,1070 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>代碼重構與模組化設計 - Vibe Coding</title>
+    <title>代碼重構與模組化設計 - Vibe Coding Learn</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script async="" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        
+        :root {
+            --ms-blue: #0078d4;
+            --ms-blue-dark: #005a9e;
+            --ms-blue-light: #deecf9;
+            --ms-gray-10: #f3f2f1;
+            --ms-gray-20: #e1dfdd;
+            --ms-gray-90: #201f1e;
+            --ms-green: #107c10;
+            --ms-red: #d13438;
+            --sidebar-w: 280px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fff;
+            color: #201f1e;
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ─── TOP NAV ─── */
+        .ms-topnav {
+            background: var(--ms-blue);
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,.2);
+        }
+        .ms-topnav .brand {
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .ms-topnav .divider { width: 1px; height: 20px; background: rgba(255,255,255,.3); }
+        .ms-topnav .nav-label { color: rgba(255,255,255,.9); font-size: 14px; }
+
+        /* ─── LAYOUT ─── */
+        .ms-layout { display: flex; min-height: calc(100vh - 48px); }
+
+        /* ─── SIDEBAR ─── */
+        .ms-sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: #faf9f8;
+            border-right: 1px solid #e1dfdd;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 48px;
+            height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+        .ms-sidebar-header {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .ms-sidebar-header .module-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #605e5c;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .ms-sidebar-header .module-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #201f1e;
+            line-height: 1.4;
+        }
+        .ms-sidebar-header .meta {
+            font-size: 12px;
+            color: #605e5c;
+            margin-top: 6px;
+        }
+        .ms-unit-list { padding: 8px 0; }
+        .ms-unit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background .12s, border-color .12s;
+            color: #201f1e;
+        }
+        .ms-unit-item:hover { background: #edebe9; }
+        .ms-unit-item.active {
+            border-left-color: var(--ms-blue);
+            background: #deecf9;
+        }
+        .ms-unit-item.active .unit-name { color: var(--ms-blue); font-weight: 600; }
+        .unit-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #c8c6c4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+            font-size: 10px;
+            background: #fff;
+        }
+        .unit-icon.done { background: var(--ms-green); border-color: var(--ms-green); color: #fff; }
+        .unit-icon.active-icon { border-color: var(--ms-blue); background: var(--ms-blue); color: #fff; }
+        .unit-meta { flex: 1; min-width: 0; }
+        .unit-name { font-size: 13px; line-height: 1.4; }
+        .unit-time { font-size: 11px; color: #605e5c; margin-top: 2px; }
+        .sidebar-progress {
+            padding: 12px 16px;
+            border-top: 1px solid #e1dfdd;
+            margin-top: auto;
+        }
+        .progress-bar-bg { background: #e1dfdd; border-radius: 4px; height: 6px; }
+        .progress-bar-fill { background: var(--ms-green); border-radius: 4px; height: 6px; transition: width .4s; }
+        .progress-text { font-size: 12px; color: #605e5c; margin-top: 6px; }
+
+        /* ─── MAIN ─── */
+        .ms-content { flex: 1; min-width: 0; }
+
+        .ms-breadcrumb {
+            padding: 10px 40px;
+            font-size: 12px;
+            color: #605e5c;
+            border-bottom: 1px solid #e1dfdd;
+            background: #fff;
+        }
+        .ms-breadcrumb a { color: var(--ms-blue); text-decoration: none; }
+        .ms-breadcrumb a:hover { text-decoration: underline; }
+        .ms-breadcrumb span { margin: 0 6px; }
+
+        /* ─── PAGES ─── */
+        .ms-unit-page { display: none; }
+        .ms-unit-page.visible { display: block; }
+
+        .unit-content {
+            max-width: 820px;
+            padding: 32px 40px 60px;
+            margin: 0 auto;
+        }
+
+        .unit-status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .unit-completed-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #dff6dd;
+            color: #107c10;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+        .unit-time-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #605e5c;
+            font-size: 13px;
+        }
+
+        /* Typography */
+        .unit-content h1 { font-size: 28px; font-weight: 700; margin: 0 0 20px; color: #201f1e; line-height: 1.3; }
+        .unit-content h2 { font-size: 20px; font-weight: 600; margin: 36px 0 12px; color: #201f1e; padding-top: 8px; }
+        .unit-content h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: #201f1e; }
+        .unit-content p { margin: 0 0 14px; }
+        .unit-content ul, .unit-content ol { margin: 0 0 14px; padding-left: 28px; }
+        .unit-content li { margin-bottom: 6px; }
+        .unit-content strong { font-weight: 600; }
+        .unit-content a { color: var(--ms-blue); text-decoration: none; }
+        .unit-content a:hover { text-decoration: underline; }
+        .unit-content code {
+            background: #f3f2f1;
+            border: 1px solid #e1dfdd;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            color: #a31515;
+        }
+
+        /* Callouts */
+        .ms-note, .ms-tip, .ms-warning, .ms-important {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+        .ms-note { background: #deecf9; border-color: var(--ms-blue); }
+        .ms-note .note-icon { color: var(--ms-blue); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-tip { background: #dff6dd; border-color: var(--ms-green); }
+        .ms-tip .note-icon { color: var(--ms-green); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-warning { background: #fff4ce; border-color: #ffaa44; }
+        .ms-warning .note-icon { color: #ffaa44; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-important { background: #fde7e9; border-color: var(--ms-red); }
+        .ms-important .note-icon { color: var(--ms-red); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .note-body strong { display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+
+        /* Scenario */
+        .ms-scenario {
+            background: #f3f2f1;
+            border-radius: 4px;
+            padding: 20px 24px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #323130;
+            border-left: 4px solid #c8c6c4;
+        }
+        .ms-scenario-label {
+            font-style: normal;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #605e5c;
+            margin-bottom: 8px;
+        }
+
+        /* Steps */
+        .ms-steps { margin: 16px 0; }
+        .ms-step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
+        .ms-step-num {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--ms-blue); color: #fff;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .ms-step-body { flex: 1; }
+        .ms-step-body h4 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+        .ms-step-body p { font-size: 14px; margin: 0; }
+
+        /* Table */
+        .ms-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+        .ms-table th {
+            background: #f3f2f1; font-weight: 600; text-align: left;
+            padding: 10px 14px; border: 1px solid #e1dfdd; color: #323130;
+        }
+        .ms-table td { padding: 9px 14px; border: 1px solid #e1dfdd; vertical-align: top; }
+        .ms-table tr:nth-child(even) td { background: #faf9f8; }
+        .ms-table .check { color: var(--ms-green); font-size: 16px; }
+        .ms-table .cross { color: #8a8886; font-size: 16px; }
+
+        /* Checklist */
+        .ms-checklist { list-style: none; padding: 0; margin: 12px 0; }
+        .ms-checklist li {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 6px 0; font-size: 14px;
+        }
+        .ms-checklist li .check-box {
+            width: 18px; height: 18px;
+            border: 2px solid #8a8886; border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 1px; cursor: pointer; transition: all .15s;
+        }
+        .ms-checklist li .check-box.checked {
+            background: var(--ms-blue); border-color: var(--ms-blue); color: #fff;
+        }
+
+        /* Code block */
+        .ms-code {
+            background: #1e1e1e;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-x: auto;
+        }
+        .ms-code .c-comment { color: #6a9955; }
+        .ms-code .c-str { color: #ce9178; }
+        .ms-code .c-kw { color: #569cd6; }
+        .ms-code .c-attr { color: #9cdcfe; }
+        .ms-code .c-val { color: #ce9178; }
+        .ms-code .c-tag { color: #4ec9b0; }
+        .ms-code .c-white { color: #d4d4d4; }
+
+        /* Lab card */
+        .ms-lab-card {
+            background: linear-gradient(135deg, #eef6ff 0%, #f5f0ff 100%);
+            border: 1px solid #c7e0f4;
+            border-radius: 6px;
+            padding: 24px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: box-shadow .15s, border-color .15s;
+        }
+        .ms-lab-card:hover { box-shadow: 0 4px 16px rgba(0,120,212,.12); border-color: var(--ms-blue); }
+        .ms-lab-card h3 { margin: 0 0 12px; color: var(--ms-blue-dark); font-size: 16px; font-weight: 600; }
+        .ms-lab-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--ms-blue);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 12px;
+        }
+        .ms-lab-time {
+            font-size: 12px;
+            color: #605e5c;
+            margin-left: 8px;
+        }
+
+        /* Compare grid */
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border: 1px solid #e1dfdd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .compare-card-header {
+            padding: 12px 14px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .compare-card-body {
+            padding: 14px;
+            font-size: 13px;
+            color: #605e5c;
+            line-height: 1.5;
+        }
+
+        /* Buttons */
+        .ms-btn {
+            background: var(--ms-blue); color: #fff; border: none;
+            padding: 7px 18px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; transition: background .12s;
+            font-family: inherit;
+        }
+        .ms-btn:hover { background: var(--ms-blue-dark); }
+        .ms-btn-ghost {
+            background: transparent; color: var(--ms-blue);
+            border: 1px solid var(--ms-blue); padding: 6px 18px;
+            font-size: 14px; font-weight: 600; border-radius: 2px;
+            cursor: pointer; transition: background .12s; font-family: inherit;
+        }
+        .ms-btn-ghost:hover { background: var(--ms-blue-light); }
+
+        /* Nav */
+        .unit-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            border-top: 1px solid #e1dfdd;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+        .nav-btn-prev, .nav-btn-next {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 20px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; border: 1px solid;
+            font-family: inherit; transition: background .12s;
+        }
+        .nav-btn-next { background: var(--ms-blue); color: #fff; border-color: var(--ms-blue); }
+        .nav-btn-next:hover { background: var(--ms-blue-dark); border-color: var(--ms-blue-dark); }
+        .nav-btn-prev { background: #fff; color: var(--ms-blue); border-color: var(--ms-blue); }
+        .nav-btn-prev:hover { background: var(--ms-blue-light); }
+        .unit-page-indicator { font-size: 13px; color: #605e5c; }
+
+        /* Module index */
+        .module-meta-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+        .ms-tag { background: #f3f2f1; color: #323130; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 500; }
+        .ms-tag.blue { background: #deecf9; color: var(--ms-blue-dark); }
+        .ms-tag.green { background: #dff6dd; color: #107c10; }
+        .unit-card-list { margin: 20px 0; }
+        .unit-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 0; border-bottom: 1px solid #f3f2f1; cursor: pointer;
+        }
+        .unit-card:last-child { border-bottom: none; }
+        .unit-card:hover .unit-card-name { color: var(--ms-blue); text-decoration: underline; }
+        .unit-card-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #f3f2f1; color: #605e5c;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .unit-card.lab .unit-card-num { background: #eef6ff; color: var(--ms-blue-dark); }
+        .unit-card.quiz .unit-card-num { background: #fff4ce; color: #8a6914; }
+        .unit-card-info { flex: 1; }
+        .unit-card-name { font-size: 15px; font-weight: 500; }
+        .unit-card-time { font-size: 12px; color: #605e5c; margin-top: 2px; }
+        .unit-card-arrow { color: #c8c6c4; font-size: 14px; }
+
+        /* Resource links */
+        .ms-resource-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border: 1px solid #e1dfdd; border-radius: 4px;
+            margin-bottom: 8px; text-decoration: none; color: #201f1e;
+            font-size: 14px; transition: background .1s;
+        }
+        .ms-resource-link:hover { background: #f3f2f1; }
+        .ms-resource-link i { color: var(--ms-blue); font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+
+        /* Achievement */
+        .ms-achievement {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: #fff; border-radius: 6px; padding: 24px 28px;
+            margin: 24px 0; display: flex; align-items: center; gap: 20px;
+        }
+        .achievement-icon { font-size: 48px; flex-shrink: 0; }
+        .achievement-text h3 { margin: 0 0 4px; font-size: 18px; }
+        .achievement-text p { margin: 0; font-size: 14px; opacity: .9; }
+
+        @media (max-width: 768px) {
+            .ms-sidebar { display: none; }
+            .unit-content { padding: 20px 16px 40px; }
+            .unit-nav { padding: 16px; }
+            .ms-breadcrumb { padding: 8px 16px; }
+            .compare-grid { grid-template-columns: 1fr; }
+        }
+
+    </style>
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+<body>
 
-    <!-- Hero Section -->
-    <header
-        class="relative bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white pt-24 pb-32 overflow-hidden">
-        <div
-            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+<!-- TOP NAV -->
+<nav class="ms-topnav">
+    <a href="#" class="brand"><i class="fas fa-graduation-cap"></i> Vibe Coding Learn</a>
+    <div class="divider"></div>
+    <span class="nav-label">單元課程 進階 14 - 重構藝術</span>
+</nav>
+
+<div class="ms-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="ms-sidebar">
+        <div class="ms-sidebar-header">
+            <div class="module-label">模組</div>
+            <div class="module-title">代碼重構與模組化設計</div>
+            <div class="meta"><i class="far fa-clock"></i> 約 201 分鐘 · 6 個單元</div>
         </div>
-        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+        <nav class="ms-unit-list" id="sidebar-nav"></nav>
+        <div class="sidebar-progress">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0 / 6 已完成</div>
+        </div>
+    </aside>
 
-        <div class="container mx-auto px-4 relative z-10 text-center">
-            <span
-                class="badge-header inline-block py-1.5 px-4 rounded-full bg-white/10 border border-white/20 text-white/90 text-sm font-medium mb-6 tracking-wide uppercase backdrop-blur-sm font-[Outfit]">
-                進階 14 - 軟體架構
-            </span>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit] text-center">
-                代碼重構與<br><span class="text-teal-400">模組化設計</span>
-            </h1>
-            <p class="text-xl md:text-2xl text-emerald-100 max-w-2xl mx-auto font-light leading-relaxed text-center">
-                從「義大利麵代碼」進化到優雅的軟體架構。學習償還技術債，設計高內聚、低耦合的控制系統。
-            </p>
+    <!-- MAIN -->
+    <main class="ms-content">
 
-            <div class="mt-8 flex flex-wrap justify-center gap-4 text-center">
-                <button onclick="enterMediaMode('video', window.RESOURCES.video)"
-                    class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105">
-                    <span class="text-xl group-hover:animate-pulse">📺</span>
-                    <span>觀看教學影片</span>
-                </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
-                    class="group flex items-center gap-3 bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105">
-                    <span class="text-xl text-left">📄</span>
-                    <span>閱讀課程講義</span>
-                </button>
+        <div class="ms-breadcrumb">
+            <a href="#">Vibe Coding</a><span>›</span>
+            <a href="#">單元課程 進階 14</a><span>›</span>
+            <span id="bc-current">課程總覽</span>
+        </div>
+
+        <!-- ══════════ PAGE 0: INDEX ══════════ -->
+        <div class="ms-unit-page visible" id="page-index">
+            <div class="unit-content">
+                <h1>代碼重構與模組化設計</h1>
+                <div class="module-meta-tags">
+                    <span class="ms-tag">模組</span>
+                    <span class="ms-tag">6 個單元</span>
+                    <span class="ms-tag green">單元課程 進階 14</span>
+                    <span class="ms-tag blue">硬體開發</span>
+                    <span class="ms-tag blue">物聯網</span>
+                </div>
+
+                <p>從「義大利麵代碼」進化到優雅的軟體架構。學習償還技術債，設計高內聚、低耦合的控制系統。</p>
+
+                <h2>學習目標</h2>
+                <p>完成本模組後，你將能夠：</p>
+                <ul>
+                    <li>理解並掌握 <strong>👃 1. 識別「代碼壞味道」 (Code Smells)</strong> 的核心觀念與操作實務。</li>
+                    <li>學會 <strong>🧱 2. 關注點分離：模組化神經架構</strong> 的關鍵原理，並能將其應用於開發。</li>
+                    <li>掌握 <strong>🧩 3. 插件化與管道設計模式</strong> 的調校技巧與穩定性測試。</li>
+                    <li>完成三項實作作業，並以 Git 提交成果到 GitHub Classroom。</li>
+                </ul>
+
+                <h2>必要條件</h2>
+                <ul>
+                    <li>準備好 ESP32 開發板與 Micro USB / USB-C 數據線</li>
+                    <li>電腦已配置 VS Code 與 PlatformIO 開發環境</li>
+                    <li>擁有 GitHub 帳號，能夠接受 GitHub Classroom 邀請</li>
+                </ul>
+
+                <h2>本模組單元</h2>
+                <div class="unit-card-list" id="index-unit-list"></div>
+                <div style="margin-top:32px;">
+                    <button class="ms-btn" onclick="goToUnit(1)">開始模組 &nbsp;›</button>
+                </div>
             </div>
         </div>
-    </header>
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+        <!-- ══════════ PAGE 1: 簡介 ══════════ -->
+        <div class="ms-unit-page" id="page-1">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-1" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
 
-        <!-- Module 1: Identifying Code Smells -->
-        <section class="module-section mb-16 text-justify">
-            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 text-justify">
-                <div class="p-1 bg-gradient-to-r from-emerald-500 to-green-500 text-justify"></div>
-                <div class="p-8 md:p-14 text-justify">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3 text-justify text-justify">
-                        <span class="text-4xl text-emerald-500 text-justify text-left">👃</span> 1. 識別「代碼壞味道」 (Code
-                        Smells)
-                    </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 text-justify">
-                        <div class="space-y-6 text-justify text-justify">
-                            <p
-                                class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify text-justify">
+                <h1>簡介</h1>
+
+                <p>
+                    歡迎來到本模組！本單元的核心主題是 <strong>代碼重構與模組化設計</strong>。
+                    在現代 Vibe Coding 開發模式中，AI 能幫你生成程式碼，
+                    但要建立一套高可用、穩定的物聯網硬體系統，你必須確實理解底層的硬體連線、更新與控制協定。
+                </p>
+
+                <div class="ms-scenario">
+                    <div class="ms-scenario-label">學習指引</div>
+                    「工欲善其事，必先利其器。」在開始寫代碼與接線之前，請先花 3 分鐘觀看下方的教學影片，
+                    這能幫助你快速建構完整的系統架構觀，減少後續排除故障的時間。
+                </div>
+
+                <h2>教學影片</h2>
+                <div style="border-radius:4px; overflow:hidden; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,.12); aspect-ratio:16/9;">
+                    <iframe src=""
+                        title="代碼重構與模組化設計 教學影片" allowfullscreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        style="width:100%; height:100%; display:block; border:0;">
+                    </iframe>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(0)">‹ &nbsp;總覽</button>
+                <span class="unit-page-indicator">1 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(1); goToUnit(2)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 2: 單元 1 ══════════ -->
+        <div class="ms-unit-page" id="page-2">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-2" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>👃 1. 識別「代碼壞味道」 (Code Smells)</h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-16 text-justify">
+<div class="space-y-6 text-justify text-justify">
+<p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify text-justify">
                                 重構不是增加新功能，而是優化內部結構。好的代碼應該像優美的散文，讓人讀起來賞心悅目。學會「聞出」隱藏在開發初期的技術債。
                             </p>
-                            <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 text-justify">
-                                <h4
-                                    class="font-bold text-emerald-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed text-center text-justify">
+<div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 text-justify">
+<h4 class="font-bold text-emerald-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed text-center text-justify">
                                     Common Technical Debt Symptoms</h4>
-                                <ul class="text-[9px] text-slate-500 space-y-2 font-light text-justify text-justify">
-                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span
-                                            class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1 text-justify"></span>
-                                        <div><strong class="text-justify text-left">冗長函式 (Long Method)</strong>：主迴圈超過 50
+<ul class="text-[9px] text-slate-500 space-y-2 font-light text-justify text-justify">
+<li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1 text-justify"></span>
+<div><strong class="text-justify text-left">冗長函式 (Long Method)</strong>：主迴圈超過 50
                                             行，且混雜了感測、計算與輸出職責。</div>
-                                    </li>
-                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span
-                                            class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1 text-justify"></span>
-                                        <div><strong class="text-justify">魔法數字 (Magic
+</li>
+<li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1 text-justify"></span>
+<div><strong class="text-justify">魔法數字 (Magic
                                                 Numbers)</strong>：代碼中充滿寫死的數值標籤，缺乏具名常數定義。</div>
-                                    </li>
-                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span
-                                            class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1 text-justify"></span>
-                                        <div><strong class="text-justify">緊密耦合 (Spaghetti)</strong>：模組間相互依賴，改動通訊層卻導致 PID
+</li>
+<li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1 text-justify"></span>
+<div><strong class="text-justify">緊密耦合 (Spaghetti)</strong>：模組間相互依賴，改動通訊層卻導致 PID
                                             計算損毀。</div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div
-                            class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group text-justify">
-                            <div
-                                class="absolute inset-0 bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors text-justify">
-                            </div>
-                            <h4
-                                class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10 text-center text-justify">
+</li>
+</ul>
+</div>
+</div>
+<div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group text-justify">
+<div class="absolute inset-0 bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors text-justify">
+</div>
+<h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10 text-center text-justify">
                                 Refactoring Logic Flow</h4>
-                            <div class="relative z-10 flex flex-col items-center gap-2 text-justify">
-                                <div class="text-[8px] text-red-400 font-mono line-through text-justify">
+<div class="relative z-10 flex flex-col items-center gap-2 text-justify">
+<div class="text-[8px] text-red-400 font-mono line-through text-justify">
                                     raw_monolith_loop() { ... 500 lines ... }</div>
-                                <div class="text-emerald-500 animate-bounce text-justify">↓</div>
-                                <div class="space-y-1 text-justify">
-                                    <div class="text-[9px] text-emerald-400 font-mono text-justify">
+<div class="text-emerald-500 animate-bounce text-justify">↓</div>
+<div class="space-y-1 text-justify">
+<div class="text-[9px] text-emerald-400 font-mono text-justify">
                                         sensor_fusion_update()</div>
-                                    <div class="text-[9px] text-emerald-400 font-mono text-justify">
+<div class="text-[9px] text-emerald-400 font-mono text-justify">
                                         control_logic_process()</div>
-                                    <div class="text-[9px] text-emerald-400 font-mono text-justify">
+<div class="text-[9px] text-emerald-400 font-mono text-justify">
                                         motor_actuation_commit()</div>
-                                </div>
-                            </div>
-                            <p
-                                class="text-[9px] text-slate-600 mt-8 font-mono tracking-widest text-center text-justify uppercase font-black">
+</div>
+</div>
+<p class="text-[9px] text-slate-600 mt-8 font-mono tracking-widest text-center text-justify uppercase font-black">
                                 Clean Code Transition</p>
-                        </div>
-                    </div>
-                </div>
+</div>
+</div>
+                
             </div>
-        </section>
-
-        <!-- Module 2: System Architecture Layers -->
-        <section class="module-section mb-16 text-justify">
-            <div
-                class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 text-justify text-justify">
-                <div class="p-1 bg-gradient-to-r from-teal-500 to-emerald-500 text-justify text-justify"></div>
-                <div class="p-8 md:p-14 text-justify">
-                    <h2
-                        class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3 text-justify text-justify text-justify">
-                        <span class="text-4xl text-teal-500 text-justify text-left text-justify">🧱</span> 2.
-                        關注點分離：模組化神經架構
-                    </h2>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 text-justify">
-                        <div class="space-y-8 text-justify">
-                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify">
-                                將系統拆解為不互相依賴的獨立模組。感知 (Perceive)、決策 (Decide) 與執行 (Act) 三權分立，實現極高內聚且低耦合的軟體結構。
-                            </p>
-                            <div class="bg-teal-50 p-8 rounded-3xl border border-teal-100 text-center text-justify">
-                                <h4
-                                    class="text-teal-900 font-bold mb-4 text-xs uppercase tracking-widest text-center text-justify text-justify">
-                                    Architectural Layering</h4>
-                                <div class="grid grid-cols-3 gap-2 text-justify">
-                                    <div
-                                        class="p-3 bg-white border border-teal-200 rounded-xl text-[10px] font-bold text-justify">
-                                        感測<br><span
-                                            class="text-[7px] font-normal text-slate-400 text-justify">INPUT</span>
-                                    </div>
-                                    <div
-                                        class="p-3 bg-teal-600 text-white rounded-xl text-[10px] font-bold shadow-lg text-justify text-left">
-                                        邏輯核心<br><span
-                                            class="text-[7px] font-normal text-teal-200 text-justify">PROCESS</span>
-                                    </div>
-                                    <div
-                                        class="p-3 bg-white border border-teal-200 rounded-xl text-[10px] font-bold text-justify">
-                                        執行<br><span
-                                            class="text-[7px] font-normal text-slate-400 text-justify">OUTPUT</span>
-                                    </div>
-                                </div>
-                                <p
-                                    class="text-[10px] text-slate-400 mt-6 italic font-light text-center text-justify text-justify">
-                                    介面隔離：模組間僅透過標準 API 或訊息通訊，不共享全域變數</p>
-                            </div>
-                        </div>
-
-                        <div
-                            class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group text-justify">
-                            <div class="absolute inset-0 bg-teal-500/5 text-justify"></div>
-                            <h4
-                                class="text-teal-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10 text-center text-justify">
-                                Interface Contract Analysis</h4>
-                            <div class="p-6 border border-slate-800 rounded-2xl relative text-justify">
-                                <div
-                                    class="absolute -top-3 left-1/2 -translate-x-1/2 bg-slate-900 px-2 text-teal-500 text-[8px] font-mono text-justify">
-                                    DECOUPLED API</div>
-                                <div class="flex gap-4 text-justify">
-                                    <div class="w-2 h-2 rounded-full bg-teal-500 text-justify"></div>
-                                    <div class="text-[10px] text-slate-400 font-mono tracking-tighter text-justify">
-                                        telemetry.send(packet_binary)</div>
-                                </div>
-                                <div class="text-[7px] text-slate-600 mt-4 italic px-6 font-light text-justify">"Zero
-                                    Direct Hardware Calls in Main Logic"</div>
-                            </div>
-                            <p
-                                class="text-[9px] text-slate-600 mt-8 font-mono tracking-widest uppercase text-center text-justify">
-                                Module Autonomy Visualization</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Module 3: Pipeline & Plugin Patterns -->
-        <section class="module-section mb-16 text-justify">
-            <div
-                class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700 text-justify text-justify">
-                <div class="p-8 md:p-14 text-justify">
-                    <h2
-                        class="text-3xl font-bold mb-8 flex items-center gap-3 text-emerald-400 text-justify text-justify text-justify">
-                        <span
-                            class="p-2 bg-emerald-500/20 rounded-lg text-emerald-400 text-2xl text-justify text-left">🧩</span>
-                        3. 插件化與管道設計模式
-                    </h2>
-                    <div class="flex flex-col lg:flex-row gap-16 items-center text-justify text-justify text-justify">
-                        <div class="flex-1 space-y-6 text-justify">
-                            <p class="text-slate-400 font-light leading-relaxed text-lg text-justify text-justify">
-                                追求硬核的系統擴展性。設計「處理鏈」模式，在不修改核心引擎的前提下，僅需注入獨立組件即可動態載入新的控制策略或遙測濾波器。
-                            </p>
-                            <div
-                                class="bg-emerald-500/10 p-8 rounded-3xl border border-emerald-500/20 shadow-inner text-justify text-justify">
-                                <h4
-                                    class="font-bold text-emerald-400 mb-4 text-xs uppercase tracking-widest text-center text-justify text-left">
-                                    SOLID Design Principles</h4>
-                                <ul
-                                    class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light text-justify text-left text-justify">
-                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span
-                                            class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1 text-justify"></span>
-                                        <div><strong class="text-white text-justify">對擴展開放 (Open)</strong>：新增功能只需撰寫獨立
-                                            Plugin Class，無需改動既有穩定代碼。</div>
-                                    </li>
-                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span
-                                            class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1 text-justify"></span>
-                                        <div><strong class="text-white text-justify">對修改封閉
-                                                (Closed)</strong>：核心驅動邏輯經過驗證後，不再因為業務變動而被頻繁改寫。</div>
-                                    </li>
-                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span
-                                            class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1 text-justify"></span>
-                                        <div><strong class="text-white text-justify">數據管道模式
-                                                (Pipeline)</strong>：像工業生產線一樣，數據流按序流經各個異步處理站。</div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div
-                            class="lg:w-80 bg-emerald-600/10 p-10 rounded-3xl border border-emerald-500/20 text-center relative overflow-hidden group text-justify">
-                            <div
-                                class="absolute -right-8 -top-8 w-32 h-32 bg-emerald-500/5 rounded-full group-hover:scale-150 transition-transform duration-700 text-justify">
-                            </div>
-                            <h4
-                                class="text-emerald-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center text-justify">
-                                Processing Chain</h4>
-                            <div class="space-y-2 text-justify">
-                                <div
-                                    class="py-1 px-4 border border-slate-700 rounded text-[10px] bg-slate-800 text-justify">
-                                    Kalman Filter Plugin</div>
-                                <div
-                                    class="py-1 px-4 border border-slate-700 rounded text-[10px] bg-slate-800 text-justify text-left">
-                                    Edge Guard Plugin</div>
-                                <div
-                                    class="py-1 px-4 border border-emerald-500/50 rounded text-[10px] bg-emerald-600/20 text-emerald-400 animate-pulse text-justify uppercase font-black">
-                                    + Inject New Plugin</div>
-                            </div>
-                            <p
-                                class="text-[11px] text-slate-500 mt-10 leading-relaxed font-light italic text-center text-justify text-left text-justify">
-                                "高品質的架構是開發者對抗軟體熵增與複雜度的唯一武器。"
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Homework Section -->
-        <section class="module-section text-justify">
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit] text-justify text-justify">
-                核心任務：打造具備生命力的精品代碼</h2>
-            <p class="text-center text-gray-500 mb-12 text-justify text-justify text-left text-center">
-                償還技術債，設計高內聚、低耦合的系統架構。當你能寫出讓後繼者願意維護的代碼，你就是資深工程師。透過 Git Workflow 實踐大規模代碼解構與封裝任務。</p>
-
-            <div class="grid md:grid-cols-3 gap-6 text-justify">
-                <!-- Task 14-1 -->
-                <div onclick="openSubmissionModal('adv-14-refactor-surgery', '【作業 14-1】「手術台」：義大利麵代碼解構 (Spaghetti Code Logical Surgery Lab)')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
-                    <div class="bg-emerald-500 h-2"></div>
-                    <div class="p-8 flex-grow text-justify text-justify">
-                        <div class="flex justify-between items-start mb-4 text-justify">
-                            <span
-                                class="text-4xl text-emerald-500 group-hover:scale-110 transition-transform text-justify">✂️</span>
-                            <span
-                                class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest text-justify">60
-                                min</span>
-                        </div>
-                        <h3
-                            class="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition text-justify uppercase tracking-tighter">
-                            【作業 14-1】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「代碼外科手術」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
-                            挑戰拆解一段 500 行的單體控制代碼。利用「函式提取」手法將職責混亂的 loop 邏輯抽像為功能單一的模組（如：遙測層、控制層），落實 Clean Code 核心精神。
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Task 14-2 -->
-                <div onclick="openSubmissionModal('adv-14-ble-class', '【作業 14-2】OOP 實踐：封裝藍牙通訊單元 (Encapsulating Core Communication Class Lab)')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
-                    <div class="bg-teal-500 h-2"></div>
-                    <div class="p-8 flex-grow text-justify text-justify">
-                        <div class="flex justify-between items-start mb-4 text-justify text-left">
-                            <span
-                                class="text-4xl text-teal-500 group-hover:rotate-12 transition-transform text-justify">📦</span>
-                            <span
-                                class="bg-teal-100 text-teal-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest text-justify text-left text-justify">60
-                                min</span>
-                        </div>
-                        <h3
-                            class="font-bold text-xl text-gray-800 mb-2 group-hover:text-teal-600 transition text-justify uppercase tracking-tighter">
-                            【作業 14-2】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「通訊類別封裝」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
-                            使用 JavaScript Class 封裝 BLE 連線邏輯。建立具備事件觸發能力的通訊組件，確保主程式與底層 API 相隔離。證明當切換傳輸介面時，你的核心邏輯完全無需修改。
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Task 14-3 -->
-                <div onclick="openSubmissionModal('adv-14-plugin-chain', '【作業 14-3】管線模式：插件化處理鏈設計 (Dynamic Processing Pipeline Pattern Lab)')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
-                    <div class="bg-green-500 h-2"></div>
-                    <div class="p-8 flex-grow text-justify text-justify">
-                        <div class="flex justify-between items-start mb-4 text-justify text-left text-justify">
-                            <span
-                                class="text-4xl text-green-500 group-hover:translate-x-1 transition-transform text-justify">🧩</span>
-                            <span
-                                class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest text-justify">45
-                                min</span>
-                        </div>
-                        <h3
-                            class="font-bold text-xl text-gray-800 mb-2 group-hover:text-green-600 transition text-justify uppercase tracking-tighter">
-                            【作業 14-3】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「數據插件管線」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
-                            設計一個處理管線框架。實現「即插即用 (PnP)」架構，撰寫兩個獨立插件（如：平滑濾波、閾值攔截），並證明只需透過 <code>addPlugin</code> 即可動態改變系統行為。
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto text-center">
-        <div class="container mx-auto px-4 text-center text-center text-center text-center text-center">
-            <p class="text-slate-500 text-sm mb-4 text-center">&copy; 2026 Vibe Coding. All rights reserved.</p>
-            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400 text-center">
-                <span>單元課程 進階 14 - 重構藝術</span>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(1)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">2 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(2); goToUnit(3)">下一個單元 &nbsp;›</button>
             </div>
         </div>
-    </footer>
 
-    <script src="/js/course-shared.js?v=2026.05.21.V21.DISABLE_UNIFIED_SUPPORT_HUB"></script>
+        <!-- ══════════ PAGE 3: 單元 2 ══════════ -->
+        <div class="ms-unit-page" id="page-3">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-3" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
 
-    <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none text-justify;">
-<div class="markdown-heading"><h1 class="heading-element">軟體架構實踐：從 Spaghetti 到 Clean Code</h1><a id="user-content-軟體架構實踐從-spaghetti-到-clean-code" class="anchor" aria-label="Permalink: 軟體架構實踐：從 Spaghetti 到 Clean Code" href="#軟體架構實踐從-spaghetti-到-clean-code"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+                <h1>🧱 2. 關注點分離：模組化神經架構</h1>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 text-justify">
+<div class="space-y-8 text-justify">
+<p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify">
+                                將系統拆解為不互相依賴的獨立模組。感知 (Perceive)、決策 (Decide) 與執行 (Act) 三權分立，實現極高內聚且低耦合的軟體結構。
+                            </p>
+<div class="bg-teal-50 p-8 rounded-3xl border border-teal-100 text-center text-justify">
+<h4 class="text-teal-900 font-bold mb-4 text-xs uppercase tracking-widest text-center text-justify text-justify">
+                                    Architectural Layering</h4>
+<div class="grid grid-cols-3 gap-2 text-justify">
+<div class="p-3 bg-white border border-teal-200 rounded-xl text-[10px] font-bold text-justify">
+                                        感測<br/><span class="text-[7px] font-normal text-slate-400 text-justify">INPUT</span>
+</div>
+<div class="p-3 bg-teal-600 text-white rounded-xl text-[10px] font-bold shadow-lg text-justify text-left">
+                                        邏輯核心<br/><span class="text-[7px] font-normal text-teal-200 text-justify">PROCESS</span>
+</div>
+<div class="p-3 bg-white border border-teal-200 rounded-xl text-[10px] font-bold text-justify">
+                                        執行<br/><span class="text-[7px] font-normal text-slate-400 text-justify">OUTPUT</span>
+</div>
+</div>
+<p class="text-[10px] text-slate-400 mt-6 italic font-light text-center text-justify text-justify">
+                                    介面隔離：模組間僅透過標準 API 或訊息通訊，不共享全域變數</p>
+</div>
+</div>
+<div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group text-justify">
+<div class="absolute inset-0 bg-teal-500/5 text-justify"></div>
+<h4 class="text-teal-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10 text-center text-justify">
+                                Interface Contract Analysis</h4>
+<div class="p-6 border border-slate-800 rounded-2xl relative text-justify">
+<div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-slate-900 px-2 text-teal-500 text-[8px] font-mono text-justify">
+                                    DECOUPLED API</div>
+<div class="flex gap-4 text-justify">
+<div class="w-2 h-2 rounded-full bg-teal-500 text-justify"></div>
+<div class="text-[10px] text-slate-400 font-mono tracking-tighter text-justify">
+                                        telemetry.send(packet_binary)</div>
+</div>
+<div class="text-[7px] text-slate-600 mt-4 italic px-6 font-light text-justify">"Zero
+                                    Direct Hardware Calls in Main Logic"</div>
+</div>
+<p class="text-[9px] text-slate-600 mt-8 font-mono tracking-widest uppercase text-center text-justify">
+                                Module Autonomy Visualization</p>
+</div>
+</div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(2)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">3 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(3); goToUnit(4)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 4: 單元 3 ══════════ -->
+        <div class="ms-unit-page" id="page-4">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-4" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>🧩 3. 插件化與管道設計模式</h1>
+                
+                <div class="flex flex-col lg:flex-row gap-16 items-center text-justify text-justify text-justify">
+<div class="flex-1 space-y-6 text-justify">
+<p class="text-slate-400 font-light leading-relaxed text-lg text-justify text-justify">
+                                追求硬核的系統擴展性。設計「處理鏈」模式，在不修改核心引擎的前提下，僅需注入獨立組件即可動態載入新的控制策略或遙測濾波器。
+                            </p>
+<div class="bg-emerald-500/10 p-8 rounded-3xl border border-emerald-500/20 shadow-inner text-justify text-justify">
+<h4 class="font-bold text-emerald-400 mb-4 text-xs uppercase tracking-widest text-center text-justify text-left">
+                                    SOLID Design Principles</h4>
+<ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light text-justify text-left text-justify">
+<li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1 text-justify"></span>
+<div><strong class="text-white text-justify">對擴展開放 (Open)</strong>：新增功能只需撰寫獨立
+                                            Plugin Class，無需改動既有穩定代碼。</div>
+</li>
+<li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1 text-justify"></span>
+<div><strong class="text-white text-justify">對修改封閉
+                                                (Closed)</strong>：核心驅動邏輯經過驗證後，不再因為業務變動而被頻繁改寫。</div>
+</li>
+<li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1 text-justify"></span>
+<div><strong class="text-white text-justify">數據管道模式
+                                                (Pipeline)</strong>：像工業生產線一樣，數據流按序流經各個異步處理站。</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="lg:w-80 bg-emerald-600/10 p-10 rounded-3xl border border-emerald-500/20 text-center relative overflow-hidden group text-justify">
+<div class="absolute -right-8 -top-8 w-32 h-32 bg-emerald-500/5 rounded-full group-hover:scale-150 transition-transform duration-700 text-justify">
+</div>
+<h4 class="text-emerald-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center text-justify">
+                                Processing Chain</h4>
+<div class="space-y-2 text-justify">
+<div class="py-1 px-4 border border-slate-700 rounded text-[10px] bg-slate-800 text-justify">
+                                    Kalman Filter Plugin</div>
+<div class="py-1 px-4 border border-slate-700 rounded text-[10px] bg-slate-800 text-justify text-left">
+                                    Edge Guard Plugin</div>
+<div class="py-1 px-4 border border-emerald-500/50 rounded text-[10px] bg-emerald-600/20 text-emerald-400 animate-pulse text-justify uppercase font-black">
+                                    + Inject New Plugin</div>
+</div>
+<p class="text-[11px] text-slate-500 mt-10 leading-relaxed font-light italic text-center text-justify text-left text-justify">
+                                "高品質的架構是開發者對抗軟體熵增與複雜度的唯一武器。"
+                            </p>
+</div>
+</div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(3)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">4 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(4); goToUnit(5)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 5: 實作挑戰 ══════════ -->
+        <div class="ms-unit-page" id="page-5">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-5" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 165 分鐘</div>
+                </div>
+
+                <h1>實戰任務挑戰</h1>
+
+                <p>
+                    請動手完成以下三項實作任務，這是驗證本單元學習成果的核心挑戰。
+                    完成後請將程式碼與報告提交至 GitHub Classroom。
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6 my-6">
+                    <!-- Task 1 -->
+                    <div onclick="openSubmissionModal('adv-14-refactor-surgery', '【作業 14-1】「手術台」：義大利麵代碼解構 (Spaghetti Code Logical Surgery Lab)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#E76F51] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 14-1</div>
+                            <h3 class="text-lg font-bold mb-2">代碼外科手術</h3>
+                            <p class="text-xs text-gray-600 mb-4">挑戰拆解一段 500 行的單體控制代碼。利用「函式提取」手法將職責混亂的 loop 邏輯抽像為功能單一的模組（如：遙測層、控制層），落實 Clean Code 核心精神。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#E76F51] font-bold">
+                            <span>⏱ ✂️ 60 min 【作業 14-1】 「代碼外科手術」 挑戰拆解一段 500 行的單體控制代碼。利用「函式提取」手法將職責混亂的 loop 邏輯抽像為功能單一的模組（如：遙測層、控制層），落實 Clean Code 核心精神。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#E76F51] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 2 -->
+                    <div onclick="openSubmissionModal('adv-14-ble-class', '【作業 14-2】OOP 實踐：封裝藍牙通訊單元 (Encapsulating Core Communication Class Lab)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#2A9D8F] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 14-2</div>
+                            <h3 class="text-lg font-bold mb-2">通訊類別封裝</h3>
+                            <p class="text-xs text-gray-600 mb-4">使用 JavaScript Class 封裝 BLE 連線邏輯。建立具備事件觸發能力的通訊組件，確保主程式與底層 API 相隔離。證明當切換傳輸介面時，你的核心邏輯完全無需修改。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#2A9D8F] font-bold">
+                            <span>⏱ 📦 60 min 【作業 14-2】 「通訊類別封裝」 使用 JavaScript Class 封裝 BLE 連線邏輯。建立具備事件觸發能力的通訊組件，確保主程式與底層 API 相隔離。證明當切換傳輸介面時，你的核心邏輯完全無需修改。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#2A9D8F] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 3 -->
+                    <div onclick="openSubmissionModal('adv-14-plugin-chain', '【作業 14-3】管線模式：插件化處理鏈設計 (Dynamic Processing Pipeline Pattern Lab)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#457B9D] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 14-3</div>
+                            <h3 class="text-lg font-bold mb-2">數據插件管線</h3>
+                            <p class="text-xs text-gray-600 mb-4">設計一個處理管線框架。實現「即插即用 (PnP)」架構，撰寫兩個獨立插件（如：平滑濾波、閾值攔截），並證明只需透過 addPlugin 即可動態改變系統行為。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#457B9D] font-bold">
+                            <span>⏱ 🧩 45 min 【作業 14-3】 「數據插件管線」 設計一個處理管線框架。實現「即插即用 (PnP)」架構，撰寫兩個獨立插件（如：平滑濾波、閾值攔截），並證明只需透過 addPlugin 即可動態改變系統行為。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#457B9D] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(4)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">5 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(5); goToUnit(6)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 6: 摘要與資源 ══════════ -->
+        <div class="ms-unit-page" id="page-6">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-6" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>單元摘要與參考資源</h1>
+
+                <p>
+                    恭喜！你已經完成了「<strong>代碼重構與模組化設計</strong>」模組。
+                    透過本單元的學習與實作，你已經掌握了關鍵的核心技術，為全棧物聯網開發奠定了深厚的底層基石。
+                </p>
+
+                <div class="ms-achievement">
+                    <div class="achievement-icon">🚀</div>
+                    <div class="achievement-text">
+                        <h3>恭喜！你已完成本模組</h3>
+                        <p>你已具備開發與調校本單元核心功能的專業實力。持續累積，前進下一個挑戰！</p>
+                    </div>
+                </div>
+
+                <h2>完成本模組後，你已學會：</h2>
+                <ul>
+                    <li><strong>👃 1. 識別「代碼壞味道」 (Code Smells)</strong> 的基本架構與實作技能。</li>
+                    <li><strong>🧱 2. 關注點分離：模組化神經架構</strong> 的調試方法與資料傳輸細節。</li>
+                    <li><strong>🧩 3. 插件化與管道設計模式</strong> 的優化指標與生產環境安全機制。</li>
+                    <li>在實戰挑戰中，透過 Git 與 GitHub Classroom 提交完整的硬體與報告成果。</li>
+                </ul>
+
+                <h2>延伸學習資源</h2>
+
+                <a href="" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-youtube" style="color:#ff0000;"></i>
+                    <div>
+                        <div style="font-weight:600;">課程教學影片</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">YouTube — 本單元核心觀念與實作示範影片</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="" target="_blank" class="ms-resource-link">
+                    <i class="fas fa-file-alt"></i>
+                    <div>
+                        <div style="font-weight:600;">課程完整講義</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">Google Docs — 詳細實驗步驟、技術文件與程式碼指南</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://classroom.github.com" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-github"></i>
+                    <div>
+                        <div style="font-weight:600;">GitHub Classroom</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">classroom.github.com — 管理你的作業提交與自動評分結果</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(5)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator" style="font-weight:600; color:#107c10;">✓ 模組完成</span>
+                <button class="ms-btn" onclick="markDone(6); alert('🎉 恭喜完成「代碼重構與模組化設計」模組！')">完成模組</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    /* ─── DATA ─── */
+    const UNITS = [
+        { id: 0, label: '課程總覽',       time: '',         type: 'index' },
+        { id: 1, label: '簡介',            time: '3 分鐘',  type: 'unit'  },
+        { id: 2, label: '👃 1. 識別「代碼壞味道」 (Code Smells)', time: '10 分鐘', type: 'unit' },
+        { id: 3, label: '🧱 2. 關注點分離：模組化神經架構', time: '10 分鐘', type: 'unit' },
+        { id: 4, label: '🧩 3. 插件化與管道設計模式', time: '10 分鐘', type: 'unit' },
+        { id: 5, label: '實戰挑戰',       time: '165 分鐘', type: 'lab'   },
+        { id: 6, label: '摘要與資源',     time: '3 分鐘',  type: 'unit'  },
+    ];
+
+    let currentUnit = 0;
+    let doneSet = new Set();
+
+    /* ─── INIT ─── */
+    function init() {
+        buildSidebar();
+        buildIndexUnitList();
+        goToUnit(0);
+    }
+
+    /**
+     * 動態建構側邊欄單元選單。
+     */
+    function buildSidebar() {
+        const nav = document.getElementById('sidebar-nav');
+        nav.innerHTML = UNITS.map(u => {
+            const badge = u.type === 'lab' ? ' <span style="font-size:10px;background:#eef6ff;color:#005a9e;padding:1px 5px;border-radius:2px;">LAB</span>'
+                        : '';
+            return `
+            <div class="ms-unit-item" id="nav-${u.id}" onclick="goToUnit(${u.id})">
+                <div class="unit-icon" id="icon-${u.id}">${u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id}</div>
+                <div class="unit-meta">
+                    <div class="unit-name">${u.label}${badge}</div>
+                    ${u.time ? `<div class="unit-time"><i class="far fa-clock"></i> ${u.time}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /**
+     * 動態建構首頁單元卡片列表。
+     */
+    function buildIndexUnitList() {
+        const el = document.getElementById('index-unit-list');
+        el.innerHTML = UNITS.filter(u => u.id > 0).map(u => `
+            <div class="unit-card ${u.type}" onclick="goToUnit(${u.id})">
+                <div class="unit-card-num">${u.id}</div>
+                <div class="unit-card-info">
+                    <div class="unit-card-name">${u.label}</div>
+                    <div class="unit-card-time"><i class="far fa-clock"></i> ${u.time}</div>
+                </div>
+                <div class="unit-card-arrow">›</div>
+            </div>
+        `).join('');
+    }
+
+    /* ─── NAVIGATION ─── */
+    /**
+     * 切換至指定單元頁面。
+     * @param {number} id - 單元識別碼
+     */
+    function goToUnit(id) {
+        document.querySelectorAll('.ms-unit-page').forEach(p => p.classList.remove('visible'));
+        const target = id === 0 ? document.getElementById('page-index') : document.getElementById(`page-${id}`);
+        if (target) target.classList.add('visible');
+
+        document.querySelectorAll('.ms-unit-item').forEach(el => el.classList.remove('active'));
+        const navItem = document.getElementById(`nav-${id}`);
+        if (navItem) { navItem.classList.add('active'); navItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) {
+                icon.className = 'unit-icon done';
+                icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>';
+            } else if (u.id === id) {
+                icon.className = 'unit-icon active-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            } else {
+                icon.className = 'unit-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            }
+        });
+
+        const unit = UNITS.find(u => u.id === id);
+        document.getElementById('bc-current').textContent = unit ? unit.label : '';
+        currentUnit = id;
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * 標記特定單元為已完成。
+     * @param {number} id - 單元識別碼
+     */
+    function markDone(id) {
+        doneSet.add(id);
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) badge.style.display = 'flex';
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) { icon.className = 'unit-icon done'; icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>'; }
+        });
+        updateProgress();
+    }
+
+    /**
+     * 計算並更新課程進度與進度條。
+     */
+    function updateProgress() {
+        const total = UNITS.length - 1;
+        const done = doneSet.size;
+        document.getElementById('progress-fill').style.width = Math.round(done / total * 100) + '%';
+        document.getElementById('progress-text').textContent = `${done} / ${total} 已完成`;
+    }
+
+    /* ─── CHECKLIST ─── */
+    /**
+     * 切換核取方塊的狀態。
+     * @param {HTMLElement} el - 核取方塊元素
+     */
+    function toggleCheck(el) {
+        el.classList.toggle('checked');
+        el.innerHTML = el.classList.contains('checked') ? '<i class="fas fa-check" style="font-size:10px;"></i>' : '';
+    }
+
+    /* ─── START ─── */
+    init();
+</script>
+
+<!-- Define Resources -->
+<script>
+    window.RESOURCES = {
+        video: "",
+        doc: ""
+    };
+</script>
+<script src="/js/course-shared.js?v=2026.05.22.V27.START_UNITS_LAYOUT_UPGRADE"></script>
+
+<!-- Assignment Guide (Hidden) -->
+<section id="assignment-guide" style="display: none text-justify;">
+<div class="markdown-heading"><h1 class="heading-element">軟體架構實踐：從 Spaghetti 到 Clean Code</h1><a aria-label="Permalink: 軟體架構實踐：從 Spaghetti 到 Clean Code" class="anchor" href="#軟體架構實踐從-spaghetti-到-clean-code" id="user-content-軟體架構實踐從-spaghetti-到-clean-code"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <p>歡迎來到 <strong><code>adv-14-unit-refactoring</code></strong> 程式庫。本單元是從「程式員 (Coder)」蛻變為「軟體架構師 (Architect)」的核心訓練。你將學習如何處理混亂的單體代碼，並將其重構為具備可維護性、可擴展性與美感的專業架構。</p>
-<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a aria-label="Permalink: 🎯 學習目標" class="anchor" href="#-學習目標" id="user-content--學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ol>
 <li>
 <strong>關注點分離 (SoC)</strong>：將混亂的單體檔案拆解為具備單一職責的模組。</li>
@@ -365,8 +1076,8 @@
 <li>
 <strong>開閉原則 (OCP)</strong>：打造具備擴展能力的數據管道 (Pipeline)，實踐「對擴展開放，對修改封閉」。</li>
 </ol>
-<div class="markdown-heading"><h2 class="heading-element">🚀 任務說明</h2><a id="user-content--任務說明" class="anchor" aria-label="Permalink: 🚀 任務說明" href="#-任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
-<div class="markdown-heading"><h3 class="heading-element">任務 1：義大利麵代碼大手術 (Legacy Decoupling)</h3><a id="user-content-任務-1義大利麵代碼大手術-legacy-decoupling" class="anchor" aria-label="Permalink: 任務 1：義大利麵代碼大手術 (Legacy Decoupling)" href="#任務-1義大利麵代碼大手術-legacy-decoupling"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">🚀 任務說明</h2><a aria-label="Permalink: 🚀 任務說明" class="anchor" href="#-任務說明" id="user-content--任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：義大利麵代碼大手術 (Legacy Decoupling)</h3><a aria-label="Permalink: 任務 1：義大利麵代碼大手術 (Legacy Decoupling)" class="anchor" href="#任務-1義大利麵代碼大手術-legacy-decoupling" id="user-content-任務-1義大利麵代碼大手術-legacy-decoupling"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>對象</strong>：<code>src/legacy_monolith.js</code>
@@ -382,7 +1093,7 @@
 <li>
 <strong>記錄</strong>：請在 <code>docs/Migration_Diary.md</code> 中記錄你的重構日誌。</li>
 </ul>
-<div class="markdown-heading"><h3 class="heading-element">任務 2：通訊層 OOP 封裝</h3><a id="user-content-任務-2通訊層-oop-封裝" class="anchor" aria-label="Permalink: 任務 2：通訊層 OOP 封裝" href="#任務-2通訊層-oop-封裝"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：通訊層 OOP 封裝</h3><a aria-label="Permalink: 任務 2：通訊層 OOP 封裝" class="anchor" href="#任務-2通訊層-oop-封裝" id="user-content-任務-2通訊層-oop-封裝"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>要求</strong>：
@@ -393,7 +1104,7 @@
 </ul>
 </li>
 </ul>
-<div class="markdown-heading"><h3 class="heading-element">任務 3：插件化處理管線 (Pipeline Framework)</h3><a id="user-content-任務-3插件化處理管線-pipeline-framework" class="anchor" aria-label="Permalink: 任務 3：插件化處理管線 (Pipeline Framework)" href="#任務-3插件化處理管線-pipeline-framework"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：插件化處理管線 (Pipeline Framework)</h3><a aria-label="Permalink: 任務 3：插件化處理管線 (Pipeline Framework)" class="anchor" href="#任務-3插件化處理管線-pipeline-framework" id="user-content-任務-3插件化處理管線-pipeline-framework"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>要求</strong>：
@@ -404,7 +1115,7 @@
 </ul>
 </li>
 </ul>
-<div class="markdown-heading"><h2 class="heading-element">📁 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📁 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">📁 程式庫結構</h2><a aria-label="Permalink: 📁 程式庫結構" class="anchor" href="#-程式庫結構" id="user-content--程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <code>src/legacy_monolith.js</code>: 待重構的原始混亂代碼。</li>
@@ -417,24 +1128,23 @@
 <li>
 <code>tests/</code>: 自動化測試腳本，用於驗證重構後的架構品質。</li>
 </ul>
-<div class="markdown-heading"><h2 class="heading-element">📝 提交要求</h2><a id="user-content--提交要求" class="anchor" aria-label="Permalink: 📝 提交要求" href="#-提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">📝 提交要求</h2><a aria-label="Permalink: 📝 提交要求" class="anchor" href="#-提交要求" id="user-content--提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ol>
 <li>完成所有重構任務，確保程式碼能通過 <code>tests/</code> 中的架構檢核。</li>
 <li>更新 <code>docs/Migration_Diary.md</code>，詳細描述你解決了哪些壞味道，以及使用了哪些重構手法。</li>
 <li>確保 <code>README.md</code>（本檔案）最後包含你的結案感言。</li>
 </ol>
-<hr>
+<hr/>
 <blockquote>
 <p>「任何傻瓜都能寫出電腦懂的代碼。好的工程師能寫出人類懂的代碼。」 — Martin Fowler</p>
 </blockquote>
+</section>
 
-    </section>
-
-    <!-- Tutor Guide (Hidden) -->
-    <section id="tutor-guide" style="display: none text-justify;">
+<!-- Tutor Guide (Hidden) -->
+<section id="tutor-guide" style="display: none text-justify;">
 <p>針對 <strong><code>adv-14-unit-refactoring</code> (代碼重構)</strong> 單元，這是從「程式員 (Coder)」蛻變為「軟體架構師 (Architect)」的核心訓練。它不再關注功能實現，而是關注代碼的 <strong>可維護性、可擴展性與閱讀美感</strong>。在 Vibe Coding 這種跨平台系統中，優雅的架構是防止系統隨功能增加而崩潰的唯一防線。</p>
 <p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
-<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" class="anchor" href="#1-範本程式庫-template-repo-配置建議" id="user-content-1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <p>重構教學需要一個「待手術」的正反面教材，建議範本包含：</p>
 <ul>
 <li>
@@ -446,9 +1156,9 @@
 <li>
 <strong>📂 <code>tests/architecture.test.js</code></strong>：架構完整性測試。這不是測功能，而是檢核：1. 主程式是否還有超過 50 行的函式？ 2. 通訊層是否實現了真正的 OOP 封裝？</li>
 </ul>
-<hr>
-<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
-<div class="markdown-heading"><h4 class="heading-element">任務 1：義大利麵代碼之大手術 (Legacy Decoupling Surgery Lab)</h4><a id="user-content-任務-1義大利麵代碼之大手術-legacy-decoupling-surgery-lab" class="anchor" aria-label="Permalink: 任務 1：義大利麵代碼之大手術 (Legacy Decoupling Surgery Lab)" href="#任務-1義大利麵代碼之大手術-legacy-decoupling-surgery-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a aria-label="Permalink: 2. 作業任務部署細節" class="anchor" href="#2-作業任務部署細節" id="user-content-2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：義大利麵代碼之大手術 (Legacy Decoupling Surgery Lab)</h4><a aria-label="Permalink: 任務 1：義大利麵代碼之大手術 (Legacy Decoupling Surgery Lab)" class="anchor" href="#任務-1義大利麵代碼之大手術-legacy-decoupling-surgery-lab" id="user-content-任務-1義大利麵代碼之大手術-legacy-decoupling-surgery-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>目標</strong>：練習「關注點分離 (SoC)」手法，解決單體代碼的認知負荷問題。</li>
@@ -466,7 +1176,7 @@
 </ul>
 </li>
 </ul>
-<div class="markdown-heading"><h4 class="heading-element">任務 2：通訊層 OOP 封裝 (Communication Layer OOP Lab)</h4><a id="user-content-任務-2通訊層-oop-封裝-communication-layer-oop-lab" class="anchor" aria-label="Permalink: 任務 2：通訊層 OOP 封裝 (Communication Layer OOP Lab)" href="#任務-2通訊層-oop-封裝-communication-layer-oop-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：通訊層 OOP 封裝 (Communication Layer OOP Lab)</h4><a aria-label="Permalink: 任務 2：通訊層 OOP 封裝 (Communication Layer OOP Lab)" class="anchor" href="#任務-2通訊層-oop-封裝-communication-layer-oop-lab" id="user-content-任務-2通訊層-oop-封裝-communication-layer-oop-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>目標</strong>：透過類別封裝，隱藏底層複雜性，實現「介面隔離」。</li>
@@ -484,7 +1194,7 @@
 </ul>
 </li>
 </ul>
-<div class="markdown-heading"><h4 class="heading-element">任務 3：插件化處理管線架構 (Dynamic Pipeline Framework Lab)</h4><a id="user-content-任務-3插件化處理管線架構-dynamic-pipeline-framework-lab" class="anchor" aria-label="Permalink: 任務 3：插件化處理管線架構 (Dynamic Pipeline Framework Lab)" href="#任務-3插件化處理管線架構-dynamic-pipeline-framework-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：插件化處理管線架構 (Dynamic Pipeline Framework Lab)</h4><a aria-label="Permalink: 任務 3：插件化處理管線架構 (Dynamic Pipeline Framework Lab)" class="anchor" href="#任務-3插件化處理管線架構-dynamic-pipeline-framework-lab" id="user-content-任務-3插件化處理管線架構-dynamic-pipeline-framework-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>目標</strong>：實踐「開閉原則 (OCP)」，打造具備擴展能力的數據管道。</li>
@@ -502,15 +1212,15 @@
 </ul>
 </li>
 </ul>
-<hr>
-<div class="markdown-heading"><h3 class="heading-element">3. 軟體架構組件導師點評標準 (Clean Code &amp; Architecture Standards)</h3><a id="user-content-3-軟體架構組件導師點評標準-clean-code--architecture-standards" class="anchor" aria-label="Permalink: 3. 軟體架構組件導師點評標準 (Clean Code &amp; Architecture Standards)" href="#3-軟體架構組件導師點評標準-clean-code--architecture-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">3. 軟體架構組件導師點評標準 (Clean Code &amp; Architecture Standards)</h3><a aria-label="Permalink: 3. 軟體架構組件導師點評標準 (Clean Code &amp; Architecture Standards)" class="anchor" href="#3-軟體架構組件導師點評標準-clean-code--architecture-standards" id="user-content-3-軟體架構組件導師點評標準-clean-code--architecture-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <p>此單元的價值在於 <strong>「對對抗代碼熵增的防禦深度」</strong>：</p>
 <ul>
 <li>[ ] <strong>封裝完備度</strong>：模組間是否做到了「知道的越少越好 (Least Knowledge)」？</li>
 <li>[ ] <strong>API 語意化</strong>：設計的類別介面是否自然流暢，能讓其他開發者快速上手而無需閱讀內部實作？</li>
 <li>[ ] <strong>架構彈性</strong>：系統是否支持「不修改原始碼即能增加功能」？（展現對 OCP 的理解）。</li>
 </ul>
-<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" class="anchor" href="#-推薦範本結構-github-classroom-template" id="user-content--推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <pre lang="text"><code>.
 ├── src/core_engine.js      # 核心：精簡後的主控邏輯管道
 ├── src/modules/            # 模組：解耦後的 Perception &amp; Actuation 類別
@@ -520,10 +1230,9 @@
 └── tests/quality.test.js   # 檢核：檢測循環複雜度與模組依賴耦合度
 </code></pre>
 <p>透過這種部署方式，學生能體驗到 <strong>「好的工程師，是能寫出『讓人類讀懂』的代碼，並建立起可以建立起可以讓系統優雅生長的骨架」</strong>。掌握重構藝術後，學員將擁有了管理「長週期、多人協作、物聯網大規模開發」必備的高階架構師核心競爭力！</p>
-<hr>
+<hr/>
 <p>完美！至此我們已經將 <strong>進階 14</strong> 的最後一個核心單元（重構藝術）完成了流程定義。這不僅是進階 14 的終點，更是整個進階課程體系化建設的圓滿結尾。恭喜！Vibe Coding 進階系列 GitHub Classroom 部署建議已全部完成！</p>
+</section>
 
-    </section>
 </body>
-
 </html>
