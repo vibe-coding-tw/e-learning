@@ -4,332 +4,1055 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>代碼實作邏輯預習 - Vibe Coding</title>
+    <title>代碼實作邏輯預習 - Vibe Coding Learn</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script async="" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        
+        :root {
+            --ms-blue: #0078d4;
+            --ms-blue-dark: #005a9e;
+            --ms-blue-light: #deecf9;
+            --ms-gray-10: #f3f2f1;
+            --ms-gray-20: #e1dfdd;
+            --ms-gray-90: #201f1e;
+            --ms-green: #107c10;
+            --ms-red: #d13438;
+            --sidebar-w: 280px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fff;
+            color: #201f1e;
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ─── TOP NAV ─── */
+        .ms-topnav {
+            background: var(--ms-blue);
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,.2);
+        }
+        .ms-topnav .brand {
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .ms-topnav .divider { width: 1px; height: 20px; background: rgba(255,255,255,.3); }
+        .ms-topnav .nav-label { color: rgba(255,255,255,.9); font-size: 14px; }
+
+        /* ─── LAYOUT ─── */
+        .ms-layout { display: flex; min-height: calc(100vh - 48px); }
+
+        /* ─── SIDEBAR ─── */
+        .ms-sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: #faf9f8;
+            border-right: 1px solid #e1dfdd;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 48px;
+            height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+        .ms-sidebar-header {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .ms-sidebar-header .module-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #605e5c;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .ms-sidebar-header .module-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #201f1e;
+            line-height: 1.4;
+        }
+        .ms-sidebar-header .meta {
+            font-size: 12px;
+            color: #605e5c;
+            margin-top: 6px;
+        }
+        .ms-unit-list { padding: 8px 0; }
+        .ms-unit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background .12s, border-color .12s;
+            color: #201f1e;
+        }
+        .ms-unit-item:hover { background: #edebe9; }
+        .ms-unit-item.active {
+            border-left-color: var(--ms-blue);
+            background: #deecf9;
+        }
+        .ms-unit-item.active .unit-name { color: var(--ms-blue); font-weight: 600; }
+        .unit-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #c8c6c4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+            font-size: 10px;
+            background: #fff;
+        }
+        .unit-icon.done { background: var(--ms-green); border-color: var(--ms-green); color: #fff; }
+        .unit-icon.active-icon { border-color: var(--ms-blue); background: var(--ms-blue); color: #fff; }
+        .unit-meta { flex: 1; min-width: 0; }
+        .unit-name { font-size: 13px; line-height: 1.4; }
+        .unit-time { font-size: 11px; color: #605e5c; margin-top: 2px; }
+        .sidebar-progress {
+            padding: 12px 16px;
+            border-top: 1px solid #e1dfdd;
+            margin-top: auto;
+        }
+        .progress-bar-bg { background: #e1dfdd; border-radius: 4px; height: 6px; }
+        .progress-bar-fill { background: var(--ms-green); border-radius: 4px; height: 6px; transition: width .4s; }
+        .progress-text { font-size: 12px; color: #605e5c; margin-top: 6px; }
+
+        /* ─── MAIN ─── */
+        .ms-content { flex: 1; min-width: 0; }
+
+        .ms-breadcrumb {
+            padding: 10px 40px;
+            font-size: 12px;
+            color: #605e5c;
+            border-bottom: 1px solid #e1dfdd;
+            background: #fff;
+        }
+        .ms-breadcrumb a { color: var(--ms-blue); text-decoration: none; }
+        .ms-breadcrumb a:hover { text-decoration: underline; }
+        .ms-breadcrumb span { margin: 0 6px; }
+
+        /* ─── PAGES ─── */
+        .ms-unit-page { display: none; }
+        .ms-unit-page.visible { display: block; }
+
+        .unit-content {
+            max-width: 820px;
+            padding: 32px 40px 60px;
+            margin: 0 auto;
+        }
+
+        .unit-status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .unit-completed-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #dff6dd;
+            color: #107c10;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+        .unit-time-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #605e5c;
+            font-size: 13px;
+        }
+
+        /* Typography */
+        .unit-content h1 { font-size: 28px; font-weight: 700; margin: 0 0 20px; color: #201f1e; line-height: 1.3; }
+        .unit-content h2 { font-size: 20px; font-weight: 600; margin: 36px 0 12px; color: #201f1e; padding-top: 8px; }
+        .unit-content h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: #201f1e; }
+        .unit-content p { margin: 0 0 14px; }
+        .unit-content ul, .unit-content ol { margin: 0 0 14px; padding-left: 28px; }
+        .unit-content li { margin-bottom: 6px; }
+        .unit-content strong { font-weight: 600; }
+        .unit-content a { color: var(--ms-blue); text-decoration: none; }
+        .unit-content a:hover { text-decoration: underline; }
+        .unit-content code {
+            background: #f3f2f1;
+            border: 1px solid #e1dfdd;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            color: #a31515;
+        }
+
+        /* Callouts */
+        .ms-note, .ms-tip, .ms-warning, .ms-important {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+        .ms-note { background: #deecf9; border-color: var(--ms-blue); }
+        .ms-note .note-icon { color: var(--ms-blue); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-tip { background: #dff6dd; border-color: var(--ms-green); }
+        .ms-tip .note-icon { color: var(--ms-green); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-warning { background: #fff4ce; border-color: #ffaa44; }
+        .ms-warning .note-icon { color: #ffaa44; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-important { background: #fde7e9; border-color: var(--ms-red); }
+        .ms-important .note-icon { color: var(--ms-red); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .note-body strong { display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+
+        /* Scenario */
+        .ms-scenario {
+            background: #f3f2f1;
+            border-radius: 4px;
+            padding: 20px 24px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #323130;
+            border-left: 4px solid #c8c6c4;
+        }
+        .ms-scenario-label {
+            font-style: normal;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #605e5c;
+            margin-bottom: 8px;
+        }
+
+        /* Steps */
+        .ms-steps { margin: 16px 0; }
+        .ms-step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
+        .ms-step-num {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--ms-blue); color: #fff;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .ms-step-body { flex: 1; }
+        .ms-step-body h4 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+        .ms-step-body p { font-size: 14px; margin: 0; }
+
+        /* Table */
+        .ms-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+        .ms-table th {
+            background: #f3f2f1; font-weight: 600; text-align: left;
+            padding: 10px 14px; border: 1px solid #e1dfdd; color: #323130;
+        }
+        .ms-table td { padding: 9px 14px; border: 1px solid #e1dfdd; vertical-align: top; }
+        .ms-table tr:nth-child(even) td { background: #faf9f8; }
+        .ms-table .check { color: var(--ms-green); font-size: 16px; }
+        .ms-table .cross { color: #8a8886; font-size: 16px; }
+
+        /* Checklist */
+        .ms-checklist { list-style: none; padding: 0; margin: 12px 0; }
+        .ms-checklist li {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 6px 0; font-size: 14px;
+        }
+        .ms-checklist li .check-box {
+            width: 18px; height: 18px;
+            border: 2px solid #8a8886; border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 1px; cursor: pointer; transition: all .15s;
+        }
+        .ms-checklist li .check-box.checked {
+            background: var(--ms-blue); border-color: var(--ms-blue); color: #fff;
+        }
+
+        /* Code block */
+        .ms-code {
+            background: #1e1e1e;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-x: auto;
+        }
+        .ms-code .c-comment { color: #6a9955; }
+        .ms-code .c-str { color: #ce9178; }
+        .ms-code .c-kw { color: #569cd6; }
+        .ms-code .c-attr { color: #9cdcfe; }
+        .ms-code .c-val { color: #ce9178; }
+        .ms-code .c-tag { color: #4ec9b0; }
+        .ms-code .c-white { color: #d4d4d4; }
+
+        /* Lab card */
+        .ms-lab-card {
+            background: linear-gradient(135deg, #eef6ff 0%, #f5f0ff 100%);
+            border: 1px solid #c7e0f4;
+            border-radius: 6px;
+            padding: 24px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: box-shadow .15s, border-color .15s;
+        }
+        .ms-lab-card:hover { box-shadow: 0 4px 16px rgba(0,120,212,.12); border-color: var(--ms-blue); }
+        .ms-lab-card h3 { margin: 0 0 12px; color: var(--ms-blue-dark); font-size: 16px; font-weight: 600; }
+        .ms-lab-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--ms-blue);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 12px;
+        }
+        .ms-lab-time {
+            font-size: 12px;
+            color: #605e5c;
+            margin-left: 8px;
+        }
+
+        /* Compare grid */
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border: 1px solid #e1dfdd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .compare-card-header {
+            padding: 12px 14px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .compare-card-body {
+            padding: 14px;
+            font-size: 13px;
+            color: #605e5c;
+            line-height: 1.5;
+        }
+
+        /* Buttons */
+        .ms-btn {
+            background: var(--ms-blue); color: #fff; border: none;
+            padding: 7px 18px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; transition: background .12s;
+            font-family: inherit;
+        }
+        .ms-btn:hover { background: var(--ms-blue-dark); }
+        .ms-btn-ghost {
+            background: transparent; color: var(--ms-blue);
+            border: 1px solid var(--ms-blue); padding: 6px 18px;
+            font-size: 14px; font-weight: 600; border-radius: 2px;
+            cursor: pointer; transition: background .12s; font-family: inherit;
+        }
+        .ms-btn-ghost:hover { background: var(--ms-blue-light); }
+
+        /* Nav */
+        .unit-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            border-top: 1px solid #e1dfdd;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+        .nav-btn-prev, .nav-btn-next {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 20px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; border: 1px solid;
+            font-family: inherit; transition: background .12s;
+        }
+        .nav-btn-next { background: var(--ms-blue); color: #fff; border-color: var(--ms-blue); }
+        .nav-btn-next:hover { background: var(--ms-blue-dark); border-color: var(--ms-blue-dark); }
+        .nav-btn-prev { background: #fff; color: var(--ms-blue); border-color: var(--ms-blue); }
+        .nav-btn-prev:hover { background: var(--ms-blue-light); }
+        .unit-page-indicator { font-size: 13px; color: #605e5c; }
+
+        /* Module index */
+        .module-meta-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+        .ms-tag { background: #f3f2f1; color: #323130; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 500; }
+        .ms-tag.blue { background: #deecf9; color: var(--ms-blue-dark); }
+        .ms-tag.green { background: #dff6dd; color: #107c10; }
+        .unit-card-list { margin: 20px 0; }
+        .unit-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 0; border-bottom: 1px solid #f3f2f1; cursor: pointer;
+        }
+        .unit-card:last-child { border-bottom: none; }
+        .unit-card:hover .unit-card-name { color: var(--ms-blue); text-decoration: underline; }
+        .unit-card-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #f3f2f1; color: #605e5c;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .unit-card.lab .unit-card-num { background: #eef6ff; color: var(--ms-blue-dark); }
+        .unit-card.quiz .unit-card-num { background: #fff4ce; color: #8a6914; }
+        .unit-card-info { flex: 1; }
+        .unit-card-name { font-size: 15px; font-weight: 500; }
+        .unit-card-time { font-size: 12px; color: #605e5c; margin-top: 2px; }
+        .unit-card-arrow { color: #c8c6c4; font-size: 14px; }
+
+        /* Resource links */
+        .ms-resource-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border: 1px solid #e1dfdd; border-radius: 4px;
+            margin-bottom: 8px; text-decoration: none; color: #201f1e;
+            font-size: 14px; transition: background .1s;
+        }
+        .ms-resource-link:hover { background: #f3f2f1; }
+        .ms-resource-link i { color: var(--ms-blue); font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+
+        /* Achievement */
+        .ms-achievement {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: #fff; border-radius: 6px; padding: 24px 28px;
+            margin: 24px 0; display: flex; align-items: center; gap: 20px;
+        }
+        .achievement-icon { font-size: 48px; flex-shrink: 0; }
+        .achievement-text h3 { margin: 0 0 4px; font-size: 18px; }
+        .achievement-text p { margin: 0; font-size: 14px; opacity: .9; }
+
+        @media (max-width: 768px) {
+            .ms-sidebar { display: none; }
+            .unit-content { padding: 20px 16px 40px; }
+            .unit-nav { padding: 16px; }
+            .ms-breadcrumb { padding: 8px 16px; }
+            .compare-grid { grid-template-columns: 1fr; }
+        }
+
+    </style>
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+<body>
 
-    <!-- Hero Section -->
-    <header
-        class="relative bg-gradient-to-br from-slate-900 via-gray-800 to-zinc-900 text-white pt-24 pb-32 overflow-hidden">
-        <div
-            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+<!-- TOP NAV -->
+<nav class="ms-topnav">
+    <a href="#" class="brand"><i class="fas fa-graduation-cap"></i> Vibe Coding Learn</a>
+    <div class="divider"></div>
+    <span class="nav-label">單元課程 進階 12 - 程式邏輯</span>
+</nav>
+
+<div class="ms-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="ms-sidebar">
+        <div class="ms-sidebar-header">
+            <div class="module-label">模組</div>
+            <div class="module-title">代碼實作邏輯預習</div>
+            <div class="meta"><i class="far fa-clock"></i> 約 201 分鐘 · 6 個單元</div>
         </div>
-        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+        <nav class="ms-unit-list" id="sidebar-nav"></nav>
+        <div class="sidebar-progress">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0 / 6 已完成</div>
+        </div>
+    </aside>
 
-        <div class="container mx-auto px-4 relative z-10 text-center">
-            <span
-                class="badge-header inline-block py-1.5 px-4 rounded-full bg-white/10 border border-white/20 text-white/90 text-sm font-medium mb-6 tracking-wide uppercase backdrop-blur-sm font-[Outfit]">
-                進階 12 - 程式邏輯
-            </span>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit] text-center">
-                代碼實作邏輯預習<br><span class="text-cyan-400">Logic, Loop & FSM</span>
-            </h1>
-            <p class="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed text-center">
-                無人車的大腦如何思考？從混亂的訊號轉化為精確的決策時序與強韌的系統防護。
-            </p>
+    <!-- MAIN -->
+    <main class="ms-content">
 
-            <div class="mt-8 flex flex-wrap justify-center gap-4 text-center">
-                <button onclick="enterMediaMode('video', window.RESOURCES.video)"
-                    class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105">
-                    <span class="text-xl group-hover:animate-pulse">📺</span>
-                    <span>觀看教學影片</span>
-                </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
-                    class="group flex items-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105">
-                    <span class="text-xl text-left">📄</span>
-                    <span>閱讀課程講義</span>
-                </button>
+        <div class="ms-breadcrumb">
+            <a href="#">Vibe Coding</a><span>›</span>
+            <a href="#">單元課程 進階 12</a><span>›</span>
+            <span id="bc-current">課程總覽</span>
+        </div>
+
+        <!-- ══════════ PAGE 0: INDEX ══════════ -->
+        <div class="ms-unit-page visible" id="page-index">
+            <div class="unit-content">
+                <h1>代碼實作邏輯預習</h1>
+                <div class="module-meta-tags">
+                    <span class="ms-tag">模組</span>
+                    <span class="ms-tag">6 個單元</span>
+                    <span class="ms-tag green">單元課程 進階 12</span>
+                    <span class="ms-tag blue">硬體開發</span>
+                    <span class="ms-tag blue">物聯網</span>
+                </div>
+
+                <p>無人車的大腦如何思考？從混亂的訊號轉化為精確的決策時序與強韌的系統防護。</p>
+
+                <h2>學習目標</h2>
+                <p>完成本模組後，你將能夠：</p>
+                <ul>
+                    <li>理解並掌握 <strong>🔄 1. 有限狀態機 (FSM)：決策的骨架</strong> 的核心觀念與操作實務。</li>
+                    <li>學會 <strong>️ 2. 非阻塞迴圈：維持大腦的清醒</strong> 的關鍵原理，並能將其應用於開發。</li>
+                    <li>掌握 <strong>🛡️ 3. 防錯邏輯與系統魯棒性</strong> 的調校技巧與穩定性測試。</li>
+                    <li>完成三項實作作業，並以 Git 提交成果到 GitHub Classroom。</li>
+                </ul>
+
+                <h2>必要條件</h2>
+                <ul>
+                    <li>準備好 ESP32 開發板與 Micro USB / USB-C 數據線</li>
+                    <li>電腦已配置 VS Code 與 PlatformIO 開發環境</li>
+                    <li>擁有 GitHub 帳號，能夠接受 GitHub Classroom 邀請</li>
+                </ul>
+
+                <h2>本模組單元</h2>
+                <div class="unit-card-list" id="index-unit-list"></div>
+                <div style="margin-top:32px;">
+                    <button class="ms-btn" onclick="goToUnit(1)">開始模組 &nbsp;›</button>
+                </div>
             </div>
         </div>
-    </header>
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+        <!-- ══════════ PAGE 1: 簡介 ══════════ -->
+        <div class="ms-unit-page" id="page-1">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-1" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
 
-        <!-- Module 1: Finite State Machine -->
-        <section class="module-section mb-16 text-justify">
-            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 text-justify">
-                <div class="p-1 bg-gradient-to-r from-orange-500 to-amber-500 text-justify"></div>
-                <div class="p-8 md:p-14 text-justify">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3 text-justify text-justify">
-                        <span class="text-4xl text-orange-500 text-justify text-left">🔄</span> 1. 有限狀態機 (FSM)：決策的骨架
-                    </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 text-justify">
-                        <div class="space-y-6 text-justify">
-                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify">
+                <h1>簡介</h1>
+
+                <p>
+                    歡迎來到本模組！本單元的核心主題是 <strong>代碼實作邏輯預習</strong>。
+                    在現代 Vibe Coding 開發模式中，AI 能幫你生成程式碼，
+                    但要建立一套高可用、穩定的物聯網硬體系統，你必須確實理解底層的硬體連線、更新與控制協定。
+                </p>
+
+                <div class="ms-scenario">
+                    <div class="ms-scenario-label">學習指引</div>
+                    「工欲善其事，必先利其器。」在開始寫代碼與接線之前，請先花 3 分鐘觀看下方的教學影片，
+                    這能幫助你快速建構完整的系統架構觀，減少後續排除故障的時間。
+                </div>
+
+                <h2>教學影片</h2>
+                <div style="border-radius:4px; overflow:hidden; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,.12); aspect-ratio:16/9;">
+                    <iframe src=""
+                        title="代碼實作邏輯預習 教學影片" allowfullscreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        style="width:100%; height:100%; display:block; border:0;">
+                    </iframe>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(0)">‹ &nbsp;總覽</button>
+                <span class="unit-page-indicator">1 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(1); goToUnit(2)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 2: 單元 1 ══════════ -->
+        <div class="ms-unit-page" id="page-2">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-2" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>🔄 1. 有限狀態機 (FSM)：決策的骨架</h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-16 text-justify">
+<div class="space-y-6 text-justify">
+<p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify">
                                 無人車的大腦不是單一線程跑到底。它會根據目前的模式（如：靜止 Idle / 循跡 Tracking / 搜尋 Search）採取完全不同的計算策略。
                             </p>
-                            <div class="bg-orange-50 p-6 rounded-2xl border border-orange-100 text-justify">
-                                <h4
-                                    class="font-bold text-orange-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed text-center text-justify">
+<div class="bg-orange-50 p-6 rounded-2xl border border-orange-100 text-justify">
+<h4 class="font-bold text-orange-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed text-center text-justify">
                                     FSM Core Elements</h4>
-                                <ul class="text-[9px] text-slate-500 space-y-2 font-light text-justify text-justify">
-                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span
-                                            class="w-1.5 h-1.5 bg-orange-500 rounded-full mt-1 text-justify"></span>
-                                        <div><strong class="text-justify text-left">狀態
+<ul class="text-[9px] text-slate-500 space-y-2 font-light text-justify text-justify">
+<li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-orange-500 rounded-full mt-1 text-justify"></span>
+<div><strong class="text-justify text-left">狀態
                                                 (States)</strong>：系統當下的身份。如「搜尋循跡線中」。</div>
-                                    </li>
-                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span
-                                            class="w-1.5 h-1.5 bg-orange-500 rounded-full mt-1 text-justify text-left"></span>
-                                        <div><strong class="text-justify">轉換 (Transitions)</strong>：觸發身份切換的事件。如「感測器全白」。
+</li>
+<li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-orange-500 rounded-full mt-1 text-justify text-left"></span>
+<div><strong class="text-justify">轉換 (Transitions)</strong>：觸發身份切換的事件。如「感測器全白」。
                                         </div>
-                                    </li>
-                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span
-                                            class="w-1.5 h-1.5 bg-orange-500 rounded-full mt-1 text-justify text-left"></span>
-                                        <div><strong class="text-justify">行為 (Actions)</strong>：在特定狀態下執行的具體控制邏輯。</div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div
-                            class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group text-justify">
-                            <div
-                                class="absolute inset-0 bg-orange-500/5 group-hover:bg-orange-500/10 transition-colors">
-                            </div>
-                            <h4
-                                class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10 text-center text-justify">
+</li>
+<li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-orange-500 rounded-full mt-1 text-justify text-left"></span>
+<div><strong class="text-justify">行為 (Actions)</strong>：在特定狀態下執行的具體控制邏輯。</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group text-justify">
+<div class="absolute inset-0 bg-orange-500/5 group-hover:bg-orange-500/10 transition-colors">
+</div>
+<h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10 text-center text-justify">
                                 State Transition Graph</h4>
-                            <div class="relative z-10 flex flex-col items-center gap-4 text-justify">
-                                <div class="px-4 py-2 border border-slate-600 rounded-full text-xs text-justify">IDLE
+<div class="relative z-10 flex flex-col items-center gap-4 text-justify">
+<div class="px-4 py-2 border border-slate-600 rounded-full text-xs text-justify">IDLE
                                 </div>
-                                <div class="text-orange-500 animate-[bounce_2s_infinite] text-justify">↓ Start cmd</div>
-                                <div
-                                    class="px-6 py-2 bg-orange-600 rounded-full text-xs font-bold shadow-[0_0_15px_rgba(234,88,12,0.5)] text-justify">
+<div class="text-orange-500 animate-[bounce_2s_infinite] text-justify">↓ Start cmd</div>
+<div class="px-6 py-2 bg-orange-600 rounded-full text-xs font-bold shadow-[0_0_15px_rgba(234,88,12,0.5)] text-justify">
                                     TRACKING</div>
-                                <div class="text-slate-500 text-justify">↓ Off track</div>
-                                <div class="px-4 py-2 border border-slate-600 rounded-full text-xs text-justify">
+<div class="text-slate-500 text-justify">↓ Off track</div>
+<div class="px-4 py-2 border border-slate-600 rounded-full text-xs text-justify">
                                     SEARCHING</div>
-                            </div>
-                            <p
-                                class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest uppercase text-center text-justify">
+</div>
+<p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest uppercase text-center text-justify">
                                 Logic Complexity Reduced</p>
-                        </div>
-                    </div>
-                </div>
+</div>
+</div>
+                
             </div>
-        </section>
-
-        <!-- Module 2: Non-Blocking Control -->
-        <section class="module-section mb-16 text-justify">
-            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 text-justify">
-                <div class="p-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-justify"></div>
-                <div class="p-8 md:p-14 text-justify">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3 text-justify text-justify">
-                        <span class="text-4xl text-cyan-500 text-justify text-left">♾️</span> 2. 非阻塞迴圈：維持大腦的清醒
-                    </h2>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 text-justify">
-                        <div class="space-y-8 text-justify text-left text-justify">
-                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify">
-                                嚴禁在 PID 迴圈中使用 <code>delay()</code>。每一毫秒的阻塞，感測器都是盲目的。我們利用時間戳計時器達成多工併行處理。
-                            </p>
-                            <div class="bg-cyan-50 p-8 rounded-3xl border border-cyan-100 text-justify">
-                                <h4
-                                    class="text-cyan-900 font-bold mb-4 text-xs uppercase tracking-widest text-center text-justify">
-                                    Efficiency Paradigm</h4>
-                                <div class="text-xl font-mono text-cyan-600 text-center text-justify text-justify">
-                                    \[\Delta T \approx Constant\]
-                                </div>
-                                <p
-                                    class="text-[10px] text-slate-400 mt-4 italic font-light text-center text-justify text-justify">
-                                    使用 millis() 取代沈睡：讓 CPU 隨時響應中斷與任務切換</p>
-                            </div>
-                        </div>
-
-                        <div
-                            class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group text-justify">
-                            <div class="absolute inset-0 bg-cyan-500/5 text-justify"></div>
-                            <h4
-                                class="text-cyan-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10 text-center text-justify">
-                                Task Scheduling Pipeline</h4>
-                            <div class="space-y-4 w-full px-10 relative z-10 text-justify">
-                                <div
-                                    class="flex justify-between items-center text-[10px] text-justify text-left text-justify">
-                                    <span class="text-slate-400 text-justify">PID Calc (10ms)</span>
-                                    <div class="w-20 h-1 bg-cyan-500 rounded-full text-justify"></div>
-                                </div>
-                                <div
-                                    class="flex justify-between items-center text-[10px] text-justify text-left text-justify">
-                                    <span class="text-slate-400 text-justify">Sensor Sync (2ms)</span>
-                                    <div class="w-32 h-1 bg-blue-500 rounded-full text-justify"></div>
-                                </div>
-                                <div
-                                    class="flex justify-between items-center text-[10px] text-justify text-left text-justify">
-                                    <span class="text-slate-400 text-justify">WiFi Telemetry (500ms)</span>
-                                    <div class="w-12 h-1 bg-indigo-500 rounded-full text-justify text-left"></div>
-                                </div>
-                            </div>
-                            <p
-                                class="text-[9px] text-slate-600 mt-8 font-mono tracking-widest uppercase italic text-center text-justify">
-                                Zero-Delay Async Framework</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Module 3: Fail-Safe Design -->
-        <section class="module-section mb-16 text-justify">
-            <div
-                class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700 text-justify">
-                <div class="p-8 md:p-14 text-justify">
-                    <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-red-400 text-justify text-justify">
-                        <span
-                            class="p-2 bg-red-500/20 rounded-lg text-red-400 text-2xl text-justify text-left">🛡️</span>
-                        3. 防錯邏輯與系統魯棒性
-                    </h2>
-                    <div class="flex flex-col lg:flex-row gap-16 items-center text-justify">
-                        <div class="flex-1 space-y-6 text-justify">
-                            <p class="text-slate-400 font-light leading-relaxed text-lg text-justify text-justify">
-                                工業級程式必須考量「驚喜」。數據溢位、感測器誤報、通訊中斷，都必須具備相應的失效保護 (Fail-Safe) 解決方案。
-                            </p>
-                            <div
-                                class="bg-red-500/10 p-8 rounded-3xl border border-red-500/20 shadow-inner text-justify text-left">
-                                <h4
-                                    class="font-bold text-red-400 mb-4 text-xs uppercase tracking-widest text-center text-justify">
-                                    Robustness Architecture</h4>
-                                <ul
-                                    class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light text-justify text-left">
-                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span
-                                            class="w-1.5 h-1.5 bg-red-500 rounded-full mt-1 text-justify"></span>
-                                        <div><strong class="text-white text-justify">數值鉗位 (Clamping)</strong>：確保 PWM
-                                            永不超出邊際 \[0, 255\]，防止溢位導致的倒車災難。</div>
-                                    </li>
-                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span
-                                            class="w-1.5 h-1.5 bg-red-500 rounded-full mt-1 text-justify"></span>
-                                        <div><strong class="text-white text-justify">心跳包
-                                                (Heartbeat)</strong>：若一段時間未收到外部指令，系統應立刻進入 SAFE STOP。</div>
-                                    </li>
-                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span
-                                            class="w-1.5 h-1.5 bg-red-500 rounded-full mt-1 text-justify text-left text-justify"></span>
-                                        <div><strong class="text-white text-justify">堵轉偵測 (Stall
-                                                Guard)</strong>：感測馬達過載狀態，及時切斷電力以防電機燒毀。</div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div
-                            class="lg:w-80 bg-red-600/10 p-10 rounded-3xl border border-red-500/20 text-center relative overflow-hidden group text-justify">
-                            <div
-                                class="absolute -right-8 -top-8 w-32 h-32 bg-red-500/5 rounded-full group-hover:scale-150 transition-transform duration-700 text-justify">
-                            </div>
-                            <h4
-                                class="text-red-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center text-justify">
-                                Hardware Guard</h4>
-                            <p
-                                class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic text-center text-justify text-left text-justify">
-                                "一個好的控制專案，20% 處理正常流程，80% 處理出錯後的安全退路。"
-                            </p>
-                            <div
-                                class="inline-block px-8 py-3 bg-red-500 text-white rounded-xl font-bold text-[10px] shadow-lg cursor-pointer hover:bg-red-400 transition-colors text-center text-justify">
-                                Invoke Safety Protocol</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Homework Section -->
-        <section class="module-section text-justify">
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit] text-justify text-justify">
-                核心任務：高性能控制邏輯之戰</h2>
-            <p class="text-center text-gray-500 mb-12 text-justify text-justify text-left">
-                掌握狀態機與非阻塞多工，打造一個強韌、安全且高性能的無人駕駛控制大腦。透過 Git Workflow 實踐「安全優先」的開發理念。</p>
-
-            <div class="grid md:grid-cols-3 gap-6 text-justify">
-                <!-- Task 12-1 -->
-                <div onclick="openSubmissionModal('adv-12-logic-puzzle', '【作業 12-1】「偽代碼建築師」：狀態邏輯規劃 (Pseudocode FSM Design Lab)')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
-                    <div class="bg-orange-500 h-2"></div>
-                    <div class="p-8 flex-grow text-justify text-justify">
-                        <div class="flex justify-between items-start mb-4 text-justify text-left">
-                            <span class="text-4xl text-orange-500 group-hover:scale-110 transition-transform">📝</span>
-                            <span
-                                class="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest text-justify">60
-                                min</span>
-                        </div>
-                        <h3
-                            class="font-bold text-xl text-gray-800 mb-2 group-hover:text-orange-600 transition text-justify uppercase tracking-tighter">
-                            【作業 12-1】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「邏輯藍圖規劃」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
-                            繪製包含 IDLE / SEARCH / RUN 的狀態圖。撰寫偽代碼解釋各狀態下的 PID 配置，特別是處理「感測器全白」的意外重尋邏輯。
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Task 12-2 -->
-                <div onclick="openSubmissionModal('adv-12-non-blocking', '【作業 12-2】「非阻塞計時器」：millis() 多工並行實戰 (Async Tasking Lab)')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
-                    <div class="bg-cyan-500 h-2"></div>
-                    <div class="p-8 flex-grow text-justify text-justify">
-                        <div class="flex justify-between items-start mb-4 text-justify text-left">
-                            <span class="text-4xl text-cyan-500 group-hover:rotate-12 transition-transform">🕒</span>
-                            <span
-                                class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest text-justify">60
-                                min</span>
-                        </div>
-                        <h3
-                            class="font-bold text-xl text-gray-800 mb-2 group-hover:text-cyan-600 transition text-justify uppercase tracking-tighter text-justify">
-                            【作業 12-2】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「多工併行實踐」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
-                            建立精確 100Hz 的主迴圈。確保在執行 PID 的同時，能併行閃爍狀態燈與發送藍牙遙測包，杜絕任何毫秒級的 <code>delay()</code>。
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Task 12-3 -->
-                <div onclick="openSubmissionModal('adv-12-safeguard', '【作業 12-3】「災難預防」：系統魯棒性實作 (Robustness & Safeguard Lab)')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
-                    <div class="bg-red-500 h-2"></div>
-                    <div class="p-8 flex-grow text-justify text-justify">
-                        <div class="flex justify-between items-start mb-4 text-justify text-left">
-                            <span
-                                class="text-4xl text-red-500 group-hover:translate-x-1 transition-transform">🛡️</span>
-                            <span
-                                class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest text-justify">45
-                                min</span>
-                        </div>
-                        <h3
-                            class="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-600 transition text-justify uppercase tracking-tighter text-justify text-justify">
-                            【作業 12-3】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「系統安全工程」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
-                            實作通訊 Heartbeat 與馬達 Stall Guard。確保所有 PID 輸出皆經過 Clamping 鎖定，預防因感測雜訊導致的非預期全速輸出。
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto text-center">
-        <div class="container mx-auto px-4 text-center text-center text-center text-center">
-            <p class="text-slate-500 text-sm mb-4 text-center text-left text-center">&copy; 2026 Vibe Coding. All rights
-                reserved.</p>
-            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400 text-center">
-                <span>單元課程 進階 12 - 程式邏輯</span>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(1)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">2 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(2); goToUnit(3)">下一個單元 &nbsp;›</button>
             </div>
         </div>
-    </footer>
 
-    <script src="/js/course-shared.js?v=2026.05.21.V21.DISABLE_UNIFIED_SUPPORT_HUB"></script>
+        <!-- ══════════ PAGE 3: 單元 2 ══════════ -->
+        <div class="ms-unit-page" id="page-3">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-3" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
 
-    <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none;">
-<div class="markdown-heading"><h1 class="heading-element">adv-12-unit-code-logic: 程式路徑邏輯與系統魯棒性</h1><a id="user-content-adv-12-unit-code-logic-程式路徑邏輯與系統魯棒性" class="anchor" aria-label="Permalink: adv-12-unit-code-logic: 程式路徑邏輯與系統魯棒性" href="#adv-12-unit-code-logic-程式路徑邏輯與系統魯棒性"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+                <h1>♾️ 2. 非阻塞迴圈：維持大腦的清醒</h1>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 text-justify">
+<div class="space-y-8 text-justify text-left text-justify">
+<p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify">
+                                嚴禁在 PID 迴圈中使用 <code>delay()</code>。每一毫秒的阻塞，感測器都是盲目的。我們利用時間戳計時器達成多工併行處理。
+                            </p>
+<div class="bg-cyan-50 p-8 rounded-3xl border border-cyan-100 text-justify">
+<h4 class="text-cyan-900 font-bold mb-4 text-xs uppercase tracking-widest text-center text-justify">
+                                    Efficiency Paradigm</h4>
+<div class="text-xl font-mono text-cyan-600 text-center text-justify text-justify">
+                                    \[\Delta T \approx Constant\]
+                                </div>
+<p class="text-[10px] text-slate-400 mt-4 italic font-light text-center text-justify text-justify">
+                                    使用 millis() 取代沈睡：讓 CPU 隨時響應中斷與任務切換</p>
+</div>
+</div>
+<div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group text-justify">
+<div class="absolute inset-0 bg-cyan-500/5 text-justify"></div>
+<h4 class="text-cyan-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10 text-center text-justify">
+                                Task Scheduling Pipeline</h4>
+<div class="space-y-4 w-full px-10 relative z-10 text-justify">
+<div class="flex justify-between items-center text-[10px] text-justify text-left text-justify">
+<span class="text-slate-400 text-justify">PID Calc (10ms)</span>
+<div class="w-20 h-1 bg-cyan-500 rounded-full text-justify"></div>
+</div>
+<div class="flex justify-between items-center text-[10px] text-justify text-left text-justify">
+<span class="text-slate-400 text-justify">Sensor Sync (2ms)</span>
+<div class="w-32 h-1 bg-blue-500 rounded-full text-justify"></div>
+</div>
+<div class="flex justify-between items-center text-[10px] text-justify text-left text-justify">
+<span class="text-slate-400 text-justify">WiFi Telemetry (500ms)</span>
+<div class="w-12 h-1 bg-indigo-500 rounded-full text-justify text-left"></div>
+</div>
+</div>
+<p class="text-[9px] text-slate-600 mt-8 font-mono tracking-widest uppercase italic text-center text-justify">
+                                Zero-Delay Async Framework</p>
+</div>
+</div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(2)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">3 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(3); goToUnit(4)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 4: 單元 3 ══════════ -->
+        <div class="ms-unit-page" id="page-4">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-4" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>🛡️ 3. 防錯邏輯與系統魯棒性</h1>
+                
+                <div class="flex flex-col lg:flex-row gap-16 items-center text-justify">
+<div class="flex-1 space-y-6 text-justify">
+<p class="text-slate-400 font-light leading-relaxed text-lg text-justify text-justify">
+                                工業級程式必須考量「驚喜」。數據溢位、感測器誤報、通訊中斷，都必須具備相應的失效保護 (Fail-Safe) 解決方案。
+                            </p>
+<div class="bg-red-500/10 p-8 rounded-3xl border border-red-500/20 shadow-inner text-justify text-left">
+<h4 class="font-bold text-red-400 mb-4 text-xs uppercase tracking-widest text-center text-justify">
+                                    Robustness Architecture</h4>
+<ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light text-justify text-left">
+<li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-red-500 rounded-full mt-1 text-justify"></span>
+<div><strong class="text-white text-justify">數值鉗位 (Clamping)</strong>：確保 PWM
+                                            永不超出邊際 \[0, 255\]，防止溢位導致的倒車災難。</div>
+</li>
+<li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-red-500 rounded-full mt-1 text-justify"></span>
+<div><strong class="text-white text-justify">心跳包
+                                                (Heartbeat)</strong>：若一段時間未收到外部指令，系統應立刻進入 SAFE STOP。</div>
+</li>
+<li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-red-500 rounded-full mt-1 text-justify text-left text-justify"></span>
+<div><strong class="text-white text-justify">堵轉偵測 (Stall
+                                                Guard)</strong>：感測馬達過載狀態，及時切斷電力以防電機燒毀。</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="lg:w-80 bg-red-600/10 p-10 rounded-3xl border border-red-500/20 text-center relative overflow-hidden group text-justify">
+<div class="absolute -right-8 -top-8 w-32 h-32 bg-red-500/5 rounded-full group-hover:scale-150 transition-transform duration-700 text-justify">
+</div>
+<h4 class="text-red-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center text-justify">
+                                Hardware Guard</h4>
+<p class="text-[11px] text-slate-500 leading-relaxed font-light mb-8 italic text-center text-justify text-left text-justify">
+                                "一個好的控制專案，20% 處理正常流程，80% 處理出錯後的安全退路。"
+                            </p>
+<div class="inline-block px-8 py-3 bg-red-500 text-white rounded-xl font-bold text-[10px] shadow-lg cursor-pointer hover:bg-red-400 transition-colors text-center text-justify">
+                                Invoke Safety Protocol</div>
+</div>
+</div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(3)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">4 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(4); goToUnit(5)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 5: 實作挑戰 ══════════ -->
+        <div class="ms-unit-page" id="page-5">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-5" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 165 分鐘</div>
+                </div>
+
+                <h1>實戰任務挑戰</h1>
+
+                <p>
+                    請動手完成以下三項實作任務，這是驗證本單元學習成果的核心挑戰。
+                    完成後請將程式碼與報告提交至 GitHub Classroom。
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6 my-6">
+                    <!-- Task 1 -->
+                    <div onclick="openSubmissionModal('adv-12-logic-puzzle', '【作業 12-1】「偽代碼建築師」：狀態邏輯規劃 (Pseudocode FSM Design Lab)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#E76F51] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 12-1</div>
+                            <h3 class="text-lg font-bold mb-2">邏輯藍圖規劃</h3>
+                            <p class="text-xs text-gray-600 mb-4">繪製包含 IDLE / SEARCH / RUN 的狀態圖。撰寫偽代碼解釋各狀態下的 PID 配置，特別是處理「感測器全白」的意外重尋邏輯。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#E76F51] font-bold">
+                            <span>⏱ 📝 60 min 【作業 12-1】 「邏輯藍圖規劃」 繪製包含 IDLE / SEARCH / RUN 的狀態圖。撰寫偽代碼解釋各狀態下的 PID 配置，特別是處理「感測器全白」的意外重尋邏輯。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#E76F51] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 2 -->
+                    <div onclick="openSubmissionModal('adv-12-non-blocking', '【作業 12-2】「非阻塞計時器」：millis() 多工並行實戰 (Async Tasking Lab)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#2A9D8F] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 12-2</div>
+                            <h3 class="text-lg font-bold mb-2">多工併行實踐</h3>
+                            <p class="text-xs text-gray-600 mb-4">建立精確 100Hz 的主迴圈。確保在執行 PID 的同時，能併行閃爍狀態燈與發送藍牙遙測包，杜絕任何毫秒級的 delay()。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#2A9D8F] font-bold">
+                            <span>⏱ 🕒 60 min 【作業 12-2】 「多工併行實踐」 建立精確 100Hz 的主迴圈。確保在執行 PID 的同時，能併行閃爍狀態燈與發送藍牙遙測包，杜絕任何毫秒級的 delay()。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#2A9D8F] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 3 -->
+                    <div onclick="openSubmissionModal('adv-12-safeguard', '【作業 12-3】「災難預防」：系統魯棒性實作 (Robustness & Safeguard Lab)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#457B9D] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 12-3</div>
+                            <h3 class="text-lg font-bold mb-2">系統安全工程</h3>
+                            <p class="text-xs text-gray-600 mb-4">實作通訊 Heartbeat 與馬達 Stall Guard。確保所有 PID 輸出皆經過 Clamping 鎖定，預防因感測雜訊導致的非預期全速輸出。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#457B9D] font-bold">
+                            <span>⏱ 🛡️ 45 min 【作業 12-3】 「系統安全工程」 實作通訊 Heartbeat 與馬達 Stall Guard。確保所有 PID 輸出皆經過 Clamping 鎖定，預防因感測雜訊導致的非預期全速輸出。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#457B9D] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(4)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">5 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(5); goToUnit(6)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 6: 摘要與資源 ══════════ -->
+        <div class="ms-unit-page" id="page-6">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-6" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>單元摘要與參考資源</h1>
+
+                <p>
+                    恭喜！你已經完成了「<strong>代碼實作邏輯預習</strong>」模組。
+                    透過本單元的學習與實作，你已經掌握了關鍵的核心技術，為全棧物聯網開發奠定了深厚的底層基石。
+                </p>
+
+                <div class="ms-achievement">
+                    <div class="achievement-icon">🚀</div>
+                    <div class="achievement-text">
+                        <h3>恭喜！你已完成本模組</h3>
+                        <p>你已具備開發與調校本單元核心功能的專業實力。持續累積，前進下一個挑戰！</p>
+                    </div>
+                </div>
+
+                <h2>完成本模組後，你已學會：</h2>
+                <ul>
+                    <li><strong>🔄 1. 有限狀態機 (FSM)：決策的骨架</strong> 的基本架構與實作技能。</li>
+                    <li><strong>️ 2. 非阻塞迴圈：維持大腦的清醒</strong> 的調試方法與資料傳輸細節。</li>
+                    <li><strong>🛡️ 3. 防錯邏輯與系統魯棒性</strong> 的優化指標與生產環境安全機制。</li>
+                    <li>在實戰挑戰中，透過 Git 與 GitHub Classroom 提交完整的硬體與報告成果。</li>
+                </ul>
+
+                <h2>延伸學習資源</h2>
+
+                <a href="" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-youtube" style="color:#ff0000;"></i>
+                    <div>
+                        <div style="font-weight:600;">課程教學影片</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">YouTube — 本單元核心觀念與實作示範影片</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="" target="_blank" class="ms-resource-link">
+                    <i class="fas fa-file-alt"></i>
+                    <div>
+                        <div style="font-weight:600;">課程完整講義</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">Google Docs — 詳細實驗步驟、技術文件與程式碼指南</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://classroom.github.com" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-github"></i>
+                    <div>
+                        <div style="font-weight:600;">GitHub Classroom</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">classroom.github.com — 管理你的作業提交與自動評分結果</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(5)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator" style="font-weight:600; color:#107c10;">✓ 模組完成</span>
+                <button class="ms-btn" onclick="markDone(6); alert('🎉 恭喜完成「代碼實作邏輯預習」模組！')">完成模組</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    /* ─── DATA ─── */
+    const UNITS = [
+        { id: 0, label: '課程總覽',       time: '',         type: 'index' },
+        { id: 1, label: '簡介',            time: '3 分鐘',  type: 'unit'  },
+        { id: 2, label: '🔄 1. 有限狀態機 (FSM)：決策的骨架', time: '10 分鐘', type: 'unit' },
+        { id: 3, label: '️ 2. 非阻塞迴圈：維持大腦的清醒', time: '10 分鐘', type: 'unit' },
+        { id: 4, label: '🛡️ 3. 防錯邏輯與系統魯棒性', time: '10 分鐘', type: 'unit' },
+        { id: 5, label: '實戰挑戰',       time: '165 分鐘', type: 'lab'   },
+        { id: 6, label: '摘要與資源',     time: '3 分鐘',  type: 'unit'  },
+    ];
+
+    let currentUnit = 0;
+    let doneSet = new Set();
+
+    /* ─── INIT ─── */
+    function init() {
+        buildSidebar();
+        buildIndexUnitList();
+        goToUnit(0);
+    }
+
+    /**
+     * 動態建構側邊欄單元選單。
+     */
+    function buildSidebar() {
+        const nav = document.getElementById('sidebar-nav');
+        nav.innerHTML = UNITS.map(u => {
+            const badge = u.type === 'lab' ? ' <span style="font-size:10px;background:#eef6ff;color:#005a9e;padding:1px 5px;border-radius:2px;">LAB</span>'
+                        : '';
+            return `
+            <div class="ms-unit-item" id="nav-${u.id}" onclick="goToUnit(${u.id})">
+                <div class="unit-icon" id="icon-${u.id}">${u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id}</div>
+                <div class="unit-meta">
+                    <div class="unit-name">${u.label}${badge}</div>
+                    ${u.time ? `<div class="unit-time"><i class="far fa-clock"></i> ${u.time}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /**
+     * 動態建構首頁單元卡片列表。
+     */
+    function buildIndexUnitList() {
+        const el = document.getElementById('index-unit-list');
+        el.innerHTML = UNITS.filter(u => u.id > 0).map(u => `
+            <div class="unit-card ${u.type}" onclick="goToUnit(${u.id})">
+                <div class="unit-card-num">${u.id}</div>
+                <div class="unit-card-info">
+                    <div class="unit-card-name">${u.label}</div>
+                    <div class="unit-card-time"><i class="far fa-clock"></i> ${u.time}</div>
+                </div>
+                <div class="unit-card-arrow">›</div>
+            </div>
+        `).join('');
+    }
+
+    /* ─── NAVIGATION ─── */
+    /**
+     * 切換至指定單元頁面。
+     * @param {number} id - 單元識別碼
+     */
+    function goToUnit(id) {
+        document.querySelectorAll('.ms-unit-page').forEach(p => p.classList.remove('visible'));
+        const target = id === 0 ? document.getElementById('page-index') : document.getElementById(`page-${id}`);
+        if (target) target.classList.add('visible');
+
+        document.querySelectorAll('.ms-unit-item').forEach(el => el.classList.remove('active'));
+        const navItem = document.getElementById(`nav-${id}`);
+        if (navItem) { navItem.classList.add('active'); navItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) {
+                icon.className = 'unit-icon done';
+                icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>';
+            } else if (u.id === id) {
+                icon.className = 'unit-icon active-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            } else {
+                icon.className = 'unit-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            }
+        });
+
+        const unit = UNITS.find(u => u.id === id);
+        document.getElementById('bc-current').textContent = unit ? unit.label : '';
+        currentUnit = id;
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * 標記特定單元為已完成。
+     * @param {number} id - 單元識別碼
+     */
+    function markDone(id) {
+        doneSet.add(id);
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) badge.style.display = 'flex';
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) { icon.className = 'unit-icon done'; icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>'; }
+        });
+        updateProgress();
+    }
+
+    /**
+     * 計算並更新課程進度與進度條。
+     */
+    function updateProgress() {
+        const total = UNITS.length - 1;
+        const done = doneSet.size;
+        document.getElementById('progress-fill').style.width = Math.round(done / total * 100) + '%';
+        document.getElementById('progress-text').textContent = `${done} / ${total} 已完成`;
+    }
+
+    /* ─── CHECKLIST ─── */
+    /**
+     * 切換核取方塊的狀態。
+     * @param {HTMLElement} el - 核取方塊元素
+     */
+    function toggleCheck(el) {
+        el.classList.toggle('checked');
+        el.innerHTML = el.classList.contains('checked') ? '<i class="fas fa-check" style="font-size:10px;"></i>' : '';
+    }
+
+    /* ─── START ─── */
+    init();
+</script>
+
+<!-- Define Resources -->
+<script>
+    window.RESOURCES = {
+        video: "",
+        doc: ""
+    };
+</script>
+<script src="/js/course-shared.js?v=2026.05.22.V27.START_UNITS_LAYOUT_UPGRADE"></script>
+
+<!-- Assignment Guide (Hidden) -->
+<section id="assignment-guide" style="display: none;">
+<div class="markdown-heading"><h1 class="heading-element">adv-12-unit-code-logic: 程式路徑邏輯與系統魯棒性</h1><a aria-label="Permalink: adv-12-unit-code-logic: 程式路徑邏輯與系統魯棒性" class="anchor" href="#adv-12-unit-code-logic-程式路徑邏輯與系統魯棒性" id="user-content-adv-12-unit-code-logic-程式路徑邏輯與系統魯棒性"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <p>歡迎來到 <strong>進階 12 單元</strong>！在本單元中，我們將學習如何將簡單的機器人行為轉化為專業級的控制系統。這不僅僅是關於「讓車子動起來」，更是關於如何構建一個 <strong>可靠、強韌且具備自我保護能力</strong> 的系統。</p>
-<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a aria-label="Permalink: 🎯 學習目標" class="anchor" href="#-學習目標" id="user-content--學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ol>
 <li>
 <strong>有限狀態機 (FSM)</strong>：學習如何使用狀態機管理複雜的行為（如：靜止、循跡、搜尋、緊急停止）。</li>
@@ -338,7 +1061,7 @@
 <li>
 <strong>系統魯棒性 (Robustness)</strong>：實作安全保護機制，確保系統在異常情況下（如通訊中斷、馬達堵轉）能安全停止。</li>
 </ol>
-<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構</h2><a id="user-content--程式庫結構" class="anchor" aria-label="Permalink: 📂 程式庫結構" href="#-程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構</h2><a aria-label="Permalink: 📂 程式庫結構" class="anchor" href="#-程式庫結構" id="user-content--程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <code>include/fsm_states.h</code>: 定義核心狀態與系統資料結構。</li>
@@ -349,12 +1072,12 @@
 <li>
 <code>docs/Safety_Logic.md</code>: 安全設計說明文件。</li>
 </ul>
-<div class="markdown-heading"><h2 class="heading-element">🚀 任務清單</h2><a id="user-content--任務清單" class="anchor" aria-label="Permalink: 🚀 任務清單" href="#-任務清單"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
-<div class="markdown-heading"><h3 class="heading-element">任務 1：狀態機框架實作</h3><a id="user-content-任務-1狀態機框架實作" class="anchor" aria-label="Permalink: 任務 1：狀態機框架實作" href="#任務-1狀態機框架實作"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">🚀 任務清單</h2><a aria-label="Permalink: 🚀 任務清單" class="anchor" href="#-任務清單" id="user-content--任務清單"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：狀態機框架實作</h3><a aria-label="Permalink: 任務 1：狀態機框架實作" class="anchor" href="#任務-1狀態機框架實作" id="user-content-任務-1狀態機框架實作"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <p>在 <code>src/ControlBrain.cpp</code> 中完成 <code>updateFSM()</code> 函數。你需要根據當前感測器狀態與時間戳，決定何時在 <code>TRACKING</code>、<code>SEARCHING</code> 與 <code>EMERGENCY_STOP</code> 之間切換。</p>
-<div class="markdown-heading"><h3 class="heading-element">任務 2：非阻塞時序優化</h3><a id="user-content-任務-2非阻塞時序優化" class="anchor" aria-label="Permalink: 任務 2：非阻塞時序優化" href="#任務-2非阻塞時序優化"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：非阻塞時序優化</h3><a aria-label="Permalink: 任務 2：非阻塞時序優化" class="anchor" href="#任務-2非阻塞時序優化" id="user-content-任務-2非阻塞時序優化"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <p>檢查程式碼中是否有任何 <code>delay()</code> 調用。將其全部替換為基於 <code>millis()</code> 的邏輯，以確保控制迴圈能維持在 100Hz (10ms) 的穩定頻率。</p>
-<div class="markdown-heading"><h3 class="heading-element">任務 3：實作失效保護 (Fail-Safe)</h3><a id="user-content-任務-3實作失效保護-fail-safe" class="anchor" aria-label="Permalink: 任務 3：實作失效保護 (Fail-Safe)" href="#任務-3實作失效保護-fail-safe"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：實作失效保護 (Fail-Safe)</h3><a aria-label="Permalink: 任務 3：實作失效保護 (Fail-Safe)" class="anchor" href="#任務-3實作失效保護-fail-safe" id="user-content-任務-3實作失效保護-fail-safe"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <p>實作以下安全機制：</p>
 <ul>
 <li>
@@ -362,23 +1085,22 @@
 <li>
 <strong>堵轉保護</strong>：若 PWM 輸出很高但編碼器數值無變化，必須立即斷電。</li>
 </ul>
-<div class="markdown-heading"><h2 class="heading-element">檢核清單</h2><a id="user-content-檢核清單" class="anchor" aria-label="Permalink: 檢核清單" href="#檢核清單"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">檢核清單</h2><a aria-label="Permalink: 檢核清單" class="anchor" href="#檢核清單" id="user-content-檢核清單"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>[ ] 程式碼中完全沒有 <code>delay()</code>。</li>
 <li>[ ] 狀態機能正確處理「全白脫線」並進入搜尋模式。</li>
 <li>[ ] 斷開模擬通訊時，車輛能在 2 秒內停止。</li>
 <li>[ ] 通過 <code>npm test</code> 自動化測試。</li>
 </ul>
-<hr>
+<hr/>
 <p><em>這是一個「系統架構師」的起點。記住：好的程式碼，20% 處理正常路徑，80% 處理出錯後的安全退路。</em></p>
+</section>
 
-    </section>
-
-    <!-- Tutor Guide (Hidden) -->
-    <section id="tutor-guide" style="display: none text-justify;">
+<!-- Tutor Guide (Hidden) -->
+<section id="tutor-guide" style="display: none text-justify;">
 <p>針對 <strong><code>adv-12-unit-code-logic</code> (程式路徑邏輯)</strong> 單元，這是控制系統從「簡單腳本」轉向「專業工程」的關鍵飛躍。它要求學員具備 <strong>系統架構思維</strong>，能透過 <strong>有限狀態機 (FSM)</strong> 管理複雜行為，並利用 <strong>非阻塞 (Non-blocking)</strong> 技術實現即時多工處理。</p>
 <p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
-<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" class="anchor" href="#1-範本程式庫-template-repo-配置建議" id="user-content-1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <p>高效能邏輯需要清晰的框架支撐，建議範本包含：</p>
 <ul>
 <li>
@@ -390,9 +1112,9 @@
 <li>
 <strong>📂 <code>LOGIC_DIAGRAM.md</code></strong>：邏輯設計圖。要求學員在寫代碼前，先用 Mermaid 語法或文字描述繪製出狀態轉移的觸發條件。</li>
 </ul>
-<hr>
-<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
-<div class="markdown-heading"><h4 class="heading-element">任務 1：循跡狀態機設計 (State Machine Logic Plan)</h4><a id="user-content-任務-1循跡狀態機設計-state-machine-logic-plan" class="anchor" aria-label="Permalink: 任務 1：循跡狀態機設計 (State Machine Logic Plan)" href="#任務-1循跡狀態機設計-state-machine-logic-plan"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a aria-label="Permalink: 2. 作業任務部署細節" class="anchor" href="#2-作業任務部署細節" id="user-content-2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：循跡狀態機設計 (State Machine Logic Plan)</h4><a aria-label="Permalink: 任務 1：循跡狀態機設計 (State Machine Logic Plan)" class="anchor" href="#任務-1循跡狀態機設計-state-machine-logic-plan" id="user-content-任務-1循跡狀態機設計-state-machine-logic-plan"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>目標</strong>：將複雜任務「分而治之 (Divide and Conquer)」，解決「全白脫線」等異常場景。</li>
@@ -408,7 +1130,7 @@
 </ul>
 </li>
 </ul>
-<div class="markdown-heading"><h4 class="heading-element">任務 2：非阻塞併行時序實作 (Async Timing Implementation)</h4><a id="user-content-任務-2非阻塞併行時序實作-async-timing-implementation" class="anchor" aria-label="Permalink: 任務 2：非阻塞併行時序實作 (Async Timing Implementation)" href="#任務-2非阻塞併行時序實作-async-timing-implementation"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：非阻塞併行時序實作 (Async Timing Implementation)</h4><a aria-label="Permalink: 任務 2：非阻塞併行時序實作 (Async Timing Implementation)" class="anchor" href="#任務-2非阻塞併行時序實作-async-timing-implementation" id="user-content-任務-2非阻塞併行時序實作-async-timing-implementation"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>目標</strong>：徹底消除 <code>delay()</code>，維持大腦在執行 PID 時依然能隨時響應。</li>
@@ -424,7 +1146,7 @@
 </ul>
 </li>
 </ul>
-<div class="markdown-heading"><h4 class="heading-element">任務 3：系統魯棒性防線 (Robustness &amp; Fail-Safe Engineering)</h4><a id="user-content-任務-3系統魯棒性防線-robustness--fail-safe-engineering" class="anchor" aria-label="Permalink: 任務 3：系統魯棒性防線 (Robustness &amp; Fail-Safe Engineering)" href="#任務-3系統魯棒性防線-robustness--fail-safe-engineering"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：系統魯棒性防線 (Robustness &amp; Fail-Safe Engineering)</h4><a aria-label="Permalink: 任務 3：系統魯棒性防線 (Robustness &amp; Fail-Safe Engineering)" class="anchor" href="#任務-3系統魯棒性防線-robustness--fail-safe-engineering" id="user-content-任務-3系統魯棒性防線-robustness--fail-safe-engineering"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>目標</strong>：實現「安全性 (Safety)」重於「功能性 (Functionality)」的專業工程理念。</li>
@@ -442,15 +1164,15 @@
 </ul>
 </li>
 </ul>
-<hr>
-<div class="markdown-heading"><h3 class="heading-element">3. 系統架構師導師點評標準 (System Architecture Benchmarks)</h3><a id="user-content-3-系統架構師導師點評標準-system-architecture-benchmarks" class="anchor" aria-label="Permalink: 3. 系統架構師導師點評標準 (System Architecture Benchmarks)" href="#3-系統架構師導師點評標準-system-architecture-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">3. 系統架構師導師點評標準 (System Architecture Benchmarks)</h3><a aria-label="Permalink: 3. 系統架構師導師點評標準 (System Architecture Benchmarks)" class="anchor" href="#3-系統架構師導師點評標準-system-architecture-benchmarks" id="user-content-3-系統架構師導師點評標準-system-architecture-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <p>此單元的價值在於 <strong>「程式碼的強韌度與可維護性」</strong>：</p>
 <ul>
 <li>[ ] <strong>架構解耦性</strong>：狀態邏輯是否與馬達驅動底層完全分離？</li>
 <li>[ ] <strong>即時響應率</strong>：控制迴圈是否有足夠的頻寬去處理突發的中斷？</li>
 <li>[ ] <strong>異常覆蓋程度</strong>：學員是否考慮到了「感測器故障」或「電量不足」時的緩解措施？</li>
 </ul>
-<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" class="anchor" href="#-推薦範本結構-github-classroom-template" id="user-content--推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <pre lang="text"><code>.
 ├── include/fsm_states.h    # 核心：定義 State 列舉與 Transition 條件
 ├── src/ControlBrain.cpp    # 實作：學員需填寫狀態行為與非阻塞邏輯
@@ -462,8 +1184,7 @@
 |
 |
 太棒了！我們完成了 <strong>進階 12</strong> 的邏輯架構單元定義。這標誌著學員從單純的「寫程式」進化到了「系統工程」的高度。這也是整個課程中，最能展現「Vibe Coding」強健性開發哲學的核心單元！</p>
+</section>
 
-    </section>
 </body>
-
 </html>

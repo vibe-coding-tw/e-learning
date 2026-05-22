@@ -4,347 +4,1065 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>視覺敘事：如何展示技術專案 - Vibe Coding</title>
+    <title>視覺敘事：如何展示技術專案 - Vibe Coding Learn</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script async="" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        
+        :root {
+            --ms-blue: #0078d4;
+            --ms-blue-dark: #005a9e;
+            --ms-blue-light: #deecf9;
+            --ms-gray-10: #f3f2f1;
+            --ms-gray-20: #e1dfdd;
+            --ms-gray-90: #201f1e;
+            --ms-green: #107c10;
+            --ms-red: #d13438;
+            --sidebar-w: 280px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fff;
+            color: #201f1e;
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ─── TOP NAV ─── */
+        .ms-topnav {
+            background: var(--ms-blue);
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,.2);
+        }
+        .ms-topnav .brand {
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .ms-topnav .divider { width: 1px; height: 20px; background: rgba(255,255,255,.3); }
+        .ms-topnav .nav-label { color: rgba(255,255,255,.9); font-size: 14px; }
+
+        /* ─── LAYOUT ─── */
+        .ms-layout { display: flex; min-height: calc(100vh - 48px); }
+
+        /* ─── SIDEBAR ─── */
+        .ms-sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: #faf9f8;
+            border-right: 1px solid #e1dfdd;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 48px;
+            height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+        .ms-sidebar-header {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .ms-sidebar-header .module-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #605e5c;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .ms-sidebar-header .module-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #201f1e;
+            line-height: 1.4;
+        }
+        .ms-sidebar-header .meta {
+            font-size: 12px;
+            color: #605e5c;
+            margin-top: 6px;
+        }
+        .ms-unit-list { padding: 8px 0; }
+        .ms-unit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background .12s, border-color .12s;
+            color: #201f1e;
+        }
+        .ms-unit-item:hover { background: #edebe9; }
+        .ms-unit-item.active {
+            border-left-color: var(--ms-blue);
+            background: #deecf9;
+        }
+        .ms-unit-item.active .unit-name { color: var(--ms-blue); font-weight: 600; }
+        .unit-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #c8c6c4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+            font-size: 10px;
+            background: #fff;
+        }
+        .unit-icon.done { background: var(--ms-green); border-color: var(--ms-green); color: #fff; }
+        .unit-icon.active-icon { border-color: var(--ms-blue); background: var(--ms-blue); color: #fff; }
+        .unit-meta { flex: 1; min-width: 0; }
+        .unit-name { font-size: 13px; line-height: 1.4; }
+        .unit-time { font-size: 11px; color: #605e5c; margin-top: 2px; }
+        .sidebar-progress {
+            padding: 12px 16px;
+            border-top: 1px solid #e1dfdd;
+            margin-top: auto;
+        }
+        .progress-bar-bg { background: #e1dfdd; border-radius: 4px; height: 6px; }
+        .progress-bar-fill { background: var(--ms-green); border-radius: 4px; height: 6px; transition: width .4s; }
+        .progress-text { font-size: 12px; color: #605e5c; margin-top: 6px; }
+
+        /* ─── MAIN ─── */
+        .ms-content { flex: 1; min-width: 0; }
+
+        .ms-breadcrumb {
+            padding: 10px 40px;
+            font-size: 12px;
+            color: #605e5c;
+            border-bottom: 1px solid #e1dfdd;
+            background: #fff;
+        }
+        .ms-breadcrumb a { color: var(--ms-blue); text-decoration: none; }
+        .ms-breadcrumb a:hover { text-decoration: underline; }
+        .ms-breadcrumb span { margin: 0 6px; }
+
+        /* ─── PAGES ─── */
+        .ms-unit-page { display: none; }
+        .ms-unit-page.visible { display: block; }
+
+        .unit-content {
+            max-width: 820px;
+            padding: 32px 40px 60px;
+            margin: 0 auto;
+        }
+
+        .unit-status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .unit-completed-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #dff6dd;
+            color: #107c10;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+        .unit-time-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #605e5c;
+            font-size: 13px;
+        }
+
+        /* Typography */
+        .unit-content h1 { font-size: 28px; font-weight: 700; margin: 0 0 20px; color: #201f1e; line-height: 1.3; }
+        .unit-content h2 { font-size: 20px; font-weight: 600; margin: 36px 0 12px; color: #201f1e; padding-top: 8px; }
+        .unit-content h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: #201f1e; }
+        .unit-content p { margin: 0 0 14px; }
+        .unit-content ul, .unit-content ol { margin: 0 0 14px; padding-left: 28px; }
+        .unit-content li { margin-bottom: 6px; }
+        .unit-content strong { font-weight: 600; }
+        .unit-content a { color: var(--ms-blue); text-decoration: none; }
+        .unit-content a:hover { text-decoration: underline; }
+        .unit-content code {
+            background: #f3f2f1;
+            border: 1px solid #e1dfdd;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            color: #a31515;
+        }
+
+        /* Callouts */
+        .ms-note, .ms-tip, .ms-warning, .ms-important {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+        .ms-note { background: #deecf9; border-color: var(--ms-blue); }
+        .ms-note .note-icon { color: var(--ms-blue); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-tip { background: #dff6dd; border-color: var(--ms-green); }
+        .ms-tip .note-icon { color: var(--ms-green); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-warning { background: #fff4ce; border-color: #ffaa44; }
+        .ms-warning .note-icon { color: #ffaa44; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-important { background: #fde7e9; border-color: var(--ms-red); }
+        .ms-important .note-icon { color: var(--ms-red); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .note-body strong { display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+
+        /* Scenario */
+        .ms-scenario {
+            background: #f3f2f1;
+            border-radius: 4px;
+            padding: 20px 24px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #323130;
+            border-left: 4px solid #c8c6c4;
+        }
+        .ms-scenario-label {
+            font-style: normal;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #605e5c;
+            margin-bottom: 8px;
+        }
+
+        /* Steps */
+        .ms-steps { margin: 16px 0; }
+        .ms-step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
+        .ms-step-num {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--ms-blue); color: #fff;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .ms-step-body { flex: 1; }
+        .ms-step-body h4 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+        .ms-step-body p { font-size: 14px; margin: 0; }
+
+        /* Table */
+        .ms-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+        .ms-table th {
+            background: #f3f2f1; font-weight: 600; text-align: left;
+            padding: 10px 14px; border: 1px solid #e1dfdd; color: #323130;
+        }
+        .ms-table td { padding: 9px 14px; border: 1px solid #e1dfdd; vertical-align: top; }
+        .ms-table tr:nth-child(even) td { background: #faf9f8; }
+        .ms-table .check { color: var(--ms-green); font-size: 16px; }
+        .ms-table .cross { color: #8a8886; font-size: 16px; }
+
+        /* Checklist */
+        .ms-checklist { list-style: none; padding: 0; margin: 12px 0; }
+        .ms-checklist li {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 6px 0; font-size: 14px;
+        }
+        .ms-checklist li .check-box {
+            width: 18px; height: 18px;
+            border: 2px solid #8a8886; border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 1px; cursor: pointer; transition: all .15s;
+        }
+        .ms-checklist li .check-box.checked {
+            background: var(--ms-blue); border-color: var(--ms-blue); color: #fff;
+        }
+
+        /* Code block */
+        .ms-code {
+            background: #1e1e1e;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-x: auto;
+        }
+        .ms-code .c-comment { color: #6a9955; }
+        .ms-code .c-str { color: #ce9178; }
+        .ms-code .c-kw { color: #569cd6; }
+        .ms-code .c-attr { color: #9cdcfe; }
+        .ms-code .c-val { color: #ce9178; }
+        .ms-code .c-tag { color: #4ec9b0; }
+        .ms-code .c-white { color: #d4d4d4; }
+
+        /* Lab card */
+        .ms-lab-card {
+            background: linear-gradient(135deg, #eef6ff 0%, #f5f0ff 100%);
+            border: 1px solid #c7e0f4;
+            border-radius: 6px;
+            padding: 24px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: box-shadow .15s, border-color .15s;
+        }
+        .ms-lab-card:hover { box-shadow: 0 4px 16px rgba(0,120,212,.12); border-color: var(--ms-blue); }
+        .ms-lab-card h3 { margin: 0 0 12px; color: var(--ms-blue-dark); font-size: 16px; font-weight: 600; }
+        .ms-lab-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--ms-blue);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 12px;
+        }
+        .ms-lab-time {
+            font-size: 12px;
+            color: #605e5c;
+            margin-left: 8px;
+        }
+
+        /* Compare grid */
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border: 1px solid #e1dfdd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .compare-card-header {
+            padding: 12px 14px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .compare-card-body {
+            padding: 14px;
+            font-size: 13px;
+            color: #605e5c;
+            line-height: 1.5;
+        }
+
+        /* Buttons */
+        .ms-btn {
+            background: var(--ms-blue); color: #fff; border: none;
+            padding: 7px 18px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; transition: background .12s;
+            font-family: inherit;
+        }
+        .ms-btn:hover { background: var(--ms-blue-dark); }
+        .ms-btn-ghost {
+            background: transparent; color: var(--ms-blue);
+            border: 1px solid var(--ms-blue); padding: 6px 18px;
+            font-size: 14px; font-weight: 600; border-radius: 2px;
+            cursor: pointer; transition: background .12s; font-family: inherit;
+        }
+        .ms-btn-ghost:hover { background: var(--ms-blue-light); }
+
+        /* Nav */
+        .unit-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            border-top: 1px solid #e1dfdd;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+        .nav-btn-prev, .nav-btn-next {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 20px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; border: 1px solid;
+            font-family: inherit; transition: background .12s;
+        }
+        .nav-btn-next { background: var(--ms-blue); color: #fff; border-color: var(--ms-blue); }
+        .nav-btn-next:hover { background: var(--ms-blue-dark); border-color: var(--ms-blue-dark); }
+        .nav-btn-prev { background: #fff; color: var(--ms-blue); border-color: var(--ms-blue); }
+        .nav-btn-prev:hover { background: var(--ms-blue-light); }
+        .unit-page-indicator { font-size: 13px; color: #605e5c; }
+
+        /* Module index */
+        .module-meta-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+        .ms-tag { background: #f3f2f1; color: #323130; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 500; }
+        .ms-tag.blue { background: #deecf9; color: var(--ms-blue-dark); }
+        .ms-tag.green { background: #dff6dd; color: #107c10; }
+        .unit-card-list { margin: 20px 0; }
+        .unit-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 0; border-bottom: 1px solid #f3f2f1; cursor: pointer;
+        }
+        .unit-card:last-child { border-bottom: none; }
+        .unit-card:hover .unit-card-name { color: var(--ms-blue); text-decoration: underline; }
+        .unit-card-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #f3f2f1; color: #605e5c;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .unit-card.lab .unit-card-num { background: #eef6ff; color: var(--ms-blue-dark); }
+        .unit-card.quiz .unit-card-num { background: #fff4ce; color: #8a6914; }
+        .unit-card-info { flex: 1; }
+        .unit-card-name { font-size: 15px; font-weight: 500; }
+        .unit-card-time { font-size: 12px; color: #605e5c; margin-top: 2px; }
+        .unit-card-arrow { color: #c8c6c4; font-size: 14px; }
+
+        /* Resource links */
+        .ms-resource-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border: 1px solid #e1dfdd; border-radius: 4px;
+            margin-bottom: 8px; text-decoration: none; color: #201f1e;
+            font-size: 14px; transition: background .1s;
+        }
+        .ms-resource-link:hover { background: #f3f2f1; }
+        .ms-resource-link i { color: var(--ms-blue); font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+
+        /* Achievement */
+        .ms-achievement {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: #fff; border-radius: 6px; padding: 24px 28px;
+            margin: 24px 0; display: flex; align-items: center; gap: 20px;
+        }
+        .achievement-icon { font-size: 48px; flex-shrink: 0; }
+        .achievement-text h3 { margin: 0 0 4px; font-size: 18px; }
+        .achievement-text p { margin: 0; font-size: 14px; opacity: .9; }
+
+        @media (max-width: 768px) {
+            .ms-sidebar { display: none; }
+            .unit-content { padding: 20px 16px 40px; }
+            .unit-nav { padding: 16px; }
+            .ms-breadcrumb { padding: 8px 16px; }
+            .compare-grid { grid-template-columns: 1fr; }
+        }
+
+    </style>
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+<body>
 
-    <!-- Hero Section -->
-    <header
-        class="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white pt-24 pb-32 overflow-hidden">
-        <div
-            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay">
+<!-- TOP NAV -->
+<nav class="ms-topnav">
+    <a href="#" class="brand"><i class="fas fa-graduation-cap"></i> Vibe Coding Learn</a>
+    <div class="divider"></div>
+    <span class="nav-label">單元課程 進階 13 - 技術敘事</span>
+</nav>
+
+<div class="ms-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="ms-sidebar">
+        <div class="ms-sidebar-header">
+            <div class="module-label">模組</div>
+            <div class="module-title">視覺敘事：如何展示技術專案</div>
+            <div class="meta"><i class="far fa-clock"></i> 約 201 分鐘 · 6 個單元</div>
         </div>
-        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+        <nav class="ms-unit-list" id="sidebar-nav"></nav>
+        <div class="sidebar-progress">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0 / 6 已完成</div>
+        </div>
+    </aside>
 
-        <div class="container mx-auto px-4 relative z-10 text-center">
-            <span
-                class="badge-header inline-block py-1.5 px-4 rounded-full bg-white/10 border border-white/20 text-white/90 text-sm font-medium mb-6 tracking-wide uppercase backdrop-blur-sm font-[Outfit]">
-                進階 13 - 技術敘事
-            </span>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit] text-center">
-                視覺敘事：<br><span class="text-pink-400">如何展示技術專案</span>
-            </h1>
-            <p class="text-xl md:text-2xl text-purple-100 max-w-2xl mx-auto font-light leading-relaxed text-center">
-                技術再強，沒人看懂也是白搭。學習用視覺與故事為代碼注入靈魂，打造令人驚艷的作品集。
-            </p>
+    <!-- MAIN -->
+    <main class="ms-content">
 
-            <div class="mt-8 flex flex-wrap justify-center gap-4 text-center">
-                <button onclick="enterMediaMode('video', window.RESOURCES.video)"
-                    class="group flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105">
-                    <span class="text-xl group-hover:animate-pulse">📺</span>
-                    <span>觀看教學影片</span>
-                </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
-                    class="group flex items-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-full font-bold shadow-xl transition-all duration-300 hover:scale-105">
-                    <span class="text-xl text-left">📄</span>
-                    <span>閱讀課程講義</span>
-                </button>
+        <div class="ms-breadcrumb">
+            <a href="#">Vibe Coding</a><span>›</span>
+            <a href="#">單元課程 進階 13</a><span>›</span>
+            <span id="bc-current">課程總覽</span>
+        </div>
+
+        <!-- ══════════ PAGE 0: INDEX ══════════ -->
+        <div class="ms-unit-page visible" id="page-index">
+            <div class="unit-content">
+                <h1>視覺敘事：如何展示技術專案</h1>
+                <div class="module-meta-tags">
+                    <span class="ms-tag">模組</span>
+                    <span class="ms-tag">6 個單元</span>
+                    <span class="ms-tag green">單元課程 進階 13</span>
+                    <span class="ms-tag blue">硬體開發</span>
+                    <span class="ms-tag blue">物聯網</span>
+                </div>
+
+                <p>技術再強，沒人看懂也是白搭。學習用視覺與故事為代碼注入靈魂，打造令人驚艷的作品集。</p>
+
+                <h2>學習目標</h2>
+                <p>完成本模組後，你將能夠：</p>
+                <ul>
+                    <li>理解並掌握 <strong>📖 1. 英雄之旅：技術敘事的骨架</strong> 的核心觀念與操作實務。</li>
+                    <li>學會 <strong>🎨 2. 邏輯視覺化：讓代碼「被看見」</strong> 的關鍵原理，並能將其應用於開發。</li>
+                    <li>掌握 <strong>🎬 3. 實機演示與電梯簡報</strong> 的調校技巧與穩定性測試。</li>
+                    <li>完成三項實作作業，並以 Git 提交成果到 GitHub Classroom。</li>
+                </ul>
+
+                <h2>必要條件</h2>
+                <ul>
+                    <li>準備好 ESP32 開發板與 Micro USB / USB-C 數據線</li>
+                    <li>電腦已配置 VS Code 與 PlatformIO 開發環境</li>
+                    <li>擁有 GitHub 帳號，能夠接受 GitHub Classroom 邀請</li>
+                </ul>
+
+                <h2>本模組單元</h2>
+                <div class="unit-card-list" id="index-unit-list"></div>
+                <div style="margin-top:32px;">
+                    <button class="ms-btn" onclick="goToUnit(1)">開始模組 &nbsp;›</button>
+                </div>
             </div>
         </div>
-    </header>
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+        <!-- ══════════ PAGE 1: 簡介 ══════════ -->
+        <div class="ms-unit-page" id="page-1">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-1" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
 
-        <!-- Module 1: The Hero's Journey Framework -->
-        <section class="module-section mb-16 text-justify">
-            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 text-justify">
-                <div class="p-1 bg-gradient-to-r from-violet-500 to-purple-500 text-justify"></div>
-                <div class="p-8 md:p-14 text-justify">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3 text-justify text-justify">
-                        <span class="text-4xl text-violet-500 text-justify text-left text-justify">📖</span> 1.
-                        英雄之旅：技術敘事的骨架
-                    </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 text-justify">
-                        <div class="space-y-6 text-justify">
-                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify">
+                <h1>簡介</h1>
+
+                <p>
+                    歡迎來到本模組！本單元的核心主題是 <strong>視覺敘事：如何展示技術專案</strong>。
+                    在現代 Vibe Coding 開發模式中，AI 能幫你生成程式碼，
+                    但要建立一套高可用、穩定的物聯網硬體系統，你必須確實理解底層的硬體連線、更新與控制協定。
+                </p>
+
+                <div class="ms-scenario">
+                    <div class="ms-scenario-label">學習指引</div>
+                    「工欲善其事，必先利其器。」在開始寫代碼與接線之前，請先花 3 分鐘觀看下方的教學影片，
+                    這能幫助你快速建構完整的系統架構觀，減少後續排除故障的時間。
+                </div>
+
+                <h2>教學影片</h2>
+                <div style="border-radius:4px; overflow:hidden; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,.12); aspect-ratio:16/9;">
+                    <iframe src=""
+                        title="視覺敘事：如何展示技術專案 教學影片" allowfullscreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        style="width:100%; height:100%; display:block; border:0;">
+                    </iframe>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(0)">‹ &nbsp;總覽</button>
+                <span class="unit-page-indicator">1 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(1); goToUnit(2)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 2: 單元 1 ══════════ -->
+        <div class="ms-unit-page" id="page-2">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-2" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>📖 1. 英雄之旅：技術敘事的骨架</h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-16 text-justify">
+<div class="space-y-6 text-justify">
+<p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify">
                                 別只說 "I made a car"，試著講一個關於「克服極限」的故事。面試官只有 30 秒能被你吸引，你需要一套具備邏輯與張力的敘事框架。
                             </p>
-                            <div class="bg-violet-50 p-6 rounded-2xl border border-violet-100 text-justify">
-                                <h4
-                                    class="font-bold text-violet-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed text-center text-justify">
+<div class="bg-violet-50 p-6 rounded-2xl border border-violet-100 text-justify">
+<h4 class="font-bold text-violet-900 mb-2 text-[10px] uppercase tracking-widest leading-relaxed text-center text-justify">
                                     Narrative Structure</h4>
-                                <ul class="text-[9px] text-slate-500 space-y-2 font-light text-justify text-justify">
-                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span
-                                            class="w-1.5 h-1.5 bg-violet-500 rounded-full mt-1 text-justify"></span>
-                                        <div><strong class="text-justify text-left">挑戰 (The
+<ul class="text-[9px] text-slate-500 space-y-2 font-light text-justify text-justify">
+<li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-violet-500 rounded-full mt-1 text-justify"></span>
+<div><strong class="text-justify text-left">挑戰 (The
                                                 Problem)</strong>：為什麼要做這個專案？它解決了什麼現實痛點。</div>
-                                    </li>
-                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span
-                                            class="w-1.5 h-1.5 bg-violet-500 rounded-full mt-1 text-justify"></span>
-                                        <div><strong class="text-justify">掙扎 (The
+</li>
+<li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-violet-500 rounded-full mt-1 text-justify"></span>
+<div><strong class="text-justify">掙扎 (The
                                                 Struggle)</strong>：開發中遇到了什麼障礙（延遲、崩潰、雜訊）？</div>
-                                    </li>
-                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span
-                                            class="w-1.5 h-1.5 bg-violet-500 rounded-full mt-1 text-justify text-left"></span>
-                                        <div><strong class="text-justify">突破 (The Solution)</strong>：你用了什麼黑科技（PID, FSM,
+</li>
+<li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-violet-500 rounded-full mt-1 text-justify text-left"></span>
+<div><strong class="text-justify">突破 (The Solution)</strong>：你用了什麼黑科技（PID, FSM,
                                             Protocol）解決它。</div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div
-                            class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group text-justify">
-                            <div
-                                class="absolute inset-0 bg-violet-500/5 group-hover:bg-violet-500/10 transition-colors text-justify">
-                            </div>
-                            <h4
-                                class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10 text-center text-justify">
+</li>
+</ul>
+</div>
+</div>
+<div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 text-white flex flex-col justify-center text-center relative overflow-hidden group text-justify">
+<div class="absolute inset-0 bg-violet-500/5 group-hover:bg-violet-500/10 transition-colors text-justify">
+</div>
+<h4 class="text-[10px] font-bold text-slate-500 mb-6 uppercase tracking-widest relative z-10 text-center text-justify">
                                 Story Arc Visualization</h4>
-                            <div class="relative z-10 flex flex-col items-center gap-2 text-justify">
-                                <div class="flex items-end gap-1 h-20 text-justify">
-                                    <div class="w-4 bg-slate-700 h-8 text-justify"></div>
-                                    <div class="w-4 bg-violet-500 h-16 animate-pulse text-justify"></div>
-                                    <div class="w-4 bg-slate-700 h-12 text-justify"></div>
-                                    <div class="w-4 bg-emerald-500 h-20 text-justify"></div>
-                                </div>
-                                <div
-                                    class="flex justify-between w-full text-[7px] text-slate-500 font-mono tracking-tighter text-justify">
-                                    <span>IDEATION</span>
-                                    <span>STUCK</span>
-                                    <span>PIVOT</span>
-                                    <span>SUCCESS</span>
-                                </div>
-                            </div>
-                            <p
-                                class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest text-center text-justify uppercase font-black">
+<div class="relative z-10 flex flex-col items-center gap-2 text-justify">
+<div class="flex items-end gap-1 h-20 text-justify">
+<div class="w-4 bg-slate-700 h-8 text-justify"></div>
+<div class="w-4 bg-violet-500 h-16 animate-pulse text-justify"></div>
+<div class="w-4 bg-slate-700 h-12 text-justify"></div>
+<div class="w-4 bg-emerald-500 h-20 text-justify"></div>
+</div>
+<div class="flex justify-between w-full text-[7px] text-slate-500 font-mono tracking-tighter text-justify">
+<span>IDEATION</span>
+<span>STUCK</span>
+<span>PIVOT</span>
+<span>SUCCESS</span>
+</div>
+</div>
+<p class="text-[9px] text-slate-600 mt-6 font-mono tracking-widest text-center text-justify uppercase font-black">
                                 Emotional Engagement Graph</p>
-                        </div>
-                    </div>
-                </div>
+</div>
+</div>
+                
             </div>
-        </section>
-
-        <!-- Module 2: Logic Visualization -->
-        <section class="module-section mb-16 text-justify">
-            <div class="glass-card bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 text-justify">
-                <div class="p-1 bg-gradient-to-r from-pink-500 to-rose-500 text-justify"></div>
-                <div class="p-8 md:p-14 text-justify">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3 text-justify text-justify">
-                        <span class="text-4xl text-pink-500 text-justify text-left text-justify">🎨</span> 2.
-                        邏輯視覺化：讓代碼「被看見」
-                    </h2>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 text-justify">
-                        <div class="space-y-8 text-justify">
-                            <p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify">
-                                看不見的代碼很難被外部欣賞。利用流程圖、架構圖與子母畫面展示，將抽象的邏輯轉化為直觀的「視覺證據」，增強說服力。
-                            </p>
-                            <div class="bg-pink-50 p-8 rounded-3xl border border-pink-100 text-justify">
-                                <h4
-                                    class="text-pink-900 font-bold mb-4 text-xs uppercase tracking-widest text-center text-justify text-justify">
-                                    Visual Assets Checklist</h4>
-                                <ul class="text-[10px] text-slate-500 text-left space-y-2 text-justify">
-                                    <li class="flex items-center gap-2 italic text-justify text-left"><span
-                                            class="w-1 h-1 bg-pink-400 rounded-full"></span> 系統架構圖 (Architecture
-                                        Diagrams)</li>
-                                    <li class="flex items-center gap-2 italic text-justify text-left"><span
-                                            class="w-1 h-1 bg-pink-400 rounded-full"></span> 指令/數據封包格式圖 (Protocol Specs)
-                                    </li>
-                                    <li class="flex items-center gap-2 italic text-justify text-left"><span
-                                            class="w-1 h-1 bg-pink-400 rounded-full"></span> PID 誤差修正實測波形 (Waveform
-                                        Proof)</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div
-                            class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group text-justify">
-                            <div class="absolute inset-0 bg-pink-500/5 text-justify"></div>
-                            <h4
-                                class="text-pink-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10 text-center text-justify">
-                                Data Flow Mapping</h4>
-                            <div class="relative z-10 flex gap-4 items-center text-justify">
-                                <div class="p-2 border border-slate-600 rounded text-[8px] text-justify">ESP32 CORE
-                                </div>
-                                <div class="text-pink-500 animate-[bounce_1s_infinite] text-justify">→</div>
-                                <div class="p-2 border border-slate-600 rounded text-[8px] text-justify text-left">BLE
-                                    MESH</div>
-                                <div class="text-pink-500 animate-[bounce_1s_infinite] text-justify text-left">→</div>
-                                <div
-                                    class="p-2 bg-pink-600 rounded text-[8px] font-bold shadow-[0_0_15px_rgba(236,72,153,0.5)] text-justify">
-                                    DASHBOARD UI</div>
-                            </div>
-                            <p
-                                class="text-[9px] text-slate-600 mt-8 font-mono tracking-widest uppercase text-center text-justify">
-                                Transparent Logic Path</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Module 3: Demo & Pitch -->
-        <section class="module-section mb-16 text-justify">
-            <div
-                class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden text-white border border-slate-700 text-justify">
-                <div class="p-8 md:p-14 text-justify">
-                    <h2
-                        class="text-3xl font-bold mb-8 flex items-center gap-3 text-violet-400 text-justify text-justify text-justify">
-                        <span
-                            class="p-2 bg-violet-500/20 rounded-lg text-violet-400 text-2xl text-justify text-left">🎬</span>
-                        3. 實機演示與電梯簡報
-                    </h2>
-                    <div class="flex flex-col lg:flex-row gap-16 items-center text-justify text-justify">
-                        <div class="flex-1 space-y-6 text-justify">
-                            <p class="text-slate-400 font-light leading-relaxed text-lg text-justify text-justify">
-                                沒影片就沒真相 (Pics or it didn't happen)。錄製子母畫面 (PiP) 同步展示代碼邏輯與硬體動態，展現系統的毫秒級響應實力。
-                            </p>
-                            <div
-                                class="bg-violet-500/10 p-8 rounded-3xl border border-violet-500/20 shadow-inner text-justify text-justify">
-                                <h4
-                                    class="font-bold text-violet-400 mb-4 text-xs uppercase tracking-widest text-center text-justify text-left">
-                                    Master Demo Strategies</h4>
-                                <ul
-                                    class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light text-justify text-left">
-                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span
-                                            class="w-1.5 h-1.5 bg-violet-500 rounded-full mt-1 text-justify"></span>
-                                        <div><strong class="text-white text-justify">子母畫面 (PiP)</strong>：左側放
-                                            Dashboard，右側放車子實際動態，證明低延遲控制。</div>
-                                    </li>
-                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span
-                                            class="w-1.5 h-1.5 bg-violet-500 rounded-full mt-1 text-justify"></span>
-                                        <div><strong
-                                                class="text-white text-justify text-justify">極限挑戰演示</strong>：拍攝馬達精確停靠或高速過彎的慢動作鏡頭，展現穩定度。
-                                        </div>
-                                    </li>
-                                    <li class="flex items-start gap-2 text-justify text-left text-justify"><span
-                                            class="w-1.5 h-1.5 bg-violet-500 rounded-full mt-1 text-justify"></span>
-                                        <div><strong class="text-white text-justify">30 秒原則</strong>：別錄太長！在影片前 10
-                                            秒內就要讓觀眾看到最炸裂的功能。</div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div
-                            class="lg:w-80 bg-violet-600/10 p-10 rounded-3xl border border-violet-500/20 text-center relative overflow-hidden group text-justify">
-                            <div
-                                class="absolute -right-8 -top-8 w-32 h-32 bg-violet-500/5 rounded-full group-hover:scale-150 transition-transform duration-700 text-justify">
-                            </div>
-                            <h4
-                                class="text-violet-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center text-justify">
-                                Professional Showcase</h4>
-                            <div
-                                class="w-full h-40 bg-black/60 rounded-xl relative overflow-hidden border border-slate-700 text-justify">
-                                <div
-                                    class="absolute top-2 left-2 w-12 h-20 bg-slate-800 border border-slate-700 rounded text-[5px] p-1 text-justify text-left">
-                                    DASHBOARD</div>
-                                <div class="absolute inset-0 flex items-center justify-center text-justify">
-                                    <div class="w-4 h-4 bg-slate-500 rounded-full animate-ping text-justify"></div>
-                                </div>
-                                <div class="absolute bottom-2 right-2 text-[8px] bg-red-600 px-1 rounded text-justify">●
-                                    REC</div>
-                            </div>
-                            <p
-                                class="text-[9px] text-slate-500 mt-6 font-mono uppercase tracking-widest text-center text-justify">
-                                Layout: Reality Sync Flow</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Homework Section -->
-        <section class="module-section text-justify">
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4 font-[Outfit] text-justify text-justify">
-                核心任務：說一個令人驚艷的技術故事</h2>
-            <p class="text-center text-gray-500 mb-12 text-justify text-justify text-left">
-                打造你的專業技術作品集。將這十二週的專案成果轉化為一眼就能吸引開發者、評審或面試官的視覺資產。透過 Git Workflow 建立高質量的專案文檔與 Demo。</p>
-
-            <div class="grid md:grid-cols-3 gap-6 text-justify">
-                <!-- Task 13-1 -->
-                <div onclick="openSubmissionModal('adv-13-architecture', '【作業 13-1】「一眼就懂」：系統架構圖設計與繪製 (System Architecture Design Lab)')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
-                    <div class="bg-violet-500 h-2"></div>
-                    <div class="p-8 flex-grow text-justify text-justify">
-                        <div class="flex justify-between items-start mb-4 text-justify">
-                            <span
-                                class="text-4xl text-violet-500 group-hover:scale-110 transition-transform text-justify">🧭</span>
-                            <span
-                                class="bg-violet-100 text-violet-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest text-justify">60
-                                min</span>
-                        </div>
-                        <h3
-                            class="font-bold text-xl text-gray-800 mb-2 group-hover:text-violet-600 transition text-justify uppercase tracking-tighter text-justify">
-                            【作業 13-1】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「系統藍圖繪製」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
-                            整理系統模組架構。使用 Mermaid 或方塊圖標註前後端、藍牙與馬達控制層的數據流向。將代碼邏輯轉化為清晰、具備工業感的視覺藍圖。
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Task 13-2 -->
-                <div onclick="openSubmissionModal('adv-13-dashboard', '【作業 13-2】展示證據：關鍵性能視覺化截圖 (Data Evidence & Result Lab)')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
-                    <div class="bg-pink-500 h-2"></div>
-                    <div class="p-8 flex-grow text-justify text-justify">
-                        <div class="flex justify-between items-start mb-4 text-justify text-left">
-                            <span class="text-4xl text-pink-500 group-hover:rotate-12 transition-transform">📉</span>
-                            <span
-                                class="bg-pink-100 text-pink-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest text-justify">60
-                                min</span>
-                        </div>
-                        <h3
-                            class="font-bold text-xl text-gray-800 mb-2 group-hover:text-pink-600 transition text-justify uppercase tracking-tighter text-justify">
-                            【作業 13-2】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「性能證據採集」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify">
-                            定義專案的核心里程碑。採集 Dashboard 上的即時波形 GIF 或對比截圖。在 README 中用數據證明你的系統優化（如延遲削減、更新率提升）成效。
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Task 13-3 -->
-                <div onclick="openSubmissionModal('adv-13-pitch', '【作業 13-3】「一分鐘技術簡報」：Demo 影片錄製 (Professional Pitch Video Lab)')"
-                    class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group cursor-pointer relative hover:shadow-2xl transition-all hover:-translate-y-2 text-justify">
-                    <div class="bg-indigo-500 h-2"></div>
-                    <div class="p-8 flex-grow text-justify text-justify text-justify">
-                        <div class="flex justify-between items-start mb-4 text-justify text-left">
-                            <span
-                                class="text-4xl text-indigo-500 group-hover:translate-x-1 transition-transform">🎬</span>
-                            <span
-                                class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold uppercase font-black text-justify uppercase tracking-widest text-justify">45
-                                min</span>
-                        </div>
-                        <h3
-                            class="font-bold text-xl text-gray-800 mb-2 group-hover:text-indigo-600 transition text-justify uppercase tracking-tighter text-justify">
-                            【作業 13-3】</h3>
-                        <h4 class="font-medium text-gray-500 mb-4 text-justify">「技術電梯簡報」</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed text-left text-justify text-justify">
-                            錄製包含 PiP 的 Demo 影片。結合技術口述與實機演示，在 60 秒內清楚介紹專案背景、遭遇的技術挑戰以及你採用的關鍵解決策略。
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-slate-900 py-12 border-t border-slate-800 mt-auto text-center">
-        <div class="container mx-auto px-4 text-center text-center text-center text-center">
-            <p class="text-slate-500 text-sm mb-4 text-center">&copy; 2026 Vibe Coding. All rights reserved.</p>
-            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400 text-center">
-                <span>單元課程 進階 13 - 技術敘事</span>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(1)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">2 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(2); goToUnit(3)">下一個單元 &nbsp;›</button>
             </div>
         </div>
-    </footer>
 
-    <script src="/js/course-shared.js?v=2026.05.21.V21.DISABLE_UNIFIED_SUPPORT_HUB"></script>
+        <!-- ══════════ PAGE 3: 單元 2 ══════════ -->
+        <div class="ms-unit-page" id="page-3">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-3" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
 
-    <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none;">
-<div class="markdown-heading"><h1 class="heading-element">🎓 作業指引：技術敘事與作品集封裝 (ADV-13)</h1><a id="user-content--作業指引技術敘事與作品集封裝-adv-13" class="anchor" aria-label="Permalink: 🎓 作業指引：技術敘事與作品集封裝 (ADV-13)" href="#-作業指引技術敘事與作品集封裝-adv-13"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+                <h1>🎨 2. 邏輯視覺化：讓代碼「被看見」</h1>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 text-justify">
+<div class="space-y-8 text-justify">
+<p class="text-lg text-gray-600 leading-relaxed font-light text-justify text-justify">
+                                看不見的代碼很難被外部欣賞。利用流程圖、架構圖與子母畫面展示，將抽象的邏輯轉化為直觀的「視覺證據」，增強說服力。
+                            </p>
+<div class="bg-pink-50 p-8 rounded-3xl border border-pink-100 text-justify">
+<h4 class="text-pink-900 font-bold mb-4 text-xs uppercase tracking-widest text-center text-justify text-justify">
+                                    Visual Assets Checklist</h4>
+<ul class="text-[10px] text-slate-500 text-left space-y-2 text-justify">
+<li class="flex items-center gap-2 italic text-justify text-left"><span class="w-1 h-1 bg-pink-400 rounded-full"></span> 系統架構圖 (Architecture
+                                        Diagrams)</li>
+<li class="flex items-center gap-2 italic text-justify text-left"><span class="w-1 h-1 bg-pink-400 rounded-full"></span> 指令/數據封包格式圖 (Protocol Specs)
+                                    </li>
+<li class="flex items-center gap-2 italic text-justify text-left"><span class="w-1 h-1 bg-pink-400 rounded-full"></span> PID 誤差修正實測波形 (Waveform
+                                        Proof)</li>
+</ul>
+</div>
+</div>
+<div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group text-justify">
+<div class="absolute inset-0 bg-pink-500/5 text-justify"></div>
+<h4 class="text-pink-400 font-bold mb-6 text-[10px] uppercase tracking-widest relative z-10 text-center text-justify">
+                                Data Flow Mapping</h4>
+<div class="relative z-10 flex gap-4 items-center text-justify">
+<div class="p-2 border border-slate-600 rounded text-[8px] text-justify">ESP32 CORE
+                                </div>
+<div class="text-pink-500 animate-[bounce_1s_infinite] text-justify">→</div>
+<div class="p-2 border border-slate-600 rounded text-[8px] text-justify text-left">BLE
+                                    MESH</div>
+<div class="text-pink-500 animate-[bounce_1s_infinite] text-justify text-left">→</div>
+<div class="p-2 bg-pink-600 rounded text-[8px] font-bold shadow-[0_0_15px_rgba(236,72,153,0.5)] text-justify">
+                                    DASHBOARD UI</div>
+</div>
+<p class="text-[9px] text-slate-600 mt-8 font-mono tracking-widest uppercase text-center text-justify">
+                                Transparent Logic Path</p>
+</div>
+</div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(2)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">3 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(3); goToUnit(4)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 4: 單元 3 ══════════ -->
+        <div class="ms-unit-page" id="page-4">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-4" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>🎬 3. 實機演示與電梯簡報</h1>
+                
+                <div class="flex flex-col lg:flex-row gap-16 items-center text-justify text-justify">
+<div class="flex-1 space-y-6 text-justify">
+<p class="text-slate-400 font-light leading-relaxed text-lg text-justify text-justify">
+                                沒影片就沒真相 (Pics or it didn't happen)。錄製子母畫面 (PiP) 同步展示代碼邏輯與硬體動態，展現系統的毫秒級響應實力。
+                            </p>
+<div class="bg-violet-500/10 p-8 rounded-3xl border border-violet-500/20 shadow-inner text-justify text-justify">
+<h4 class="font-bold text-violet-400 mb-4 text-xs uppercase tracking-widest text-center text-justify text-left">
+                                    Master Demo Strategies</h4>
+<ul class="grid grid-cols-1 gap-4 text-[11px] text-slate-400 font-light text-justify text-left">
+<li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-violet-500 rounded-full mt-1 text-justify"></span>
+<div><strong class="text-white text-justify">子母畫面 (PiP)</strong>：左側放
+                                            Dashboard，右側放車子實際動態，證明低延遲控制。</div>
+</li>
+<li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-violet-500 rounded-full mt-1 text-justify"></span>
+<div><strong class="text-white text-justify text-justify">極限挑戰演示</strong>：拍攝馬達精確停靠或高速過彎的慢動作鏡頭，展現穩定度。
+                                        </div>
+</li>
+<li class="flex items-start gap-2 text-justify text-left text-justify"><span class="w-1.5 h-1.5 bg-violet-500 rounded-full mt-1 text-justify"></span>
+<div><strong class="text-white text-justify">30 秒原則</strong>：別錄太長！在影片前 10
+                                            秒內就要讓觀眾看到最炸裂的功能。</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="lg:w-80 bg-violet-600/10 p-10 rounded-3xl border border-violet-500/20 text-center relative overflow-hidden group text-justify">
+<div class="absolute -right-8 -top-8 w-32 h-32 bg-violet-500/5 rounded-full group-hover:scale-150 transition-transform duration-700 text-justify">
+</div>
+<h4 class="text-violet-400 font-bold mb-4 text-[10px] uppercase tracking-widest text-center text-justify">
+                                Professional Showcase</h4>
+<div class="w-full h-40 bg-black/60 rounded-xl relative overflow-hidden border border-slate-700 text-justify">
+<div class="absolute top-2 left-2 w-12 h-20 bg-slate-800 border border-slate-700 rounded text-[5px] p-1 text-justify text-left">
+                                    DASHBOARD</div>
+<div class="absolute inset-0 flex items-center justify-center text-justify">
+<div class="w-4 h-4 bg-slate-500 rounded-full animate-ping text-justify"></div>
+</div>
+<div class="absolute bottom-2 right-2 text-[8px] bg-red-600 px-1 rounded text-justify">●
+                                    REC</div>
+</div>
+<p class="text-[9px] text-slate-500 mt-6 font-mono uppercase tracking-widest text-center text-justify">
+                                Layout: Reality Sync Flow</p>
+</div>
+</div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(3)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">4 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(4); goToUnit(5)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 5: 實作挑戰 ══════════ -->
+        <div class="ms-unit-page" id="page-5">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-5" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 165 分鐘</div>
+                </div>
+
+                <h1>實戰任務挑戰</h1>
+
+                <p>
+                    請動手完成以下三項實作任務，這是驗證本單元學習成果的核心挑戰。
+                    完成後請將程式碼與報告提交至 GitHub Classroom。
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6 my-6">
+                    <!-- Task 1 -->
+                    <div onclick="openSubmissionModal('adv-13-architecture', '【作業 13-1】「一眼就懂」：系統架構圖設計與繪製 (System Architecture Design Lab)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#E76F51] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 13-1</div>
+                            <h3 class="text-lg font-bold mb-2">系統藍圖繪製</h3>
+                            <p class="text-xs text-gray-600 mb-4">整理系統模組架構。使用 Mermaid 或方塊圖標註前後端、藍牙與馬達控制層的數據流向。將代碼邏輯轉化為清晰、具備工業感的視覺藍圖。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#E76F51] font-bold">
+                            <span>⏱ 🧭 60 min 【作業 13-1】 「系統藍圖繪製」 整理系統模組架構。使用 Mermaid 或方塊圖標註前後端、藍牙與馬達控制層的數據流向。將代碼邏輯轉化為清晰、具備工業感的視覺藍圖。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#E76F51] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 2 -->
+                    <div onclick="openSubmissionModal('adv-13-dashboard', '【作業 13-2】展示證據：關鍵性能視覺化截圖 (Data Evidence & Result Lab)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#2A9D8F] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 13-2</div>
+                            <h3 class="text-lg font-bold mb-2">性能證據採集</h3>
+                            <p class="text-xs text-gray-600 mb-4">定義專案的核心里程碑。採集 Dashboard 上的即時波形 GIF 或對比截圖。在 README 中用數據證明你的系統優化（如延遲削減、更新率提升）成效。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#2A9D8F] font-bold">
+                            <span>⏱ 📉 60 min 【作業 13-2】 「性能證據採集」 定義專案的核心里程碑。採集 Dashboard 上的即時波形 GIF 或對比截圖。在 README 中用數據證明你的系統優化（如延遲削減、更新率提升）成效。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#2A9D8F] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 3 -->
+                    <div onclick="openSubmissionModal('adv-13-pitch', '【作業 13-3】「一分鐘技術簡報」：Demo 影片錄製 (Professional Pitch Video Lab)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#457B9D] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 13-3</div>
+                            <h3 class="text-lg font-bold mb-2">技術電梯簡報</h3>
+                            <p class="text-xs text-gray-600 mb-4">錄製包含 PiP 的 Demo 影片。結合技術口述與實機演示，在 60 秒內清楚介紹專案背景、遭遇的技術挑戰以及你採用的關鍵解決策略。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#457B9D] font-bold">
+                            <span>⏱ 🎬 45 min 【作業 13-3】 「技術電梯簡報」 錄製包含 PiP 的 Demo 影片。結合技術口述與實機演示，在 60 秒內清楚介紹專案背景、遭遇的技術挑戰以及你採用的關鍵解決策略。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#457B9D] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(4)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">5 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(5); goToUnit(6)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 6: 摘要與資源 ══════════ -->
+        <div class="ms-unit-page" id="page-6">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-6" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>單元摘要與參考資源</h1>
+
+                <p>
+                    恭喜！你已經完成了「<strong>視覺敘事：如何展示技術專案</strong>」模組。
+                    透過本單元的學習與實作，你已經掌握了關鍵的核心技術，為全棧物聯網開發奠定了深厚的底層基石。
+                </p>
+
+                <div class="ms-achievement">
+                    <div class="achievement-icon">🚀</div>
+                    <div class="achievement-text">
+                        <h3>恭喜！你已完成本模組</h3>
+                        <p>你已具備開發與調校本單元核心功能的專業實力。持續累積，前進下一個挑戰！</p>
+                    </div>
+                </div>
+
+                <h2>完成本模組後，你已學會：</h2>
+                <ul>
+                    <li><strong>📖 1. 英雄之旅：技術敘事的骨架</strong> 的基本架構與實作技能。</li>
+                    <li><strong>🎨 2. 邏輯視覺化：讓代碼「被看見」</strong> 的調試方法與資料傳輸細節。</li>
+                    <li><strong>🎬 3. 實機演示與電梯簡報</strong> 的優化指標與生產環境安全機制。</li>
+                    <li>在實戰挑戰中，透過 Git 與 GitHub Classroom 提交完整的硬體與報告成果。</li>
+                </ul>
+
+                <h2>延伸學習資源</h2>
+
+                <a href="" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-youtube" style="color:#ff0000;"></i>
+                    <div>
+                        <div style="font-weight:600;">課程教學影片</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">YouTube — 本單元核心觀念與實作示範影片</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="" target="_blank" class="ms-resource-link">
+                    <i class="fas fa-file-alt"></i>
+                    <div>
+                        <div style="font-weight:600;">課程完整講義</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">Google Docs — 詳細實驗步驟、技術文件與程式碼指南</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://classroom.github.com" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-github"></i>
+                    <div>
+                        <div style="font-weight:600;">GitHub Classroom</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">classroom.github.com — 管理你的作業提交與自動評分結果</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(5)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator" style="font-weight:600; color:#107c10;">✓ 模組完成</span>
+                <button class="ms-btn" onclick="markDone(6); alert('🎉 恭喜完成「視覺敘事：如何展示技術專案」模組！')">完成模組</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    /* ─── DATA ─── */
+    const UNITS = [
+        { id: 0, label: '課程總覽',       time: '',         type: 'index' },
+        { id: 1, label: '簡介',            time: '3 分鐘',  type: 'unit'  },
+        { id: 2, label: '📖 1. 英雄之旅：技術敘事的骨架', time: '10 分鐘', type: 'unit' },
+        { id: 3, label: '🎨 2. 邏輯視覺化：讓代碼「被看見」', time: '10 分鐘', type: 'unit' },
+        { id: 4, label: '🎬 3. 實機演示與電梯簡報', time: '10 分鐘', type: 'unit' },
+        { id: 5, label: '實戰挑戰',       time: '165 分鐘', type: 'lab'   },
+        { id: 6, label: '摘要與資源',     time: '3 分鐘',  type: 'unit'  },
+    ];
+
+    let currentUnit = 0;
+    let doneSet = new Set();
+
+    /* ─── INIT ─── */
+    function init() {
+        buildSidebar();
+        buildIndexUnitList();
+        goToUnit(0);
+    }
+
+    /**
+     * 動態建構側邊欄單元選單。
+     */
+    function buildSidebar() {
+        const nav = document.getElementById('sidebar-nav');
+        nav.innerHTML = UNITS.map(u => {
+            const badge = u.type === 'lab' ? ' <span style="font-size:10px;background:#eef6ff;color:#005a9e;padding:1px 5px;border-radius:2px;">LAB</span>'
+                        : '';
+            return `
+            <div class="ms-unit-item" id="nav-${u.id}" onclick="goToUnit(${u.id})">
+                <div class="unit-icon" id="icon-${u.id}">${u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id}</div>
+                <div class="unit-meta">
+                    <div class="unit-name">${u.label}${badge}</div>
+                    ${u.time ? `<div class="unit-time"><i class="far fa-clock"></i> ${u.time}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /**
+     * 動態建構首頁單元卡片列表。
+     */
+    function buildIndexUnitList() {
+        const el = document.getElementById('index-unit-list');
+        el.innerHTML = UNITS.filter(u => u.id > 0).map(u => `
+            <div class="unit-card ${u.type}" onclick="goToUnit(${u.id})">
+                <div class="unit-card-num">${u.id}</div>
+                <div class="unit-card-info">
+                    <div class="unit-card-name">${u.label}</div>
+                    <div class="unit-card-time"><i class="far fa-clock"></i> ${u.time}</div>
+                </div>
+                <div class="unit-card-arrow">›</div>
+            </div>
+        `).join('');
+    }
+
+    /* ─── NAVIGATION ─── */
+    /**
+     * 切換至指定單元頁面。
+     * @param {number} id - 單元識別碼
+     */
+    function goToUnit(id) {
+        document.querySelectorAll('.ms-unit-page').forEach(p => p.classList.remove('visible'));
+        const target = id === 0 ? document.getElementById('page-index') : document.getElementById(`page-${id}`);
+        if (target) target.classList.add('visible');
+
+        document.querySelectorAll('.ms-unit-item').forEach(el => el.classList.remove('active'));
+        const navItem = document.getElementById(`nav-${id}`);
+        if (navItem) { navItem.classList.add('active'); navItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) {
+                icon.className = 'unit-icon done';
+                icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>';
+            } else if (u.id === id) {
+                icon.className = 'unit-icon active-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            } else {
+                icon.className = 'unit-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            }
+        });
+
+        const unit = UNITS.find(u => u.id === id);
+        document.getElementById('bc-current').textContent = unit ? unit.label : '';
+        currentUnit = id;
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * 標記特定單元為已完成。
+     * @param {number} id - 單元識別碼
+     */
+    function markDone(id) {
+        doneSet.add(id);
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) badge.style.display = 'flex';
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) { icon.className = 'unit-icon done'; icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>'; }
+        });
+        updateProgress();
+    }
+
+    /**
+     * 計算並更新課程進度與進度條。
+     */
+    function updateProgress() {
+        const total = UNITS.length - 1;
+        const done = doneSet.size;
+        document.getElementById('progress-fill').style.width = Math.round(done / total * 100) + '%';
+        document.getElementById('progress-text').textContent = `${done} / ${total} 已完成`;
+    }
+
+    /* ─── CHECKLIST ─── */
+    /**
+     * 切換核取方塊的狀態。
+     * @param {HTMLElement} el - 核取方塊元素
+     */
+    function toggleCheck(el) {
+        el.classList.toggle('checked');
+        el.innerHTML = el.classList.contains('checked') ? '<i class="fas fa-check" style="font-size:10px;"></i>' : '';
+    }
+
+    /* ─── START ─── */
+    init();
+</script>
+
+<!-- Define Resources -->
+<script>
+    window.RESOURCES = {
+        video: "",
+        doc: ""
+    };
+</script>
+<script src="/js/course-shared.js?v=2026.05.22.V27.START_UNITS_LAYOUT_UPGRADE"></script>
+
+<!-- Assignment Guide (Hidden) -->
+<section id="assignment-guide" style="display: none;">
+<div class="markdown-heading"><h1 class="heading-element">🎓 作業指引：技術敘事與作品集封裝 (ADV-13)</h1><a aria-label="Permalink: 🎓 作業指引：技術敘事與作品集封裝 (ADV-13)" class="anchor" href="#-作業指引技術敘事與作品集封裝-adv-13" id="user-content--作業指引技術敘事與作品集封裝-adv-13"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <p>歡迎來到進階機器人課程的最後一站！在本單元中，你將學習如何將過去 12 週的硬核研發成果，轉化為具備「工程說服力」的專業作品集。</p>
-<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a aria-label="Permalink: 🎯 學習目標" class="anchor" href="#-學習目標" id="user-content--學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>技術視覺化</strong>：使用架構圖精確描述複雜系統。</li>
@@ -353,9 +1071,9 @@
 <li>
 <strong>技術佈道</strong>：透過 Demo 影片與敘事框架吸引目標受眾。</li>
 </ul>
-<hr>
-<div class="markdown-heading"><h2 class="heading-element">🛠️ 三大核心任務</h2><a id="user-content-️-三大核心任務" class="anchor" aria-label="Permalink: 🛠️ 三大核心任務" href="#️-三大核心任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
-<div class="markdown-heading"><h3 class="heading-element">任務 1：專業級系統架構圖 (Professional Architecture Lab)</h3><a id="user-content-任務-1專業級系統架構圖-professional-architecture-lab" class="anchor" aria-label="Permalink: 任務 1：專業級系統架構圖 (Professional Architecture Lab)" href="#任務-1專業級系統架構圖-professional-architecture-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<hr/>
+<div class="markdown-heading"><h2 class="heading-element">🛠️ 三大核心任務</h2><a aria-label="Permalink: 🛠️ 三大核心任務" class="anchor" href="#️-三大核心任務" id="user-content-️-三大核心任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：專業級系統架構圖 (Professional Architecture Lab)</h3><a aria-label="Permalink: 任務 1：專業級系統架構圖 (Professional Architecture Lab)" class="anchor" href="#任務-1專業級系統架構圖-professional-architecture-lab" id="user-content-任務-1專業級系統架構圖-professional-architecture-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>要求</strong>：在 <code>README.md</code> 中嵌入一張系統架構圖（建議使用 Mermaid 語法）。</li>
@@ -364,7 +1082,7 @@
 <li>
 <strong>參考</strong>：請見 <a href="./MERMAID_GUIDE.md">MERMAID_GUIDE.md</a>。</li>
 </ul>
-<div class="markdown-heading"><h3 class="heading-element">任務 2：動態性能證據集 (Evidence-based Portfolio)</h3><a id="user-content-任務-2動態性能證據集-evidence-based-portfolio" class="anchor" aria-label="Permalink: 任務 2：動態性能證據集 (Evidence-based Portfolio)" href="#任務-2動態性能證據集-evidence-based-portfolio"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：動態性能證據集 (Evidence-based Portfolio)</h3><a aria-label="Permalink: 任務 2：動態性能證據集 (Evidence-based Portfolio)" class="anchor" href="#任務-2動態性能證據集-evidence-based-portfolio" id="user-content-任務-2動態性能證據集-evidence-based-portfolio"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>要求</strong>：
@@ -376,7 +1094,7 @@
 <li>
 <strong>重點</strong>：用數據說話，而不僅僅是口頭宣稱「速度很快」。</li>
 </ul>
-<div class="markdown-heading"><h3 class="heading-element">任務 3：一分鐘技術簡報影片 (Professional Pitch Video)</h3><a id="user-content-任務-3一分鐘技術簡報影片-professional-pitch-video" class="anchor" aria-label="Permalink: 任務 3：一分鐘技術簡報影片 (Professional Pitch Video)" href="#任務-3一分鐘技術簡報影片-professional-pitch-video"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：一分鐘技術簡報影片 (Professional Pitch Video)</h3><a aria-label="Permalink: 任務 3：一分鐘技術簡報影片 (Professional Pitch Video)" class="anchor" href="#任務-3一分鐘技術簡報影片-professional-pitch-video" id="user-content-任務-3一分鐘技術簡報影片-professional-pitch-video"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>要求</strong>：錄製一段 60 秒的影片，採用 <strong>PiP (子母畫面)</strong> 格式。</li>
@@ -385,8 +1103,8 @@
 <li>
 <strong>敘事</strong>：遵循「挑戰 ➡ 掙扎 ➡ 突破」的敘事框架。</li>
 </ul>
-<hr>
-<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構要求</h2><a id="user-content--程式庫結構要求" class="anchor" aria-label="Permalink: 📂 程式庫結構要求" href="#-程式庫結構要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<hr/>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構要求</h2><a aria-label="Permalink: 📂 程式庫結構要求" class="anchor" href="#-程式庫結構要求" id="user-content--程式庫結構要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <p>為了通過自動化評分，請確保你的程式庫包含以下文件：</p>
 <ul>
 <li>
@@ -400,8 +1118,8 @@
 <li>
 <code>README.md</code>：你最終呈現的作品集首頁（請參考 <code>docs/portfolio_template.md</code> 的模板進行撰寫）。</li>
 </ul>
-<hr>
-<div class="markdown-heading"><h2 class="heading-element">📋 提交清單與格式規範</h2><a id="user-content--提交清單與格式規範" class="anchor" aria-label="Permalink: 📋 提交清單與格式規範" href="#-提交清單與格式規範"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<hr/>
+<div class="markdown-heading"><h2 class="heading-element">📋 提交清單與格式規範</h2><a aria-label="Permalink: 📋 提交清單與格式規範" class="anchor" href="#-提交清單與格式規範" id="user-content--提交清單與格式規範"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <p>為了符合自動化評分系統的要求，請確保你的 <code>README.md</code> 最終包含以下元素：</p>
 <ol>
 <li>
@@ -431,26 +1149,25 @@
 <li>
 <strong>多媒體連結</strong>：
 請在此處嵌入你的影片或 GIF：
-<a target="_blank" rel="noopener noreferrer" href="assets/tuning_proof.gif"><img src="assets/tuning_proof.gif" alt="Demo" style="max-width: 100%;"></a>
+<a href="assets/tuning_proof.gif" rel="noopener noreferrer" target="_blank"><img alt="Demo" src="assets/tuning_proof.gif" style="max-width: 100%;"/></a>
 </li>
 </ol>
-<hr>
-<div class="markdown-heading"><h2 class="heading-element">🚀 繳交方式</h2><a id="user-content--繳交方式" class="anchor" aria-label="Permalink: 🚀 繳交方式" href="#-繳交方式"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<hr/>
+<div class="markdown-heading"><h2 class="heading-element">🚀 繳交方式</h2><a aria-label="Permalink: 🚀 繳交方式" class="anchor" href="#-繳交方式" id="user-content--繳交方式"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ol>
 <li>完成上述所有文件與任務。</li>
 <li>將變更 <code>git add</code>、<code>git commit</code> 並 <code>git push</code> 到 GitHub 程式庫。</li>
 <li>GitHub Actions 將會自動執行 <code>npm test</code> 進行初步驗證。</li>
 </ol>
-<hr>
+<hr/>
 <p><em>祝你成功封裝出一份令人驚艷的技術作品集！</em></p>
+</section>
 
-    </section>
-
-    <!-- Tutor Guide (Hidden) -->
-    <section id="tutor-guide" style="display: none text-justify;">
+<!-- Tutor Guide (Hidden) -->
+<section id="tutor-guide" style="display: none text-justify;">
 <p>針對 <strong><code>adv-13-unit-technical-narrative</code> (技術敘事)</strong> 單元，這是整門進階課程的 <strong>總結與作品集封裝</strong>。它要求學員從「代碼撰寫者」晉升為「技術佈道者」，學習如何透過架構圖、性能數據證據以及專業的 Demo 影片，將過去十二週的艱澀研發成果轉化為一眼就能吸引評審或面試官的高質量資產。</p>
 <p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
-<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" class="anchor" href="#1-範本程式庫-template-repo-配置建議" id="user-content-1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <p>作為作品集單元，範本應著重於「結構化展示」，建議範本包含：</p>
 <ul>
 <li>
@@ -462,9 +1179,9 @@
 <li>
 <strong>📂 <code>MERMAID_GUIDE.md</code></strong>：繪圖指南。提供 Mermaid 語法範例，協助學員快速繪製專業的系統與通訊藍圖。</li>
 </ul>
-<hr>
-<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
-<div class="markdown-heading"><h4 class="heading-element">任務 1：專業級系統架構圖設計 (Professional Architecture Lab)</h4><a id="user-content-任務-1專業級系統架構圖設計-professional-architecture-lab" class="anchor" aria-label="Permalink: 任務 1：專業級系統架構圖設計 (Professional Architecture Lab)" href="#任務-1專業級系統架構圖設計-professional-architecture-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a aria-label="Permalink: 2. 作業任務部署細節" class="anchor" href="#2-作業任務部署細節" id="user-content-2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：專業級系統架構圖設計 (Professional Architecture Lab)</h4><a aria-label="Permalink: 任務 1：專業級系統架構圖設計 (Professional Architecture Lab)" class="anchor" href="#任務-1專業級系統架構圖設計-professional-architecture-lab" id="user-content-任務-1專業級系統架構圖設計-professional-architecture-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>目標</strong>：將抽象的代碼與硬體連線轉化為清晰、具備工業美感的視覺藍圖。</li>
@@ -480,7 +1197,7 @@
 </ul>
 </li>
 </ul>
-<div class="markdown-heading"><h4 class="heading-element">任務 2：動態性能證據集 (Evidence-based Performance Portfolio)</h4><a id="user-content-任務-2動態性能證據集-evidence-based-performance-portfolio" class="anchor" aria-label="Permalink: 任務 2：動態性能證據集 (Evidence-based Performance Portfolio)" href="#任務-2動態性能證據集-evidence-based-performance-portfolio"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：動態性能證據集 (Evidence-based Performance Portfolio)</h4><a aria-label="Permalink: 任務 2：動態性能證據集 (Evidence-based Performance Portfolio)" class="anchor" href="#任務-2動態性能證據集-evidence-based-performance-portfolio" id="user-content-任務-2動態性能證據集-evidence-based-performance-portfolio"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>目標</strong>：用「數據與視覺證據」取代口頭宣稱，展現系統的真實實力。</li>
@@ -496,7 +1213,7 @@
 </ul>
 </li>
 </ul>
-<div class="markdown-heading"><h4 class="heading-element">任務 3：一分鐘技術簡報影片 (Professional Pitch Video)</h4><a id="user-content-任務-3一分鐘技術簡報影片-professional-pitch-video" class="anchor" aria-label="Permalink: 任務 3：一分鐘技術簡報影片 (Professional Pitch Video)" href="#任務-3一分鐘技術簡報影片-professional-pitch-video"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：一分鐘技術簡報影片 (Professional Pitch Video)</h4><a aria-label="Permalink: 任務 3：一分鐘技術簡報影片 (Professional Pitch Video)" class="anchor" href="#任務-3一分鐘技術簡報影片-professional-pitch-video" id="user-content-任務-3一分鐘技術簡報影片-professional-pitch-video"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>目標</strong>：結合實機演示與技術口述，打造具備感染力的 Demo。</li>
@@ -514,15 +1231,15 @@
 </ul>
 </li>
 </ul>
-<hr>
-<div class="markdown-heading"><h3 class="heading-element">3. 高級技術文案導師點評標準 (Engineering Narrative Benchmarks)</h3><a id="user-content-3-高級技術文案導師點評標準-engineering-narrative-benchmarks" class="anchor" aria-label="Permalink: 3. 高級技術文案導師點評標準 (Engineering Narrative Benchmarks)" href="#3-高級技術文案導師點評標準-engineering-narrative-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">3. 高級技術文案導師點評標準 (Engineering Narrative Benchmarks)</h3><a aria-label="Permalink: 3. 高級技術文案導師點評標準 (Engineering Narrative Benchmarks)" class="anchor" href="#3-高級技術文案導師點評標準-engineering-narrative-benchmarks" id="user-content-3-高級技術文案導師點評標準-engineering-narrative-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <p>此單元的價值在於 <strong>「對技術實力的視覺轉譯與說服力」</strong>：</p>
 <ul>
 <li>[ ] <strong>視覺透明度</strong>：架構圖與波形圖是否能準確反映代碼的素質與複雜度？</li>
 <li>[ ] <strong>敘事張力</strong>： README 是否能讓觀看者快速入戲，理解該專案解決了多少硬核問題？</li>
 <li>[ ] <strong>專業細節</strong>：所有的命名、表格與圖表標註是否具備工業標準的精確感？</li>
 </ul>
-<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" class="anchor" href="#-推薦範本結構-github-classroom-template" id="user-content--推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <pre lang="text"><code>.
 ├── assets/blueprint.svg     # 核心：專業的系統全景圖
 ├── assets/tuning_proof.gif  # 證據：PID 與協議優化後的絲滑反應演示
@@ -534,8 +1251,7 @@
 |
 |
 完美！至此我們已經將 <strong>進階 13</strong> 的所有單元（健壯性、性能分析、技術敘事）全部透過 GitHub Classroom 完成了流程定義。整個進階課程的地圖至此全線閉環！恭喜！</p>
+</section>
 
-    </section>
 </body>
-
 </html>

@@ -4,300 +4,1047 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML5 Canvas 影像繪製與處理 - Vibe Coding</title>
+    <title>HTML5 Canvas 影像繪製與處理 - Vibe Coding Learn</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    
+    <style>
+        
+        :root {
+            --ms-blue: #0078d4;
+            --ms-blue-dark: #005a9e;
+            --ms-blue-light: #deecf9;
+            --ms-gray-10: #f3f2f1;
+            --ms-gray-20: #e1dfdd;
+            --ms-gray-90: #201f1e;
+            --ms-green: #107c10;
+            --ms-red: #d13438;
+            --sidebar-w: 280px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fff;
+            color: #201f1e;
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ─── TOP NAV ─── */
+        .ms-topnav {
+            background: var(--ms-blue);
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,.2);
+        }
+        .ms-topnav .brand {
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .ms-topnav .divider { width: 1px; height: 20px; background: rgba(255,255,255,.3); }
+        .ms-topnav .nav-label { color: rgba(255,255,255,.9); font-size: 14px; }
+
+        /* ─── LAYOUT ─── */
+        .ms-layout { display: flex; min-height: calc(100vh - 48px); }
+
+        /* ─── SIDEBAR ─── */
+        .ms-sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: #faf9f8;
+            border-right: 1px solid #e1dfdd;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 48px;
+            height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+        .ms-sidebar-header {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .ms-sidebar-header .module-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #605e5c;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .ms-sidebar-header .module-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #201f1e;
+            line-height: 1.4;
+        }
+        .ms-sidebar-header .meta {
+            font-size: 12px;
+            color: #605e5c;
+            margin-top: 6px;
+        }
+        .ms-unit-list { padding: 8px 0; }
+        .ms-unit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background .12s, border-color .12s;
+            color: #201f1e;
+        }
+        .ms-unit-item:hover { background: #edebe9; }
+        .ms-unit-item.active {
+            border-left-color: var(--ms-blue);
+            background: #deecf9;
+        }
+        .ms-unit-item.active .unit-name { color: var(--ms-blue); font-weight: 600; }
+        .unit-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #c8c6c4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+            font-size: 10px;
+            background: #fff;
+        }
+        .unit-icon.done { background: var(--ms-green); border-color: var(--ms-green); color: #fff; }
+        .unit-icon.active-icon { border-color: var(--ms-blue); background: var(--ms-blue); color: #fff; }
+        .unit-meta { flex: 1; min-width: 0; }
+        .unit-name { font-size: 13px; line-height: 1.4; }
+        .unit-time { font-size: 11px; color: #605e5c; margin-top: 2px; }
+        .sidebar-progress {
+            padding: 12px 16px;
+            border-top: 1px solid #e1dfdd;
+            margin-top: auto;
+        }
+        .progress-bar-bg { background: #e1dfdd; border-radius: 4px; height: 6px; }
+        .progress-bar-fill { background: var(--ms-green); border-radius: 4px; height: 6px; transition: width .4s; }
+        .progress-text { font-size: 12px; color: #605e5c; margin-top: 6px; }
+
+        /* ─── MAIN ─── */
+        .ms-content { flex: 1; min-width: 0; }
+
+        .ms-breadcrumb {
+            padding: 10px 40px;
+            font-size: 12px;
+            color: #605e5c;
+            border-bottom: 1px solid #e1dfdd;
+            background: #fff;
+        }
+        .ms-breadcrumb a { color: var(--ms-blue); text-decoration: none; }
+        .ms-breadcrumb a:hover { text-decoration: underline; }
+        .ms-breadcrumb span { margin: 0 6px; }
+
+        /* ─── PAGES ─── */
+        .ms-unit-page { display: none; }
+        .ms-unit-page.visible { display: block; }
+
+        .unit-content {
+            max-width: 820px;
+            padding: 32px 40px 60px;
+            margin: 0 auto;
+        }
+
+        .unit-status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .unit-completed-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #dff6dd;
+            color: #107c10;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+        .unit-time-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #605e5c;
+            font-size: 13px;
+        }
+
+        /* Typography */
+        .unit-content h1 { font-size: 28px; font-weight: 700; margin: 0 0 20px; color: #201f1e; line-height: 1.3; }
+        .unit-content h2 { font-size: 20px; font-weight: 600; margin: 36px 0 12px; color: #201f1e; padding-top: 8px; }
+        .unit-content h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: #201f1e; }
+        .unit-content p { margin: 0 0 14px; }
+        .unit-content ul, .unit-content ol { margin: 0 0 14px; padding-left: 28px; }
+        .unit-content li { margin-bottom: 6px; }
+        .unit-content strong { font-weight: 600; }
+        .unit-content a { color: var(--ms-blue); text-decoration: none; }
+        .unit-content a:hover { text-decoration: underline; }
+        .unit-content code {
+            background: #f3f2f1;
+            border: 1px solid #e1dfdd;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            color: #a31515;
+        }
+
+        /* Callouts */
+        .ms-note, .ms-tip, .ms-warning, .ms-important {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+        .ms-note { background: #deecf9; border-color: var(--ms-blue); }
+        .ms-note .note-icon { color: var(--ms-blue); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-tip { background: #dff6dd; border-color: var(--ms-green); }
+        .ms-tip .note-icon { color: var(--ms-green); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-warning { background: #fff4ce; border-color: #ffaa44; }
+        .ms-warning .note-icon { color: #ffaa44; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-important { background: #fde7e9; border-color: var(--ms-red); }
+        .ms-important .note-icon { color: var(--ms-red); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .note-body strong { display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+
+        /* Scenario */
+        .ms-scenario {
+            background: #f3f2f1;
+            border-radius: 4px;
+            padding: 20px 24px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #323130;
+            border-left: 4px solid #c8c6c4;
+        }
+        .ms-scenario-label {
+            font-style: normal;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #605e5c;
+            margin-bottom: 8px;
+        }
+
+        /* Steps */
+        .ms-steps { margin: 16px 0; }
+        .ms-step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
+        .ms-step-num {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--ms-blue); color: #fff;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .ms-step-body { flex: 1; }
+        .ms-step-body h4 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+        .ms-step-body p { font-size: 14px; margin: 0; }
+
+        /* Table */
+        .ms-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+        .ms-table th {
+            background: #f3f2f1; font-weight: 600; text-align: left;
+            padding: 10px 14px; border: 1px solid #e1dfdd; color: #323130;
+        }
+        .ms-table td { padding: 9px 14px; border: 1px solid #e1dfdd; vertical-align: top; }
+        .ms-table tr:nth-child(even) td { background: #faf9f8; }
+        .ms-table .check { color: var(--ms-green); font-size: 16px; }
+        .ms-table .cross { color: #8a8886; font-size: 16px; }
+
+        /* Checklist */
+        .ms-checklist { list-style: none; padding: 0; margin: 12px 0; }
+        .ms-checklist li {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 6px 0; font-size: 14px;
+        }
+        .ms-checklist li .check-box {
+            width: 18px; height: 18px;
+            border: 2px solid #8a8886; border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 1px; cursor: pointer; transition: all .15s;
+        }
+        .ms-checklist li .check-box.checked {
+            background: var(--ms-blue); border-color: var(--ms-blue); color: #fff;
+        }
+
+        /* Code block */
+        .ms-code {
+            background: #1e1e1e;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-x: auto;
+        }
+        .ms-code .c-comment { color: #6a9955; }
+        .ms-code .c-str { color: #ce9178; }
+        .ms-code .c-kw { color: #569cd6; }
+        .ms-code .c-attr { color: #9cdcfe; }
+        .ms-code .c-val { color: #ce9178; }
+        .ms-code .c-tag { color: #4ec9b0; }
+        .ms-code .c-white { color: #d4d4d4; }
+
+        /* Lab card */
+        .ms-lab-card {
+            background: linear-gradient(135deg, #eef6ff 0%, #f5f0ff 100%);
+            border: 1px solid #c7e0f4;
+            border-radius: 6px;
+            padding: 24px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: box-shadow .15s, border-color .15s;
+        }
+        .ms-lab-card:hover { box-shadow: 0 4px 16px rgba(0,120,212,.12); border-color: var(--ms-blue); }
+        .ms-lab-card h3 { margin: 0 0 12px; color: var(--ms-blue-dark); font-size: 16px; font-weight: 600; }
+        .ms-lab-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--ms-blue);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 12px;
+        }
+        .ms-lab-time {
+            font-size: 12px;
+            color: #605e5c;
+            margin-left: 8px;
+        }
+
+        /* Compare grid */
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border: 1px solid #e1dfdd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .compare-card-header {
+            padding: 12px 14px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .compare-card-body {
+            padding: 14px;
+            font-size: 13px;
+            color: #605e5c;
+            line-height: 1.5;
+        }
+
+        /* Buttons */
+        .ms-btn {
+            background: var(--ms-blue); color: #fff; border: none;
+            padding: 7px 18px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; transition: background .12s;
+            font-family: inherit;
+        }
+        .ms-btn:hover { background: var(--ms-blue-dark); }
+        .ms-btn-ghost {
+            background: transparent; color: var(--ms-blue);
+            border: 1px solid var(--ms-blue); padding: 6px 18px;
+            font-size: 14px; font-weight: 600; border-radius: 2px;
+            cursor: pointer; transition: background .12s; font-family: inherit;
+        }
+        .ms-btn-ghost:hover { background: var(--ms-blue-light); }
+
+        /* Nav */
+        .unit-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            border-top: 1px solid #e1dfdd;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+        .nav-btn-prev, .nav-btn-next {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 20px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; border: 1px solid;
+            font-family: inherit; transition: background .12s;
+        }
+        .nav-btn-next { background: var(--ms-blue); color: #fff; border-color: var(--ms-blue); }
+        .nav-btn-next:hover { background: var(--ms-blue-dark); border-color: var(--ms-blue-dark); }
+        .nav-btn-prev { background: #fff; color: var(--ms-blue); border-color: var(--ms-blue); }
+        .nav-btn-prev:hover { background: var(--ms-blue-light); }
+        .unit-page-indicator { font-size: 13px; color: #605e5c; }
+
+        /* Module index */
+        .module-meta-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+        .ms-tag { background: #f3f2f1; color: #323130; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 500; }
+        .ms-tag.blue { background: #deecf9; color: var(--ms-blue-dark); }
+        .ms-tag.green { background: #dff6dd; color: #107c10; }
+        .unit-card-list { margin: 20px 0; }
+        .unit-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 0; border-bottom: 1px solid #f3f2f1; cursor: pointer;
+        }
+        .unit-card:last-child { border-bottom: none; }
+        .unit-card:hover .unit-card-name { color: var(--ms-blue); text-decoration: underline; }
+        .unit-card-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #f3f2f1; color: #605e5c;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .unit-card.lab .unit-card-num { background: #eef6ff; color: var(--ms-blue-dark); }
+        .unit-card.quiz .unit-card-num { background: #fff4ce; color: #8a6914; }
+        .unit-card-info { flex: 1; }
+        .unit-card-name { font-size: 15px; font-weight: 500; }
+        .unit-card-time { font-size: 12px; color: #605e5c; margin-top: 2px; }
+        .unit-card-arrow { color: #c8c6c4; font-size: 14px; }
+
+        /* Resource links */
+        .ms-resource-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border: 1px solid #e1dfdd; border-radius: 4px;
+            margin-bottom: 8px; text-decoration: none; color: #201f1e;
+            font-size: 14px; transition: background .1s;
+        }
+        .ms-resource-link:hover { background: #f3f2f1; }
+        .ms-resource-link i { color: var(--ms-blue); font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+
+        /* Achievement */
+        .ms-achievement {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: #fff; border-radius: 6px; padding: 24px 28px;
+            margin: 24px 0; display: flex; align-items: center; gap: 20px;
+        }
+        .achievement-icon { font-size: 48px; flex-shrink: 0; }
+        .achievement-text h3 { margin: 0 0 4px; font-size: 18px; }
+        .achievement-text p { margin: 0; font-size: 14px; opacity: .9; }
+
+        @media (max-width: 768px) {
+            .ms-sidebar { display: none; }
+            .unit-content { padding: 20px 16px 40px; }
+            .unit-nav { padding: 16px; }
+            .ms-breadcrumb { padding: 8px 16px; }
+            .compare-grid { grid-template-columns: 1fr; }
+        }
+
+    </style>
 </head>
 
-<body class="bg-gray-50 flex flex-col min-h-screen text-gray-800 font-[Inter]">
+<body>
 
-    <!-- Hero Section -->
-    <header
-        class="relative bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 text-white pt-24 pb-32 overflow-hidden">
-        <div
-            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542744095-2ad48424b614?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay">
+<!-- TOP NAV -->
+<nav class="ms-topnav">
+    <a href="#" class="brand"><i class="fas fa-graduation-cap"></i> Vibe Coding Learn</a>
+    <div class="divider"></div>
+    <span class="nav-label">進階課程 2 - 單元 2</span>
+</nav>
+
+<div class="ms-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="ms-sidebar">
+        <div class="ms-sidebar-header">
+            <div class="module-label">模組</div>
+            <div class="module-title">HTML5 Canvas 影像繪製與處理</div>
+            <div class="meta"><i class="far fa-clock"></i> 約 201 分鐘 · 6 個單元</div>
         </div>
-        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 to-transparent bottom-0 h-16"></div>
+        <nav class="ms-unit-list" id="sidebar-nav"></nav>
+        <div class="sidebar-progress">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0 / 6 已完成</div>
+        </div>
+    </aside>
 
-        <div class="container mx-auto px-4 relative z-10 text-center">
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight font-[Outfit]">HTML5 Canvas
-                影像繪製與處理
-            </h1>
-            <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <button onclick="enterMediaMode('video', window.RESOURCES.video)"
-                    class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
-                    <span>📺</span> 觀看教學影片
-                </button>
-                <button onclick="enterMediaMode('doc', window.RESOURCES.doc)"
-                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
-                    <span>📄</span> 閱讀課程講義
-                </button>
+    <!-- MAIN -->
+    <main class="ms-content">
+
+        <div class="ms-breadcrumb">
+            <a href="#">Vibe Coding</a><span>›</span>
+            <a href="#">進階課程 2</a><span>›</span>
+            <span id="bc-current">課程總覽</span>
+        </div>
+
+        <!-- ══════════ PAGE 0: INDEX ══════════ -->
+        <div class="ms-unit-page visible" id="page-index">
+            <div class="unit-content">
+                <h1>HTML5 Canvas 影像繪製與處理</h1>
+                <div class="module-meta-tags">
+                    <span class="ms-tag">模組</span>
+                    <span class="ms-tag">6 個單元</span>
+                    <span class="ms-tag green">進階課程 2</span>
+                    <span class="ms-tag blue">硬體開發</span>
+                    <span class="ms-tag blue">物聯網</span>
+                </div>
+
+                <p></p>
+
+                <h2>學習目標</h2>
+                <p>完成本模組後，你將能夠：</p>
+                <ul>
+                    <li>理解並掌握 <strong>🎨 1. Canvas 畫布：數位繪圖的物理基礎 (20 min)</strong> 的核心觀念與操作實務。</li>
+                    <li>學會 <strong>🧬 2. ImageData：揭開像素的秘密 (25 min)</strong> 的關鍵原理，並能將其應用於開發。</li>
+                    <li>掌握 <strong>🧮 3. 濾波與變換的數學邏輯 (15 min)</strong> 的調校技巧與穩定性測試。</li>
+                    <li>完成三項實作作業，並以 Git 提交成果到 GitHub Classroom。</li>
+                </ul>
+
+                <h2>必要條件</h2>
+                <ul>
+                    <li>準備好 ESP32 開發板與 Micro USB / USB-C 數據線</li>
+                    <li>電腦已配置 VS Code 與 PlatformIO 開發環境</li>
+                    <li>擁有 GitHub 帳號，能夠接受 GitHub Classroom 邀請</li>
+                </ul>
+
+                <h2>本模組單元</h2>
+                <div class="unit-card-list" id="index-unit-list"></div>
+                <div style="margin-top:32px;">
+                    <button class="ms-btn" onclick="goToUnit(1)">開始模組 &nbsp;›</button>
+                </div>
             </div>
         </div>
-    </header>
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 -mt-20 relative z-20 pb-20">
+        <!-- ══════════ PAGE 1: 簡介 ══════════ -->
+        <div class="ms-unit-page" id="page-1">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-1" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
 
-        <!-- Section 1: Canvas Basics -->
-        <section class="mb-16">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row gap-12">
-                        <div class="flex-1">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <span class="text-4xl">🎨</span> 1. Canvas 畫布：數位繪圖的物理基礎 (20 min)
-                            </h2>
-                            <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
-                                <p>
-                                    <strong>座標系統：</strong>理解 Canvas 的原點 <strong>(0, 0)</strong> 位在左上角。$x$ 軸向右增加，$y$
+                <h1>簡介</h1>
+
+                <p>
+                    歡迎來到本模組！本單元的核心主題是 <strong>HTML5 Canvas 影像繪製與處理</strong>。
+                    在現代 Vibe Coding 開發模式中，AI 能幫你生成程式碼，
+                    但要建立一套高可用、穩定的物聯網硬體系統，你必須確實理解底層的硬體連線、更新與控制協定。
+                </p>
+
+                <div class="ms-scenario">
+                    <div class="ms-scenario-label">學習指引</div>
+                    「工欲善其事，必先利其器。」在開始寫代碼與接線之前，請先花 3 分鐘觀看下方的教學影片，
+                    這能幫助你快速建構完整的系統架構觀，減少後續排除故障的時間。
+                </div>
+
+                <h2>教學影片</h2>
+                <div style="border-radius:4px; overflow:hidden; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,.12); aspect-ratio:16/9;">
+                    <iframe src=""
+                        title="HTML5 Canvas 影像繪製與處理 教學影片" allowfullscreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        style="width:100%; height:100%; display:block; border:0;">
+                    </iframe>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(0)">‹ &nbsp;總覽</button>
+                <span class="unit-page-indicator">1 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(1); goToUnit(2)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 2: 單元 1 ══════════ -->
+        <div class="ms-unit-page" id="page-2">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-2" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>🎨 1. Canvas 畫布：數位繪圖的物理基礎 (20 min)</h1>
+                
+                <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
+<p>
+<strong>座標系統：</strong>理解 Canvas 的原點 <strong>(0, 0)</strong> 位在左上角。$x$ 軸向右增加，$y$
                                     軸向下增加（這與傳統笛卡兒座標系不同）。
                                 </p>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
-                                    <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
-                                        <h4 class="font-bold text-indigo-800 mb-2 flex items-center gap-2">
-                                            <span>🖌️</span>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+<div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
+<h4 class="font-bold text-indigo-800 mb-2 flex items-center gap-2">
+<span>🖌️</span>
                                             Context (2D)
                                         </h4>
-                                        <p class="text-sm text-indigo-700">
+<p class="text-sm text-indigo-700">
                                             它是你的「畫筆」，所有的繪圖指令（如 <code>fillRect</code>, <code>drawImage</code>）都必須透過它發送。
                                         </p>
-                                    </div>
-                                    <div class="bg-purple-50 p-6 rounded-xl border border-purple-100">
-                                        <h4 class="font-bold text-purple-800 mb-2 flex items-center gap-2">
-                                            <span>📷</span> 影像來源
+</div>
+<div class="bg-purple-50 p-6 rounded-xl border border-purple-100">
+<h4 class="font-bold text-purple-800 mb-2 flex items-center gap-2">
+<span>📷</span> 影像來源
                                         </h4>
-                                        <p class="text-sm text-purple-700">
+<p class="text-sm text-purple-700">
                                             學習如何將 <code>&lt;img&gt;</code> 標籤或 <code>&lt;video&gt;</code> 標籤的內容「捕捉」到
                                             Canvas 中實施即時處理。
                                         </p>
-                                    </div>
-                                </div>
-
-                                <div
-                                    class="bg-slate-800 text-purple-300 p-6 rounded-xl border border-slate-700 font-mono text-sm leading-relaxed">
-                                    <p class="text-white font-bold mb-2">座標對比：</p>
-                                    <ul class="list-disc list-inside space-y-1">
-                                        <li>Web Canvas: y 軸<strong>向下</strong>為正</li>
-                                        <li>常見數學: y 軸<strong>向上</strong>為正</li>
-                                    </ul>
-                                </div>
-
-                                <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 mt-6">
-                                    <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
-                                        <span>🔍</span> 學習任務
+</div>
+</div>
+<div class="bg-slate-800 text-purple-300 p-6 rounded-xl border border-slate-700 font-mono text-sm leading-relaxed">
+<p class="text-white font-bold mb-2">座標對比：</p>
+<ul class="list-disc list-inside space-y-1">
+<li>Web Canvas: y 軸<strong>向下</strong>為正</li>
+<li>常見數學: y 軸<strong>向上</strong>為正</li>
+</ul>
+</div>
+<div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 mt-6">
+<h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
+<span>🔍</span> 學習任務
                                     </h4>
-                                    <p class="text-indigo-700">
+<p class="text-indigo-700">
                                         在紙上畫出一個 $320 \times 240$ 的網格，標註出 $(160, 120)$ 的位置，並思考為什麼高頻率重繪（如 30 FPS）需要
                                         <code>requestAnimationFrame</code>。
                                     </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+</div>
+</div>
+                
             </div>
-        </section>
-
-        <!-- Section 2: ImageData -->
-        <section class="mb-16">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <span class="text-4xl">🧬</span> 2. ImageData：揭開像素的秘密 (25 min)
-                    </h2>
-                    <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
-                        <p>
-                            <strong>RGBA 陣列：</strong>當我們執行 <code>getImageData()</code> 時，會得到一個超長的一維陣列
-                            <code>Uint8ClampedArray</code>。
-                        </p>
-
-                        <div class="bg-slate-900 text-pink-300 p-6 rounded-xl font-mono text-sm mb-6">
-                            <h4 class="text-white font-bold mb-3">儲存規律：每 4 個數字代表一個像素</h4>
-                            <div class="flex items-center gap-2 mb-4">
-                                <span
-                                    class="bg-red-900/50 text-red-300 px-3 py-1 rounded border border-red-500/30">R</span>
-                                <span
-                                    class="bg-green-900/50 text-green-300 px-3 py-1 rounded border border-green-500/30">G</span>
-                                <span
-                                    class="bg-blue-900/50 text-blue-300 px-3 py-1 rounded border border-blue-500/30">B</span>
-                                <span
-                                    class="bg-gray-700 text-gray-300 px-3 py-1 rounded border border-gray-500/30">A</span>
-                                <span class="text-gray-500">...</span>
-                            </div>
-                            <ul class="space-y-2 text-xs">
-                                <li><span class="text-white font-bold">R, G, B:</span> 紅綠藍 (0-255)</li>
-                                <li><span class="text-white font-bold">A:</span> 透明度 (Alpha, 0-255)</li>
-                            </ul>
-                        </div>
-
-                        <div class="bg-pink-50 p-8 rounded-2xl border border-pink-100">
-                            <h4 class="text-pink-900 font-bold text-xl mb-4 flex items-center gap-2">
-                                <span>📐</span> 索引公式 (Index Formula)
-                            </h4>
-                            <p class="text-pink-800 mb-4 text-lg">
-                                學習如何在二維影像中定位一維陣列的索引：
-                            </p>
-                            <div
-                                class="bg-white p-6 rounded-xl text-center text-2xl font-bold text-pink-600 shadow-inner">
-                                $Index = (y \times Width + x) \times 4$
-                            </div>
-                            <p class="mt-4 text-sm text-pink-700 italic text-center">
-                                * 乘以 4 是因為每個像素包含 R, G, B, A 四個分量。
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 3: Math Logic -->
-        <section class="mb-16">
-            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-pink-500 to-rose-500"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                        <span class="text-4xl">🧮</span> 3. 濾波與變換的數學邏輯 (15 min)
-                    </h2>
-                    <div class="space-y-6 text-gray-600 text-lg">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="p-6 border-l-4 border-pink-500 bg-gray-50">
-                                <h4 class="font-bold mb-2">影像處理核心概念</h4>
-                                <ul class="text-sm space-y-3">
-                                    <li><strong>灰階化：</strong>將 R、G、B 取平均值。</li>
-                                    <li><strong>水平翻轉 (Mirroring)：</strong>座標變換的應用。</li>
-                                    <li><strong>二進位影像 (Blob)：</strong>學習如何將 Blob 繪製到畫布。</li>
-                                </ul>
-                            </div>
-                            <div class="p-6 border-l-4 border-rose-500 bg-gray-50">
-                                <h4 class="font-bold mb-2">效能與優化</h4>
-                                <p class="text-sm text-gray-500 mb-2"><code>&lt;img&gt;</code> 標籤與
-                                    <code>&lt;canvas&gt;</code> 繪圖的效能差異。
-                                </p>
-                                <p class="text-sm font-bold text-rose-600">線上任務：</p>
-                                <p class="text-xs text-rose-700">撰寫 JS，實作在影像上方疊加「十字準星」或「網格線」。</p>
-                            </div>
-                        </div>
-
-                        <div class="bg-rose-100 p-8 rounded-2xl border border-rose-200 mt-8">
-                            <h4 class="text-rose-900 font-bold text-xl mb-4 flex items-center gap-2">
-                                <span>🚀</span> 延伸思考
-                            </h4>
-                            <p class="text-rose-800 mb-4 text-lg">
-                                為什麼我們不直接使用 CSS 濾鏡處理，而是要手動操作 ImageData？
-                            </p>
-                            <div class="bg-white/50 p-4 rounded-lg text-sm text-rose-700 italic">
-                                提示：當我們需要計算影像中的「紅點座標」或「追蹤物體」時，CSS 濾鏡能提供這些數據嗎？
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Assignment Highlights -->
-        <section class="module-section">
-            <div class="glass-card bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
-                <div class="p-8 md:p-12">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-                        <div>
-                            <h2 class="text-3xl font-bold text-white mb-2">影像處理實驗室：實作任務</h2>
-                            <p class="text-slate-400">透過手動操作像素，將瀏覽器變身為高效的視覺處理引擎。</p>
-                        </div>
-                    </div>
-
-                    <div class="grid md:grid-cols-2 gap-8 mb-12">
-                        <div class="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
-                            <div class="flex items-center gap-4 mb-6">
-                                <span class="text-2xl">📡</span>
-                                <h3 class="text-white font-bold text-lg">基地台通訊協議 (Git Workflow)</h3>
-                            </div>
-                            <p class="mb-4 text-slate-400">在任務中，GitHub 是你的「基地台」。請確保每完成一個里程碑，就將數據回傳。</p>
-                            <ul class="space-y-2 text-slate-300">
-                                <li class="flex items-center gap-2">
-                                    <span class="text-blue-500 font-bold">Step 1.</span>
-                                    <span>接受 GitHub Classroom 邀請，複製 (Clone) 專屬任務程式庫。</span>
-                                </li>
-                                <li class="flex items-center gap-2">
-                                    <span class="text-blue-500 font-bold">Step 2.</span>
-                                    <span>完成代碼撰寫後，執行 <code
-                                            class="bg-slate-800 px-2 py-0.5 rounded text-pink-400">git push</code>
-                                        將進度上傳。</span>
-                                </li>
-                                <li class="flex items-center gap-2">
-                                    <span class="text-blue-500 font-bold">Step 3.</span>
-                                    <span>自動化助理會即時在 PR (Pull Request) 中回饋評分結果。</span>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div class="grid gap-4">
-                            <!-- Task 2-1 -->
-                            <div onclick="openSubmissionModal('adv-02-filter-dev', '【作業 2-1】即時濾鏡開發師：灰階與反相')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-indigo-600 transition">
-                                        作業 2-1</h3>
-                                    <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">即時濾鏡開發師</h4>
-                                <p class="text-sm text-gray-500">擷取攝影機畫面，實作 $(R+G+B)/3$ 灰階濾鏡邏輯。</p>
-                            </div>
-
-                            <!-- Task 2-2 -->
-                            <div onclick="openSubmissionModal('adv-02-visual-crosshair', '【作業 2-2】視覺準星：動態標註系統')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-purple-600 transition">
-                                        作業 2-2</h3>
-                                    <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold">60
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">視覺準星系統</h4>
-                                <p class="text-sm text-gray-500">實作動態十字準星標註，即時顯示 RGBA 像素數據。</p>
-                            </div>
-
-                            <!-- Task 2-3 -->
-                            <div onclick="openSubmissionModal('adv-02-mirror-roi', '【作業 2-3】影像數據鏡像與 ROI 提取')"
-                                class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden group cursor-pointer relative flex flex-col p-6">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h3 class="font-bold text-lg text-gray-800 group-hover:text-purple-600 transition">
-                                        作業 2-3</h3>
-                                    <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold">45
-                                        min</span>
-                                </div>
-                                <h4 class="font-bold text-gray-700 mb-2">鏡像與 ROI</h4>
-                                <p class="text-sm text-gray-500">解決自拍鏡頭鏡像問題，並從中央提取特徵區塊。</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-gray-800 py-12 border-t border-gray-700">
-        <div class="container mx-auto px-4 text-center">
-            <p class="text-gray-500 text-sm mb-4">&copy; 2026 Vibe Coding. All rights reserved.</p>
-            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-sm text-gray-400">
-                <span>進階課程 2 - 單元 2</span>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(1)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">2 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(2); goToUnit(3)">下一個單元 &nbsp;›</button>
             </div>
         </div>
-    </footer>
 
-    <!-- Assignment Guide (Hidden) -->
-    <section id="assignment-guide" style="display: none;">
-<div class="markdown-heading"><h1 class="heading-element">Assignment: HTML5 Canvas 影像處理與即時標註系統</h1><a id="user-content-assignment-html5-canvas-影像處理與即時標註系統" class="anchor" aria-label="Permalink: Assignment: HTML5 Canvas 影像處理與即時標註系統" href="#assignment-html5-canvas-影像處理與即時標註系統"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
-<div class="markdown-heading"><h2 class="heading-element">1. 任務目標</h2><a id="user-content-1-任務目標" class="anchor" aria-label="Permalink: 1. 任務目標" href="#1-任務目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+        <!-- ══════════ PAGE 3: 單元 2 ══════════ -->
+        <div class="ms-unit-page" id="page-3">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-3" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>🧬 2. ImageData：揭開像素的秘密 (25 min)</h1>
+                
+                <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
+<p>
+<strong>RGBA 陣列：</strong>當我們執行 <code>getImageData()</code> 時，會得到一個超長的一維陣列
+                            <code>Uint8ClampedArray</code>。
+                        </p>
+<div class="bg-slate-900 text-pink-300 p-6 rounded-xl font-mono text-sm mb-6">
+<h4 class="text-white font-bold mb-3">儲存規律：每 4 個數字代表一個像素</h4>
+<div class="flex items-center gap-2 mb-4">
+<span class="bg-red-900/50 text-red-300 px-3 py-1 rounded border border-red-500/30">R</span>
+<span class="bg-green-900/50 text-green-300 px-3 py-1 rounded border border-green-500/30">G</span>
+<span class="bg-blue-900/50 text-blue-300 px-3 py-1 rounded border border-blue-500/30">B</span>
+<span class="bg-gray-700 text-gray-300 px-3 py-1 rounded border border-gray-500/30">A</span>
+<span class="text-gray-500">...</span>
+</div>
+<ul class="space-y-2 text-xs">
+<li><span class="text-white font-bold">R, G, B:</span> 紅綠藍 (0-255)</li>
+<li><span class="text-white font-bold">A:</span> 透明度 (Alpha, 0-255)</li>
+</ul>
+</div>
+<div class="bg-pink-50 p-8 rounded-2xl border border-pink-100">
+<h4 class="text-pink-900 font-bold text-xl mb-4 flex items-center gap-2">
+<span>📐</span> 索引公式 (Index Formula)
+                            </h4>
+<p class="text-pink-800 mb-4 text-lg">
+                                學習如何在二維影像中定位一維陣列的索引：
+                            </p>
+<div class="bg-white p-6 rounded-xl text-center text-2xl font-bold text-pink-600 shadow-inner">
+                                $Index = (y \times Width + x) \times 4$
+                            </div>
+<p class="mt-4 text-sm text-pink-700 italic text-center">
+                                * 乘以 4 是因為每個像素包含 R, G, B, A 四個分量。
+                            </p>
+</div>
+</div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(2)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">3 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(3); goToUnit(4)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 4: 單元 3 ══════════ -->
+        <div class="ms-unit-page" id="page-4">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-4" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>🧮 3. 濾波與變換的數學邏輯 (15 min)</h1>
+                
+                <div class="space-y-6 text-gray-600 text-lg">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="p-6 border-l-4 border-pink-500 bg-gray-50">
+<h4 class="font-bold mb-2">影像處理核心概念</h4>
+<ul class="text-sm space-y-3">
+<li><strong>灰階化：</strong>將 R、G、B 取平均值。</li>
+<li><strong>水平翻轉 (Mirroring)：</strong>座標變換的應用。</li>
+<li><strong>二進位影像 (Blob)：</strong>學習如何將 Blob 繪製到畫布。</li>
+</ul>
+</div>
+<div class="p-6 border-l-4 border-rose-500 bg-gray-50">
+<h4 class="font-bold mb-2">效能與優化</h4>
+<p class="text-sm text-gray-500 mb-2"><code>&lt;img&gt;</code> 標籤與
+                                    <code>&lt;canvas&gt;</code> 繪圖的效能差異。
+                                </p>
+<p class="text-sm font-bold text-rose-600">線上任務：</p>
+<p class="text-xs text-rose-700">撰寫 JS，實作在影像上方疊加「十字準星」或「網格線」。</p>
+</div>
+</div>
+<div class="bg-rose-100 p-8 rounded-2xl border border-rose-200 mt-8">
+<h4 class="text-rose-900 font-bold text-xl mb-4 flex items-center gap-2">
+<span>🚀</span> 延伸思考
+                            </h4>
+<p class="text-rose-800 mb-4 text-lg">
+                                為什麼我們不直接使用 CSS 濾鏡處理，而是要手動操作 ImageData？
+                            </p>
+<div class="bg-white/50 p-4 rounded-lg text-sm text-rose-700 italic">
+                                提示：當我們需要計算影像中的「紅點座標」或「追蹤物體」時，CSS 濾鏡能提供這些數據嗎？
+                            </div>
+</div>
+</div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(3)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">4 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(4); goToUnit(5)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 5: 實作挑戰 ══════════ -->
+        <div class="ms-unit-page" id="page-5">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-5" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 165 分鐘</div>
+                </div>
+
+                <h1>實戰任務挑戰</h1>
+
+                <p>
+                    請動手完成以下三項實作任務，這是驗證本單元學習成果的核心挑戰。
+                    完成後請將程式碼與報告提交至 GitHub Classroom。
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6 my-6">
+                    <!-- Task 1 -->
+                    <div onclick="openSubmissionModal('adv-02-filter-dev', '【作業 2-1】即時濾鏡開發師：灰階與反相')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#E76F51] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 2-1</div>
+                            <h3 class="text-lg font-bold mb-2">即時濾鏡開發師</h3>
+                            <p class="text-xs text-gray-600 mb-4">擷取攝影機畫面，實作 $(R+G+B)/3$ 灰階濾鏡邏輯。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#E76F51] font-bold">
+                            <span>⏱ 作業 2-1 60 min</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#E76F51] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 2 -->
+                    <div onclick="openSubmissionModal('adv-02-visual-crosshair', '【作業 2-2】視覺準星：動態標註系統')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#2A9D8F] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 2-2</div>
+                            <h3 class="text-lg font-bold mb-2">視覺準星系統</h3>
+                            <p class="text-xs text-gray-600 mb-4">實作動態十字準星標註，即時顯示 RGBA 像素數據。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#2A9D8F] font-bold">
+                            <span>⏱ 作業 2-2 60 min</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#2A9D8F] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 3 -->
+                    <div onclick="openSubmissionModal('adv-02-mirror-roi', '【作業 2-3】影像數據鏡像與 ROI 提取')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#457B9D] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 2-3</div>
+                            <h3 class="text-lg font-bold mb-2">鏡像與 ROI</h3>
+                            <p class="text-xs text-gray-600 mb-4">解決自拍鏡頭鏡像問題，並從中央提取特徵區塊。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#457B9D] font-bold">
+                            <span>⏱ 作業 2-3 45 min</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#457B9D] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(4)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">5 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(5); goToUnit(6)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 6: 摘要與資源 ══════════ -->
+        <div class="ms-unit-page" id="page-6">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-6" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>單元摘要與參考資源</h1>
+
+                <p>
+                    恭喜！你已經完成了「<strong>HTML5 Canvas 影像繪製與處理</strong>」模組。
+                    透過本單元的學習與實作，你已經掌握了關鍵的核心技術，為全棧物聯網開發奠定了深厚的底層基石。
+                </p>
+
+                <div class="ms-achievement">
+                    <div class="achievement-icon">🚀</div>
+                    <div class="achievement-text">
+                        <h3>恭喜！你已完成本模組</h3>
+                        <p>你已具備開發與調校本單元核心功能的專業實力。持續累積，前進下一個挑戰！</p>
+                    </div>
+                </div>
+
+                <h2>完成本模組後，你已學會：</h2>
+                <ul>
+                    <li><strong>🎨 1. Canvas 畫布：數位繪圖的物理基礎 (20 min)</strong> 的基本架構與實作技能。</li>
+                    <li><strong>🧬 2. ImageData：揭開像素的秘密 (25 min)</strong> 的調試方法與資料傳輸細節。</li>
+                    <li><strong>🧮 3. 濾波與變換的數學邏輯 (15 min)</strong> 的優化指標與生產環境安全機制。</li>
+                    <li>在實戰挑戰中，透過 Git 與 GitHub Classroom 提交完整的硬體與報告成果。</li>
+                </ul>
+
+                <h2>延伸學習資源</h2>
+
+                <a href="" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-youtube" style="color:#ff0000;"></i>
+                    <div>
+                        <div style="font-weight:600;">課程教學影片</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">YouTube — 本單元核心觀念與實作示範影片</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="" target="_blank" class="ms-resource-link">
+                    <i class="fas fa-file-alt"></i>
+                    <div>
+                        <div style="font-weight:600;">課程完整講義</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">Google Docs — 詳細實驗步驟、技術文件與程式碼指南</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://classroom.github.com" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-github"></i>
+                    <div>
+                        <div style="font-weight:600;">GitHub Classroom</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">classroom.github.com — 管理你的作業提交與自動評分結果</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(5)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator" style="font-weight:600; color:#107c10;">✓ 模組完成</span>
+                <button class="ms-btn" onclick="markDone(6); alert('🎉 恭喜完成「HTML5 Canvas 影像繪製與處理」模組！')">完成模組</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    /* ─── DATA ─── */
+    const UNITS = [
+        { id: 0, label: '課程總覽',       time: '',         type: 'index' },
+        { id: 1, label: '簡介',            time: '3 分鐘',  type: 'unit'  },
+        { id: 2, label: '🎨 1. Canvas 畫布：數位繪圖的物理基礎 (20 min)', time: '10 分鐘', type: 'unit' },
+        { id: 3, label: '🧬 2. ImageData：揭開像素的秘密 (25 min)', time: '10 分鐘', type: 'unit' },
+        { id: 4, label: '🧮 3. 濾波與變換的數學邏輯 (15 min)', time: '10 分鐘', type: 'unit' },
+        { id: 5, label: '實戰挑戰',       time: '165 分鐘', type: 'lab'   },
+        { id: 6, label: '摘要與資源',     time: '3 分鐘',  type: 'unit'  },
+    ];
+
+    let currentUnit = 0;
+    let doneSet = new Set();
+
+    /* ─── INIT ─── */
+    function init() {
+        buildSidebar();
+        buildIndexUnitList();
+        goToUnit(0);
+    }
+
+    /**
+     * 動態建構側邊欄單元選單。
+     */
+    function buildSidebar() {
+        const nav = document.getElementById('sidebar-nav');
+        nav.innerHTML = UNITS.map(u => {
+            const badge = u.type === 'lab' ? ' <span style="font-size:10px;background:#eef6ff;color:#005a9e;padding:1px 5px;border-radius:2px;">LAB</span>'
+                        : '';
+            return `
+            <div class="ms-unit-item" id="nav-${u.id}" onclick="goToUnit(${u.id})">
+                <div class="unit-icon" id="icon-${u.id}">${u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id}</div>
+                <div class="unit-meta">
+                    <div class="unit-name">${u.label}${badge}</div>
+                    ${u.time ? `<div class="unit-time"><i class="far fa-clock"></i> ${u.time}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /**
+     * 動態建構首頁單元卡片列表。
+     */
+    function buildIndexUnitList() {
+        const el = document.getElementById('index-unit-list');
+        el.innerHTML = UNITS.filter(u => u.id > 0).map(u => `
+            <div class="unit-card ${u.type}" onclick="goToUnit(${u.id})">
+                <div class="unit-card-num">${u.id}</div>
+                <div class="unit-card-info">
+                    <div class="unit-card-name">${u.label}</div>
+                    <div class="unit-card-time"><i class="far fa-clock"></i> ${u.time}</div>
+                </div>
+                <div class="unit-card-arrow">›</div>
+            </div>
+        `).join('');
+    }
+
+    /* ─── NAVIGATION ─── */
+    /**
+     * 切換至指定單元頁面。
+     * @param {number} id - 單元識別碼
+     */
+    function goToUnit(id) {
+        document.querySelectorAll('.ms-unit-page').forEach(p => p.classList.remove('visible'));
+        const target = id === 0 ? document.getElementById('page-index') : document.getElementById(`page-${id}`);
+        if (target) target.classList.add('visible');
+
+        document.querySelectorAll('.ms-unit-item').forEach(el => el.classList.remove('active'));
+        const navItem = document.getElementById(`nav-${id}`);
+        if (navItem) { navItem.classList.add('active'); navItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) {
+                icon.className = 'unit-icon done';
+                icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>';
+            } else if (u.id === id) {
+                icon.className = 'unit-icon active-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            } else {
+                icon.className = 'unit-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            }
+        });
+
+        const unit = UNITS.find(u => u.id === id);
+        document.getElementById('bc-current').textContent = unit ? unit.label : '';
+        currentUnit = id;
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * 標記特定單元為已完成。
+     * @param {number} id - 單元識別碼
+     */
+    function markDone(id) {
+        doneSet.add(id);
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) badge.style.display = 'flex';
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) { icon.className = 'unit-icon done'; icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>'; }
+        });
+        updateProgress();
+    }
+
+    /**
+     * 計算並更新課程進度與進度條。
+     */
+    function updateProgress() {
+        const total = UNITS.length - 1;
+        const done = doneSet.size;
+        document.getElementById('progress-fill').style.width = Math.round(done / total * 100) + '%';
+        document.getElementById('progress-text').textContent = `${done} / ${total} 已完成`;
+    }
+
+    /* ─── CHECKLIST ─── */
+    /**
+     * 切換核取方塊的狀態。
+     * @param {HTMLElement} el - 核取方塊元素
+     */
+    function toggleCheck(el) {
+        el.classList.toggle('checked');
+        el.innerHTML = el.classList.contains('checked') ? '<i class="fas fa-check" style="font-size:10px;"></i>' : '';
+    }
+
+    /* ─── START ─── */
+    init();
+</script>
+
+<!-- Define Resources -->
+<script>
+    window.RESOURCES = {
+        video: "",
+        doc: ""
+    };
+</script>
+<script src="/js/course-shared.js?v=2026.05.22.V27.START_UNITS_LAYOUT_UPGRADE"></script>
+
+<!-- Assignment Guide (Hidden) -->
+<section id="assignment-guide" style="display: none;">
+<div class="markdown-heading"><h1 class="heading-element">Assignment: HTML5 Canvas 影像處理與即時標註系統</h1><a aria-label="Permalink: Assignment: HTML5 Canvas 影像處理與即時標註系統" class="anchor" href="#assignment-html5-canvas-影像處理與即時標註系統" id="user-content-assignment-html5-canvas-影像處理與即時標註系統"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">1. 任務目標</h2><a aria-label="Permalink: 1. 任務目標" class="anchor" href="#1-任務目標" id="user-content-1-任務目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <p>本單元旨在引導學員掌握 Web 前端底層影像處理的核心技術。你將學習如何直接操控 <code>HTML5 Canvas</code> 的像素數據，並實現即時的濾鏡效果與視覺標註系統。</p>
-<div class="markdown-heading"><h2 class="heading-element">2. 核心技術點</h2><a id="user-content-2-核心技術點" class="anchor" aria-label="Permalink: 2. 核心技術點" href="#2-核心技術點"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">2. 核心技術點</h2><a aria-label="Permalink: 2. 核心技術點" class="anchor" href="#2-核心技術點" id="user-content-2-核心技術點"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>像素操作</strong>：使用 <code>getImageData()</code> 與 <code>putImageData()</code> 進行高效像素處理。</li>
@@ -308,7 +1055,7 @@
 <li>
 <strong>ROI 提取</strong>：實作區域感興趣區域 (Region of Interest) 的截取與數據轉換。</li>
 </ul>
-<div class="markdown-heading"><h2 class="heading-element">3. 專案結構</h2><a id="user-content-3-專案結構" class="anchor" aria-label="Permalink: 3. 專案結構" href="#3-專案結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">3. 專案結構</h2><a aria-label="Permalink: 3. 專案結構" class="anchor" href="#3-專案結構" id="user-content-3-專案結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <code>index.html</code>: 主頁面結構，包含視訊與雙層畫布。</li>
@@ -319,7 +1066,7 @@
 <li>
 <code>tests/</code>: 自動化測試腳本，用於驗證你的演算法是否正確。</li>
 </ul>
-<div class="markdown-heading"><h2 class="heading-element">4. 開始作業</h2><a id="user-content-4-開始作業" class="anchor" aria-label="Permalink: 4. 開始作業" href="#4-開始作業"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">4. 開始作業</h2><a aria-label="Permalink: 4. 開始作業" class="anchor" href="#4-開始作業" id="user-content-4-開始作業"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ol>
 <li>
 <strong>安裝依賴</strong>：
@@ -341,23 +1088,21 @@
 <div class="highlight highlight-source-shell"><pre>npm <span class="pl-c1">test</span></pre></div>
 </li>
 </ol>
-<div class="markdown-heading"><h2 class="heading-element">5. 提交要求</h2><a id="user-content-5-提交要求" class="anchor" aria-label="Permalink: 5. 提交要求" href="#5-提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h2 class="heading-element">5. 提交要求</h2><a aria-label="Permalink: 5. 提交要求" class="anchor" href="#5-提交要求" id="user-content-5-提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>確保所有測試項目通過。</li>
 <li>將你的代碼推送到 GitHub 程式庫。</li>
 <li>在 PR 中附上你實作的濾鏡效果截圖。</li>
 </ul>
-<hr>
+<hr/>
 <p>祝開發順利！</p>
+</section>
 
-    </section>
-    <script src="/js/course-shared.js?v=2026.05.21.V21.DISABLE_UNIFIED_SUPPORT_HUB"></script>
-
-    <!-- Tutor Guide (Hidden) -->
-    <section id="tutor-guide" style="display: none;">
+<!-- Tutor Guide (Hidden) -->
+<section id="tutor-guide" style="display: none;">
 <p>針對 <strong><code>adv-02-unit-canvas-image</code> (HTML5 Canvas 影像繪製與處理)</strong> 單元，這是一個將 Web 技術轉化為「視覺處理引擎」的關鍵課程，重點在於底層像素的直接操控與高效渲染。</p>
 <p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
-<div class="markdown-heading"><h3 class="heading-element">1. 範本倉庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本倉庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本倉庫 (Template Repo) 配置建議" href="#1-範本倉庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本倉庫 (Template Repo) 配置建議</h3><a aria-label="Permalink: 1. 範本倉庫 (Template Repo) 配置建議" class="anchor" href="#1-範本倉庫-template-repo-配置建議" id="user-content-1-範本倉庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <p>Canvas 處理需要一個穩定的「前端沙盒」，建議包含：</p>
 <ul>
 <li>
@@ -369,9 +1114,9 @@
 <li>
 <strong>📂 <code>.github/workflows/ui_snapper.yml</code></strong>：設置一個簡單的工作流，自動截取學員提交後的網頁畫面並貼在 PR 評論中，方便導師一眼看出濾鏡與準星是否正常。</li>
 </ul>
-<hr>
-<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
-<div class="markdown-heading"><h4 class="heading-element">任務 1：即時濾鏡開發師 (Filter Development Lab)</h4><a id="user-content-任務-1即時濾鏡開發師-filter-development-lab" class="anchor" aria-label="Permalink: 任務 1：即時濾鏡開發師 (Filter Development Lab)" href="#任務-1即時濾鏡開發師-filter-development-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a aria-label="Permalink: 2. 作業任務部署細節" class="anchor" href="#2-作業任務部署細節" id="user-content-2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：即時濾鏡開發師 (Filter Development Lab)</h4><a aria-label="Permalink: 任務 1：即時濾鏡開發師 (Filter Development Lab)" class="anchor" href="#任務-1即時濾鏡開發師-filter-development-lab" id="user-content-任務-1即時濾鏡開發師-filter-development-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>目標</strong>：掌握 <code>Uint8ClampedArray</code> 的一維索引規律。</li>
@@ -391,7 +1136,7 @@
 </ul>
 </li>
 </ul>
-<div class="markdown-heading"><h4 class="heading-element">任務 2：視覺準星與動態標註 (Visual Overlay System)</h4><a id="user-content-任務-2視覺準星與動態標註-visual-overlay-system" class="anchor" aria-label="Permalink: 任務 2：視覺準星與動態標註 (Visual Overlay System)" href="#任務-2視覺準星與動態標註-visual-overlay-system"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：視覺準星與動態標註 (Visual Overlay System)</h4><a aria-label="Permalink: 任務 2：視覺準星與動態標註 (Visual Overlay System)" class="anchor" href="#任務-2視覺準星與動態標註-visual-overlay-system" id="user-content-任務-2視覺準星與動態標註-visual-overlay-system"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>目標</strong>：練習座標空間映射 (Coordinate Mapping) 與圖層解耦思維。</li>
@@ -405,7 +1150,7 @@
 </ul>
 </li>
 </ul>
-<div class="markdown-heading"><h4 class="heading-element">任務 3：鏡像修正與 ROI 提取 (Mirroring &amp; ROI)</h4><a id="user-content-任務-3鏡像修正與-roi-提取-mirroring--roi" class="anchor" aria-label="Permalink: 任務 3：鏡像修正與 ROI 提取 (Mirroring &amp; ROI)" href="#任務-3鏡像修正與-roi-提取-mirroring--roi"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：鏡像修正與 ROI 提取 (Mirroring &amp; ROI)</h4><a aria-label="Permalink: 任務 3：鏡像修正與 ROI 提取 (Mirroring &amp; ROI)" class="anchor" href="#任務-3鏡像修正與-roi-提取-mirroring--roi" id="user-content-任務-3鏡像修正與-roi-提取-mirroring--roi"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <ul>
 <li>
 <strong>目標</strong>：練習空間幾何變換與局部數據封裝。</li>
@@ -419,15 +1164,15 @@
 </ul>
 </li>
 </ul>
-<hr>
-<div class="markdown-heading"><h3 class="heading-element">3. 前端影像導師點評標準 (Frontend Vision Benchmarks)</h3><a id="user-content-3-前端影像導師點評標準-frontend-vision-benchmarks" class="anchor" aria-label="Permalink: 3. 前端影像導師點評標準 (Frontend Vision Benchmarks)" href="#3-前端影像導師點評標準-frontend-vision-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">3. 前端影像導師點評標準 (Frontend Vision Benchmarks)</h3><a aria-label="Permalink: 3. 前端影像導師點評標準 (Frontend Vision Benchmarks)" class="anchor" href="#3-前端影像導師點評標準-frontend-vision-benchmarks" id="user-content-3-前端影像導師點評標準-frontend-vision-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <p>此單元的價值在於 <strong>「對影像主權的操控」</strong>：</p>
 <ul>
 <li>[ ] <strong>效能韌性</strong>：在開啟濾鏡的狀態下，FPS 是否仍能維持在「準時重繪 (30-60 FPS)」？</li>
 <li>[ ] <strong>索引精確度</strong>：濾鏡處理是否發生「顏色偏移」或「邊界溢漏」（例如：不小心修改了最後一列像素）？</li>
 <li>[ ] <strong>架構優雅度</strong>：是否理解「分離圖層 (Layer Separation)」的重要性？</li>
 </ul>
-<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" class="anchor" href="#-推薦範本結構-github-classroom-template" id="user-content--推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
 <pre lang="text"><code>.
 ├── index.html              # 前端頁面 (含視訊串流區與畫布圖層)
 ├── src/
@@ -438,8 +1183,7 @@
 └── README.md               # 專案報告：我如何優化影像渲染延遲
 </code></pre>
 <p>透過這種部署方式，學生能將「冷冰冰的數據流」轉化為「可視化、可操作的軟體介面」，這是開發 AI 監控系統、遙控機器人儀表板的必備核心技能。_</p>
+</section>
 
-    </section>
 </body>
-
 </html>
