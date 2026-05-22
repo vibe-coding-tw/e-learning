@@ -14,12 +14,191 @@ window.__courseSharedLoaded = true;
 function init() {
     console.log("[CourseShared] Initializing...");
     applyHideTabsPreference();
+    upgradeLegacyStartUnitToMsLayout();
     applyStartUnitModernTheme();
     injectMediaOverlay();
     initAnimations();
     enhanceAssignmentEntryButtons();
     initFirebaseFeatures(); // [NEW] Start Firebase (Tracking + Assignments)
     initGithubReadme(); // [V8.2] Fetch and render GitHub README if applicable
+}
+
+function upgradeLegacyStartUnitToMsLayout() {
+    try {
+        const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
+        if (!/^start-\d{2}-unit-.*\.html$/.test(file)) return;
+        if (document.querySelector('.ms-layout')) return;
+
+        const legacyMain = document.querySelector('main');
+        const legacySections = legacyMain ? Array.from(legacyMain.querySelectorAll('.module-section')) : [];
+        if (!legacyMain || legacySections.length === 0) return;
+
+        const pageTitle = (document.querySelector('header h1')?.textContent || document.title || '課程單元').trim();
+        const pageSubtitle = (document.querySelector('header p')?.textContent || '').trim();
+
+        const topNav = document.createElement('nav');
+        topNav.className = 'ms-topnav';
+        topNav.innerHTML = `
+            <a href="#" class="brand"><i class="fas fa-graduation-cap"></i> Vibe Coding Learn</a>
+            <div class="divider"></div>
+            <span class="nav-label">開發者課程</span>
+        `;
+
+        const layout = document.createElement('div');
+        layout.className = 'ms-layout';
+
+        const sidebar = document.createElement('aside');
+        sidebar.className = 'ms-sidebar';
+        sidebar.innerHTML = `
+            <div class="ms-sidebar-header">
+                <div class="module-label">模組</div>
+                <div class="module-title"></div>
+                <div class="meta"><i class="far fa-clock"></i> 約 45 分鐘 · ${legacySections.length + 1} 個單元</div>
+            </div>
+            <nav class="ms-unit-list" id="sidebar-nav"></nav>
+            <div class="sidebar-progress">
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+                <div class="progress-text" id="progress-text">0 / ${legacySections.length} 已完成</div>
+            </div>
+        `;
+        sidebar.querySelector('.module-title').textContent = pageTitle;
+
+        const content = document.createElement('main');
+        content.className = 'ms-content';
+        content.innerHTML = `
+            <div class="ms-breadcrumb">
+                <a href="#">Vibe Coding</a><span>›</span>
+                <a href="#">入門課程</a><span>›</span>
+                <span id="bc-current">課程總覽</span>
+            </div>
+        `;
+
+        const pageIndex = document.createElement('div');
+        pageIndex.className = 'ms-unit-page visible';
+        pageIndex.id = 'page-index';
+        pageIndex.innerHTML = `
+            <div class="unit-content">
+                <h1>${pageTitle}</h1>
+                ${pageSubtitle ? `<p>${pageSubtitle}</p>` : ''}
+                <h2>本單元內容</h2>
+                <div class="unit-card-list" id="index-unit-list"></div>
+                <div style="margin-top:32px;">
+                    <button class="ms-btn" onclick="goToUnit(1)">開始單元 &nbsp;›</button>
+                </div>
+            </div>
+        `;
+        content.appendChild(pageIndex);
+
+        const unitTitles = [];
+        legacySections.forEach((section, idx) => {
+            const pageNo = idx + 1;
+            const title = (section.querySelector('.section-header-left h2')?.textContent || section.querySelector('h2')?.textContent || `單元 ${pageNo}`).trim();
+            unitTitles.push(title);
+            const page = document.createElement('div');
+            page.className = 'ms-unit-page';
+            page.id = `page-${pageNo}`;
+
+            const contentWrap = document.createElement('div');
+            contentWrap.className = 'unit-content';
+            contentWrap.innerHTML = `<h1>${title}</h1>`;
+
+            const sectionBody = section.querySelector('.p-8, .p-6, .p-10') || section;
+            const cloned = sectionBody.cloneNode(true);
+            // Remove header blocks from legacy card to avoid duplicate big titles.
+            cloned.querySelectorAll('.section-header-left').forEach(el => el.remove());
+            contentWrap.appendChild(cloned);
+
+            const nav = document.createElement('div');
+            nav.className = 'unit-nav';
+            const prevTarget = pageNo === 1 ? 0 : pageNo - 1;
+            const nextTarget = pageNo === legacySections.length ? 0 : pageNo + 1;
+            nav.innerHTML = `
+                <button class="nav-btn-prev" onclick="goToUnit(${prevTarget})">‹ &nbsp;${pageNo === 1 ? '總覽' : '上一個單元'}</button>
+                <span class="unit-page-indicator">${pageNo} / ${legacySections.length}</span>
+                <button class="nav-btn-next" onclick="markDone(${pageNo}); goToUnit(${nextTarget})">${pageNo === legacySections.length ? '返回總覽' : '下一個單元'} &nbsp;›</button>
+            `;
+
+            page.appendChild(contentWrap);
+            page.appendChild(nav);
+            content.appendChild(page);
+        });
+
+        layout.appendChild(sidebar);
+        layout.appendChild(content);
+
+        // Replace body content with the upgraded layout.
+        document.body.innerHTML = '';
+        document.body.appendChild(topNav);
+        document.body.appendChild(layout);
+
+        const sideNav = document.getElementById('sidebar-nav');
+        const indexList = document.getElementById('index-unit-list');
+        unitTitles.forEach((title, i) => {
+            const unitNo = i + 1;
+            const sideItem = document.createElement('div');
+            sideItem.className = 'ms-unit-item';
+            sideItem.dataset.unit = String(unitNo);
+            sideItem.innerHTML = `
+                <div class="unit-icon">${unitNo}</div>
+                <div class="unit-meta">
+                    <div class="unit-name">${title}</div>
+                </div>
+            `;
+            sideItem.addEventListener('click', () => window.goToUnit(unitNo));
+            sideNav.appendChild(sideItem);
+
+            const indexItem = document.createElement('div');
+            indexItem.className = 'unit-card';
+            indexItem.innerHTML = `
+                <div class="unit-card-num">${unitNo}</div>
+                <div class="unit-card-info"><div class="unit-card-name">${title}</div></div>
+                <div class="unit-card-arrow">›</div>
+            `;
+            indexItem.addEventListener('click', () => window.goToUnit(unitNo));
+            indexList.appendChild(indexItem);
+        });
+
+        window.__startUnitDone = new Set();
+        window.markDone = function (unitNo) {
+            if (!unitNo || unitNo < 1) return;
+            window.__startUnitDone.add(unitNo);
+            refreshStartUnitUiState();
+        };
+        window.goToUnit = function (unitNo) {
+            const allPages = Array.from(document.querySelectorAll('.ms-unit-page'));
+            allPages.forEach(p => p.classList.remove('visible'));
+            const target = unitNo === 0 ? document.getElementById('page-index') : document.getElementById(`page-${unitNo}`);
+            if (target) target.classList.add('visible');
+
+            document.querySelectorAll('.ms-unit-item').forEach(it => {
+                const n = Number(it.dataset.unit);
+                it.classList.toggle('active', n === unitNo);
+                const icon = it.querySelector('.unit-icon');
+                if (!icon) return;
+                icon.classList.toggle('active-icon', n === unitNo);
+                icon.classList.toggle('done', window.__startUnitDone.has(n));
+                icon.innerHTML = window.__startUnitDone.has(n) ? '<i class="fas fa-check"></i>' : String(n);
+            });
+
+            const bc = document.getElementById('bc-current');
+            if (bc) bc.textContent = unitNo === 0 ? '課程總覽' : (unitTitles[unitNo - 1] || '單元');
+            refreshStartUnitUiState();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        function refreshStartUnitUiState() {
+            const doneCount = window.__startUnitDone.size;
+            const total = unitTitles.length;
+            const fill = document.getElementById('progress-fill');
+            const txt = document.getElementById('progress-text');
+            if (fill) fill.style.width = `${Math.round((doneCount / Math.max(total, 1)) * 100)}%`;
+            if (txt) txt.textContent = `${doneCount} / ${total} 已完成`;
+        }
+
+        window.goToUnit(0);
+    } catch (e) {
+        console.warn('[CourseShared] upgradeLegacyStartUnitToMsLayout failed:', e);
+    }
 }
 
 function applyStartUnitModernTheme() {
