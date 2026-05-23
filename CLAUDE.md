@@ -39,10 +39,11 @@ scripts/            # Classroom 同步 shell 腳本
 
 | 類別 | 變數 |
 |------|------|
-| 金流 | `ECPAY_MERCHANT_ID`、`ECPAY_HASH_KEY`、`ECPAY_HASH_IV`、`ECPAY_API_URL` |
+| 金流 | `ECPAY_MERCHANT_ID`、`ECPAY_HASH_KEY`、`ECPAY_HASH_IV`、`ECPAY_API_URL`、`ECPAY_LOGISTICS_MAP_URL` |
 | 郵件 | `MAIL_USER`、`MAIL_PASS` |
 | 站點 | `APP_BASE_URL`（預設 `https://vibe-coding.tw`）、`ADMIN_EMAIL` |
 | GitHub | `GITHUB_WEBHOOK_SECRET` |
+| 物流查詢 | `ECPAY_LOGISTICS_QUERY_URL`（選填） |
 
 ## 關鍵文件
 
