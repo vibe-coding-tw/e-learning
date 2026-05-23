@@ -85,7 +85,7 @@ This reflects:
 
 ## 8) How to Update Monthly
 
-1. Update `docs/examples/valuation-scenarios.csv` assumptions.
+1. Update `docs/investor/valuation-scenarios.csv` assumptions.
 2. Recompute revenue and valuation columns.
 3. Update this markdown summary with latest numbers.
 4. Keep one frozen copy per month for investor/audit traceability.
