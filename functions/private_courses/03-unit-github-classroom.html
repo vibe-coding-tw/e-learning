@@ -453,8 +453,14 @@
                     <div class="ms-step">
                         <div class="ms-step-num">2</div>
                         <div class="ms-step-body">
-                            <h4>Clone Repository</h4>
-                            <p>在 Repository 頁面點擊 <strong>Code ▾</strong>，複製 HTTPS 網址，在終端機執行 <code>git clone 網址</code>；或直接用 <kbd>.</kbd> 在 github.dev 開啟，或啟動 Codespaces。</p>
+                            <h4>Clone Repository 或啟動 Codespaces</h4>
+                            <p>將作業檔案下載到本地或啟動雲端開發環境。我們強烈建議使用 <strong>GitHub Codespaces</strong> 作為預設環境：</p>
+                            <ul style="margin: 6px 0 0; padding-left: 20px; font-size: 13px; color: #605e5c; list-style-type: disc;">
+                                <li><strong>什麼是 Codespaces？</strong> 它是一個運行在雲端的虛擬開發環境，預裝了完整的開發工具與執行環境（如 Node.js、Git），省去繁瑣的本機設定。</li>
+                                <li><strong>啟動方式：</strong> 進入作業 Repository 首頁，點擊右側的綠色 <strong>Code ▾</strong> 按鈕 &rarr; 切換至 <strong>Codespaces</strong> 頁籤 &rarr; 點擊 <strong>Create codespace on main</strong>。</li>
+                                <li><strong>卡點排除：</strong> 若顯示「You need to accept organization invite」或無法載入，請確認是否已接受組織邀請。請前往 <code>github.com/orgs/vibe-coding-classroom/invitation</code> 接受邀請後重試。</li>
+                                <li><strong>終端機操作：</strong> 開啟雲端 IDE 後，使用快捷鍵 <kbd>Ctrl + `</kbd>（Mac: <kbd>Cmd + `</kbd>）打開 Terminal。即可直接執行 <code>npm install</code> 來安裝相依套件。</li>
+                            </ul>
                         </div>
                     </div>
                     <div class="ms-step">
@@ -528,18 +534,23 @@
                 </div>
 
                 <h2>Commit 訊息格式</h2>
-                <p>我們採用以下標籤規範，幫助導師（和未來的你）快速理解每一筆 commit 的性質：</p>
+                <p>在與 AI 協作的 Vibe Coding 開發模式中，好的 commit 訊息應該清楚區分<strong>人類決策與 AI 的產出</strong>。我們將 Vibe 標籤與業界的認意式提交（Conventional Commits）規範結合，格式如下：</p>
 
                 <div class="ms-code">
-                    <span class="lang-label">commit message 範例</span>
-                    <div><span class="c-comment"># AI 生成的程式碼（直接使用）</span></div>
-                    <div><span class="c-str">[AI-Generated]</span> <span class="c-white">實作 BLE 連線基礎邏輯</span></div>
-                    <div style="margin-top:8px;"><span class="c-comment"># 你理解後手動修正的部分</span></div>
-                    <div><span class="c-fn">[Human-Modified]</span> <span class="c-white">修正 MTU 限制下的分段傳輸 Bug</span></div>
-                    <div style="margin-top:8px;"><span class="c-comment"># 通過測試驗證後的里程碑</span></div>
-                    <div><span class="c-teal">[Review-Only]</span> <span class="c-white">完成單元測試驗證，所有測試通過</span></div>
-                    <div style="margin-top:8px;"><span class="c-comment"># 修正 AI 的錯誤（最有價值的 commit！）</span></div>
-                    <div><span class="c-prompt">[AI-Fixed]</span> <span class="c-white">糾正 AI 生成的邊界條件錯誤：陣列超界問題</span></div>
+                    <span class="lang-label">Vibe Coding 提交格式規範</span>
+                    <div><span class="c-comment"># 格式：[Vibe 標籤] &lt;類型&gt;(&lt;範疇&gt;): &lt;簡短描述&gt;</span></div>
+                    
+                    <div style="margin-top:8px;"><span class="c-comment"># 1. AI 生成的程式碼（未作邏輯修改）</span></div>
+                    <div><span class="c-str">[AI-Generated]</span> <span class="c-kw">feat(ble):</span> <span class="c-white">實作 BLE 連線基礎邏輯</span></div>
+                    
+                    <div style="margin-top:8px;"><span class="c-comment"># 2. 人類理解後，手動微調或重構部分</span></div>
+                    <div><span class="c-fn">[Human-Modified]</span> <span class="c-kw">fix(ble):</span> <span class="c-white">修正 MTU 限制下的分段傳輸 Bug</span></div>
+                    
+                    <div style="margin-top:8px;"><span class="c-comment"># 3. 人類主導的測試或單元驗證通過</span></div>
+                    <div><span class="c-teal">[Review-Only]</span> <span class="c-kw">test(core):</span> <span class="c-white">完成單元測試驗證，所有測試通過</span></div>
+                    
+                    <div style="margin-top:8px;"><span class="c-comment"># 4. 修正 AI 生成的錯誤（非常有價值的思考足跡）</span></div>
+                    <div><span class="c-prompt">[AI-Fixed]</span> <span class="c-kw">fix(core):</span> <span class="c-white">糾正 AI 生成的邊界條件錯誤：陣列超界問題</span></div>
                 </div>
 
                 <h2>為什麼這樣做？</h2>
@@ -646,13 +657,64 @@
                     <li>問題位置：<code>wifi_module.py</code> 第 42 行</li>
                 </ul>
 
-                <div class="ms-note">
+                <div class="ms-tip" style="margin-top: 24px;">
+                    <i class="fas fa-lightbulb note-icon"></i>
+                    <div class="note-body">
+                        <strong>提升效率技巧：先在本地執行測試！</strong><br>
+                        每次 <code>git push</code> 觸發的雲端 Autograding 需要 1 到 2 分鐘的啟動時間。
+                        為了加快除錯效率，建議你<strong>先在 Codespaces 本地 Terminal 執行 <code>npm test</code> 進行快速驗證</strong>。
+                        當本地測試亮起綠燈後再 <code>git push</code>，這樣既省時又能確保一次通過！
+                    </div>
+                </div>
+
+                <h2>二、Feedback PR：與導師對話的專屬空間</h2>
+                <p>
+                    自動評分（Autograding）幫你把關程式的正確性，而 <strong>Feedback Pull Request (Feedback PR)</strong> 則是導師與你進行思維對話、程式審查（Code Review）的專屬空間。
+                </p>
+                
+                <div class="ms-scenario" style="font-style: normal; border-left-color: var(--ms-blue); margin: 20px 0;">
+                    <div class="ms-scenario-label" style="color: var(--ms-blue-dark); font-size: 11px;">什麼是 Feedback PR？</div>
+                    當你接受 GitHub Classroom 作業時，系統會自動在背景建立一個名為 <strong>Feedback</strong> 的 Pull Request（從 <code>feedback</code> 分支到 <code>main</code> 主分支）。
+                    <ul style="margin: 8px 0 0; padding-left: 20px; font-size: 13px; color: #323130; list-style-type: disc;">
+                        <li><strong>不需進行 Merge：</strong> 這個 PR 是用來留下評論和代碼審查的，請勿點擊「Merge pull request」關閉它。</li>
+                        <li><strong>代碼差異瀏覽：</strong> 當你點進該 PR 的 <strong>Files changed</strong> 分頁時，能一目了然看見你修改的程式碼與原始範本的具體差異。</li>
+                    </ul>
+                </div>
+
+                <h2>三、實戰 Code Review：Inline Comment</h2>
+                <p>
+                    Code Review 是軟體工程師的核心技能之一。在 Feedback PR 中，不只導師會給你意見，你也應該對自己的程式碼進行反思與備註。
+                </p>
+                
+                <div class="ms-steps" style="margin: 20px 0;">
+                    <div class="ms-step" style="margin-bottom: 14px;">
+                        <div class="ms-step-num" style="width: 22px; height: 22px; font-size: 11px;">1</div>
+                        <div class="ms-step-body" style="font-size: 13px;">
+                            <strong>進入 Files changed 頁籤</strong>：進入你的作業 PR，點擊上方分頁中的 <strong>Files changed</strong>。
+                        </div>
+                    </div>
+                    <div class="ms-step" style="margin-bottom: 14px;">
+                        <div class="ms-step-num" style="width: 22px; height: 22px; font-size: 11px;">2</div>
+                        <div class="ms-step-body" style="font-size: 13px;">
+                            <strong>撰寫單行註解 (Inline Comment)</strong>：將滑鼠游標移至要討論的程式碼行數旁，點選藍色的 <strong><code>+</code></strong> 按鈕，即可在該行下方直接輸入評論。
+                        </div>
+                    </div>
+                    <div class="ms-step" style="margin-bottom: 14px;">
+                        <div class="ms-step-num" style="width: 22px; height: 22px; font-size: 11px;">3</div>
+                        <div class="ms-step-body" style="font-size: 13px;">
+                            <strong>取得評論永久連結 (Permalink)</strong>：評論提交後，點選評論區塊右上角的 <strong><code>...</code></strong> 按鈕 &rarr; 選擇 <strong>Copy link</strong>。這可以用來作為作業的提交佐證！
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ms-note" style="margin-top: 24px;">
                     <i class="fas fa-info-circle note-icon"></i>
                     <div class="note-body">
-                        <strong>測試失敗不是失敗</strong>
-                        在工程實務中，測試失敗是開發流程的一部分，不是終點。
-                        重要的是你能讀懂錯誤訊息，找到問題，並修正它。
-                        這個「紅燈 → 修正 → 綠燈」的循環，正是 TDD（測試驅動開發）的核心精神。
+                        <strong>怎樣是高品質的 Inline Comment？</strong>
+                        不要只寫「我完成了」或「已修正」。優質的 Review 內容應包含：<br>
+                        ① 說明這段程式碼的<strong>關鍵作用</strong>（Why this solution?）。<br>
+                        ② 說明你在這裡<strong>發現的 AI 幻覺或 Bug 點</strong>，以及你是如何導正它的。<br>
+                        ③ 提供具體的效能或安全性考量（如：防呆、邊界保護）。
                     </div>
                 </div>
             </div>
