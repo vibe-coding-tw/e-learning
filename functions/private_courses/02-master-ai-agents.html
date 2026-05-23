@@ -1180,9 +1180,20 @@
             if (pct >= 80) { doneSet.add(7); updateProgress(); }
         }
 
+        function getInitialUnitFromQuery() {
+            const params = new URLSearchParams(window.location.search);
+            const tab = (params.get('tab') || '').toLowerCase();
+            const map = {
+                mode: 2,
+                web: 3,
+                vibe: 4
+            };
+            return Object.prototype.hasOwnProperty.call(map, tab) ? map[tab] : 0;
+        }
+
         /* ---- Init ---- */
         buildSidebar();
-        goToUnit(0);
+        goToUnit(getInitialUnitFromQuery());
     </script>
 
 </body>
