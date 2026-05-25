@@ -26,6 +26,8 @@ function init() {
 
 function ensureGlobalNavOnCoursePage() {
     try {
+        // If this course page is inside a master-page iframe, keep only the parent nav.
+        if (window.self !== window.top) return;
         const path = window.location.pathname || '';
         if (!path.startsWith('/courses/')) return;
         if (document.getElementById('main-nav')) return;
