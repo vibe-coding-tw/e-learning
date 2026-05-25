@@ -79,13 +79,14 @@
 
         function resolveEntryUrl(lesson = {}, fallbackUrl = '') {
             const pickFile = (value = '') => String(value || '').split('/').pop().split('?')[0];
+            // Keep master-page entry for started catalog so unit tabs remain visible.
+            if (lesson.classroomUrl && /\.html(?:$|\?)/i.test(lesson.classroomUrl)) {
+                const file = pickFile(lesson.classroomUrl);
+                if (file) return `/courses/${file}`;
+            }
             if (lesson.entryUnitId) return `/courses/${lesson.entryUnitId}`;
             if (lesson.contentRef) {
                 const file = pickFile(lesson.contentRef);
-                if (file) return `/courses/${file}`;
-            }
-            if (lesson.classroomUrl && /\.html(?:$|\?)/i.test(lesson.classroomUrl)) {
-                const file = pickFile(lesson.classroomUrl);
                 if (file) return `/courses/${file}`;
             }
             return lesson.classroomUrl || fallbackUrl || '';
