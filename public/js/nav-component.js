@@ -347,14 +347,13 @@ function injectDashboardFAB() {
     const path = decodeURIComponent(window.location.pathname);
     const filename = path.split('/').pop();
 
-    const isCourseUnit = filename.includes('unit-') || filename.includes('master-');
+    const isCourseUnit = filename.includes('unit-');
     if (!isCourseUnit) return;
 
     let courseParam = '';
     if (filename) {
         let idPrefix = null;
         if (filename.includes('-unit')) { idPrefix = filename.split('-unit')[0]; }
-        else if (filename.includes('-master')) { idPrefix = filename.split('-master')[0]; }
         else {
             const match = filename.match(/^([a-zA-Z0-9]+-\d+|\d+)-/);
             if (match) idPrefix = match[1];
