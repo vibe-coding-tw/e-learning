@@ -14,6 +14,35 @@ const { getFirestore } = require('firebase-admin/firestore');
 const app = initializeApp({ projectId: 'e-learning-942f7' });
 const db = getFirestore(app);
 
+function buildContentRef(entryUnitId) {
+  const file = String(entryUnitId || '').replace(/\.html$/i, '');
+  if (!file) return '';
+  if (/^start-\d{2}-unit-/.test(file)) return `courses/zh-TW/${file.replace(/^start-\d{2}-unit-/, 'tw-car-starter-')}.html`;
+  if (/^basic-\d{2}-unit-/.test(file)) return `courses/zh-TW/${file.replace(/^basic-\d{2}-unit-/, 'tw-car-basic-')}.html`;
+  if (/^(adv|advanced)-\d{2}-unit-/.test(file)) return `courses/zh-TW/${file.replace(/^(adv|advanced)-\d{2}-unit-/, 'tw-car-advanced-')}.html`;
+  if (/^\d{2}-unit-/.test(file)) return `courses/zh-TW/${file.replace(/^\d{2}-unit-/, 'tw-common-')}.html`;
+  return `courses/zh-TW/${file}.html`;
+}
+
+function withEntryMetadata(course) {
+  const firstUnit = Array.isArray(course.courseUnits) && course.courseUnits.length > 0 ? course.courseUnits[0] : '';
+  const resolvedEntryUnitId = course.entryUnitId || firstUnit;
+  return {
+    ...course,
+    courseKey: course.courseKey || String(course.courseId || '').replace(/\.html$/i, '').toLowerCase(),
+    track: course.track || (String(course.courseId || '').startsWith('start-') || String(course.courseId || '').startsWith('basic-') || String(course.courseId || '').startsWith('adv-') ? 'car' : 'common'),
+    level: course.level || (
+      String(course.courseId || '').startsWith('start-') ? 'starter' :
+      String(course.courseId || '').startsWith('basic-') ? 'basic' :
+      String(course.courseId || '').startsWith('adv-') ? 'advanced' :
+      'common'
+    ),
+    entryUnitId: resolvedEntryUnitId,
+    contentRef: course.contentRef || buildContentRef(resolvedEntryUnitId),
+    classroomUrl: resolvedEntryUnitId ? `/courses/${resolvedEntryUnitId}` : (course.classroomUrl || ''),
+  };
+}
+
 // metadata_lessons 種子資料
 // courseId 需與各頁面的 data-course-id 一致
 // 渲染所需欄位：courseId, title, price, category, courseUnits, orderWeight,
@@ -22,81 +51,97 @@ const courses = [
   // ─── prepare ───
   {
     id: 'prepare-01-identity',
-    courseId: 'master-identity-free',
+    courseId: '01-master-getting-started.html',
+    courseKey: 'tw-common-getting-started',
     title: '開發者身分 (Developer Identity)',
     lessonLabel: '準備課程 01', icon: '🆔', tagText: '免費', duration: '30 分鐘',
     price: 0, category: 'prepare',
-    courseUnits: ['prepare-01-developer-identity.html'],
+    courseUnits: ['01-unit-developer-identity.html', '01-unit-vscode-online.html', '01-unit-vscode-setup.html'],
+    entryUnitId: '01-unit-developer-identity.html',
     coreContent: ['GitHub 帳號建立', '個人 Profile 設定', 'SSH Key 設定'],
     orderWeight: 1, isPhysical: false,
   },
   {
     id: 'prepare-02-vscode-online',
-    courseId: 'master-online-free',
+    courseId: '01-master-getting-started.html',
+    courseKey: 'tw-common-getting-started',
     title: 'VS Code Online',
     lessonLabel: '準備課程 02', icon: '🌐', tagText: '免費', duration: '20 分鐘',
     price: 0, category: 'prepare',
-    courseUnits: ['prepare-02-vscode-online.html'],
+    courseUnits: ['01-unit-developer-identity.html', '01-unit-vscode-online.html', '01-unit-vscode-setup.html'],
+    entryUnitId: '01-unit-vscode-online.html',
     coreContent: ['GitHub Codespaces 啟用', '線上編輯器操作', '即開即用開發環境'],
     orderWeight: 2, isPhysical: false,
   },
   {
     id: 'prepare-03-vscode-setup',
-    courseId: 'master-vscode-free',
+    courseId: '01-master-getting-started.html',
+    courseKey: 'tw-common-getting-started',
     title: '開發環境 (VS Code Setup)',
     lessonLabel: '準備課程 03', icon: '💻', tagText: '免費', duration: '40 分鐘',
     price: 0, category: 'prepare',
-    courseUnits: ['prepare-03-vscode-setup.html'],
+    courseUnits: ['01-unit-developer-identity.html', '01-unit-vscode-online.html', '01-unit-vscode-setup.html'],
+    entryUnitId: '01-unit-vscode-setup.html',
     coreContent: ['VS Code 安裝與設定', '常用擴充套件', 'Terminal 基本操作'],
     orderWeight: 3, isPhysical: false,
   },
   {
     id: 'prepare-04-agent-mode',
-    courseId: 'prepare-04.html',
+    courseId: '02-master-ai-agents.html',
+    courseKey: 'tw-common-ai-agents',
     title: 'AI Agent 模式實務',
     lessonLabel: '準備課程 04', icon: '🤖', tagText: '免費', duration: '35 分鐘',
     price: 0, category: 'prepare',
-    courseUnits: ['prepare-04-agent-mode.html'],
+    courseUnits: ['02-unit-agent-mode.html', '02-unit-vibe-coding.html', '02-unit-web-agents.html'],
+    entryUnitId: '02-unit-agent-mode.html',
     coreContent: ['Cursor Agent Mode', 'AI 輔助程式開發', '提示工程基礎'],
     orderWeight: 4, isPhysical: false,
   },
   {
     id: 'prepare-05-vibe-coding',
-    courseId: 'prepare-05.html',
+    courseId: '02-master-ai-agents.html',
+    courseKey: 'tw-common-ai-agents',
     title: 'Vibe Coding 實戰',
     lessonLabel: '準備課程 05', icon: '🎵', tagText: '免費', duration: '45 分鐘',
     price: 0, category: 'prepare',
-    courseUnits: ['prepare-05-vibe-coding.html'],
+    courseUnits: ['02-unit-agent-mode.html', '02-unit-vibe-coding.html', '02-unit-web-agents.html'],
+    entryUnitId: '02-unit-vibe-coding.html',
     coreContent: ['Vibe Coding 方法論', '快速原型開發', 'AI 驅動開發流程'],
     orderWeight: 5, isPhysical: false,
   },
   {
     id: 'prepare-06-web-agents',
-    courseId: 'prepare-06.html',
+    courseId: '02-master-ai-agents.html',
+    courseKey: 'tw-common-ai-agents',
     title: '網頁版 AI 代理人實務',
     lessonLabel: '準備課程 06', icon: '🌍', tagText: '免費', duration: '30 分鐘',
     price: 0, category: 'prepare',
-    courseUnits: ['prepare-06-web-agents.html'],
+    courseUnits: ['02-unit-agent-mode.html', '02-unit-vibe-coding.html', '02-unit-web-agents.html'],
+    entryUnitId: '02-unit-web-agents.html',
     coreContent: ['ChatGPT / Claude 實務', '網頁版 AI 工具比較', '提示工程進階技巧'],
     orderWeight: 6, isPhysical: false,
   },
   {
     id: 'prepare-07-github-classroom',
-    courseId: 'github-classroom-free',
+    courseId: '03-master-wifi-motor.html',
+    courseKey: 'tw-common-wifi-motor',
     title: 'GitHub Classroom & Vibe Coding 實務',
     lessonLabel: '準備課程 07', icon: '📚', tagText: '免費', duration: '25 分鐘',
     price: 0, category: 'prepare',
-    courseUnits: ['prepare-07-github-classroom.html'],
+    courseUnits: ['03-unit-github-classroom.html', '03-unit-motor-ramping.html', '03-unit-wifi-setup.html'],
+    entryUnitId: '03-unit-github-classroom.html',
     coreContent: ['GitHub Classroom 加入流程', '作業繳交方式', '自動評分系統'],
     orderWeight: 7, isPhysical: false,
   },
   {
     id: 'prepare-08-09-wifi-motor',
-    courseId: 'cvhofqxc',
+    courseId: '03-master-wifi-motor.html',
+    courseKey: 'tw-common-wifi-motor',
     title: 'WiFi 組態 & 馬達 Ramping',
     lessonLabel: '準備課程 08-09', icon: '📡', tagText: '免費', duration: '50 分鐘',
     price: 0, category: 'prepare',
-    courseUnits: ['prepare-08-motor-ramping.html', 'prepare-09-wifi-setup.html'],
+    courseUnits: ['03-unit-github-classroom.html', '03-unit-motor-ramping.html', '03-unit-wifi-setup.html'],
+    entryUnitId: '03-unit-wifi-setup.html',
     coreContent: ['ESP32 WiFi 連線設定', '馬達 Ramping 控制', '硬體初始化流程'],
     orderWeight: 8, isPhysical: false,
   },
@@ -107,10 +152,11 @@ const courses = [
     courseId: 'start-01-master-web-app.html',
     title: 'Web App 基礎開發',
     lessonLabel: '入門 01', icon: '📱', tagText: '入門', duration: '2 小時',
-    price: 990, category: 'start',
+    price: 990, category: 'started',
     courseUnits: ['start-01-unit-html5-basics.html', 'start-01-unit-flexbox-layout.html', 'start-01-unit-ui-ux-standards.html'],
     coreContent: ['HTML5 基礎結構', 'Flexbox 版面佈局', 'UI/UX 設計標準'],
-    classroomUrl: '/courses/start-01-master-web-app.html',
+    courseKey: 'tw-car-starter-web-app',
+    entryUnitId: 'start-01-unit-flexbox-layout.html',
     orderWeight: 10, isPhysical: false,
   },
   {
@@ -118,10 +164,11 @@ const courses = [
     courseId: 'start-02-master-web-ble.html',
     title: 'Web BLE 藍牙整合',
     lessonLabel: '入門 02', icon: '📶', tagText: '入門', duration: '2.5 小時',
-    price: 990, category: 'start',
+    price: 990, category: 'started',
     courseUnits: ['start-02-unit-ble-async.html', 'start-02-unit-ble-security.html', 'start-02-unit-typed-arrays.html'],
     coreContent: ['BLE 非同步連線', 'BLE 安全機制', 'TypedArray 資料處理'],
-    classroomUrl: '/courses/start-02-master-web-ble.html',
+    courseKey: 'tw-car-starter-web-ble',
+    entryUnitId: 'start-02-unit-ble-async.html',
     orderWeight: 11, isPhysical: false,
   },
   {
@@ -129,10 +176,11 @@ const courses = [
     courseId: 'start-03-master-remote-control.html',
     title: '遙控器介面實作',
     lessonLabel: '入門 03', icon: '🎮', tagText: '入門', duration: '2 小時',
-    price: 990, category: 'start',
+    price: 990, category: 'started',
     courseUnits: ['start-03-unit-control-panel.html', 'start-03-unit-data-json.html', 'start-03-unit-flow-logic.html'],
     coreContent: ['控制面板設計', 'JSON 資料交換', '流程邏輯設計'],
-    classroomUrl: '/courses/start-03-master-remote-control.html',
+    courseKey: 'tw-car-starter-remote-control',
+    entryUnitId: 'start-03-unit-control-panel.html',
     orderWeight: 12, isPhysical: false,
   },
   {
@@ -140,10 +188,11 @@ const courses = [
     courseId: 'start-04-master-touch-events.html',
     title: '觸控事件處理',
     lessonLabel: '入門 04', icon: '👆', tagText: '入門', duration: '2 小時',
-    price: 990, category: 'start',
+    price: 990, category: 'started',
     courseUnits: ['start-04-unit-touch-basics.html', 'start-04-unit-prevent-default.html', 'start-04-unit-long-press.html'],
     coreContent: ['觸控基礎事件', 'preventDefault 應用', '長按事件實作'],
-    classroomUrl: '/courses/start-04-master-touch-events.html',
+    courseKey: 'tw-car-starter-touch-events',
+    entryUnitId: 'start-04-unit-long-press.html',
     orderWeight: 13, isPhysical: false,
   },
   {
@@ -151,10 +200,11 @@ const courses = [
     courseId: 'start-05-master-joystick-lab.html',
     title: '搖桿實驗室',
     lessonLabel: '入門 05', icon: '🕹️', tagText: '入門', duration: '2.5 小時',
-    price: 990, category: 'start',
+    price: 990, category: 'started',
     courseUnits: ['start-05-unit-canvas-joystick.html', 'start-05-unit-joystick-math.html', 'start-05-unit-touch-vs-mouse.html'],
     coreContent: ['Canvas 搖桿繪製', '搖桿數學運算', '觸控與滑鼠相容'],
-    classroomUrl: '/courses/start-05-master-joystick-lab.html',
+    courseKey: 'tw-car-starter-joystick-lab',
+    entryUnitId: 'start-05-unit-canvas-joystick.html',
     orderWeight: 14, isPhysical: false,
   },
 
@@ -445,7 +495,8 @@ async function seed() {
   console.log('🌱 開始寫入種子資料到本地 Firestore 模擬器...\n');
 
   for (const course of courses) {
-    const { id, ...data } = course;
+    const normalizedCourse = withEntryMetadata(course);
+    const { id, ...data } = normalizedCourse;
     await db.collection('metadata_lessons').doc(id).set(data);
     console.log(`  ✅ ${id} (courseId: ${data.courseId})`);
   }
