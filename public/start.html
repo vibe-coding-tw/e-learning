@@ -180,9 +180,10 @@
             const container = document.getElementById('lesson-container');
             if (!container) return;
 
-            const targetLessons = filterCategory === 'all'
+            const normalizedFilterCategory = filterCategory === 'start' ? 'started' : filterCategory;
+            const targetLessons = normalizedFilterCategory === 'all'
                 ? lessons
-                : lessons.filter(item => item.category === filterCategory);
+                : lessons.filter(item => item.category === normalizedFilterCategory);
 
             if (targetLessons.length === 0) {
                 container.innerHTML = `<p class="text-center text-gray-500 w-full col-span-3 py-12">目前此分類尚無課程。</p>`;
@@ -260,7 +261,7 @@
 
         vibeFetchLessons()
             .then(data => {
-                renderLessons(data, 'start');
+                renderLessons(data, 'started');
             })
             .catch(error => console.error('資料讀取失敗:', error));
 
