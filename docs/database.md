@@ -65,10 +65,15 @@
 | `category` | string | 課程類別（如 `prepare`, `start`, `basic`, `advanced`）。 |
 | `isPhysical` | boolean | 是否為實體商品。 |
 | `orderWeight` | number | 排序權重。 |
+| `metadataType` | string | 元資料類型：`course` / `product` / `legacy_product`。 |
+| `productId` | string | 商品識別碼（商品型 metadata 使用）。 |
+| `hiddenFromCatalog` | boolean | 是否從課程/商品列表隱藏（保留歷史資料時使用）。 |
+| `isDeprecated` | boolean | 是否為已廢止舊資料（保留對帳/歷史用途）。 |
 
 > 重要：課程授權判斷（包含免費課程 `price=0`）以 `metadata_lessons` 為唯一來源（Source of Truth）。
 > 不再依賴硬編碼單元白名單。
 > 所有執行期資料比對（包含邀請連結、課程授權、單元歸屬）都必須直接查 Firestore，禁止使用程式碼內相容名單或 fallback 白名單。
+> `metadata_lessons` 可同時承載課程與部分商品 metadata。判斷時請以 `metadataType`/`isPhysical` 區分用途，不可假設所有 `courseId` 都是課程頁檔名。
 >
 > 2026-05-16 更新：
 > - `ai-agents-vibe.courseUnits` 已切換為 `02-unit-agent-mode.html`, `02-unit-web-agents.html`, `02-unit-vibe-coding.html`
