@@ -462,16 +462,7 @@ function isRenderableUnitFile(fileName) {
 function normalizeTutorAdminUnitId(unitId) {
     const raw = String(unitId || '').trim();
     if (!raw) return raw;
-    if (raw === '02-unit-classroom-workflow.html') return 'prepare-07-github-classroom.html';
-    if (raw === '03-unit-github-classroom.html') return 'prepare-07-github-classroom.html';
-    if (raw === '03-unit-wifi-setup.html') return 'prepare-09-wifi-setup.html';
-    if (raw === '03-unit-motor-ramping.html') return 'prepare-08-motor-ramping.html';
-    if (raw === '01-unit-developer-identity.html') return 'prepare-01-developer-identity.html';
-    if (raw === '01-unit-vscode-online.html') return 'prepare-02-vscode-online.html';
-    if (raw === '01-unit-vscode-setup.html') return 'prepare-03-vscode-setup.html';
-    if (raw === '02-unit-agent-mode.html') return 'prepare-04-agent-mode.html';
-    if (raw === '02-unit-vibe-coding.html') return 'prepare-05-vibe-coding.html';
-    if (raw === '02-unit-web-agents.html') return 'prepare-06-web-agents.html';
+    if (raw === '02-unit-classroom-workflow.html') return '03-unit-github-classroom.html';
     if (raw.startsWith('04-')) return raw.replace(/^04-/, '02-');
     return raw;
 }
@@ -479,8 +470,7 @@ function normalizeTutorAdminUnitId(unitId) {
 function shouldHideTutorAdminUnit(unitId) {
     const normalized = normalizeTutorAdminUnitId(unitId);
     return normalized === '02-unit-vibe-coding-intro.html' ||
-        normalized === '02-unit-teacher-matrix.html' ||
-        normalized === 'prepare-05-vibe-coding.html'; // 舊 vibe-coding-intro 對應
+        normalized === '02-unit-teacher-matrix.html';
 }
 
 function normalizeTutorIdentifier(value) {
@@ -1133,18 +1123,14 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
         // 2. Definition of "Prepare" units (準備課程)
         const prepareCids = [
-            'github-classroom-free',
-            'prepare-04-agent-mode.html',
-            'prepare-05-vibe-coding.html',
-            'prepare-06-web-agents.html',
-            'cvhofqxc'              // WiFi & Motor
+            '01-master-getting-started.html',
+            '02-master-ai-agents.html',
+            '03-master-wifi-motor.html'
         ];
         const prepareTitles = {
-            'github-classroom-free': 'GitHub Classroom & Vibe Coding 實務',
-            'prepare-04-agent-mode.html': 'AI Agent 模式實務',
-            'prepare-05-vibe-coding.html': 'Vibe Coding 實戰',
-            'prepare-06-web-agents.html': '網頁版 AI 代理人實務',
-            'cvhofqxc': 'WiFi 組態設定'
+            '01-master-getting-started.html': '準備課程：開發者工具與 VS Code',
+            '02-master-ai-agents.html': '準備課程：AI Agent 與 Vibe Coding',
+            '03-master-wifi-motor.html': '準備課程：GitHub Classroom、WiFi 與馬達'
         };
         
         // Combine into "Always Show" list
