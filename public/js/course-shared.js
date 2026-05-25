@@ -1961,6 +1961,7 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
     const pathParts = window.location.pathname.split('/');
     const fileName = pathParts[pathParts.length - 1];
     const courseId = await findCourseIdByUnit(fileName);
+    const normalizeLooseKey = (value = "") => String(value || "").split('/').pop().split('?')[0].replace('.html', '').toLowerCase();
     let classroomUrl = null;
     let assignmentAccess = null;
     let shouldUseDirectClassroomLink = false;
@@ -2034,8 +2035,16 @@ window.openSubmissionModal = async function (assignmentId, title, options = {}) 
                 // Search all courses for this filename key
                 if (globalLessonsData) {
                     for (const course of globalLessonsData) {
-                        if (course.githubClassroomUrls && course.githubClassroomUrls[fileName]) {
-                            classroomUrl = resolveClassroomUrl(course.githubClassroomUrls[fileName]);
+                        const classroomUrls = course.githubClassroomUrls || {};
+                        if (classroomUrls[fileName]) {
+                            classroomUrl = resolveClassroomUrl(classroomUrls[fileName]);
+                            break;
+                        }
+
+                        const requestedKey = normalizeLooseKey(fileName);
+                        const matchedEntry = Object.entries(classroomUrls).find(([key]) => normalizeLooseKey(key) === requestedKey);
+                        if (matchedEntry && matchedEntry[1]) {
+                            classroomUrl = resolveClassroomUrl(matchedEntry[1]);
                             break;
                         }
                     }
@@ -2297,9 +2306,23 @@ async function findCourseIdByUnit(fileName) {
             console.log("[CourseShared] globalLessonsData empty, fetching...");
             globalLessonsData = await vibeFetchLessons();
         }
+
+        const normalizeLooseKey = (value = "") => String(value || "").split('/').pop().split('?')[0].replace('.html', '').toLowerCase();
+        const targetKey = normalizeLooseKey(fileName);
         
         if (globalLessonsData && Array.isArray(globalLessonsData)) {
-            const course = globalLessonsData.find(c => c.courseUnits && c.courseUnits.includes(fileName));
+            const course = globalLessonsData.find(c => {
+                const candidateKeys = new Set([
+                    normalizeLooseKey(c.courseId),
+                    normalizeLooseKey(c.courseKey),
+                    normalizeLooseKey(c.entryUnitId),
+                    normalizeLooseKey(c.classroomUrl),
+                    normalizeLooseKey(c.contentRef)
+                ].filter(Boolean));
+
+                (Array.isArray(c.courseUnits) ? c.courseUnits : []).forEach(unitId => candidateKeys.add(normalizeLooseKey(unitId)));
+                return candidateKeys.has(targetKey);
+            });
             if (course) {
                 console.log(`[CourseShared] Resolved ${fileName} -> ${course.courseId}`);
                 return course.courseId;
@@ -2312,11 +2335,8 @@ async function findCourseIdByUnit(fileName) {
     } catch (e) {
         console.error("[CourseShared] Error in findCourseIdByUnit:", e);
     }
-    
-    // Fallback logic
-    const fallbackId = fileName.startsWith('prepare-') ? 'prepare'
-        : (fileName.split('-')[0] + "-master");
-    console.log(`[CourseShared] Fallback resolution for ${fileName} -> ${fallbackId}`);
-    return fallbackId;
+
+    console.warn(`[CourseShared] Fallback resolution failed for ${fileName}; returning original key.`);
+    return fileName;
 }
 } // end window.__courseSharedLoaded guard

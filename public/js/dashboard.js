@@ -2949,6 +2949,11 @@ window.aggregateData = window.aggregateData || function(data) {
 }
 
 window.findCourseId = window.findCourseId || function(key) {
+    if (!key) return key;
+
+    const normalizeLooseKey = (value = "") => String(value || "").split('/').pop().split('?')[0].replace('.html', '').toLowerCase();
+    const cleanKey = normalizeLooseKey(key);
+
     // 1. Exact match in loaded lessons
     const exact = allLessons.find(l => l.courseId === key);
     if (exact) return key;
@@ -2956,33 +2961,18 @@ window.findCourseId = window.findCourseId || function(key) {
     // 2. Exact match in lessonsMap (keys are courseIds)
     if (lessonsMap[key]) return key;
 
-    // 3. Prefix match / Filename match
-    // key might be "02-unit-html5-basics.html" or "basic-01-unit..."
-    // lesson.classroomUrl might be ".../02-master-web-app.html"
-
-    // Sanitize key: remove .html
-    const cleanKey = key.replace('.html', '');
-
+    // 3. Match against courseId/courseKey/entryUnitId/courseUnits/classroomUrl
     for (const l of allLessons) {
-        if (!l.classroomUrl) continue;
+        const candidateKeys = new Set([
+            normalizeLooseKey(l.courseId),
+            normalizeLooseKey(l.courseKey),
+            normalizeLooseKey(l.entryUnitId),
+            normalizeLooseKey(l.classroomUrl)
+        ].filter(Boolean));
 
-        // Extract filename from lesson URL and clean it
-        const lessonFile = l.classroomUrl.split('/').pop().replace('.html', '');
+        (Array.isArray(l.courseUnits) ? l.courseUnits : []).forEach(unitId => candidateKeys.add(normalizeLooseKey(unitId)));
 
-        // Matches if:
-        // A. Key starts with lessonFile prefix (very specific)
-        // B. Key and LessonFile share a common "course code" prefix (e.g. "02-", "basic-01-")
-
-        // Try code prefix matching
-        // Patterns: "XX-", "basic-XX-"
-        // Extract prefix from Lesson File:
-        // "00-master..." -> "00-"
-        // "basic-01-master..." -> "basic-01-"
-
-        const masterMatch = lessonFile.match(/^([a-zA-Z0-9]+-\d+-|[0-9]+-)/);
-        const prefix = masterMatch ? masterMatch[0] : null;
-
-        if (prefix && cleanKey.startsWith(prefix)) {
+        if (candidateKeys.has(cleanKey)) {
             return l.courseId;
         }
     }
@@ -3097,11 +3087,10 @@ async function renderSettingsTab(filterUnitId = null) {
         const unitToDataMap = new Map();
 
         authorizedLessons.forEach(course => {
-            const units = Array.isArray(course.courseUnits) ? [...course.courseUnits] : [];
-            const masterFile = (course.classroomUrl || "").split('/').pop().split('?')[0];
-            if (masterFile && !units.includes(masterFile)) {
-                units.unshift(masterFile);
-            }
+            const units = Array.from(new Set([
+                ...(Array.isArray(course.courseUnits) ? course.courseUnits : []),
+                course.entryUnitId || ''
+            ].filter(Boolean)));
 
             const guideConfig = getCourseGuideConfig(course.courseId);
             const guideData = robustExtractGuideSegments(guideConfig.tutorGuide, guideConfig.assignmentGuide);

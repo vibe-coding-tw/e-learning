@@ -858,6 +858,20 @@
             await signOut(auth);
         }
 
+        function resolveEntryUrl(lesson = {}, fallbackUrl = '') {
+            const pickFile = (value = '') => String(value || '').split('/').pop().split('?')[0];
+            if (lesson.entryUnitId) return `/courses/${lesson.entryUnitId}`;
+            if (lesson.contentRef) {
+                const file = pickFile(lesson.contentRef);
+                if (file) return `/courses/${file}`;
+            }
+            if (lesson.classroomUrl && /\.html(?:$|\?)/i.test(lesson.classroomUrl)) {
+                const file = pickFile(lesson.classroomUrl);
+                if (file) return `/courses/${file}`;
+            }
+            return lesson.classroomUrl || fallbackUrl || '';
+        }
+
         // ===============================================
         // D. 動態按鈕狀態更新核心邏輯
         // ===============================================
@@ -984,6 +998,8 @@
                     }
                     card.dataset.coursePrice = meta.price !== undefined ? meta.price : card.dataset.coursePrice;
                     card.dataset.isPhysical = meta.isPhysical !== undefined ? meta.isPhysical : (card.dataset.isPhysical === 'true');
+                    card.dataset.classroomUrl = resolveEntryUrl(meta, card.dataset.classroomUrl);
+                    if (meta.entryUnitId) card.dataset.entryUnitId = meta.entryUnitId;
 
                     // Update UI title if exists
                     const titleEl = card.querySelector('h2');

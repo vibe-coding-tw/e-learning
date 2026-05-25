@@ -78,6 +78,20 @@
         window.handleLogin = async () => { await signInWithPopup(auth, new GoogleAuthProvider()); };
         window.handleLogout = async () => { await signOut(auth); };
 
+        function resolveEntryUrl(lesson = {}, fallbackUrl = '') {
+            const pickFile = (value = '') => String(value || '').split('/').pop().split('?')[0];
+            if (lesson.entryUnitId) return `/courses/${lesson.entryUnitId}`;
+            if (lesson.contentRef) {
+                const file = pickFile(lesson.contentRef);
+                if (file) return `/courses/${file}`;
+            }
+            if (lesson.classroomUrl && /\.html(?:$|\?)/i.test(lesson.classroomUrl)) {
+                const file = pickFile(lesson.classroomUrl);
+                if (file) return `/courses/${file}`;
+            }
+            return lesson.classroomUrl || fallbackUrl || '';
+        }
+
         function updateCardAction(cardElement, status) {
             const btn = cardElement.querySelector('.action-btn');
             if (!btn) return;
@@ -184,13 +198,15 @@
 
                 const loadButtonClass = lesson.videoId ? 'flex-1' : 'w-full';
 
+                const entryUrl = resolveEntryUrl(lesson);
                 return `
                     <div class="lesson-card"
                          data-course-id="${lesson.courseId}" 
                          data-course-name="${lesson.title}" 
                          data-course-price="${lesson.price}" 
                          data-is-physical="${lesson.isPhysical || false}"
-                         data-classroom-url="${lesson.classroomUrl}">
+                         data-classroom-url="${entryUrl}"
+                         data-entry-unit-id="${lesson.entryUnitId || ''}">
                 
                         <div class="lesson-header mb-4 border-b pb-3">
                             <h2 class="text-xl font-bold text-gray-800 flex justify-between items-start gap-2">
