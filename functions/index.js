@@ -12,6 +12,42 @@ const admin = require("firebase-admin");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
+const PRIVATE_COURSES_DIR = path.join(__dirname, "private_courses");
+const I18N_COURSES_DIR = path.join(__dirname, "private_courses_i18n");
+
+function buildI18nFilenameCandidates(candidateFileName, locale = "") {
+    const fileName = String(candidateFileName || "").trim();
+    if (!fileName) return [];
+
+    const normalizedLocale = String(locale || "").toLowerCase();
+    const regionPrefix = normalizedLocale.startsWith("zh") ? "tw" : normalizedLocale.startsWith("en") ? "en" : "";
+    const deduped = new Set([fileName]);
+
+    if (!regionPrefix || !fileName.endsWith(".html")) {
+        return Array.from(deduped);
+    }
+
+    const addCandidate = (value) => {
+        if (value) deduped.add(value);
+    };
+
+    const stripHtml = fileName.replace(/\.html$/i, "");
+    const makeRenamed = (prefix, stem) => `${prefix}-${stem}.html`;
+
+    let match = stripHtml.match(/^start-\d+-unit-(.+)$/i);
+    if (match) addCandidate(makeRenamed(`${regionPrefix}-car-starter`, match[1]));
+
+    match = stripHtml.match(/^basic-\d+-unit-(.+)$/i);
+    if (match) addCandidate(makeRenamed(`${regionPrefix}-car-basic`, match[1]));
+
+    match = stripHtml.match(/^(?:adv|advanced)-\d+-unit-(.+)$/i);
+    if (match) addCandidate(makeRenamed(`${regionPrefix}-car-advanced`, match[1]));
+
+    match = stripHtml.match(/^\d+-unit-(.+)$/i);
+    if (match) addCandidate(makeRenamed(`${regionPrefix}-common`, match[1]));
+
+    return Array.from(deduped);
+}
 
 /**
  * [V12.0.9] HELPER: Compare two unit IDs with fallback for .html suffix
@@ -1303,10 +1339,94 @@ exports.checkPaymentAuthorization = onCall(async (request) => {
 // 4. 安全檔案服務 (serveCourse)
 // ==========================================
 exports.serveCourse = onRequest(async (req, res) => {
+    const normalizeLocale = (locale = "") => {
+        const raw = String(locale || "").trim();
+        if (!raw) return "";
+        if (/^zh[-_]tw$/i.test(raw)) return "zh-TW";
+        if (/^zh/i.test(raw)) return "zh-TW";
+        if (/^en/i.test(raw)) return "en";
+        return raw;
+    };
+    const resolvePreferredLocales = () => {
+        const queryLocale = normalizeLocale(req.query.lang || req.query.locale || "");
+        const header = String(req.headers["accept-language"] || "");
+        const headerPrimary = normalizeLocale(header.split(",")[0] || "");
+        const chain = [];
+        if (queryLocale) chain.push(queryLocale);
+        if (headerPrimary && !chain.includes(headerPrimary)) chain.push(headerPrimary);
+        if (!chain.includes("zh-TW")) chain.push("zh-TW");
+        return chain;
+    };
+    const resolveCourseFilePath = (candidateFileName) => {
+        const locales = resolvePreferredLocales();
+        for (const locale of locales) {
+            const localeCandidates = buildI18nFilenameCandidates(candidateFileName, locale);
+            for (const localeCandidate of localeCandidates) {
+                const p = path.join(I18N_COURSES_DIR, locale, localeCandidate);
+                if (fs.existsSync(p)) return p;
+            }
+        }
+        const fallback = path.join(PRIVATE_COURSES_DIR, candidateFileName);
+        return fs.existsSync(fallback) ? fallback : "";
+    };
+
     const normalizeCourseFile = (value = '') => {
         if (!value) return value;
         const filePart = String(value).split('/').pop().split('?')[0];
         return filePart;
+    };
+    const normalizeLooseKey = (value = "") => normalizeCourseFile(String(value || "")).replace(/\.html$/i, '').toLowerCase();
+    const buildAuthorizedFileCandidates = (course = {}) => {
+        const candidates = new Set();
+        const addCandidate = (value = "") => {
+            const normalized = normalizeCourseFile(value);
+            if (normalized) candidates.add(normalizeLooseKey(normalized));
+        };
+
+        const locales = resolvePreferredLocales();
+        const addLegacyAndI18n = (value = "") => {
+            const normalized = normalizeCourseFile(value);
+            if (!normalized) return;
+            addCandidate(normalized);
+            for (const locale of locales) {
+                for (const alt of buildI18nFilenameCandidates(normalized, locale)) {
+                    addCandidate(alt);
+                }
+            }
+        };
+
+        addLegacyAndI18n(course.entryUnitId || "");
+        addLegacyAndI18n(course.classroomUrl || "");
+        addLegacyAndI18n(course.contentRef || "");
+
+        (Array.isArray(course.courseUnits) ? course.courseUnits : []).forEach(unitId => addLegacyAndI18n(unitId));
+
+        return candidates;
+    };
+    const findCourseForScope = (lessons = [], scopeValue = "", pageValue = "") => {
+        const normalizedScope = normalizeLooseKey(scopeValue);
+        const normalizedPage = normalizeLooseKey(pageValue);
+        return lessons.find((lesson) => {
+            const lessonKeys = new Set([
+                normalizeLooseKey(lesson.courseId || ""),
+                normalizeLooseKey(lesson.courseKey || ""),
+                normalizeLooseKey(lesson.entryUnitId || ""),
+                normalizeLooseKey(lesson.classroomUrl || ""),
+                normalizeLooseKey(lesson.contentRef || "")
+            ].filter(Boolean));
+
+            if (lessonKeys.has(normalizedScope) || lessonKeys.has(normalizedPage)) {
+                return true;
+            }
+
+            const units = Array.isArray(lesson.courseUnits) ? lesson.courseUnits : [];
+            return units.some(unitId =>
+                unitIdsMatch(unitId, normalizedScope) ||
+                unitIdsMatch(unitId, normalizedPage) ||
+                normalizeLooseKey(unitId) === normalizedScope ||
+                normalizeLooseKey(unitId) === normalizedPage
+            );
+        });
     };
 
     // 1. Parsing Path (e.g. /courses/ble-connection-master.html)
@@ -1345,7 +1465,7 @@ exports.serveCourse = onRequest(async (req, res) => {
         // C. Normalize target filename
         let normalizedFileName = normalizeCourseFile(fileName);
         if (fileName.match(/^0[1-5]-/) && !fileName.includes('-master-')) {
-            const asIsPath = path.join(__dirname, 'private_courses', fileName);
+            const asIsPath = resolveCourseFilePath(fileName);
             if (!fs.existsSync(asIsPath)) {
                 normalizedFileName = 'start-' + fileName;
                 console.log(`[serveCourse] Early Normalization (Conditional): ${fileName} -> ${normalizedFileName}`);
@@ -1359,7 +1479,7 @@ exports.serveCourse = onRequest(async (req, res) => {
             return res.status(403).send("Access Denied: Token expired.");
         }
 
-        // C. Validate File Scope Dynamic Logic [REFACTORED v11.3.14]
+        // C. Validate File Scope Dynamic Logic
         let isAuthorizedScope = (
             scopePart === fileName ||
             normalizedScopePart === normalizedFileName ||
@@ -1373,24 +1493,18 @@ exports.serveCourse = onRequest(async (req, res) => {
                 // Use the centralized getLessons helper [FIXED v11.3.14]
                 lessons = await getLessons();
 
-                // Find the course by pageId/courseId or scopePart
+                // Find the course by pageId/courseId/courseKey/entryUnitId or scopePart
                 const normalizedPageId = normalizeCourseFile(pageId || '');
-                const course = lessons.find(l =>
-                    l.courseId === pageId ||
-                    l.courseId === normalizedPageId ||
-                    l.courseId === normalizedScopePart ||
-                    normalizeCourseFile(l.classroomUrl || '') === normalizedScopePart
-                );
+                const course = findCourseForScope(lessons, normalizedScopePart, normalizedPageId);
 
                 if (course) {
-                    const masterFile = normalizeCourseFile(course.classroomUrl || "");
-                    const normalizedUnits = (course.courseUnits || []).map(u => normalizeCourseFile(u));
-                    const isMasterMatch = (normalizeCourseFile(normalizedFileName) === masterFile);
-                    let isUnitMatch = normalizedUnits.includes(normalizeCourseFile(normalizedFileName));
-                    
-                    debugInfo = `CourseFound: ${course.courseId}, isMasterMatch: ${isMasterMatch}, isUnitMatch: ${isUnitMatch}, masterFile: ${masterFile}`;
+                    const authorizedCandidates = buildAuthorizedFileCandidates(course);
+                    const requestedFileKey = normalizeLooseKey(normalizedFileName);
+                    const isCourseScopedMatch = authorizedCandidates.has(requestedFileKey);
 
-                    if (isMasterMatch || isUnitMatch) {
+                    debugInfo = `CourseFound: ${course.courseId || course.courseKey || "unknown"}, requested=${requestedFileKey}, entryUnitId=${normalizeCourseFile(course.entryUnitId || "")}, candidates=${authorizedCandidates.size}`;
+
+                    if (isCourseScopedMatch) {
                         isAuthorizedScope = true;
                         console.log(`[serveCourse] ${normalizedFileName} authorized via dynamic course-scope: ${scopePart}`);
                     }
@@ -1405,22 +1519,15 @@ exports.serveCourse = onRequest(async (req, res) => {
 
         if (!isAuthorizedScope) {
             const normalizedPageId = normalizeCourseFile(pageId || '');
-            const manualFallback = lessons.find(l =>
-                l.courseId === pageId ||
-                l.courseId === normalizedPageId ||
-                l.courseUnits &&
-                (l.courseUnits.includes(normalizedScopePart) || l.courseUnits.includes(scopePart))
-            );
+            const manualFallback = findCourseForScope(lessons, normalizedScopePart, normalizedPageId);
             console.error(`Access Denied Debug: Scope=${scopePart} (normalized=${normalizedScopePart}), File=${normalizedFileName}, Debug=${debugInfo}`);
             
-            // [MODIFIED v11.3.14] Fallback: If scopePart is a fileName and lesson contains it, allow.
+            // Compatibility fallback while migrating away from master-file scope.
             if (manualFallback) {
-                const fallbackMaster = normalizeCourseFile(manualFallback.classroomUrl || '');
-                const normalizedUnits = (manualFallback.courseUnits || []).map(u => normalizeCourseFile(u));
-                const isMasterMatch = (fallbackMaster === normalizeCourseFile(normalizedFileName));
-                let isUnitMatch = normalizedUnits.includes(normalizeCourseFile(normalizedFileName));
-                
-                if (isMasterMatch || isUnitMatch) {
+                const requestedFileKey = normalizeLooseKey(normalizedFileName);
+                const fallbackCandidates = buildAuthorizedFileCandidates(manualFallback);
+
+                if (fallbackCandidates.has(requestedFileKey)) {
                     isAuthorizedScope = true;
                     console.log(`[serveCourse] ${normalizedFileName} authorized via manual fallback for scope ${scopePart}`);
                 }
@@ -1433,7 +1540,7 @@ exports.serveCourse = onRequest(async (req, res) => {
 
         // 3. Serve File
         const finalServeName = normalizedFileName; 
-        let filePath = path.join(__dirname, 'private_courses', finalServeName);
+        let filePath = resolveCourseFilePath(finalServeName);
 
         // [NEW v11.3.9] Legacy Name Fallback (01- to 00-)
         if (!fs.existsSync(filePath)) {
@@ -1442,7 +1549,7 @@ exports.serveCourse = onRequest(async (req, res) => {
             else if (fileName.match(/^0[1-5]-/)) altFileName = 'start-' + fileName;
 
             if (altFileName) {
-                const altPath = path.join(__dirname, 'private_courses', altFileName);
+                const altPath = resolveCourseFilePath(altFileName);
                 if (fs.existsSync(altPath)) {
                     console.log(`[serveCourse] Legacy Fallback: ${fileName} -> ${altFileName}`);
                     filePath = altPath;
@@ -2544,19 +2651,24 @@ exports.getDashboardData = onCall(async (request) => {
 
         for (const cid of authorizedCourseIds) {
             const course = lessons.find(l => l.courseId === cid);
-            if (course && course.classroomUrl) {
+            if (course) {
                 try {
-                    const masterFile = (course.classroomUrl || "").split('/').pop().split('?')[0];
+                    const entryUnitId = normalizeCourseFile(course.entryUnitId || '');
+                    const classroomFile = normalizeCourseFile(course.classroomUrl || '');
                     const units = Array.isArray(course.courseUnits) ? [...course.courseUnits] : [];
-                    
-                    const relatedFiles = [masterFile, ...units].filter(f => f && allFiles.includes(f));
+
+                    const relatedFiles = Array.from(new Set([
+                        entryUnitId,
+                        ...units,
+                        (classroomFile && classroomFile.endsWith('.html')) ? classroomFile : ''
+                    ].filter(f => f && allFiles.includes(f))));
                     let aggregatedGuides = {};
 
                     if (relatedFiles.length > 0) {
                         // console.log(`[getDashboardData] Extracting logs for ${cid}. Files: ${relatedFiles.join(', ')}`);
                         relatedFiles.sort((a, b) => {
-                            if (a === masterFile) return -1;
-                            if (b === masterFile) return 1;
+                            if (a === entryUnitId) return -1;
+                            if (b === entryUnitId) return 1;
                             return a.localeCompare(b);
                         });
 
