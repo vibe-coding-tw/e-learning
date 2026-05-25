@@ -13,6 +13,7 @@ window.__courseSharedLoaded = true;
 // Initializer
 function init() {
     console.log("[CourseShared] Initializing...");
+    ensureGlobalNavOnCoursePage();
     applyHideTabsPreference();
     upgradeLegacyStartUnitToMsLayout();
     applyStartUnitModernTheme();
@@ -21,6 +22,36 @@ function init() {
     enhanceAssignmentEntryButtons();
     initFirebaseFeatures(); // [NEW] Start Firebase (Tracking + Assignments)
     initGithubReadme(); // [V8.2] Fetch and render GitHub README if applicable
+}
+
+function ensureGlobalNavOnCoursePage() {
+    try {
+        const path = window.location.pathname || '';
+        if (!path.startsWith('/courses/')) return;
+        if (document.getElementById('main-nav')) return;
+        if (document.getElementById('nav-placeholder')) return;
+
+        const hostNav = document.createElement('div');
+        hostNav.id = 'nav-placeholder';
+        hostNav.setAttribute('data-root', '..');
+        hostNav.setAttribute('data-show-auth', 'true');
+
+        const topBar = document.querySelector('.ms-topnav');
+        if (topBar && topBar.parentNode) {
+            topBar.parentNode.insertBefore(hostNav, topBar);
+        } else {
+            document.body.prepend(hostNav);
+        }
+
+        if (!document.querySelector('script[src*="/js/nav-component.js"]')) {
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.src = '/js/nav-component.js?v=2026.05.26.COURSE_NAV_HOTFIX';
+            document.body.appendChild(script);
+        }
+    } catch (e) {
+        console.warn('[CourseShared] ensureGlobalNavOnCoursePage failed:', e);
+    }
 }
 
 function upgradeLegacyStartUnitToMsLayout() {

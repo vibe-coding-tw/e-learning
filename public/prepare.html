@@ -860,6 +860,18 @@
 
         function resolveEntryUrl(lesson = {}, fallbackUrl = '') {
             const pickFile = (value = '') => String(value || '').split('/').pop().split('?')[0];
+            const legacyPrepareMap = {
+                'prepare-01-developer-identity.html': '01-unit-developer-identity.html',
+                'prepare-02-vscode-online.html': '01-unit-vscode-online.html',
+                'prepare-03-vscode-setup.html': '01-unit-vscode-setup.html',
+                'prepare-04-agent-mode.html': '02-unit-agent-mode.html',
+                'prepare-05-vibe-coding.html': '02-unit-vibe-coding.html',
+                'prepare-06-web-agents.html': '02-unit-web-agents.html',
+                'prepare-07-github-classroom.html': '03-unit-github-classroom.html',
+                'prepare-08-motor-ramping.html': '03-unit-motor-ramping.html',
+                'prepare-09-wifi-setup.html': '03-unit-wifi-setup.html'
+            };
+
             if (lesson.entryUnitId) return `/courses/${lesson.entryUnitId}`;
             if (lesson.contentRef) {
                 const file = pickFile(lesson.contentRef);
@@ -867,7 +879,10 @@
             }
             if (lesson.classroomUrl && /\.html(?:$|\?)/i.test(lesson.classroomUrl)) {
                 const file = pickFile(lesson.classroomUrl);
-                if (file) return `/courses/${file}`;
+                if (file) {
+                    const mapped = legacyPrepareMap[file] || file;
+                    return `/courses/${mapped}`;
+                }
             }
             return lesson.classroomUrl || fallbackUrl || '';
         }
