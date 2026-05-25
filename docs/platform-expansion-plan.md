@@ -5,8 +5,9 @@
 This document consolidates:
 
 1. Course architecture upgrade
-2. I18N content repo MVP
-3. Channel partner / revenue share parameterization
+2. Content quality standardization
+3. I18N content repo MVP
+4. Channel partner / revenue share parameterization
 
 The goal is to keep one source of truth for the next-stage platform changes.
 
@@ -77,9 +78,21 @@ Conclusion:
 - `*-master-*.html` can be removed in the new architecture.
 - They should not be removed until their responsibilities are detached.
 
-Current dependencies that must be removed first:
+**Completed removals (2025-05):**
 
-1. Entry pages such as `prepare.html`
+- `01-master-getting-started.html` — removed; prepare units now use `prepare-*` naming directly.
+- `02-master-ai-agents.html` — removed; three child units replaced by `prepare-04/05/06-*.html`.
+- `03-master-wifi-motor.html` — removed; child units migrated to `prepare-07/08/09-*.html`.
+
+**Remaining master files** (still in use by `start`, `basic`, `adv` courses):
+
+- `start-*-master-*.html` (5 files)
+- `basic-*-master-*.html` (10 files)
+- `adv-*-master-*.html` (15 files)
+
+Dependencies that must be removed before retiring the remaining masters:
+
+1. Entry pages such as `prepare.html` ← **partially done**: prepare courses no longer use master files
 2. `serveCourse` scope validation that still uses `classroomUrl/masterFile`
 3. Frontend fallbacks that hardcode master filenames
 
@@ -91,17 +104,106 @@ Migration order:
 4. Convert master pages into compatibility redirects
 5. Remove master files after validation
 
+### 2.7 Completed file renames (2025-05)
+
+The original `0x-unit-*.html` naming was migrated to a `prepare-NN-*` sequential scheme:
+
+| Old filename | New filename |
+|---|---|
+| `01-unit-developer-identity.html` | `prepare-01-developer-identity.html` |
+| `01-unit-vscode-online.html` | `prepare-02-vscode-online.html` |
+| `01-unit-vscode-setup.html` | `prepare-03-vscode-setup.html` |
+| `02-unit-agent-mode.html` | `prepare-04-agent-mode.html` (rewritten) |
+| `02-unit-vibe-coding.html` | `prepare-05-vibe-coding.html` (rewritten) |
+| `02-unit-web-agents.html` | `prepare-06-web-agents.html` (rewritten) |
+| `03-unit-github-classroom.html` | `prepare-07-github-classroom.html` |
+| `03-unit-motor-ramping.html` | `prepare-08-motor-ramping.html` (rewritten) |
+| `03-unit-wifi-setup.html` | `prepare-09-wifi-setup.html` (rewritten) |
+
+Frontend rename:
+
+| Old filename | New filename |
+|---|---|
+| `public/started.html` | `public/start.html` |
+
+### 2.8 New tooling files
+
+| File | Purpose |
+|---|---|
+| `functions/scripts/seed-emulator.js` | Seed Firestore emulator with course metadata and test data |
+| `public/js/firebase-local.js` | Auto-detect and connect to local Firebase emulator |
+| `functions/private_courses/_add_quiz.py` | Batch script used for inserting quizzes (build-time only) |
+
 ---
 
-## 3. I18N Content Repo MVP
+## 3. Content Quality Standardization (Completed 2025-05)
 
 ### 3.1 Objectives
+
+- Bring all 104 course unit files to a consistent MS Learn-style format.
+- Ensure every unit has rich educational content, not boilerplate.
+- Add knowledge quizzes to all unit files for learner self-assessment.
+
+### 3.2 MS Learn format standard
+
+All unit files now follow a consistent structure:
+
+- Sidebar navigation with progress tracking
+- Breadcrumbs linking to course listing
+- Content pages using semantic CSS classes: `.ms-note`, `.ms-tip`, `.ms-warning`, `.ms-important`, `.ms-steps`, `.ms-table`, `.ms-code`
+- Knowledge quiz page with 4 topic-specific multiple-choice questions, answer validation, and explanations
+- Summary page with key takeaways
+
+### 3.3 Phase 1 — Critical defect fixes (adv 50 files)
+
+| Issue | Files affected | Resolution |
+|---|---|---|
+| Empty index page descriptions | 13 files (adv-01 ~ adv-05) | Filled with topic-specific 1-2 sentence descriptions |
+| Unreadable fonts (`text-[8px]`/`[9px]`/`[10px]`) | 38 files | Replaced with `text-[13px]` |
+| Task card footer text overflow | 50 files | Added CSS truncation rule |
+| H1 titles with emoji/numbering/time | 50 files | Cleaned to topic-only titles |
+| Boilerplate intro paragraphs | 50 files | Replaced with topic-specific content |
+
+### 3.4 Phase 2 — Content enrichment (basic 30 + adv 50 = 80 files)
+
+| Task | Files | Details |
+|---|---|---|
+| Rewrite boilerplate intros and scenarios | 80 files | Unique, topic-specific introductions |
+| Fix fonts, footer overflow, H1 format | basic 30 files | Same fixes as adv Phase 1 |
+| Rewrite generic learning objectives | basic 30 files | Specific, measurable, action-verb-based outcomes |
+| Expand teaching pages | 240 pages across 80 files | From 1-3 sentences to full MS Learn-style content with tables, code examples, callouts, and step-by-step instructions |
+| Remove raw Tailwind from content | 80 files | Replaced with MS Learn CSS components |
+
+### 3.5 Phase 3 — Knowledge quizzes (basic 30 + adv 50 = 80 files)
+
+- Inserted a quiz page (4 topic-specific questions) into each file between Lab and Summary.
+- Updated JavaScript `UNITS` array, navigation links, progress indicators, and sidebar badges.
+- Added `submitQuiz` / `resetQuiz` functions with answer validation and explanations.
+
+### 3.6 Phase 4 — Polish start + prepare (24 files)
+
+| Task | Files | Details |
+|---|---|---|
+| Add knowledge quiz | start 15 files | 4 topic-specific questions per unit |
+| Full content rewrite | `prepare-08-motor-ramping.html` | PWM, BLE binary communication, DataView, ramping algorithms |
+| Full content rewrite | `prepare-09-wifi-setup.html` | BLE, Web Bluetooth API, NVS, TextEncoder |
+| Quality verification | `prepare-01` ~ `prepare-07` | Already met standards; no changes needed |
+
+### 3.7 Remaining content issues
+
+- **46 adv files missing video/doc URLs**: `adv-02` through `adv-15` have empty `video` and `doc` fields in `window.RESOURCES`. Only `adv-01` (3 units) and `adv-04-filter-algorithms` have actual URLs. These require user-provided YouTube and Google Docs links.
+
+---
+
+## 4. I18N Content Repo MVP
+
+### 4.1 Objectives
 
 - Move course content into an external private content repo.
 - Support `zh-TW` and `en` first.
 - Keep current auth/token behavior unchanged.
 
-### 3.2 External content repo structure
+### 4.2 External content repo structure
 
 ```text
 content-repo/
@@ -123,7 +225,7 @@ Current decision:
 - `assignment-guide` and `tutor-guide` are not split into a separate repo area yet.
 - For now they stay hidden inside course content.
 
-### 3.3 Runtime lookup
+### 4.3 Runtime lookup
 
 `serveCourse` should resolve in this order:
 
@@ -132,7 +234,7 @@ Current decision:
 3. `functions/private_courses_i18n/zh-TW/<fileName>`
 4. `functions/private_courses/<fileName>`
 
-### 3.4 Sync flow
+### 4.4 Sync flow
 
 MVP sync command:
 
@@ -150,15 +252,15 @@ Release flow:
 
 ---
 
-## 4. Channel Partner And Revenue Share
+## 5. Channel Partner And Revenue Share
 
-### 4.1 Objectives
+### 5.1 Objectives
 
 - Make tutor and agent revenue share ratios configurable.
 - Support multi-market and multi-channel policies.
 - Preserve future room for course development revenue share.
 
-### 4.2 Role model
+### 5.2 Role model
 
 Roles:
 
@@ -172,7 +274,7 @@ Notes:
 - The system distributes revenue by role instead of using a single bundled partner model.
 - Current courses do not have an owner, so `CourseDev` share is reserved but not paid.
 
-### 4.3 Confirmed initial parameters
+### 5.3 Confirmed initial parameters
 
 - `tutorRate = 0.20`
 - `agentRate = 0.20`
@@ -187,7 +289,7 @@ Operational rules:
 5. If there is no upline configured, do not issue upline share.
 6. Margin guardrails should be adjustable based on real operating conditions, not hardcoded to a fixed threshold.
 
-### 4.4 Firestore additions
+### 5.4 Firestore additions
 
 New collection:
 
@@ -200,7 +302,7 @@ Recommended `orders` additions:
 - `policyId`
 - `pricingVersion`
 
-### 4.5 Calculation changes
+### 5.5 Calculation changes
 
 `calculateMonthlySharing` should:
 
@@ -213,7 +315,7 @@ Recommended `orders` additions:
    - upline share if applicable
 4. Store ledger lines with `policySnapshot`
 
-### 4.6 Admin MVP
+### 5.6 Admin MVP
 
 Admin needs:
 
@@ -224,7 +326,7 @@ Admin needs:
 
 ---
 
-## 5. Confirmed Decisions
+## 6. Confirmed Decisions
 
 1. Use `courseKey` as the new main course key.
 2. Use pure display names such as `Agent Mode`.
@@ -235,13 +337,19 @@ Admin needs:
 
 ---
 
-## 6. Execution Roadmap
+## 7. Execution Roadmap
 
-### Phase 0
+### Phase 0 — Content & naming groundwork ✅ Completed 2025-05
 
-1. Hide technical prefixes in UI
-2. Group courses by `track` and `level`
-3. Align naming and planning docs
+1. ~~Hide technical prefixes in UI~~
+2. ~~Group courses by `track` and `level`~~
+3. ~~Align naming and planning docs~~
+4. Migrate prepare-course files from `0x-unit-*` to `prepare-NN-*` naming ✅
+5. Remove 3 legacy master files (`01-master`, `02-master`, `03-master`) ✅
+6. Rename `started.html` → `start.html` ✅
+7. Enrich all 104 course files to MS Learn standard ✅
+8. Add knowledge quizzes to all 95 unit files ✅
+9. Add `seed-emulator.js` and `firebase-local.js` for local dev ✅
 
 ### Phase 1
 
@@ -250,6 +358,7 @@ Admin needs:
 3. Start `zh-TW/en` content repo pilot
 4. Add `revenue_share_policies`
 5. Make monthly share calculation read policies
+6. Fill 46 missing video/doc URLs in advanced course files
 
 ### Phase 2
 
@@ -260,14 +369,14 @@ Admin needs:
 
 ### Phase 3
 
-1. Redirect and remove `*-master-*`
+1. Redirect and remove remaining `*-master-*` (30 files)
 2. Gradually migrate legacy `unitId/courseId`
 3. Expand to multi-market pricing/versioning
 4. Support external instructors publishing through the standardized content pipeline
 
 ---
 
-## 7. Risks
+## 8. Risks
 
 1. Authorization regressions during route migration
 2. Grade writeback failures during ID migration
@@ -285,9 +394,10 @@ Controls:
 
 ---
 
-## 8. Immediate Next Steps
+## 9. Immediate Next Steps
 
 1. Treat this file as the primary planning document.
-2. Use it to drive implementation tasks in order: naming -> entry routing -> content repo -> revenue share policies.
+2. Use it to drive implementation tasks in order: naming → entry routing → content repo → revenue share policies.
 3. Keep old planning docs only as compatibility pointers.
+4. Collect 46 missing video/doc URLs for advanced course files from content owners.
 
