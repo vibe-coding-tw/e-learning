@@ -1522,8 +1522,9 @@ exports.serveCourse = onRequest(async (req, res) => {
             const manualFallback = findCourseForScope(lessons, normalizedScopePart, normalizedPageId);
             console.error(`Access Denied Debug: Scope=${scopePart} (normalized=${normalizedScopePart}), File=${normalizedFileName}, Debug=${debugInfo}`);
             
-            // Compatibility fallback while migrating away from master-file scope.
-            if (manualFallback) {
+            // Compatibility fallback (legacy master-token only).
+            const isLegacyMasterScope = String(scopePart || '').includes('-master-') || String(pageId || '').includes('-master-');
+            if (manualFallback && isLegacyMasterScope) {
                 const requestedFileKey = normalizeLooseKey(normalizedFileName);
                 const fallbackCandidates = buildAuthorizedFileCandidates(manualFallback);
 
