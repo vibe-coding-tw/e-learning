@@ -105,8 +105,12 @@ See also: `docs/database.md` section `profit_ledger`.
 - `docs/database.md`
 - `README.md`
 - `functions/scripts/report_missing_payout_accounts.js`
+- `functions/scripts/backfill_course_dev_upline.js`
 
 ## 9. CourseDev Upline Mapping
 1. `courseDev` 上線來源優先使用 `users.courseDevEmail`。
 2. 若未設定，fallback 到 `users.tutorEmail`。
 3. 遞迴停止條件與其他角色一致：空值、同值迴圈或 `share < 0.01`。
+4. 建議先跑回填腳本建立初始鏈條：
+   - `node functions/scripts/backfill_course_dev_upline.js --dry-run`
+   - `node functions/scripts/backfill_course_dev_upline.js --apply`
