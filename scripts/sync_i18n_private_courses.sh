@@ -63,12 +63,13 @@ for locale in "${locale_arr[@]}"; do
     continue
   fi
 
-  declare -A source_files=()
-
   # Sync HTML only for MVP
+  src_list_file="/tmp/i18n_src_list_${locale}_$(date +%Y%m%d_%H%M%S).txt"
+  touch "$src_list_file"
+
   while IFS= read -r -d '' file; do
     base="$(basename "$file")"
-    source_files["$base"]=1
+    echo "$base" >> "$src_list_file"
     if [[ "$DRY_RUN" -eq 1 ]]; then
       echo "$locale,$base,preview_sync" >> "$report"
     else
@@ -79,7 +80,7 @@ for locale in "${locale_arr[@]}"; do
 
   while IFS= read -r -d '' existing; do
     base="$(basename "$existing")"
-    if [[ -z "${source_files[$base]:-}" ]]; then
+    if ! grep -q "^$base$" "$src_list_file" 2>/dev/null; then
       if [[ "$APPLY_DELETE" -eq 1 && "$DRY_RUN" -eq 0 ]]; then
         rm -f "$existing"
         echo "$locale,$base,deleted_stale_local" >> "$report"
@@ -89,7 +90,7 @@ for locale in "${locale_arr[@]}"; do
     fi
   done < <(find "$dst_dir" -type f -name "*.html" -print0)
 
-  unset source_files
+  rm -f "$src_list_file"
 done
 
 echo "[DONE] report=$report"
