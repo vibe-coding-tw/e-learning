@@ -32,7 +32,7 @@
 - **[✉️ Email 通知規格](docs/email-notifications.md)**：通知觸發條件、收件者、深連結與異常告警規範。
 - **[📘 學生操作指南](public/students.html)**：包含付款、導師指派、作業提交及師資申請流程。
 - **[🧑‍🏫 導師操作指南](public/tutors.html)**：導師端日常操作與協作流程說明。
-- **[準備課程 (Preparation)](public/prepare.html)**：軟硬體環境準備與教材購買指引。
+- **[學習路徑入口 (Learning Path)](public/learning-path.html)**：依 `metadata_lessons` 動態分類渲染課程卡片（`?path=tw-common|tw-car-starter|tw-car-basic|tw-car-advanced`）。
 - **[🚚 物流管理 MVP](docs/logistics-mvp.md)**：硬體訂單出貨流程與 Admin Logistics 分頁規格。
 - **[✅ 合格教師管理 MVP](docs/tutor-management-mvp.md)**：申請、推薦、審核與授權流程。
 - **[💸 多層級分潤規格](docs/recursive-sharing.md)**：分潤公式、上線鏈條、冪等與對帳流程。
@@ -113,6 +113,11 @@
 > - 禁止在前端或後端維護硬編碼白名單、相容名單、舊 ID 對照表作為執行期判斷依據。
 > - 若資料不一致，先修 Firestore 資料與遷移腳本，不新增 fallback 白名單邏輯。
 > - `metadata_lessons.courseId` 新增資料請使用 canonical page URL（優先 `entryUnitId` 可開課頁），不再新增 `*-master-*` 作為主鍵。
+
+### 學習路徑頁（新）
+- `public/learning-path.html` 為唯一課程列表頁，依 `path` 參數與 Firestore `metadata_lessons` 動態渲染。
+- `public/prepare.html`、`public/start.html`、`public/basic.html`、`public/advanced.html` 保留為相容轉址頁。
+- 導覽列分類與名稱維護以 Firestore 欄位為主：`locale`, `track`, `level`, `courseKey`，顯示名稱可用 `learningPathLabel*` / `categoryLabel*` / `navLabel*`。
 
 ---
 
