@@ -224,10 +224,26 @@ async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
                 key.includes("starter") ? "fa-rocket" : "fa-book-open"
         }));
         const finalPaths = dynamic.length ? dynamic : DEFAULT_LEARNING_PATHS;
+        window.__vibeLearningPathDebug = {
+            locale: uiLocale,
+            lessonsCount: lessons.length,
+            categories: finalPaths.map((x) => x.key),
+            generatedAt: new Date().toISOString(),
+            source: dynamic.length ? "firestore-metadata_lessons" : "fallback-default"
+        };
+        console.info("[NavComp] learning paths generated:", window.__vibeLearningPathDebug);
         setLearningPathsCache(finalPaths);
         return finalPaths;
     } catch (e) {
         console.warn("[NavComp] loadLearningPathsDynamic failed:", e);
+        window.__vibeLearningPathDebug = {
+            locale: uiLocale,
+            lessonsCount: 0,
+            categories: DEFAULT_LEARNING_PATHS.map((x) => x.key),
+            generatedAt: new Date().toISOString(),
+            source: "fallback-default-error"
+        };
+        console.info("[NavComp] learning paths generated (fallback):", window.__vibeLearningPathDebug);
         return DEFAULT_LEARNING_PATHS;
     }
 }
