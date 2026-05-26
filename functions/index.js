@@ -4342,6 +4342,7 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
         agentRate: 0,
         agentUplineRate: 0,
         courseDevRate: 0,
+        courseDevUplineRate: 0,
         enabled: true
     };
 
@@ -4410,10 +4411,17 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
             order?.courseDevEmail ||
             ""
         ).trim().toLowerCase();
+        const courseDevData = courseDev ? await getUserByEmail(courseDev) : null;
+        const courseDevUpline = String(
+            courseDevData?.courseDevEmail ||
+            courseDevData?.tutorEmail ||
+            ""
+        ).trim().toLowerCase();
 
         return {
             agentEmail: resolvedAgent,
-            courseDevEmail: courseDev
+            courseDevEmail: courseDev,
+            courseDevUplineEmail: courseDevUpline
         };
     };
     const loadPolicyById = async (policyId = "") => {
@@ -4434,6 +4442,7 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
                         agentRate: Number(raw.agentRate ?? fallbackPolicy.agentRate),
                         agentUplineRate: Number(raw.agentUplineRate ?? fallbackPolicy.agentUplineRate),
                         courseDevRate: Number(raw.courseDevRate ?? fallbackPolicy.courseDevRate),
+                        courseDevUplineRate: Number(raw.courseDevUplineRate ?? fallbackPolicy.courseDevUplineRate),
                         enabled: raw.enabled !== false
                     };
                     if (!policy.enabled) {
@@ -4488,7 +4497,7 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
                 tutorLevel++;
             }
 
-            const { agentEmail, courseDevEmail } = await resolveOrderRoleEmails({ itemValue, order, initialTutor });
+            const { agentEmail, courseDevEmail, courseDevUplineEmail } = await resolveOrderRoleEmails({ itemValue, order, initialTutor });
             if (agentEmail && Number(policy.agentRate || 0) > 0) {
                 let currentAgentEmail = agentEmail;
                 let currentAgentShare = lineAmount * Number(policy.agentRate || 0);
@@ -4505,12 +4514,24 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
             }
 
             if (courseDevEmail && Number(policy.courseDevRate || 0) > 0) {
-                targets.push({
-                    role: "courseDev",
-                    recipientEmail: courseDevEmail,
-                    shareAmount: round2(lineAmount * Number(policy.courseDevRate || 0)),
-                    level: 1
-                });
+                let currentCourseDevEmail = courseDevEmail;
+                let currentCourseDevShare = lineAmount * Number(policy.courseDevRate || 0);
+                let courseDevLevel = 1;
+                let nextCourseDevEmail = courseDevUplineEmail;
+                while (currentCourseDevEmail && currentCourseDevShare >= 0.01) {
+                    targets.push({
+                        role: "courseDev",
+                        recipientEmail: currentCourseDevEmail,
+                        shareAmount: round2(currentCourseDevShare),
+                        level: courseDevLevel
+                    });
+                    if (!nextCourseDevEmail || nextCourseDevEmail === currentCourseDevEmail) break;
+                    currentCourseDevEmail = nextCourseDevEmail;
+                    currentCourseDevShare = currentCourseDevShare * Number(policy.courseDevUplineRate || 0);
+                    courseDevLevel++;
+                    const cdData = await getUserByEmail(currentCourseDevEmail);
+                    nextCourseDevEmail = String(cdData?.courseDevEmail || cdData?.tutorEmail || "").trim().toLowerCase();
+                }
             }
             return targets;
         };
@@ -4538,7 +4559,8 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
                     tutorUplineRate: Number(policy.tutorUplineRate || 0),
                     agentRate: Number(policy.agentRate || 0),
                     agentUplineRate: Number(policy.agentUplineRate || 0),
-                    courseDevRate: Number(policy.courseDevRate || 0)
+                    courseDevRate: Number(policy.courseDevRate || 0),
+                    courseDevUplineRate: Number(policy.courseDevUplineRate || 0)
                 };
                 const shareTargets = await collectShareTargets({
                     order,

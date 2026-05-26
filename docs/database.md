@@ -201,7 +201,7 @@
 | `agentRate` | number | Agent 直推分潤比例。 |
 | `agentUplineRate` | number | Agent 上線遞迴比例。 |
 | `courseDevRate` | number | 課程開發分潤比例。 |
-| `courseDevUplineRate` | number | （規劃）課程開發上線遞迴比例。 |
+| `courseDevUplineRate` | number | 課程開發上線遞迴比例。 |
 | `enabled` | boolean | 是否啟用。 |
 | `createdAt` / `updatedAt` | timestamp | 建立/更新時間。 |
 

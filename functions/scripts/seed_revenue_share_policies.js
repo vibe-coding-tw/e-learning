@@ -23,6 +23,7 @@ const policies = [
     agentRate: 0.2,
     agentUplineRate: 0,
     courseDevRate: 0.2,
+    courseDevUplineRate: 0.1,
     enabled: true
   },
   {
@@ -33,6 +34,7 @@ const policies = [
     agentRate: 0,
     agentUplineRate: 0,
     courseDevRate: 0.2,
+    courseDevUplineRate: 0.1,
     enabled: true
   },
   {
@@ -43,6 +45,7 @@ const policies = [
     agentRate: 0.2,
     agentUplineRate: 0.1,
     courseDevRate: 0.2,
+    courseDevUplineRate: 0.1,
     enabled: true
   }
 ];

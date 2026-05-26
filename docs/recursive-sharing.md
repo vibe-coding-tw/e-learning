@@ -10,9 +10,9 @@
 3. Agent 鏈條：
    - Level 1: `lineAmount * agentRate`
    - Level N+1: `previousShare * agentUplineRate`
-4. Course Developer：
-   - `lineAmount * courseDevRate`（單層，無遞迴）
-   - （規劃）可擴充為多層：`courseDevUplineRate` 鏈條遞迴
+4. Course Developer 鏈條：
+   - Level 1: `lineAmount * courseDevRate`
+   - Level N+1: `previousShare * courseDevUplineRate`
 5. Tutor 上線來源為 `users.tutorEmail`；Agent 上線來源為 `users.agentEmail`。
 6. Tutor 鏈若缺上線，回落到平台帳號 `info@vibe-coding.tw`。
 7. 迭代停止條件：
@@ -26,7 +26,8 @@ Given order line amount `A`:
 - Tutor L2 = `L1 * tutorUplineRate`
 - Agent L1 = `A * agentRate`
 - Agent L2 = `L1 * agentUplineRate`
-- CourseDev = `A * courseDevRate`
+- CourseDev L1 = `A * courseDevRate`
+- CourseDev L2 = `L1 * courseDevUplineRate`
 
 Example (`A=1000`, policy `tutorRate=0.2`, `tutorUplineRate=0.2`, `agentRate=0.2`, `agentUplineRate=0.1`, `courseDevRate=0.2`):
 - Tutor L1 = 200, L2 = 40, L3 = 8...
@@ -105,9 +106,7 @@ See also: `docs/database.md` section `profit_ledger`.
 - `README.md`
 - `functions/scripts/report_missing_payout_accounts.js`
 
-## 9. Planned: Multi-level CourseDev Sharing
-可行，建議用和 tutor/agent 一致的鏈條模型：
-1. 在 `revenue_share_policies` 增加 `courseDevUplineRate`。
-2. 在 user profile（或專用關聯表）定義 `courseDevEmail` 上線。
-3. 產生 credit 時新增 `role=courseDev` 的多層 target。
-4. 仍沿用 `revenue_share_credits` + 月結攤提支付，不需改支付流程。
+## 9. CourseDev Upline Mapping
+1. `courseDev` 上線來源優先使用 `users.courseDevEmail`。
+2. 若未設定，fallback 到 `users.tutorEmail`。
+3. 遞迴停止條件與其他角色一致：空值、同值迴圈或 `share < 0.01`。
