@@ -117,6 +117,50 @@ const ECPAY_LOGISTICS_MAP_URL = process.env.ECPAY_LOGISTICS_MAP_URL;
 const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET || "";
 const GITHUB_CLASSROOM_ORG = process.env.GITHUB_CLASSROOM_ORG || "vibe-coding-classroom";
 const GITHUB_ORG_ADMIN_TOKEN = process.env.GITHUB_ORG_ADMIN_TOKEN || "";
+const CONTENT_REPO_TOKEN = process.env.CONTENT_REPO_TOKEN || "";
+
+const CONTENT_RUNTIME_CACHE = {
+    config: null,
+    expiresAt: 0
+};
+const CONTENT_FILE_CACHE = new Map();
+
+async function getContentRuntimeConfig() {
+    if (Date.now() < CONTENT_RUNTIME_CACHE.expiresAt && CONTENT_RUNTIME_CACHE.config) {
+        return CONTENT_RUNTIME_CACHE.config;
+    }
+    const defaults = {
+        enabled: false,
+        repoOwner: "vibe-coding-tw",
+        repoName: "content-repo",
+        contentVersion: "main",
+        defaultLocale: "zh-TW",
+        fallbackEnabled: true,
+        cacheTtlSec: 300
+    };
+    try {
+        const snap = await db.collection("metadata_settings").doc("content_runtime").get();
+        if (snap.exists) {
+            const data = snap.data() || {};
+            CONTENT_RUNTIME_CACHE.config = {
+                enabled: data.enabled === true,
+                repoOwner: String(data.repoOwner || defaults.repoOwner).trim(),
+                repoName: String(data.repoName || defaults.repoName).trim(),
+                contentVersion: String(data.contentVersion || defaults.contentVersion).trim() || "main",
+                defaultLocale: String(data.defaultLocale || defaults.defaultLocale).trim() || "zh-TW",
+                fallbackEnabled: data.fallbackEnabled !== false,
+                cacheTtlSec: Math.max(30, Number(data.cacheTtlSec || defaults.cacheTtlSec))
+            };
+        } else {
+            CONTENT_RUNTIME_CACHE.config = defaults;
+        }
+    } catch (err) {
+        console.warn("[content-runtime] failed to load config, fallback to defaults:", err.message || err);
+        CONTENT_RUNTIME_CACHE.config = defaults;
+    }
+    CONTENT_RUNTIME_CACHE.expiresAt = Date.now() + 60 * 1000;
+    return CONTENT_RUNTIME_CACHE.config;
+}
 
 const REGION = "asia-east1";
 // 為了避免專案 ID 寫死，我們也可以動態抓取，或者您保留原本寫死的字串
@@ -1385,18 +1429,19 @@ exports.serveCourse = onRequest(async (req, res) => {
         if (/^en/i.test(raw)) return "en";
         return raw;
     };
-    const resolvePreferredLocales = () => {
+    const resolvePreferredLocales = (runtimeConfig = null) => {
         const queryLocale = normalizeLocale(req.query.lang || req.query.locale || "");
         const header = String(req.headers["accept-language"] || "");
         const headerPrimary = normalizeLocale(header.split(",")[0] || "");
         const chain = [];
         if (queryLocale) chain.push(queryLocale);
         if (headerPrimary && !chain.includes(headerPrimary)) chain.push(headerPrimary);
-        if (!chain.includes("zh-TW")) chain.push("zh-TW");
+        const defaultLocale = normalizeLocale(runtimeConfig?.defaultLocale || "zh-TW") || "zh-TW";
+        if (!chain.includes(defaultLocale)) chain.push(defaultLocale);
         return chain;
     };
-    const resolveCourseFilePath = (candidateFileName) => {
-        const locales = resolvePreferredLocales();
+    const resolveLocalCourseFilePath = (candidateFileName, runtimeConfig = null) => {
+        const locales = resolvePreferredLocales(runtimeConfig);
         for (const locale of locales) {
             const localeCandidates = buildI18nFilenameCandidates(candidateFileName, locale);
             for (const localeCandidate of localeCandidates) {
@@ -1406,6 +1451,59 @@ exports.serveCourse = onRequest(async (req, res) => {
         }
         const fallback = path.join(PRIVATE_COURSES_DIR, candidateFileName);
         return fs.existsSync(fallback) ? fallback : "";
+    };
+    const fetchExternalCourseContent = async (candidateFileName, runtimeConfig) => {
+        if (!runtimeConfig?.enabled) return null;
+        if (!CONTENT_REPO_TOKEN) {
+            console.warn("[content-runtime] CONTENT_REPO_TOKEN missing, skip external fetch.");
+            return null;
+        }
+        const locales = resolvePreferredLocales(runtimeConfig);
+        const repoOwner = runtimeConfig.repoOwner;
+        const repoName = runtimeConfig.repoName;
+        const ref = runtimeConfig.contentVersion || "main";
+        for (const locale of locales) {
+            const localeCandidates = buildI18nFilenameCandidates(candidateFileName, locale);
+            for (const localeCandidate of localeCandidates) {
+                const key = `${repoOwner}/${repoName}@${ref}|${locale}|${localeCandidate}`;
+                const cached = CONTENT_FILE_CACHE.get(key);
+                if (cached && cached.expiresAt > Date.now()) {
+                    return { content: cached.content, source: "external-cache", locale, file: localeCandidate };
+                }
+                const contentPath = `courses/${locale}/${localeCandidate}`;
+                const apiUrl = `https://api.github.com/repos/${encodeURIComponent(repoOwner)}/${encodeURIComponent(repoName)}/contents/${contentPath}?ref=${encodeURIComponent(ref)}`;
+                try {
+                    const startedAt = Date.now();
+                    const resp = await fetch(apiUrl, {
+                        method: "GET",
+                        headers: {
+                            "Authorization": `Bearer ${CONTENT_REPO_TOKEN}`,
+                            "Accept": "application/vnd.github+json",
+                            "User-Agent": "vibe-coding-runtime"
+                        }
+                    });
+                    if (!resp.ok) {
+                        if (resp.status !== 404) {
+                            console.warn(`[content-runtime] external fetch non-404: ${resp.status} ${contentPath}`);
+                        }
+                        continue;
+                    }
+                    const payload = await resp.json();
+                    const encoded = String(payload?.content || "").replace(/\n/g, "");
+                    if (!encoded) continue;
+                    const content = Buffer.from(encoded, "base64").toString("utf8");
+                    CONTENT_FILE_CACHE.set(key, {
+                        content,
+                        expiresAt: Date.now() + (Math.max(30, Number(runtimeConfig.cacheTtlSec || 300)) * 1000)
+                    });
+                    console.log(`[content-runtime] source=external file=${localeCandidate} locale=${locale} ms=${Date.now() - startedAt}`);
+                    return { content, source: "external", locale, file: localeCandidate };
+                } catch (err) {
+                    console.warn(`[content-runtime] external fetch failed for ${contentPath}:`, err.message || err);
+                }
+            }
+        }
+        return null;
     };
 
     const normalizeCourseFile = (value = '') => {
@@ -1502,8 +1600,10 @@ exports.serveCourse = onRequest(async (req, res) => {
 
         // C. Normalize target filename
         let normalizedFileName = normalizeCourseFile(fileName);
+        const runtimeConfig = await getContentRuntimeConfig();
+
         if (fileName.match(/^0[1-5]-/) && !fileName.includes('-master-')) {
-            const asIsPath = resolveCourseFilePath(fileName);
+            const asIsPath = resolveLocalCourseFilePath(fileName, runtimeConfig);
             if (!fs.existsSync(asIsPath)) {
                 normalizedFileName = 'start-' + fileName;
                 console.log(`[serveCourse] Early Normalization (Conditional): ${fileName} -> ${normalizedFileName}`);
@@ -1579,7 +1679,16 @@ exports.serveCourse = onRequest(async (req, res) => {
 
         // 3. Serve File
         const finalServeName = normalizedFileName; 
-        let filePath = resolveCourseFilePath(finalServeName);
+        let resolvedSource = "none";
+        let content = "";
+        let filePath = "";
+        const externalHit = await fetchExternalCourseContent(finalServeName, runtimeConfig);
+        if (externalHit && externalHit.content) {
+            content = externalHit.content;
+            resolvedSource = externalHit.source;
+        } else {
+            filePath = resolveLocalCourseFilePath(finalServeName, runtimeConfig);
+        }
 
         // [NEW v11.3.9] Legacy Name Fallback (01- to 00-)
         if (!fs.existsSync(filePath)) {
@@ -1588,20 +1697,33 @@ exports.serveCourse = onRequest(async (req, res) => {
             else if (fileName.match(/^0[1-5]-/)) altFileName = 'start-' + fileName;
 
             if (altFileName) {
-                const altPath = resolveCourseFilePath(altFileName);
+                const altExternalHit = await fetchExternalCourseContent(altFileName, runtimeConfig);
+                if (altExternalHit && altExternalHit.content) {
+                    console.log(`[serveCourse] Legacy Fallback via external: ${fileName} -> ${altFileName}`);
+                    content = altExternalHit.content;
+                    resolvedSource = altExternalHit.source;
+                    filePath = "";
+                }
+                const altPath = resolveLocalCourseFilePath(altFileName, runtimeConfig);
                 if (fs.existsSync(altPath)) {
                     console.log(`[serveCourse] Legacy Fallback: ${fileName} -> ${altFileName}`);
                     filePath = altPath;
+                    content = "";
+                    resolvedSource = "local";
                 }
             }
         }
 
-        if (!fs.existsSync(filePath)) {
+        if (!content && !fs.existsSync(filePath)) {
             return res.status(404).send("File not found.");
         }
 
         // [NEW v11.3.15] Inject Firebase SDK & Bootstrapper for Auto-Tracking
-        let content = fs.readFileSync(filePath, 'utf8');
+        if (!content) {
+            content = fs.readFileSync(filePath, 'utf8');
+            resolvedSource = "local";
+        }
+        console.log(`[serveCourse] content_source=${resolvedSource} file=${finalServeName}`);
         const firebaseConfig = {
             apiKey: "AIzaSyCO6Y6Pa7b7zbieJIErysaNF6-UqbT8KJw",
             authDomain: "e-learning-942f7.firebaseapp.com",
