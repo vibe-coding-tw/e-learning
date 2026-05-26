@@ -112,6 +112,7 @@
 > - 所有「資料比對 / 權限判斷 / 邏輯驗證 / 寫入儲存」一律以 Firestore 為準。
 > - 禁止在前端或後端維護硬編碼白名單、相容名單、舊 ID 對照表作為執行期判斷依據。
 > - 若資料不一致，先修 Firestore 資料與遷移腳本，不新增 fallback 白名單邏輯。
+> - `metadata_lessons.courseId` 新增資料請使用 canonical page URL（優先 `entryUnitId` 可開課頁），不再新增 `*-master-*` 作為主鍵。
 
 ---
 
