@@ -16,6 +16,7 @@ function init() {
     // Cleanup legacy style that may hide dashboard FAB from previous builds.
     const staleFabHide = document.getElementById('hide-dashboard-fab-style');
     if (staleFabHide) staleFabHide.remove();
+    normalizeCourseTopNav();
     hideGlobalNavOnCoursePage();
     ensureGlobalNavOnCoursePage();
     applyHideTabsPreference();
@@ -26,6 +27,40 @@ function init() {
     enhanceAssignmentEntryButtons();
     initFirebaseFeatures(); // [NEW] Start Firebase (Tracking + Assignments)
     initGithubReadme(); // [V8.2] Fetch and render GitHub README if applicable
+}
+
+function normalizeCourseTopNav() {
+    try {
+        const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
+        if (!file.endsWith('.html')) return;
+
+        const topNav = document.querySelector('.ms-topnav');
+        if (!topNav) return;
+
+        // 1) Prepare pages: hide the blue course top nav entirely.
+        if (file.startsWith('prepare-')) {
+            topNav.style.setProperty('display', 'none', 'important');
+            return;
+        }
+
+        // 2) Other course pages: fix broken brand href.
+        const brandLink = topNav.querySelector('.brand');
+        if (!brandLink) return;
+
+        const currentHref = (brandLink.getAttribute('href') || '').trim();
+        const isBroken = !currentHref || currentHref === '#' || currentHref === './#';
+        if (!isBroken) return;
+
+        let target = '/';
+        if (file.startsWith('start-')) target = '/start.html';
+        else if (file.startsWith('basic-')) target = '/basic.html';
+        else if (file.startsWith('adv-')) target = '/advanced.html';
+
+        brandLink.setAttribute('href', target);
+        brandLink.setAttribute('target', '_top');
+    } catch (e) {
+        console.warn('[CourseShared] normalizeCourseTopNav failed:', e);
+    }
 }
 
 function hideGlobalNavOnCoursePage() {
