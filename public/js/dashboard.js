@@ -356,7 +356,7 @@ function updateCurrentDashboardPermissions({ isAdmin = false, isQualifiedTutor =
     const isGlobalAdmin = !filterUnitId && isAdmin;
     const canViewAssignments = isGlobalAdmin ||
         (!!filterUnitId && (isQualifiedTutor ? !adminTutorMode : isPaidStudent));
-    const canViewSettings = !!filterUnitId && isQualifiedTutor && adminTutorMode;
+    const canViewSettings = !!filterUnitId && adminTutorMode && (isQualifiedTutor || isAdmin);
     
     currentDashboardPermissions = {
         isAdmin,
@@ -2195,10 +2195,10 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
 
     let html = `
         ${pendingHtml}
-        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div id="admin-console-header" class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <h3 class="text-2xl font-black text-orange-900 flex items-center gap-3">
                 <span class="p-2.5 bg-orange-100 rounded-xl">🛠️</span> 
-                合格教師管理控制台 (Tutor Admin Console)
+                合格教師控制台 (Tutor Console)
             </h3>
 
             <p id="admin-msg" class="text-sm font-bold text-orange-600 animate-pulse"></p>
@@ -2530,7 +2530,7 @@ window.vibeInjectAdminTutorModeToggle = function() {
         </div>
     `;
 
-    const targetIds = ['assignments-header', 'assignments-header-integrated', 'settings-header'];
+    const targetIds = ['assignments-header', 'assignments-header-integrated', 'settings-header', 'admin-console-header'];
     
     targetIds.forEach(id => {
         const header = document.getElementById(id);
