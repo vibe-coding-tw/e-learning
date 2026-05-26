@@ -455,14 +455,49 @@ Reference artifacts:
 
 ### 7.6 Validation and pilot rollout
 
-- [ ] Pick 1 `tw-common-*` unit as pilot
-- [ ] Pick 1 `tw-car-starter-*` unit as pilot
-- [ ] Verify course open flow
-- [ ] Verify authorization scope
-- [ ] Verify dashboard lesson entry
-- [ ] Verify assignment-guide and tutor-guide rendering
+- Pilot selection (2026-05-26):
+  - `tw-common` proxy pilot: `prepare-01-developer-identity.html`
+  - `tw-car-starter` proxy pilot: `start-01-unit-html5-basics.html`
+  - Note: naming migration to `tw-*` is pending; current pilot uses existing canonical filenames as proxies.
+
+- [x] Pick 1 `tw-common-*` unit as pilot
+- [x] Pick 1 `tw-car-starter-*` unit as pilot
+- [x] Verify course open flow
+- [x] Verify authorization scope
+- [x] Verify dashboard lesson entry
+- [x] Verify assignment-guide and tutor-guide rendering
 - [ ] Verify autograde and writeback are unaffected
 - [ ] Remove `*-master-*` only after pilot validation succeeds
+
+Billing window note (2026-05):
+- GitHub Actions execution is temporarily blocked by billing limits.
+- Therefore, `autograde + writeback` end-to-end runtime verification is temporarily deferred.
+- During this window, do **not** retire `*-master-*` pages yet.
+
+Pilot verification notes (2026-05-26):
+- Course open flow: verified at code-path level
+  - `public/start.html|basic.html|advanced.html` resolve entry by `entryUnitId` first
+  - pilot master page links point to existing unit files
+- Authorization scope: verified in `serveCourse`
+  - scope resolution now checks `courseId/courseKey/entryUnitId/classroomUrl/contentRef/courseUnits`
+  - legacy fallback limited to `-master-` scope only
+- Dashboard lesson entry: verified in `getDashboardData`
+  - related files aggregation includes `entryUnitId + courseUnits + classroomUrl`
+  - hidden sections extraction for `assignment-guide` and `tutor-guide` confirmed in both pilot files
+- Autograde/writeback: not yet passed
+  - audit sample file: `/tmp/autograde_consistency_audit_20260526_134707.csv`
+  - sample scope (34 repos): `workflow_ok=no` for 34/34, `last_writeback_ok=no` for 34/34
+  - current blocker: GitHub Actions billing window; runtime runs cannot be executed this month
+
+Deferred verification plan (next billing cycle):
+
+1. Trigger 1 pilot bridge repo autograde workflow manually
+2. Confirm Actions run status = success
+3. Confirm `ingestGithubAutograde` writes Firestore `autoGrade*` fields
+4. Re-run consistency audit and capture new report path
+5. Only then mark:
+   - `Verify autograde and writeback are unaffected`
+   - `Remove *-master-* only after pilot validation succeeds`
 
 Operational note:
 - Any change under `functions/private_courses/*` requires `firebase deploy --only functions`.
