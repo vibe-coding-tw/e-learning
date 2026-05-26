@@ -418,11 +418,11 @@ Admin needs:
 - [x] Add `--dry-run` support
 - [x] Add stale-file detection
 - [x] Add optional stale-file deletion via `--apply-delete`
-- [ ] Create external private content repo
-- [ ] Add first `zh-TW` pilot content
-- [ ] Add first `en` pilot content
-- [ ] Define publish SOP: update repo -> sync -> deploy
-- [ ] Verify fallback order with one migrated unit
+- [x] Create external private content repo
+- [x] Add first `zh-TW` pilot content
+- [x] Add first `en` pilot content
+- [x] Define publish SOP: update repo -> sync -> deploy
+- [x] Verify fallback order with one migrated unit
 
 ### 7.4 Naming migration
 
