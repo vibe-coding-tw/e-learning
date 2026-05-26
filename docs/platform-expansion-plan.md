@@ -445,7 +445,7 @@ Reference artifacts:
 - [x] Add single-level `courseDevRate` support (owner-present only)
 - [x] Add upline share calculation for tutor
 - [x] Add upline share calculation for agent
-- [ ] Add upline share calculation for course developer (`courseDevUplineRate`)
+- [x] Add upline share calculation for course developer (`courseDevUplineRate`)
 - [x] Persist `policySnapshot` into ledger records
 - [ ] Add admin policy CRUD
 - [ ] Add admin revenue simulation UI
@@ -467,7 +467,7 @@ Reference artifacts:
 
 1. Apply `users` and `orders` regional fields (`locale`, `region`, `channelType`, `policyId`, `pricingVersion`) with migration script.
 2. Complete role-based sharing (`tutor/agent/courseDev`) with policy snapshot mode.
-3. Design and implement multi-level `courseDev` sharing (`courseDevUplineRate` + ownership chain mapping).
+3. Add admin UI for setting `courseDev` ownership/upline mapping quality checks.
 3. Prepare first external content repo pilot (`zh-TW` + `en`, one unit each).
 4. Plan master-page retirement for `start/basic/advanced` after tabs are replaced by unit-page native navigation.
 5. Collect 46 missing video/doc URLs for advanced course files from content owners.
