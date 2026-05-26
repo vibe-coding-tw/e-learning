@@ -356,7 +356,7 @@ function updateCurrentDashboardPermissions({ isAdmin = false, isQualifiedTutor =
     const isGlobalAdmin = !filterUnitId && isAdmin;
     const canViewAssignments = isGlobalAdmin ||
         (!!filterUnitId && (isQualifiedTutor ? !adminTutorMode : isPaidStudent));
-    const canViewSettings = !!filterUnitId && adminTutorMode && (isQualifiedTutor || isAdmin);
+    const canViewSettings = !!filterUnitId && isQualifiedTutor && adminTutorMode;
     
     currentDashboardPermissions = {
         isAdmin,
