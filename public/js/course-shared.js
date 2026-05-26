@@ -27,6 +27,7 @@ function init() {
     enhanceAssignmentEntryButtons();
     initFirebaseFeatures(); // [NEW] Start Firebase (Tracking + Assignments)
     initGithubReadme(); // [V8.2] Fetch and render GitHub README if applicable
+    ensureDashboardFabFallback();
 }
 
 function normalizeCourseTopNav() {
@@ -107,6 +108,47 @@ function ensureGlobalNavOnCoursePage() {
         }
     } catch (e) {
         console.warn('[CourseShared] ensureGlobalNavOnCoursePage failed:', e);
+    }
+}
+
+function ensureDashboardFabFallback() {
+    try {
+        const file = (window.location.pathname.split('/').pop() || '').toLowerCase();
+        const excluded = new Set([
+            '',
+            'index.html',
+            'prepare.html',
+            'start.html',
+            'basic.html',
+            'advanced.html',
+            'students.html',
+            'tutors.html',
+            'dashboard.html',
+            'cart.html',
+            'login.html',
+            'payment-return.html'
+        ]);
+        if (!file.endsWith('.html') || excluded.has(file)) return;
+
+        const inject = () => {
+            if (document.getElementById('dashboard-fab')) return;
+            const fab = document.createElement('button');
+            fab.id = 'dashboard-fab';
+            fab.className = 'fixed bottom-8 right-8 w-16 h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 z-50';
+            fab.style.zIndex = '9999';
+            fab.innerHTML = '<span class="text-3xl">📊</span>';
+            fab.onclick = () => {
+                const u = `/dashboard.html?unitId=${encodeURIComponent(file)}`;
+                window.location.href = u;
+            };
+            document.body.appendChild(fab);
+        };
+
+        setTimeout(inject, 50);
+        setTimeout(inject, 500);
+        document.addEventListener('DOMContentLoaded', inject);
+    } catch (e) {
+        console.warn('[CourseShared] ensureDashboardFabFallback failed:', e);
     }
 }
 
