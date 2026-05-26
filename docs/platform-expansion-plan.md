@@ -403,6 +403,7 @@ Admin needs:
 - [x] Add old-filename -> new-filename fallback for i18n content paths
 - [x] Restrict compatibility fallback to legacy `-master-` token scopes only
 - [x] Add `/courses/*` global nav injection with iframe-safe guard (avoid duplicate nav in master iframes)
+- [x] Remove invalid injected placeholder script (`P26...`) from `functions/private_courses/*.html` and restore canonical `/js/course-shared.js` loading
 - [~] Make `entryUnitId` the primary course entry target
   - `prepare`: now mapped to existing `prepare-*` unit pages
   - `start/basic/advanced`: temporarily keep master entry to preserve in-page unit tabs
@@ -460,6 +461,10 @@ Reference artifacts:
 - [ ] Verify assignment-guide and tutor-guide rendering
 - [ ] Verify autograde and writeback are unaffected
 - [ ] Remove `*-master-*` only after pilot validation succeeds
+
+Operational note:
+- Any change under `functions/private_courses/*` requires `firebase deploy --only functions`.
+- Deploying hosting only will not update `/courses/*` served content.
 
 ---
 
