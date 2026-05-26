@@ -4334,6 +4334,56 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
 
     console.log(`Starting profit sharing calculation for: ${lastMonth.toISOString()} to ${endOfLastMonth.toISOString()}`);
 
+    const fallbackPolicy = {
+        policyId: "default-v1",
+        policyName: "Default Tutor Sharing Policy",
+        tutorRate: 0.2,
+        tutorUplineRate: 0.2,
+        agentRate: 0,
+        agentUplineRate: 0,
+        courseDevRate: 0,
+        enabled: true
+    };
+
+    const policyCache = new Map();
+    const loadPolicyById = async (policyId = "") => {
+        const normalized = String(policyId || "").trim() || fallbackPolicy.policyId;
+        if (policyCache.has(normalized)) return policyCache.get(normalized);
+
+        let policy = fallbackPolicy;
+        if (normalized !== fallbackPolicy.policyId) {
+            try {
+                const snap = await db.collection("revenue_share_policies").doc(normalized).get();
+                if (snap.exists) {
+                    const raw = snap.data() || {};
+                    policy = {
+                        policyId: normalized,
+                        policyName: raw.policyName || raw.name || normalized,
+                        tutorRate: Number(raw.tutorRate ?? fallbackPolicy.tutorRate),
+                        tutorUplineRate: Number(raw.tutorUplineRate ?? fallbackPolicy.tutorUplineRate),
+                        agentRate: Number(raw.agentRate ?? fallbackPolicy.agentRate),
+                        agentUplineRate: Number(raw.agentUplineRate ?? fallbackPolicy.agentUplineRate),
+                        courseDevRate: Number(raw.courseDevRate ?? fallbackPolicy.courseDevRate),
+                        enabled: raw.enabled !== false
+                    };
+                    if (!policy.enabled) {
+                        console.warn(`[sharing] policy disabled (${normalized}), fallback to default.`);
+                        policy = fallbackPolicy;
+                    }
+                } else {
+                    console.warn(`[sharing] policy not found (${normalized}), fallback to default.`);
+                    policy = fallbackPolicy;
+                }
+            } catch (e) {
+                console.warn(`[sharing] load policy failed (${normalized}), fallback to default:`, e.message || e);
+                policy = fallbackPolicy;
+            }
+        }
+
+        policyCache.set(normalized, policy);
+        return policy;
+    };
+
     try {
         // 1. Find all successful orders in the last month that have referral info
         const ordersSnapshot = await db.collection('orders')
@@ -4363,11 +4413,13 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
                     ? itemValue.referredTutorEmail.trim()
                     : ((itemValue?.referralTutor && itemValue.referralTutor.trim()) ? itemValue.referralTutor.trim() : "info@vibe-coding.tw");
                 const itemReferralLink = itemValue?.referralLink || itemValue?.promoCode || null;
+                const effectivePolicyId = String(order.policyId || "").trim() || fallbackPolicy.policyId;
+                const policy = await loadPolicyById(effectivePolicyId);
 
                 if (lineAmount <= 0) continue;
 
                 let currentTutorEmail = initialTutor;
-                let currentShare = lineAmount * 0.2; // First level: 20%
+                let currentShare = lineAmount * Number(policy.tutorRate || fallbackPolicy.tutorRate);
                 let level = 1;
 
                 while (currentTutorEmail && currentShare >= 0.01) {
@@ -4385,6 +4437,16 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
                         shareAmount: Math.round(currentShare * 100) / 100,
                         level: level,
                         referralLink: itemReferralLink,
+                        policyId: policy.policyId,
+                        policySnapshot: {
+                            policyId: policy.policyId,
+                            policyName: policy.policyName,
+                            tutorRate: Number(policy.tutorRate || 0),
+                            tutorUplineRate: Number(policy.tutorUplineRate || 0),
+                            agentRate: Number(policy.agentRate || 0),
+                            agentUplineRate: Number(policy.agentUplineRate || 0),
+                            courseDevRate: Number(policy.courseDevRate || 0)
+                        },
                         calculatedAt: admin.firestore.FieldValue.serverTimestamp(),
                         period
                     };
@@ -4397,11 +4459,11 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
                     if (!tutorUserSnapshot.empty) {
                         const tutorData = tutorUserSnapshot.docs[0].data();
                         currentTutorEmail = tutorData.tutorEmail || "info@vibe-coding.tw";
-                        currentShare = currentShare * 0.2;
+                        currentShare = currentShare * Number(policy.tutorUplineRate || fallbackPolicy.tutorUplineRate);
                         level++;
                     } else {
                         currentTutorEmail = "info@vibe-coding.tw";
-                        currentShare = currentShare * 0.2;
+                        currentShare = currentShare * Number(policy.tutorUplineRate || fallbackPolicy.tutorUplineRate);
                         level++;
                     }
                 }
