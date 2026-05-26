@@ -490,7 +490,7 @@ async function sendTutorLinkedToStudentEmail(email, studentName, unitId) {
  */
 async function sendAdminNewApplicationEmail(adminEmail, userEmail, unitId) {
     const cleanUnitId = unitId ? unitId.replace('.html', '') : '';
-    const dashboardUrl = cleanUnitId ? appUrl(`/dashboard.html?unitId=${cleanUnitId}&tab=admin`) : appUrl('/dashboard.html?tab=admin');
+    const dashboardUrl = cleanUnitId ? appUrl(`/dashboard.html?unitId=${cleanUnitId}&tab=tutors`) : appUrl('/dashboard.html?tab=tutors');
     const mailOptions = {
         from: '"Vibe Coding System" <info@vibe-coding.tw>',
         to: adminEmail,
@@ -581,7 +581,7 @@ async function sendApplicationResultEmail(email, unitId, status, message = "") {
  * Send a summary email to the admin about pending student assignments.
  */
 async function sendAdminAssignmentReminder(adminEmail, pendingList) {
-    const dashboardUrl = appUrl('/dashboard.html?tab=admin');
+    const dashboardUrl = appUrl('/dashboard.html?tab=tutors');
     const listHtml = pendingList.map(item => `
         <li style="margin-bottom: 10px;">
             <strong>${item.email}</strong> 尚未指派老師單元: <em>${item.units.join(', ')}</em>
@@ -877,7 +877,7 @@ async function sendTutorRecommendationCandidateEmail(email, unitId, recommenderE
  */
 async function sendAutogradeFailureAlertEmail(adminEmail, reason, payload = {}) {
     if (!adminEmail) return;
-    const dashboardUrl = appUrl('/dashboard.html?tab=admin');
+    const dashboardUrl = appUrl('/dashboard.html?tab=tutors');
     const payloadPreview = JSON.stringify(payload || {}, null, 2).slice(0, 3000);
 
     const mailOptions = {

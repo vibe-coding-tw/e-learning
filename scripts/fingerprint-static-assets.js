@@ -6,6 +6,7 @@ const crypto = require('crypto');
 
 const rootDir = path.resolve(__dirname, '..');
 const publicDir = path.join(rootDir, 'public');
+const privateCoursesDir = path.join(rootDir, 'functions', 'private_courses');
 
 function walkFiles(dir, out = []) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -122,7 +123,13 @@ function main() {
     console.error(`public dir not found: ${publicDir}`);
     process.exit(1);
   }
-  const htmlFiles = walkFiles(publicDir).filter((f) => f.endsWith('.html'));
+  const htmlRoots = [publicDir];
+  if (fs.existsSync(privateCoursesDir)) {
+    htmlRoots.push(privateCoursesDir);
+  }
+  const htmlFiles = htmlRoots
+    .flatMap((dir) => walkFiles(dir))
+    .filter((f) => f.endsWith('.html'));
   htmlFiles.forEach(processHtmlFile);
   console.log('fingerprint complete');
 }
