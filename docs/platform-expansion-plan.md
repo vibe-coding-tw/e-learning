@@ -41,6 +41,24 @@ For `metadata_lessons`:
 - `i18n`
 - `contentRef`
 
+### 2.3.1 Current implementation (2026-05-27)
+
+- Course list pages are unified into `public/learning-path.html`.
+- `path` query drives category rendering, e.g.:
+  - `?path=tw-common`
+  - `?path=tw-car-starter`
+  - `?path=tw-car-basic`
+  - `?path=tw-car-advanced`
+- Legacy entry pages `prepare/start/basic/advanced` are compatibility redirects only.
+- Top nav learning-path menu is generated dynamically from Firestore `metadata_lessons`:
+  - grouping key source: `locale + track + level (+ courseKey context)`
+  - label source priority:
+    1. `learningPathLabelZh/En`
+    2. `categoryLabelZh/En`
+    3. `navLabelZh/En`
+    4. `learningPathLabel|categoryLabel|navLabel`
+  - fallback: key humanization if no label is configured.
+
 For `users`:
 
 - `locale`
@@ -92,7 +110,7 @@ Conclusion:
 
 Dependencies that must be removed before retiring the remaining masters:
 
-1. Entry pages such as `prepare.html` ← **partially done**: prepare courses no longer use master files
+1. Entry pages such as `prepare.html` ← **done**: now redirect to `learning-path.html`
 2. `serveCourse` scope validation that still uses `classroomUrl/masterFile`
 3. Frontend fallbacks that hardcode master filenames
 
@@ -125,6 +143,15 @@ Frontend rename:
 | Old filename | New filename |
 |---|---|
 | `public/started.html` | `public/start.html` |
+
+Frontend routing update (2026-05):
+
+| Legacy page | Current behavior |
+|---|---|
+| `public/prepare.html` | Redirect to `public/learning-path.html?path=tw-common` |
+| `public/start.html` | Redirect to `public/learning-path.html?path=tw-car-starter` |
+| `public/basic.html` | Redirect to `public/learning-path.html?path=tw-car-basic` |
+| `public/advanced.html` | Redirect to `public/learning-path.html?path=tw-car-advanced` |
 
 ### 2.8 New tooling files
 

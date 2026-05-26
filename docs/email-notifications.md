@@ -17,7 +17,7 @@ It is the source of truth for:
 ## 2. Notification Matrix
 | Notification | Trigger | Recipient | Function | Deep Link |
 | :--- | :--- | :--- | :--- | :--- |
-| Welcome | Firebase Auth user created | New user | `sendWelcomeEmail` | `/prepare.html`, `/start.html`, `/dashboard.html` |
+| Welcome | Firebase Auth user created | New user | `sendWelcomeEmail` | `/learning-path.html?path=tw-common`, `/learning-path.html?path=tw-car-starter`, `/dashboard.html` |
 | Payment success | `paymentNotify` success | Student | `sendPaymentSuccessEmail` | `/dashboard.html?tab=overview` |
 | Trial expiring | Scheduled check | Student | `sendTrialExpiringEmail` | `/dashboard.html` |
 | Course expiring | Scheduled check | Student | `sendCourseExpiringEmail` | `/dashboard.html` |
