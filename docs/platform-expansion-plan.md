@@ -379,15 +379,16 @@ Admin needs:
 
 ---
 
-## 7. Implementation Checklist
+## 7. Implementation Checklist (Live Status)
 
 ### 7.1 Data model and Firestore
 
-- [ ] Add `courseKey` to `metadata_lessons`
-- [ ] Add `track` to `metadata_lessons`
-- [ ] Add `level` to `metadata_lessons`
-- [ ] Add `entryUnitId` to `metadata_lessons`
-- [ ] Add `contentRef` to `metadata_lessons`
+- [x] Add `courseKey` to `metadata_lessons`
+- [x] Add `track` to `metadata_lessons`
+- [x] Add `level` to `metadata_lessons`
+- [x] Add `entryUnitId` to `metadata_lessons`
+- [x] Add `contentRef` to `metadata_lessons`
+- [x] Normalize known non-canonical metadata records into explicit product types (`metadataType=product|legacy_product`)
 - [ ] Add `locale` to `users`
 - [ ] Add `region` to `users`
 - [ ] Add `region` to `orders`
@@ -400,9 +401,12 @@ Admin needs:
 
 - [x] Add locale-aware content lookup in `serveCourse`
 - [x] Add old-filename -> new-filename fallback for i18n content paths
-- [ ] Replace `classroomUrl/masterFile` scope validation with `courseKey + unit list`
-- [ ] Make `entryUnitId` the primary course entry target
-- [ ] Convert `*-master-*` pages into compatibility redirects
+- [x] Restrict compatibility fallback to legacy `-master-` token scopes only
+- [x] Add `/courses/*` global nav injection with iframe-safe guard (avoid duplicate nav in master iframes)
+- [~] Make `entryUnitId` the primary course entry target
+  - `prepare`: now mapped to existing `prepare-*` unit pages
+  - `start/basic/advanced`: temporarily keep master entry to preserve in-page unit tabs
+- [ ] Convert remaining `*-master-*` pages into compatibility redirects
 - [ ] Remove `*-master-*` dependencies from token generation and entry links
 
 ### 7.3 External content repo MVP
@@ -422,8 +426,9 @@ Admin needs:
 - [x] Confirm new lowercase naming examples
 - [x] Create old filename -> new filename mapping table
 - [x] Create old `unitId` -> `contentRef` mapping table
+- [x] Remove `master` check from shared nav FAB injection logic
 - [ ] Hide `-unit-` technical prefixes in all UI surfaces
-- [ ] Update `prepare.html` and related entry pages to use new metadata-driven names
+- [ ] Move prepare course units from `prepare-*` compatibility names to target `tw-common-*` / `tw-car-*` naming
 
 Reference artifacts:
 
@@ -459,21 +464,17 @@ Reference artifacts:
 
 ## 8. Immediate Next Steps
 
-1. Create the filename mapping tables
-2. Add the new metadata fields in Firestore planning
-3. Refactor `serveCourse` authorization away from `masterFile`
-4. Prepare 1-2 pilot units for external private repo migration
-
-### Phase 3
-
-1. Redirect and remove remaining `*-master-*` (30 files)
-2. Gradually migrate legacy `unitId/courseId`
-3. Expand to multi-market pricing/versioning
-4. Support external instructors publishing through the standardized content pipeline
+1. Apply `users` and `orders` regional fields (`locale`, `region`, `channelType`, `policyId`, `pricingVersion`) with migration script.
+2. Implement `revenue_share_policies` and wire `calculateMonthlySharing` to policy snapshot mode.
+3. Prepare first external content repo pilot (`zh-TW` + `en`, one unit each).
+4. Plan master-page retirement for `start/basic/advanced` after tabs are replaced by unit-page native navigation.
+5. Collect 46 missing video/doc URLs for advanced course files from content owners.
 
 ---
 
-## 8. Risks
+## 9. Risks And Controls
+
+Risks:
 
 1. Authorization regressions during route migration
 2. Grade writeback failures during ID migration
@@ -483,17 +484,8 @@ Reference artifacts:
 
 Controls:
 
-1. Backward-compatible fallback while migrating
+1. Backward-compatible fallback while migrating (now narrowed to legacy master tokens)
 2. Ledger policy snapshots
 3. Versioned content sync
 4. Cache busting
 5. Admin audit trail and simulation
-
----
-
-## 9. Immediate Next Steps
-
-1. Treat this file as the primary planning document.
-2. Use it to drive implementation tasks in order: naming → entry routing → content repo → revenue share policies.
-3. Keep old planning docs only as compatibility pointers.
-4. Collect 46 missing video/doc URLs for advanced course files from content owners.
