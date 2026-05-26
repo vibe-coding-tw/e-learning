@@ -1884,6 +1884,78 @@ window.setupAdminFeatures = window.setupAdminFeatures || function() {
     // Admin features are now initialized during renderAdminConsole
 }
 
+window.buildRevenueToolsHtml = window.buildRevenueToolsHtml || function() {
+    return `
+        <div class="mb-10 bg-blue-50 border border-blue-100 rounded-2xl overflow-hidden shadow-sm">
+            <div class="px-6 py-4 border-b border-blue-100 flex items-center justify-between">
+                <h4 class="text-sm font-black text-blue-900 flex items-center gap-2">
+                    📊 分潤模擬器（唯讀）
+                </h4>
+                <span class="text-[11px] text-blue-500 font-semibold">不寫入資料庫</span>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <label class="text-xs font-bold text-gray-600">訂單金額
+                    <input id="sim-amount" type="number" min="0" step="1" value="1200" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+                </label>
+                <label class="text-xs font-bold text-gray-600">有效期(月)
+                    <input id="sim-months" type="number" min="1" step="1" value="12" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+                </label>
+                <label class="text-xs font-bold text-gray-600">Tutor Rate
+                    <input id="sim-tutor-rate" type="number" min="0" max="1" step="0.01" value="0.2" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+                </label>
+                <label class="text-xs font-bold text-gray-600">Tutor Upline Rate
+                    <input id="sim-tutor-upline-rate" type="number" min="0" max="1" step="0.01" value="0.2" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+                </label>
+                <label class="text-xs font-bold text-gray-600">Agent Rate
+                    <input id="sim-agent-rate" type="number" min="0" max="1" step="0.01" value="0.2" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+                </label>
+                <label class="text-xs font-bold text-gray-600">Agent Upline Rate
+                    <input id="sim-agent-upline-rate" type="number" min="0" max="1" step="0.01" value="0.1" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+                </label>
+                <label class="text-xs font-bold text-gray-600">CourseDev Rate
+                    <input id="sim-course-rate" type="number" min="0" max="1" step="0.01" value="0.2" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+                </label>
+                <label class="text-xs font-bold text-gray-600">CourseDev Upline Rate
+                    <input id="sim-course-upline-rate" type="number" min="0" max="1" step="0.01" value="0.1" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+                </label>
+            </div>
+            <div class="px-6 pb-6">
+                <button onclick="window.runRevenueSimulation()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700">
+                    重新模擬
+                </button>
+            </div>
+            <div id="revenue-sim-result" class="px-6 pb-6"></div>
+        </div>
+
+        <div class="mb-10 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                <h4 class="text-sm font-black text-slate-900 flex items-center gap-2">⚙️ 分潤策略管理（Admin）</h4>
+                <button onclick="window.loadRevenuePolicies()" class="px-3 py-1.5 text-xs font-bold border border-slate-300 rounded-lg hover:bg-slate-50">重新載入</button>
+            </div>
+            <div class="p-6 overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="text-slate-500 border-b">
+                            <th class="py-2 pr-3">Policy</th>
+                            <th class="py-2 pr-3">Tutor</th>
+                            <th class="py-2 pr-3">Tutor Up</th>
+                            <th class="py-2 pr-3">Agent</th>
+                            <th class="py-2 pr-3">Agent Up</th>
+                            <th class="py-2 pr-3">CourseDev</th>
+                            <th class="py-2 pr-3">CourseDev Up</th>
+                            <th class="py-2 pr-3">Enabled</th>
+                            <th class="py-2 text-right">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="revenue-policy-body" class="divide-y">
+                        <tr><td colspan="9" class="py-6 text-center text-slate-400">載入中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+};
+
 /**
  * [V17.0] Render Logistics Management Tab (Admin Only)
  */
@@ -1891,6 +1963,7 @@ window.renderLogisticsTab = function() {
     if (myRole !== 'admin' || !dashboardData) return;
     
     const container = document.getElementById('shipments-table-body');
+    const revenueToolsContainer = document.getElementById('shipments-revenue-tools');
     if (!container) return;
 
     const orders = dashboardData.hardwareOrders || [];
@@ -1965,6 +2038,16 @@ window.renderLogisticsTab = function() {
             </tr>
         `;
     }).join('');
+
+    if (revenueToolsContainer) {
+        revenueToolsContainer.innerHTML = window.buildRevenueToolsHtml ? window.buildRevenueToolsHtml() : '';
+    }
+    if (typeof window.runRevenueSimulation === 'function') {
+        window.runRevenueSimulation();
+    }
+    if (typeof window.loadRevenuePolicies === 'function') {
+        window.loadRevenuePolicies();
+    }
 };
 
 window.markAsShipped = async function(orderId) {
@@ -2110,87 +2193,6 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
         </div>
     `;
 
-    const revenueSimHtml = `
-        <div class="mb-10 bg-blue-50 border border-blue-100 rounded-2xl overflow-hidden shadow-sm">
-            <div class="px-6 py-4 border-b border-blue-100 flex items-center justify-between">
-                <h4 class="text-sm font-black text-blue-900 flex items-center gap-2">
-                    📊 分潤模擬器（唯讀）
-                </h4>
-                <span class="text-[11px] text-blue-500 font-semibold">不寫入資料庫</span>
-            </div>
-            <div class="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-                <label class="text-xs font-bold text-gray-600">訂單金額
-                    <input id="sim-amount" type="number" min="0" step="1" value="1200"
-                        class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
-                </label>
-                <label class="text-xs font-bold text-gray-600">有效期(月)
-                    <input id="sim-months" type="number" min="1" step="1" value="12"
-                        class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
-                </label>
-                <label class="text-xs font-bold text-gray-600">Tutor Rate
-                    <input id="sim-tutor-rate" type="number" min="0" max="1" step="0.01" value="0.2"
-                        class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
-                </label>
-                <label class="text-xs font-bold text-gray-600">Tutor Upline Rate
-                    <input id="sim-tutor-upline-rate" type="number" min="0" max="1" step="0.01" value="0.2"
-                        class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
-                </label>
-                <label class="text-xs font-bold text-gray-600">Agent Rate
-                    <input id="sim-agent-rate" type="number" min="0" max="1" step="0.01" value="0.2"
-                        class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
-                </label>
-                <label class="text-xs font-bold text-gray-600">Agent Upline Rate
-                    <input id="sim-agent-upline-rate" type="number" min="0" max="1" step="0.01" value="0.1"
-                        class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
-                </label>
-                <label class="text-xs font-bold text-gray-600">CourseDev Rate
-                    <input id="sim-course-rate" type="number" min="0" max="1" step="0.01" value="0.2"
-                        class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
-                </label>
-                <label class="text-xs font-bold text-gray-600">CourseDev Upline Rate
-                    <input id="sim-course-upline-rate" type="number" min="0" max="1" step="0.01" value="0.1"
-                        class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
-                </label>
-            </div>
-            <div class="px-6 pb-6">
-                <button onclick="window.runRevenueSimulation()"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700">
-                    重新模擬
-                </button>
-            </div>
-            <div id="revenue-sim-result" class="px-6 pb-6"></div>
-        </div>
-    `;
-
-    const policyAdminHtml = `
-        <div class="mb-10 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-                <h4 class="text-sm font-black text-slate-900 flex items-center gap-2">⚙️ 分潤策略管理（Admin）</h4>
-                <button onclick="window.loadRevenuePolicies()" class="px-3 py-1.5 text-xs font-bold border border-slate-300 rounded-lg hover:bg-slate-50">重新載入</button>
-            </div>
-            <div class="p-6 overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead>
-                        <tr class="text-slate-500 border-b">
-                            <th class="py-2 pr-3">Policy</th>
-                            <th class="py-2 pr-3">Tutor</th>
-                            <th class="py-2 pr-3">Tutor Up</th>
-                            <th class="py-2 pr-3">Agent</th>
-                            <th class="py-2 pr-3">Agent Up</th>
-                            <th class="py-2 pr-3">CourseDev</th>
-                            <th class="py-2 pr-3">CourseDev Up</th>
-                            <th class="py-2 pr-3">Enabled</th>
-                            <th class="py-2 text-right">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="revenue-policy-body" class="divide-y">
-                        <tr><td colspan="9" class="py-6 text-center text-slate-400">載入中...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    `;
-
     let html = `
         ${pendingHtml}
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
@@ -2202,8 +2204,6 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
             <p id="admin-msg" class="text-sm font-bold text-orange-600 animate-pulse"></p>
         </div>
         ${metricsHtml}
-        ${revenueSimHtml}
-        ${policyAdminHtml}
     `;
 
     try {
@@ -2355,12 +2355,6 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
 
     adminPanel.innerHTML = html;
     stripAdminConsoleAttachmentSections(adminPanel);
-    if (typeof window.runRevenueSimulation === 'function') {
-        window.runRevenueSimulation();
-    }
-    if (typeof window.loadRevenuePolicies === 'function') {
-        window.loadRevenuePolicies();
-    }
 }
 
 window.runRevenueSimulation = function () {
