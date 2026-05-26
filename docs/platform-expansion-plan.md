@@ -486,6 +486,69 @@ Hotfix note (2026-05-26):
 2. Apply `users` and `orders` regional fields (`locale`, `region`, `channelType`, `policyId`, `pricingVersion`) with migration script.
 3. Complete role-based sharing (`tutor/agent/courseDev`) with policy snapshot mode.
 4. Add admin UI for setting `courseDev` ownership/upline mapping quality checks.
+
+---
+
+## 9. Execution Runbook (Next Sprint)
+
+### 9.1 Phase A: Master-page stability gate
+
+Goal: make current `start/basic/adv` fully stable before structural migration.
+
+Tasks:
+
+1. Verify all master pages load canonical runtime scripts only:
+   - `/js/nav-component.js?v=...`
+   - `/js/course-shared.js?v=...`
+2. Verify unit pages no longer contain invalid placeholder script tokens.
+3. Confirm per track:
+   - `prepare-*`: FAB visible, no duplicate global nav
+   - `start-*`: tab + `.ms-topnav` consistent with `basic/adv`
+   - `basic-*`, `adv-*`: unchanged behavior after patch
+4. Smoke-test authorization path:
+   - `checkPaymentAuthorization` -> token -> `serveCourse` works
+5. Deploy sequence:
+   - if `functions/private_courses/*` changed -> deploy functions
+   - if only `public/js/*` changed -> deploy hosting
+
+Exit criteria:
+
+- No missing FAB reports on prepare/start/basic/adv unit pages
+- No duplicated nav on `/courses/*`
+- No `File not found` from token-to-course opens for active units
+
+### 9.2 Phase B: `entryUnitId` promotion
+
+Goal: reduce dependency on `*-master-*` as runtime entry.
+
+Tasks:
+
+1. For each `metadata_lessons` record, ensure `entryUnitId` points to a valid unit file.
+2. Update entry pages (`start.html`, `basic.html`, `advanced.html`) to navigate by `entryUnitId`.
+3. Keep master pages as compatibility wrappers during one full teaching cycle.
+
+Exit criteria:
+
+- Entry flows do not require `classroomUrl` master file to boot
+- Course landing pages still preserve current UX
+
+### 9.3 Phase C: Master retirement
+
+Goal: convert remaining masters into lightweight compatibility redirects, then remove.
+
+Tasks:
+
+1. Generate redirect mapping from each `*-master-*` to `entryUnitId`.
+2. Add migration note and rollback plan for each removed master.
+3. Remove master references from:
+   - token generation
+   - frontend fallback logic
+   - admin/debug tools
+
+Exit criteria:
+
+- `serveCourse` scope checks based on course/unit mapping, not master filename
+- No production link depends on `*-master-*`
 3. Prepare first external content repo pilot (`zh-TW` + `en`, one unit each).
 4. Plan master-page retirement for `start/basic/advanced` after tabs are replaced by unit-page native navigation.
 5. Collect 46 missing video/doc URLs for advanced course files from content owners.
