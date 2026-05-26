@@ -361,11 +361,14 @@ function injectDashboardFAB() {
         'login.html',
         'payment-return.html'
     ]);
+    const pathIsCourseRoute = path.startsWith('/courses/');
+    const looksLikeUnitPage = filename.includes('-unit-') || filename.includes('-master-') || /^prepare-\d+/.test(filename);
     const isHtml = filename.endsWith('.html');
-    const shouldShowFab = isHtml && !excluded.has(filename);
+    const shouldShowFab = (pathIsCourseRoute || isHtml || looksLikeUnitPage) && !excluded.has(filename);
     if (!shouldShowFab) return;
 
-    const courseParam = `?unitId=${encodeURIComponent(filename)}`;
+    const normalizedUnitId = filename || '';
+    const courseParam = normalizedUnitId ? `?unitId=${encodeURIComponent(normalizedUnitId)}` : '';
 
     const fab = document.createElement('button');
     fab.id = 'dashboard-fab';
