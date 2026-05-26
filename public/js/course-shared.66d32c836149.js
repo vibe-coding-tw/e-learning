@@ -41,10 +41,10 @@ function normalizeCourseTopNav() {
         // Normalize course bucket label to keep all units visually consistent.
         const navLabel = topNav.querySelector('.nav-label');
         if (navLabel) {
-            if (file.startsWith('start-')) navLabel.textContent = '入門課程';
-            else if (file.startsWith('basic-')) navLabel.textContent = '基礎課程';
-            else if (file.startsWith('adv-')) navLabel.textContent = '進階課程';
-            else if (file.startsWith('prepare-')) navLabel.textContent = '準備課程';
+            if (file.startsWith('start-') || file.startsWith('tw-car-starter-')) navLabel.textContent = '入門課程';
+            else if (file.startsWith('basic-') || file.startsWith('tw-car-basic-')) navLabel.textContent = '基礎課程';
+            else if (file.startsWith('adv-') || file.startsWith('tw-car-advanced-')) navLabel.textContent = '進階課程';
+            else if (file.startsWith('prepare-') || file.startsWith('tw-common-')) navLabel.textContent = '準備課程';
         }
 
         // Fix broken brand href for unit pages (especially start pages).
@@ -59,9 +59,9 @@ function normalizeCourseTopNav() {
         if (!isBroken) return;
 
         let target = '/';
-        if (file.startsWith('start-')) target = '/start.html';
-        else if (file.startsWith('basic-')) target = '/basic.html';
-        else if (file.startsWith('adv-')) target = '/advanced.html';
+        if (file.startsWith('start-') || file.startsWith('tw-car-starter-')) target = '/start.html';
+        else if (file.startsWith('basic-') || file.startsWith('tw-car-basic-')) target = '/basic.html';
+        else if (file.startsWith('adv-') || file.startsWith('tw-car-advanced-')) target = '/advanced.html';
 
         brandLink.setAttribute('href', target);
         brandLink.setAttribute('target', '_top');
@@ -75,7 +75,7 @@ function hideGlobalNavOnCoursePage() {
         const path = window.location.pathname || '';
         const file = (path.split('/').pop() || '').toLowerCase();
         const isCourseRoute = path.startsWith('/courses/');
-        const isPrepareUnit = /^prepare-\d+.*\.html$/.test(file);
+        const isPrepareUnit = /^(?:prepare-\d+|tw-common)-.*\.html$/.test(file);
         if (!isCourseRoute && !isPrepareUnit) return;
         if (document.getElementById('course-hide-main-nav-style')) return;
 
@@ -1412,10 +1412,10 @@ async function initFirebaseFeatures() {
                 }
             }
             // Fallback prefix check
-            if (fileName.startsWith('adv-')) return 'advanced';
-            if (fileName.startsWith('basic-')) return 'basic';
-            if (fileName.startsWith('start-')) return 'started';
-            if (fileName.match(/^[0-9]/)) return 'prepare';
+            if (fileName.startsWith('adv-') || fileName.startsWith('tw-car-advanced-')) return 'advanced';
+            if (fileName.startsWith('basic-') || fileName.startsWith('tw-car-basic-')) return 'basic';
+            if (fileName.startsWith('start-') || fileName.startsWith('tw-car-starter-')) return 'started';
+            if (fileName.match(/^[0-9]/) || fileName.startsWith('prepare-') || fileName.startsWith('tw-common-')) return 'prepare';
             return 'basic';
         };
 
