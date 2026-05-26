@@ -517,6 +517,16 @@ Exit criteria:
 - No duplicated nav on `/courses/*`
 - No `File not found` from token-to-course opens for active units
 
+Validation matrix (Phase A):
+
+| Area | Check item | Method | Owner | Status |
+|---|---|---|---|---|
+| Runtime script loading | No invalid placeholder script token in served course HTML | `rg "P26\\.05\\.26"` on `functions/private_courses/*.html` | Engineering | Completed |
+| FAB visibility | FAB shows on `prepare-*`, `start-*`, `basic-*`, `adv-*` unit pages | Manual open + hard refresh on each track sample | QA/PM | In progress |
+| Nav de-duplication | No duplicate global nav on `/courses/*` | Manual check on 5 master pages + 4 unit pages | QA/PM | In progress |
+| Start parity | `start` tab + iframe behavior matches `basic/adv` | Compare master wrappers (`start-01..05-master-*`) | Engineering | Completed |
+| Access route | token-based open does not return `File not found` on active units | Open from catalog + dashboard deep link | QA/PM | In progress |
+
 ### 9.2 Phase B: `entryUnitId` promotion
 
 Goal: reduce dependency on `*-master-*` as runtime entry.
@@ -549,6 +559,31 @@ Exit criteria:
 
 - `serveCourse` scope checks based on course/unit mapping, not master filename
 - No production link depends on `*-master-*`
+
+---
+
+## 10. Milestones And KPIs
+
+### M1 (stability)
+
+- Scope: complete Phase A
+- KPI:
+  - Course page critical UI incident (`FAB missing`, `duplicate nav`, `broken topnav`) = 0 for 7 consecutive days
+  - `/courses/*` support tickets related to page shell < 2 per week
+
+### M2 (entry migration)
+
+- Scope: complete Phase B
+- KPI:
+  - `entryUnitId` coverage in `metadata_lessons` = 100%
+  - Start/basic/advanced entry click-through success > 99%
+
+### M3 (master retirement)
+
+- Scope: complete Phase C
+- KPI:
+  - Runtime dependency on `*-master-*` = 0
+  - Rollback test for at least 3 representative courses passed
 3. Prepare first external content repo pilot (`zh-TW` + `en`, one unit each).
 4. Plan master-page retirement for `start/basic/advanced` after tabs are replaced by unit-page native navigation.
 5. Collect 46 missing video/doc URLs for advanced course files from content owners.
