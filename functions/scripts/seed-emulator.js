@@ -24,17 +24,30 @@ function buildContentRef(entryUnitId) {
   return `courses/zh-TW/${file}.html`;
 }
 
+function resolveCanonicalCourseId(course) {
+  const rawCourseId = String(course.courseId || '').trim();
+  const firstUnit = Array.isArray(course.courseUnits) && course.courseUnits.length > 0 ? course.courseUnits[0] : '';
+  const entryUnitId = String(course.entryUnitId || firstUnit || '').trim();
+  if (rawCourseId.includes('-master-') && entryUnitId.endsWith('.html')) return entryUnitId;
+  return rawCourseId || entryUnitId;
+}
+
 function withEntryMetadata(course) {
   const firstUnit = Array.isArray(course.courseUnits) && course.courseUnits.length > 0 ? course.courseUnits[0] : '';
   const resolvedEntryUnitId = course.entryUnitId || firstUnit;
+  const canonicalCourseId = resolveCanonicalCourseId({
+    ...course,
+    entryUnitId: resolvedEntryUnitId,
+  });
   return {
     ...course,
-    courseKey: course.courseKey || String(course.courseId || '').replace(/\.html$/i, '').toLowerCase(),
-    track: course.track || (String(course.courseId || '').startsWith('start-') || String(course.courseId || '').startsWith('basic-') || String(course.courseId || '').startsWith('adv-') ? 'car' : 'common'),
+    courseId: canonicalCourseId,
+    courseKey: course.courseKey || String(canonicalCourseId || '').replace(/\.html$/i, '').toLowerCase(),
+    track: course.track || (String(canonicalCourseId || '').startsWith('start-') || String(canonicalCourseId || '').startsWith('basic-') || String(canonicalCourseId || '').startsWith('adv-') ? 'car' : 'common'),
     level: course.level || (
-      String(course.courseId || '').startsWith('start-') ? 'starter' :
-      String(course.courseId || '').startsWith('basic-') ? 'basic' :
-      String(course.courseId || '').startsWith('adv-') ? 'advanced' :
+      String(canonicalCourseId || '').startsWith('start-') ? 'starter' :
+      String(canonicalCourseId || '').startsWith('basic-') ? 'basic' :
+      String(canonicalCourseId || '').startsWith('adv-') ? 'advanced' :
       'common'
     ),
     entryUnitId: resolvedEntryUnitId,
