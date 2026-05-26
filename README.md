@@ -198,6 +198,20 @@ firebase deploy --only functions --project e-learning-942f7
 firebase deploy --only hosting --project e-learning-942f7
 ```
 
+### 課程頁故障排查（FAB / `.ms-topnav` / 重複 nav）
+- 症狀：
+  - 課程右下角 `FAB` 不見
+  - `start` 課程的 `.ms-topnav` 和 `basic/advanced` 不一致
+  - 課程頁出現重複 nav
+- 常見根因：
+  - `functions/private_courses/*.html` 誤載入無效腳本（例如 `P26...` 字串），導致 `/js/course-shared.js` 沒執行
+  - 只部署 hosting，未部署 functions（`/courses/*` 由 `serveCourse` 提供，內容來源在 functions）
+- 標準修復：
+  1. 確認課程 HTML 載入的是 `/js/course-shared.js?v=...`（不要是未知字串）
+  2. 部署 `functions`：`firebase deploy --only functions --project e-learning-942f7`
+  3. 若有改 `public/js/*` 再部署 `hosting`
+  4. 前端驗證時使用硬重新整理 `Cmd+Shift+R`
+
 ### CI/CD 自動化流程 (GitHub Actions)
 1. **PR 預覽部署 (`firebase-hosting-pull-request.yml`)**
    - 觸發時機：發起 Pull Request 時。
