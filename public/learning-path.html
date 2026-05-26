@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>學習路徑</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="./style.f0b432c70be1.css">
+</head>
+<body class="flex flex-col min-h-screen">
+  <div id="nav-placeholder" data-root="." data-show-auth="true"></div>
+  <script type="module" src="./js/nav-component.js"></script>
+  <script src="./js/course-shared.js"></script>
+
+  <div class="container mx-auto px-4 py-8 flex-grow">
+    <div class="page-header text-center mb-10">
+      <h1 id="page-title" class="text-3xl font-bold text-gray-800">學習路徑</h1>
+      <div class="section-title-underline"></div>
+    </div>
+    <div id="lesson-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6"></div>
+  </div>
+
+  <div id="footer-placeholder" data-root="."></div>
+  <script src="./js/footer-component.js"></script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+    import { firebaseConfig, connectFirebaseEmulators } from "./js/firebase-local.js";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const functions = getFunctions(app, "asia-east1");
+    connectFirebaseEmulators({ auth, db, functions });
+
+    window.vibeApp = app;
+    window.getFunctions = getFunctions;
+    window.httpsCallable = httpsCallable;
+
+    const checkAuthFunction = httpsCallable(functions, "checkPaymentAuthorization");
+    const getLessonsFunc = httpsCallable(functions, "getLessonsMetadata");
+    const AUTH_URL = "/auth.html?v=" + Date.now();
+    const CART_URL = "cart.html";
+
+    function normalizeLocaleCode(raw = "") {
+      const v = String(raw || "").trim().toLowerCase();
+      if (!v) return "tw";
+      if (v.startsWith("zh")) return "tw";
+      return v.split(/[-_]/)[0] || "en";
+    }
+    function normalizeLevel(raw = "") {
+      const v = String(raw || "").trim().toLowerCase();
+      if (!v) return "common";
+      if (v === "started" || v === "start") return "starter";
+      if (v === "prepare") return "common";
+      return v;
+    }
+    function normalizeTrack(raw = "") {
+      const v = String(raw || "").trim().toLowerCase();
+      return v || "common";
+    }
+    function categoryFromLesson(lesson = {}) {
+      const locale = normalizeLocaleCode(lesson.locale || "");
+      const level = normalizeLevel(lesson.level || lesson.category || "");
+      const track = normalizeTrack(lesson.track || "");
+      if (level === "common") return `${locale}-common`;
+      if (track === "common") return `${locale}-${level}`;
+      return `${locale}-${track}-${level}`;
+    }
+    function categoryLabel(path = "") {
+      const m = {
+        "tw-common": "課前準備",
+        "tw-car-starter": "入門課程",
+        "tw-car-basic": "基礎課程",
+        "tw-car-advanced": "進階課程"
+      };
+      return m[path] || path;
+    }
+    function resolveEntryUrl(lesson = {}, fallbackUrl = "") {
+      const pickFile = (value = "") => String(value || "").split("/").pop().split("?")[0];
+      if (lesson.classroomUrl && /\.html(?:$|\?)/i.test(lesson.classroomUrl)) {
+        const file = pickFile(lesson.classroomUrl);
+        if (file) return `/courses/${file}`;
+      }
+      if (lesson.entryUnitId) return `/courses/${lesson.entryUnitId}`;
+      if (lesson.contentRef) {
+        const file = pickFile(lesson.contentRef);
+        if (file) return `/courses/${file}`;
+      }
+      return lesson.classroomUrl || fallbackUrl || "";
+    }
+
+    function addToCart(productId, productName, productPrice, isPhysical) {
+      const cart = JSON.parse(localStorage.getItem("vibeCodingCart") || "{}");
+      if (cart[productId]) return false;
+      cart[productId] = { name: productName, price: Number(productPrice || 0), quantity: 1, isPhysical: !!isPhysical };
+      localStorage.setItem("vibeCodingCart", JSON.stringify(cart));
+      return true;
+    }
+
+    function updateCardAction(card, status) {
+      const btn = card.querySelector(".action-btn");
+      if (!btn) return;
+      const courseId = card.dataset.courseId;
+      const courseName = card.dataset.courseName;
+      const coursePrice = Number(card.dataset.coursePrice || 0);
+      const isPhysical = card.dataset.isPhysical === "true";
+      const classroomUrl = card.dataset.classroomUrl;
+      btn.onclick = null;
+      btn.disabled = false;
+
+      if (isPhysical && coursePrice > 0) {
+        btn.textContent = "🛒 加入購物車";
+        btn.className = "action-btn w-full py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition";
+        btn.onclick = () => {
+          if (addToCart(courseId, courseName, coursePrice, isPhysical)) window.location.href = CART_URL;
+          else alert(`⚠️ 「${courseName}」已在購物車中！`);
+        };
+        return;
+      }
+      if (status === "AUTHORIZED") {
+        btn.textContent = "✅ 進入課程內容";
+        btn.className = "action-btn w-full py-2 px-3 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium transition";
+        btn.onclick = () => {
+          if (!classroomUrl) return alert("⚠️ 課程連結尚未備妥，請聯繫客服。");
+          window.location.href = `${AUTH_URL}&url=${encodeURIComponent(classroomUrl)}&id=${encodeURIComponent(courseId)}&price=${coursePrice}`;
+        };
+        return;
+      }
+      if (status === "NOT_LOGGED_IN") {
+        btn.textContent = coursePrice === 0 ? "👤 請先登入 (免費)" : "👤 請先登入";
+        btn.className = "action-btn w-full py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition";
+        btn.onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
+        return;
+      }
+      if (status === "UNAUTHORIZED" || status === "ERROR") {
+        btn.textContent = "🛒 加入購物車";
+        btn.className = "action-btn w-full py-2 px-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition";
+        btn.onclick = () => {
+          if (addToCart(courseId, courseName, coursePrice, isPhysical)) window.location.href = CART_URL;
+          else alert(`⚠️ 「${courseName}」已在購物車中！`);
+        };
+        return;
+      }
+      btn.textContent = "載入中...";
+      btn.className = "action-btn w-full py-2 px-3 rounded-md bg-gray-400 text-white font-medium cursor-not-allowed";
+      btn.disabled = true;
+    }
+
+    async function checkLessonAuthorization(card, user) {
+      updateCardAction(card, "LOADING");
+      const courseId = card.dataset.courseId;
+      const isFreeCourse = Number(card.dataset.coursePrice || 0) === 0;
+      if (isFreeCourse && user) return updateCardAction(card, "AUTHORIZED");
+      const tutorModeActive = localStorage.getItem("adminTutorMode") === "true";
+      try {
+        const result = await checkAuthFunction({ pageId: courseId, tutorMode: tutorModeActive });
+        updateCardAction(card, result?.data?.authorized ? "AUTHORIZED" : "UNAUTHORIZED");
+      } catch (_) {
+        updateCardAction(card, "UNAUTHORIZED");
+      }
+    }
+
+    function isCatalogCourseLesson(lesson = {}) {
+      const metadataType = String(lesson?.metadataType || "").toLowerCase();
+      if (lesson?.hiddenFromCatalog === true) return false;
+      if (lesson?.isPhysical === true) return false;
+      if (metadataType === "product" || metadataType === "legacy_product") return false;
+      if (metadataType === "course") return true;
+      return Array.isArray(lesson?.courseUnits) || String(lesson?.courseId || "").endsWith(".html");
+    }
+
+    function renderLessons(lessons, pathKey) {
+      const container = document.getElementById("lesson-container");
+      const title = document.getElementById("page-title");
+      title.textContent = categoryLabel(pathKey);
+      const rows = lessons.filter(isCatalogCourseLesson).filter((x) => categoryFromLesson(x) === pathKey);
+      if (!rows.length) {
+        container.innerHTML = `<p class="text-center text-gray-500 w-full col-span-3 py-12">目前此分類尚無課程。</p>`;
+        return;
+      }
+      container.innerHTML = rows.map((lesson) => {
+        const entryUrl = resolveEntryUrl(lesson);
+        const price = Number(lesson.price || 0);
+        return `
+          <div class="lesson-card bg-white border border-slate-200 rounded-2xl p-6 shadow-sm"
+               data-course-id="${lesson.courseId || ""}"
+               data-course-name="${lesson.title || ""}"
+               data-course-price="${price}"
+               data-is-physical="${lesson.isPhysical === true}"
+               data-classroom-url="${entryUrl}">
+            <div class="text-xs text-slate-500 mb-2">${lesson.courseKey || lesson.courseId || ""}</div>
+            <h2 class="text-xl font-bold text-slate-800 mb-3">${lesson.title || lesson.courseId || "未命名課程"}</h2>
+            <p class="text-sm text-slate-600 mb-4">${(lesson.description || lesson.summary || "").slice(0, 120) || "課程內容由系統資料動態載入。"}</p>
+            <div class="mt-4 pt-3 border-t border-slate-100 text-center">
+              <span class="text-2xl font-bold text-blue-600">${price === 0 ? "免費" : `NT$ ${price.toLocaleString()}`}</span>
+            </div>
+            <div class="mt-3">
+              <button class="action-btn w-full py-2 px-3 rounded-md bg-gray-300 text-gray-500 font-medium cursor-not-allowed" disabled>載入中...</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function init() {
+      const pathKey = (new URLSearchParams(location.search).get("path") || "tw-common").toLowerCase();
+      const result = await getLessonsFunc({});
+      const lessons = Array.isArray(result?.data?.lessons) ? result.data.lessons : [];
+      renderLessons(lessons, pathKey);
+      window.updateAuthUI = function () {
+        const cards = document.querySelectorAll(".lesson-card");
+        const user = auth.currentUser;
+        cards.forEach((card) => {
+          if (user) checkLessonAuthorization(card, user);
+          else updateCardAction(card, "NOT_LOGGED_IN");
+        });
+      };
+      onAuthStateChanged(auth, () => window.updateAuthUI());
+    }
+    init();
+    window.handleLogout = async () => { await signOut(auth); };
+  </script>
+</body>
+</html>
