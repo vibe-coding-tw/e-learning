@@ -1136,14 +1136,26 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
         // 2. Definition of "Prepare" units (準備課程)
         const prepareCids = [
-            '01-master-getting-started.html',
-            '02-master-ai-agents.html',
-            '03-master-wifi-motor.html'
+            'prepare-01-developer-identity.html',
+            'prepare-02-vscode-online.html',
+            'prepare-03-vscode-setup.html',
+            'prepare-04-agent-mode.html',
+            'prepare-05-vibe-coding.html',
+            'prepare-06-web-agents.html',
+            'prepare-07-github-classroom.html',
+            'prepare-08-motor-ramping.html',
+            'prepare-09-wifi-setup.html'
         ];
         const prepareTitles = {
-            '01-master-getting-started.html': '準備課程：開發者工具與 VS Code',
-            '02-master-ai-agents.html': '準備課程：AI Agent 與 Vibe Coding',
-            '03-master-wifi-motor.html': '準備課程：GitHub Classroom、WiFi 與馬達'
+            'prepare-01-developer-identity.html': '準備 01：開發者身分與安全',
+            'prepare-02-vscode-online.html': '準備 02：VS Code Online',
+            'prepare-03-vscode-setup.html': '準備 03：開發環境安裝設定',
+            'prepare-04-agent-mode.html': '準備 04：AI Agent 模式實務',
+            'prepare-05-vibe-coding.html': '準備 05：Vibe Coding 實戰',
+            'prepare-06-web-agents.html': '準備 06：網頁版 AI 代理人',
+            'prepare-07-github-classroom.html': '準備 07：GitHub Classroom 實務',
+            'prepare-08-motor-ramping.html': '準備 08：馬達 Ramping 控制',
+            'prepare-09-wifi-setup.html': '準備 09：ESP32 WiFi 連線設定'
         };
         
         // Combine into "Always Show" list
