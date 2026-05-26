@@ -1,14 +1,146 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 import { firebaseConfig, connectFirebaseEmulators } from "./firebase-local.js";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-connectFirebaseEmulators({ auth, db });
+const functions = getFunctions(app, "asia-east1");
+connectFirebaseEmulators({ auth, db, functions });
 
 const NAV_STATE_VERSION = "2026.05.13.FINAL_V9";
+const LEARNING_PATH_CACHE_KEY = "vibe_learning_path_menu_cache_v1";
+const LEARNING_PATH_CACHE_TTL_MS = 1000 * 60 * 30;
+
+const DEFAULT_LEARNING_PATHS = [
+    { key: "tw-common", href: "prepare.html", icon: "fa-book-open", labelZh: "準備課程", labelEn: "Common Prep" },
+    { key: "tw-car-starter", href: "start.html", icon: "fa-rocket", labelZh: "入門課程", labelEn: "Starter Course" },
+    { key: "tw-car-basic", href: "basic.html", icon: "fa-code", labelZh: "基礎課程", labelEn: "Basic Course" },
+    { key: "tw-car-advanced", href: "advanced.html", icon: "fa-microchip", labelZh: "進階課程", labelEn: "Advanced Course" }
+];
+
+function detectUiLocale() {
+    const htmlLang = String(document.documentElement?.lang || "").toLowerCase();
+    const navLang = String(navigator.language || "").toLowerCase();
+    const raw = htmlLang || navLang;
+    if (raw.startsWith("zh")) return "zh-TW";
+    return "en";
+}
+
+function isZhLocale(locale) {
+    return String(locale || "").toLowerCase().startsWith("zh");
+}
+
+function resolveCategoryFromFilename(filename = "") {
+    const file = String(filename || "").toLowerCase();
+    if (!file) return null;
+    if (file.startsWith("prepare-") || file.startsWith("tw-common-")) return "tw-common";
+    if (file.startsWith("start-") || file.startsWith("tw-car-starter-")) return "tw-car-starter";
+    if (file.startsWith("basic-") || file.startsWith("tw-car-basic-")) return "tw-car-basic";
+    if (file.startsWith("adv-") || file.startsWith("advanced-") || file.startsWith("tw-car-advanced-")) return "tw-car-advanced";
+    const m = file.match(/^([a-z]{2})-([a-z0-9]+)-(starter|basic|advanced|common)-/i);
+    if (m) return `${m[1]}-${m[2]}-${m[3]}`.toLowerCase();
+    return null;
+}
+
+function getCategoryHref(categoryKey = "") {
+    const key = String(categoryKey || "").toLowerCase();
+    if (key.endsWith("-starter") || key === "tw-car-starter") return "start.html";
+    if (key.endsWith("-basic") || key === "tw-car-basic") return "basic.html";
+    if (key.endsWith("-advanced") || key === "tw-car-advanced") return "advanced.html";
+    return "prepare.html";
+}
+
+function categoryLabel(categoryKey = "", locale = "zh-TW") {
+    const key = String(categoryKey || "").toLowerCase();
+    const zh = isZhLocale(locale);
+    if (key === "tw-common") return zh ? "準備課程" : "TW Common";
+    if (key === "tw-car-starter") return zh ? "入門課程" : "TW Car Starter";
+    if (key === "tw-car-basic") return zh ? "基礎課程" : "TW Car Basic";
+    if (key === "tw-car-advanced") return zh ? "進階課程" : "TW Car Advanced";
+    return key.replace(/-/g, " ");
+}
+
+function getLearningPathsFromCache() {
+    try {
+        const raw = localStorage.getItem(LEARNING_PATH_CACHE_KEY);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        if (!data || !Array.isArray(data.paths)) return null;
+        if ((Date.now() - Number(data.updatedAt || 0)) > LEARNING_PATH_CACHE_TTL_MS) return null;
+        return data.paths;
+    } catch (_) {
+        return null;
+    }
+}
+
+function setLearningPathsCache(paths = []) {
+    try {
+        localStorage.setItem(LEARNING_PATH_CACHE_KEY, JSON.stringify({
+            updatedAt: Date.now(),
+            paths
+        }));
+    } catch (_) {}
+}
+
+function renderLearningPathMenus(rootPath = ".", items = DEFAULT_LEARNING_PATHS, locale = "zh-TW") {
+    const resolve = (path) => {
+        if (path.startsWith("http")) return path;
+        return `${rootPath}/${path}`.replace("./http", "http").replace("//", "/");
+    };
+    const desktop = document.getElementById("learning-path-desktop-menu");
+    const mobile = document.getElementById("learning-path-mobile-menu");
+    if (!desktop || !mobile) return;
+
+    desktop.innerHTML = items.map((item) => `
+        <a href="${resolve(item.href)}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
+            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-40"></i> ${categoryLabel(item.key, locale)}
+        </a>
+    `).join("");
+
+    mobile.innerHTML = items.map((item) => `
+        <a href="${resolve(item.href)}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-700 transition-all text-sm">
+            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-50"></i> ${categoryLabel(item.key, locale)}
+        </a>
+    `).join("");
+}
+
+async function loadLearningPathsDynamic() {
+    const cached = getLearningPathsFromCache();
+    if (cached?.length) return cached;
+    try {
+        const getLessons = httpsCallable(functions, "getLessons");
+        const res = await getLessons({});
+        const lessons = Array.isArray(res?.data?.lessons) ? res.data.lessons : [];
+        const keys = new Set();
+        lessons.forEach((lesson) => {
+            const filename = String(
+                lesson?.contentRef ||
+                lesson?.entryUnitId ||
+                lesson?.courseId ||
+                lesson?.classroomUrl ||
+                ""
+            ).split("/").pop().split("?")[0];
+            const key = resolveCategoryFromFilename(filename);
+            if (key) keys.add(key);
+        });
+        const dynamic = Array.from(keys).sort().map((key) => ({
+            key,
+            href: getCategoryHref(key),
+            icon: key.includes("advanced") ? "fa-microchip" :
+                key.includes("basic") ? "fa-code" :
+                key.includes("starter") ? "fa-rocket" : "fa-book-open"
+        }));
+        const finalPaths = dynamic.length ? dynamic : DEFAULT_LEARNING_PATHS;
+        setLearningPathsCache(finalPaths);
+        return finalPaths;
+    } catch (e) {
+        console.warn("[NavComp] loadLearningPathsDynamic failed:", e);
+        return DEFAULT_LEARNING_PATHS;
+    }
+}
 
 // --- 1. Navigation Rendering Engine ---
 
@@ -110,19 +242,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
                             <button aria-expanded="false" aria-haspopup="true" class="flex items-center hover:text-cyan-600 transition-all cursor-pointer py-2 gap-1">
                                 學習路徑 <svg class="w-4 h-4 opacity-50 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
-                            <div class="dropdown-menu absolute hidden bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl py-3 w-56 mt-0 border border-slate-100 left-0 animate-in fade-in slide-in-from-top-2 duration-200">
-                                <a href="${resolve('prepare.html')}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
-                                    <i class="fa-solid fa-book-open text-xs opacity-40"></i> 準備課程
-                                </a>
-                                <a href="${resolve('start.html')}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
-                                    <i class="fa-solid fa-rocket text-xs opacity-40"></i> 入門課程
-                                </a>
-                                <a href="${resolve('basic.html')}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
-                                    <i class="fa-solid fa-code text-xs opacity-40"></i> 基礎課程
-                                </a>
-                                <a href="${resolve('advanced.html')}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
-                                    <i class="fa-solid fa-microchip text-xs opacity-40"></i> 進階課程
-                                </a>
+                            <div id="learning-path-desktop-menu" class="dropdown-menu absolute hidden bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl py-3 w-56 mt-0 border border-slate-100 left-0 animate-in fade-in slide-in-from-top-2 duration-200">
                             </div>
                         </div>
                         <div class="relative dropdown group">
@@ -182,19 +302,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
                 </div>` : ''}
                 <div class="space-y-3">
                     <span class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] px-1">學習路徑</span>
-                    <div class="grid grid-cols-2 gap-3">
-                        <a href="${resolve('prepare.html')}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-700 transition-all text-sm">
-                            <i class="fa-solid fa-book-open text-xs opacity-50"></i> 準備課程
-                        </a>
-                        <a href="${resolve('start.html')}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-700 transition-all text-sm">
-                            <i class="fa-solid fa-rocket text-xs opacity-50"></i> 入門課程
-                        </a>
-                        <a href="${resolve('basic.html')}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-700 transition-all text-sm">
-                            <i class="fa-solid fa-code text-xs opacity-50"></i> 基礎課程
-                        </a>
-                        <a href="${resolve('advanced.html')}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-700 transition-all text-sm">
-                            <i class="fa-solid fa-microchip text-xs opacity-50"></i> 進階課程
-                        </a>
+                    <div id="learning-path-mobile-menu" class="grid grid-cols-2 gap-3">
                     </div>
                 </div>
                 <div class="space-y-3 pb-4">
@@ -251,6 +359,12 @@ window.renderNav = function (rootPath = '.', options = {}) {
             }
         });
     }, 0);
+
+    const uiLocale = detectUiLocale();
+    renderLearningPathMenus(rootPath, DEFAULT_LEARNING_PATHS, uiLocale);
+    loadLearningPathsDynamic().then((paths) => {
+        renderLearningPathMenus(rootPath, paths, uiLocale);
+    });
 };
 
 // --- 2. Dashboard Modal logic ---
