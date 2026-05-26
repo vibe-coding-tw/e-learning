@@ -4346,6 +4346,41 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
     };
 
     const policyCache = new Map();
+    const userByEmailCache = new Map();
+    const getUserByEmail = async (email = "") => {
+        const normalized = String(email || "").trim().toLowerCase();
+        if (!normalized) return null;
+        if (userByEmailCache.has(normalized)) return userByEmailCache.get(normalized);
+        const snap = await db.collection('users').where('email', '==', normalized).limit(1).get();
+        const userData = snap.empty ? null : (snap.docs[0].data() || null);
+        userByEmailCache.set(normalized, userData);
+        return userData;
+    };
+
+    const resolveOrderRoleEmails = async ({ itemValue, order, initialTutor }) => {
+        const itemAgent = String(
+            itemValue?.agentEmail ||
+            itemValue?.referredAgentEmail ||
+            itemValue?.referralAgent ||
+            ""
+        ).trim().toLowerCase();
+        const orderAgent = String(order?.agentEmail || "").trim().toLowerCase();
+        const tutorData = await getUserByEmail(initialTutor);
+        const tutorAgent = String(tutorData?.agentEmail || "").trim().toLowerCase();
+        const resolvedAgent = itemAgent || orderAgent || tutorAgent || "";
+
+        const courseDev = String(
+            itemValue?.courseDevEmail ||
+            itemValue?.ownerTutorEmail ||
+            order?.courseDevEmail ||
+            ""
+        ).trim().toLowerCase();
+
+        return {
+            agentEmail: resolvedAgent,
+            courseDevEmail: courseDev
+        };
+    };
     const loadPolicyById = async (policyId = "") => {
         const normalized = String(policyId || "").trim() || fallbackPolicy.policyId;
         if (policyCache.has(normalized)) return policyCache.get(normalized);
@@ -4418,54 +4453,105 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
 
                 if (lineAmount <= 0) continue;
 
-                let currentTutorEmail = initialTutor;
-                let currentShare = lineAmount * Number(policy.tutorRate || fallbackPolicy.tutorRate);
-                let level = 1;
-
-                while (currentTutorEmail && currentShare >= 0.01) {
+                const period = `${lastMonth.getFullYear()}-${(lastMonth.getMonth() + 1).toString().padStart(2, '0')}`;
+                const policySnapshot = {
+                    policyId: policy.policyId,
+                    policyName: policy.policyName,
+                    tutorRate: Number(policy.tutorRate || 0),
+                    tutorUplineRate: Number(policy.tutorUplineRate || 0),
+                    agentRate: Number(policy.agentRate || 0),
+                    agentUplineRate: Number(policy.agentUplineRate || 0),
+                    courseDevRate: Number(policy.courseDevRate || 0)
+                };
+                const writeShareLine = async ({
+                    role,
+                    recipientEmail,
+                    shareAmount,
+                    level = 1
+                }) => {
+                    const normalizedRecipient = String(recipientEmail || "").trim().toLowerCase();
+                    if (!normalizedRecipient || shareAmount < 0.01) return null;
                     const period = `${lastMonth.getFullYear()}-${(lastMonth.getMonth() + 1).toString().padStart(2, '0')}`;
-                    const idempotencySeed = `${period}|${orderId}|${itemKey}|${level}|${currentTutorEmail.toLowerCase()}`;
+                    const idempotencySeed = `${period}|${orderId}|${itemKey}|${role}|${level}|${normalizedRecipient}`;
                     const idempotencyKey = crypto.createHash('sha256').update(idempotencySeed).digest('hex').slice(0, 40);
                     const ledgerRef = db.collection('profit_ledger').doc(idempotencyKey);
                     const shareRecord = {
                         idempotencyKey,
-                        tutorEmail: currentTutorEmail,
+                        role,
+                        tutorEmail: normalizedRecipient,
+                        recipientEmail: normalizedRecipient,
                         studentUid: studentUid,
                         orderId: orderId,
                         orderItemId: itemKey,
                         orderAmount: lineAmount,
-                        shareAmount: Math.round(currentShare * 100) / 100,
+                        shareAmount: Math.round(shareAmount * 100) / 100,
                         level: level,
                         referralLink: itemReferralLink,
                         policyId: policy.policyId,
-                        policySnapshot: {
-                            policyId: policy.policyId,
-                            policyName: policy.policyName,
-                            tutorRate: Number(policy.tutorRate || 0),
-                            tutorUplineRate: Number(policy.tutorUplineRate || 0),
-                            agentRate: Number(policy.agentRate || 0),
-                            agentUplineRate: Number(policy.agentUplineRate || 0),
-                            courseDevRate: Number(policy.courseDevRate || 0)
-                        },
+                        policySnapshot,
                         calculatedAt: admin.firestore.FieldValue.serverTimestamp(),
                         period
                     };
                     await ledgerRef.set(shareRecord, { merge: true });
                     auditTrail.push(shareRecord);
+                    return shareRecord;
+                };
+
+                let currentTutorEmail = initialTutor;
+                let currentTutorShare = lineAmount * Number(policy.tutorRate || fallbackPolicy.tutorRate);
+                let tutorLevel = 1;
+
+                while (currentTutorEmail && currentTutorShare >= 0.01) {
+                    await writeShareLine({
+                        role: "tutor",
+                        recipientEmail: currentTutorEmail,
+                        shareAmount: currentTutorShare,
+                        level: tutorLevel
+                    });
 
                     if (currentTutorEmail === "info@vibe-coding.tw") break;
 
-                    const tutorUserSnapshot = await db.collection('users').where('email', '==', currentTutorEmail).limit(1).get();
-                    if (!tutorUserSnapshot.empty) {
-                        const tutorData = tutorUserSnapshot.docs[0].data();
+                    const tutorData = await getUserByEmail(currentTutorEmail);
+                    if (tutorData) {
                         currentTutorEmail = tutorData.tutorEmail || "info@vibe-coding.tw";
-                        currentShare = currentShare * Number(policy.tutorUplineRate || fallbackPolicy.tutorUplineRate);
-                        level++;
+                        currentTutorShare = currentTutorShare * Number(policy.tutorUplineRate || fallbackPolicy.tutorUplineRate);
+                        tutorLevel++;
                     } else {
                         currentTutorEmail = "info@vibe-coding.tw";
-                        currentShare = currentShare * Number(policy.tutorUplineRate || fallbackPolicy.tutorUplineRate);
-                        level++;
+                        currentTutorShare = currentTutorShare * Number(policy.tutorUplineRate || fallbackPolicy.tutorUplineRate);
+                        tutorLevel++;
                     }
+                }
+
+                // Optional agent and course developer sharing (policy-driven).
+                const { agentEmail, courseDevEmail } = await resolveOrderRoleEmails({ itemValue, order, initialTutor });
+                if (agentEmail && Number(policy.agentRate || 0) > 0) {
+                    let currentAgentEmail = agentEmail;
+                    let currentAgentShare = lineAmount * Number(policy.agentRate || 0);
+                    let agentLevel = 1;
+                    while (currentAgentEmail && currentAgentShare >= 0.01) {
+                        await writeShareLine({
+                            role: "agent",
+                            recipientEmail: currentAgentEmail,
+                            shareAmount: currentAgentShare,
+                            level: agentLevel
+                        });
+                        const agentData = await getUserByEmail(currentAgentEmail);
+                        const nextAgent = String(agentData?.agentEmail || "").trim().toLowerCase();
+                        if (!nextAgent || nextAgent === currentAgentEmail) break;
+                        currentAgentEmail = nextAgent;
+                        currentAgentShare = currentAgentShare * Number(policy.agentUplineRate || 0);
+                        agentLevel++;
+                    }
+                }
+
+                if (courseDevEmail && Number(policy.courseDevRate || 0) > 0) {
+                    await writeShareLine({
+                        role: "courseDev",
+                        recipientEmail: courseDevEmail,
+                        shareAmount: lineAmount * Number(policy.courseDevRate || 0),
+                        level: 1
+                    });
                 }
             }
         }

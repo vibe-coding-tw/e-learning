@@ -164,7 +164,9 @@
 
 | 欄位名稱 | 類型 | 說明 |
 | :--- | :--- | :--- |
+| `role` | string | 分潤角色：`tutor` / `agent` / `courseDev`。 |
 | `tutorEmail` | string | 分潤歸屬導師。 |
+| `recipientEmail` | string | 分潤收款人 Email（與 `tutorEmail` 同步保留，供新角色欄位使用）。 |
 | `studentUid` | string | 訂單對應學生 UID。 |
 | `orderId` | string | 關聯訂單 ID。 |
 | `orderItemId` | string | 關聯訂單項目 key。 |
@@ -173,10 +175,28 @@
 | `level` | number | 分潤層級。 |
 | `referralLink` | string | 對應推薦連結（若有）。 |
 | `period` | string | 計算月份（YYYY-MM）。 |
+| `policyId` | string | 套用的分潤策略 ID。 |
+| `policySnapshot` | map | 當下分潤比例快照（tutor/agent/courseDev）。 |
 | `calculatedAt` | timestamp | 本次計算寫入時間。 |
-| `idempotencyKey` | string | 冪等鍵（`period+orderId+orderItemId+level+tutorEmail` 雜湊），避免重跑重複入帳。 |
+| `idempotencyKey` | string | 冪等鍵（`period+orderId+orderItemId+role+level+recipientEmail` 雜湊），避免重跑重複入帳。 |
 
 > 分潤公式、上線鏈條與月結規則詳見 `docs/recursive-sharing.md`。
+
+---
+
+## 6.1 `revenue_share_policies` 集合
+儲存分潤比例策略（由 `orders.policyId` 指定）。
+
+| 欄位名稱 | 類型 | 說明 |
+| :--- | :--- | :--- |
+| `policyName` | string | 策略名稱。 |
+| `tutorRate` | number | Tutor 直推分潤比例。 |
+| `tutorUplineRate` | number | Tutor 上線遞迴比例。 |
+| `agentRate` | number | Agent 直推分潤比例。 |
+| `agentUplineRate` | number | Agent 上線遞迴比例。 |
+| `courseDevRate` | number | 課程開發分潤比例。 |
+| `enabled` | boolean | 是否啟用。 |
+| `createdAt` / `updatedAt` | timestamp | 建立/更新時間。 |
 
 ---
 
