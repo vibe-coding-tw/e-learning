@@ -32,24 +32,38 @@ Example (`A=1000`, policy `tutorRate=0.2`, `tutorUplineRate=0.2`, `agentRate=0.2
 - Agent L1 = 200, L2 = 20, L3 = 2...
 - CourseDev = 200
 
-## 3. Execution Window
+## 3. Credit And Monthly Settlement
+- 訂單付款成功後（`orders.status=SUCCESS`），系統會建立分潤 `credit`（`revenue_share_credits`）。
+- 月結時不是一次付清，而是按有效期攤提：
+  - `validityMonths = item.validityMonths || order.validityMonths || metadata_settings/revenue_share_config.defaultValidityMonths`
+  - `monthlyInstallment = totalCredit / validityMonths`
+- 每月支付前會檢查受益者是否有 `users.payoutAccount`：
+  - 有：本月支付並扣減 `remainingCredit`
+  - 無：本月標記 `missing_payout_account`，credit 保留不扣款
+- 系統會同步重建 `revenue_share_balances`，顯示每位受益者的 `totalCredit / totalPaid / remainingBalance`。
+
+## 4. Execution Window
 - Function: `calculateMonthlySharing` (Cloud Scheduler)
 - Schedule: monthly on day 1 (`0 0 1 * *`)
 - Time span: previous calendar month
-- Order filter:
+- Credit generation filter:
   - `orders.status == SUCCESS`
   - `paidAt` within previous month
+- Payout settlement filter:
+  - `revenue_share_credits.status in [active, pending_account]`
+  - `nextPayoutPeriod <= targetPeriod`
 
-## 4. Idempotency & Safety
+## 5. Idempotency & Safety
 Each ledger row uses deterministic document id:
-- `idempotencyKey = sha256("${period}|${orderId}|${orderItemId}|${role}|${level}|${recipientEmail}")[:40]`
+- credit id: `sha256("${orderId}|${orderItemId}|${role}|${level}|${recipientEmail}")[:40]`
+- payout ledger id: `sha256("${period}|${creditId}|payout")[:40]`
 - Stored to `profit_ledger/{idempotencyKey}` with `set(..., { merge: true })`
 
 This prevents duplicate entries when:
 1. Scheduler retries.
 2. Monthly job is rerun manually for same period.
 
-## 5. Data Contract (`profit_ledger`)
+## 6. Data Contract (`profit_ledger`)
 Core fields:
 - `idempotencyKey`
 - `role` (`tutor|agent|courseDev`)
@@ -60,6 +74,8 @@ Core fields:
 - `orderItemId`
 - `orderAmount`
 - `shareAmount`
+- `plannedShareAmount`
+- `blockedShareAmount`
 - `level`
 - `referralLink`
 - `policyId`
@@ -69,18 +85,20 @@ Core fields:
 
 See also: `docs/database.md` section `profit_ledger`.
 
-## 6. Operational Runbook
+## 7. Operational Runbook
 1. If expected share entry is missing:
    - Confirm order `status=SUCCESS`.
    - Confirm `paidAt` falls in target month.
    - Confirm order item amount > 0.
-2. If upstream share always goes to platform:
+2. If payout rows are always `missing_payout_account`:
+   - Check `users.payoutAccount` for recipient email.
+3. If upstream share always goes to platform:
    - Check `users/{uid}.tutorEmail` for upline link.
-3. If duplicates are suspected:
+4. If duplicates are suspected:
    - Query by `idempotencyKey` and `period`.
    - Validate scheduler retries / manual rerun history.
 
-## 7. Related Files
+## 8. Related Files
 - `functions/index.js` (`calculateMonthlySharing`)
 - `docs/database.md`
 - `README.md`
