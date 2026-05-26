@@ -100,3 +100,13 @@ Exit criteria:
 - Non-qualified user sees assignment application button below assignment guide
 - Teacher list shows each teacher once with normal email formatting
 - Started-course units resolve correctly with canonical ids only
+
+## Current Tab Display Policy (Canonical)
+
+- No `unitId` in URL:
+  - Dashboard is admin-only.
+- With `unitId` in URL:
+  - Only `Assignments` and `Settings` tabs may appear.
+  - `Settings` allowed only when `isQualifiedTutor` OR (`role=admin` AND `TutorMode=ON`).
+  - If user cannot open `Settings`, system must fallback to `Assignments`.
+  - `Overview` / `Admin` / `Shipments` / `Earnings` must be hidden in unit context.

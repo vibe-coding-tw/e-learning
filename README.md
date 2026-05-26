@@ -217,6 +217,13 @@ firebase deploy --only hosting --project e-learning-942f7
 - 課程單元頁右下角 `FAB`（📊）與支援中心中的 Dashboard 入口，需開啟「全螢幕 Dialog」內嵌 Dashboard（`mode=iframe`），不可直接離開當前單元頁。
 - 使用者按下 `Esc` 時，若 Dashboard Dialog 開啟中，必須先關閉 Dialog 並回到原課程單元頁面。
 
+### Dashboard 分頁顯示規則（強制）
+- 非課程單元（`?unitId` 不存在）：只有 `admin` 可存取 Dashboard。
+- 課程單元（`?unitId=...`）：
+  - `Settings` 僅限 `isQualifiedTutor` 或 `admin + TutorMode=ON`。
+  - 其餘情況導回 `Assignments`。
+  - 在單元情境只顯示 `Assignments` / `Settings`；`Overview` / `Admin` / `Shipments` / `Earnings` 不顯示。
+
 ### CI/CD 自動化流程 (GitHub Actions)
 1. **PR 預覽部署 (`firebase-hosting-pull-request.yml`)**
    - 觸發時機：發起 Pull Request 時。
