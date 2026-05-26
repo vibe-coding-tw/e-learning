@@ -22,6 +22,7 @@
 | `region` | string | 使用者地區（例：`TW`）。 |
 | `courseProgress` | map | 學習進度聚合資料。 |
 | `orders` | array | 主要為 Dashboard 聚合回傳欄位，非主要持久化來源（實際訂單以 `orders` 集合為準）。 |
+| `payoutAccount` | string | 分潤收款帳號（可選；未填時分潤 credit 會累積但不會月結支付）。 |
 | `updatedAt` | timestamp | 最後更新時間。 |
 | `createdAt` / `joinedAt` | timestamp | 建立時間。 |
 
@@ -160,7 +161,7 @@
 ---
 
 ## 6. `profit_ledger` 集合
-儲存導師分潤計算明細。
+儲存分潤月結支付明細（每月攤提後的支付列）。
 
 | 欄位名稱 | 類型 | 說明 |
 | :--- | :--- | :--- |
@@ -172,11 +173,16 @@
 | `orderItemId` | string | 關聯訂單項目 key。 |
 | `orderAmount` | number | 該項目金額（單價 x 數量）。 |
 | `shareAmount` | number | 分潤金額。 |
+| `plannedShareAmount` | number | 該期預計支付金額。 |
+| `blockedShareAmount` | number | 因缺少收款帳號而暫緩支付金額。 |
 | `level` | number | 分潤層級。 |
 | `referralLink` | string | 對應推薦連結（若有）。 |
 | `period` | string | 計算月份（YYYY-MM）。 |
 | `policyId` | string | 套用的分潤策略 ID。 |
 | `policySnapshot` | map | 當下分潤比例快照（tutor/agent/courseDev）。 |
+| `creditId` | string | 對應 `revenue_share_credits` credit。 |
+| `payoutStatus` | string | `scheduled` / `missing_payout_account`。 |
+| `payoutAccountPresent` | boolean | 是否已提供收款帳號。 |
 | `calculatedAt` | timestamp | 本次計算寫入時間。 |
 | `idempotencyKey` | string | 冪等鍵（`period+orderId+orderItemId+role+level+recipientEmail` 雜湊），避免重跑重複入帳。 |
 
@@ -197,6 +203,46 @@
 | `courseDevRate` | number | 課程開發分潤比例。 |
 | `enabled` | boolean | 是否啟用。 |
 | `createdAt` / `updatedAt` | timestamp | 建立/更新時間。 |
+
+---
+
+## 6.2 `revenue_share_credits` 集合
+儲存訂單產生的分潤 credit（付款後建立，按月攤提）。
+
+| 欄位名稱 | 類型 | 說明 |
+| :--- | :--- | :--- |
+| `creditId` | string | credit 識別碼（order/item/role/level/recipient 雜湊）。 |
+| `orderId` / `orderItemId` | string | 對應訂單與項目。 |
+| `studentUid` | string | 購買學生 UID。 |
+| `role` | string | `tutor` / `agent` / `courseDev`。 |
+| `recipientEmail` | string | 分潤受益者 Email。 |
+| `totalCredit` | number | 總分潤 credit。 |
+| `paidCredit` | number | 累計已支付。 |
+| `remainingCredit` | number | 剩餘待支付餘額。 |
+| `validityMonths` | number | 攤提月數。 |
+| `monthlyInstallment` | number | 每期平均支付金額。 |
+| `startPeriod` | string | 開始月（YYYY-MM）。 |
+| `nextPayoutPeriod` | string | 下次月結支付月。 |
+| `status` | string | `active` / `pending_account` / `completed`。 |
+| `policyId` / `policySnapshot` | string / map | 分潤策略與比例快照。 |
+| `createdAt` / `updatedAt` | timestamp | 建立/更新時間。 |
+
+---
+
+## 6.3 `revenue_share_balances` 集合
+儲存每位受益者分潤餘額快照。
+
+| 欄位名稱 | 類型 | 說明 |
+| :--- | :--- | :--- |
+| `recipientEmail` | string | 受益者 Email。 |
+| `totalCredit` | number | 累計產生 credit。 |
+| `totalPaid` | number | 累計已支付。 |
+| `remainingBalance` | number | 目前待支付餘額。 |
+| `activeCredits` | number | 進行中 credit 數量。 |
+| `pendingAccountCredits` | number | 因缺少收款帳號而暫緩數量。 |
+| `payoutAccountPresent` | boolean | 是否已有收款帳號。 |
+| `lastCalculatedPeriod` | string | 最後計算月份（YYYY-MM）。 |
+| `updatedAt` | timestamp | 更新時間。 |
 
 ---
 
@@ -228,12 +274,16 @@
 ---
 
 ## 9. `metadata_settings` 集合
-系統全域設定（目前已使用：`tutor_terms`）。
+系統全域設定（目前已使用：`tutor_terms`, `revenue_share_config`）。
 
 | 欄位名稱 | 類型 | 說明 |
 | :--- | :--- | :--- |
 | `content` | string | 設定內容（例：合格教師條款）。 |
 | `updatedAt` | timestamp | 設定更新時間。 |
+
+`revenue_share_config` 常見欄位：
+- `defaultValidityMonths`：預設攤提月數（建議 12）。
+- `defaultPayoutEmail`：缺省受益者（預設 `info@vibe-coding.tw`）。
 
 ---
 

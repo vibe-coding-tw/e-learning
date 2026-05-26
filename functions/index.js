@@ -4347,6 +4347,41 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
 
     const policyCache = new Map();
     const userByEmailCache = new Map();
+    const balanceAgg = new Map();
+    const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+    const ymFromDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const parseYm = (ym) => {
+        const m = /^(\d{4})-(\d{2})$/.exec(String(ym || ""));
+        if (!m) return null;
+        return { y: Number(m[1]), m: Number(m[2]) };
+    };
+    const addMonthsYm = (ym, delta) => {
+        const parsed = parseYm(ym);
+        if (!parsed) return ym;
+        const d = new Date(parsed.y, parsed.m - 1 + Number(delta || 0), 1);
+        return ymFromDate(d);
+    };
+    const ymLTE = (a, b) => String(a || "") <= String(b || "");
+    const countValidityMonths = (paidAtTs, expiryTs, fallbackMonths = 12) => {
+        try {
+            if (!paidAtTs?.toDate || !expiryTs?.toDate) return Math.max(1, Number(fallbackMonths || 12));
+            const p = paidAtTs.toDate();
+            const e = expiryTs.toDate();
+            let months = (e.getFullYear() - p.getFullYear()) * 12 + (e.getMonth() - p.getMonth());
+            if (e.getDate() >= p.getDate()) months += 1;
+            return Math.max(1, months);
+        } catch {
+            return Math.max(1, Number(fallbackMonths || 12));
+        }
+    };
+    const getPayoutAccountFromUser = (userData = {}) => {
+        if (!userData || typeof userData !== "object") return "";
+        if (typeof userData.payoutAccount === "string" && userData.payoutAccount.trim()) return userData.payoutAccount.trim();
+        if (typeof userData.paymentAccount === "string" && userData.paymentAccount.trim()) return userData.paymentAccount.trim();
+        const map = userData.payoutAccounts || {};
+        const candidate = map.default || map.bank || "";
+        return typeof candidate === "string" ? candidate.trim() : "";
+    };
     const getUserByEmail = async (email = "") => {
         const normalized = String(email || "").trim().toLowerCase();
         if (!normalized) return null;
@@ -4420,19 +4455,65 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
     };
 
     try {
-        // 1. Find all successful orders in the last month that have referral info
+        const revenueConfigDoc = await db.collection("metadata_settings").doc("revenue_share_config").get();
+        const revenueConfig = revenueConfigDoc.exists ? (revenueConfigDoc.data() || {}) : {};
+        const defaultValidityMonths = Math.max(1, Number(revenueConfig.defaultValidityMonths || 12));
+        const fallbackPayoutEmail = String(revenueConfig.defaultPayoutEmail || "info@vibe-coding.tw").trim().toLowerCase() || "info@vibe-coding.tw";
+        const targetPeriod = ymFromDate(lastMonth);
+
+        // 1) For last month successful orders, generate/refresh share credits.
         const ordersSnapshot = await db.collection('orders')
             .where('status', '==', 'SUCCESS')
             .where('paidAt', '>=', admin.firestore.Timestamp.fromDate(lastMonth))
             .where('paidAt', '<=', admin.firestore.Timestamp.fromDate(endOfLastMonth))
             .get();
 
-        if (ordersSnapshot.empty) {
-            console.log("No successful orders found for sharing this month.");
-            return;
-        }
-
         const auditTrail = [];
+        const creditTrail = [];
+        const collectShareTargets = async ({ order, orderId, studentUid, itemKey, itemValue, lineAmount, policy }) => {
+            const targets = [];
+            const initialTutor = (itemValue?.referredTutorEmail && itemValue.referredTutorEmail.trim())
+                ? itemValue.referredTutorEmail.trim().toLowerCase()
+                : ((itemValue?.referralTutor && itemValue.referralTutor.trim()) ? itemValue.referralTutor.trim().toLowerCase() : fallbackPayoutEmail);
+
+            let currentTutorEmail = initialTutor;
+            let currentTutorShare = lineAmount * Number(policy.tutorRate || fallbackPolicy.tutorRate);
+            let tutorLevel = 1;
+            while (currentTutorEmail && currentTutorShare >= 0.01) {
+                targets.push({ role: "tutor", recipientEmail: currentTutorEmail, shareAmount: round2(currentTutorShare), level: tutorLevel });
+                if (currentTutorEmail === fallbackPayoutEmail) break;
+                const tutorData = await getUserByEmail(currentTutorEmail);
+                currentTutorEmail = String(tutorData?.tutorEmail || fallbackPayoutEmail).trim().toLowerCase();
+                currentTutorShare = currentTutorShare * Number(policy.tutorUplineRate || fallbackPolicy.tutorUplineRate);
+                tutorLevel++;
+            }
+
+            const { agentEmail, courseDevEmail } = await resolveOrderRoleEmails({ itemValue, order, initialTutor });
+            if (agentEmail && Number(policy.agentRate || 0) > 0) {
+                let currentAgentEmail = agentEmail;
+                let currentAgentShare = lineAmount * Number(policy.agentRate || 0);
+                let agentLevel = 1;
+                while (currentAgentEmail && currentAgentShare >= 0.01) {
+                    targets.push({ role: "agent", recipientEmail: currentAgentEmail, shareAmount: round2(currentAgentShare), level: agentLevel });
+                    const agentData = await getUserByEmail(currentAgentEmail);
+                    const nextAgent = String(agentData?.agentEmail || "").trim().toLowerCase();
+                    if (!nextAgent || nextAgent === currentAgentEmail) break;
+                    currentAgentEmail = nextAgent;
+                    currentAgentShare = currentAgentShare * Number(policy.agentUplineRate || 0);
+                    agentLevel++;
+                }
+            }
+
+            if (courseDevEmail && Number(policy.courseDevRate || 0) > 0) {
+                targets.push({
+                    role: "courseDev",
+                    recipientEmail: courseDevEmail,
+                    shareAmount: round2(lineAmount * Number(policy.courseDevRate || 0)),
+                    level: 1
+                });
+            }
+            return targets;
+        };
 
         for (const orderDoc of ordersSnapshot.docs) {
             const order = orderDoc.data();
@@ -4444,16 +4525,12 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
                 const quantity = parseInt(itemValue?.quantity || 1, 10) || 1;
                 const itemPrice = parseFloat(itemValue?.price || 0) || 0;
                 const lineAmount = itemPrice * quantity;
-                const initialTutor = (itemValue?.referredTutorEmail && itemValue.referredTutorEmail.trim())
-                    ? itemValue.referredTutorEmail.trim()
-                    : ((itemValue?.referralTutor && itemValue.referralTutor.trim()) ? itemValue.referralTutor.trim() : "info@vibe-coding.tw");
                 const itemReferralLink = itemValue?.referralLink || itemValue?.promoCode || null;
                 const effectivePolicyId = String(order.policyId || "").trim() || fallbackPolicy.policyId;
                 const policy = await loadPolicyById(effectivePolicyId);
 
                 if (lineAmount <= 0) continue;
 
-                const period = `${lastMonth.getFullYear()}-${(lastMonth.getMonth() + 1).toString().padStart(2, '0')}`;
                 const policySnapshot = {
                     policyId: policy.policyId,
                     policyName: policy.policyName,
@@ -4463,100 +4540,159 @@ exports.calculateMonthlySharing = onSchedule("0 0 1 * *", async (event) => {
                     agentUplineRate: Number(policy.agentUplineRate || 0),
                     courseDevRate: Number(policy.courseDevRate || 0)
                 };
-                const writeShareLine = async ({
-                    role,
-                    recipientEmail,
-                    shareAmount,
-                    level = 1
-                }) => {
-                    const normalizedRecipient = String(recipientEmail || "").trim().toLowerCase();
-                    if (!normalizedRecipient || shareAmount < 0.01) return null;
-                    const period = `${lastMonth.getFullYear()}-${(lastMonth.getMonth() + 1).toString().padStart(2, '0')}`;
-                    const idempotencySeed = `${period}|${orderId}|${itemKey}|${role}|${level}|${normalizedRecipient}`;
-                    const idempotencyKey = crypto.createHash('sha256').update(idempotencySeed).digest('hex').slice(0, 40);
-                    const ledgerRef = db.collection('profit_ledger').doc(idempotencyKey);
-                    const shareRecord = {
-                        idempotencyKey,
-                        role,
-                        tutorEmail: normalizedRecipient,
-                        recipientEmail: normalizedRecipient,
-                        studentUid: studentUid,
-                        orderId: orderId,
-                        orderItemId: itemKey,
-                        orderAmount: lineAmount,
-                        shareAmount: Math.round(shareAmount * 100) / 100,
-                        level: level,
-                        referralLink: itemReferralLink,
-                        policyId: policy.policyId,
-                        policySnapshot,
-                        calculatedAt: admin.firestore.FieldValue.serverTimestamp(),
-                        period
-                    };
-                    await ledgerRef.set(shareRecord, { merge: true });
-                    auditTrail.push(shareRecord);
-                    return shareRecord;
-                };
+                const shareTargets = await collectShareTargets({
+                    order,
+                    orderId,
+                    studentUid,
+                    itemKey,
+                    itemValue,
+                    lineAmount,
+                    policy
+                });
+                const validityMonths = Math.max(
+                    1,
+                    Number(itemValue?.validityMonths || order?.validityMonths || countValidityMonths(order?.paidAt, order?.expiryDate, defaultValidityMonths))
+                );
+                const creditStartPeriod = order?.paidAt?.toDate ? ymFromDate(order.paidAt.toDate()) : targetPeriod;
 
-                let currentTutorEmail = initialTutor;
-                let currentTutorShare = lineAmount * Number(policy.tutorRate || fallbackPolicy.tutorRate);
-                let tutorLevel = 1;
-
-                while (currentTutorEmail && currentTutorShare >= 0.01) {
-                    await writeShareLine({
-                        role: "tutor",
-                        recipientEmail: currentTutorEmail,
-                        shareAmount: currentTutorShare,
-                        level: tutorLevel
-                    });
-
-                    if (currentTutorEmail === "info@vibe-coding.tw") break;
-
-                    const tutorData = await getUserByEmail(currentTutorEmail);
-                    if (tutorData) {
-                        currentTutorEmail = tutorData.tutorEmail || "info@vibe-coding.tw";
-                        currentTutorShare = currentTutorShare * Number(policy.tutorUplineRate || fallbackPolicy.tutorUplineRate);
-                        tutorLevel++;
-                    } else {
-                        currentTutorEmail = "info@vibe-coding.tw";
-                        currentTutorShare = currentTutorShare * Number(policy.tutorUplineRate || fallbackPolicy.tutorUplineRate);
-                        tutorLevel++;
+                for (const target of shareTargets) {
+                    const recipientEmail = String(target.recipientEmail || "").trim().toLowerCase() || fallbackPayoutEmail;
+                    const totalCredit = round2(target.shareAmount);
+                    if (totalCredit < 0.01) continue;
+                    const creditSeed = `${orderId}|${itemKey}|${target.role}|${target.level}|${recipientEmail}`;
+                    const creditId = crypto.createHash("sha256").update(creditSeed).digest("hex").slice(0, 40);
+                    const creditRef = db.collection("revenue_share_credits").doc(creditId);
+                    const existingCredit = await creditRef.get();
+                    if (!existingCredit.exists) {
+                        const monthlyInstallment = round2(totalCredit / validityMonths);
+                        const remainingCredit = round2(totalCredit);
+                        const creditDoc = {
+                            creditId,
+                            orderId,
+                            orderItemId: itemKey,
+                            studentUid,
+                            role: target.role,
+                            recipientEmail,
+                            level: target.level,
+                            referralLink: itemReferralLink,
+                            policyId: policy.policyId,
+                            policySnapshot,
+                            orderAmount: lineAmount,
+                            totalCredit,
+                            paidCredit: 0,
+                            remainingCredit,
+                            validityMonths,
+                            monthlyInstallment: monthlyInstallment > 0 ? monthlyInstallment : remainingCredit,
+                            startPeriod: creditStartPeriod,
+                            nextPayoutPeriod: creditStartPeriod,
+                            status: "active",
+                            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                        };
+                        await creditRef.set(creditDoc, { merge: true });
+                        creditTrail.push({ creditId, ...creditDoc });
                     }
-                }
-
-                // Optional agent and course developer sharing (policy-driven).
-                const { agentEmail, courseDevEmail } = await resolveOrderRoleEmails({ itemValue, order, initialTutor });
-                if (agentEmail && Number(policy.agentRate || 0) > 0) {
-                    let currentAgentEmail = agentEmail;
-                    let currentAgentShare = lineAmount * Number(policy.agentRate || 0);
-                    let agentLevel = 1;
-                    while (currentAgentEmail && currentAgentShare >= 0.01) {
-                        await writeShareLine({
-                            role: "agent",
-                            recipientEmail: currentAgentEmail,
-                            shareAmount: currentAgentShare,
-                            level: agentLevel
-                        });
-                        const agentData = await getUserByEmail(currentAgentEmail);
-                        const nextAgent = String(agentData?.agentEmail || "").trim().toLowerCase();
-                        if (!nextAgent || nextAgent === currentAgentEmail) break;
-                        currentAgentEmail = nextAgent;
-                        currentAgentShare = currentAgentShare * Number(policy.agentUplineRate || 0);
-                        agentLevel++;
-                    }
-                }
-
-                if (courseDevEmail && Number(policy.courseDevRate || 0) > 0) {
-                    await writeShareLine({
-                        role: "courseDev",
-                        recipientEmail: courseDevEmail,
-                        shareAmount: lineAmount * Number(policy.courseDevRate || 0),
-                        level: 1
-                    });
                 }
             }
         }
 
-        console.log(`Profit sharing completed. Recorded ${auditTrail.length} share entries.`);
+        // 2) Monthly settlement: pay due credits by installment.
+        const creditsSnapshot = await db.collection("revenue_share_credits")
+            .where("status", "in", ["active", "pending_account"])
+            .get();
+
+        for (const creditDoc of creditsSnapshot.docs) {
+            const credit = creditDoc.data() || {};
+            const recipientEmail = String(credit.recipientEmail || "").trim().toLowerCase();
+            if (!recipientEmail) continue;
+            const nextPayoutPeriod = String(credit.nextPayoutPeriod || credit.startPeriod || "");
+            const remainingCredit = round2(credit.remainingCredit || 0);
+            if (!nextPayoutPeriod || remainingCredit < 0.01) continue;
+            if (!ymLTE(nextPayoutPeriod, targetPeriod)) continue;
+
+            const recipientUser = await getUserByEmail(recipientEmail);
+            const payoutAccount = getPayoutAccountFromUser(recipientUser);
+            const monthlyInstallment = round2(credit.monthlyInstallment || 0);
+            const plannedPay = Math.min(remainingCredit, monthlyInstallment > 0 ? monthlyInstallment : remainingCredit);
+            const paidAmount = payoutAccount ? round2(plannedPay) : 0;
+            const blockedAmount = payoutAccount ? 0 : round2(plannedPay);
+
+            const idempotencySeed = `${targetPeriod}|${creditDoc.id}|payout`;
+            const idempotencyKey = crypto.createHash("sha256").update(idempotencySeed).digest("hex").slice(0, 40);
+            const payoutRef = db.collection("profit_ledger").doc(idempotencyKey);
+            const payoutRow = {
+                idempotencyKey,
+                role: credit.role || "tutor",
+                tutorEmail: recipientEmail,
+                recipientEmail,
+                studentUid: credit.studentUid || "",
+                orderId: credit.orderId || "",
+                orderItemId: credit.orderItemId || "",
+                orderAmount: round2(credit.orderAmount || 0),
+                shareAmount: paidAmount,
+                plannedShareAmount: round2(plannedPay),
+                blockedShareAmount: blockedAmount,
+                level: Number(credit.level || 1),
+                referralLink: credit.referralLink || null,
+                policyId: credit.policyId || fallbackPolicy.policyId,
+                policySnapshot: credit.policySnapshot || null,
+                creditId: creditDoc.id,
+                payoutStatus: payoutAccount ? "scheduled" : "missing_payout_account",
+                payoutAccountPresent: Boolean(payoutAccount),
+                calculatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                period: targetPeriod
+            };
+            await payoutRef.set(payoutRow, { merge: true });
+            auditTrail.push(payoutRow);
+
+            const newPaid = round2((credit.paidCredit || 0) + paidAmount);
+            const newRemaining = round2((credit.remainingCredit || 0) - paidAmount);
+            const isCompleted = newRemaining < 0.01;
+            const nextPeriod = payoutAccount && !isCompleted ? addMonthsYm(nextPayoutPeriod, 1) : nextPayoutPeriod;
+            await creditDoc.ref.set({
+                paidCredit: newPaid,
+                remainingCredit: Math.max(0, newRemaining),
+                nextPayoutPeriod: nextPeriod,
+                status: isCompleted ? "completed" : (payoutAccount ? "active" : "pending_account"),
+                lastSettledPeriod: targetPeriod,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
+
+        // 3) Rebuild balances snapshot per recipient.
+        const allCredits = await db.collection("revenue_share_credits").get();
+        for (const cDoc of allCredits.docs) {
+            const c = cDoc.data() || {};
+            const email = String(c.recipientEmail || "").trim().toLowerCase();
+            if (!email) continue;
+            const acc = balanceAgg.get(email) || {
+                recipientEmail: email,
+                totalCredit: 0,
+                totalPaid: 0,
+                remainingBalance: 0,
+                activeCredits: 0,
+                pendingAccountCredits: 0
+            };
+            acc.totalCredit = round2(acc.totalCredit + Number(c.totalCredit || 0));
+            acc.totalPaid = round2(acc.totalPaid + Number(c.paidCredit || 0));
+            acc.remainingBalance = round2(acc.remainingBalance + Number(c.remainingCredit || 0));
+            if (String(c.status || "") === "active") acc.activeCredits += 1;
+            if (String(c.status || "") === "pending_account") acc.pendingAccountCredits += 1;
+            balanceAgg.set(email, acc);
+        }
+        for (const [email, rec] of balanceAgg.entries()) {
+            const user = await getUserByEmail(email);
+            const payoutAccount = getPayoutAccountFromUser(user);
+            const balanceId = crypto.createHash("sha256").update(email).digest("hex").slice(0, 40);
+            await db.collection("revenue_share_balances").doc(balanceId).set({
+                ...rec,
+                payoutAccountPresent: Boolean(payoutAccount),
+                lastCalculatedPeriod: targetPeriod,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
+
+        console.log(`Profit sharing completed. createdCredits=${creditTrail.length}, ledgerRows=${auditTrail.length}, balances=${balanceAgg.size}`);
     } catch (error) {
         console.error("Error in calculateMonthlySharing:", error);
     }
