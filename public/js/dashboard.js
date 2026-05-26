@@ -3056,14 +3056,16 @@ window.formatUnitName = window.formatUnitName || function(fileName) {
     if (!fileName) return "Unknown";
     let name = fileName.replace('.html', '');
 
-    // Explicit handle for master files - Keep them for display in settings
-    if (name.includes('-master-')) {
-        // Fallback title for masters
-    }
+    // Normalize common course/unit prefixes into readable labels.
+    name = name
+        .replace(/^(start|basic|adv|advanced)-\d{2}-/i, '')
+        .replace(/^\d{2}-/i, '')
+        .replace(/^unit-/i, '')
+        .replace(/^master-/i, '');
 
-    // Try to strip prefixes like "00-unit-", "basic-01-unit-"
+    // Fallback: if unit/master still appears in middle, trim the left part.
     const nameMatch = name.match(/(?:unit-|master-)(.+)/i);
-    if (nameMatch) name = nameMatch[1];
+    if (nameMatch && nameMatch[1]) name = nameMatch[1];
     return name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); // Title Case
 }
 
