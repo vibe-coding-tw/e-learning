@@ -923,7 +923,7 @@ function extractReferralAssignmentsFromOrder(orderItems = {}, lessons = []) {
 function itemContainsUnit(itemKey = '', lessons = [], targetUnitId = '') {
     if (!itemKey || !targetUnitId) return false;
     const canonicalTargetUnitId = resolveCanonicalUnitId(targetUnitId, lessons);
-    const lesson = lessons.find(l => l.courseId === itemKey);
+    const lesson = lessons.find(l => l.courseId === itemKey) || findCourseByPageOrUnit(itemKey, itemKey, lessons);
     if (lesson && Array.isArray(lesson.courseUnits)) {
         return lesson.courseUnits
             .map(unitId => resolveCanonicalUnitId(unitId, lessons))
@@ -992,7 +992,7 @@ async function backfillTutorReferralForPaidOrders(db, {
     return { updatedOrders, updatedItems };
 }
 
-function hasActiveOrderForCourse(ordersSnapshot, courseId) {
+function hasActiveOrderForCourse(ordersSnapshot, courseId, lessons = []) {
     let hasCourse = false;
     const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
     const now = Date.now();
@@ -1000,7 +1000,21 @@ function hasActiveOrderForCourse(ordersSnapshot, courseId) {
     ordersSnapshot.forEach(doc => {
         const data = doc.data();
         const items = data.items || {};
-        if (!items[courseId]) return;
+        
+        // 1. Direct match check
+        let matched = !!items[courseId];
+        
+        // 2. Compatibility check: if direct lookup fails, verify if any purchased item matches/contains courseId
+        if (!matched && lessons.length > 0) {
+            for (const itemKey of Object.keys(items)) {
+                if (itemContainsUnit(itemKey, lessons, courseId)) {
+                    matched = true;
+                    break;
+                }
+            }
+        }
+        
+        if (!matched) return;
 
         if (data.expiryDate?.toDate) {
             const expiry = data.expiryDate.toDate().getTime();
@@ -1282,7 +1296,7 @@ async function resolveStudentAssignmentAccess(db, uid, courseId, unitId, lessons
         .where('status', '==', 'SUCCESS')
         .get();
 
-    const hasPaidCourse = !ordersSnapshot.empty && hasActiveOrderForCourse(ordersSnapshot, effectiveCourseId);
+    const hasPaidCourse = !ordersSnapshot.empty && hasActiveOrderForCourse(ordersSnapshot, effectiveCourseId, lessons);
     if (!hasPaidCourse) {
         return {
             authorized: false,
