@@ -2162,6 +2162,35 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
         </div>
     `;
 
+    const policyAdminHtml = `
+        <div class="mb-10 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                <h4 class="text-sm font-black text-slate-900 flex items-center gap-2">⚙️ 分潤策略管理（Admin）</h4>
+                <button onclick="window.loadRevenuePolicies()" class="px-3 py-1.5 text-xs font-bold border border-slate-300 rounded-lg hover:bg-slate-50">重新載入</button>
+            </div>
+            <div class="p-6 overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="text-slate-500 border-b">
+                            <th class="py-2 pr-3">Policy</th>
+                            <th class="py-2 pr-3">Tutor</th>
+                            <th class="py-2 pr-3">Tutor Up</th>
+                            <th class="py-2 pr-3">Agent</th>
+                            <th class="py-2 pr-3">Agent Up</th>
+                            <th class="py-2 pr-3">CourseDev</th>
+                            <th class="py-2 pr-3">CourseDev Up</th>
+                            <th class="py-2 pr-3">Enabled</th>
+                            <th class="py-2 text-right">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="revenue-policy-body" class="divide-y">
+                        <tr><td colspan="9" class="py-6 text-center text-slate-400">載入中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+
     let html = `
         ${pendingHtml}
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
@@ -2174,6 +2203,7 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
         </div>
         ${metricsHtml}
         ${revenueSimHtml}
+        ${policyAdminHtml}
     `;
 
     try {
@@ -2328,6 +2358,9 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
     if (typeof window.runRevenueSimulation === 'function') {
         window.runRevenueSimulation();
     }
+    if (typeof window.loadRevenuePolicies === 'function') {
+        window.loadRevenuePolicies();
+    }
 }
 
 window.runRevenueSimulation = function () {
@@ -2378,6 +2411,63 @@ window.runRevenueSimulation = function () {
             <div><span class="font-bold text-amber-700">CourseDev:</span> ${fmt(courseLevels)}（合計 ${courseTotal}）</div>
         </div>
     `;
+};
+
+window.loadRevenuePolicies = async function () {
+    const body = document.getElementById('revenue-policy-body');
+    if (!body) return;
+    body.innerHTML = '<tr><td colspan="9" class="py-6 text-center text-slate-400">載入中...</td></tr>';
+    try {
+        const fn = httpsCallable(functions, 'getRevenueSharePolicies');
+        const res = await fn({});
+        const policies = Array.isArray(res?.data?.policies) ? res.data.policies : [];
+        if (!policies.length) {
+            body.innerHTML = '<tr><td colspan="9" class="py-6 text-center text-slate-400">尚無策略</td></tr>';
+            return;
+        }
+        body.innerHTML = policies.map((p) => {
+            const id = String(p.id || '');
+            const num = (k, d = 0) => Number.isFinite(Number(p[k])) ? Number(p[k]) : d;
+            const field = (name, value, type = 'number', step = '0.01') =>
+                `<input id="${name}-${id}" type="${type}" step="${step}" value="${value}" class="w-20 border rounded px-2 py-1">`;
+            return `
+                <tr>
+                    <td class="py-2 pr-3 font-bold">${escapeHtml(id)}</td>
+                    <td class="py-2 pr-3">${field('policy-tutorRate', num('tutorRate', 0))}</td>
+                    <td class="py-2 pr-3">${field('policy-tutorUplineRate', num('tutorUplineRate', 0))}</td>
+                    <td class="py-2 pr-3">${field('policy-agentRate', num('agentRate', 0))}</td>
+                    <td class="py-2 pr-3">${field('policy-agentUplineRate', num('agentUplineRate', 0))}</td>
+                    <td class="py-2 pr-3">${field('policy-courseDevRate', num('courseDevRate', 0))}</td>
+                    <td class="py-2 pr-3">${field('policy-courseDevUplineRate', num('courseDevUplineRate', 0))}</td>
+                    <td class="py-2 pr-3"><input id="policy-enabled-${id}" type="checkbox" ${p.enabled !== false ? 'checked' : ''}></td>
+                    <td class="py-2 text-right"><button onclick="window.saveRevenuePolicy('${id}')" class="px-3 py-1.5 text-xs font-bold bg-slate-900 text-white rounded hover:bg-slate-700">儲存</button></td>
+                </tr>
+            `;
+        }).join('');
+    } catch (e) {
+        body.innerHTML = `<tr><td colspan="9" class="py-6 text-center text-red-500">載入失敗：${escapeHtml(e.message || 'unknown')}</td></tr>`;
+    }
+};
+
+window.saveRevenuePolicy = async function (policyId) {
+    const g = (id) => document.getElementById(`${id}-${policyId}`);
+    const payload = {
+        policyId,
+        tutorRate: Number(g('policy-tutorRate')?.value || 0),
+        tutorUplineRate: Number(g('policy-tutorUplineRate')?.value || 0),
+        agentRate: Number(g('policy-agentRate')?.value || 0),
+        agentUplineRate: Number(g('policy-agentUplineRate')?.value || 0),
+        courseDevRate: Number(g('policy-courseDevRate')?.value || 0),
+        courseDevUplineRate: Number(g('policy-courseDevUplineRate')?.value || 0),
+        enabled: !!g('policy-enabled')?.checked
+    };
+    try {
+        const fn = httpsCallable(functions, 'upsertRevenueSharePolicy');
+        await fn(payload);
+        alert(`已更新策略：${policyId}`);
+    } catch (e) {
+        alert(`更新失敗：${e.message}`);
+    }
 };
 
 function stripAdminConsoleAttachmentSections(rootEl) {

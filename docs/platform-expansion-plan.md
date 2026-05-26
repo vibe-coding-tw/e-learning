@@ -447,7 +447,7 @@ Reference artifacts:
 - [x] Add upline share calculation for agent
 - [x] Add upline share calculation for course developer (`courseDevUplineRate`)
 - [x] Persist `policySnapshot` into ledger records
-- [ ] Add admin policy CRUD
+- [x] Add admin policy CRUD (MVP: list + inline update in Admin Console)
 - [x] Add admin revenue simulation UI (read-only calculator in Tutor Admin Console)
 
 ### 7.6 Validation and pilot rollout

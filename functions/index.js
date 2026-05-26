@@ -1659,6 +1659,60 @@ exports.setUserRole = onCall(async (request) => {
     }
 });
 
+exports.getRevenueSharePolicies = onCall(async (request) => {
+    const db = admin.firestore();
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', '請先登入');
+    const userDoc = await db.collection('users').doc(uid).get();
+    if ((userDoc.data() || {}).role !== 'admin') {
+        throw new HttpsError('permission-denied', 'Only admins can read revenue policies.');
+    }
+
+    const snap = await db.collection('revenue_share_policies').get();
+    const policies = snap.docs
+        .map((d) => ({ id: d.id, ...(d.data() || {}) }))
+        .sort((a, b) => String(a.id).localeCompare(String(b.id)));
+    return { policies };
+});
+
+exports.upsertRevenueSharePolicy = onCall(async (request) => {
+    const db = admin.firestore();
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError('unauthenticated', '請先登入');
+    const userDoc = await db.collection('users').doc(uid).get();
+    if ((userDoc.data() || {}).role !== 'admin') {
+        throw new HttpsError('permission-denied', 'Only admins can write revenue policies.');
+    }
+
+    const payload = request.data || {};
+    const policyId = String(payload.policyId || '').trim();
+    if (!policyId) throw new HttpsError('invalid-argument', 'policyId is required');
+
+    const asRate = (v, fallback = 0) => {
+        const n = Number(v);
+        if (!Number.isFinite(n)) return fallback;
+        if (n < 0) return 0;
+        if (n > 1) return 1;
+        return n;
+    };
+
+    const docRef = db.collection('revenue_share_policies').doc(policyId);
+    await docRef.set({
+        policyName: String(payload.policyName || payload.name || policyId).trim() || policyId,
+        tutorRate: asRate(payload.tutorRate, 0),
+        tutorUplineRate: asRate(payload.tutorUplineRate, 0),
+        agentRate: asRate(payload.agentRate, 0),
+        agentUplineRate: asRate(payload.agentUplineRate, 0),
+        courseDevRate: asRate(payload.courseDevRate, 0),
+        courseDevUplineRate: asRate(payload.courseDevUplineRate, 0),
+        enabled: payload.enabled !== false,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    return { success: true, policyId };
+});
+
 // ==========================================
 // 6. 記錄學習活動 (logActivity)
 // ==========================================
