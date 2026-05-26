@@ -655,3 +655,44 @@ Controls:
 3. Versioned content sync
 4. Cache busting
 5. Admin audit trail and simulation
+
+---
+
+## 11. Immediate Cleanup Queue (2026-05-26)
+
+### 11.1 `*-master-*` retirement inventory (no deletion yet)
+
+Current master wrappers still present in runtime content:
+
+- `functions/private_courses/*-master-*.html`: **30 files**
+  - `start`: 5
+  - `basic`: 10
+  - `adv`: 15
+
+Blocking dependencies still active:
+
+1. `public/start.html`, `public/basic.html`, `public/advanced.html` explicitly keep master-entry behavior for tab UX.
+2. `functions/index.js` still contains legacy master-scope compatibility fallback for authorization (`serveCourse`).
+3. `public/js/dashboard.js` still has master-aware rendering/filter branches in Tutor/Admin views.
+
+Decision:
+
+- Keep all 30 master wrappers during current pilot window.
+- Do not remove until Actions billing window resumes and full validation matrix is re-run.
+
+### 11.2 Firestore-only cleanup candidates (safe to do now)
+
+These are low-risk doc/script/runtime cleanups we can do before master retirement:
+
+1. Docs consistency:
+   - replace examples that imply master IDs are primary course IDs.
+   - keep wording: Firestore canonical data is source of truth.
+2. Script defaults:
+   - `functions/scripts/seed-emulator.js` still seeds many `*-master-*` IDs; migrate seed set to canonical `entryUnitId` + unit IDs.
+3. Dashboard cleanup:
+   - trim non-essential master-title fallback branches that are only for legacy display.
+
+### 11.3 Deferred items (wait for billing recovery)
+
+1. `Verify autograde and writeback are unaffected` (requires Actions run evidence).
+2. `Remove *-master-* only after pilot validation succeeds`.
