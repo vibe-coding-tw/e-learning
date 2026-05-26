@@ -11,9 +11,10 @@
 
 </head>
 
-<body class="bg-gray-50 flex flex-col h-screen overflow-hidden">
+<body id="page-started" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
-    <script src="/js/course-shared.js?v=2026.05.21.V21.DISABLE_UNIFIED_SUPPORT_HUB"></script>
+    <script type="module" src="/js/nav-component.js?v=2026.05.26.V48.START_MASTER_PARITY"></script>
+    <script src="/js/course-shared.js?v=2026.05.26.V48.START_MASTER_PARITY"></script>
     
 
     <!-- Tab Navigation Bar -->
@@ -33,11 +34,11 @@
         </div>
     </div>
 
-    <!-- Main Content (Iframe) -->
-    <main class="flex-grow w-full bg-gray-100 relative">
-        <iframe id="content-frame" src="" class="w-full h-full border-0" title="Course Content"
-            allowfullscreen></iframe>
-    </main>
+    <!-- Content Area (Iframe) -->
+    <div class="flex-grow w-full relative">
+        <iframe id="content-frame" src="" class="w-full h-full border-0 absolute inset-0 bg-gray-50 option-opacity"
+            onload="resizeIframe(this)"></iframe>
+    </div>
 
     <script>
         const tabs = {
@@ -55,6 +56,8 @@
             }
         };
 
+        const iframe = document.getElementById('content-frame');
+
         function switchTab(unitKey) {
             // Update Tab Styles
             Object.keys(tabs).forEach(key => {
@@ -67,11 +70,20 @@
             });
 
             // Update Iframe Source with Query Params (Tokens)
-            const iframe = document.getElementById('content-frame');
             const url = tabs[unitKey].url;
-            const separator = url.includes('?') ? '&' : '?';
-            const query = window.location.search.substring(1);
-            iframe.src = query ? `${url}${separator}${query}` : url;
+            loadContent(url);
+        }
+
+        function loadContent(url) {
+            iframe.style.opacity = '0';
+            setTimeout(() => {
+                const separator = url.includes('?') ? '&' : '?';
+                const query = window.location.search.substring(1);
+                iframe.src = query ? `${url}${separator}${query}` : url;
+                iframe.onload = () => {
+                    iframe.style.opacity = '1';
+                };
+            }, 300);
         }
 
         // Initialize first tab

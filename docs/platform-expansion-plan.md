@@ -404,6 +404,8 @@ Admin needs:
 - [x] Restrict compatibility fallback to legacy `-master-` token scopes only
 - [x] Add `/courses/*` global nav injection with iframe-safe guard (avoid duplicate nav in master iframes)
 - [x] Remove invalid injected placeholder script (`P26...`) from `functions/private_courses/*.html` and restore canonical `/js/course-shared.js` loading
+- [x] Repair broken runtime boot script in all unit files (104 files updated to canonical `/js/course-shared.js?v=...`)
+- [x] Restore dashboard FAB and `.ms-topnav` normalization by removing invalid script dependencies from served course HTML
 - [~] Make `entryUnitId` the primary course entry target
   - `prepare`: now mapped to existing `prepare-*` unit pages
   - `start/basic/advanced`: temporarily keep master entry to preserve in-page unit tabs
@@ -465,14 +467,25 @@ Reference artifacts:
 Operational note:
 - Any change under `functions/private_courses/*` requires `firebase deploy --only functions`.
 - Deploying hosting only will not update `/courses/*` served content.
+- If you only change `public/js/*` (for shared nav/FAB behavior), deploy hosting; if course HTML content under `functions/private_courses/*` is modified, deploy functions.
+
+Hotfix note (2026-05-26):
+- A malformed placeholder script token (`P26.05.26...`) was accidentally written into course HTML files and caused:
+  - missing FAB
+  - inconsistent `.ms-topnav`
+  - partial course runtime boot failures
+- The token has been fully replaced with canonical script paths and redeployed.
 
 ---
 
 ## 8. Immediate Next Steps
 
-1. Apply `users` and `orders` regional fields (`locale`, `region`, `channelType`, `policyId`, `pricingVersion`) with migration script.
-2. Complete role-based sharing (`tutor/agent/courseDev`) with policy snapshot mode.
-3. Add admin UI for setting `courseDev` ownership/upline mapping quality checks.
+1. Finish start/master parity pass:
+   - align all `start-*-master-*.html` tab wrapper and iframe behavior with `basic/adv` baseline
+   - verify `.ms-topnav` text structure consistency on all start units
+2. Apply `users` and `orders` regional fields (`locale`, `region`, `channelType`, `policyId`, `pricingVersion`) with migration script.
+3. Complete role-based sharing (`tutor/agent/courseDev`) with policy snapshot mode.
+4. Add admin UI for setting `courseDev` ownership/upline mapping quality checks.
 3. Prepare first external content repo pilot (`zh-TW` + `en`, one unit each).
 4. Plan master-page retirement for `start/basic/advanced` after tabs are replaced by unit-page native navigation.
 5. Collect 46 missing video/doc URLs for advanced course files from content owners.

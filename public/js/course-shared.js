@@ -18,7 +18,6 @@ function init() {
     if (staleFabHide) staleFabHide.remove();
     normalizeCourseTopNav();
     hideGlobalNavOnCoursePage();
-    ensureGlobalNavOnCoursePage();
     applyHideTabsPreference();
     upgradeLegacyStartUnitToMsLayout();
     applyStartUnitModernTheme();
@@ -38,9 +37,21 @@ function normalizeCourseTopNav() {
         const topNav = document.querySelector('.ms-topnav');
         if (!topNav) return;
 
+        // Normalize course bucket label to keep all units visually consistent.
+        const navLabel = topNav.querySelector('.nav-label');
+        if (navLabel) {
+            if (file.startsWith('start-')) navLabel.textContent = '入門課程';
+            else if (file.startsWith('basic-')) navLabel.textContent = '基礎課程';
+            else if (file.startsWith('adv-')) navLabel.textContent = '進階課程';
+            else if (file.startsWith('prepare-')) navLabel.textContent = '準備課程';
+        }
+
         // Fix broken brand href for unit pages (especially start pages).
         const brandLink = topNav.querySelector('.brand');
         if (!brandLink) return;
+
+        // Normalize brand text/icon style using the current production baseline.
+        brandLink.innerHTML = '<i class="fas fa-rocket"></i> Vibe Coding';
 
         const currentHref = (brandLink.getAttribute('href') || '').trim();
         const isBroken = !currentHref || currentHref === '#' || currentHref === './#';
@@ -76,38 +87,6 @@ function hideGlobalNavOnCoursePage() {
         document.head.appendChild(style);
     } catch (e) {
         console.warn('[CourseShared] hideGlobalNavOnCoursePage failed:', e);
-    }
-}
-
-function ensureGlobalNavOnCoursePage() {
-    try {
-        // If this course page is inside a master-page iframe, keep only the parent nav.
-        if (window.self !== window.top) return;
-        const path = window.location.pathname || '';
-        if (!path.startsWith('/courses/')) return;
-        if (document.getElementById('main-nav')) return;
-        if (document.getElementById('nav-placeholder')) return;
-
-        const hostNav = document.createElement('div');
-        hostNav.id = 'nav-placeholder';
-        hostNav.setAttribute('data-root', '..');
-        hostNav.setAttribute('data-show-auth', 'true');
-
-        const topBar = document.querySelector('.ms-topnav');
-        if (topBar && topBar.parentNode) {
-            topBar.parentNode.insertBefore(hostNav, topBar);
-        } else {
-            document.body.prepend(hostNav);
-        }
-
-        if (!document.querySelector('script[src*="/js/nav-component.js"]')) {
-            const script = document.createElement('script');
-            script.type = 'module';
-            script.src = '/js/nav-component.js?v=2026.05.26.COURSE_NAV_HOTFIX';
-            document.body.appendChild(script);
-        }
-    } catch (e) {
-        console.warn('[CourseShared] ensureGlobalNavOnCoursePage failed:', e);
     }
 }
 
@@ -1511,47 +1490,6 @@ async function initFirebaseFeatures() {
             };
 
             const learningState = details.learningState;
-
-            // [NEW] Hide duplicate dashboard floating button on unit pages to merge widgets
-            if (!document.getElementById('hide-dashboard-fab-style')) {
-                const style = document.createElement('style');
-                style.id = 'hide-dashboard-fab-style';
-                style.innerHTML = '#dashboard-fab { display: none !important; }';
-                document.head.appendChild(style);
-            }
-            const removeDashboardFab = () => {
-                const removeFromDoc = (doc) => {
-                    if (!doc) return;
-                    const fab = doc.getElementById('dashboard-fab');
-                    if (fab) fab.remove();
-                };
-                removeFromDoc(document);
-                try {
-                    if (window.parent && window.parent !== window && window.parent.document) {
-                        removeFromDoc(window.parent.document);
-                    }
-                } catch (_) {}
-            };
-            removeDashboardFab();
-            window.addEventListener('DOMContentLoaded', removeDashboardFab);
-            setTimeout(removeDashboardFab, 100);
-            setTimeout(removeDashboardFab, 500);
-            setTimeout(removeDashboardFab, 1500);
-            if (!window.__dashboardFabObserverInstalled) {
-                const observer = new MutationObserver(() => {
-                    removeDashboardFab();
-                });
-                observer.observe(document.body, { childList: true, subtree: true });
-                try {
-                    if (window.parent && window.parent !== window && window.parent.document && window.parent.document.body) {
-                        const parentObserver = new MutationObserver(() => {
-                            removeDashboardFab();
-                        });
-                        parentObserver.observe(window.parent.document.body, { childList: true, subtree: true });
-                    }
-                } catch (_) {}
-                window.__dashboardFabObserverInstalled = true;
-            }
 
             // Define openDashboardModalFromHub helper
             window.openDashboardModalFromHub = function() {
