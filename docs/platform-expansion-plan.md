@@ -395,7 +395,7 @@ Admin needs:
 - [x] Add `channelType` to `orders`
 - [x] Add `policyId` to `orders`
 - [x] Add `pricingVersion` to `orders`
-- [ ] Create `revenue_share_policies` collection
+- [x] Create `revenue_share_policies` collection
 
 ### 7.2 Content routing and serving
 
@@ -439,12 +439,12 @@ Reference artifacts:
 
 ### 7.5 Revenue share system
 
-- [~] Store role-based revenue share policies in Firestore
-- [~] Add tutor share calculation by policy
-- [ ] Add agent share calculation by policy
-- [ ] Reserve `courseDevRate` support without payout when no owner exists
-- [ ] Add upline share calculation for tutor
-- [ ] Add upline share calculation for agent
+- [x] Store role-based revenue share policies in Firestore
+- [x] Add tutor share calculation by policy
+- [x] Add agent share calculation by policy
+- [x] Reserve `courseDevRate` support without payout when no owner exists
+- [x] Add upline share calculation for tutor
+- [x] Add upline share calculation for agent
 - [x] Persist `policySnapshot` into ledger records
 - [ ] Add admin policy CRUD
 - [ ] Add admin revenue simulation UI
@@ -465,7 +465,7 @@ Reference artifacts:
 ## 8. Immediate Next Steps
 
 1. Apply `users` and `orders` regional fields (`locale`, `region`, `channelType`, `policyId`, `pricingVersion`) with migration script.
-2. Implement `revenue_share_policies` and wire `calculateMonthlySharing` to policy snapshot mode.
+2. Complete role-based sharing (`tutor/agent/courseDev`) with policy snapshot mode.
 3. Prepare first external content repo pilot (`zh-TW` + `en`, one unit each).
 4. Plan master-page retirement for `start/basic/advanced` after tabs are replaced by unit-page native navigation.
 5. Collect 46 missing video/doc URLs for advanced course files from content owners.
@@ -477,10 +477,11 @@ Status update (2026-05-26):
   - Applied defaults:
     - users: `locale=zh-TW`, `region=TW`
     - orders: `region=TW`, `channelType=direct`, `policyId=""`, `pricingVersion=v1`
-- Step 2 in progress:
+- Step 2 completed:
   - `calculateMonthlySharing` now reads `orders.policyId` (fallback to `default-v1`)
   - `profit_ledger` now stores `policyId` + `policySnapshot`
-  - current rollout scope is tutor-chain policy rates (`tutorRate`, `tutorUplineRate`)
+  - role-based ledger lines: `tutor`, `agent`, `courseDev`
+  - script added: `functions/scripts/seed_revenue_share_policies.js`
 
 ---
 
