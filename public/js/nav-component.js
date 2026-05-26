@@ -45,6 +45,36 @@ function resolveCategoryFromFilename(filename = "") {
     return null;
 }
 
+function normalizeLocaleCode(raw = "") {
+    const v = String(raw || "").trim().toLowerCase();
+    if (!v) return "tw";
+    if (v.startsWith("zh")) return "tw";
+    return v.split(/[-_]/)[0] || "en";
+}
+
+function normalizeLevel(raw = "") {
+    const v = String(raw || "").trim().toLowerCase();
+    if (!v) return "common";
+    if (v === "started" || v === "start") return "starter";
+    if (v === "prepare") return "common";
+    return v;
+}
+
+function normalizeTrack(raw = "") {
+    const v = String(raw || "").trim().toLowerCase();
+    if (!v) return "common";
+    return v;
+}
+
+function resolveCategoryFromLesson(lesson = {}) {
+    const locale = normalizeLocaleCode(lesson.locale || "");
+    const level = normalizeLevel(lesson.level || "");
+    const track = normalizeTrack(lesson.track || "");
+    if (level === "common") return `${locale}-common`;
+    if (track === "common") return `${locale}-${level}`;
+    return `${locale}-${track}-${level}`;
+}
+
 function getCategoryHref(categoryKey = "") {
     const key = String(categoryKey || "").toLowerCase();
     if (key.endsWith("-starter") || key === "tw-car-starter") return "start.html";
@@ -61,6 +91,63 @@ function categoryLabel(categoryKey = "", locale = "zh-TW") {
     if (key === "tw-car-basic") return zh ? "基礎課程" : "TW Car Basic";
     if (key === "tw-car-advanced") return zh ? "進階課程" : "TW Car Advanced";
     return key.replace(/-/g, " ");
+}
+
+function categoryLabelFromParts(categoryKey = "", uiLocale = "zh-TW") {
+    const zh = isZhLocale(uiLocale);
+    const key = String(categoryKey || "").toLowerCase();
+    const parts = key.split("-");
+    const lang = parts[0] || "tw";
+    const maybeTrack = parts.length >= 3 ? parts[1] : "common";
+    const level = parts.length >= 3 ? parts[2] : (parts[1] || "common");
+    const track = parts.length >= 3 ? maybeTrack : "common";
+
+    const TRACK_ZH = { common: "通用", car: "無人車", drone: "無人機", robot: "機器人" };
+    const TRACK_EN = { common: "Common", car: "Car", drone: "Drone", robot: "Robot" };
+    const LEVEL_ZH = { common: "準備課程", starter: "入門課程", basic: "基礎課程", advanced: "進階課程" };
+    const LEVEL_EN = { common: "Common Prep", starter: "Starter Course", basic: "Basic Course", advanced: "Advanced Course" };
+
+    if (lang === "tw" && track === "common" && LEVEL_ZH[level]) return LEVEL_ZH[level];
+    if (lang === "tw" && track === "car" && LEVEL_ZH[level]) return LEVEL_ZH[level];
+    if (zh) {
+        const t = TRACK_ZH[track] || track.toUpperCase();
+        const l = LEVEL_ZH[level] || level;
+        return `${t} ${l}`.trim();
+    }
+    const t = TRACK_EN[track] || track.toUpperCase();
+    const l = LEVEL_EN[level] || level;
+    return `${t} ${l}`.trim();
+}
+
+function sortCategoryKeys(keys = [], uiLocale = "zh-TW") {
+    const uiLang = isZhLocale(uiLocale) ? "tw" : "en";
+    const levelRank = { common: 0, starter: 1, basic: 2, advanced: 3 };
+    const trackRank = { common: 0, car: 1, drone: 2, robot: 3 };
+    return [...keys].sort((a, b) => {
+        const pa = String(a).split("-");
+        const pb = String(b).split("-");
+        const la = pa[0] || "";
+        const lb = pb[0] || "";
+        const ta = pa.length >= 3 ? pa[1] : "common";
+        const tb = pb.length >= 3 ? pb[1] : "common";
+        const va = pa.length >= 3 ? pa[2] : (pa[1] || "common");
+        const vb = pb.length >= 3 ? pb[2] : (pb[1] || "common");
+
+        const langA = la === uiLang ? 0 : 1;
+        const langB = lb === uiLang ? 0 : 1;
+        if (langA !== langB) return langA - langB;
+        if (la !== lb) return la.localeCompare(lb);
+
+        const trA = (ta in trackRank) ? trackRank[ta] : 99;
+        const trB = (tb in trackRank) ? trackRank[tb] : 99;
+        if (trA !== trB) return trA - trB;
+        if (ta !== tb) return ta.localeCompare(tb);
+
+        const lvA = (va in levelRank) ? levelRank[va] : 99;
+        const lvB = (vb in levelRank) ? levelRank[vb] : 99;
+        if (lvA !== lvB) return lvA - lvB;
+        return va.localeCompare(vb);
+    });
 }
 
 function getLearningPathsFromCache() {
@@ -96,37 +183,40 @@ function renderLearningPathMenus(rootPath = ".", items = DEFAULT_LEARNING_PATHS,
 
     desktop.innerHTML = items.map((item) => `
         <a href="${resolve(item.href)}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
-            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-40"></i> ${categoryLabel(item.key, locale)}
+            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-40"></i> ${categoryLabelFromParts(item.key, locale)}
         </a>
     `).join("");
 
     mobile.innerHTML = items.map((item) => `
         <a href="${resolve(item.href)}" class="flex items-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl hover:bg-indigo-50 hover:text-indigo-700 transition-all text-sm">
-            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-50"></i> ${categoryLabel(item.key, locale)}
+            <i class="fa-solid ${item.icon || "fa-book-open"} text-xs opacity-50"></i> ${categoryLabelFromParts(item.key, locale)}
         </a>
     `).join("");
 }
 
-async function loadLearningPathsDynamic() {
+async function loadLearningPathsDynamic(uiLocale = "zh-TW") {
     const cached = getLearningPathsFromCache();
     if (cached?.length) return cached;
     try {
-        const getLessons = httpsCallable(functions, "getLessons");
+        const getLessons = httpsCallable(functions, "getLessonsMetadata");
         const res = await getLessons({});
         const lessons = Array.isArray(res?.data?.lessons) ? res.data.lessons : [];
         const keys = new Set();
         lessons.forEach((lesson) => {
-            const filename = String(
-                lesson?.contentRef ||
-                lesson?.entryUnitId ||
-                lesson?.courseId ||
-                lesson?.classroomUrl ||
-                ""
-            ).split("/").pop().split("?")[0];
-            const key = resolveCategoryFromFilename(filename);
+            let key = resolveCategoryFromLesson(lesson);
+            if (!key) {
+                const filename = String(
+                    lesson?.contentRef ||
+                    lesson?.entryUnitId ||
+                    lesson?.courseId ||
+                    lesson?.classroomUrl ||
+                    ""
+                ).split("/").pop().split("?")[0];
+                key = resolveCategoryFromFilename(filename);
+            }
             if (key) keys.add(key);
         });
-        const dynamic = Array.from(keys).sort().map((key) => ({
+        const dynamic = sortCategoryKeys(Array.from(keys), uiLocale).map((key) => ({
             key,
             href: getCategoryHref(key),
             icon: key.includes("advanced") ? "fa-microchip" :
@@ -362,7 +452,7 @@ window.renderNav = function (rootPath = '.', options = {}) {
 
     const uiLocale = detectUiLocale();
     renderLearningPathMenus(rootPath, DEFAULT_LEARNING_PATHS, uiLocale);
-    loadLearningPathsDynamic().then((paths) => {
+    loadLearningPathsDynamic(uiLocale).then((paths) => {
         renderLearningPathMenus(rootPath, paths, uiLocale);
     });
 };
