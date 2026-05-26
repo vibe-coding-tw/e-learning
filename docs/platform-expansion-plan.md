@@ -439,13 +439,13 @@ Reference artifacts:
 
 ### 7.5 Revenue share system
 
-- [ ] Store role-based revenue share policies in Firestore
-- [ ] Add tutor share calculation by policy
+- [~] Store role-based revenue share policies in Firestore
+- [~] Add tutor share calculation by policy
 - [ ] Add agent share calculation by policy
 - [ ] Reserve `courseDevRate` support without payout when no owner exists
 - [ ] Add upline share calculation for tutor
 - [ ] Add upline share calculation for agent
-- [ ] Persist `policySnapshot` into ledger records
+- [x] Persist `policySnapshot` into ledger records
 - [ ] Add admin policy CRUD
 - [ ] Add admin revenue simulation UI
 
@@ -477,6 +477,10 @@ Status update (2026-05-26):
   - Applied defaults:
     - users: `locale=zh-TW`, `region=TW`
     - orders: `region=TW`, `channelType=direct`, `policyId=""`, `pricingVersion=v1`
+- Step 2 in progress:
+  - `calculateMonthlySharing` now reads `orders.policyId` (fallback to `default-v1`)
+  - `profit_ledger` now stores `policyId` + `policySnapshot`
+  - current rollout scope is tutor-chain policy rates (`tutorRate`, `tutorUplineRate`)
 
 ---
 
