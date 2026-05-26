@@ -642,6 +642,10 @@ Status update (2026-05-26):
   - `profit_ledger` now stores `policyId` + `policySnapshot`
   - role-based ledger lines: `tutor`, `agent`, `courseDev`
   - script added: `functions/scripts/seed_revenue_share_policies.js`
+- Seeding & Order Compatibility updates:
+  - Added robust backward-compatible purchase matching (`itemContainsUnit` fallback) in `hasActiveOrderForCourse` and `resolveStudentAssignmentAccess`.
+  - Configured `functions/scripts/seed-emulator.js` to seed canonical `courseId` in orders items, users/orders regional defaults, and default revenue share policies.
+  - Set prepare track landing to target resolved unit entries, while preserving original master entry URLs for started/basic/advanced tracks.
 
 ---
 
@@ -691,12 +695,12 @@ Decision:
 
 These are low-risk doc/script/runtime cleanups we can do before master retirement:
 
-1. Docs consistency:
+1. Docs consistency: [Completed 2026-05-26]
    - replace examples that imply master IDs are primary course IDs.
    - keep wording: Firestore canonical data is source of truth.
-2. Script defaults:
+2. Script defaults: [Completed 2026-05-26]
    - `functions/scripts/seed-emulator.js` still seeds many `*-master-*` IDs; migrate seed set to canonical `entryUnitId` + unit IDs.
-3. Dashboard cleanup:
+3. Dashboard cleanup: [Completed 2026-05-26]
    - trim non-essential master-title fallback branches that are only for legacy display.
 
 ### 11.3 Deferred items (wait for billing recovery)
