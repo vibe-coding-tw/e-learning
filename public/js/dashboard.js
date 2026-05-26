@@ -2110,6 +2110,58 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
         </div>
     `;
 
+    const revenueSimHtml = `
+        <div class="mb-10 bg-blue-50 border border-blue-100 rounded-2xl overflow-hidden shadow-sm">
+            <div class="px-6 py-4 border-b border-blue-100 flex items-center justify-between">
+                <h4 class="text-sm font-black text-blue-900 flex items-center gap-2">
+                    📊 分潤模擬器（唯讀）
+                </h4>
+                <span class="text-[11px] text-blue-500 font-semibold">不寫入資料庫</span>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <label class="text-xs font-bold text-gray-600">訂單金額
+                    <input id="sim-amount" type="number" min="0" step="1" value="1200"
+                        class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+                </label>
+                <label class="text-xs font-bold text-gray-600">有效期(月)
+                    <input id="sim-months" type="number" min="1" step="1" value="12"
+                        class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+                </label>
+                <label class="text-xs font-bold text-gray-600">Tutor Rate
+                    <input id="sim-tutor-rate" type="number" min="0" max="1" step="0.01" value="0.2"
+                        class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+                </label>
+                <label class="text-xs font-bold text-gray-600">Tutor Upline Rate
+                    <input id="sim-tutor-upline-rate" type="number" min="0" max="1" step="0.01" value="0.2"
+                        class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+                </label>
+                <label class="text-xs font-bold text-gray-600">Agent Rate
+                    <input id="sim-agent-rate" type="number" min="0" max="1" step="0.01" value="0.2"
+                        class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+                </label>
+                <label class="text-xs font-bold text-gray-600">Agent Upline Rate
+                    <input id="sim-agent-upline-rate" type="number" min="0" max="1" step="0.01" value="0.1"
+                        class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+                </label>
+                <label class="text-xs font-bold text-gray-600">CourseDev Rate
+                    <input id="sim-course-rate" type="number" min="0" max="1" step="0.01" value="0.2"
+                        class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+                </label>
+                <label class="text-xs font-bold text-gray-600">CourseDev Upline Rate
+                    <input id="sim-course-upline-rate" type="number" min="0" max="1" step="0.01" value="0.1"
+                        class="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+                </label>
+            </div>
+            <div class="px-6 pb-6">
+                <button onclick="window.runRevenueSimulation()"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700">
+                    重新模擬
+                </button>
+            </div>
+            <div id="revenue-sim-result" class="px-6 pb-6"></div>
+        </div>
+    `;
+
     let html = `
         ${pendingHtml}
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
@@ -2121,6 +2173,7 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
             <p id="admin-msg" class="text-sm font-bold text-orange-600 animate-pulse"></p>
         </div>
         ${metricsHtml}
+        ${revenueSimHtml}
     `;
 
     try {
@@ -2272,7 +2325,60 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
 
     adminPanel.innerHTML = html;
     stripAdminConsoleAttachmentSections(adminPanel);
+    if (typeof window.runRevenueSimulation === 'function') {
+        window.runRevenueSimulation();
+    }
 }
+
+window.runRevenueSimulation = function () {
+    const val = (id, fallback = 0) => {
+        const el = document.getElementById(id);
+        const n = Number(el?.value);
+        return Number.isFinite(n) ? n : fallback;
+    };
+    const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+    const buildLevels = (amount, rate, uplineRate, maxLevels = 6) => {
+        const out = [];
+        let share = amount * rate;
+        let level = 1;
+        while (level <= maxLevels && share >= 0.01) {
+            out.push(round2(share));
+            share = share * uplineRate;
+            level += 1;
+        }
+        return out;
+    };
+
+    const amount = Math.max(0, val('sim-amount', 0));
+    const months = Math.max(1, Math.floor(val('sim-months', 12)));
+    const tutorLevels = buildLevels(amount, val('sim-tutor-rate', 0.2), val('sim-tutor-upline-rate', 0.2));
+    const agentLevels = buildLevels(amount, val('sim-agent-rate', 0.2), val('sim-agent-upline-rate', 0.1));
+    const courseLevels = buildLevels(amount, val('sim-course-rate', 0.2), val('sim-course-upline-rate', 0.1));
+
+    const sum = (arr) => round2(arr.reduce((a, b) => a + b, 0));
+    const tutorTotal = sum(tutorLevels);
+    const agentTotal = sum(agentLevels);
+    const courseTotal = sum(courseLevels);
+    const totalCredit = round2(tutorTotal + agentTotal + courseTotal);
+    const monthlyPay = round2(totalCredit / months);
+
+    const resultEl = document.getElementById('revenue-sim-result');
+    if (!resultEl) return;
+    const fmt = (arr) => arr.length ? arr.map((v, i) => `L${i + 1}: ${v}`).join(' / ') : '0';
+    resultEl.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+            <div class="bg-white rounded-xl border p-3"><div class="text-xs text-gray-500">總 Credit</div><div class="text-xl font-black text-gray-800">TWD ${totalCredit}</div></div>
+            <div class="bg-white rounded-xl border p-3"><div class="text-xs text-gray-500">月攤提</div><div class="text-xl font-black text-blue-700">TWD ${monthlyPay}</div></div>
+            <div class="bg-white rounded-xl border p-3"><div class="text-xs text-gray-500">有效期</div><div class="text-xl font-black text-gray-800">${months} 月</div></div>
+            <div class="bg-white rounded-xl border p-3"><div class="text-xs text-gray-500">訂單金額</div><div class="text-xl font-black text-gray-800">TWD ${round2(amount)}</div></div>
+        </div>
+        <div class="bg-white rounded-xl border p-4 text-sm text-gray-700 space-y-2">
+            <div><span class="font-bold text-indigo-700">Tutor:</span> ${fmt(tutorLevels)}（合計 ${tutorTotal}）</div>
+            <div><span class="font-bold text-emerald-700">Agent:</span> ${fmt(agentLevels)}（合計 ${agentTotal}）</div>
+            <div><span class="font-bold text-amber-700">CourseDev:</span> ${fmt(courseLevels)}（合計 ${courseTotal}）</div>
+        </div>
+    `;
+};
 
 function stripAdminConsoleAttachmentSections(rootEl) {
     if (!rootEl) return;
