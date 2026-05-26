@@ -52,7 +52,7 @@ function withEntryMetadata(course) {
     ),
     entryUnitId: resolvedEntryUnitId,
     contentRef: course.contentRef || buildContentRef(resolvedEntryUnitId),
-    classroomUrl: resolvedEntryUnitId ? `/courses/${resolvedEntryUnitId}` : (course.classroomUrl || ''),
+    classroomUrl: (course.category === 'prepare' && resolvedEntryUnitId) ? `/courses/${resolvedEntryUnitId}` : (course.classroomUrl || ''),
   };
 }
 
@@ -507,23 +507,71 @@ const TEST_USER_EMAIL = 'chen.yuiliang@gmail.com';
 async function seed() {
   console.log('🌱 開始寫入種子資料到本地 Firestore 模擬器...\n');
 
-  for (const course of courses) {
-    const normalizedCourse = withEntryMetadata(course);
-    const { id, ...data } = normalizedCourse;
-    await db.collection('metadata_lessons').doc(id).set(data);
-    console.log(`  ✅ ${id} (courseId: ${data.courseId})`);
+  const normalizedCourses = courses.map(withEntryMetadata);
+
+  for (const data of normalizedCourses) {
+    const { id, ...payload } = data;
+    await db.collection('metadata_lessons').doc(id).set(payload);
+    console.log(`  ✅ ${id} (courseId: ${payload.courseId})`);
   }
 
-  // Seed user document
+  // Seed user document with defaults
   await db.collection('users').doc(TEST_USER_UID).set({
     email: TEST_USER_EMAIL,
     role: 'user',
+    locale: 'zh-TW',
+    region: 'TW',
     createdAt: admin.firestore.Timestamp.now(),
   }, { merge: true });
   console.log(`\n  👤 使用者 ${TEST_USER_EMAIL} (uid: ${TEST_USER_UID})`);
 
-  // Seed orders for basic + advanced courses
-  const paidCourses = courses.filter(c => c.category === 'basic' || c.category === 'advanced');
+  // Seed default revenue share policies
+  const policies = [
+    {
+      policyName: "Default Sharing Policy",
+      tutorRate: 0.2,
+      tutorUplineRate: 0.2,
+      agentRate: 0.2,
+      agentUplineRate: 0,
+      courseDevRate: 0.2,
+      courseDevUplineRate: 0.1,
+      enabled: true
+    },
+    {
+      policyName: "TW Direct Sales Policy",
+      tutorRate: 0.2,
+      tutorUplineRate: 0.2,
+      agentRate: 0,
+      agentUplineRate: 0,
+      courseDevRate: 0.2,
+      courseDevUplineRate: 0.1,
+      enabled: true
+    },
+    {
+      policyName: "TW Channel Partner Policy",
+      tutorRate: 0.2,
+      tutorUplineRate: 0.2,
+      agentRate: 0.2,
+      agentUplineRate: 0.1,
+      courseDevRate: 0.2,
+      courseDevUplineRate: 0.1,
+      enabled: true
+    }
+  ];
+
+  const policyIds = ["default-v1", "tw-direct-v1", "tw-agent-v1"];
+  for (let i = 0; i < policies.length; i++) {
+    const policyId = policyIds[i];
+    await db.collection('revenue_share_policies').doc(policyId).set({
+      ...policies[i],
+      updatedAt: admin.firestore.Timestamp.now(),
+      createdAt: admin.firestore.Timestamp.now()
+    });
+    console.log(`  📋 Policy Seeded: ${policyId}`);
+  }
+
+  // Seed orders for basic + advanced courses (using normalized courses for canonical keys)
+  const paidCourses = normalizedCourses.filter(c => c.category === 'basic' || c.category === 'advanced');
   const expiryDate = new Date();
   expiryDate.setFullYear(expiryDate.getFullYear() + 1);
 
@@ -537,6 +585,10 @@ async function seed() {
     email: TEST_USER_EMAIL,
     status: 'SUCCESS',
     items,
+    region: 'TW',
+    channelType: 'direct',
+    policyId: '',
+    pricingVersion: 'v1',
     expiryDate: admin.firestore.Timestamp.fromDate(expiryDate),
     createdAt: admin.firestore.Timestamp.now(),
     paidAt: admin.firestore.Timestamp.now(),
