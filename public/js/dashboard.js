@@ -2198,7 +2198,7 @@ window.renderAdminConsole = window.renderAdminConsole || function() {
         <div id="admin-console-header" class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <h3 class="text-2xl font-black text-orange-900 flex items-center gap-3">
                 <span class="p-2.5 bg-orange-100 rounded-xl">🛠️</span> 
-                合格教師控制台 (Tutor Console)
+                合格教師設定 (Tutor Settings)
             </h3>
 
             <p id="admin-msg" class="text-sm font-bold text-orange-600 animate-pulse"></p>
