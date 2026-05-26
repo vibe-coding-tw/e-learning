@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>搖桿限位數學與勾股定理應用 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <!-- MathJax for rendering math formulas -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            }
+        };
+    </script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --ms-blue: #0078d4;
+            --ms-blue-dark: #005a9e;
+            --ms-blue-light: #deecf9;
+            --ms-gray-10: #f3f2f1;
+            --ms-gray-20: #e1dfdd;
+            --ms-gray-90: #201f1e;
+            --ms-green: #107c10;
+            --ms-red: #d13438;
+            --sidebar-w: 280px;
+        }
+
+        * { box-sizing: border-box; }
+        #assignment-guide, #tutor-guide { display: none !important; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fff;
+            color: #201f1e;
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ─── TOP NAV ─── */
+        .ms-topnav {
+            background: var(--ms-blue);
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,.2);
+        }
+        .ms-topnav .brand {
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .ms-topnav .divider { width: 1px; height: 20px; background: rgba(255,255,255,.3); }
+        .ms-topnav .nav-label { color: rgba(255,255,255,.9); font-size: 14px; }
+
+        /* ─── LAYOUT ─── */
+        .ms-layout { display: flex; min-height: calc(100vh - 48px); }
+
+        /* ─── SIDEBAR ─── */
+        .ms-sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: #faf9f8;
+            border-right: 1px solid #e1dfdd;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 48px;
+            height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+        .ms-sidebar-header {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .ms-sidebar-header .module-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #605e5c;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .ms-sidebar-header .module-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #201f1e;
+            line-height: 1.4;
+        }
+        .ms-sidebar-header .meta {
+            font-size: 12px;
+            color: #605e5c;
+            margin-top: 6px;
+        }
+        .ms-unit-list { padding: 8px 0; }
+        .ms-unit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background .12s, border-color .12s;
+            color: #201f1e;
+        }
+        .ms-unit-item:hover { background: #edebe9; }
+        .ms-unit-item.active {
+            border-left-color: var(--ms-blue);
+            background: #deecf9;
+        }
+        .ms-unit-item.active .unit-name { color: var(--ms-blue); font-weight: 600; }
+        .unit-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #c8c6c4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+            font-size: 10px;
+            background: #fff;
+        }
+        .unit-icon.done { background: var(--ms-green); border-color: var(--ms-green); color: #fff; }
+        .unit-icon.active-icon { border-color: var(--ms-blue); background: var(--ms-blue); color: #fff; }
+        .unit-meta { flex: 1; min-width: 0; }
+        .unit-name { font-size: 13px; line-height: 1.4; }
+        .unit-time { font-size: 11px; color: #605e5c; margin-top: 2px; }
+        .sidebar-progress {
+            padding: 12px 16px;
+            border-top: 1px solid #e1dfdd;
+            margin-top: auto;
+        }
+        .progress-bar-bg { background: #e1dfdd; border-radius: 4px; height: 6px; }
+        .progress-bar-fill { background: var(--ms-green); border-radius: 4px; height: 6px; transition: width .4s; }
+        .progress-text { font-size: 12px; color: #605e5c; margin-top: 6px; }
+
+        /* ─── MAIN ─── */
+        .ms-content { flex: 1; min-width: 0; }
+
+        .ms-breadcrumb {
+            padding: 10px 40px;
+            font-size: 12px;
+            color: #605e5c;
+            border-bottom: 1px solid #e1dfdd;
+            background: #fff;
+        }
+        .ms-breadcrumb a { color: var(--ms-blue); text-decoration: none; }
+        .ms-breadcrumb a:hover { text-decoration: underline; }
+        .ms-breadcrumb span { margin: 0 6px; }
+
+        /* ─── PAGES ─── */
+        .ms-unit-page { display: none; }
+        .ms-unit-page.visible { display: block; }
+
+        .unit-content {
+            max-width: 820px;
+            padding: 32px 40px 60px;
+            margin: 0 auto;
+        }
+
+        .unit-status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .unit-completed-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #dff6dd;
+            color: #107c10;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+        .unit-time-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #605e5c;
+            font-size: 13px;
+        }
+
+        /* Typography */
+        .unit-content h1 { font-size: 28px; font-weight: 700; margin: 0 0 20px; color: #201f1e; line-height: 1.3; }
+        .unit-content h2 { font-size: 20px; font-weight: 600; margin: 36px 0 12px; color: #201f1e; padding-top: 8px; }
+        .unit-content h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: #201f1e; }
+        .unit-content p { margin: 0 0 14px; }
+        .unit-content ul, .unit-content ol { margin: 0 0 14px; padding-left: 28px; }
+        .unit-content li { margin-bottom: 6px; }
+        .unit-content strong { font-weight: 600; }
+        .unit-content a { color: var(--ms-blue); text-decoration: none; }
+        .unit-content a:hover { text-decoration: underline; }
+        .unit-content code {
+            background: #f3f2f1;
+            border: 1px solid #e1dfdd;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            color: #a31515;
+        }
+
+        /* Lab card */
+        .ms-lab-card {
+            background: linear-gradient(135deg, #eef6ff 0%, #f5f0ff 100%);
+            border: 1px solid #c7e0f4;
+            border-radius: 6px;
+            padding: 24px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: box-shadow .15s, border-color .15s;
+        }
+        .ms-lab-card:hover { box-shadow: 0 4px 16px rgba(0,120,212,.12); border-color: var(--ms-blue); }
+        .ms-lab-card h3 { margin: 0 0 12px; color: var(--ms-blue-dark); font-size: 16px; font-weight: 600; }
+        .ms-lab-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--ms-blue);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 12px;
+        }
+        .ms-lab-time {
+            font-size: 12px;
+            color: #605e5c;
+            margin-left: 8px;
+        }
+
+        /* Checklist */
+        .ms-checklist { list-style: none; padding: 0; margin: 12px 0; }
+        .ms-checklist li {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 6px 0; font-size: 14px;
+        }
+        .ms-checklist li .check-box {
+            width: 18px; height: 18px;
+            border: 2px solid #8a8886; border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 1px; cursor: pointer; transition: all .15s;
+        }
+        .ms-checklist li .check-box.checked {
+            background: var(--ms-blue); border-color: var(--ms-blue); color: #fff;
+        }
+
+        /* Resource links */
+        .ms-resource-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border: 1px solid #e1dfdd; border-radius: 4px;
+            margin-bottom: 8px; text-decoration: none; color: #201f1e;
+        }
+        .ms-resource-link:hover { background: #f3f2f1; border-color: #c8c6c4; }
+        .ms-resource-link i { font-size: 20px; color: var(--ms-blue); width: 24px; text-align: center; }
+
+        /* Unit nav */
+        .unit-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            border-top: 1px solid #e1dfdd;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+        .nav-btn-prev, .nav-btn-next {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 20px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; border: 1px solid;
+            font-family: inherit; transition: background .12s;
+        }
+        .nav-btn-next { background: var(--ms-blue); color: #fff; border-color: var(--ms-blue); }
+        .nav-btn-next:hover { background: var(--ms-blue-dark); border-color: var(--ms-blue-dark); }
+        .nav-btn-prev { background: #fff; color: var(--ms-blue); border-color: var(--ms-blue); }
+        .nav-btn-prev:hover { background: var(--ms-blue-light); }
+        .unit-page-indicator { font-size: 13px; color: #605e5c; }
+
+        /* Module index */
+        .module-meta-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+        .ms-tag { background: #f3f2f1; color: #323130; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 500; }
+        .ms-tag.blue { background: #deecf9; color: var(--ms-blue-dark); }
+        .ms-tag.green { background: #dff6dd; color: #107c10; }
+        .unit-card-list { margin: 20px 0; }
+        .unit-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 0; border-bottom: 1px solid #f3f2f1; cursor: pointer;
+        }
+        .unit-card:last-child { border-bottom: none; }
+        .unit-card:hover .unit-card-name { color: var(--ms-blue); text-decoration: underline; }
+        .unit-card-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #f3f2f1; color: #605e5c;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .unit-card.lab .unit-card-num { background: #eef6ff; color: var(--ms-blue-dark); }
+        .unit-card-info { flex: 1; }
+        .unit-card-name { font-size: 15px; font-weight: 500; }
+        .unit-card-time { font-size: 12px; color: #605e5c; margin-top: 2px; }
+        .unit-card-arrow { color: #c8c6c4; font-size: 14px; }
+    
+        /* Quiz */
+        .quiz-question { margin-bottom: 32px; }
+        .quiz-question p { font-size: 15px; font-weight: 500; margin-bottom: 14px; }
+        .quiz-option {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 10px 14px; border: 1px solid #e1dfdd; border-radius: 4px;
+            margin-bottom: 8px; cursor: pointer; transition: background .1s, border-color .1s; font-size: 14px;
+        }
+        .quiz-option:hover { background: #f3f2f1; border-color: #c8c6c4; }
+        .quiz-option input[type=radio] { margin-top: 2px; accent-color: var(--ms-blue); flex-shrink: 0; }
+        .quiz-option.correct { background: #dff6dd; border-color: var(--ms-green); }
+        .quiz-option.wrong { background: #fde7e9; border-color: var(--ms-red); }
+        .quiz-feedback { display: none; margin-top: 8px; padding: 10px 14px; border-radius: 4px; font-size: 13px; font-weight: 500; }
+        .quiz-feedback.correct { background: #dff6dd; color: #107c10; display: block; }
+        .quiz-feedback.wrong { background: #fde7e9; color: #d13438; display: block; }
+    </style>
+</head>
+<body>
+
+    <!-- ─── TOP NAV ─── -->
+    <div class="ms-topnav">
+        <a class="brand" href="/">
+            <i class="fas fa-cubes"></i>
+            <span>Vibe Coding Learn</span>
+        </a>
+        <div class="divider"></div>
+        <div class="nav-label">搖桿限位數學與勾股定理應用</div>
+    </div>
+
+    <!-- ─── LAYOUT ─── -->
+    <div class="ms-layout">
+        <!-- Sidebar -->
+        <div class="ms-sidebar">
+            <div class="ms-sidebar-header">
+                <div class="module-label">Start 05</div>
+                <div class="module-title">搖桿限位數學</div>
+                <div class="meta"><i class="far fa-clock"></i> 約 3 小時 · 5 個單元</div>
+            </div>
+            <div class="ms-unit-list" id="sidebar-nav">
+                <!-- JavaScript populated -->
+            </div>
+            <div class="sidebar-progress">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progress-fill" style="width: 0%;"></div>
+                </div>
+                <div class="progress-text" id="progress-text">0 / 6 已完成</div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="ms-content">
+            <!-- Breadcrumbs -->
+            <div class="ms-breadcrumb">
+                <a href="/">課程</a>
+                <span>&gt;</span>
+                <a href="#">Start 05</a>
+                <span>&gt;</span>
+                <span id="bc-current">課程總覽</span>
+            </div>
+
+            <!-- PAGE: Index (0) -->
+            <div class="ms-unit-page visible" id="page-index">
+                <div class="unit-content">
+                    <div class="module-meta-tags">
+                        <span class="ms-tag blue"><i class="fas fa-calculator"></i> 幾何約束</span>
+                        <span class="ms-tag green"><i class="fas fa-expand-arrows-alt"></i> 數據歸一化</span>
+                    </div>
+                    <h1>搖桿限位數學：勾股定理的應用</h1>
+                    <p class="text-gray-600">
+                        從 \( c = \sqrt{a^2 + b^2} \) 到流暢的虛擬搖桿體驗。理解如何利用基本幾何學與三角函數，打造完美的觸控回饋。
+                    </p>
+
+                    <h2>單元大綱</h2>
+                    <div class="unit-card-list" id="index-unit-list">
+                        <!-- JavaScript populated -->
+                    </div>
+
+                    <h2>預備知識</h2>
+                    <ul class="text-gray-600">
+                        <li>HTML5 Canvas 繪圖基礎</li>
+                        <li>國中基本畢氏定理 (勾股定理) 概念</li>
+                    </ul>
+                </div>
+                <div class="unit-nav">
+                    <span></span>
+                    <button class="nav-btn-next" onclick="goToUnit(1)">下一單元 &nbsp;›</button>
+                </div>
+            </div>
+
+            <!-- PAGE: 簡介 (1) -->
+            <div class="ms-unit-page" id="page-1">
+                <div class="unit-content">
+                    <div class="unit-status-bar">
+                        <div class="unit-completed-badge" id="badge-1" style="display: none;"><i class="fas fa-check"></i> 已完成</div>
+                        <div class="unit-time-badge"><i class="far fa-clock"></i> 5 分鐘</div>
+                    </div>
+                    <h1>課程簡介</h1>
+                    <p class="text-gray-600">
+                        觀看以下影片或講義，了解如何利用幾何公式與圓周約束，將手指碰觸的二維座標映射至限制半徑內的控制訊號。
+                    </p>
+
+                    <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; margin: 24px 0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        <iframe src="https://www.youtube.com/embed/geLlEPK6MY8" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allowfullscreen></iframe>
+                    </div>
+
+                    <p class="text-gray-600">
+                        在觀看影片後，請繼續點擊「勾股定理與歐幾里得距離」來開始體驗數學公式的幾何視覺化。
+                    </p>
+                </div>
+                <div class="unit-nav">
+                    <button class="nav-btn-prev" onclick="goToUnit(0)">‹ &nbsp;上一個單元</button>
+                    <button class="nav-btn-next" onclick="markDone(1); goToUnit(2)">下一單元 &nbsp;›</button>
+                </div>
+            </div>
+
+            <!-- PAGE: 勾股定理與歐幾里得距離 (2) -->
+            <div class="ms-unit-page" id="page-2">
+                <div class="unit-content">
+                    <div class="unit-status-bar">
+                        <div class="unit-completed-badge" id="badge-2" style="display: none;"><i class="fas fa-check"></i> 已完成</div>
+                        <div class="unit-time-badge"><i class="far fa-clock"></i> 20 分鐘</div>
+                    </div>
+                    <h1>勾股定理與歐幾里得距離</h1>
+                    
+                    <div class="grid md:grid-cols-2 gap-8 items-start my-6">
+                        <div class="space-y-6">
+                            <h3 class="text-2xl font-bold text-gray-800">核心公式</h3>
+                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                                <div class="text-3xl text-center font-serif text-slate-800 mb-2">
+                                    \( c = \sqrt{a^2 + b^2} \)
+                                </div>
+                                <p class="text-center text-slate-500 text-sm">直角三角形斜邊計算公式</p>
+                            </div>
+
+                            <div class="space-y-4">
+                                <h4 class="font-bold text-gray-700">控制場景應用：</h4>
+                                <ul class="space-y-3 text-sm text-gray-600">
+                                    <li class="flex items-start gap-3">
+                                        <span class="font-mono text-blue-600 font-bold w-12 flex-shrink-0">Center</span>
+                                        <span>搖桿底座中心點座標 \((x_0, y_0)\)</span>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <span class="font-mono text-blue-600 font-bold w-12 flex-shrink-0">Touch</span>
+                                        <span>手指觸碰點座標 \((x_1, y_1)\)</span>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <span class="font-mono text-blue-600 font-bold w-12 flex-shrink-0">Delta</span>
+                                        <span>X軸與Y軸的偏移量 \(\Delta x = x_1 - x_0, \Delta y = y_1 - y_0\)</span>
+                                    </li>
+                                </ul>
+
+                                <div class="bg-blue-50 text-blue-900 p-4 rounded-lg text-xs border border-blue-100 leading-relaxed">
+                                    <strong>學習任務：</strong><br>
+                                    給定中心點 \((0,0)\) 與觸控點 \((30, 40)\)，算出手指偏移了多少距離？<br>
+                                    <span class="text-blue-500 font-bold mt-1 block">計算方式：\(\sqrt{30^2 + 40^2} = \sqrt{900 + 1600} = \sqrt{2500} = 50\)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Math Canvas -->
+                        <div class="bg-slate-900 rounded-xl p-6 relative flex flex-col items-center justify-center border border-slate-700 shadow-inner overflow-hidden select-none">
+                            <canvas id="mathCanvas" width="300" height="300" class="cursor-crosshair bg-slate-950 rounded border border-slate-800 touch-none"></canvas>
+                            <p class="text-[10px] text-slate-500 mt-2">（在上方畫布內點擊並拖曳以改變座標位置）</p>
+                            <div class="mt-4 flex gap-6 text-xs font-mono text-slate-300 bg-slate-800/80 px-4 py-2 rounded-full">
+                                <div id="val-dx">dx: 0</div>
+                                <div id="val-dy">dy: 0</div>
+                                <div id="val-dist" class="text-yellow-400 font-bold">Distance: 0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="unit-nav">
+                    <button class="nav-btn-prev" onclick="goToUnit(1)">‹ &nbsp;上一個單元</button>
+                    <button class="nav-btn-next" onclick="markDone(2); goToUnit(3)">下一單元 &nbsp;›</button>
+                </div>
+            </div>
+
+            <!-- PAGE: 限位邏輯：半徑的限制 (3) -->
+            <div class="ms-unit-page" id="page-3">
+                <div class="unit-content">
+                    <div class="unit-status-bar">
+                        <div class="unit-completed-badge" id="badge-3" style="display: none;"><i class="fas fa-check"></i> 已完成</div>
+                        <div class="unit-time-badge"><i class="far fa-clock"></i> 20 分鐘</div>
+                    </div>
+                    <h1>限位邏輯：半徑的限制</h1>
+                    
+                    <div class="grid md:grid-cols-2 gap-8 items-start my-6">
+                        <div class="space-y-6">
+                            <p class="text-gray-600 leading-relaxed">
+                                為什麼不能直接讓搖桿頭跟著手指跑？如果手指滑太遠，搖桿頭會飛出底座！我們需要實作<strong>圓形限制 (Circular Clamping)</strong>。
+                            </p>
+
+                            <div class="bg-purple-50 p-6 rounded-xl border border-purple-100">
+                                <h4 class="font-bold text-purple-800 mb-3">關鍵邏輯：</h4>
+                                <ol class="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                                    <li>設定搖桿底座最大限制半徑為 \(R\)。</li>
+                                    <li>計算目前偏移距離 \(d = \sqrt{\Delta x^2 + \Delta y^2}\)。</li>
+                                    <li><strong>判斷與等比縮放：</strong>如果 \(d > R\)，則必須將座標限縮回圓周邊界上。</li>
+                                </ol>
+                            </div>
+
+                            <div class="bg-slate-900 rounded-lg p-4 font-mono text-xs text-slate-300 overflow-x-auto leading-normal">
+                                <div class="text-gray-500 mb-2">// 比例縮放公式 (Circular Clamping)</div>
+                                <span class="text-pink-400">if</span> (distance > maxRadius) {<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-blue-400">const</span> ratio = maxRadius / distance;<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;newX = startX + deltaX * ratio;<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;newY = startY + deltaY * ratio;<br>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col justify-center items-center select-none bg-gray-50 p-6 rounded-2xl border border-gray-200">
+                            <div class="relative w-64 h-64 bg-white rounded-full border-4 border-dashed border-gray-300 flex items-center justify-center shadow-inner">
+                                <div class="absolute w-full h-[1px] bg-gray-200"></div>
+                                <div class="absolute h-full w-[1px] bg-gray-200"></div>
+
+                                <!-- Visual Representation -->
+                                <div class="absolute w-2 h-2 bg-black rounded-full z-10"></div>
+                                <div class="absolute w-[180px] h-1 bg-gradient-to-r from-transparent to-red-400 opacity-50 rotate-45 transform origin-left left-1/2 top-1/2 -mt-0.5"></div>
+                                <div class="absolute w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-lg top-[15%] right-[15%] z-20 animate-bounce"></div>
+                                <div class="absolute w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-lg top-[24%] right-[24%] z-20 opacity-50"></div>
+
+                                <div class="absolute top-10 right-10 text-[10px] text-red-500 font-bold bg-white px-2 py-0.5 rounded border border-red-200">Touch</div>
+                                <div class="absolute top-24 right-24 text-[10px] text-green-600 font-bold bg-white px-2 py-0.5 rounded border border-green-200">Clamped</div>
+                            </div>
+                            <p class="mt-4 text-xs text-center text-gray-500 max-w-xs leading-relaxed">
+                                當觸控點(紅)超出最大半徑限制時，系統會計算出其在圓周上的相對投影切點(綠)作為搖桿實際位置。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="unit-nav">
+                    <button class="nav-btn-prev" onclick="goToUnit(2)">‹ &nbsp;上一個單元</button>
+                    <button class="nav-btn-next" onclick="markDone(3); goToUnit(4)">下一單元 &nbsp;›</button>
+                </div>
+            </div>
+
+            <!-- PAGE: 教室實戰 (4) -->
+            <div class="ms-unit-page" id="page-4">
+                <div class="unit-content">
+                    <div class="unit-status-bar">
+                        <div class="unit-completed-badge" id="badge-4" style="display: none;"><i class="fas fa-check"></i> 已完成</div>
+                        <div class="unit-time-badge"><i class="far fa-clock"></i> 135 分鐘</div>
+                    </div>
+                    <h1>教室實戰與歸一化預習</h1>
+                    
+                    <div class="mb-8 bg-orange-50 rounded-xl p-6 border border-orange-100">
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">預習：速度百分比與向量歸一化</h3>
+                        <p class="text-sm text-gray-600 mb-4">
+                            硬體或 API 通常需要 \(-1.0\) 到 \(1.0\) 或 \(0\) 到 \(100\%\) 的推力數值，而非網頁的像素值。我們需要進行<strong>歸一化 (Normalization)</strong>。
+                        </p>
+                        <div class="grid md:grid-cols-2 gap-4 text-xs">
+                            <div class="bg-white p-4 rounded border border-orange-200">
+                                <strong class="block text-orange-700 mb-2">Power (推力百分比):</strong>
+                                <div>\(\text{Power} = \min(\frac{d}{R}, 1.0)\)</div>
+                                <div class="text-gray-500 mt-1">將偏移距離與底座半徑相除，最大值限制在 100%。</div>
+                            </div>
+                            <div class="bg-white p-4 rounded border border-orange-200">
+                                <strong class="block text-orange-700 mb-2">Angle (方向角度):</strong>
+                                <div>\(\theta = \text{atan2}(\Delta y, \Delta x)\)</div>
+                                <div class="text-gray-500 mt-1">計算手指對應中心點的象限方向弧度，並轉換為角度。</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="ms-lab-card" onclick="openSubmissionModal('joystick-math-task-1', '作業 3-1: 搖桿邊界鎖定實作')">
+                            <div class="ms-lab-badge">Task 3-1</div>
+                            <span class="ms-lab-time"><i class="far fa-clock"></i> 60 分鐘</span>
+                            <h3>作業 3-1: 搖桿邊界鎖定實作</h3>
+                            <p class="text-sm text-gray-600 leading-relaxed">
+                                編寫 <code>touchmove</code> 邏輯，利用勾股定理判斷當前手指座標距離中心的大小，實作等比例縮放以防止搖桿頭飛出底座。
+                            </p>
+                        </div>
+
+                        <div class="ms-lab-card" onclick="openSubmissionModal('joystick-math-task-2', '作業 3-2: 動態數據顯示')">
+                            <div class="ms-lab-badge">Task 3-2</div>
+                            <span class="ms-lab-time"><i class="far fa-clock"></i> 45 分鐘</span>
+                            <h3>作業 3-2: 動態數據顯示</h3>
+                            <p class="text-sm text-gray-600 leading-relaxed">
+                                將點擊與拖移搖桿所產生的數據，轉換為 Power (百分比) 及 Angle (360度角)，並即時呈現在網頁的 Telemetry 數據看板上。
+                            </p>
+                        </div>
+
+                        <div class="ms-lab-card" onclick="openSubmissionModal('joystick-math-task-3', '作業 3-3: 搖桿自動回彈')">
+                            <div class="ms-lab-badge">Task 3-3</div>
+                            <span class="ms-lab-time"><i class="far fa-clock"></i> 30 分鐘</span>
+                            <h3>作業 3-3: 搖桿自動回彈</h3>
+                            <p class="text-sm text-gray-600 leading-relaxed">
+                                監聽 <code>touchend</code> 或 <code>mouseup</code> 事件，在放開手指時將搖桿頭重置回中心 \((0,0)\)，且所有推力數據立刻歸零以保障機器人操縱安全。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="unit-nav">
+                    <button class="nav-btn-prev" onclick="goToUnit(3)">‹ &nbsp;上一個單元</button>
+                    <button class="nav-btn-next" onclick="markDone(4); goToUnit(5)">下一單元 &nbsp;›</button>
+                </div>
+            </div>
+        <!-- ══════════ PAGE 5: QUIZ ══════════ -->
+        <div class="ms-unit-page" id="page-5">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-5" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 4 分鐘</div>
+                </div>
+
+                <h1>知識測驗</h1>
+                <p>為每個問題選出最佳答案，確認你對本模組的理解。</p>
+
+                <div id="quiz-form">
+
+                    <div class="quiz-question">
+                        <p>1. 在搖桿數學中，如何計算操控頭到圓心的距離？</p>
+                        <label class="quiz-option"><input type="radio" name="q1" value="a"> 使用 <code>Math.abs(dx) + Math.abs(dy)</code> 計算曼哈頓距離</label>
+                        <label class="quiz-option"><input type="radio" name="q1" value="b"> 使用勾股定理 <code>Math.sqrt(dx*dx + dy*dy)</code> 計算歐幾里得距離</label>
+                        <label class="quiz-option"><input type="radio" name="q1" value="c"> 使用 <code>Math.max(Math.abs(dx), Math.abs(dy))</code> 計算切比雪夫距離</label>
+                        <div class="quiz-feedback" id="q1-feedback"></div>
+                    </div>
+                    <div class="quiz-question">
+                        <p>2. 「圓形限位（Clamping）」的作用是什麼？當操控頭被拖出底盤範圍時，系統應如何處理？</p>
+                        <label class="quiz-option"><input type="radio" name="q2" value="a"> 直接忽略超出範圍的觸控事件</label>
+                        <label class="quiz-option"><input type="radio" name="q2" value="b"> 將操控頭的位置限制在底盤半徑內，使用比例縮放公式 <code>(R/d) * dx</code> 將座標投影回圓周上</label>
+                        <label class="quiz-option"><input type="radio" name="q2" value="c"> 讓操控頭自由移動，不設任何限制</label>
+                        <div class="quiz-feedback" id="q2-feedback"></div>
+                    </div>
+                    <div class="quiz-question">
+                        <p>3. <code>Math.atan2(dy, dx)</code> 相比 <code>Math.atan(dy/dx)</code> 的主要優勢是什麼？</p>
+                        <label class="quiz-option"><input type="radio" name="q3" value="a"> <code>atan2</code> 的計算速度更快</label>
+                        <label class="quiz-option"><input type="radio" name="q3" value="b"> <code>atan2</code> 能正確區分四個象限（360度），且不會因為 dx 為 0 而產生除零錯誤</label>
+                        <label class="quiz-option"><input type="radio" name="q3" value="c"> <code>atan2</code> 回傳的單位是角度而非弧度</label>
+                        <div class="quiz-feedback" id="q3-feedback"></div>
+                    </div>
+                    <div class="quiz-question">
+                        <p>4. 搖桿的「推力百分比（Power）」是如何歸一化到 0~100% 的？</p>
+                        <label class="quiz-option"><input type="radio" name="q4" value="a"> 直接使用觸控點的螢幕座標除以螢幕寬度</label>
+                        <label class="quiz-option"><input type="radio" name="q4" value="b"> 將操控頭到圓心的距離除以底盤半徑，再用 <code>Math.min()</code> 限制最大值為 1.0</label>
+                        <label class="quiz-option"><input type="radio" name="q4" value="c"> 使用 CSS 的 <code>transform: scale()</code> 自動計算</label>
+                        <div class="quiz-feedback" id="q4-feedback"></div>
+                    </div>
+
+                    <div class="quiz-submit">
+                        <button class="ms-btn" onclick="submitQuiz()">提交答案</button>
+                        <button class="ms-btn-ghost" onclick="resetQuiz()" id="quiz-reset-btn" style="margin-left:8px; display:none;">重新作答</button>
+                    </div>
+                    <div id="quiz-score" style="display:none; margin-top:16px; padding:16px; background:#f3f2f1; border-radius:4px; font-size:14px;"></div>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(4)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">5 / 6</span>
+                <button class="nav-btn-next" onclick="markDone(5); goToUnit(6)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+<div class="ms-unit-page" id="page-6">
+                <div class="unit-content">
+                    <div class="unit-status-bar">
+                        <div class="unit-completed-badge" id="badge-6" style="display: none;"><i class="fas fa-check"></i> 已完成</div>
+                        <div class="unit-time-badge"><i class="far fa-clock"></i> 5 分鐘</div>
+                    </div>
+                    <h1>本單元摘要與學習資源</h1>
+                    <h2>重點回顧</h2>
+                    <ul class="text-gray-600">
+                        <li><strong>畢氏定理應用：</strong>使用公式 \(d = \sqrt{\Delta x^2 + \Delta y^2}\) 來算出手指與搖桿中心的相對直線距離。</li>
+                        <li><strong>圓形限位：</strong>利用比例因子 <code>ratio = maxRadius / distance</code> 將超出的位置等比拉回邊界圓周上。</li>
+                        <li><strong>歸一化與安全重置：</strong>轉換成硬體接受的 Power 百分比，並在 <code>touchend</code> 階段觸發安全歸零重置。</li>
+                    </ul>
+
+                    <h2>延伸閱讀與資源</h2>
+                    <div class="my-4">
+                        <a href="#" onclick="enterMediaMode('video', window.RESOURCES.video); return false;" class="ms-resource-link">
+                            <i class="fab fa-youtube"></i>
+                            <div>
+                                <div class="font-semibold">教學影片</div>
+                                <div class="text-xs text-gray-500">搖桿限位數學與勾股定理應用</div>
+                            </div>
+                        </a>
+                        <a href="#" onclick="enterMediaMode('doc', window.RESOURCES.doc); return false;" class="ms-resource-link">
+                            <i class="far fa-file-alt"></i>
+                            <div>
+                                <div class="font-semibold">課程講義</div>
+                                <div class="text-xs text-gray-500">詳細說明與幾何公式</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="unit-nav">
+                    <button class="nav-btn-prev" onclick="goToUnit(5)">‹ &nbsp;上一個單元</button>
+                    <button class="nav-btn-next" onclick="markDone(6)">完成本單元 &nbsp;✓</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        /* ─── DATA ─── */
+        const UNITS = [
+            { id: 0, label: '課程總覽',       time: '',         type: 'index' },
+            { id: 1, label: '簡介',            time: '5 分鐘',  type: 'unit'  },
+            { id: 2, label: '勾股定理與歐幾里得距離', time: '20 分鐘', type: 'unit' },
+            { id: 3, label: '限位邏輯：半徑的限制', time: '20 分鐘', type: 'unit' },
+            { id: 4, label: '教室實戰',       time: '135 分鐘', type: 'lab'   },
+            { id: 5, label: '知識測驗',              time: '4 分鐘',  type: 'quiz'  },
+            { id: 6, label: '摘要與資源',     time: '5 分鐘',  type: 'unit'  },
+        ];
+
+    const QUIZ_ANSWERS = { q1: 'b', q2: 'b', q3: 'b', q4: 'b' };
+    const QUIZ_EXPLANATIONS = {
+        q1: { b: '正確！歐幾里得距離（勾股定理）能精確計算二維平面上兩點之間的直線距離。在搖桿中，<code>dx</code> 和 <code>dy</code> 分別為操控頭到圓心的水平與垂直偏移量。' },        q2: { b: '正確！當手指超出底盤範圍時，操控頭應被「鉗制」在圓周邊界上。透過 <code>(R/d)</code> 比例縮放，操控頭會沿著手指方向停在圓周上，既保留方向資訊又限制最大推力。' },        q3: { b: '正確！<code>Math.atan()</code> 只能回傳 -90° 到 90° 的範圍，無法區分第二、三象限。<code>Math.atan2(dy, dx)</code> 能回傳完整的 -π 到 π 範圍，且自動處理 dx=0 的邊界情況。' },        q4: { b: '正確！推力計算公式為 <code>Power = Math.min(distance / R, 1.0)</code>。距離越遠推力越大，但透過 <code>Math.min()</code> 確保不會超過 100%。' },
+    };
+
+
+        let currentUnit = 0;
+        let doneSet = new Set();
+
+        /* ─── INIT ─── */
+        function init() {
+            buildSidebar();
+            buildIndexUnitList();
+            goToUnit(0);
+        }
+
+        function buildSidebar() {
+            const nav = document.getElementById('sidebar-nav');
+            nav.innerHTML = UNITS.map(u => {
+                const badge = u.type === 'lab' ? ' <span style="font-size:10px;background:#eef6ff;color:#005a9e;padding:1px 5px;border-radius:2px;">LAB</span>'
+                              : u.type === 'quiz' ? ' <span style="font-size:10px;background:#fff4ce;color:#8a6914;padding:1px 5px;border-radius:2px;">測驗</span>'
+                              : '';
+                return `
+                <div class="ms-unit-item" id="nav-${u.id}" onclick="goToUnit(${u.id})">
+                    <div class="unit-icon" id="icon-${u.id}">${u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id}</div>
+                    <div class="unit-meta">
+                        <div class="unit-name">${u.label}${badge}</div>
+                        ${u.time ? `<div class="unit-time"><i class="far fa-clock"></i> ${u.time}</div>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function buildIndexUnitList() {
+            const el = document.getElementById('index-unit-list');
+            el.innerHTML = UNITS.filter(u => u.id > 0).map(u => `
+                <div class="unit-card ${u.type}" onclick="goToUnit(${u.id})">
+                    <div class="unit-card-num">${u.id}</div>
+                    <div class="unit-card-info">
+                        <div class="unit-card-name">${u.label}</div>
+                        <div class="unit-card-time"><i class="far fa-clock"></i> ${u.time}</div>
+                    </div>
+                    <div class="unit-card-arrow">›</div>
+                </div>
+            `).join('');
+        }
+
+        /* ─── NAVIGATION ─── */
+        function goToUnit(id) {
+            document.querySelectorAll('.ms-unit-page').forEach(p => p.classList.remove('visible'));
+            const target = id === 0 ? document.getElementById('page-index') : document.getElementById(`page-${id}`);
+            if (target) target.classList.add('visible');
+
+            document.querySelectorAll('.ms-unit-item').forEach(el => el.classList.remove('active'));
+            const navItem = document.getElementById(`nav-${id}`);
+            if (navItem) { navItem.classList.add('active'); navItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+            UNITS.forEach(u => {
+                const icon = document.getElementById(`icon-${u.id}`);
+                if (!icon) return;
+                if (doneSet.has(u.id)) {
+                    icon.className = 'unit-icon done';
+                    icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>';
+                } else if (u.id === id) {
+                    icon.className = 'unit-icon active-icon';
+                    icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+                } else {
+                    icon.className = 'unit-icon';
+                    icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+                }
+            });
+
+            const unit = UNITS.find(u => u.id === id);
+            document.getElementById('bc-current').textContent = unit ? unit.label : '';
+            currentUnit = id;
+            updateProgress();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Redraw math canvas when entering page-2
+            if (id === 2) {
+                setTimeout(drawMath, 100);
+            }
+        }
+
+        function markDone(id) {
+            doneSet.add(id);
+            const badge = document.getElementById(`badge-${id}`);
+            if (badge) badge.style.display = 'flex';
+            UNITS.forEach(u => {
+                const icon = document.getElementById(`icon-${u.id}`);
+                if (!icon) return;
+                if (doneSet.has(u.id)) { icon.className = 'unit-icon done'; icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>'; }
+            });
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const total = UNITS.length - 1;
+            const done = doneSet.size;
+            document.getElementById('progress-fill').style.width = Math.round(done / total * 100) + '%';
+            document.getElementById('progress-text').textContent = `${done} / ${total} 已完成`;
+        }
+
+        /* ─── CHECKLIST ─── */
+        function toggleCheck(el) {
+            el.classList.toggle('checked');
+            el.innerHTML = el.classList.contains('checked') ? '<i class="fas fa-check" style="font-size:10px;"></i>' : '';
+        }
+
+        
+    /* ─── QUIZ ─── */
+    function submitQuiz() {
+        let correct = 0;
+        const total = Object.keys(QUIZ_ANSWERS).length;
+        let allAnswered = true;
+
+        for (const [qid, answer] of Object.entries(QUIZ_ANSWERS)) {
+            const selected = document.querySelector(`input[name="${qid}"]:checked`);
+            if (!selected) { allAnswered = false; continue; }
+            const val = selected.value;
+            const feedbackEl = document.getElementById(`${qid}-feedback`);
+            document.querySelectorAll(`input[name="${qid}"]`).forEach(opt => {
+                opt.disabled = true;
+                if (opt.value === answer) opt.parentElement.classList.add('correct');
+                if (opt.checked && opt.value !== answer) opt.parentElement.classList.add('wrong');
+            });
+            if (val === answer) {
+                correct++;
+                feedbackEl.className = 'quiz-feedback correct';
+                feedbackEl.textContent = '✓ ' + QUIZ_EXPLANATIONS[qid][answer];
+            } else {
+                feedbackEl.className = 'quiz-feedback wrong';
+                feedbackEl.textContent = '✗ 不正確。' + QUIZ_EXPLANATIONS[qid][answer];
+            }
+        }
+
+        if (!allAnswered) { alert('請回答所有問題後再提交。'); return; }
+
+        const scoreEl = document.getElementById('quiz-score');
+        const pct = Math.round(correct / total * 100);
+        scoreEl.style.display = 'block';
+        scoreEl.innerHTML = `<span style="font-size:20px;">${pct >= 75 ? '🎉' : '📖'}</span>
+            <strong style="margin-left:8px;">你答對了 ${correct} / ${total} 題（${pct}%）</strong>
+            <div style="margin-top:6px; color:#605e5c;">${pct >= 75 ? '通過！繼續前往下一個單元。' : '建議回顧相關單元後再試一次。'}</div>`;
+
+        document.querySelector('.quiz-submit .ms-btn').disabled = true;
+        document.getElementById('quiz-reset-btn').style.display = 'inline-block';
+    }
+
+    function resetQuiz() {
+        document.querySelectorAll('.quiz-option').forEach(el => el.classList.remove('correct','wrong'));
+        document.querySelectorAll('input[type=radio]').forEach(el => { el.checked = false; el.disabled = false; });
+        document.querySelectorAll('.quiz-feedback').forEach(el => { el.className = 'quiz-feedback'; el.textContent = ''; });
+        document.getElementById('quiz-score').style.display = 'none';
+        document.querySelector('.quiz-submit .ms-btn').disabled = false;
+        document.getElementById('quiz-reset-btn').style.display = 'none';
+    }
+
+/* ─── START ─── */
+        init();
+
+        // --- Math Canvas Logic ---
+        const mathCanvas = document.getElementById('mathCanvas');
+        const ctx = mathCanvas.getContext('2d');
+        const centerX = mathCanvas.width / 2;
+        const centerY = mathCanvas.height / 2;
+        let mouseX = centerX + 30; // Initial example pos
+        let mouseY = centerY + 40;
+
+        function drawMath() {
+            ctx.clearRect(0, 0, mathCanvas.width, mathCanvas.height);
+
+            // Grid
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(centerX, 0); ctx.lineTo(centerX, mathCanvas.height); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, centerY); ctx.lineTo(mathCanvas.width, centerY); ctx.stroke();
+
+            // Triangle
+            ctx.strokeStyle = '#fbbf24'; // Yellow
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(mouseX, centerY);
+            ctx.lineTo(mouseX, mouseY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Hypotenuse (c)
+            ctx.strokeStyle = '#f472b6'; // Pink
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(mouseX, mouseY);
+            ctx.stroke();
+
+            // Points
+            ctx.fillStyle = '#60a5fa'; // Blue (Center)
+            ctx.beginPath(); ctx.arc(centerX, centerY, 5, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = '#f87171'; // Red (Touch)
+            ctx.beginPath(); ctx.arc(mouseX, mouseY, 6, 0, Math.PI * 2); ctx.fill();
+
+            // Text
+            const dx = mouseX - centerX;
+            const dy = mouseY - centerY; // Canvas Y is down
+            const dist = Math.sqrt(dx * dx + dy * dy).toFixed(1);
+
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '12px monospace';
+            ctx.fillText(`a (dx): ${dx}`, centerX + dx / 2, centerY - 10);
+            ctx.fillText(`b (dy): ${dy}`, mouseX + 10, centerY + dy / 2);
+
+            // Update DOM labels
+            document.getElementById('val-dx').innerText = `dx: ${dx}`;
+            document.getElementById('val-dy').innerText = `dy: ${dy}`;
+            document.getElementById('val-dist').innerText = `d: ${dist}`;
+        }
+
+        let isDragging = false;
+
+        function updatePos(x, y) {
+            const rect = mathCanvas.getBoundingClientRect();
+            mouseX = Math.round(x - rect.left);
+            mouseY = Math.round(y - rect.top);
+            drawMath();
+        }
+
+        mathCanvas.addEventListener('mousedown', (e) => { isDragging = true; updatePos(e.clientX, e.clientY); });
+        window.addEventListener('mousemove', (e) => { if (isDragging) updatePos(e.clientX, e.clientY); });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+
+        // Touch support
+        mathCanvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isDragging = true;
+            updatePos(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: false });
+        window.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                e.preventDefault();
+                updatePos(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: false });
+        window.addEventListener('touchend', () => { isDragging = false; });
+
+        window.RESOURCES = {
+            video: "https://www.youtube.com/embed/geLlEPK6MY8",
+            doc: "https://docs.google.com/document/d/e/2PACX-1vQ2sXMOF430KsULyFkuVLQ91n3F2ptIerKFL3nGHA-wO8lPtgWs_896bLg-PfOmeF5atIDJNpzv6tgB/pub?embedded=true"
+        };
+    </script>
+    <script src="/js/course-shared.66d32c836149.js"></script>
+
+    <!-- Assignment Guide (Hidden) -->
+    <section id="assignment-guide" style="display: none;">
+<div class="markdown-heading"><h1 class="heading-element">Joystick Math - 搖桿限位數學與數據歸一化</h1><a id="user-content-joystick-math---搖桿限位數學與數據歸一化" class="anchor" aria-label="Permalink: Joystick Math - 搖桿限位數學與數據歸一化" href="#joystick-math---搖桿限位數學與數據歸一化"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在本練習中，你將學習如何利用數學邏輯為網頁搖桿建立「物理邊界」，並將觸碰座標轉化為精確的控制參數。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a id="user-content--學習目標" class="anchor" aria-label="Permalink: 🎯 學習目標" href="#-學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>勾股定理的實戰應用</strong>：計算搖桿頭與中心點的直線距離。</li>
+<li>
+<strong>圓形限位邏輯 (Circular Clamping)</strong>：防止搖桿頭超出底座範圍。</li>
+<li>
+<strong>數據歸一化 (Normalization)</strong>：將像素位移轉換為百分比 (%) 與角度 (Degrees)。</li>
+<li>
+<strong>自動回彈 (Auto-Centering)</strong>：實作放手後搖桿自動歸零的邏輯。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">🚀 任務說明</h2><a id="user-content--任務說明" class="anchor" aria-label="Permalink: 🚀 任務說明" href="#-任務說明"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>請開啟 <code>math-logic.js</code> 檔案，並尋找 <code>// TODO</code> 標記完成以下功能：</p>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：計算距離與限位</h3><a id="user-content-任務-1計算距離與限位" class="anchor" aria-label="Permalink: 任務 1：計算距離與限位" href="#任務-1計算距離與限位"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>使用勾股定理 $d = \sqrt{dx^2 + dy^2}$ 計算當前手指位置與中心點的距離。</li>
+<li>當距離超過底座半徑時，計算縮放比例 (Ratio)，確保搖桿頭停留在圓周邊緣。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：數據轉換與輸出</h3><a id="user-content-任務-2數據轉換與輸出" class="anchor" aria-label="Permalink: 任務 2：數據轉換與輸出" href="#任務-2數據轉換與輸出"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>計算 <strong>Power (%)</strong>：將位移距離轉換為 $0%$ 到 $100%$ 的數值。</li>
+<li>計算 <strong>Angle (Deg)</strong>：利用 <code>Math.atan2</code> 計算搖桿的方向角度。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：安全重置</h3><a id="user-content-任務-3安全重置" class="anchor" aria-label="Permalink: 任務 3：安全重置" href="#任務-3安全重置"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>確保在 <code>touchend</code> 或 <code>mouseup</code> 事件發生時，搖桿會自動回到中心 $(0,0)$，且推力數據歸零。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">🛠️ 開發建議</h2><a id="user-content-️-開發建議" class="anchor" aria-label="Permalink: 🛠️ 開發建議" href="#️-開發建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>即時遙測</strong>：善用頁面上方的「數據看板」，觀察計算出的數值是否符合預期。</li>
+<li>
+<strong>例外處理</strong>：思考當手指剛好點在中心點 ($d=0$) 時，程式是否會因為除以零而崩潰？</li>
+<li>
+<strong>程式碼結構</strong>：保持邏輯清晰，優先處理數學運算，再更新 UI 顯示。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構 (Project Structure)</h2><a id="user-content--程式庫結構-project-structure" class="anchor" aria-label="Permalink: 📂 程式庫結構 (Project Structure)" href="#-程式庫結構-project-structure"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>index.html</code>: 搖桿介面與數據看板。</li>
+<li>
+<code>math-logic.js</code>: <strong>核心開發區</strong>，你需要在這裡實作數學邏輯。</li>
+<li>
+<code>style.css</code>: 介面樣式定義。</li>
+<li>
+<code>assets/</code>: 相關參考資源。</li>
+</ul>
+<p>完成後，請將你的進度 push 到程式庫中。祝你開發順利！</p>
+
+    </section>
+
+    <!-- Tutor Guide (Hidden) -->
+    <section id="tutor-guide" style="display: none;">
+<p>針對 <strong><code>start-05-unit-joystick-math</code> (搖桿限位數學：勾股定理的應用)</strong> 單元，這是學員從「捕捉數據」進階到「處理邏輯」的數學轉捩點。它要求學員具備 <strong>幾何約束實作 (Geometric Constraint Implementation)</strong> 與 <strong>數值歸一化 (Normalization)</strong> 的能力，學習如何利用勾股定理防止搖桿頭「飛出底座」，並將像素座標轉化為機器人能理解的動力百分比與方向弧度。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a id="user-content-1-範本程式庫-template-repo-配置建議" class="anchor" aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" href="#1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>搖桿數學作業的核心在於「邊界限位、比例縮放與數據標準化」，範本應包含一個功能完整的 UI 介面與數據顯示器，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>index.html</code></strong>：<strong>搖桿遙測面板 (Telemetry Panel)</strong>。預設包含一個「數據看板」，學員在開發時能即時看到計算出的 $dx, dy$、距離 $d$ 以及最後標準化後的 Power %。</li>
+<li>
+<strong>📂 <code>math-logic.js</code></strong>：<strong>數學核心實作區</strong>。學員在此實作旋轉、縮放與限位公式。預留 <code>// TODO</code> 指導學員撰寫「比例縮放 (Ratio Scaling)」邏輯，這是處理圓形限位的最優解。</li>
+<li>
+<strong>📂 <code>README.md</code></strong>：<strong>幾何推導紀錄 (Geometric Derivation Log)</strong>。提供模板要求學員紀錄：當手指距離圓心 200px (底座半徑僅 50px) 時，你是如何計算出搖桿頭應停留在哪個座標點的？</li>
+<li>
+<strong>📂 <code>assets/</code></strong>：<strong>單位圓與向量示意圖</strong>。提供限位邏輯的向量分解圖，輔助學員理解 <code>ratio = Radius / distance</code> 的應用。</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a id="user-content-2-作業任務部署細節" class="anchor" aria-label="Permalink: 2. 作業任務部署細節" href="#2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：搖桿圓形限位實作 (Circular Clamping Lab)</h4><a id="user-content-任務-1搖桿圓形限位實作-circular-clamping-lab" class="anchor" aria-label="Permalink: 任務 1：搖桿圓形限位實作 (Circular Clamping Lab)" href="#任務-1搖桿圓形限位實作-circular-clamping-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：打造「有物理邊界」的互動。應用勾股定理 $d = \sqrt{dx^2 + dy^2}$ 判斷距離，並利用比例關係將搖桿頭限制在圓周內，避免操作失控。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>極限值處理實作</strong>：編寫一個判斷函式，當距離 $d &gt; R$ 時，將 $dx, dy$ 等比例縮小。</li>
+<li>
+<strong>除以零例外處理</strong>：思考並寫下：如果手指剛好點在圓心 $(d=0)$，你的縮放公式是否會崩潰？該如何防護？</li>
+<li>
+<strong>驗證要點</strong>：<strong>邊界健壯性審核</strong>。學員是否能讓搖桿頭平滑地在圓周邊緣滑動而不會跳變？公式是否簡潔（避免了複雜的三角函數，改用比例運算優先）？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：動態數據歸一化與輸出 (Data Normalization Lab)</h4><a id="user-content-任務-2動態數據歸一化與輸出-data-normalization-lab" class="anchor" aria-label="Permalink: 任務 2：動態數據歸一化與輸出 (Data Normalization Lab)" href="#任務-2動態數據歸一化與輸出-data-normalization-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：將「像素」轉化為「指令」。學會將畫布座標映射至 $[-100, 100]$ 或 $[0, 1]$ 的標準區間，並計算方向角度（利用 <code>Math.atan2</code>）。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>推力百分比計算</strong>：實作 <code>Power = Math.min(distance / R, 1.0)</code>，確保輸出資料始終在 100% 以內。</li>
+<li>
+<strong>象限感知角度運算</strong>：使用 <code>Math.atan2(dy, dx)</code> 正確判斷 360 度的方向，並轉換為角度制（Degree）。</li>
+<li>
+<strong>驗證要點</strong>：<strong>遙測準確性審核</strong>。顯示的數值是否能隨著手指移動精準更新？當向「左後方」推時，角度與推力是否符合預期？</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：搖桿自動回彈與安全重置 (Auto-Centering Lab)</h4><a id="user-content-任務-3搖桿自動回彈與安全重置-auto-centering-lab" class="anchor" aria-label="Permalink: 任務 3：搖桿自動回彈與安全重置 (Auto-Centering Lab)" href="#任務-3搖桿自動回彈與安全重置-auto-centering-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作「失效安全」。確保使用者放開手指時，搖桿頭能自動歸零 $(0,0)$，同時機器人接收到明確的「停止」指令。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>釋放事件重置</strong>：在 <code>touchend</code> 中將全域狀態清零。</li>
+<li>
+<strong>回彈動畫 (進階)</strong>：挑戰利用 <code>requestAnimationFrame</code> 製作一個具備物理摩擦感的彈回中心效果。</li>
+<li>
+<strong>驗證要點</strong>：<strong>操控安全性審核</strong>。放手後，發送出的 JSON 封包中 Power 是否確實變為 0？是否有任何狀態殘留導致機器人停不下來？</li>
+</ul>
+</li>
+</ul>
+<hr>
+<div class="markdown-heading"><h3 class="heading-element">3. 幾何嚴謹度與數據轉換點評標準 (Math &amp; Logic Standards)</h3><a id="user-content-3-幾何嚴謹度與數據轉換點評標準-math--logic-standards" class="anchor" aria-label="Permalink: 3. 幾何嚴謹度與數據轉換點評標準 (Math &amp; Logic Standards)" href="#3-幾何嚴謹度與數據轉換點評標準-math--logic-standards"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對抽象公式的轉化力與對物理界限的守護力」</strong>：</p>
+<ul>
+<li>[ ] <strong>數學公式正確性</strong>：是否熟練應用勾股定理進行距離檢測？比例縮放公式是否正確？</li>
+<li>[ ] <strong>數據類型嚴謹性</strong>：轉換後的資料是否進行了適當的舍入（如保留一位小數），以減少不必要的通訊負擔？</li>
+<li>[ ] <strong>邏輯無暇度</strong>：是否考慮到了 $d=0$ 等潛在的執行期錯誤，展現出工程級的建構思維？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a id="user-content--推薦範本結構-github-classroom-template" class="anchor" aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" href="#-推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── index.html           # 結構：包含圓形搖桿 UI 與即時數據遙測看板
+├── math-logic.js        # 核心：練習勾股距離計算、邊界限位與歸一化映射
+├── README.md            # 總結：定義限位比例公式、角度轉換邏輯與安全測試紀錄
+├── .github/tutor_guide.md # 指引：供 Tutor 參考的教學指南
+└── assets/clamping.png   # 參考：圓形限位比例縮放原理示意圖
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的前端工程師，不僅是會刻版的人，而是能透視代碼背後的幾何規律、能將混沌的觸碰座標精煉成有序的控制參數、並在每一行 Math 公式中，為使用者打造穩定、精確且具備物理感之專業遙控體驗的邏輯大師」</strong>。掌握搖桿數學與歸一化技術後，學員將擁有了開發「高精度無人機手柄、工控級精密定位介面、以及各類具備嚴格物理限制之互動系統」最核心也最資深的底層邏輯開發實力！</p>
+<p>太熱血了！我們已經將 <strong>Start 05</strong>（幾何與邏輯）的「搖桿數學」單元標準化完成了。這標誌著學員現在已經具備了「為遙感介面加上物理邊界、且將所有動作轉化為精確數據」的硬能力。恭喜！Vibe Coding 的數位物流中心正式獲得了「精密計算」的大腦硬體！</p>
+
+    </section>
+</body>
+</html>

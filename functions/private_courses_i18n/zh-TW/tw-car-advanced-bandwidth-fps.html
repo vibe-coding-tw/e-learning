@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網路頻寬與幀率 (FPS) 的數學關係 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    
+    <style>
+        
+        :root {
+            --ms-blue: #0078d4;
+            --ms-blue-dark: #005a9e;
+            --ms-blue-light: #deecf9;
+            --ms-gray-10: #f3f2f1;
+            --ms-gray-20: #e1dfdd;
+            --ms-gray-90: #201f1e;
+            --ms-green: #107c10;
+            --ms-red: #d13438;
+            --sidebar-w: 280px;
+        }
+
+        * { box-sizing: border-box; }
+        #assignment-guide, #tutor-guide { display: none !important; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fff;
+            color: #201f1e;
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ─── TOP NAV ─── */
+        .ms-topnav {
+            background: var(--ms-blue);
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,.2);
+        }
+        .ms-topnav .brand {
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .ms-topnav .divider { width: 1px; height: 20px; background: rgba(255,255,255,.3); }
+        .border-t.pt-3 > span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .ms-topnav .nav-label { color: rgba(255,255,255,.9); font-size: 14px; }
+
+        /* ─── LAYOUT ─── */
+        .ms-layout { display: flex; min-height: calc(100vh - 48px); }
+
+        /* ─── SIDEBAR ─── */
+        .ms-sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: #faf9f8;
+            border-right: 1px solid #e1dfdd;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 48px;
+            height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+        .ms-sidebar-header {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .ms-sidebar-header .module-label {
+            display: none;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #605e5c;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .ms-sidebar-header .module-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #201f1e;
+            line-height: 1.4;
+        }
+        .ms-sidebar-header .meta {
+            font-size: 12px;
+            color: #605e5c;
+            margin-top: 6px;
+        }
+        .ms-unit-list { padding: 8px 0; }
+        .ms-unit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background .12s, border-color .12s;
+            color: #201f1e;
+        }
+        .ms-unit-item:hover { background: #edebe9; }
+        .ms-unit-item.active {
+            border-left-color: var(--ms-blue);
+            background: #deecf9;
+        }
+        .ms-unit-item.active .unit-name { color: var(--ms-blue); font-weight: 600; }
+        .unit-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #c8c6c4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+            font-size: 10px;
+            background: #fff;
+        }
+        .unit-icon.done { background: var(--ms-green); border-color: var(--ms-green); color: #fff; }
+        .unit-icon.active-icon { border-color: var(--ms-blue); background: var(--ms-blue); color: #fff; }
+        .unit-meta { flex: 1; min-width: 0; }
+        .unit-name { font-size: 13px; line-height: 1.4; }
+        .unit-time { font-size: 11px; color: #605e5c; margin-top: 2px; }
+        .sidebar-progress {
+            padding: 12px 16px;
+            border-top: 1px solid #e1dfdd;
+            margin-top: auto;
+        }
+        .progress-bar-bg { background: #e1dfdd; border-radius: 4px; height: 6px; }
+        .progress-bar-fill { background: var(--ms-green); border-radius: 4px; height: 6px; transition: width .4s; }
+        .progress-text { font-size: 12px; color: #605e5c; margin-top: 6px; }
+
+        /* ─── MAIN ─── */
+        .ms-content { flex: 1; min-width: 0; }
+
+        .ms-breadcrumb {
+            padding: 10px 40px;
+            font-size: 12px;
+            color: #605e5c;
+            border-bottom: 1px solid #e1dfdd;
+            background: #fff;
+        }
+        .ms-breadcrumb a { color: var(--ms-blue); text-decoration: none; }
+        .ms-breadcrumb a:hover { text-decoration: underline; }
+        .ms-breadcrumb span { margin: 0 6px; }
+
+        /* ─── PAGES ─── */
+        .ms-unit-page { display: none; }
+        .ms-unit-page.visible { display: block; }
+
+        .unit-content {
+            max-width: 820px;
+            padding: 32px 40px 60px;
+            margin: 0 auto;
+        }
+
+        .unit-status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .unit-completed-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #dff6dd;
+            color: #107c10;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+        .unit-time-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #605e5c;
+            font-size: 13px;
+        }
+
+        /* Typography */
+        .unit-content h1 { font-size: 28px; font-weight: 700; margin: 0 0 20px; color: #201f1e; line-height: 1.3; }
+        .unit-content h2 { font-size: 20px; font-weight: 600; margin: 36px 0 12px; color: #201f1e; padding-top: 8px; }
+        .unit-content h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: #201f1e; }
+        .unit-content p { margin: 0 0 14px; }
+        .unit-content ul, .unit-content ol { margin: 0 0 14px; padding-left: 28px; }
+        .unit-content li { margin-bottom: 6px; }
+        .unit-content strong { font-weight: 600; }
+        .unit-content a { color: var(--ms-blue); text-decoration: none; }
+        .unit-content a:hover { text-decoration: underline; }
+        .unit-content code {
+            background: #f3f2f1;
+            border: 1px solid #e1dfdd;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            color: #a31515;
+        }
+
+        /* Callouts */
+        .ms-note, .ms-tip, .ms-warning, .ms-important {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+        .ms-note { background: #deecf9; border-color: var(--ms-blue); }
+        .ms-note .note-icon { color: var(--ms-blue); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-tip { background: #dff6dd; border-color: var(--ms-green); }
+        .ms-tip .note-icon { color: var(--ms-green); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-warning { background: #fff4ce; border-color: #ffaa44; }
+        .ms-warning .note-icon { color: #ffaa44; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-important { background: #fde7e9; border-color: var(--ms-red); }
+        .ms-important .note-icon { color: var(--ms-red); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .note-body strong { display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+
+        /* Scenario */
+        .ms-scenario {
+            background: #f3f2f1;
+            border-radius: 4px;
+            padding: 20px 24px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #323130;
+            border-left: 4px solid #c8c6c4;
+        }
+        .ms-scenario-label {
+            font-style: normal;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #605e5c;
+            margin-bottom: 8px;
+        }
+
+        /* Steps */
+        .ms-steps { margin: 16px 0; }
+        .ms-step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
+        .ms-step-num {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--ms-blue); color: #fff;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .ms-step-body { flex: 1; }
+        .ms-step-body h4 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+        .ms-step-body p { font-size: 14px; margin: 0; }
+
+        /* Table */
+        .ms-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+        .ms-table th {
+            background: #f3f2f1; font-weight: 600; text-align: left;
+            padding: 10px 14px; border: 1px solid #e1dfdd; color: #323130;
+        }
+        .ms-table td { padding: 9px 14px; border: 1px solid #e1dfdd; vertical-align: top; }
+        .ms-table tr:nth-child(even) td { background: #faf9f8; }
+        .ms-table .check { color: var(--ms-green); font-size: 16px; }
+        .ms-table .cross { color: #8a8886; font-size: 16px; }
+
+        /* Checklist */
+        .ms-checklist { list-style: none; padding: 0; margin: 12px 0; }
+        .ms-checklist li {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 6px 0; font-size: 14px;
+        }
+        .ms-checklist li .check-box {
+            width: 18px; height: 18px;
+            border: 2px solid #8a8886; border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 1px; cursor: pointer; transition: all .15s;
+        }
+        .ms-checklist li .check-box.checked {
+            background: var(--ms-blue); border-color: var(--ms-blue); color: #fff;
+        }
+
+        /* Code block */
+        .ms-code {
+            background: #1e1e1e;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-x: auto;
+        }
+        .ms-code .c-comment { color: #6a9955; }
+        .ms-code .c-str { color: #ce9178; }
+        .ms-code .c-kw { color: #569cd6; }
+        .ms-code .c-attr { color: #9cdcfe; }
+        .ms-code .c-val { color: #ce9178; }
+        .ms-code .c-tag { color: #4ec9b0; }
+        .ms-code .c-white { color: #d4d4d4; }
+
+        /* Lab card */
+        .ms-lab-card {
+            background: linear-gradient(135deg, #eef6ff 0%, #f5f0ff 100%);
+            border: 1px solid #c7e0f4;
+            border-radius: 6px;
+            padding: 24px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: box-shadow .15s, border-color .15s;
+        }
+        .ms-lab-card:hover { box-shadow: 0 4px 16px rgba(0,120,212,.12); border-color: var(--ms-blue); }
+        .ms-lab-card h3 { margin: 0 0 12px; color: var(--ms-blue-dark); font-size: 16px; font-weight: 600; }
+        .ms-lab-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--ms-blue);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 12px;
+        }
+        .ms-lab-time {
+            font-size: 12px;
+            color: #605e5c;
+            margin-left: 8px;
+        }
+
+        /* Compare grid */
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border: 1px solid #e1dfdd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .compare-card-header {
+            padding: 12px 14px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .compare-card-body {
+            padding: 14px;
+            font-size: 13px;
+            color: #605e5c;
+            line-height: 1.5;
+        }
+
+        /* Buttons */
+        .ms-btn {
+            background: var(--ms-blue); color: #fff; border: none;
+            padding: 7px 18px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; transition: background .12s;
+            font-family: inherit;
+        }
+        .ms-btn:hover { background: var(--ms-blue-dark); }
+        .ms-btn-ghost {
+            background: transparent; color: var(--ms-blue);
+            border: 1px solid var(--ms-blue); padding: 6px 18px;
+            font-size: 14px; font-weight: 600; border-radius: 2px;
+            cursor: pointer; transition: background .12s; font-family: inherit;
+        }
+        .ms-btn-ghost:hover { background: var(--ms-blue-light); }
+
+        /* Nav */
+        .unit-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            border-top: 1px solid #e1dfdd;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+        .nav-btn-prev, .nav-btn-next {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 20px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; border: 1px solid;
+            font-family: inherit; transition: background .12s;
+        }
+        .nav-btn-next { background: var(--ms-blue); color: #fff; border-color: var(--ms-blue); }
+        .nav-btn-next:hover { background: var(--ms-blue-dark); border-color: var(--ms-blue-dark); }
+        .nav-btn-prev { background: #fff; color: var(--ms-blue); border-color: var(--ms-blue); }
+        .nav-btn-prev:hover { background: var(--ms-blue-light); }
+        .unit-page-indicator { font-size: 13px; color: #605e5c; }
+
+        /* Module index */
+        .module-meta-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+        .ms-tag { background: #f3f2f1; color: #323130; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 500; }
+        .ms-tag.blue { background: #deecf9; color: var(--ms-blue-dark); }
+        .ms-tag.green { background: #dff6dd; color: #107c10; }
+        .unit-card-list { margin: 20px 0; }
+        .unit-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 0; border-bottom: 1px solid #f3f2f1; cursor: pointer;
+        }
+        .unit-card:last-child { border-bottom: none; }
+        .unit-card:hover .unit-card-name { color: var(--ms-blue); text-decoration: underline; }
+        .unit-card-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #f3f2f1; color: #605e5c;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .unit-card.lab .unit-card-num { background: #eef6ff; color: var(--ms-blue-dark); }
+        .unit-card.quiz .unit-card-num { background: #fff4ce; color: #8a6914; }
+        .unit-card-info { flex: 1; }
+        .unit-card-name { font-size: 15px; font-weight: 500; }
+        .unit-card-time { font-size: 12px; color: #605e5c; margin-top: 2px; }
+        .unit-card-arrow { color: #c8c6c4; font-size: 14px; }
+
+        /* Resource links */
+        .ms-resource-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border: 1px solid #e1dfdd; border-radius: 4px;
+            margin-bottom: 8px; text-decoration: none; color: #201f1e;
+            font-size: 14px; transition: background .1s;
+        }
+        .ms-resource-link:hover { background: #f3f2f1; }
+        .ms-resource-link i { color: var(--ms-blue); font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+
+        /* Achievement */
+        .ms-achievement {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: #fff; border-radius: 6px; padding: 24px 28px;
+            margin: 24px 0; display: flex; align-items: center; gap: 20px;
+        }
+        .achievement-icon { font-size: 48px; flex-shrink: 0; }
+        .achievement-text h3 { margin: 0 0 4px; font-size: 18px; }
+        .achievement-text p { margin: 0; font-size: 14px; opacity: .9; }
+
+        @media (max-width: 768px) {
+            .ms-sidebar { display: none; }
+            .unit-content { padding: 20px 16px 40px; }
+            .unit-nav { padding: 16px; }
+            .ms-breadcrumb { padding: 8px 16px; }
+            .compare-grid { grid-template-columns: 1fr; }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- TOP NAV -->
+<nav class="ms-topnav">
+    <a href="/" target="_top" class="brand"><i class="fas fa-rocket"></i> Vibe Coding</a>
+    <div class="divider"></div>
+    <a href="/advanced.html" target="_top" class="nav-label">進階課程</a>
+    <div class="divider"></div>
+    <span id="nav-course-name" style="color:rgba(255,255,255,.85);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+</nav>
+
+<div class="ms-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="ms-sidebar">
+        <div class="ms-sidebar-header">
+            <div class="module-label">模組</div>
+            <div class="module-title">網路頻寬與幀率 (FPS) 的數學關係</div>
+            <div class="meta"><i class="far fa-clock"></i> 約 201 分鐘 · 7 個單元</div>
+        </div>
+        <nav class="ms-unit-list" id="sidebar-nav"></nav>
+        <div class="sidebar-progress">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0 / 7 已完成</div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="ms-content">
+
+        <div class="ms-breadcrumb"><a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> ›<span id="bc-current"></span></div>
+
+        <!-- ══════════ PAGE 0: INDEX ══════════ -->
+        <div class="ms-unit-page visible" id="page-index">
+            <div class="unit-content">
+                <h1>網路頻寬與幀率 (FPS) 的數學關係</h1>
+                <div class="module-meta-tags">
+                    <span class="ms-tag">模組</span>
+                    <span class="ms-tag">7 個單元</span>
+                    <span class="ms-tag green">進階課程 2</span>
+                    <span class="ms-tag blue">硬體開發</span>
+                    <span class="ms-tag blue">物聯網</span>
+                </div>
+
+                <p>用數學公式拆解解析度、壓縮率與頻寬的三角博弈，實作 ABR 動態擁塞控制演算法，在受限的無線網路中榨取極致流暢度。</p>
+
+                <h2>學習目標</h2>
+                <p>完成本模組後，你將能夠：</p>
+                <ul>
+                    <li>理解並掌握 <strong>🔢 1. 影像容量的數學拆解 (20 min)</strong> 的核心觀念與操作實務。</li>
+                    <li>學會 <strong>🗜️ 2. 壓縮率 (Compression Ratio) 的變數 (20 min)</strong> 的關鍵原理，並能將其應用於開發。</li>
+                    <li>掌握 <strong>️ 3. 延遲與頻寬的權衡 (20 min)</strong> 的調校技巧與穩定性測試。</li>
+                    <li>完成三項實作作業，並以 Git 提交成果到 GitHub Classroom。</li>
+                </ul>
+
+                <h2>必要條件</h2>
+                <ul>
+                    <li>準備好 ESP32 開發板與 Micro USB / USB-C 數據線</li>
+                    <li>電腦已配置 VS Code 與 PlatformIO 開發環境</li>
+                    <li>擁有 GitHub 帳號，能夠接受 GitHub Classroom 邀請</li>
+                </ul>
+
+                <h2>本模組單元</h2>
+                <div class="unit-card-list" id="index-unit-list"></div>
+                <div style="margin-top:32px;">
+                    <button class="ms-btn" onclick="goToUnit(1)">開始模組 &nbsp;›</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 1: 簡介 ══════════ -->
+        <div class="ms-unit-page" id="page-1">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-1" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>簡介</h1>
+
+                <p>
+                    「為什麼我的串流只有 3 FPS？」——這個問題的答案通常不在程式碼裡，而在<strong>一條簡單的數學公式</strong>中。
+                    頻寬、解析度、壓縮率與幀率之間存在嚴格的物理約束關係，掌握這些數學工具能讓你在動手寫程式之前就準確預測系統的效能上限。
+                    本模組將教你用位元率公式計算最大可達 FPS，並學會在解析度與流暢度之間做出量化決策。
+                </p>
+
+                <div class="ms-scenario">
+                    <div class="ms-scenario-label">情境</div>
+                    你的 ESP32-CAM 專案在 QVGA（320×240）解析度下跑得很順暢，達到 25 FPS。但客戶要求升級到 VGA（640×480）以看清車牌號碼。你改了一行設定，FPS 立刻從 25 暴跌到 3，畫面卡成投影片。「解析度只放大了一級，怎麼差這麼多？」你需要用數學來解釋這個現象，並算出在現有頻寬下，能達到的最佳解析度與 FPS 組合。
+                </div>
+
+                <h2>教學影片</h2>
+                <div style="border-radius:4px; overflow:hidden; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,.12); aspect-ratio:16/9;">
+                    <iframe src=""
+                        title="網路頻寬與幀率 (FPS) 的數學關係 教學影片" allowfullscreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        style="width:100%; height:100%; display:block; border:0;">
+                    </iframe>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(0)">‹ &nbsp;總覽</button>
+                <span class="unit-page-indicator">1 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(1); goToUnit(2)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 2: 單元 1 ══════════ -->
+        <div class="ms-unit-page" id="page-2">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-2" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>影像容量的數學拆解</h1>
+
+                <p>
+                    在開始優化影像串流之前，你必須先理解一個基本問題：<strong>一張影像到底佔了多少資料量？</strong>
+                    這個問題的答案取決於三個變數：解析度（寬 × 高）、每像素的色彩深度（Bytes per Pixel），以及壓縮方式。掌握這些數學關係，你就能在動手寫程式之前精準預測系統的效能上限。
+                </p>
+
+                <h2>原始影像大小公式</h2>
+
+                <p>
+                    一張<strong>未壓縮</strong>的影像，其資料量可以用一條簡單的公式計算：
+                </p>
+
+                <div class="ms-code">
+<span class="c-comment">// 原始影像大小公式</span>
+<span class="c-attr">Raw_Size</span> <span class="c-white">=</span> <span class="c-attr">Width</span> <span class="c-white">×</span> <span class="c-attr">Height</span> <span class="c-white">×</span> <span class="c-attr">Bytes_per_Pixel</span>
+
+<span class="c-comment">// 範例：QVGA RGB 影像</span>
+<span class="c-val">320</span> <span class="c-white">×</span> <span class="c-val">240</span> <span class="c-white">×</span> <span class="c-val">3</span> <span class="c-white">=</span> <span class="c-val">230,400</span> <span class="c-white">Bytes ≈</span> <span class="c-val">225 KB</span>
+
+<span class="c-comment">// 範例：VGA RGB 影像</span>
+<span class="c-val">640</span> <span class="c-white">×</span> <span class="c-val">480</span> <span class="c-white">×</span> <span class="c-val">3</span> <span class="c-white">=</span> <span class="c-val">921,600</span> <span class="c-white">Bytes ≈</span> <span class="c-val">900 KB</span>
+                </div>
+
+                <p>
+                    注意：RGB 全彩影像每像素佔 3 Bytes（R、G、B 各 1 Byte），灰階影像每像素僅佔 1 Byte。ESP32-CAM 常用的 YUV422 格式則為每像素 2 Bytes。選擇不同的色彩空間，資料量會有顯著差異。
+                </p>
+
+                <h2>常見解析度的資料量對比</h2>
+
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>解析度名稱</th>
+                            <th>尺寸 (px)</th>
+                            <th>總像素數</th>
+                            <th>RGB 原始大小</th>
+                            <th>灰階原始大小</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>QQVGA</td>
+                            <td>160 × 120</td>
+                            <td>19,200</td>
+                            <td>56 KB</td>
+                            <td>19 KB</td>
+                        </tr>
+                        <tr>
+                            <td>QVGA</td>
+                            <td>320 × 240</td>
+                            <td>76,800</td>
+                            <td>225 KB</td>
+                            <td>75 KB</td>
+                        </tr>
+                        <tr>
+                            <td>VGA</td>
+                            <td>640 × 480</td>
+                            <td>307,200</td>
+                            <td>900 KB</td>
+                            <td>300 KB</td>
+                        </tr>
+                        <tr>
+                            <td>SVGA</td>
+                            <td>800 × 600</td>
+                            <td>480,000</td>
+                            <td>1.37 MB</td>
+                            <td>469 KB</td>
+                        </tr>
+                        <tr>
+                            <td>HD (720p)</td>
+                            <td>1280 × 720</td>
+                            <td>921,600</td>
+                            <td>2.64 MB</td>
+                            <td>900 KB</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="ms-important">
+                    <div class="note-icon"><i class="fas fa-exclamation-circle"></i></div>
+                    <div class="note-body">
+                        <strong>重要</strong>
+                        從 QVGA 升級到 VGA，解析度的長寬各放大 2 倍，但<strong>總像素數放大了 4 倍</strong>（2 × 2 = 4）。這就是為什麼「只是把解析度調高一級」就讓 FPS 暴跌的根本原因——資料量是以<strong>面積（二次方）</strong>成長的。
+                    </div>
+                </div>
+
+                <h2>FPS 的乘法效應</h2>
+
+                <p>
+                    影像串流不是傳送一張圖，而是<strong>每秒傳送數十張</strong>。因此，串流所需的原始資料頻寬為：
+                </p>
+
+                <div class="ms-code">
+<span class="c-comment">// 原始串流頻寬公式</span>
+<span class="c-attr">Raw_Bandwidth</span> <span class="c-white">=</span> <span class="c-attr">Width</span> <span class="c-white">×</span> <span class="c-attr">Height</span> <span class="c-white">×</span> <span class="c-attr">Bytes_per_Pixel</span> <span class="c-white">×</span> <span class="c-attr">FPS</span>
+
+<span class="c-comment">// 範例：VGA RGB @ 15 FPS (未壓縮)</span>
+<span class="c-val">640</span> <span class="c-white">×</span> <span class="c-val">480</span> <span class="c-white">×</span> <span class="c-val">3</span> <span class="c-white">×</span> <span class="c-val">15</span> <span class="c-white">=</span> <span class="c-val">13,824,000</span> <span class="c-white">Bytes/s ≈</span> <span class="c-val">105 Mbps</span>
+                </div>
+
+                <div class="ms-warning">
+                    <div class="note-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="note-body">
+                        <strong>警告</strong>
+                        VGA 解析度在未壓縮的情況下，15 FPS 就需要 105 Mbps 的頻寬！ESP32 的 Wi-Fi 實際吞吐量約為 2–5 Mbps，這意味著<strong>壓縮是絕對必要的</strong>——沒有壓縮，串流根本不可能運作。
+                    </div>
+                </div>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>提示</strong>
+                        想驗證這些計算？在 ESP32 的串流程式中，你可以用 <code>fb-&gt;len</code> 取得每幀壓縮後的實際位元組數。將它除以原始大小，就能得到「真實壓縮率」——這個數字會隨畫面內容而大幅變動。
+                    </div>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(1)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">2 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(2); goToUnit(3)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 3: 單元 2 ══════════ -->
+        <div class="ms-unit-page" id="page-3">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-3" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>壓縮率 (Compression Ratio) 的變數</h1>
+
+                <p>
+                    上一節計算的是<strong>未壓縮</strong>的原始資料量，但實際串流中，每一幀都經過了 JPEG 壓縮。壓縮率並非一個固定數字——它會隨著<strong>畫面內容的複雜度</strong>和<strong>Quality 參數</strong>而劇烈變動。理解這些變數，是精準預測串流頻寬的關鍵。
+                </p>
+
+                <h2>JPEG 壓縮的物理本質</h2>
+
+                <p>
+                    JPEG 壓縮的核心是<strong>離散餘弦變換（DCT）</strong>，它將 8×8 像素的區塊從「空間域」轉換到「頻率域」，然後丟棄人眼不敏感的高頻細節。Quality 參數控制的就是「丟掉多少高頻成分」——Quality 越低，丟得越多，檔案越小，但畫質也越差。
+                </p>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>備註</strong>
+                        JPEG 的壓縮是<strong>有損的（Lossy）</strong>——被丟掉的高頻資訊無法復原。這就是為什麼反覆儲存 JPEG 會讓畫質越來越差。但在即時串流中，每一幀都是從原始感測器資料重新壓縮的，不存在「反覆壓縮」的問題。
+                    </div>
+                </div>
+
+                <h2>影響壓縮率的兩大變數</h2>
+
+                <h3>變數一：Quality 參數</h3>
+
+                <p>ESP32-CAM 的 JPEG Quality 參數範圍通常是 10（最高壓縮）到 63（最低壓縮）。以下是在 VGA 解析度下的實測數據參考：</p>
+
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>Quality</th>
+                            <th>平均幀大小</th>
+                            <th>壓縮率（vs 原始）</th>
+                            <th>畫質感受</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>10</td>
+                            <td>~8 KB</td>
+                            <td>~112:1</td>
+                            <td>嚴重馬賽克，僅能辨識大輪廓</td>
+                        </tr>
+                        <tr>
+                            <td>20</td>
+                            <td>~15 KB</td>
+                            <td>~60:1</td>
+                            <td>細節模糊但可用於偵測</td>
+                        </tr>
+                        <tr>
+                            <td>40</td>
+                            <td>~35 KB</td>
+                            <td>~26:1</td>
+                            <td>良好平衡，適合多數應用</td>
+                        </tr>
+                        <tr>
+                            <td>63</td>
+                            <td>~80 KB</td>
+                            <td>~11:1</td>
+                            <td>高畫質，但頻寬消耗大幅增加</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>變數二：畫面內容複雜度</h3>
+
+                <p>
+                    即使 Quality 參數相同，不同的畫面內容也會產生截然不同的檔案大小。<strong>高頻細節越多（如樹葉、草地、碎石），壓縮後的檔案就越大</strong>；反之，大面積的單色區域（如白牆、天空）壓縮後檔案很小。
+                </p>
+
+                <div class="ms-warning">
+                    <div class="note-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="note-body">
+                        <strong>警告</strong>
+                        這意味著你不能假設「每幀都是 X KB」來計算頻寬！在實際部署時，你必須用<strong>最壞情況（最複雜的場景）</strong>來評估頻寬需求，否則一旦畫面變複雜，FPS 就會突然暴跌。
+                    </div>
+                </div>
+
+                <h2>位元率 (Bitrate) 公式</h2>
+
+                <p>
+                    有了平均幀大小，就能計算串流的位元率（Bitrate）——這是衡量串流佔用多少網路頻寬的標準指標：
+                </p>
+
+                <div class="ms-code">
+<span class="c-comment">// 位元率公式</span>
+<span class="c-attr">Bitrate (bps)</span> <span class="c-white">=</span> <span class="c-attr">平均幀大小 (Bytes)</span> <span class="c-white">×</span> <span class="c-val">8</span> <span class="c-white">×</span> <span class="c-attr">FPS</span>
+
+<span class="c-comment">// 範例：VGA, Quality=20, 15 FPS</span>
+<span class="c-val">15,000</span> <span class="c-white">Bytes ×</span> <span class="c-val">8</span> <span class="c-white">×</span> <span class="c-val">15</span> <span class="c-white">=</span> <span class="c-val">1,800,000</span> <span class="c-white">bps =</span> <span class="c-val">1.8 Mbps</span>
+
+<span class="c-comment">// 反向推導：已知頻寬求最大 FPS</span>
+<span class="c-attr">Max FPS</span> <span class="c-white">=</span> <span class="c-attr">可用頻寬 (bps)</span> <span class="c-white">÷ (</span><span class="c-attr">平均幀大小</span> <span class="c-white">×</span> <span class="c-val">8</span><span class="c-white">)</span>
+
+<span class="c-comment">// 範例：2 Mbps 頻寬下的最大 FPS</span>
+<span class="c-val">2,000,000</span> <span class="c-white">÷ (</span><span class="c-val">15,000</span> <span class="c-white">×</span> <span class="c-val">8</span><span class="c-white">) ≈</span> <span class="c-val">16.7 FPS</span>
+                </div>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>提示</strong>
+                        在相同的 Wi-Fi 頻寬下，<strong>降低解析度</strong>可以換取<strong>更高的 FPS</strong>。例如從 VGA 降到 QVGA，幀大小減少約 4 倍，FPS 就能提升近 4 倍。這就是「解析度 vs 流暢度」的核心取捨——你無法同時擁有兩者，必須根據應用場景做出選擇。
+                    </div>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(2)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">3 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(3); goToUnit(4)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 4: 單元 3 ══════════ -->
+        <div class="ms-unit-page" id="page-4">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-4" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>延遲與頻寬的權衡</h1>
+
+                <p>
+                    當你的影像串流產生的資料量超過了網路的可用頻寬，會發生什麼事？答案不是「畫面變模糊」那麼簡單——而是引發一連串的<strong>連鎖崩潰</strong>：封包在傳送佇列中堆積、延遲急劇上升、TCP 重傳機制介入導致更多壅塞，最終可能導致連線完全斷開。理解這個物理極限，是設計穩定串流系統的前提。
+                </p>
+
+                <h2>頻寬瓶頸的物理現象</h2>
+
+                <p>
+                    網路頻寬就像水管的直徑——你灌入的水量（資料量）不能超過水管的容量。當超量時，多餘的水會在入口堆積，形成「壅塞佇列」。對應到串流系統，現象如下：
+                </p>
+
+                <div class="ms-steps">
+                    <div class="ms-step">
+                        <div class="ms-step-num">1</div>
+                        <div class="ms-step-body">
+                            <h4>封包堆積</h4>
+                            <p>編碼器產出的資料速率超過網路傳輸速率，封包開始在傳送緩衝區中排隊等待。佇列越長，每個封包的等待時間（延遲）就越久。</p>
+                        </div>
+                    </div>
+                    <div class="ms-step">
+                        <div class="ms-step-num">2</div>
+                        <div class="ms-step-body">
+                            <h4>延遲飆升</h4>
+                            <p>當佇列深度超過 200–500 ms 時，使用者感受到「畫面嚴重落後」。對遙控應用而言，操控變得完全無法預測。</p>
+                        </div>
+                    </div>
+                    <div class="ms-step">
+                        <div class="ms-step-num">3</div>
+                        <div class="ms-step-body">
+                            <h4>連線崩潰</h4>
+                            <p>TCP 偵測到丟包後觸發重傳，而重傳的封包又加劇了壅塞。在最壞的情況下，系統進入「壅塞崩潰（Congestion Collapse）」，有效吞吐量趨近於零。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ms-important">
+                    <div class="note-icon"><i class="fas fa-exclamation-circle"></i></div>
+                    <div class="note-body">
+                        <strong>重要</strong>
+                        ESP32 的 2.4 GHz Wi-Fi 在理想條件下的理論傳輸速率為 72 Mbps，但<strong>實際可用吞吐量通常只有 2–5 Mbps</strong>。這是因為 Wi-Fi 協定的開銷（標頭、ACK、退避機制）、環境干擾、以及多裝置競爭等因素。你的頻寬計算必須以「實測值」而非「理論值」為依據。
+                    </div>
+                </div>
+
+                <h2>解析度 vs 流暢度：不可能三角</h2>
+
+                <p>
+                    在固定的頻寬下，你面對的是一個<strong>不可能三角</strong>——解析度、畫質（Quality）、流暢度（FPS）三者最多只能同時滿足兩個。提升任何一項，必然要犧牲另一項：
+                </p>
+
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>策略</th>
+                            <th>解析度</th>
+                            <th>Quality</th>
+                            <th>FPS</th>
+                            <th>適用場景</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>高解析度 + 高品質</td>
+                            <td>VGA</td>
+                            <td>40</td>
+                            <td>2–5</td>
+                            <td>靜態監控截圖（不需要動態）</td>
+                        </tr>
+                        <tr>
+                            <td>高解析度 + 高流暢度</td>
+                            <td>VGA</td>
+                            <td>10</td>
+                            <td>10–15</td>
+                            <td>動態監控（接受畫質損失）</td>
+                        </tr>
+                        <tr>
+                            <td>低解析度 + 高流暢度</td>
+                            <td>QVGA</td>
+                            <td>20</td>
+                            <td>25–30</td>
+                            <td>遙控車、FPV 飛行（流暢優先）</td>
+                        </tr>
+                        <tr>
+                            <td>極低解析度 + 極高流暢度</td>
+                            <td>QQVGA</td>
+                            <td>20</td>
+                            <td>30+</td>
+                            <td>AI 視覺避障（資料量最小）</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>ABR 動態擁塞控制概念</h2>
+
+                <p>
+                    Netflix 和 YouTube 使用的<strong>ABR（Adaptive Bitrate）</strong>技術，其核心思想很簡單：<strong>偵測到 FPS 下降時，自動降低解析度或品質，讓串流保持流暢</strong>。反之，當網路恢復時，再逐步提升品質。這種「自我調節」的機制可以避免壅塞崩潰。
+                </p>
+
+                <div class="ms-code">
+<span class="c-comment">// ABR 擁塞控制的虛擬碼</span>
+<span class="c-kw">if</span> <span class="c-white">(連續 3 秒 FPS &lt; 5) {</span>
+    <span class="c-white">current_resolution = </span><span class="c-tag">降一級</span><span class="c-white">(current_resolution);</span>
+    <span class="c-tag">更新攝影機設定</span><span class="c-white">();</span>
+    <span class="c-tag">log</span><span class="c-white">(</span><span class="c-str">"⚠ 偵測到壅塞，降級至"</span><span class="c-white">, current_resolution);</span>
+<span class="c-white">}</span>
+
+<span class="c-kw">if</span> <span class="c-white">(連續 10 秒 FPS &gt; 20 &amp;&amp; current_resolution &lt; 最高級) {</span>
+    <span class="c-white">current_resolution = </span><span class="c-tag">升一級</span><span class="c-white">(current_resolution);</span>
+    <span class="c-tag">更新攝影機設定</span><span class="c-white">();</span>
+    <span class="c-tag">log</span><span class="c-white">(</span><span class="c-str">"✓ 網路恢復，升級至"</span><span class="c-white">, current_resolution);</span>
+<span class="c-white">}</span>
+                </div>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>提示</strong>
+                        注意升級條件比降級條件更嚴格（10 秒 vs 3 秒）——這種「不對稱閾值」設計稱為<strong>遲滯（Hysteresis）</strong>。它可以避免解析度在臨界點來回跳動（Resolution Flickering），讓使用者看到穩定的畫面品質。
+                    </div>
+                </div>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>備註</strong>
+                        在實戰挑戰中，你將親手實作這套 ABR 邏輯，並在模擬弱網環境下測試它的自癒能力。思考：對於自動導航的無人車，究竟是「高解析度但每秒 2 幀」好，還是「低解析度但每秒 30 幀」好？答案取決於 AI 模型需要多少細節——而你的 ABR 邏輯必須做出即時判斷。
+                    </div>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(3)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">4 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(4); goToUnit(5)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 5: 實作挑戰 ══════════ -->
+        <div class="ms-unit-page" id="page-5">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-5" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 165 分鐘</div>
+                </div>
+
+                <h1>實戰任務挑戰</h1>
+
+                <p>
+                    請動手完成以下三項實作任務，這是驗證本單元學習成果的核心挑戰。
+                    完成後請將程式碼與報告提交至 GitHub Classroom。
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6 my-6">
+                    <!-- Task 1 -->
+                    <div onclick="openSubmissionModal('adv-02-bandwidth-weigh', '【作業 3-1】數據秤重：解析度與封包體積實測')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#E76F51] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 3-1</div>
+                            <h3 class="text-lg font-bold mb-2">數據秤重</h3>
+                            <p class="text-xs text-gray-600 mb-4">實測不同解析度下的真實數據量，推導頻寬需求。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#E76F51] font-bold">
+                            <span>⏱ 作業 3-1 60 min</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#E76F51] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 2 -->
+                    <div onclick="openSubmissionModal('adv-02-fps-bottleneck', '【作業 3-2】流暢度優化：FPS 瓶頸除錯')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#2A9D8F] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 3-2</div>
+                            <h3 class="text-lg font-bold mb-2">流暢度優化</h3>
+                            <p class="text-xs text-gray-600 mb-4">模擬弱網環境，對比不同優化策略的操控體感。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#2A9D8F] font-bold">
+                            <span>⏱ 作業 3-2 60 min</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#2A9D8F] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 3 -->
+                    <div onclick="openSubmissionModal('adv-02-abr-logical', '【作業 3-3】動態頻寬適應 (ABR) 邏輯設計')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#457B9D] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 3-3</div>
+                            <h3 class="text-lg font-bold mb-2">ABR 動態邏輯</h3>
+                            <p class="text-xs text-gray-600 mb-4">實作偵測 FPS 下降後自動降低解析度的防擁塞設計。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#457B9D] font-bold">
+                            <span>⏱ 作業 3-3 45 min</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#457B9D] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(4)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">5 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(5); goToUnit(6)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+
+        <!-- ══════════ PAGE 6: 知識測驗 ══════════ -->
+        <div class="ms-unit-page" id="page-6">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-6" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 5 分鐘</div>
+                </div>
+
+                <h1>知識測驗</h1>
+                <p>請回答以下問題，測試你對本模組內容的理解程度。每題僅有一個正確答案。</p>
+
+                <form id="quiz-form" onsubmit="return false;" style="margin-top:24px;">
+
+                    <div style="background:#f9f9f9;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;">1. 從 QVGA (320×240) 升級到 VGA (640×480)，總像素數增加了幾倍？</p>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q1" value="A" style="margin-right:8px;"> A. 2 倍
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q1" value="B" style="margin-right:8px;"> B. 4 倍
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q1" value="C" style="margin-right:8px;"> C. 8 倍
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q1" value="D" style="margin-right:8px;"> D. 16 倍
+                        </label>
+                        <div id="fb-q1" style="margin-top:10px;font-size:13px;display:none;"></div>
+                    </div>
+
+                    <div style="background:#f9f9f9;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;">2. 在固定頻寬下，最大可達 FPS 的計算公式為何？</p>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q2" value="A" style="margin-right:8px;"> A. FPS = 頻寬 × 每幀資料量
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q2" value="B" style="margin-right:8px;"> B. FPS = 頻寬 / 每幀資料量
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q2" value="C" style="margin-right:8px;"> C. FPS = 每幀資料量 / 頻寬
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q2" value="D" style="margin-right:8px;"> D. FPS = 解析度 × 壓縮率
+                        </label>
+                        <div id="fb-q2" style="margin-top:10px;font-size:13px;display:none;"></div>
+                    </div>
+
+                    <div style="background:#f9f9f9;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;">3. 一張 QVGA (320×240) RGB565 格式的原始影像大小約為？</p>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q3" value="A" style="margin-right:8px;"> A. 約 38 KB
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q3" value="B" style="margin-right:8px;"> B. 約 75 KB
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q3" value="C" style="margin-right:8px;"> C. 約 150 KB
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q3" value="D" style="margin-right:8px;"> D. 約 300 KB
+                        </label>
+                        <div id="fb-q3" style="margin-top:10px;font-size:13px;display:none;"></div>
+                    </div>
+
+                    <div style="background:#f9f9f9;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;">4. 壓縮率 (Compression Ratio) 的定義為何？</p>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q4" value="A" style="margin-right:8px;"> A. 壓縮後大小 / 原始大小
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q4" value="B" style="margin-right:8px;"> B. 原始大小 / 壓縮後大小
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q4" value="C" style="margin-right:8px;"> C. 原始大小 − 壓縮後大小
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q4" value="D" style="margin-right:8px;"> D. 壓縮後大小 × 100%
+                        </label>
+                        <div id="fb-q4" style="margin-top:10px;font-size:13px;display:none;"></div>
+                    </div>
+
+                    <div style="display:flex;gap:12px;margin-top:20px;">
+                        <button type="button" class="ms-btn" onclick="submitQuiz()">提交答案</button>
+                        <button type="button" class="ms-btn-ghost" onclick="resetQuiz()">重新作答</button>
+                    </div>
+                    <div id="quiz-result" style="margin-top:16px;font-size:15px;font-weight:600;display:none;"></div>
+                </form>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(5)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">6 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(6); goToUnit(7)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 7: 摘要與資源 ══════════ -->
+        <div class="ms-unit-page" id="page-7">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-7" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>單元摘要與參考資源</h1>
+
+                <p>
+                    恭喜！你已經完成了「<strong>網路頻寬與幀率 (FPS) 的數學關係</strong>」模組。
+                    透過本單元的學習與實作，你已經掌握了關鍵的核心技術，為全棧物聯網開發奠定了深厚的底層基石。
+                </p>
+
+                <div class="ms-achievement">
+                    <div class="achievement-icon">🚀</div>
+                    <div class="achievement-text">
+                        <h3>恭喜！你已完成本模組</h3>
+                        <p>你已具備開發與調校本單元核心功能的專業實力。持續累積，前進下一個挑戰！</p>
+                    </div>
+                </div>
+
+                <h2>完成本模組後，你已學會：</h2>
+                <ul>
+                    <li><strong>🔢 1. 影像容量的數學拆解 (20 min)</strong> 的基本架構與實作技能。</li>
+                    <li><strong>🗜️ 2. 壓縮率 (Compression Ratio) 的變數 (20 min)</strong> 的調試方法與資料傳輸細節。</li>
+                    <li><strong>️ 3. 延遲與頻寬的權衡 (20 min)</strong> 的優化指標與生產環境安全機制。</li>
+                    <li>在實戰挑戰中，透過 Git 與 GitHub Classroom 提交完整的硬體與報告成果。</li>
+                </ul>
+
+                <h2>延伸學習資源</h2>
+
+                <a href="" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-youtube" style="color:#ff0000;"></i>
+                    <div>
+                        <div style="font-weight:600;">課程教學影片</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">YouTube — 本單元核心觀念與實作示範影片</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="" target="_blank" class="ms-resource-link">
+                    <i class="fas fa-file-alt"></i>
+                    <div>
+                        <div style="font-weight:600;">課程完整講義</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">Google Docs — 詳細實驗步驟、技術文件與程式碼指南</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://classroom.github.com" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-github"></i>
+                    <div>
+                        <div style="font-weight:600;">GitHub Classroom</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">classroom.github.com — 管理你的作業提交與自動評分結果</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(6)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator" style="font-weight:600; color:#107c10;">✓ 模組完成</span>
+                <button class="ms-btn" onclick="markDone(7); alert('🎉 恭喜完成「網路頻寬與幀率 (FPS) 的數學關係」模組！')">完成模組</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    /* ─── DATA ─── */
+    const UNITS = [
+        { id: 0, label: '課程總覽',       time: '',         type: 'index' },
+        { id: 1, label: '簡介',            time: '3 分鐘',  type: 'unit'  },
+        { id: 2, label: '🔢 1. 影像容量的數學拆解 (20 min)', time: '10 分鐘', type: 'unit' },
+        { id: 3, label: '🗜️ 2. 壓縮率 (Compression Ratio) 的變數 (20 min)', time: '10 分鐘', type: 'unit' },
+        { id: 4, label: '️ 3. 延遲與頻寬的權衡 (20 min)', time: '10 分鐘', type: 'unit' },
+        { id: 5, label: '實戰挑戰',       time: '165 分鐘', type: 'lab'   },
+        { id: 6, label: '知識測驗',     time: '5 分鐘',  type: 'quiz'  },
+        { id: 7, label: '摘要與資源',     time: '3 分鐘',  type: 'unit'  },
+    ];
+
+    let currentUnit = 0;
+    let doneSet = new Set();
+
+    /* ─── INIT ─── */
+    function init() {
+        buildSidebar();
+        buildIndexUnitList();
+        goToUnit(0);
+    }
+
+    /**
+     * 動態建構側邊欄單元選單。
+     */
+    function buildSidebar() {
+        const nav = document.getElementById('sidebar-nav');
+        nav.innerHTML = UNITS.map(u => {
+            const badge = u.type === 'lab' ? ' <span style="font-size:10px;background:#eef6ff;color:#005a9e;padding:1px 5px;border-radius:2px;">LAB</span>'
+                        : u.type === 'quiz' ? ' <span style="font-size:10px;background:#fff4ce;color:#8a6914;padding:1px 5px;border-radius:2px;">測驗</span>'
+                        : '';
+            return `
+            <div class="ms-unit-item" id="nav-${u.id}" onclick="goToUnit(${u.id})">
+                <div class="unit-icon" id="icon-${u.id}">${u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id}</div>
+                <div class="unit-meta">
+                    <div class="unit-name">${u.label}${badge}</div>
+                    ${u.time ? `<div class="unit-time"><i class="far fa-clock"></i> ${u.time}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /**
+     * 動態建構首頁單元卡片列表。
+     */
+    function buildIndexUnitList() {
+        const el = document.getElementById('index-unit-list');
+        el.innerHTML = UNITS.filter(u => u.id > 0).map(u => `
+            <div class="unit-card ${u.type}" onclick="goToUnit(${u.id})">
+                <div class="unit-card-num">${u.id}</div>
+                <div class="unit-card-info">
+                    <div class="unit-card-name">${u.label}</div>
+                    <div class="unit-card-time"><i class="far fa-clock"></i> ${u.time}</div>
+                </div>
+                <div class="unit-card-arrow">›</div>
+            </div>
+        `).join('');
+    }
+
+    /* ─── NAVIGATION ─── */
+    /**
+     * 切換至指定單元頁面。
+     * @param {number} id - 單元識別碼
+     */
+    function goToUnit(id) {
+        document.querySelectorAll('.ms-unit-page').forEach(p => p.classList.remove('visible'));
+        const target = id === 0 ? document.getElementById('page-index') : document.getElementById(`page-${id}`);
+        if (target) target.classList.add('visible');
+
+        document.querySelectorAll('.ms-unit-item').forEach(el => el.classList.remove('active'));
+        const navItem = document.getElementById(`nav-${id}`);
+        if (navItem) { navItem.classList.add('active'); navItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) {
+                icon.className = 'unit-icon done';
+                icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>';
+            } else if (u.id === id) {
+                icon.className = 'unit-icon active-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            } else {
+                icon.className = 'unit-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            }
+        });
+
+        const unit = UNITS.find(u => u.id === id);
+        document.getElementById('bc-current').textContent = unit ? unit.label : '';
+        currentUnit = id;
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * 標記特定單元為已完成。
+     * @param {number} id - 單元識別碼
+     */
+    function markDone(id) {
+        doneSet.add(id);
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) badge.style.display = 'flex';
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) { icon.className = 'unit-icon done'; icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>'; }
+        });
+        updateProgress();
+    }
+
+    /**
+     * 計算並更新課程進度與進度條。
+     */
+    function updateProgress() {
+        const total = UNITS.length - 1;
+        const done = doneSet.size;
+        document.getElementById('progress-fill').style.width = Math.round(done / total * 100) + '%';
+        document.getElementById('progress-text').textContent = `${done} / ${total} 已完成`;
+    }
+
+    /* ─── CHECKLIST ─── */
+    /**
+     * 切換核取方塊的狀態。
+     * @param {HTMLElement} el - 核取方塊元素
+     */
+    function toggleCheck(el) {
+        el.classList.toggle('checked');
+        el.innerHTML = el.classList.contains('checked') ? '<i class="fas fa-check" style="font-size:10px;"></i>' : '';
+    }
+
+
+    /* ─── QUIZ ─── */
+    const QUIZ_ANSWERS = { q1: 'B', q2: 'B', q3: 'C', q4: 'B' };
+    const QUIZ_EXPLANATIONS = {
+        q1: 'QVGA = 76,800 像素，VGA = 307,200 像素。寬和高各放大 2 倍，總像素數為 2×2 = 4 倍。',
+        q2: '最大 FPS = 可用頻寬 (bits/s) / 每幀大小 (bits)。頻寬固定時，每幀越大，FPS 越低。',
+        q3: '320 × 240 × 2 bytes (RGB565) = 153,600 bytes ≈ 150 KB。',
+        q4: '壓縮率 CR = 原始大小 / 壓縮後大小。CR 越大表示壓縮效果越好。例如 CR=10 表示壓縮到原來的 1/10。'
+    };
+
+    function submitQuiz() {
+        let score = 0;
+        const total = Object.keys(QUIZ_ANSWERS).length;
+        for (const [q, correct] of Object.entries(QUIZ_ANSWERS)) {
+            const selected = document.querySelector(`input[name="${q}"]:checked`);
+            const fb = document.getElementById(`fb-${q}`);
+            if (!selected) {
+                fb.style.display = 'block';
+                fb.innerHTML = '<span style="color:#d13438;">⚠ 請選擇一個答案</span>';
+                continue;
+            }
+            fb.style.display = 'block';
+            if (selected.value === correct) {
+                score++;
+                fb.innerHTML = `<span style="color:#107c10;">✔ 正確！</span> ${QUIZ_EXPLANATIONS[q]}`;
+            } else {
+                fb.innerHTML = `<span style="color:#d13438;">✘ 不正確。正確答案是 ${correct}。</span> ${QUIZ_EXPLANATIONS[q]}`;
+            }
+        }
+        const result = document.getElementById('quiz-result');
+        result.style.display = 'block';
+        if (score === total) {
+            result.innerHTML = `<span style="color:#107c10;">🎉 滿分！你答對了全部 ${total} 題！</span>`;
+            markDone(6);
+        } else {
+            result.innerHTML = `<span style="color:#d13438;">你答對了 ${score} / ${total} 題。再試一次吧！</span>`;
+        }
+    }
+
+    function resetQuiz() {
+        document.getElementById('quiz-form').reset();
+        for (let i = 1; i <= Object.keys(QUIZ_ANSWERS).length; i++) {
+            const fb = document.getElementById(`fb-q${i}`);
+            if (fb) { fb.style.display = 'none'; fb.innerHTML = ''; }
+        }
+        document.getElementById('quiz-result').style.display = 'none';
+    }
+
+    /* ─── START ─── */
+    init();
+    var mt=document.querySelector('.module-title');var ml=document.getElementById('bc-module-link');if(mt&&ml)ml.textContent=mt.textContent;var nc=document.getElementById('nav-course-name');if(nc)nc.textContent='進階 02：影像串流技術';
+</script>
+
+<!-- Define Resources -->
+<script>
+    window.RESOURCES = {
+        video: "",
+        doc: ""
+    };
+</script>
+<script src="/js/course-shared.66d32c836149.js"></script>
+
+<!-- Assignment Guide (Hidden) -->
+<section id="assignment-guide" style="display: none;">
+<div class="markdown-heading"><h1 class="heading-element">adv-02-unit-bandwidth-fps (網路頻寬與幀率的數學關係)</h1><a aria-label="Permalink: adv-02-unit-bandwidth-fps (網路頻寬與幀率的數學關係)" class="anchor" href="#adv-02-unit-bandwidth-fps-網路頻寬與幀率的數學關係" id="user-content-adv-02-unit-bandwidth-fps-網路頻寬與幀率的數學關係"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本單元旨在探討物聯網影像系統中的「資源取捨 (Trade-off)」。你將學習如何平衡解析度、影像品質與流暢度（FPS），並實作動態擁塞控制算法。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a aria-label="Permalink: 🎯 學習目標" class="anchor" href="#-學習目標" id="user-content--學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>掌握解析度與頻寬消耗的量化關係。</li>
+<li>識別系統效能瓶頸（網路、硬體或算力）。</li>
+<li>實作 ABR (Adaptive Bitrate) 算法以應對網路波動。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構</h2><a aria-label="Permalink: 📂 程式庫結構" class="anchor" href="#-程式庫結構" id="user-content--程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>src/main.cpp</code>: 主程式，包含效能監測邏輯。</li>
+<li>
+<code>src/abr_logic.cpp</code>: <strong>[任務點]</strong> 在此實作 ABR 降級邏輯。</li>
+<li>
+<code>analysis/throughput.csv</code>: <strong>[任務點]</strong> 紀錄實驗數據。</li>
+<li>
+<code>docs/bottleneck_report.md</code>: <strong>[任務點]</strong> 填寫系統瓶頸分析報告。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">🚀 作業任務</h2><a aria-label="Permalink: 🚀 作業任務" class="anchor" href="#-作業任務" id="user-content--作業任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：頻寬消耗標定 (Bandwidth Profiling)</h3><a aria-label="Permalink: 任務 1：頻寬消耗標定 (Bandwidth Profiling)" class="anchor" href="#任務-1頻寬消耗標定-bandwidth-profiling" id="user-content-任務-1頻寬消耗標定-bandwidth-profiling"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>透過實驗測量不同解析度下的頻寬佔用，並將數據填入 <code>analysis/throughput.csv</code>。</p>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：動態擁塞控制 (ABR Logic)</h3><a aria-label="Permalink: 任務 2：動態擁塞控制 (ABR Logic)" class="anchor" href="#任務-2動態擁塞控制-abr-logic" id="user-content-任務-2動態擁塞控制-abr-logic"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>在 <code>src/abr_logic.cpp</code> 中實作當 FPS 過低時自動降低解析度的邏輯。</p>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：瓶頸分析 (Report)</h3><a aria-label="Permalink: 任務 3：瓶頸分析 (Report)" class="anchor" href="#任務-3瓶頸分析-report" id="user-content-任務-3瓶頸分析-report"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>分析實驗結果，並在 <code>docs/bottleneck_report.md</code> 中勾選並解釋系統瓶頸。</p>
+<div class="markdown-heading"><h2 class="heading-element">📝 自我檢測</h2><a aria-label="Permalink: 📝 自我檢測" class="anchor" href="#-自我檢測" id="user-content--自我檢測"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本程式庫內建自動化評分工具。提交前請執行以下指令：</p>
+<ol>
+<li>安裝必要套件：
+<div class="highlight highlight-source-shell"><pre>pip install pandas</pre></div>
+</li>
+<li>執行評分腳本：
+<div class="highlight highlight-source-shell"><pre>python tools/grader.py</pre></div>
+</li>
+</ol>
+<hr/>
+<p>祝開發順利！</p>
+</section>
+
+<!-- Tutor Guide (Hidden) -->
+<section id="tutor-guide" style="display: none;">
+<p>針對 <strong><code>adv-02-unit-bandwidth-fps</code> (網路頻寬與幀率的數學關係)</strong> 單元，這是一個深入探討「資源取捨 (Trade-off)」的進階工程課程，核心在於解析度、品質與流暢度的平衡。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 (Template Repo) 配置建議</h3><a aria-label="Permalink: 1. 範本程式庫 (Template Repo) 配置建議" class="anchor" href="#1-範本程式庫-template-repo-配置建議" id="user-content-1-範本程式庫-template-repo-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>進階效能單元的範本應強調「量化測量」工具，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/main.cpp</code></strong>：內建精確的 $FPS$ 與 $Bytes/sec$ 監測與輸出邏輯，減少學員在底層測量上的重複勞動。</li>
+<li>
+<strong>📂 <code>src/abr_controller.cpp</code></strong>：預置一個「自動適應頻寬 (ABR)」的框架類別，將核心的降級邏輯 (Downscaling Logic) 留給學員實作。</li>
+<li>
+<strong>📂 <code>analysis/bandwidth_profile.csv</code></strong>：一個預先格式化的 CSV 檔案，讓學員填入在不同解析度下的頻寬消耗數據。</li>
+<li>
+<strong>📂 <code>.github/workflows/bench_checker.yml</code></strong>：自動化腳本，驗證 <code>bandwidth_profile.csv</code> 是否填寫完整且數值邏輯正確。</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a aria-label="Permalink: 2. 作業任務部署細節" class="anchor" href="#2-作業任務部署細節" id="user-content-2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：頻寬消耗標定法 (Bandwidth Profiling)</h4><a aria-label="Permalink: 任務 1：頻寬消耗標定法 (Bandwidth Profiling)" class="anchor" href="#任務-1頻寬消耗標定法-bandwidth-profiling" id="user-content-任務-1頻寬消耗標定法-bandwidth-profiling"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過實驗數據，畫出解析度、品質與頻寬的三維關係圖。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>數據提交</strong>：學員需在 <code>analysis/bandwidth_profile.csv</code> 中紀錄 QQVGA、QVGA、VGA 解析度在 Quality=20 下的真實頻寬佔用。</li>
+<li>
+<strong>Autograding</strong>：檢查數據是否符合「面積加倍 -&gt; 流量近乎加倍」的線性趨勢，並核對學員是否發現了 Wi-Fi 傳輸的物理瓶頸（例如：當流量超過 2MB/s 時，FPS 是否開始異常跳動）。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：動態擁塞控制實驗 (Congestion Control Lab)</h4><a aria-label="Permalink: 任務 2：動態擁塞控制實驗 (Congestion Control Lab)" class="anchor" href="#任務-2動態擁塞控制實驗-congestion-control-lab" id="user-content-任務-2動態擁塞控制實驗-congestion-control-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：實作簡單的 ABR (Adaptive Bitrate) 算法，確保系統在網路惡化時不會斷連。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>核心邏輯檢核</strong>：
+<div class="highlight highlight-source-c++"><pre><span class="pl-c"><span class="pl-c">//</span> 學生需實作：當 FPS 連續 3 秒低於 5 幀時，自動切換至更低解析度</span>
+<span class="pl-k">if</span> (consecutive_low_fps_seconds &gt;= <span class="pl-c1">3</span>) {
+    current_resolution = <span class="pl-c1">get_lower_res</span>(current_resolution);
+    <span class="pl-c1">update_camera_config</span>();
+}</pre></div>
+</li>
+<li>
+<strong>挑戰項 (Extra Credit)</strong>：學員是否實作了「遲滯 (Hysteresis)」邏輯？避免解析度在臨界點來回跳動 (Resolution Flickering)。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：硬體加速與 FPS 極限挑戰 (XCLK Optimization)</h4><a aria-label="Permalink: 任務 3：硬體加速與 FPS 極限挑戰 (XCLK Optimization)" class="anchor" href="#任務-3硬體加速與-fps-極限挑戰-xclk-optimization" id="user-content-任務-3硬體加速與-fps-極限挑戰-xclk-optimization"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：調教感測器時鐘 (XCLK)，找出硬體同步與功耗的極限。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>現象紀錄</strong>：要求學員紀錄將 XCLK 從 20MHz 提升後，影像是否出現「畫面撕裂 (Sync Lost)」或顏色失真。</li>
+<li>
+<strong>驗證方式</strong>：在 README 中說明為什麼盲目提升時鐘頻率不一定能提升有效 FPS（提示：後端的 DMA 搬運速度或 JPEG 編碼能力可能已經封頂）。</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">3. 進階效能單元導師點評標準 (Advanced Benchmarks)</h3><a aria-label="Permalink: 3. 進階效能單元導師點評標準 (Advanced Benchmarks)" class="anchor" href="#3-進階效能單元導師點評標準-advanced-benchmarks" id="user-content-3-進階效能單元導師點評標準-advanced-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「數據驅動的工程決策」</strong>：</p>
+<ul>
+<li>[ ] <strong>量化嚴謹度</strong>：提交的數據表是否完整，且能清晰標出系統的「雪崩點 (Performance Drop)」？</li>
+<li>[ ] <strong>算力感應</strong>：是否能區分出 $FPS$ 下降是因為「封包塞在大氣中」還是「CPU 來不及編碼」？</li>
+<li>[ ] <strong>自癒能力</strong>：實作的 ABR 邏輯是否能在模擬干擾撤除後，平滑地恢復至高品質影像？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" class="anchor" href="#-推薦範本結構-github-classroom-template" id="user-content--推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── src/
+│   ├── main.cpp            # 主程式：含效能監測器
+│   └── abr_logic.cpp       # 核心：學員實作動態降級邏輯處
+├── analysis/
+│   └── throughput.csv      # 數據表：紀錄解析度與頻寬關係
+├── docs/
+│   └── bottleneck_report.md # 報告：分析系統瓶頸所在
+└── README.md               # 專案總結：我的 ABR 策略優勢
+</code></pre>
+<div class="markdown-heading"><h3 class="heading-element">4. 自我檢測與自動評分 (Autograding)</h3><a aria-label="Permalink: 4. 自我檢測與自動評分 (Autograding)" class="anchor" href="#4-自我檢測與自動評分-autograding" id="user-content-4-自我檢測與自動評分-autograding"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本專案內建自動化評分腳本，您可以隨時在本地端執行以驗證您的進度：</p>
+<ol>
+<li>
+<strong>安裝依賴</strong>：
+<div class="highlight highlight-source-shell"><pre>pip install pandas</pre></div>
+</li>
+<li>
+<strong>執行評分</strong>：
+<div class="highlight highlight-source-shell"><pre>python tools/grader.py</pre></div>
+</li>
+</ol>
+<p>評分腳本會檢查：</p>
+<ul>
+<li>
+<code>analysis/throughput.csv</code> 是否已填寫完整數據。</li>
+<li>
+<code>src/abr_logic.cpp</code> 中的 <code>TODO</code> 是否已處理（即已實作 ABR 邏輯）。</li>
+<li>
+<code>docs/bottleneck_report.md</code> 是否已完成分析且勾選了對應項。</li>
+</ul>
+<hr/>
+<p>透過這種部署方式，學生能體會到 <strong>「數據是不會說謊的」</strong>。在面對網路多變的真實世界時，學會如何透過數學公式與動態邏輯，在受限的頻寬中榨取最高的視覺品質。</p>
+</section>
+
+</body>
+</html>

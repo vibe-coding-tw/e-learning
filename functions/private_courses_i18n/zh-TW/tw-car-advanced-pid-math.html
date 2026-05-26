@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PID 三兄弟的數學直覺 - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script async="" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        
+        :root {
+            --ms-blue: #0078d4;
+            --ms-blue-dark: #005a9e;
+            --ms-blue-light: #deecf9;
+            --ms-gray-10: #f3f2f1;
+            --ms-gray-20: #e1dfdd;
+            --ms-gray-90: #201f1e;
+            --ms-green: #107c10;
+            --ms-red: #d13438;
+            --sidebar-w: 280px;
+        }
+
+        * { box-sizing: border-box; }
+        #assignment-guide, #tutor-guide { display: none !important; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fff;
+            color: #201f1e;
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ─── TOP NAV ─── */
+        .ms-topnav {
+            background: var(--ms-blue);
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,.2);
+        }
+        .ms-topnav .brand {
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .ms-topnav .divider { width: 1px; height: 20px; background: rgba(255,255,255,.3); }
+        .border-t.pt-3 > span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .ms-topnav .nav-label { color: rgba(255,255,255,.9); font-size: 14px; }
+
+        /* ─── LAYOUT ─── */
+        .ms-layout { display: flex; min-height: calc(100vh - 48px); }
+
+        /* ─── SIDEBAR ─── */
+        .ms-sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: #faf9f8;
+            border-right: 1px solid #e1dfdd;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 48px;
+            height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+        .ms-sidebar-header {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .ms-sidebar-header .module-label {
+            display: none;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #605e5c;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .ms-sidebar-header .module-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #201f1e;
+            line-height: 1.4;
+        }
+        .ms-sidebar-header .meta {
+            font-size: 12px;
+            color: #605e5c;
+            margin-top: 6px;
+        }
+        .ms-unit-list { padding: 8px 0; }
+        .ms-unit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background .12s, border-color .12s;
+            color: #201f1e;
+        }
+        .ms-unit-item:hover { background: #edebe9; }
+        .ms-unit-item.active {
+            border-left-color: var(--ms-blue);
+            background: #deecf9;
+        }
+        .ms-unit-item.active .unit-name { color: var(--ms-blue); font-weight: 600; }
+        .unit-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #c8c6c4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+            font-size: 10px;
+            background: #fff;
+        }
+        .unit-icon.done { background: var(--ms-green); border-color: var(--ms-green); color: #fff; }
+        .unit-icon.active-icon { border-color: var(--ms-blue); background: var(--ms-blue); color: #fff; }
+        .unit-meta { flex: 1; min-width: 0; }
+        .unit-name { font-size: 13px; line-height: 1.4; }
+        .unit-time { font-size: 11px; color: #605e5c; margin-top: 2px; }
+        .sidebar-progress {
+            padding: 12px 16px;
+            border-top: 1px solid #e1dfdd;
+            margin-top: auto;
+        }
+        .progress-bar-bg { background: #e1dfdd; border-radius: 4px; height: 6px; }
+        .progress-bar-fill { background: var(--ms-green); border-radius: 4px; height: 6px; transition: width .4s; }
+        .progress-text { font-size: 12px; color: #605e5c; margin-top: 6px; }
+
+        /* ─── MAIN ─── */
+        .ms-content { flex: 1; min-width: 0; }
+
+        .ms-breadcrumb {
+            padding: 10px 40px;
+            font-size: 12px;
+            color: #605e5c;
+            border-bottom: 1px solid #e1dfdd;
+            background: #fff;
+        }
+        .ms-breadcrumb a { color: var(--ms-blue); text-decoration: none; }
+        .ms-breadcrumb a:hover { text-decoration: underline; }
+        .ms-breadcrumb span { margin: 0 6px; }
+
+        /* ─── PAGES ─── */
+        .ms-unit-page { display: none; }
+        .ms-unit-page.visible { display: block; }
+
+        .unit-content {
+            max-width: 820px;
+            padding: 32px 40px 60px;
+            margin: 0 auto;
+        }
+
+        .unit-status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .unit-completed-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #dff6dd;
+            color: #107c10;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+        .unit-time-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #605e5c;
+            font-size: 13px;
+        }
+
+        /* Typography */
+        .unit-content h1 { font-size: 28px; font-weight: 700; margin: 0 0 20px; color: #201f1e; line-height: 1.3; }
+        .unit-content h2 { font-size: 20px; font-weight: 600; margin: 36px 0 12px; color: #201f1e; padding-top: 8px; }
+        .unit-content h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: #201f1e; }
+        .unit-content p { margin: 0 0 14px; }
+        .unit-content ul, .unit-content ol { margin: 0 0 14px; padding-left: 28px; }
+        .unit-content li { margin-bottom: 6px; }
+        .unit-content strong { font-weight: 600; }
+        .unit-content a { color: var(--ms-blue); text-decoration: none; }
+        .unit-content a:hover { text-decoration: underline; }
+        .unit-content code {
+            background: #f3f2f1;
+            border: 1px solid #e1dfdd;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            color: #a31515;
+        }
+
+        /* Callouts */
+        .ms-note, .ms-tip, .ms-warning, .ms-important {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+        .ms-note { background: #deecf9; border-color: var(--ms-blue); }
+        .ms-note .note-icon { color: var(--ms-blue); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-tip { background: #dff6dd; border-color: var(--ms-green); }
+        .ms-tip .note-icon { color: var(--ms-green); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-warning { background: #fff4ce; border-color: #ffaa44; }
+        .ms-warning .note-icon { color: #ffaa44; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-important { background: #fde7e9; border-color: var(--ms-red); }
+        .ms-important .note-icon { color: var(--ms-red); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .note-body strong { display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+
+        /* Scenario */
+        .ms-scenario {
+            background: #f3f2f1;
+            border-radius: 4px;
+            padding: 20px 24px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #323130;
+            border-left: 4px solid #c8c6c4;
+        }
+        .ms-scenario-label {
+            font-style: normal;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #605e5c;
+            margin-bottom: 8px;
+        }
+
+        /* Steps */
+        .ms-steps { margin: 16px 0; }
+        .ms-step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
+        .ms-step-num {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--ms-blue); color: #fff;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .ms-step-body { flex: 1; }
+        .ms-step-body h4 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+        .ms-step-body p { font-size: 14px; margin: 0; }
+
+        /* Table */
+        .ms-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+        .ms-table th {
+            background: #f3f2f1; font-weight: 600; text-align: left;
+            padding: 10px 14px; border: 1px solid #e1dfdd; color: #323130;
+        }
+        .ms-table td { padding: 9px 14px; border: 1px solid #e1dfdd; vertical-align: top; }
+        .ms-table tr:nth-child(even) td { background: #faf9f8; }
+        .ms-table .check { color: var(--ms-green); font-size: 16px; }
+        .ms-table .cross { color: #8a8886; font-size: 16px; }
+
+        /* Checklist */
+        .ms-checklist { list-style: none; padding: 0; margin: 12px 0; }
+        .ms-checklist li {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 6px 0; font-size: 14px;
+        }
+        .ms-checklist li .check-box {
+            width: 18px; height: 18px;
+            border: 2px solid #8a8886; border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 1px; cursor: pointer; transition: all .15s;
+        }
+        .ms-checklist li .check-box.checked {
+            background: var(--ms-blue); border-color: var(--ms-blue); color: #fff;
+        }
+
+        /* Code block */
+        .ms-code {
+            background: #1e1e1e;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-x: auto;
+        }
+        .ms-code .c-comment { color: #6a9955; }
+        .ms-code .c-str { color: #ce9178; }
+        .ms-code .c-kw { color: #569cd6; }
+        .ms-code .c-attr { color: #9cdcfe; }
+        .ms-code .c-val { color: #ce9178; }
+        .ms-code .c-tag { color: #4ec9b0; }
+        .ms-code .c-white { color: #d4d4d4; }
+
+        /* Lab card */
+        .ms-lab-card {
+            background: linear-gradient(135deg, #eef6ff 0%, #f5f0ff 100%);
+            border: 1px solid #c7e0f4;
+            border-radius: 6px;
+            padding: 24px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: box-shadow .15s, border-color .15s;
+        }
+        .ms-lab-card:hover { box-shadow: 0 4px 16px rgba(0,120,212,.12); border-color: var(--ms-blue); }
+        .ms-lab-card h3 { margin: 0 0 12px; color: var(--ms-blue-dark); font-size: 16px; font-weight: 600; }
+        .ms-lab-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--ms-blue);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 12px;
+        }
+        .ms-lab-time {
+            font-size: 12px;
+            color: #605e5c;
+            margin-left: 8px;
+        }
+
+        /* Compare grid */
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border: 1px solid #e1dfdd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .compare-card-header {
+            padding: 12px 14px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .compare-card-body {
+            padding: 14px;
+            font-size: 13px;
+            color: #605e5c;
+            line-height: 1.5;
+        }
+
+        /* Buttons */
+        .ms-btn {
+            background: var(--ms-blue); color: #fff; border: none;
+            padding: 7px 18px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; transition: background .12s;
+            font-family: inherit;
+        }
+        .ms-btn:hover { background: var(--ms-blue-dark); }
+        .ms-btn-ghost {
+            background: transparent; color: var(--ms-blue);
+            border: 1px solid var(--ms-blue); padding: 6px 18px;
+            font-size: 14px; font-weight: 600; border-radius: 2px;
+            cursor: pointer; transition: background .12s; font-family: inherit;
+        }
+        .ms-btn-ghost:hover { background: var(--ms-blue-light); }
+
+        /* Nav */
+        .unit-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            border-top: 1px solid #e1dfdd;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+        .nav-btn-prev, .nav-btn-next {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 20px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; border: 1px solid;
+            font-family: inherit; transition: background .12s;
+        }
+        .nav-btn-next { background: var(--ms-blue); color: #fff; border-color: var(--ms-blue); }
+        .nav-btn-next:hover { background: var(--ms-blue-dark); border-color: var(--ms-blue-dark); }
+        .nav-btn-prev { background: #fff; color: var(--ms-blue); border-color: var(--ms-blue); }
+        .nav-btn-prev:hover { background: var(--ms-blue-light); }
+        .unit-page-indicator { font-size: 13px; color: #605e5c; }
+
+        /* Module index */
+        .module-meta-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+        .ms-tag { background: #f3f2f1; color: #323130; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 500; }
+        .ms-tag.blue { background: #deecf9; color: var(--ms-blue-dark); }
+        .ms-tag.green { background: #dff6dd; color: #107c10; }
+        .unit-card-list { margin: 20px 0; }
+        .unit-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 0; border-bottom: 1px solid #f3f2f1; cursor: pointer;
+        }
+        .unit-card:last-child { border-bottom: none; }
+        .unit-card:hover .unit-card-name { color: var(--ms-blue); text-decoration: underline; }
+        .unit-card-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #f3f2f1; color: #605e5c;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .unit-card.lab .unit-card-num { background: #eef6ff; color: var(--ms-blue-dark); }
+        .unit-card.quiz .unit-card-num { background: #fff4ce; color: #8a6914; }
+        .unit-card-info { flex: 1; }
+        .unit-card-name { font-size: 15px; font-weight: 500; }
+        .unit-card-time { font-size: 12px; color: #605e5c; margin-top: 2px; }
+        .unit-card-arrow { color: #c8c6c4; font-size: 14px; }
+
+        /* Resource links */
+        .ms-resource-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border: 1px solid #e1dfdd; border-radius: 4px;
+            margin-bottom: 8px; text-decoration: none; color: #201f1e;
+            font-size: 14px; transition: background .1s;
+        }
+        .ms-resource-link:hover { background: #f3f2f1; }
+        .ms-resource-link i { color: var(--ms-blue); font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+
+        /* Achievement */
+        .ms-achievement {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: #fff; border-radius: 6px; padding: 24px 28px;
+            margin: 24px 0; display: flex; align-items: center; gap: 20px;
+        }
+        .achievement-icon { font-size: 48px; flex-shrink: 0; }
+        .achievement-text h3 { margin: 0 0 4px; font-size: 18px; }
+        .achievement-text p { margin: 0; font-size: 14px; opacity: .9; }
+
+        @media (max-width: 768px) {
+            .ms-sidebar { display: none; }
+            .unit-content { padding: 20px 16px 40px; }
+            .unit-nav { padding: 16px; }
+            .ms-breadcrumb { padding: 8px 16px; }
+            .compare-grid { grid-template-columns: 1fr; }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- TOP NAV -->
+<nav class="ms-topnav">
+    <a href="/" target="_top" class="brand"><i class="fas fa-rocket"></i> Vibe Coding</a>
+    <div class="divider"></div>
+    <a href="/advanced.html" target="_top" class="nav-label">進階課程</a>
+    <div class="divider"></div>
+    <span id="nav-course-name" style="color:rgba(255,255,255,.85);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+</nav>
+
+<div class="ms-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="ms-sidebar">
+        <div class="ms-sidebar-header">
+            <div class="module-label">模組</div>
+            <div class="module-title">PID 三兄弟的數學直覺</div>
+            <div class="meta"><i class="far fa-clock"></i> 約 201 分鐘 · 7 個單元</div>
+        </div>
+        <nav class="ms-unit-list" id="sidebar-nav"></nav>
+        <div class="sidebar-progress">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0 / 7 已完成</div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="ms-content">
+
+        <div class="ms-breadcrumb"><a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> ›<span id="bc-current"></span></div>
+
+        <!-- ══════════ PAGE 0: INDEX ══════════ -->
+        <div class="ms-unit-page visible" id="page-index">
+            <div class="unit-content">
+                <h1>PID 三兄弟的數學直覺</h1>
+                <div class="module-meta-tags">
+                    <span class="ms-tag">模組</span>
+                    <span class="ms-tag">7 個單元</span>
+                    <span class="ms-tag green">單元課程 進階 12</span>
+                    <span class="ms-tag blue">硬體開發</span>
+                    <span class="ms-tag blue">物聯網</span>
+                </div>
+
+                <p>為什麼機器人會抖？深入 P、I、D 的物理意涵，從直覺掌握控制公式。</p>
+
+                <h2>學習目標</h2>
+                <p>完成本模組後，你將能夠：</p>
+                <ul>
+                    <li>理解並掌握 <strong>比例 (P)：關注當下的距離</strong> 的核心觀念與操作實務。</li>
+                    <li>學會 <strong>積分 (I)：記仇的歷史紀錄</strong> 的關鍵原理，並能將其應用於開發。</li>
+                    <li>掌握 <strong>微分 (D)：預測未來的預警師</strong> 的調校技巧與穩定性測試。</li>
+                    <li>完成三項實作作業，並以 Git 提交成果到 GitHub Classroom。</li>
+                </ul>
+
+                <h2>必要條件</h2>
+                <ul>
+                    <li>準備好 ESP32 開發板與 Micro USB / USB-C 數據線</li>
+                    <li>電腦已配置 VS Code 與 PlatformIO 開發環境</li>
+                    <li>擁有 GitHub 帳號，能夠接受 GitHub Classroom 邀請</li>
+                </ul>
+
+                <h2>本模組單元</h2>
+                <div class="unit-card-list" id="index-unit-list"></div>
+                <div style="margin-top:32px;">
+                    <button class="ms-btn" onclick="goToUnit(1)">開始模組 &nbsp;›</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 1: 簡介 ══════════ -->
+        <div class="ms-unit-page" id="page-1">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-1" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>簡介</h1>
+
+                <p>
+                    P 負責「現在該出多少力」，I 負責「過去累積的怨氣該怎麼清」，D 負責「未來會不會衝過頭」——這三個角色各司其職，卻又必須協同作戰。
+                    本模組將用最直覺的物理比喻，帶你深入理解 <strong>比例、積分、微分</strong> 三項的數學公式與離散化實作，
+                    並解決工程中最常見的兩大陷阱：積分飽和 (Windup) 與微分雜訊放大。
+                </p>
+
+                <div class="ms-scenario">
+                    <div class="ms-scenario-label">學習指引</div>
+                    你的機器人裝上了 P 控制器，速度曲線看起來已經很不錯了——但它永遠差最後 3 公分到不了終點。加上 I 項後終於到達了，卻發現衝過頭又彈回來。再疊加 D 項，波形終於收斂了，但感測器的微小雜訊卻讓馬達瘋狂抖動。觀看下方影片，建立 PID 三兄弟的物理直覺，再進入公式推導會事半功倍。
+                </div>
+
+                <h2>教學影片</h2>
+                <div style="border-radius:4px; overflow:hidden; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,.12); aspect-ratio:16/9;">
+                    <iframe src=""
+                        title="PID 三兄弟的數學直覺 教學影片" allowfullscreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        style="width:100%; height:100%; display:block; border:0;">
+                    </iframe>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(0)">‹ &nbsp;總覽</button>
+                <span class="unit-page-indicator">1 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(1); goToUnit(2)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 2: 單元 1 ══════════ -->
+        <div class="ms-unit-page" id="page-2">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-2" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>比例 (P)：關注當下的距離</h1>
+
+                <p>
+                    比例項 (Proportional Term) 是 PID 控制器中最直觀的一環。它的邏輯極其簡單：<strong>誤差越大，出力越猛；誤差越小，出力越輕</strong>。就像你開車接近停車場入口——還差很遠時全速前進，快到了就慢慢滑行。
+                </p>
+
+                <h2>數學公式</h2>
+
+                <p>比例項的輸出完全由當前誤差決定：</p>
+
+                <p style="text-align:center; font-size:18px; margin:20px 0;">
+                    \[Output_P = K_p \times e(t)\]
+                </p>
+
+                <p>其中：</p>
+                <ul>
+                    <li>\(K_p\) — 比例增益 (Proportional Gain)，決定系統的反應靈敏度</li>
+                    <li>\(e(t) = \text{Target} - \text{Measured}\) — 當前時刻的誤差</li>
+                </ul>
+
+                <div class="ms-code">
+<span class="c-comment">// C++ 離散實作</span><br>
+<span class="c-kw">float</span><span class="c-white"> error = targetPos - currentPos;</span><br>
+<span class="c-kw">float</span><span class="c-white"> output_P = </span><span class="c-attr">Kp</span><span class="c-white"> * error;</span><br><br>
+<span class="c-comment">// 範例數值：</span><br>
+<span class="c-comment">// targetPos = 150 cm, currentPos = 80 cm</span><br>
+<span class="c-comment">// error = 70 cm</span><br>
+<span class="c-comment">// Kp = 2.0</span><br>
+<span class="c-comment">// output_P = 2.0 × 70 = 140（PWM 輸出值）</span>
+                </div>
+
+                <h2>Kp 的效果：太小 vs. 太大</h2>
+
+                <p>選擇正確的 \(K_p\) 值是控制工程中最基本的調校任務。以下表格說明不同 \(K_p\) 的影響：</p>
+
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>\(K_p\) 大小</th>
+                            <th>系統行為</th>
+                            <th>物理現象</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>太小</strong> (如 0.5)</td>
+                            <td>反應遲鈍，需很長時間才接近目標</td>
+                            <td>機器人像烏龜爬行，停在目標前很遠處</td>
+                        </tr>
+                        <tr>
+                            <td><strong>適中</strong> (如 2.0)</td>
+                            <td>快速接近目標，最終穩定（但仍有殘留誤差）</td>
+                            <td>機器人平穩靠近目標，但最後差幾公分</td>
+                        </tr>
+                        <tr>
+                            <td><strong>太大</strong> (如 10.0)</td>
+                            <td>反應過激，在目標附近劇烈震盪</td>
+                            <td>機器人像醉漢一樣左右搖擺，無法停穩</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="ms-warning">
+                    <div class="note-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="note-body">
+                        <strong>穩定性邊界</strong>
+                        當 \(K_p\) 超過某個臨界值時，系統會從「收斂」變成「發散」——誤差不但不減小，反而越來越大。這個臨界點稱為<strong>穩定性邊界 (Stability Margin)</strong>，是控制工程中必須嚴格避免的危險區域。
+                    </div>
+                </div>
+
+                <h2>P 控制的固有缺陷：靜態誤差</h2>
+
+                <p>
+                    純 P 控制有一個無法迴避的物理侷限——<strong>靜態誤差 (Steady-State Error)</strong>。當誤差足夠小時，\(K_p \times e\) 產生的出力會低於馬達的最小啟動電壓（死區電壓），系統就卡住了。
+                </p>
+
+                <p>用數學表達這個平衡：</p>
+
+                <p style="text-align:center; font-size:16px; margin:16px 0;">
+                    \[K_p \times e_{ss} = F_{friction} \quad \Rightarrow \quad e_{ss} = \frac{F_{friction}}{K_p}\]
+                </p>
+
+                <p>
+                    即使增大 \(K_p\)，殘留誤差 \(e_{ss}\) 只會變小但<strong>永遠不會歸零</strong>（除非摩擦力為零，但這在物理世界中不存在）。這就是為什麼我們需要積分項 (I) 來徹底消除靜態誤差。
+                </p>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>學習重點</strong>
+                        P 項是 PID 控制器的「脊梁骨」——它決定了系統的基本反應速度。但它只看「此刻」，對過去的累積和未來的趨勢視而不見。接下來的 I 項和 D 項將分別彌補這兩個盲點。
+                    </div>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(1)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">2 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(2); goToUnit(3)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 3: 單元 2 ══════════ -->
+        <div class="ms-unit-page" id="page-3">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-3" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>積分 (I)：記仇的歷史紀錄</h1>
+
+                <p>
+                    積分項 (Integral Term) 是 PID 中的「長期記憶」。它不看此刻的誤差大小，而是關注<strong>誤差存在了多久</strong>。如果系統卡在目標前方太長時間，積分值會不斷累積，像慢慢填滿的水桶一樣，持續增加推力直到最終突破阻力、消滅殘留誤差。
+                </p>
+
+                <h2>數學公式</h2>
+
+                <p>積分項對歷史誤差做時間累積：</p>
+
+                <p style="text-align:center; font-size:18px; margin:20px 0;">
+                    \[Output_I = K_i \times \int_0^t e(\tau) \, d\tau\]
+                </p>
+
+                <p>離散化為程式碼時，積分變成了累加：</p>
+
+                <div class="ms-code">
+<span class="c-comment">// 離散積分實作</span><br>
+<span class="c-attr">integral</span><span class="c-white"> += error * dt;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-comment">// 每個迴圈週期累加</span><br>
+<span class="c-kw">float</span><span class="c-white"> output_I = </span><span class="c-attr">Ki</span><span class="c-white"> * integral;</span><br><br>
+<span class="c-comment">// 範例：error = 3 cm（很小，P 項已無力）</span><br>
+<span class="c-comment">// 經過 100 個週期 (dt = 0.01s)：</span><br>
+<span class="c-comment">// integral = 3 × 0.01 × 100 = 3.0</span><br>
+<span class="c-comment">// Ki = 5.0 → output_I = 5.0 × 3.0 = 15.0</span><br>
+<span class="c-comment">// 時間越長，推力越大，最終克服死區！</span>
+                </div>
+
+                <h2>為什麼 I 項能消除靜態誤差？</h2>
+
+                <p>
+                    回顧 P 項的侷限：當 \(K_p \times e\) 小於馬達死區電壓時，系統卡住。但 I 項不會因為誤差小就放棄——只要誤差<strong>持續存在</strong>，積分值就會持續增長。最終，\(K_i \times \text{integral}\) 會大到足以克服任何靜摩擦力，把系統推到精確的目標點。
+                </p>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>直覺理解</strong>
+                        想像你推一扇很重的門。P 項是你施加的即時力量——門很重，你的力氣不夠推動它。但 I 項就像你「越來越生氣」——推了 5 秒沒開，你使出 120% 的力；推了 10 秒還沒開，你怒氣值爆表，最終一定能推開。
+                    </div>
+                </div>
+
+                <h2>積分飽和 (Integral Windup) 問題</h2>
+
+                <p>
+                    I 項的最大副作用是<strong>積分飽和 (Windup)</strong>。當系統長時間無法到達目標（例如被障礙物卡住），積分值會累積到極大數字。一旦障礙物移除，這個巨大的積分值會導致系統猛烈過衝 (Overshoot)。
+                </p>
+
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>階段</th>
+                            <th>積分值狀態</th>
+                            <th>系統行為</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>正常運行</td>
+                            <td>小幅度累積，穩步消除殘餘誤差</td>
+                            <td>平穩收斂至目標</td>
+                        </tr>
+                        <tr>
+                            <td>受阻期間</td>
+                            <td>持續瘋狂累積（因為誤差一直存在）</td>
+                            <td>輸出飽和，馬達全速但車動不了</td>
+                        </tr>
+                        <tr>
+                            <td>障礙移除後</td>
+                            <td>巨大的積分值需要很長時間才能「洩掉」</td>
+                            <td>嚴重過衝，可能撞毀</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Anti-Windup 解法：積分限幅</h3>
+
+                <div class="ms-code">
+<span class="c-comment">// Anti-Windup：限制積分值的上下界</span><br>
+<span class="c-attr">integral</span><span class="c-white"> += error * dt;</span><br>
+<span class="c-attr">integral</span><span class="c-white"> = </span><span class="c-tag">constrain</span><span class="c-white">(integral, -</span><span class="c-val">MAX_INTEGRAL</span><span class="c-white">, </span><span class="c-val">MAX_INTEGRAL</span><span class="c-white">);</span><br><br>
+<span class="c-comment">// 或者：當誤差改變方向時，清除積分</span><br>
+<span class="c-kw">if</span><span class="c-white"> ((error > </span><span class="c-val">0</span><span class="c-white"> && lastError < </span><span class="c-val">0</span><span class="c-white">) || </span><br>
+<span class="c-white">&nbsp;&nbsp;&nbsp;&nbsp;(error < </span><span class="c-val">0</span><span class="c-white"> && lastError > </span><span class="c-val">0</span><span class="c-white">)) {</span><br>
+<span class="c-white">&nbsp;&nbsp;integral = </span><span class="c-val">0</span><span class="c-white">;&nbsp;&nbsp;</span><span class="c-comment">// 過零點清除</span><br>
+<span class="c-white">}</span>
+                </div>
+
+                <div class="ms-important">
+                    <div class="note-icon"><i class="fas fa-exclamation-circle"></i></div>
+                    <div class="note-body">
+                        <strong>工程實務</strong>
+                        在嵌入式系統中，永遠不要讓積分值無限增長。<code>constrain()</code> 是你的第一道防線。專業的控制庫（如 Arduino PID Library）內建 Anti-Windup 機制，但理解其原理才能在極端場景下正確調校。
+                    </div>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(2)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">3 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(3); goToUnit(4)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 4: 單元 3 ══════════ -->
+        <div class="ms-unit-page" id="page-4">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-4" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>微分 (D)：預測未來的預警師</h1>
+
+                <p>
+                    微分項 (Derivative Term) 是 PID 中的「先知」。它不關心你離目標多遠（那是 P 的事），也不關心你累積了多少未償誤差（那是 I 的事）。它只關注一件事：<strong>誤差正在以多快的速度變化</strong>。如果誤差急速減小（代表你正在高速衝向目標），D 項會提前踩下煞車，防止過衝。
+                </p>
+
+                <h2>數學公式</h2>
+
+                <p>微分項計算的是誤差的變化率（斜率）：</p>
+
+                <p style="text-align:center; font-size:18px; margin:20px 0;">
+                    \[Output_D = K_d \times \frac{de(t)}{dt}\]
+                </p>
+
+                <p>離散化實作：</p>
+
+                <div class="ms-code">
+<span class="c-comment">// 離散微分實作</span><br>
+<span class="c-kw">float</span><span class="c-white"> derivative = (error - lastError) / dt;</span><br>
+<span class="c-kw">float</span><span class="c-white"> output_D = </span><span class="c-attr">Kd</span><span class="c-white"> * derivative;</span><br>
+<span class="c-attr">lastError</span><span class="c-white"> = error;&nbsp;&nbsp;</span><span class="c-comment">// 儲存本次誤差供下次使用</span><br><br>
+<span class="c-comment">// 範例：dt = 0.01s</span><br>
+<span class="c-comment">// 上一次 error = 50 cm, 這次 error = 30 cm</span><br>
+<span class="c-comment">// derivative = (30 - 50) / 0.01 = -2000 cm/s</span><br>
+<span class="c-comment">// 負值！代表誤差正在快速減小 → 正在接近目標</span><br>
+<span class="c-comment">// Kd = 0.02 → output_D = 0.02 × (-2000) = -40</span><br>
+<span class="c-comment">// D 項產生反向力，踩煞車防止過衝！</span>
+                </div>
+
+                <h2>D 項的物理直覺：汽車避震器</h2>
+
+                <p>
+                    想像一輛沒有避震器的車開過減速帶——車身會上下劇烈彈跳。避震器的作用是<strong>阻尼</strong>：它不關心車身在哪個高度（那是彈簧的事），它只關心車身移動的速度。移動越快，阻尼力越大。D 項在控制系統中扮演的就是避震器的角色。
+                </p>
+
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>誤差變化趨勢</th>
+                            <th>derivative 值</th>
+                            <th>D 項的行為</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>誤差快速減小（高速逼近目標）</td>
+                            <td>大負值</td>
+                            <td>產生強力反向煞車，提前減速</td>
+                        </tr>
+                        <tr>
+                            <td>誤差緩慢減小（慢速接近）</td>
+                            <td>小負值</td>
+                            <td>輕微阻尼，不影響前進</td>
+                        </tr>
+                        <tr>
+                            <td>誤差不變（系統卡住）</td>
+                            <td>零</td>
+                            <td>D 項完全不作用</td>
+                        </tr>
+                        <tr>
+                            <td>誤差增大（正在遠離目標）</td>
+                            <td>正值</td>
+                            <td>加速推向目標方向</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>D 項的致命弱點：雜訊放大</h2>
+
+                <p>
+                    微分運算本質上是對信號做「差分」——這會將高頻雜訊放大到災難性的程度。即使感測器只有 ±1 的微小抖動，經過 \(\div dt\) 運算後也會變成巨大的尖峰信號，導致馬達瘋狂抖動。
+                </p>
+
+                <div class="ms-warning">
+                    <div class="note-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="note-body">
+                        <strong>雜訊放大效應</strong>
+                        假設感測器雜訊 = ±1 cm，dt = 0.01s。<br>
+                        微分值 = 1 / 0.01 = <strong>100 cm/s</strong> 的假信號！<br>
+                        若 Kd = 0.5，D 項會輸出 ±50 的隨機抖動——馬達直接瘋掉。
+                    </div>
+                </div>
+
+                <h3>解法：低通濾波器</h3>
+
+                <p>在計算微分之前，先對誤差信號做移動平均或一階低通濾波，濾除高頻雜訊：</p>
+
+                <div class="ms-code">
+<span class="c-comment">// 一階低通濾波 (Exponential Moving Average)</span><br>
+<span class="c-kw">const float</span><span class="c-white"> </span><span class="c-attr">alpha</span><span class="c-white"> = </span><span class="c-val">0.1</span><span class="c-white">;&nbsp;&nbsp;</span><span class="c-comment">// 濾波係數 (0~1, 越小越平滑)</span><br>
+<span class="c-attr">filteredError</span><span class="c-white"> = alpha * error + (</span><span class="c-val">1</span><span class="c-white"> - alpha) * filteredError;</span><br><br>
+<span class="c-comment">// 用濾波後的信號計算微分</span><br>
+<span class="c-kw">float</span><span class="c-white"> derivative = (filteredError - lastFilteredError) / dt;</span><br>
+<span class="c-kw">float</span><span class="c-white"> output_D = Kd * derivative;</span>
+                </div>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>工程取捨</strong>
+                        濾波強度是一把雙刃劍：濾太多會引入<strong>相位延遲 (Phase Lag)</strong>，讓 D 項的「預判」變成「後知後覺」；濾太少則雜訊依然猖狂。找到平衡點是系統調校的藝術。建議從 \(\alpha = 0.1\) 開始，逐步增大直到抖動可接受。
+                    </div>
+                </div>
+
+                <h2>完整 PID 公式彙整</h2>
+
+                <p>將三項合併，完整的離散 PID 控制器輸出為：</p>
+
+                <div class="ms-code">
+<span class="c-comment">// 完整離散 PID 控制器</span><br>
+<span class="c-attr">error</span><span class="c-white"> = target - measured;</span><br>
+<span class="c-attr">integral</span><span class="c-white"> += error * dt;</span><br>
+<span class="c-attr">integral</span><span class="c-white"> = constrain(integral, -MAX_I, MAX_I);</span><br>
+<span class="c-attr">derivative</span><span class="c-white"> = (error - lastError) / dt;</span><br><br>
+<span class="c-attr">output</span><span class="c-white"> = </span><span class="c-attr">Kp</span><span class="c-white">*error + </span><span class="c-attr">Ki</span><span class="c-white">*integral + </span><span class="c-attr">Kd</span><span class="c-white">*derivative;</span><br>
+<span class="c-attr">output</span><span class="c-white"> = constrain(output, -</span><span class="c-val">255</span><span class="c-white">, </span><span class="c-val">255</span><span class="c-white">);</span><br><br>
+<span class="c-attr">lastError</span><span class="c-white"> = error;</span>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(3)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">4 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(4); goToUnit(5)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 5: 實作挑戰 ══════════ -->
+        <div class="ms-unit-page" id="page-5">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-5" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 165 分鐘</div>
+                </div>
+
+                <h1>實戰任務挑戰</h1>
+
+                <p>
+                    請動手完成以下三項實作任務，這是驗證本單元學習成果的核心挑戰。
+                    完成後請將程式碼與報告提交至 GitHub Classroom。
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6 my-6">
+                    <!-- Task 1 -->
+                    <div onclick="openSubmissionModal('adv-12-human-pid', '【作業 12-1】「人肉 PID」平衡實驗 (Human-in-the-loop Simulation Lab)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#E76F51] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 12-1</div>
+                            <h3 class="text-lg font-bold mb-2">人肉控制競賽</h3>
+                            <p class="text-xs text-gray-600 mb-4">與隊友扮演感測器與執行器，手動模擬 P、I、D。體會「修正過頭」與「遲緩累積」的物理體感，撰寫控制決策報告。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#E76F51] font-bold">
+                            <span>⏱ 🤝 45 min 【作業 12-1】 「人肉控制競賽」 與隊友扮演感測器與執行器，手動模擬 P、I、D。體會「修正過頭」與「遲緩累積」的物理體感，撰寫控制決策報告。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#E76F51] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 2 -->
+                    <div onclick="openSubmissionModal('adv-12-pid-tuning', '【作業 12-2】「參數最佳化」：尋找黃金 Kp/Ki/Kd (Optimal Parameter Synthesis Lab)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#2A9D8F] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 12-2</div>
+                            <h3 class="text-lg font-bold mb-2">波形最佳化挑戰</h3>
+                            <p class="text-xs text-gray-600 mb-4">實作離散 PID 公式並動態調校。目標：讓系統在階躍訊號下能以最快速度收斂至目標且無明顯 Overshoot，Push 波形報告至 repo。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#2A9D8F] font-bold">
+                            <span>⏱ ⚙️ 75 min 【作業 12-2】 「波形最佳化挑戰」 實作離散 PID 公式並動態調校。目標：讓系統在階躍訊號下能以最快速度收斂至目標且無明顯 Overshoot，Push 波形報告至 repo。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#2A9D8F] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 3 -->
+                    <div onclick="openSubmissionModal('adv-12-noise-challenge', '【作業 12-3】「雜訊大挑戰」：微分項的副作用分析 (Derivative Noise Resilience Lab)')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#457B9D] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 12-3</div>
+                            <h3 class="text-lg font-bold mb-2">抗干擾壓力測試</h3>
+                            <p class="text-xs text-gray-600 mb-4">在反饋中注入隨機雜訊，觀察 D 項對不穩定性的放大效應。並在 README 中提出與實作簡單的數位濾波解決方案。</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#457B9D] font-bold">
+                            <span>⏱ 🌩️ 45 min 【作業 12-3】 「抗干擾壓力測試」 在反饋中注入隨機雜訊，觀察 D 項對不穩定性的放大效應。並在 README 中提出與實作簡單的數位濾波解決方案。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#457B9D] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(4)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">5 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(5); goToUnit(6)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 6: 知識測驗 ══════════ -->
+        <div class="ms-unit-page" id="page-6">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-6" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 5 分鐘</div>
+                </div>
+
+                <h1>知識測驗</h1>
+
+                <p>
+                    請回答以下問題，測試你對「<strong>PID 數學推導</strong>」的理解程度。
+                    選擇完畢後點擊「送出答案」查看結果與解析。
+                </p>
+
+                <div id="quiz-container" style="margin:24px 0;">
+
+                    <div class="quiz-question" id="quiz-q0" style="background:#faf9f8; border:1px solid #e1dfdd; border-radius:6px; padding:20px; margin-bottom:16px;">
+                        <p style="font-weight:600; margin-bottom:12px;">1. PID 控制器的離散化公式中，積分項通常使用什麼方法近似？</p>
+                        
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q0-opt0">
+                            <input type="radio" name="quiz-q0" value="0" style="accent-color:var(--ms-blue);">
+                            <span>泰勒展開</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q0-opt1">
+                            <input type="radio" name="quiz-q0" value="1" style="accent-color:var(--ms-blue);">
+                            <span>矩形法（累加歷史誤差 × 取樣週期）</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q0-opt2">
+                            <input type="radio" name="quiz-q0" value="2" style="accent-color:var(--ms-blue);">
+                            <span>傅立葉轉換</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q0-opt3">
+                            <input type="radio" name="quiz-q0" value="3" style="accent-color:var(--ms-blue);">
+                            <span>拉普拉斯反轉換</span>
+                        </label>
+                        <div class="quiz-explanation" id="quiz-exp0" style="display:none; margin-top:12px; padding:10px 14px; border-radius:4px; font-size:13px;"></div>
+                    </div>
+                    <div class="quiz-question" id="quiz-q1" style="background:#faf9f8; border:1px solid #e1dfdd; border-radius:6px; padding:20px; margin-bottom:16px;">
+                        <p style="font-weight:600; margin-bottom:12px;">2. 微分項的離散近似公式為何？</p>
+                        
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q1-opt0">
+                            <input type="radio" name="quiz-q1" value="0" style="accent-color:var(--ms-blue);">
+                            <span>Kd × (error[n] - error[n-1]) / Δt</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q1-opt1">
+                            <input type="radio" name="quiz-q1" value="1" style="accent-color:var(--ms-blue);">
+                            <span>Kd × error[n] × Δt</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q1-opt2">
+                            <input type="radio" name="quiz-q1" value="2" style="accent-color:var(--ms-blue);">
+                            <span>Kd × Σerror[n]</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q1-opt3">
+                            <input type="radio" name="quiz-q1" value="3" style="accent-color:var(--ms-blue);">
+                            <span>Kd × error[n]²</span>
+                        </label>
+                        <div class="quiz-explanation" id="quiz-exp1" style="display:none; margin-top:12px; padding:10px 14px; border-radius:4px; font-size:13px;"></div>
+                    </div>
+                    <div class="quiz-question" id="quiz-q2" style="background:#faf9f8; border:1px solid #e1dfdd; border-radius:6px; padding:20px; margin-bottom:16px;">
+                        <p style="font-weight:600; margin-bottom:12px;">3. 為什麼 PID 控制器需要「Anti-Windup（抗積分飽和）」機制？</p>
+                        
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q2-opt0">
+                            <input type="radio" name="quiz-q2" value="0" style="accent-color:var(--ms-blue);">
+                            <span>防止 P 項過大</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q2-opt1">
+                            <input type="radio" name="quiz-q2" value="1" style="accent-color:var(--ms-blue);">
+                            <span>防止積分累積超出物理執行器的輸出範圍，導致響應延遲</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q2-opt2">
+                            <input type="radio" name="quiz-q2" value="2" style="accent-color:var(--ms-blue);">
+                            <span>防止微分項產生雜訊</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q2-opt3">
+                            <input type="radio" name="quiz-q2" value="3" style="accent-color:var(--ms-blue);">
+                            <span>減少計算量</span>
+                        </label>
+                        <div class="quiz-explanation" id="quiz-exp2" style="display:none; margin-top:12px; padding:10px 14px; border-radius:4px; font-size:13px;"></div>
+                    </div>
+                    <div class="quiz-question" id="quiz-q3" style="background:#faf9f8; border:1px solid #e1dfdd; border-radius:6px; padding:20px; margin-bottom:16px;">
+                        <p style="font-weight:600; margin-bottom:12px;">4. 取樣週期（Δt）對 PID 控制器的影響，下列敘述何者正確？</p>
+                        
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q3-opt0">
+                            <input type="radio" name="quiz-q3" value="0" style="accent-color:var(--ms-blue);">
+                            <span>Δt 越大，控制越精準</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q3-opt1">
+                            <input type="radio" name="quiz-q3" value="1" style="accent-color:var(--ms-blue);">
+                            <span>Δt 必須固定且足夠小，才能準確反映系統動態</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q3-opt2">
+                            <input type="radio" name="quiz-q3" value="2" style="accent-color:var(--ms-blue);">
+                            <span>Δt 對控制品質沒有影響</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:4px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; transition:all .15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background=''" id="quiz-q3-opt3">
+                            <input type="radio" name="quiz-q3" value="3" style="accent-color:var(--ms-blue);">
+                            <span>Δt 越大，微分項越準確</span>
+                        </label>
+                        <div class="quiz-explanation" id="quiz-exp3" style="display:none; margin-top:12px; padding:10px 14px; border-radius:4px; font-size:13px;"></div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; margin-top:24px;">
+                    <button class="ms-btn" onclick="submitQuiz()">送出答案</button>
+                    <button class="ms-btn-ghost" onclick="resetQuiz()">重新作答</button>
+                </div>
+
+                <div id="quiz-result" style="display:none; margin-top:20px; padding:16px 20px; border-radius:6px; font-weight:600;"></div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(5)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">6 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(6); goToUnit(7)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 7: 摘要與資源 ══════════ -->
+        <div class="ms-unit-page" id="page-7">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-7" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>單元摘要與參考資源</h1>
+
+                <p>
+                    恭喜！你已經完成了「<strong>PID 三兄弟的數學直覺</strong>」模組。
+                    透過本單元的學習與實作，你已經掌握了關鍵的核心技術，為全棧物聯網開發奠定了深厚的底層基石。
+                </p>
+
+                <div class="ms-achievement">
+                    <div class="achievement-icon">🚀</div>
+                    <div class="achievement-text">
+                        <h3>恭喜！你已完成本模組</h3>
+                        <p>你已具備開發與調校本單元核心功能的專業實力。持續累積，前進下一個挑戰！</p>
+                    </div>
+                </div>
+
+                <h2>完成本模組後，你已學會：</h2>
+                <ul>
+                    <li><strong>比例 (P)：關注當下的距離</strong> 的基本架構與實作技能。</li>
+                    <li><strong>積分 (I)：記仇的歷史紀錄</strong> 的調試方法與資料傳輸細節。</li>
+                    <li><strong>微分 (D)：預測未來的預警師</strong> 的優化指標與生產環境安全機制。</li>
+                    <li>在實戰挑戰中，透過 Git 與 GitHub Classroom 提交完整的硬體與報告成果。</li>
+                </ul>
+
+                <h2>延伸學習資源</h2>
+
+                <a href="" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-youtube" style="color:#ff0000;"></i>
+                    <div>
+                        <div style="font-weight:600;">課程教學影片</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">YouTube — 本單元核心觀念與實作示範影片</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="" target="_blank" class="ms-resource-link">
+                    <i class="fas fa-file-alt"></i>
+                    <div>
+                        <div style="font-weight:600;">課程完整講義</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">Google Docs — 詳細實驗步驟、技術文件與程式碼指南</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://classroom.github.com" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-github"></i>
+                    <div>
+                        <div style="font-weight:600;">GitHub Classroom</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">classroom.github.com — 管理你的作業提交與自動評分結果</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(6)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator" style="font-weight:600; color:#107c10;">✓ 模組完成</span>
+                <button class="ms-btn" onclick="markDone(7); alert('🎉 恭喜完成「PID 三兄弟的數學直覺」模組！')">完成模組</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    /* ─── DATA ─── */
+    const UNITS = [
+        { id: 0, label: '課程總覽',       time: '',         type: 'index' },
+        { id: 1, label: '簡介',            time: '3 分鐘',  type: 'unit'  },
+        { id: 2, label: '比例 (P)：關注當下的距離', time: '10 分鐘', type: 'unit' },
+        { id: 3, label: '積分 (I)：記仇的歷史紀錄', time: '10 分鐘', type: 'unit' },
+        { id: 4, label: '微分 (D)：預測未來的預警師', time: '10 分鐘', type: 'unit' },
+        { id: 5, label: '實戰挑戰',       time: '165 分鐘', type: 'lab'   },
+        { id: 6, label: '知識測驗',       time: '5 分鐘',  type: 'quiz'  },
+        { id: 7, label: '摘要與資源',     time: '3 分鐘',  type: 'unit'  },
+    ];
+
+    let currentUnit = 0;
+    let doneSet = new Set();
+
+    /* ─── INIT ─── */
+    function init() {
+        buildSidebar();
+        buildIndexUnitList();
+        goToUnit(0);
+    }
+
+    /**
+     * 動態建構側邊欄單元選單。
+     */
+    function buildSidebar() {
+        const nav = document.getElementById('sidebar-nav');
+        nav.innerHTML = UNITS.map(u => {
+            const badge = u.type === 'lab' ? ' <span style="font-size:10px;background:#eef6ff;color:#005a9e;padding:1px 5px;border-radius:2px;">LAB</span>'
+                        : u.type === 'quiz' ? ' <span style="font-size:10px;background:#fff4ce;color:#8a6914;padding:1px 5px;border-radius:2px;">QUIZ</span>'
+                        : '';
+            return `
+            <div class="ms-unit-item" id="nav-${u.id}" onclick="goToUnit(${u.id})">
+                <div class="unit-icon" id="icon-${u.id}">${u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id}</div>
+                <div class="unit-meta">
+                    <div class="unit-name">${u.label}${badge}</div>
+                    ${u.time ? `<div class="unit-time"><i class="far fa-clock"></i> ${u.time}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /**
+     * 動態建構首頁單元卡片列表。
+     */
+    function buildIndexUnitList() {
+        const el = document.getElementById('index-unit-list');
+        el.innerHTML = UNITS.filter(u => u.id > 0).map(u => `
+            <div class="unit-card ${u.type}" onclick="goToUnit(${u.id})">
+                <div class="unit-card-num">${u.id}</div>
+                <div class="unit-card-info">
+                    <div class="unit-card-name">${u.label}</div>
+                    <div class="unit-card-time"><i class="far fa-clock"></i> ${u.time}</div>
+                </div>
+                <div class="unit-card-arrow">›</div>
+            </div>
+        `).join('');
+    }
+
+    /* ─── NAVIGATION ─── */
+    /**
+     * 切換至指定單元頁面。
+     * @param {number} id - 單元識別碼
+     */
+    function goToUnit(id) {
+        document.querySelectorAll('.ms-unit-page').forEach(p => p.classList.remove('visible'));
+        const target = id === 0 ? document.getElementById('page-index') : document.getElementById(`page-${id}`);
+        if (target) target.classList.add('visible');
+
+        document.querySelectorAll('.ms-unit-item').forEach(el => el.classList.remove('active'));
+        const navItem = document.getElementById(`nav-${id}`);
+        if (navItem) { navItem.classList.add('active'); navItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) {
+                icon.className = 'unit-icon done';
+                icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>';
+            } else if (u.id === id) {
+                icon.className = 'unit-icon active-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            } else {
+                icon.className = 'unit-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            }
+        });
+
+        const unit = UNITS.find(u => u.id === id);
+        document.getElementById('bc-current').textContent = unit ? unit.label : '';
+        currentUnit = id;
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * 標記特定單元為已完成。
+     * @param {number} id - 單元識別碼
+     */
+    function markDone(id) {
+        doneSet.add(id);
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) badge.style.display = 'flex';
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) { icon.className = 'unit-icon done'; icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>'; }
+        });
+        updateProgress();
+    }
+
+    /**
+     * 計算並更新課程進度與進度條。
+     */
+    function updateProgress() {
+        const total = UNITS.length - 1;
+        const done = doneSet.size;
+        document.getElementById('progress-fill').style.width = Math.round(done / total * 100) + '%';
+        document.getElementById('progress-text').textContent = `${done} / ${total} 已完成`;
+    }
+
+    /* ─── CHECKLIST ─── */
+    /**
+     * 切換核取方塊的狀態。
+     * @param {HTMLElement} el - 核取方塊元素
+     */
+    function toggleCheck(el) {
+        el.classList.toggle('checked');
+        el.innerHTML = el.classList.contains('checked') ? '<i class="fas fa-check" style="font-size:10px;"></i>' : '';
+    }
+
+    
+    /* ─── QUIZ ─── */
+    const QUIZ_ANSWERS = [1, 0, 1, 1];
+    const QUIZ_EXPLANATIONS = ["離散系統中，積分用求和（Σ error × Δt）近似連續積分，即矩形法數值積分。","微分是變化率，離散化為相鄰兩次誤差的差值除以時間間隔：(e[n] - e[n-1]) / Δt。","當執行器已達飽和，積分項繼續累加會導致回歸正常需要很長時間（積分飽和），Anti-Windup 限制積分項的累積範圍。","取樣週期決定了離散化的精度，Δt 太大會遺失系統動態資訊，且必須保持恆定以確保積分與微分計算正確。"];
+
+    function submitQuiz() {
+        let score = 0;
+        QUIZ_ANSWERS.forEach((ans, i) => {
+            const selected = document.querySelector(`input[name="quiz-q${i}"]:checked`);
+            const expEl = document.getElementById(`quiz-exp${i}`);
+            const qEl = document.getElementById(`quiz-q${i}`);
+            if (selected && parseInt(selected.value) === ans) {
+                score++;
+                qEl.style.borderColor = '#107c10';
+                expEl.style.background = '#dff6dd';
+                expEl.innerHTML = '<strong style="color:#107c10;">✓ 正確！</strong> ' + QUIZ_EXPLANATIONS[i];
+            } else {
+                qEl.style.borderColor = '#d13438';
+                expEl.style.background = '#fde7e9';
+                expEl.innerHTML = '<strong style="color:#d13438;">✗ 不正確。</strong> ' + QUIZ_EXPLANATIONS[i];
+            }
+            expEl.style.display = 'block';
+        });
+        const resultEl = document.getElementById('quiz-result');
+        resultEl.style.display = 'block';
+        if (score === QUIZ_ANSWERS.length) {
+            resultEl.style.background = '#dff6dd';
+            resultEl.style.color = '#107c10';
+            resultEl.textContent = `🎉 滿分！你答對了全部 ${QUIZ_ANSWERS.length} 題！`;
+        } else {
+            resultEl.style.background = '#deecf9';
+            resultEl.style.color = '#005a9e';
+            resultEl.textContent = `你答對了 ${score} / ${QUIZ_ANSWERS.length} 題，請查看解析後再試一次。`;
+        }
+    }
+
+    function resetQuiz() {
+        QUIZ_ANSWERS.forEach((_, i) => {
+            const radios = document.querySelectorAll(`input[name="quiz-q${i}"]`);
+            radios.forEach(r => r.checked = false);
+            const expEl = document.getElementById(`quiz-exp${i}`);
+            expEl.style.display = 'none';
+            const qEl = document.getElementById(`quiz-q${i}`);
+            qEl.style.borderColor = '#e1dfdd';
+        });
+        document.getElementById('quiz-result').style.display = 'none';
+    }
+
+    /* ─── START ─── */
+    init();
+    var mt=document.querySelector('.module-title');var ml=document.getElementById('bc-module-link');if(mt&&ml)ml.textContent=mt.textContent;var nc=document.getElementById('nav-course-name');if(nc)nc.textContent='進階 12：PID 控制';
+</script>
+
+<!-- Define Resources -->
+<script>
+    window.RESOURCES = {
+        video: "",
+        doc: ""
+    };
+</script>
+<script src="/js/course-shared.66d32c836149.js"></script>
+
+<!-- Assignment Guide (Hidden) -->
+<section id="assignment-guide" style="display: none;">
+<div class="markdown-heading"><h1 class="heading-element">adv-12-unit-pid-math：PID 數學直覺與控制實作</h1><a aria-label="Permalink: adv-12-unit-pid-math：PID 數學直覺與控制實作" class="anchor" href="#adv-12-unit-pid-mathpid-數學直覺與控制實作" id="user-content-adv-12-unit-pid-mathpid-數學直覺與控制實作"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>歡迎來到 PID 控制系統的核心單元！在這個程式庫中，你將深入理解 <strong>比例 (P)、積分 (I)、微分 (D)</strong> 三者如何協同工作，賦予機器人如生物般的直覺反應。</p>
+<div class="markdown-heading"><h2 class="heading-element">🎯 學習目標</h2><a aria-label="Permalink: 🎯 學習目標" class="anchor" href="#-學習目標" id="user-content--學習目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>直覺理解</strong>：掌握 P、I、D 在物理系統中的互補角色。</li>
+<li>
+<strong>演算法實作</strong>：將離散 PID 公式轉化為高效且魯棒的 C++ 代碼。</li>
+<li>
+<strong>系統優化</strong>：解決積分飽和 (Windup) 與微分雜訊 (Noise) 等實際工程挑戰。</li>
+<li>
+<strong>精準調校</strong>：透過實驗找出硬體系統的最佳控制參數。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">📂 程式庫結構</h2><a aria-label="Permalink: 📂 程式庫結構" class="anchor" href="#-程式庫結構" id="user-content--程式庫結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>src/main.ino</code>：主要的程式邏輯入口，你將在此實作 PID 迴路。</li>
+<li>
+<code>include/pid_engine.h</code>：PID 核心結構與參數定義。</li>
+<li>
+<code>lib/SimpleFilter.h</code>：數位濾波器庫，用於處理傳感器雜訊。</li>
+<li>
+<code>TUNING_REPORT.md</code>：你的實驗紀錄表，請在此記錄調校過程。</li>
+<li>
+<code>tests/</code>：包含自動化測試指令碼，用於驗證你的邏輯正確性。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">🚀 任務指南</h2><a aria-label="Permalink: 🚀 任務指南" class="anchor" href="#-任務指南" id="user-content--任務指南"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：離散 PID 公式實作</h3><a aria-label="Permalink: 任務 1：離散 PID 公式實作" class="anchor" href="#任務-1離散-pid-公式實作" id="user-content-任務-1離散-pid-公式實作"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>你需要實作核心的 PID 運算邏輯：</p>
+<ul>
+<li>
+<strong>P (Proportional)</strong>：根據目前誤差立即反應。</li>
+<li>
+<strong>I (Integral)</strong>：累積歷史誤差，消除靜態偏差（需實作 Anti-windup）。</li>
+<li>
+<strong>D (Derivative)</strong>：預判未來趨勢，抑制震盪（需搭配濾波）。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：抗飽和與抗雜訊挑戰</h3><a aria-label="Permalink: 任務 2：抗飽和與抗雜訊挑戰" class="anchor" href="#任務-2抗飽和與抗雜訊挑戰" id="user-content-任務-2抗飽和與抗雜訊挑戰"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>實作 <strong>積分限幅 (Anti-windup)</strong> 邏輯，防止系統因長時間受阻而產生瘋狂過衝。</li>
+<li>對微分項進行 <strong>數位濾波</strong>，避免雜訊放大導致馬達劇烈抖動。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：性能調校與實驗報告</h3><a aria-label="Permalink: 任務 3：性能調校與實驗報告" class="anchor" href="#任務-3性能調校與實驗報告" id="user-content-任務-3性能調校與實驗報告"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>使用 Serial Plotter 觀察階躍響應。</li>
+<li>目標：在 1 秒內進入穩定區間（誤差 &lt; 5%），且過衝不得超過 10%。</li>
+<li>將調校過程記錄在 <code>TUNING_REPORT.md</code> 中。</li>
+</ol>
+<div class="markdown-heading"><h2 class="heading-element">🛠️ 如何測試</h2><a aria-label="Permalink: 🛠️ 如何測試" class="anchor" href="#️-如何測試" id="user-content-️-如何測試"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本程式庫配置了自動化測試，你可以執行以下命令來驗證你的邏輯：</p>
+<div class="highlight highlight-source-shell"><pre>npm install
+npm <span class="pl-c1">test</span></pre></div>
+<div class="markdown-heading"><h2 class="heading-element">📝 提交要求</h2><a aria-label="Permalink: 📝 提交要求" class="anchor" href="#-提交要求" id="user-content--提交要求"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>完成 <code>TODO</code> 部分的代碼實作。</li>
+<li>確保所有測試通過。</li>
+<li>提交完整的 <code>TUNING_REPORT.md</code> 報告與波形截圖。</li>
+</ul>
+<hr/>
+<p><em>祝你在控制系統的世界中玩得開心！如有問題，請參考導師提供的學習指南。</em></p>
+</section>
+
+<!-- Tutor Guide (Hidden) -->
+<section id="tutor-guide" style="display: none;">
+<p>針對 <strong><code>adv-12-unit-pid-math</code> (PID 數學直覺)</strong> 單元，這是控制系統的靈魂核心。它不僅要求學員會寫公式，更要求學員理解 <strong>比例 (P)、積分 (I)、微分 (D)</strong> 三者在物理世界中的互補關係，並能解決離散化實作中常見的 <strong>「積分飽和 (Windup)」</strong> 與 <strong>「微分雜訊 (Noise)」</strong> 問題。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本程式庫 配置建議</h3><a aria-label="Permalink: 1. 範本程式庫 配置建議" class="anchor" href="#1-範本程式庫-配置建議" id="user-content-1-範本程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>PID 數學實作需要嚴謹的演算邏輯與數據紀錄，建議範本包含：</p>
+<ul>
+<li>
+<strong>📂 <code>src/PID_Controller.cpp</code></strong>：PID 核心類別。定義 <code>compute(target, measured, dt)</code> 方法，留下 P、I、D 三項運算的 <code>TODO</code>。</li>
+<li>
+<strong>📂 <code>include/control_params.h</code></strong>：參數定義檔。讓學員定義 $K_p, K_i, K_d$ 以及積分限幅（Anti-windup）的閾值。</li>
+<li>
+<strong>📂 <code>lib/SimpleFilter.h</code></strong>：數位濾波器庫。提供移動平均濾波的原型，引導學員解決微分項的雜訊放大問題。</li>
+<li>
+<strong>📂 <code>TUNING_REPORT.md</code></strong>：調校實驗報告。提供標準化表格，記錄從「只有 P」到「PI」再到「PID」的波形變化歷程。</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a aria-label="Permalink: 2. 作業任務部署細節" class="anchor" href="#2-作業任務部署細節" id="user-content-2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：人肉 PID 模擬實驗 (Human-in-the-loop Simulation)</h4><a aria-label="Permalink: 任務 1：人肉 PID 模擬實驗 (Human-in-the-loop Simulation)" class="anchor" href="#任務-1人肉-pid-模擬實驗-human-in-the-loop-simulation" id="user-content-任務-1人肉-pid-模擬實驗-human-in-the-loop-simulation"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：透過體感建立對「累積誤差 (I)」與「預判動量 (D)」的直覺理解。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>行為實驗紀錄</strong>：學員需兩人一組（一人當感測器讀數，一人當處理器踩油門）。</li>
+<li>
+<strong>決策路徑分析</strong>：在 README 中說明：當你發現自己「衝過頭」時，是大腦的哪一個邏輯（P、I 還是 D）告訴你要提前減速？</li>
+<li>
+<strong>報告提交</strong>：上傳一份關於「物理控制直覺」的思維導圖或文字報告。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：離散 PID 公式實作與波形最佳化 (Discrete PID Tuning Lab)</h4><a aria-label="Permalink: 任務 2：離散 PID 公式實作與波形最佳化 (Discrete PID Tuning Lab)" class="anchor" href="#任務-2離散-pid-公式實作與波形最佳化-discrete-pid-tuning-lab" id="user-content-任務-2離散-pid-公式實作與波形最佳化-discrete-pid-tuning-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：將數學積分與微分轉化為代碼，並尋找硬體系統的黃金參數。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>公式精準實作</strong>：
+<div class="highlight highlight-source-c++"><pre><span class="pl-c"><span class="pl-c">//</span> 學生需實作：離散 PID</span>
+integral += error * dt;            <span class="pl-c"><span class="pl-c">//</span> 累積歷史</span>
+derivative = (error - lastError) / dt; <span class="pl-c"><span class="pl-c">//</span> 預判趨勢</span>
+output = Kp*error + Ki*integral + Kd*derivative;</pre></div>
+</li>
+<li>
+<strong>積分限幅 (Anti-windup)</strong>：學員必須加入限制 <code>integral</code> 最大值的邏輯，防止系統在受阻後產生瘋狂的過衝。</li>
+<li>
+<strong>波形截圖驗證</strong>：在 Serial Plotter 中記錄「階躍響應 (Step Response)」。目標：在 1 秒內進入穩定區間（誤差 &lt; 5%）且過衝 (Overshoot) 不得超過 10%。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：微分項抗噪挑戰 (Derivative Noise Resilience)</h4><a aria-label="Permalink: 任務 3：微分項抗噪挑戰 (Derivative Noise Resilience)" class="anchor" href="#任務-3微分項抗噪挑戰-derivative-noise-resilience" id="user-content-任務-3微分項抗噪挑戰-derivative-noise-resilience"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：觀察 D 項對雜訊的放大效應，並實作數位濾波進行補償。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>雜訊放大實驗</strong>：在反饋訊號中注入微小干擾，觀測高增益 $K_d$ 如何導致馬達劇烈抖動。</li>
+<li>
+<strong>數位濾波實作</strong>：學員需在計算微分項前，對 <code>error</code> 進行簡單的移動平均。</li>
+<li>
+<strong>性能對比測試</strong>：在 README 中展示兩張 Serial Plotter 對比圖：<code>Raw D-Value (極吵)</code> vs. <code>Filtered D-Value (穩定)</code>。</li>
+<li>
+<strong>PR 深度核核</strong>：點評其對「相位延遲」的理解。過強的濾波會導致控制落後，學員是否在濾波強度與穩定度之間找到了平衡？</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">3. 計算工程導師點評標準 (Computational Engineering Benchmarks)</h3><a aria-label="Permalink: 3. 計算工程導師點評標準 (Computational Engineering Benchmarks)" class="anchor" href="#3-計算工程導師點評標準-computational-engineering-benchmarks" id="user-content-3-計算工程導師點評標準-computational-engineering-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對離散數學在即時系統中實踐的精密程度」</strong>：</p>
+<ul>
+<li>[ ] <strong>時間完整性</strong>：$\Delta t$ (dt) 是否正確參與了積分與微分的運算？</li>
+<li>[ ] <strong>代碼魯棒性</strong>：是否處理了 <code>dt = 0</code> 的零除錯誤？是否考慮了數據溢位？</li>
+<li>[ ] <strong>物理還原度</strong>：調校出的極速曲線是否符合該馬達與車體的物理運動學規律？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" class="anchor" href="#-推薦範本結構-github-classroom-template" id="user-content--推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── include/pid_engine.h    # 核心：定義 PID 結構體與積分限幅常數
+├── src/main.ino            # 實作：學員需在此實作完整的離散迴路與濾波
+├── docs/tuning_waveforms/  # 圖片：存放調校過程中的各階段波形截圖
+├── README.md               # 專案報告：我如何精準調教這台機器人的「穩健靈魂」
+└── tests/integral.test.js  # 自動化：檢核積分飽和抑制邏輯是否有效
+</code></pre>
+<p>透過這種部署方式，學生能體驗到 <strong>「好的控制器，是將冰冷的數學公式賦予了像生物般的直覺反應」</strong>。掌握 PID 數學實作後，學員將擁有了開發「倒立擺平衡車」、「精密機械臂定點」或「高速無人機穩定器」的高階技術門票。_
+|
+|
+太完美了！至此我們已經將 <strong>進階 12</strong> 的所有核心單元（程式邏輯、控制原理、數學直覺）全部完成了 GitHub Classroom 體系化對策。這是一個完整的控制工程學習循環。恭喜！Vibe Coding 進階課程的部署地圖已大功告成！</p>
+</section>
+
+</body>
+</html>

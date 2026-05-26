@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32-S3 感測器介面與 PSRAM - Vibe Coding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script async="" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        
+        :root {
+            --ms-blue: #0078d4;
+            --ms-blue-dark: #005a9e;
+            --ms-blue-light: #deecf9;
+            --ms-gray-10: #f3f2f1;
+            --ms-gray-20: #e1dfdd;
+            --ms-gray-90: #201f1e;
+            --ms-green: #107c10;
+            --ms-red: #d13438;
+            --sidebar-w: 280px;
+        }
+
+        * { box-sizing: border-box; }
+        #assignment-guide, #tutor-guide { display: none !important; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fff;
+            color: #201f1e;
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ─── TOP NAV ─── */
+        .ms-topnav {
+            background: var(--ms-blue);
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,.2);
+        }
+        .ms-topnav .brand {
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .ms-topnav .divider { width: 1px; height: 20px; background: rgba(255,255,255,.3); }
+        .border-t.pt-3 > span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .ms-topnav .nav-label { color: rgba(255,255,255,.9); font-size: 14px; }
+
+        /* ─── LAYOUT ─── */
+        .ms-layout { display: flex; min-height: calc(100vh - 48px); }
+
+        /* ─── SIDEBAR ─── */
+        .ms-sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: #faf9f8;
+            border-right: 1px solid #e1dfdd;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 48px;
+            height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+        .ms-sidebar-header {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .ms-sidebar-header .module-label {
+            display: none;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #605e5c;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .ms-sidebar-header .module-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #201f1e;
+            line-height: 1.4;
+        }
+        .ms-sidebar-header .meta {
+            font-size: 12px;
+            color: #605e5c;
+            margin-top: 6px;
+        }
+        .ms-unit-list { padding: 8px 0; }
+        .ms-unit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background .12s, border-color .12s;
+            color: #201f1e;
+        }
+        .ms-unit-item:hover { background: #edebe9; }
+        .ms-unit-item.active {
+            border-left-color: var(--ms-blue);
+            background: #deecf9;
+        }
+        .ms-unit-item.active .unit-name { color: var(--ms-blue); font-weight: 600; }
+        .unit-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #c8c6c4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+            font-size: 10px;
+            background: #fff;
+        }
+        .unit-icon.done { background: var(--ms-green); border-color: var(--ms-green); color: #fff; }
+        .unit-icon.active-icon { border-color: var(--ms-blue); background: var(--ms-blue); color: #fff; }
+        .unit-meta { flex: 1; min-width: 0; }
+        .unit-name { font-size: 13px; line-height: 1.4; }
+        .unit-time { font-size: 11px; color: #605e5c; margin-top: 2px; }
+        .sidebar-progress {
+            padding: 12px 16px;
+            border-top: 1px solid #e1dfdd;
+            margin-top: auto;
+        }
+        .progress-bar-bg { background: #e1dfdd; border-radius: 4px; height: 6px; }
+        .progress-bar-fill { background: var(--ms-green); border-radius: 4px; height: 6px; transition: width .4s; }
+        .progress-text { font-size: 12px; color: #605e5c; margin-top: 6px; }
+
+        /* ─── MAIN ─── */
+        .ms-content { flex: 1; min-width: 0; }
+
+        .ms-breadcrumb {
+            padding: 10px 40px;
+            font-size: 12px;
+            color: #605e5c;
+            border-bottom: 1px solid #e1dfdd;
+            background: #fff;
+        }
+        .ms-breadcrumb a { color: var(--ms-blue); text-decoration: none; }
+        .ms-breadcrumb a:hover { text-decoration: underline; }
+        .ms-breadcrumb span { margin: 0 6px; }
+
+        /* ─── PAGES ─── */
+        .ms-unit-page { display: none; }
+        .ms-unit-page.visible { display: block; }
+
+        .unit-content {
+            max-width: 820px;
+            padding: 32px 40px 60px;
+            margin: 0 auto;
+        }
+
+        .unit-status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .unit-completed-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #dff6dd;
+            color: #107c10;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+        .unit-time-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #605e5c;
+            font-size: 13px;
+        }
+
+        /* Typography */
+        .unit-content h1 { font-size: 28px; font-weight: 700; margin: 0 0 20px; color: #201f1e; line-height: 1.3; }
+        .unit-content h2 { font-size: 20px; font-weight: 600; margin: 36px 0 12px; color: #201f1e; padding-top: 8px; }
+        .unit-content h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: #201f1e; }
+        .unit-content p { margin: 0 0 14px; }
+        .unit-content ul, .unit-content ol { margin: 0 0 14px; padding-left: 28px; }
+        .unit-content li { margin-bottom: 6px; }
+        .unit-content strong { font-weight: 600; }
+        .unit-content a { color: var(--ms-blue); text-decoration: none; }
+        .unit-content a:hover { text-decoration: underline; }
+        .unit-content code {
+            background: #f3f2f1;
+            border: 1px solid #e1dfdd;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            color: #a31515;
+        }
+
+        /* Callouts */
+        .ms-note, .ms-tip, .ms-warning, .ms-important {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+        .ms-note { background: #deecf9; border-color: var(--ms-blue); }
+        .ms-note .note-icon { color: var(--ms-blue); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-tip { background: #dff6dd; border-color: var(--ms-green); }
+        .ms-tip .note-icon { color: var(--ms-green); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-warning { background: #fff4ce; border-color: #ffaa44; }
+        .ms-warning .note-icon { color: #ffaa44; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .ms-important { background: #fde7e9; border-color: var(--ms-red); }
+        .ms-important .note-icon { color: var(--ms-red); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .note-body strong { display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+
+        /* Scenario */
+        .ms-scenario {
+            background: #f3f2f1;
+            border-radius: 4px;
+            padding: 20px 24px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #323130;
+            border-left: 4px solid #c8c6c4;
+        }
+        .ms-scenario-label {
+            font-style: normal;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #605e5c;
+            margin-bottom: 8px;
+        }
+
+        /* Steps */
+        .ms-steps { margin: 16px 0; }
+        .ms-step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
+        .ms-step-num {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--ms-blue); color: #fff;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .ms-step-body { flex: 1; }
+        .ms-step-body h4 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+        .ms-step-body p { font-size: 14px; margin: 0; }
+
+        /* Table */
+        .ms-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+        .ms-table th {
+            background: #f3f2f1; font-weight: 600; text-align: left;
+            padding: 10px 14px; border: 1px solid #e1dfdd; color: #323130;
+        }
+        .ms-table td { padding: 9px 14px; border: 1px solid #e1dfdd; vertical-align: top; }
+        .ms-table tr:nth-child(even) td { background: #faf9f8; }
+        .ms-table .check { color: var(--ms-green); font-size: 16px; }
+        .ms-table .cross { color: #8a8886; font-size: 16px; }
+
+        /* Checklist */
+        .ms-checklist { list-style: none; padding: 0; margin: 12px 0; }
+        .ms-checklist li {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 6px 0; font-size: 14px;
+        }
+        .ms-checklist li .check-box {
+            width: 18px; height: 18px;
+            border: 2px solid #8a8886; border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 1px; cursor: pointer; transition: all .15s;
+        }
+        .ms-checklist li .check-box.checked {
+            background: var(--ms-blue); border-color: var(--ms-blue); color: #fff;
+        }
+
+        /* Code block */
+        .ms-code {
+            background: #1e1e1e;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-x: auto;
+        }
+        .ms-code .c-comment { color: #6a9955; }
+        .ms-code .c-str { color: #ce9178; }
+        .ms-code .c-kw { color: #569cd6; }
+        .ms-code .c-attr { color: #9cdcfe; }
+        .ms-code .c-val { color: #ce9178; }
+        .ms-code .c-tag { color: #4ec9b0; }
+        .ms-code .c-white { color: #d4d4d4; }
+
+        /* Lab card */
+        .ms-lab-card {
+            background: linear-gradient(135deg, #eef6ff 0%, #f5f0ff 100%);
+            border: 1px solid #c7e0f4;
+            border-radius: 6px;
+            padding: 24px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: box-shadow .15s, border-color .15s;
+        }
+        .ms-lab-card:hover { box-shadow: 0 4px 16px rgba(0,120,212,.12); border-color: var(--ms-blue); }
+        .ms-lab-card h3 { margin: 0 0 12px; color: var(--ms-blue-dark); font-size: 16px; font-weight: 600; }
+        .ms-lab-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--ms-blue);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 12px;
+        }
+        .ms-lab-time {
+            font-size: 12px;
+            color: #605e5c;
+            margin-left: 8px;
+        }
+
+        /* Compare grid */
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border: 1px solid #e1dfdd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .compare-card-header {
+            padding: 12px 14px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .compare-card-body {
+            padding: 14px;
+            font-size: 13px;
+            color: #605e5c;
+            line-height: 1.5;
+        }
+
+        /* Buttons */
+        .ms-btn {
+            background: var(--ms-blue); color: #fff; border: none;
+            padding: 7px 18px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; transition: background .12s;
+            font-family: inherit;
+        }
+        .ms-btn:hover { background: var(--ms-blue-dark); }
+        .ms-btn-ghost {
+            background: transparent; color: var(--ms-blue);
+            border: 1px solid var(--ms-blue); padding: 6px 18px;
+            font-size: 14px; font-weight: 600; border-radius: 2px;
+            cursor: pointer; transition: background .12s; font-family: inherit;
+        }
+        .ms-btn-ghost:hover { background: var(--ms-blue-light); }
+
+        /* Nav */
+        .unit-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            border-top: 1px solid #e1dfdd;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+        .nav-btn-prev, .nav-btn-next {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 20px; font-size: 14px; font-weight: 600;
+            border-radius: 2px; cursor: pointer; border: 1px solid;
+            font-family: inherit; transition: background .12s;
+        }
+        .nav-btn-next { background: var(--ms-blue); color: #fff; border-color: var(--ms-blue); }
+        .nav-btn-next:hover { background: var(--ms-blue-dark); border-color: var(--ms-blue-dark); }
+        .nav-btn-prev { background: #fff; color: var(--ms-blue); border-color: var(--ms-blue); }
+        .nav-btn-prev:hover { background: var(--ms-blue-light); }
+        .unit-page-indicator { font-size: 13px; color: #605e5c; }
+
+        /* Module index */
+        .module-meta-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+        .ms-tag { background: #f3f2f1; color: #323130; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 500; }
+        .ms-tag.blue { background: #deecf9; color: var(--ms-blue-dark); }
+        .ms-tag.green { background: #dff6dd; color: #107c10; }
+        .unit-card-list { margin: 20px 0; }
+        .unit-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 0; border-bottom: 1px solid #f3f2f1; cursor: pointer;
+        }
+        .unit-card:last-child { border-bottom: none; }
+        .unit-card:hover .unit-card-name { color: var(--ms-blue); text-decoration: underline; }
+        .unit-card-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #f3f2f1; color: #605e5c;
+            font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .unit-card.lab .unit-card-num { background: #eef6ff; color: var(--ms-blue-dark); }
+        .unit-card.quiz .unit-card-num { background: #fff4ce; color: #8a6914; }
+        .unit-card-info { flex: 1; }
+        .unit-card-name { font-size: 15px; font-weight: 500; }
+        .unit-card-time { font-size: 12px; color: #605e5c; margin-top: 2px; }
+        .unit-card-arrow { color: #c8c6c4; font-size: 14px; }
+
+        /* Resource links */
+        .ms-resource-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border: 1px solid #e1dfdd; border-radius: 4px;
+            margin-bottom: 8px; text-decoration: none; color: #201f1e;
+            font-size: 14px; transition: background .1s;
+        }
+        .ms-resource-link:hover { background: #f3f2f1; }
+        .ms-resource-link i { color: var(--ms-blue); font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+
+        /* Achievement */
+        .ms-achievement {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: #fff; border-radius: 6px; padding: 24px 28px;
+            margin: 24px 0; display: flex; align-items: center; gap: 20px;
+        }
+        .achievement-icon { font-size: 48px; flex-shrink: 0; }
+        .achievement-text h3 { margin: 0 0 4px; font-size: 18px; }
+        .achievement-text p { margin: 0; font-size: 14px; opacity: .9; }
+
+        @media (max-width: 768px) {
+            .ms-sidebar { display: none; }
+            .unit-content { padding: 20px 16px 40px; }
+            .unit-nav { padding: 16px; }
+            .ms-breadcrumb { padding: 8px 16px; }
+            .compare-grid { grid-template-columns: 1fr; }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- TOP NAV -->
+<nav class="ms-topnav">
+    <a href="/" target="_top" class="brand"><i class="fas fa-rocket"></i> Vibe Coding</a>
+    <div class="divider"></div>
+    <a href="/advanced.html" target="_top" class="nav-label">進階課程</a>
+    <div class="divider"></div>
+    <span id="nav-course-name" style="color:rgba(255,255,255,.85);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+</nav>
+
+<div class="ms-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="ms-sidebar">
+        <div class="ms-sidebar-header">
+            <div class="module-label">模組</div>
+            <div class="module-title">ESP32-S3 感測器介面與 PSRAM</div>
+            <div class="meta"><i class="far fa-clock"></i> 約 201 分鐘 · 7 個單元</div>
+        </div>
+        <nav class="ms-unit-list" id="sidebar-nav"></nav>
+        <div class="sidebar-progress">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0 / 7 已完成</div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="ms-content">
+
+        <div class="ms-breadcrumb"><a onclick="goToUnit(0)" style="cursor:pointer" id="bc-module-link"></a> ›<span id="bc-current"></span></div>
+
+        <!-- ══════════ PAGE 0: INDEX ══════════ -->
+        <div class="ms-unit-page visible" id="page-index">
+            <div class="unit-content">
+                <h1>ESP32-S3 感測器介面與 PSRAM</h1>
+                <div class="module-meta-tags">
+                    <span class="ms-tag">模組</span>
+                    <span class="ms-tag">7 個單元</span>
+                    <span class="ms-tag green">進階課程 1</span>
+                    <span class="ms-tag blue">硬體開發</span>
+                    <span class="ms-tag blue">物聯網</span>
+                </div>
+
+                <p>釋放雙核心架構的 AI 潛能，掌握 PSRAM 記憶體魔術與 DMA 高速傳輸的奧秘。</p>
+
+                <h2>學習目標</h2>
+                <p>完成本模組後，你將能夠：</p>
+                <ul>
+                    <li>理解並掌握 <strong>🚀 1. ESP32-S3：為 AI 與影像而生 (20 min)</strong> 的核心觀念與操作實務。</li>
+                    <li>學會 <strong>🧠 2. 記憶體魔術：什麼是 PSRAM？ (25 min)</strong> 的關鍵原理，並能將其應用於開發。</li>
+                    <li>掌握 <strong>高速傳輸的幕後推手：DMA (15 min)</strong> 的調校技巧與穩定性測試。</li>
+                    <li>完成三項實作作業，並以 Git 提交成果到 GitHub Classroom。</li>
+                </ul>
+
+                <h2>必要條件</h2>
+                <ul>
+                    <li>準備好 ESP32 開發板與 Micro USB / USB-C 數據線</li>
+                    <li>電腦已配置 VS Code 與 PlatformIO 開發環境</li>
+                    <li>擁有 GitHub 帳號，能夠接受 GitHub Classroom 邀請</li>
+                </ul>
+
+                <h2>本模組單元</h2>
+                <div class="unit-card-list" id="index-unit-list"></div>
+                <div style="margin-top:32px;">
+                    <button class="ms-btn" onclick="goToUnit(1)">開始模組 &nbsp;›</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 1: 簡介 ══════════ -->
+        <div class="ms-unit-page" id="page-1">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-1" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>簡介</h1>
+
+                <p>
+                    當你想在 ESP32 上跑攝影機或 AI 模型時，第一個撞上的牆往往不是程式邏輯，而是<strong>記憶體不夠用</strong>。
+                    ESP32-S3 的 PSRAM 與 DMA 機制正是為此而生——理解它們的運作原理，才能讓你的邊緣運算專案從「勉強能動」進化為「穩定高效」。
+                    本模組將帶你深入 S3 的記憶體分層架構與感測器介面，為後續的影像串流與 AI 推論打下硬體基礎。
+                </p>
+
+                <div class="ms-scenario">
+                    <div class="ms-scenario-label">情境</div>
+                    你正在為無人車專案開發即時影像辨識功能。程式碼編譯成功了，但一執行 <code>esp_camera_init()</code> 就觸發記憶體不足的 Panic，序列埠瘋狂噴出 <code>PSRAM not found</code> 錯誤。你開始懷疑：PSRAM 到底是什麼？為什麼普通的 <code>malloc()</code> 拿不到那麼大的空間？這些問題的答案，正是本模組要解開的核心謎題。
+                </div>
+
+                <h2>教學影片</h2>
+                <div style="border-radius:4px; overflow:hidden; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,.12); aspect-ratio:16/9;">
+                    <iframe src="https://www.youtube.com/embed/Rt_z_A3lm40"
+                        title="ESP32-S3 感測器介面與 PSRAM 教學影片" allowfullscreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        style="width:100%; height:100%; display:block; border:0;">
+                    </iframe>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(0)">‹ &nbsp;總覽</button>
+                <span class="unit-page-indicator">1 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(1); goToUnit(2)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 2: 單元 1 ══════════ -->
+        <div class="ms-unit-page" id="page-2">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-2" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>ESP32-S3：為 AI 與影像而生</h1>
+
+                <p>
+                    ESP32-S3 是樂鑫 (Espressif) 針對 <strong>AIoT（人工智慧物聯網）</strong> 場景所設計的旗艦級微控制器。與前代 ESP32 相比，S3 最關鍵的升級在於：它內建了專為向量運算設計的硬體加速指令集，並原生支援高速外部記憶體與攝影機介面。這使得它不再只是一顆「連上 Wi-Fi 的 MCU」，而是一台真正能在邊緣端執行影像辨識與 AI 推論的微型電腦。
+                </p>
+
+                <h2>雙核心 Xtensa LX7 架構</h2>
+                <p>
+                    ESP32-S3 搭載兩顆 Xtensa LX7 核心，主頻最高可達 240 MHz。在典型的攝影機串流應用中，開發者通常會將兩顆核心做 <strong>任務分工</strong>：一顆核心專責處理 Wi-Fi 協議棧與 HTTP 串流推送，另一顆核心則負責影像擷取與 AI 推論。這種分工模式能避免無線通訊中斷導致的幀延遲，是即時影像系統穩定運作的關鍵。
+                </p>
+                <p>
+                    更重要的是，LX7 核心內建了 <strong>向量擴展指令 (PIE — Processor Instruction Extensions)</strong>，可在單一指令週期內完成多筆乘法-累加運算 (MAC)。對於卷積神經網路 (CNN) 中大量的矩陣乘法，這能帶來 2～3 倍的加速效果，讓 S3 能在不依賴外部加速晶片的情況下執行輕量級 AI 模型。
+                </p>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>注意</strong>
+                        ESP32-S3 的向量指令主要針對 8-bit 與 16-bit 整數運算做了優化。若你的 AI 模型使用 float32 權重，需先透過 TensorFlow Lite 的量化工具轉換為 int8 格式，才能真正發揮硬體加速的效果。
+                    </div>
+                </div>
+
+                <h2>ESP32 家族硬體規格比較</h2>
+                <p>以下表格比較了常見的三款 ESP32 晶片在影像處理能力上的差異：</p>
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>規格</th>
+                            <th>ESP32（經典版）</th>
+                            <th>ESP32-S2</th>
+                            <th>ESP32-S3</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>CPU 核心</td>
+                            <td>雙核 LX6 @ 240 MHz</td>
+                            <td>單核 LX7 @ 240 MHz</td>
+                            <td>雙核 LX7 @ 240 MHz</td>
+                        </tr>
+                        <tr>
+                            <td>向量加速指令</td>
+                            <td><span class="cross"><i class="fas fa-times"></i></span></td>
+                            <td><span class="cross"><i class="fas fa-times"></i></span></td>
+                            <td><span class="check"><i class="fas fa-check"></i></span></td>
+                        </tr>
+                        <tr>
+                            <td>PSRAM 介面</td>
+                            <td>SPI（最高 4 MB）</td>
+                            <td>SPI/QSPI（最高 8 MB）</td>
+                            <td>OPI（最高 16 MB）</td>
+                        </tr>
+                        <tr>
+                            <td>DVP 攝影機介面</td>
+                            <td><span class="check"><i class="fas fa-check"></i></span></td>
+                            <td><span class="check"><i class="fas fa-check"></i></span></td>
+                            <td><span class="check"><i class="fas fa-check"></i></span></td>
+                        </tr>
+                        <tr>
+                            <td>USB OTG</td>
+                            <td><span class="cross"><i class="fas fa-times"></i></span></td>
+                            <td><span class="check"><i class="fas fa-check"></i></span></td>
+                            <td><span class="check"><i class="fas fa-check"></i></span></td>
+                        </tr>
+                        <tr>
+                            <td>適合影像 AI</td>
+                            <td>勉強可用</td>
+                            <td>有限</td>
+                            <td><strong>最佳選擇</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>感測器介面：DVP 與 SCCB</h2>
+                <p>
+                    ESP32-S3 透過 <strong>DVP（Digital Video Port）</strong> 介面與攝影機模組通訊。DVP 是一種並列式 (Parallel) 資料傳輸協定，使用 8 至 16 條資料線同時傳輸像素，搭配 <code>PCLK</code>（像素時鐘）、<code>VSYNC</code>（垂直同步）與 <code>HREF</code>（水平參考）三條控制線來界定每一幀的邊界。
+                </p>
+                <p>
+                    攝影機模組的暫存器設定（如解析度、曝光值、白平衡）則透過 <strong>SCCB（Serial Camera Control Bus）</strong> 協定進行控制。SCCB 本質上是 I2C 的子集，使用兩條線（<code>SIOD</code> 資料線與 <code>SIOC</code> 時鐘線）與感測器溝通。以常見的 OV2640 感測器為例，其 SCCB 從裝置位址為 <code>0x30</code>。
+                </p>
+
+                <div class="ms-code">
+<span class="c-comment">// 典型的 ESP32-S3 攝影機腳位配置 (以 ESP32-S3-CAM 為例)</span><br>
+<span class="c-kw">#define</span> <span class="c-attr">CAM_PIN_PWDN</span>   <span class="c-val">-1</span>     <span class="c-comment">// 電源控制 (部分模組無此腳位)</span><br>
+<span class="c-kw">#define</span> <span class="c-attr">CAM_PIN_XCLK</span>   <span class="c-val">15</span>     <span class="c-comment">// 主時鐘輸出 (通常設為 20 MHz)</span><br>
+<span class="c-kw">#define</span> <span class="c-attr">CAM_PIN_SIOD</span>   <span class="c-val">4</span>      <span class="c-comment">// SCCB 資料線 (I2C SDA)</span><br>
+<span class="c-kw">#define</span> <span class="c-attr">CAM_PIN_SIOC</span>   <span class="c-val">5</span>      <span class="c-comment">// SCCB 時鐘線 (I2C SCL)</span><br>
+<br>
+<span class="c-kw">#define</span> <span class="c-attr">CAM_PIN_D7</span>     <span class="c-val">16</span>     <span class="c-comment">// 資料線 D7 (MSB)</span><br>
+<span class="c-kw">#define</span> <span class="c-attr">CAM_PIN_D6</span>     <span class="c-val">17</span><br>
+<span class="c-kw">#define</span> <span class="c-attr">CAM_PIN_D5</span>     <span class="c-val">18</span><br>
+<span class="c-kw">#define</span> <span class="c-attr">CAM_PIN_D4</span>     <span class="c-val">12</span><br>
+<span class="c-kw">#define</span> <span class="c-attr">CAM_PIN_D3</span>     <span class="c-val">10</span><br>
+<span class="c-kw">#define</span> <span class="c-attr">CAM_PIN_D2</span>     <span class="c-val">8</span><br>
+<span class="c-kw">#define</span> <span class="c-attr">CAM_PIN_D1</span>     <span class="c-val">9</span><br>
+<span class="c-kw">#define</span> <span class="c-attr">CAM_PIN_D0</span>     <span class="c-val">11</span>     <span class="c-comment">// 資料線 D0 (LSB)</span><br>
+<br>
+<span class="c-kw">#define</span> <span class="c-attr">CAM_PIN_VSYNC</span>  <span class="c-val">6</span>      <span class="c-comment">// 垂直同步信號</span><br>
+<span class="c-kw">#define</span> <span class="c-attr">CAM_PIN_HREF</span>   <span class="c-val">7</span>      <span class="c-comment">// 水平參考信號</span><br>
+<span class="c-kw">#define</span> <span class="c-attr">CAM_PIN_PCLK</span>   <span class="c-val">13</span>     <span class="c-comment">// 像素時鐘</span>
+                </div>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>提示</strong>
+                        在選購 ESP32-S3 開發板時，注意確認板載攝影機連接器的腳位定義。不同廠商的開發板（如 Freenove、LILYGO、Seeed XIAO）使用的 GPIO 映射可能完全不同。務必查閱對應開發板的電路圖 (Schematic)，而非直接套用網路範例程式的腳位定義。
+                    </div>
+                </div>
+
+                <h2>腳位的分類：固定 vs. 彈性</h2>
+                <p>
+                    ESP32-S3 的 GPIO 可透過 IO MUX 與 GPIO Matrix 機制靈活映射功能。然而在攝影機應用中，以下腳位通常是<strong>固定占用</strong>的：DVP 的 8 條資料線（D0–D7）、<code>PCLK</code>、<code>VSYNC</code>、<code>HREF</code>，以及 SCCB 的 <code>SIOD</code>/<code>SIOC</code> 共 13 支腳位。加上 <code>XCLK</code> 主時鐘輸出，總計需要 <strong>14 支 GPIO</strong>。
+                </p>
+                <p>
+                    剩餘的 GPIO 則可彈性用於其他外接裝置，例如：透過 I2C 連接 IMU 慣性感測器（陀螺儀/加速度計）、透過 SPI 驅動 TFT 螢幕、或使用 UART 與 GPS 模組通訊。在設計無人車或機器人系統時，合理規劃這些「可用腳位」是硬體架構設計的核心挑戰之一。
+                </p>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(1)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">2 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(2); goToUnit(3)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 3: 單元 2 ══════════ -->
+        <div class="ms-unit-page" id="page-3">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-3" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>記憶體魔術：什麼是 PSRAM？</h1>
+
+                <p>
+                    在嵌入式影像處理中，記憶體是最珍貴的資源。ESP32-S3 的內部 SRAM 僅有約 <strong>512 KB</strong>，扣除系統核心、Wi-Fi 協議棧與 FreeRTOS 所需的空間後，真正可供應用程式使用的可能只剩 <strong>200～300 KB</strong>。然而，一張未壓縮的 VGA 彩色影像（640×480 像素，RGB565 格式）就需要約 614 KB——這已經超出了可用的內部記憶體。PSRAM 正是解決這個瓶頸的關鍵技術。
+                </p>
+
+                <h2>內部 SRAM 的物理極限</h2>
+                <p>
+                    讓我們用簡單的數學來理解這個問題。以下公式計算一張未壓縮影像佔用的記憶體大小：
+                </p>
+                <p style="text-align:center; margin:16px 0; font-size:15px;">
+                    Buffer 大小 = 寬度 × 高度 × 每像素位元組數
+                </p>
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>解析度</th>
+                            <th>像素數</th>
+                            <th>RGB565 大小</th>
+                            <th>內部 SRAM 能否容納？</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>QQVGA (160×120)</td>
+                            <td>19,200</td>
+                            <td>~38 KB</td>
+                            <td><span class="check"><i class="fas fa-check"></i></span> 可以</td>
+                        </tr>
+                        <tr>
+                            <td>QVGA (320×240)</td>
+                            <td>76,800</td>
+                            <td>~150 KB</td>
+                            <td><span class="check"><i class="fas fa-check"></i></span> 勉強</td>
+                        </tr>
+                        <tr>
+                            <td>VGA (640×480)</td>
+                            <td>307,200</td>
+                            <td>~614 KB</td>
+                            <td><span class="cross"><i class="fas fa-times"></i></span> 不可能</td>
+                        </tr>
+                        <tr>
+                            <td>HD (1280×720)</td>
+                            <td>921,600</td>
+                            <td>~1.8 MB</td>
+                            <td><span class="cross"><i class="fas fa-times"></i></span> 完全不可能</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    從表格可以清楚看出，如果想要在 VGA 以上的解析度工作（這是大多數影像辨識的基本需求），就<strong>必須</strong>使用外部記憶體。
+                </p>
+
+                <h2>PSRAM：外掛的記憶體魔法</h2>
+                <p>
+                    <strong>PSRAM（Pseudo Static RAM，虛擬靜態隨機存取記憶體）</strong> 是一種透過串列介面掛載在 MCU 外部的記憶體晶片。它的內部結構其實是 DRAM（動態記憶體），但封裝了自動刷新電路，對外表現得像 SRAM 一樣簡單易用——因此得名「Pseudo（虛擬的）」Static RAM。
+                </p>
+                <p>
+                    ESP32-S3 支援透過 <strong>Octal SPI (OPI)</strong> 介面連接最高 <strong>16 MB</strong> 的 PSRAM。OPI 使用 8 條資料線並列傳輸，時鐘頻率可達 80 MHz，理論頻寬約為 <strong>80 MB/s</strong>。這比前代 ESP32 的 4-bit SPI PSRAM 快了數倍。
+                </p>
+
+                <div class="ms-warning">
+                    <div class="note-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="note-body">
+                        <strong>警告</strong>
+                        PSRAM 雖然空間大，但存取速度約為內部 SRAM 的 <strong>1/5 ～ 1/10</strong>。因此，頻繁存取的小型資料（如迴圈計數器、區域變數）應放在內部 SRAM，而大型且循序存取的資料（如影像緩衝區、AI 模型權重）才適合放在 PSRAM。搞錯配置策略會嚴重拖慢程式效能。
+                    </div>
+                </div>
+
+                <h2>記憶體配置 API 對比</h2>
+                <p>
+                    ESP-IDF 提供了多種記憶體配置函數，你必須根據資料的特性選擇正確的 API。標準的 <code>malloc()</code> 只會從內部 SRAM 分配空間，當空間不足時會直接返回 <code>NULL</code>，即使 PSRAM 還有好幾 MB 的空間也不會去使用。
+                </p>
+
+                <div class="ms-code">
+<span class="c-comment">// ❌ 錯誤示範：malloc() 無法分配 PSRAM</span><br>
+<span class="c-kw">uint8_t</span><span class="c-white">* </span><span class="c-attr">buf</span><span class="c-white"> = (</span><span class="c-kw">uint8_t</span><span class="c-white">*)</span><span class="c-tag">malloc</span><span class="c-white">(614400);  </span><span class="c-comment">// VGA RGB565 需要 ~600KB</span><br>
+<span class="c-comment">// buf == NULL (內部 SRAM 空間不足)</span><br>
+<br>
+<span class="c-comment">// ✅ 正確做法：使用 heap_caps_malloc 指定 SPIRAM</span><br>
+<span class="c-kw">uint8_t</span><span class="c-white">* </span><span class="c-attr">buf</span><span class="c-white"> = (</span><span class="c-kw">uint8_t</span><span class="c-white">*)</span><span class="c-tag">heap_caps_malloc</span><span class="c-white">(614400, </span><span class="c-attr">MALLOC_CAP_SPIRAM</span><span class="c-white">);</span><br>
+<span class="c-kw">if</span><span class="c-white"> (buf == </span><span class="c-val">NULL</span><span class="c-white">) {</span><br>
+<span class="c-white">    </span><span class="c-tag">ESP_LOGE</span><span class="c-white">(TAG, </span><span class="c-str">"PSRAM 配置失敗！請確認 PSRAM 已啟用"</span><span class="c-white">);</span><br>
+<span class="c-white">}</span><br>
+<br>
+<span class="c-comment">// ✅ 簡便寫法：ps_malloc() 是 heap_caps_malloc 的封裝</span><br>
+<span class="c-kw">uint8_t</span><span class="c-white">* </span><span class="c-attr">buf2</span><span class="c-white"> = (</span><span class="c-kw">uint8_t</span><span class="c-white">*)</span><span class="c-tag">ps_malloc</span><span class="c-white">(614400);</span>
+                </div>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>提示</strong>
+                        在分配大型緩衝區之前，務必先呼叫 <code>heap_caps_get_free_size(MALLOC_CAP_SPIRAM)</code> 檢查剩餘可用空間。這個習慣能避免因記憶體不足而導致的 panic 重啟——這是 ESP32 攝影機專案中最常見的錯誤之一。
+                    </div>
+                </div>
+
+                <h2>SRAM 與 PSRAM 的分工策略</h2>
+                <p>
+                    理想的記憶體分配策略是根據「存取頻率」與「資料大小」來決定存放位置：
+                </p>
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>資料類型</th>
+                            <th>建議位置</th>
+                            <th>理由</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>堆疊 (Stack)、區域變數</td>
+                            <td><strong>內部 SRAM</strong></td>
+                            <td>極高頻率的隨機存取</td>
+                        </tr>
+                        <tr>
+                            <td>FreeRTOS Task 堆疊</td>
+                            <td><strong>內部 SRAM</strong></td>
+                            <td>任務切換需要極低延遲</td>
+                        </tr>
+                        <tr>
+                            <td>影像幀緩衝區 (Frame Buffer)</td>
+                            <td><strong>PSRAM</strong></td>
+                            <td>數百 KB 的大型循序存取</td>
+                        </tr>
+                        <tr>
+                            <td>AI 模型權重 (.tflite)</td>
+                            <td><strong>PSRAM</strong></td>
+                            <td>一次載入、循序讀取</td>
+                        </tr>
+                        <tr>
+                            <td>DMA 傳輸緩衝區</td>
+                            <td><strong>內部 SRAM</strong></td>
+                            <td>DMA 控制器需要特定的記憶體對齊</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(2)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">3 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(3); goToUnit(4)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 4: 單元 3 ══════════ -->
+        <div class="ms-unit-page" id="page-4">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-4" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 10 分鐘</div>
+                </div>
+
+                <h1>高速傳輸的幕後推手：DMA</h1>
+
+                <p>
+                    在攝影機串流應用中，影像感測器每秒會產生數 MB 的原始像素資料。如果每一個位元組都需要 CPU 親自搬運（從周邊暫存器讀出，再寫入記憶體），CPU 將被完全佔滿，毫無餘裕處理 Wi-Fi 通訊、馬達控制或 AI 推論。<strong>DMA（Direct Memory Access，直接記憶體存取）</strong> 就是為了解決這個瓶頸而生的硬體機制。
+                </p>
+
+                <h2>DMA 的運作原理</h2>
+                <p>
+                    DMA 控制器是一個獨立於 CPU 的硬體單元，能在<strong>不佔用 CPU 的情況下</strong>自動將資料從一個記憶體位址搬運到另一個位址，或從周邊設備搬到記憶體。CPU 只需要下達一次搬運指令（設定來源位址、目標位址與長度），DMA 控制器就會接手完成整個傳輸，傳輸結束後再透過中斷通知 CPU。
+                </p>
+                <p>
+                    在 ESP32-S3 的攝影機驅動中，DMA 的工作流程如下：
+                </p>
+                <ol>
+                    <li>攝影機感測器透過 DVP 介面，在每個 <code>PCLK</code> 上升緣輸出一個像素。</li>
+                    <li>DMA 控制器自動將像素資料搬入預先配置的<strong>環形緩衝區 (Ring Buffer)</strong>。</li>
+                    <li>當一整幀影像的 <code>VSYNC</code> 信號觸發時，DMA 通知 CPU：「一幀完整影像已就緒」。</li>
+                    <li>CPU 此時才介入，將幀資料進行 JPEG 壓縮或傳送至網路。</li>
+                </ol>
+
+                <div class="ms-note">
+                    <div class="note-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="note-body">
+                        <strong>注意</strong>
+                        ESP32-S3 的 DMA 控制器使用<strong>鏈結描述符 (Linked List Descriptors)</strong> 來管理多段不連續的記憶體區塊。ESP-IDF 的攝影機驅動會自動建立這些描述符鏈——你通常不需要手動操作，但理解這個機制有助於排查「幀損毀」或「DMA 溢出」的錯誤。
+                    </div>
+                </div>
+
+                <h2>有無 DMA 的效能對比</h2>
+                <p>
+                    以下數據模擬了 VGA 解析度（640×480）、RGB565 格式、30 FPS 的影像傳輸場景，比較 CPU 手動搬運（Polling）與 DMA 自動搬運的差異：
+                </p>
+                <table class="ms-table">
+                    <thead>
+                        <tr>
+                            <th>指標</th>
+                            <th>CPU Polling 模式</th>
+                            <th>DMA 模式</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>每幀資料搬運時間</td>
+                            <td>~8 ms（CPU 全速搬運）</td>
+                            <td>~8 ms（DMA 硬體搬運）</td>
+                        </tr>
+                        <tr>
+                            <td>搬運期間 CPU 占用率</td>
+                            <td><strong>100%</strong></td>
+                            <td><strong>&lt; 1%</strong></td>
+                        </tr>
+                        <tr>
+                            <td>同時可執行其他任務</td>
+                            <td><span class="cross"><i class="fas fa-times"></i></span> 不行</td>
+                            <td><span class="check"><i class="fas fa-check"></i></span> Wi-Fi / AI / 控制邏輯</td>
+                        </tr>
+                        <tr>
+                            <td>30 FPS 下的每秒 CPU 成本</td>
+                            <td>~240 ms（佔去一顆核心的 24%）</td>
+                            <td>~0.3 ms（僅中斷處理）</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    可以看出，DMA 不是讓搬運速度變快，而是讓 <strong>CPU 完全解放</strong>。在 30 FPS 的串流中，CPU Polling 模式每秒浪費約 240 ms 在純粹的資料搬運上；而 DMA 模式下，這些時間可以用來執行 AI 推論或處理控制邏輯。
+                </p>
+
+                <div class="ms-warning">
+                    <div class="note-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="note-body">
+                        <strong>警告</strong>
+                        DMA 緩衝區必須分配在<strong>內部 SRAM 的 DMA 可存取區域</strong>。並非所有記憶體位址都支援 DMA 存取——特別是 PSRAM 的部分區段可能不在 DMA 可達範圍內。使用 <code>heap_caps_malloc(size, MALLOC_CAP_DMA)</code> 確保分配的記憶體符合 DMA 對齊與位址限制。
+                    </div>
+                </div>
+
+                <h2>匯流排競爭：DMA 與 PSRAM 的潛在衝突</h2>
+                <p>
+                    ESP32-S3 的 DMA 控制器與 PSRAM 控制器共享部分<strong>內部匯流排頻寬</strong>。當攝影機 DMA 正在高速搬運像素資料的同時，如果 CPU 也正在大量讀寫 PSRAM（例如執行 AI 推論），兩者可能產生匯流排競爭，導致影像出現雜訊或 I2C 通訊逾時。
+                </p>
+                <p>
+                    這種現象在 PSRAM 設定為 <strong>80 MHz Octal SPI</strong> 時特別明顯——因為更高的時鐘頻率意味著匯流排被佔用的時間更密集。一種常見的解決方案是將 PSRAM 頻率降至 <strong>40 MHz</strong>，犧牲部分頻寬來換取更乾淨的影像信號與更穩定的 I2C 通訊。
+                </p>
+
+                <div class="ms-code">
+<span class="c-comment">// platformio.ini 中的關鍵配置</span><br>
+<span class="c-white">[env:esp32-s3-cam]</span><br>
+<span class="c-attr">platform</span><span class="c-white"> = espressif32</span><br>
+<span class="c-attr">board</span><span class="c-white"> = esp32-s3-devkitc-1</span><br>
+<span class="c-attr">framework</span><span class="c-white"> = arduino</span><br>
+<span class="c-attr">board_build.arduino.memory_type</span><span class="c-white"> = </span><span class="c-str">qio_opi</span><span class="c-comment">  ; OPI PSRAM 模式</span><br>
+<span class="c-attr">build_flags</span><span class="c-white"> =</span><br>
+<span class="c-white">    </span><span class="c-kw">-DBOARD_HAS_PSRAM</span><br>
+<span class="c-white">    </span><span class="c-kw">-DCONFIG_SPIRAM_SPEED_80M</span><span class="c-comment">  ; 或 40M 以降低匯流排干擾</span>
+                </div>
+
+                <div class="ms-tip">
+                    <div class="note-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="note-body">
+                        <strong>提示</strong>
+                        如果你在高解析度串流時發現影像偶爾出現橫向的彩色雜訊線條（通常是紫色或綠色的），這很可能是 DMA 與 PSRAM 匯流排競爭所造成的。嘗試降低 PSRAM 頻率或減少解析度，觀察問題是否改善。這是在作業「感測器與 PSRAM 聯動除錯」中需要深入探索的議題。
+                    </div>
+                </div>
+                
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(3)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">4 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(4); goToUnit(5)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 5: 實作挑戰 ══════════ -->
+        <div class="ms-unit-page" id="page-5">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-5" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 165 分鐘</div>
+                </div>
+
+                <h1>實戰任務挑戰</h1>
+
+                <p>
+                    請動手完成以下三項實作任務，這是驗證本單元學習成果的核心挑戰。
+                    完成後請將程式碼與報告提交至 GitHub Classroom。
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6 my-6">
+                    <!-- Task 1 -->
+                    <div onclick="openSubmissionModal('adv-01-psram-test', '【作業 1-1】PSRAM 初始化與壓力測試')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#E76F51] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 1-1</div>
+                            <h3 class="text-lg font-bold mb-2">空間探索：PSRAM 初始化</h3>
+                            <p class="text-xs text-gray-600 mb-4"></p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#E76F51] font-bold">
+                            <span>⏱ 💾 60 min 【作業 1-1】 空間探索：PSRAM 初始化 啟用檢查：檢測 PSRAM 類型與總大小。 分配實驗：對比 malloc() (失敗) vs heap_caps_malloc() (成功)。 效能對比：測試內部 RAM 與 PSRAM 的百萬次讀寫耗時差異。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#E76F51] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 2 -->
+                    <div onclick="openSubmissionModal('adv-01-image-buffer', '【作業 1-2】影像緩衝區管理')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#2A9D8F] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 1-2</div>
+                            <h3 class="text-lg font-bold mb-2">大數據存儲管理</h3>
+                            <p class="text-xs text-gray-600 mb-4"></p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#2A9D8F] font-bold">
+                            <span>⏱ 🖼️ 60 min 【作業 1-2】 大數據存儲管理 模擬截圖：申請 640x480x2 的 Frame Buffer。 分區處理：練習使用指標提取 ROI (感興趣區域) 數據。 監控：確保無記憶體洩漏 (Memory Leak)。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#2A9D8F] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Task 3 -->
+                    <div onclick="openSubmissionModal('adv-01-sensor-debug', '【作業 1-3】感測器與 PSRAM 聯動除錯')"
+                        class="border border-gray-200 bg-white rounded-xl p-6 hover:shadow-lg transition cursor-pointer relative group flex flex-col justify-between">
+                        <div>
+                            <div class="bg-[#457B9D] text-white w-max px-3 py-1 rounded-full text-xs font-bold mb-4">作業 1-3</div>
+                            <h3 class="text-lg font-bold mb-2">硬體資源競爭調試</h3>
+                            <p class="text-xs text-gray-600 mb-4"></p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-[#457B9D] font-bold">
+                            <span>⏱ 🛠️ 45 min 【作業 1-3】 硬體資源競爭調試 時鐘調整：測試 40MHz vs 80MHz PSRAM 對影像雜訊的影響。 衝突排除：觀察大量讀寫是否影響 I2C 中斷響應。</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            <span class="bg-[#457B9D] text-white text-xs px-4 py-2 rounded-full font-bold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                📤 點擊繳交作業
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(4)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">5 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(5); goToUnit(6)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+
+        <!-- ══════════ PAGE 6: 知識測驗 ══════════ -->
+        <div class="ms-unit-page" id="page-6">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-6" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 5 分鐘</div>
+                </div>
+
+                <h1>知識測驗</h1>
+                <p>請回答以下問題，測試你對本模組內容的理解程度。每題僅有一個正確答案。</p>
+
+                <form id="quiz-form" onsubmit="return false;" style="margin-top:24px;">
+
+                    <div style="background:#f9f9f9;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;">1. ESP32-S3 的 PSRAM 透過什麼介面連接，最高支援多少容量？</p>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q1" value="A" style="margin-right:8px;"> A. SPI 介面，最高 4 MB
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q1" value="B" style="margin-right:8px;"> B. QSPI 介面，最高 8 MB
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q1" value="C" style="margin-right:8px;"> C. Octal SPI (OPI) 介面，最高 16 MB
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q1" value="D" style="margin-right:8px;"> D. I2C 介面，最高 32 MB
+                        </label>
+                        <div id="fb-q1" style="margin-top:10px;font-size:13px;display:none;"></div>
+                    </div>
+
+                    <div style="background:#f9f9f9;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;">2. 為什麼標準的 <code>malloc()</code> 無法分配 PSRAM 記憶體？</p>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q2" value="A" style="margin-right:8px;"> A. PSRAM 不支援動態配置
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q2" value="B" style="margin-right:8px;"> B. <code>malloc()</code> 只從內部 SRAM 分配空間
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q2" value="C" style="margin-right:8px;"> C. 需要先呼叫 <code>psram_init()</code>
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q2" value="D" style="margin-right:8px;"> D. PSRAM 只能在編譯時靜態配置
+                        </label>
+                        <div id="fb-q2" style="margin-top:10px;font-size:13px;display:none;"></div>
+                    </div>
+
+                    <div style="background:#f9f9f9;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;">3. DMA 在攝影機串流中的主要優勢是什麼？</p>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q3" value="A" style="margin-right:8px;"> A. 讓資料傳輸速度加倍
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q3" value="B" style="margin-right:8px;"> B. 自動進行 JPEG 壓縮
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q3" value="C" style="margin-right:8px;"> C. 不佔用 CPU 即可自動搬運資料
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q3" value="D" style="margin-right:8px;"> D. 增加可用記憶體容量
+                        </label>
+                        <div id="fb-q3" style="margin-top:10px;font-size:13px;display:none;"></div>
+                    </div>
+
+                    <div style="background:#f9f9f9;border:1px solid #e1dfdd;border-radius:6px;padding:20px;margin-bottom:16px;">
+                        <p style="font-weight:600;margin-bottom:12px;">4. 一張 VGA (640×480) RGB565 格式的未壓縮影像約需多少記憶體？</p>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q4" value="A" style="margin-right:8px;"> A. 約 150 KB
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q4" value="B" style="margin-right:8px;"> B. 約 300 KB
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q4" value="C" style="margin-right:8px;"> C. 約 614 KB
+                        </label>
+                        <label style="display:block;padding:6px 0;cursor:pointer;">
+                            <input type="radio" name="q4" value="D" style="margin-right:8px;"> D. 約 1.8 MB
+                        </label>
+                        <div id="fb-q4" style="margin-top:10px;font-size:13px;display:none;"></div>
+                    </div>
+
+                    <div style="display:flex;gap:12px;margin-top:20px;">
+                        <button type="button" class="ms-btn" onclick="submitQuiz()">提交答案</button>
+                        <button type="button" class="ms-btn-ghost" onclick="resetQuiz()">重新作答</button>
+                    </div>
+                    <div id="quiz-result" style="margin-top:16px;font-size:15px;font-weight:600;display:none;"></div>
+                </form>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(5)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator">6 / 7</span>
+                <button class="nav-btn-next" onclick="markDone(6); goToUnit(7)">下一個單元 &nbsp;›</button>
+            </div>
+        </div>
+
+        <!-- ══════════ PAGE 7: 摘要與資源 ══════════ -->
+        <div class="ms-unit-page" id="page-7">
+            <div class="unit-content">
+                <div class="unit-status-bar">
+                    <div class="unit-completed-badge" id="badge-7" style="display:none"><i class="fas fa-check"></i> 已完成</div>
+                    <div></div>
+                    <div class="unit-time-badge"><i class="far fa-clock"></i>&nbsp; 3 分鐘</div>
+                </div>
+
+                <h1>單元摘要與參考資源</h1>
+
+                <p>
+                    恭喜！你已經完成了「<strong>ESP32-S3 感測器介面與 PSRAM</strong>」模組。
+                    透過本單元的學習與實作，你已經掌握了關鍵的核心技術，為全棧物聯網開發奠定了深厚的底層基石。
+                </p>
+
+                <div class="ms-achievement">
+                    <div class="achievement-icon">🚀</div>
+                    <div class="achievement-text">
+                        <h3>恭喜！你已完成本模組</h3>
+                        <p>你已具備開發與調校本單元核心功能的專業實力。持續累積，前進下一個挑戰！</p>
+                    </div>
+                </div>
+
+                <h2>完成本模組後，你已學會：</h2>
+                <ul>
+                    <li><strong>🚀 1. ESP32-S3：為 AI 與影像而生 (20 min)</strong> 的基本架構與實作技能。</li>
+                    <li><strong>🧠 2. 記憶體魔術：什麼是 PSRAM？ (25 min)</strong> 的調試方法與資料傳輸細節。</li>
+                    <li><strong>高速傳輸的幕後推手：DMA (15 min)</strong> 的優化指標與生產環境安全機制。</li>
+                    <li>在實戰挑戰中，透過 Git 與 GitHub Classroom 提交完整的硬體與報告成果。</li>
+                </ul>
+
+                <h2>延伸學習資源</h2>
+
+                <a href="https://www.youtube.com/embed/Rt_z_A3lm40" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-youtube" style="color:#ff0000;"></i>
+                    <div>
+                        <div style="font-weight:600;">課程教學影片</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">YouTube — 本單元核心觀念與實作示範影片</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://docs.google.com/document/d/e/2PACX-1vRWjke-UKVXUk4eEshh_G8p8QcCnqmLAuCmwtHD4rrE4OehVVTBEG4uNJwu0NZ_-4Q4F7zuy54w9S2u/pub?embedded=true" target="_blank" class="ms-resource-link">
+                    <i class="fas fa-file-alt"></i>
+                    <div>
+                        <div style="font-weight:600;">課程完整講義</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">Google Docs — 詳細實驗步驟、技術文件與程式碼指南</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+
+                <a href="https://classroom.github.com" target="_blank" class="ms-resource-link">
+                    <i class="fab fa-github"></i>
+                    <div>
+                        <div style="font-weight:600;">GitHub Classroom</div>
+                        <div style="font-size:12px; color:#605e5c; margin-top:2px;">classroom.github.com — 管理你的作業提交與自動評分結果</div>
+                    </div>
+                    <i class="fas fa-external-link-alt" style="color:#c8c6c4; margin-left:auto;"></i>
+                </a>
+            </div>
+            <div class="unit-nav">
+                <button class="nav-btn-prev" onclick="goToUnit(6)">‹ &nbsp;上一個單元</button>
+                <span class="unit-page-indicator" style="font-weight:600; color:#107c10;">✓ 模組完成</span>
+                <button class="ms-btn" onclick="markDone(7); alert('🎉 恭喜完成「ESP32-S3 感測器介面與 PSRAM」模組！')">完成模組</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    /* ─── DATA ─── */
+    const UNITS = [
+        { id: 0, label: '課程總覽',       time: '',         type: 'index' },
+        { id: 1, label: '簡介',            time: '3 分鐘',  type: 'unit'  },
+        { id: 2, label: '🚀 1. ESP32-S3：為 AI 與影像而生 (20 min)', time: '10 分鐘', type: 'unit' },
+        { id: 3, label: '🧠 2. 記憶體魔術：什麼是 PSRAM？ (25 min)', time: '10 分鐘', type: 'unit' },
+        { id: 4, label: '高速傳輸的幕後推手：DMA (15 min)', time: '10 分鐘', type: 'unit' },
+        { id: 5, label: '實戰挑戰',       time: '165 分鐘', type: 'lab'   },
+        { id: 6, label: '知識測驗',     time: '5 分鐘',  type: 'quiz'  },
+        { id: 7, label: '摘要與資源',     time: '3 分鐘',  type: 'unit'  },
+    ];
+
+    let currentUnit = 0;
+    let doneSet = new Set();
+
+    /* ─── INIT ─── */
+    function init() {
+        buildSidebar();
+        buildIndexUnitList();
+        goToUnit(0);
+    }
+
+    /**
+     * 動態建構側邊欄單元選單。
+     */
+    function buildSidebar() {
+        const nav = document.getElementById('sidebar-nav');
+        nav.innerHTML = UNITS.map(u => {
+            const badge = u.type === 'lab' ? ' <span style="font-size:10px;background:#eef6ff;color:#005a9e;padding:1px 5px;border-radius:2px;">LAB</span>'
+                        : u.type === 'quiz' ? ' <span style="font-size:10px;background:#fff4ce;color:#8a6914;padding:1px 5px;border-radius:2px;">測驗</span>'
+                        : '';
+            return `
+            <div class="ms-unit-item" id="nav-${u.id}" onclick="goToUnit(${u.id})">
+                <div class="unit-icon" id="icon-${u.id}">${u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id}</div>
+                <div class="unit-meta">
+                    <div class="unit-name">${u.label}${badge}</div>
+                    ${u.time ? `<div class="unit-time"><i class="far fa-clock"></i> ${u.time}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /**
+     * 動態建構首頁單元卡片列表。
+     */
+    function buildIndexUnitList() {
+        const el = document.getElementById('index-unit-list');
+        el.innerHTML = UNITS.filter(u => u.id > 0).map(u => `
+            <div class="unit-card ${u.type}" onclick="goToUnit(${u.id})">
+                <div class="unit-card-num">${u.id}</div>
+                <div class="unit-card-info">
+                    <div class="unit-card-name">${u.label}</div>
+                    <div class="unit-card-time"><i class="far fa-clock"></i> ${u.time}</div>
+                </div>
+                <div class="unit-card-arrow">›</div>
+            </div>
+        `).join('');
+    }
+
+    /* ─── NAVIGATION ─── */
+    /**
+     * 切換至指定單元頁面。
+     * @param {number} id - 單元識別碼
+     */
+    function goToUnit(id) {
+        document.querySelectorAll('.ms-unit-page').forEach(p => p.classList.remove('visible'));
+        const target = id === 0 ? document.getElementById('page-index') : document.getElementById(`page-${id}`);
+        if (target) target.classList.add('visible');
+
+        document.querySelectorAll('.ms-unit-item').forEach(el => el.classList.remove('active'));
+        const navItem = document.getElementById(`nav-${id}`);
+        if (navItem) { navItem.classList.add('active'); navItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) {
+                icon.className = 'unit-icon done';
+                icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>';
+            } else if (u.id === id) {
+                icon.className = 'unit-icon active-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            } else {
+                icon.className = 'unit-icon';
+                icon.innerHTML = u.id === 0 ? '<i class="fas fa-home" style="font-size:9px;"></i>' : u.id;
+            }
+        });
+
+        const unit = UNITS.find(u => u.id === id);
+        document.getElementById('bc-current').textContent = unit ? unit.label : '';
+        currentUnit = id;
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * 標記特定單元為已完成。
+     * @param {number} id - 單元識別碼
+     */
+    function markDone(id) {
+        doneSet.add(id);
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) badge.style.display = 'flex';
+        UNITS.forEach(u => {
+            const icon = document.getElementById(`icon-${u.id}`);
+            if (!icon) return;
+            if (doneSet.has(u.id)) { icon.className = 'unit-icon done'; icon.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i>'; }
+        });
+        updateProgress();
+    }
+
+    /**
+     * 計算並更新課程進度與進度條。
+     */
+    function updateProgress() {
+        const total = UNITS.length - 1;
+        const done = doneSet.size;
+        document.getElementById('progress-fill').style.width = Math.round(done / total * 100) + '%';
+        document.getElementById('progress-text').textContent = `${done} / ${total} 已完成`;
+    }
+
+    /* ─── CHECKLIST ─── */
+    /**
+     * 切換核取方塊的狀態。
+     * @param {HTMLElement} el - 核取方塊元素
+     */
+    function toggleCheck(el) {
+        el.classList.toggle('checked');
+        el.innerHTML = el.classList.contains('checked') ? '<i class="fas fa-check" style="font-size:10px;"></i>' : '';
+    }
+
+
+    /* ─── QUIZ ─── */
+    const QUIZ_ANSWERS = { q1: 'C', q2: 'B', q3: 'C', q4: 'C' };
+    const QUIZ_EXPLANATIONS = {
+        q1: 'ESP32-S3 支援透過 Octal SPI (OPI) 介面連接最高 16 MB 的 PSRAM，使用 8 條資料線並列傳輸，理論頻寬約 80 MB/s。',
+        q2: '標準的 malloc() 只會從內部 SRAM 分配空間。需使用 heap_caps_malloc(size, MALLOC_CAP_SPIRAM) 或 ps_malloc() 來配置 PSRAM。',
+        q3: 'DMA 的核心價值不是讓搬運更快，而是讓 CPU 完全解放——DMA 控制器在不佔用 CPU 的情況下自動搬運資料。',
+        q4: '640 × 480 × 2 bytes (RGB565 每像素 2 bytes) = 614,400 bytes ≈ 614 KB，遠超 ESP32-S3 可用的內部 SRAM。'
+    };
+
+    function submitQuiz() {
+        let score = 0;
+        const total = Object.keys(QUIZ_ANSWERS).length;
+        for (const [q, correct] of Object.entries(QUIZ_ANSWERS)) {
+            const selected = document.querySelector(`input[name="${q}"]:checked`);
+            const fb = document.getElementById(`fb-${q}`);
+            if (!selected) {
+                fb.style.display = 'block';
+                fb.innerHTML = '<span style="color:#d13438;">⚠ 請選擇一個答案</span>';
+                continue;
+            }
+            fb.style.display = 'block';
+            if (selected.value === correct) {
+                score++;
+                fb.innerHTML = `<span style="color:#107c10;">✔ 正確！</span> ${QUIZ_EXPLANATIONS[q]}`;
+            } else {
+                fb.innerHTML = `<span style="color:#d13438;">✘ 不正確。正確答案是 ${correct}。</span> ${QUIZ_EXPLANATIONS[q]}`;
+            }
+        }
+        const result = document.getElementById('quiz-result');
+        result.style.display = 'block';
+        if (score === total) {
+            result.innerHTML = `<span style="color:#107c10;">🎉 滿分！你答對了全部 ${total} 題！</span>`;
+            markDone(6);
+        } else {
+            result.innerHTML = `<span style="color:#d13438;">你答對了 ${score} / ${total} 題。再試一次吧！</span>`;
+        }
+    }
+
+    function resetQuiz() {
+        document.getElementById('quiz-form').reset();
+        for (let i = 1; i <= Object.keys(QUIZ_ANSWERS).length; i++) {
+            const fb = document.getElementById(`fb-q${i}`);
+            if (fb) { fb.style.display = 'none'; fb.innerHTML = ''; }
+        }
+        document.getElementById('quiz-result').style.display = 'none';
+    }
+
+    /* ─── START ─── */
+    init();
+    var mt=document.querySelector('.module-title');var ml=document.getElementById('bc-module-link');if(mt&&ml)ml.textContent=mt.textContent;var nc=document.getElementById('nav-course-name');if(nc)nc.textContent='進階 01：ESP32-S3 攝影機';
+</script>
+
+<!-- Define Resources -->
+<script>
+    window.RESOURCES = {
+        video: "https://www.youtube.com/embed/Rt_z_A3lm40",
+        doc: "https://docs.google.com/document/d/e/2PACX-1vRWjke-UKVXUk4eEshh_G8p8QcCnqmLAuCmwtHD4rrE4OehVVTBEG4uNJwu0NZ_-4Q4F7zuy54w9S2u/pub?embedded=true"
+    };
+</script>
+<script src="/js/course-shared.66d32c836149.js"></script>
+
+<!-- Assignment Guide (Hidden) -->
+<section id="assignment-guide" style="display: none;">
+<div class="markdown-heading"><h1 class="heading-element">adv-01-unit-s3-interfaces: ESP32-S3 感測器介面與 PSRAM</h1><a aria-label="Permalink: adv-01-unit-s3-interfaces: ESP32-S3 感測器介面與 PSRAM" class="anchor" href="#adv-01-unit-s3-interfaces-esp32-s3-感測器介面與-psram" id="user-content-adv-01-unit-s3-interfaces-esp32-s3-感測器介面與-psram"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>本程式庫提供 ESP32-S3 核心開發練習，重點在於硬體資源調度與底層記憶體管理。</p>
+<div class="markdown-heading"><h2 class="heading-element">課程目標</h2><a aria-label="Permalink: 課程目標" class="anchor" href="#課程目標" id="user-content-課程目標"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>掌握 ESP32-S3 的記憶體分層架構（SRAM vs PSRAM）。</li>
+<li>實作高效能的影像緩衝區管理技術。</li>
+<li>觀察高速匯流排競爭對訊號品質的影響。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">作業任務</h2><a aria-label="Permalink: 作業任務" class="anchor" href="#作業任務" id="user-content-作業任務"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h3 class="heading-element">任務 1：PSRAM 初始化與壓力測試 (Memory Stress Test)</h3><a aria-label="Permalink: 任務 1：PSRAM 初始化與壓力測試 (Memory Stress Test)" class="anchor" href="#任務-1psram-初始化與壓力測試-memory-stress-test" id="user-content-任務-1psram-初始化與壓力測試-memory-stress-test"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>內容</strong>：實作 <code>heap_caps_malloc</code> 指令申請 PSRAM，並撰寫計時器測量寫入速度。</li>
+<li>
+<strong>目標</strong>：理解為何在邊緣 AI 運算中需要 PSRAM 以及其效能物理極限。</li>
+<li>
+<strong>提交</strong>：將數據紀錄於 <code>docs/hardware_bench.md</code> 中。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 2：影像緩衝區管理 - ROI 提取 (Pointer Arithmetic Lab)</h3><a aria-label="Permalink: 任務 2：影像緩衝區管理 - ROI 提取 (Pointer Arithmetic Lab)" class="anchor" href="#任務-2影像緩衝區管理---roi-提取-pointer-arithmetic-lab" id="user-content-任務-2影像緩衝區管理---roi-提取-pointer-arithmetic-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>內容</strong>：在 <code>src/roi_math.h</code> 中實作指針運算邏輯。</li>
+<li>
+<strong>目標</strong>：學會如何在不進行記憶體拷貝的情況下，利用步幅 (Stride) 存取影像特定區域 (ROI)。</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">任務 3：感測器與 PSRAM 聯動除錯 (Signal Integrity Lab)</h3><a aria-label="Permalink: 任務 3：感測器與 PSRAM 聯動除錯 (Signal Integrity Lab)" class="anchor" href="#任務-3感測器與-psram-聯動除錯-signal-integrity-lab" id="user-content-任務-3感測器與-psram-聯動除錯-signal-integrity-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>內容</strong>：觀察 PSRAM 在 80MHz 與 40MHz 下，對感測器 I2C 訊號或影像雜訊的影響。</li>
+<li>
+<strong>目標</strong>：培養對硬體系統級干擾的偵錯與權衡能力。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">專案結構</h2><a aria-label="Permalink: 專案結構" class="anchor" href="#專案結構" id="user-content-專案結構"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<code>platformio.ini</code>: 核心硬體配置 (啟用 PSRAM 支援)。</li>
+<li>
+<code>src/</code>: 核心程式碼，包含壓測腳本與指針運算。</li>
+<li>
+<code>docs/</code>: 存放實驗報告 <code>hardware_bench.md</code>。</li>
+</ul>
+<div class="markdown-heading"><h2 class="heading-element">評分標準</h2><a aria-label="Permalink: 評分標準" class="anchor" href="#評分標準" id="user-content-評分標準"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ol>
+<li>
+<strong>內存安全</strong>：是否正確檢查 Heap 容量。</li>
+<li>
+<strong>指針嚴謹度</strong>：ROI 計算是否考慮了對齊與越界。</li>
+<li>
+<strong>實驗完整度</strong>：報告中是否如實紀錄物理現象並給出合理解釋。</li>
+</ol>
+<hr/>
+<p><em>本課程為邊緣 AI 系列單元之一。</em></p>
+</section>
+
+<!-- Tutor Guide (Hidden) -->
+<section id="tutor-guide" style="display: none;">
+<p>針對 <strong><code>adv-01-unit-s3-interfaces</code> (ESP32-S3 感測器介面與 PSRAM)</strong> 單元，這是一個深入探討「硬體資源調度」與「底層記憶體管理」的課程，是實施邊緣 AI 運算的物理基礎。</p>
+<p>以下是在 <strong>GitHub Classroom</strong> 部署其作業 (Assignments) 的具體建議：</p>
+<div class="markdown-heading"><h3 class="heading-element">1. 範本倉庫 (Template 程式庫) 配置建議</h3><a aria-label="Permalink: 1. 範本倉庫 (Template 程式庫) 配置建議" class="anchor" href="#1-範本倉庫-template-程式庫-配置建議" id="user-content-1-範本倉庫-template-程式庫-配置建議"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>進階硬體單元的範本應模擬一個「小型作業系統」的環境，建議包含：</p>
+<ul>
+<li>
+<strong>📂 <code>platformio.ini</code></strong>：預置關鍵的編譯選項，如 <code>-DBOARD_HAS_PSRAM</code>，並正確設定 <code>memory_type</code>（如 <code>qio_opi</code>），確保學員能直接調用 PSRAM。</li>
+<li>
+<strong>📂 <code>src/mem_lab.cpp</code></strong>：提供一個測試框架，內含精確到微秒 ($\mu s$) 的計時器，用於測量 SRAM 與 PSRAM 的效能差異。</li>
+<li>
+<strong>📂 <code>src/roi_processor.h</code></strong>：定義影像處理結構體，將「指針運算 (Pointer Math)」邏輯留給學員補完。</li>
+<li>
+<strong>📂 <code>docs/hardware_report.md</code></strong>：預置結構化的實驗報告，用於紀錄不同時鐘頻率下的訊號表現。</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">2. 作業任務部署細節</h3><a aria-label="Permalink: 2. 作業任務部署細節" class="anchor" href="#2-作業任務部署細節" id="user-content-2-作業任務部署細節"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<div class="markdown-heading"><h4 class="heading-element">任務 1：PSRAM 初始化與壓力測試 (Memory Stress Test)</h4><a aria-label="Permalink: 任務 1：PSRAM 初始化與壓力測試 (Memory Stress Test)" class="anchor" href="#任務-1psram-初始化與壓力測試-memory-stress-test" id="user-content-任務-1psram-初始化與壓力測試-memory-stress-test"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：理解 ESP32-S3 的記憶體分層架構，掌握特殊分配指令。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>關鍵代碼檢核</strong>：
+<div class="highlight highlight-source-c++"><pre><span class="pl-c"><span class="pl-c">//</span> 學生需實作：使用正確的 Capability 標籤申請 PSRAM</span>
+<span class="pl-c1">uint8_t</span>* buf = (<span class="pl-c1">uint8_t</span>*) heap_caps_malloc(<span class="pl-c1">1024</span>*<span class="pl-c1">1024</span>, MALLOC_CAP_SPIRAM);</pre></div>
+</li>
+<li>
+<strong>數據提交</strong>：學員需在 <code>hardware_report.md</code> 中填入百萬次單次 1MB 的寫入時間。導師核閱其數據是否展現出「SRAM 快、PSRAM 慢」的物理特徵。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 2：影像緩衝區管理 - ROI 提取 (Pointer Arithmetic Lab)</h4><a aria-label="Permalink: 任務 2：影像緩衝區管理 - ROI 提取 (Pointer Arithmetic Lab)" class="anchor" href="#任務-2影像緩衝區管理---roi-提取-pointer-arithmetic-lab" id="user-content-任務-2影像緩衝區管理---roi-提取-pointer-arithmetic-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：在不複製數據的情況下，利用指針偏移技術存取影像特定區域。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>驗證方式</strong>：學員需實作一個函數，計算給定 $(x, y)$ 座標後，在寬度為 640 的 RGB565 Buffer 中的指針地址。</li>
+<li>
+<strong>Autograding</strong>：撰寫一個模擬單元測試，提供一組 mock 的 Buffer 並檢核學員提取的 ROI 數值是否與預期一致。這能強化學生對「步幅 (Stride)」與「像素格式」的理解。</li>
+</ul>
+</li>
+</ul>
+<div class="markdown-heading"><h4 class="heading-element">任務 3：感測器與 PSRAM 聯動除錯 (Signal Integrity Lab)</h4><a aria-label="Permalink: 任務 3：感測器與 PSRAM 聯動除錯 (Signal Integrity Lab)" class="anchor" href="#任務-3感測器與-psram-聯動除錯-signal-integrity-lab" id="user-content-任務-3感測器與-psram-聯動除錯-signal-integrity-lab"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<ul>
+<li>
+<strong>目標</strong>：觀察高速匯流排競爭對類比訊號（影像雜訊）的影響。</li>
+<li>
+<strong>Classroom 部署建議</strong>：
+<ul>
+<li>
+<strong>證據提交</strong>：學員需將 PSRAM 設定在 80MHz (Octal SPI) 下產生的影像雜訊截圖上傳。</li>
+<li>
+<strong>分析任務</strong>：在報告中描述當 PSRAM 全速讀寫時，I2C 感測器（如陀螺儀）是否出現數據丟失或延遲現象。這能培養學員對「硬體系統級除錯」的直覺。</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<div class="markdown-heading"><h3 class="heading-element">3. 進階硬體單元導師點評標準 (Advanced Benchmarks)</h3><a aria-label="Permalink: 3. 進階硬體單元導師點評標準 (Advanced Benchmarks)" class="anchor" href="#3-進階硬體單元導師點評標準-advanced-benchmarks" id="user-content-3-進階硬體單元導師點評標準-advanced-benchmarks"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<p>此單元的價值在於 <strong>「對硬體物理邊界的認知」</strong>：</p>
+<ul>
+<li>[ ] <strong>內存安全意識</strong>：學員在申請大容量 Buffer 前是否檢查了 <code>heap_caps_get_free_size</code>？</li>
+<li>[ ] <strong>指針嚴謹度</strong>：ROI 計算是否考慮了邊界對齊（Alignment）與越界檢查？</li>
+<li>[ ] <strong>資源權衡能力</strong>：是否能解釋為什麼在某些場景下需要手動調降 PSRAM 頻率以獲得更乾淨的影像？</li>
+</ul>
+<div class="markdown-heading"><h3 class="heading-element">📁 推薦範本結構 (GitHub Classroom Template)：</h3><a aria-label="Permalink: 📁 推薦範本結構 (GitHub Classroom Template)：" class="anchor" href="#-推薦範本結構-github-classroom-template" id="user-content--推薦範本結構-github-classroom-template"><span aria-hidden="true" class="octicon octicon-link"></span></a></div>
+<pre lang="text"><code>.
+├── platformio.ini         # 核心硬體配置 (啟用 PSRAM 支援)
+├── src/
+│   ├── memory_benchmark.cpp # 壓測腳本
+│   └── roi_math.h         # 指針運算邏輯實作位元
+├── docs/
+│   └── hardware_bench.md  # 實驗報告 (含 SRAM/PSRAM 對比數據)
+└── README.md              # 系統架構心得：從 MCU 到小型電腦
+</code></pre>
+<p>透過這種部署方式，學生能從「單純寫程式」跨越到「<strong>操控硬體靈魂</strong>」的層次，這對於未來開發無人機、工業相機等複雜系統是不可或缺的深度練習。_</p>
+</section>
+
+</body>
+</html>
