@@ -13,6 +13,7 @@ window.__courseSharedLoaded = true;
 // Initializer
 function init() {
     console.log("[CourseShared] Initializing...");
+    hideGlobalNavOnCoursePage();
     ensureGlobalNavOnCoursePage();
     applyHideTabsPreference();
     upgradeLegacyStartUnitToMsLayout();
@@ -22,6 +23,24 @@ function init() {
     enhanceAssignmentEntryButtons();
     initFirebaseFeatures(); // [NEW] Start Firebase (Tracking + Assignments)
     initGithubReadme(); // [V8.2] Fetch and render GitHub README if applicable
+}
+
+function hideGlobalNavOnCoursePage() {
+    try {
+        const path = window.location.pathname || '';
+        if (!path.startsWith('/courses/')) return;
+        if (document.getElementById('course-hide-main-nav-style')) return;
+
+        const style = document.createElement('style');
+        style.id = 'course-hide-main-nav-style';
+        style.textContent = `
+            #main-nav { display: none !important; }
+            #nav-placeholder { display: none !important; }
+        `;
+        document.head.appendChild(style);
+    } catch (e) {
+        console.warn('[CourseShared] hideGlobalNavOnCoursePage failed:', e);
+    }
 }
 
 function ensureGlobalNavOnCoursePage() {
