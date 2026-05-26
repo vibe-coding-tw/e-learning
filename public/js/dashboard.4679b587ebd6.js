@@ -828,7 +828,7 @@ function renderStudentDashboard(data, filterUnitId = null) {
                             <tr class="hover:bg-gray-50">
                                 <td class="py-3 px-2">
                                     <div class="font-bold text-gray-800 mb-0.5">${escapeHtml(a.assignmentTitle || a.title || "未指定任務")}</div>
-                                    <div class="text-[10px] text-gray-400 capitalize">${escapeHtml(a.unitId ? a.unitId.replace('.html', '').replace(/-/g, ' ') : 'N/A')}</div>
+                                    <div class="text-[10px] text-gray-400 capitalize">${escapeHtml(window.formatUnitIdForUI(a.unitId))}</div>
                                 </td>
                                 <td class="py-3 px-2 text-gray-500 text-xs">${a.submittedAt ? new Date(a.submittedAt.seconds * 1000).toLocaleString() : '-'}</td>
                                 <td class="py-3 px-2">
@@ -1136,26 +1136,26 @@ function renderAdminDashboard(data, filterUnitId = null) {
 
         // 2. Definition of "Prepare" units (準備課程)
         const prepareCids = [
-            'prepare-01-developer-identity.html',
-            'prepare-02-vscode-online.html',
-            'prepare-03-vscode-setup.html',
-            'prepare-04-agent-mode.html',
-            'prepare-05-vibe-coding.html',
-            'prepare-06-web-agents.html',
-            'prepare-07-github-classroom.html',
-            'prepare-08-motor-ramping.html',
-            'prepare-09-wifi-setup.html'
+            'tw-common-developer-identity.html',
+            'tw-common-vscode-online.html',
+            'tw-common-vscode-setup.html',
+            'tw-common-agent-mode.html',
+            'tw-common-vibe-coding.html',
+            'tw-common-web-agents.html',
+            'tw-common-github-classroom.html',
+            'tw-common-motor-ramping.html',
+            'tw-common-wifi-setup.html'
         ];
         const prepareTitles = {
-            'prepare-01-developer-identity.html': '準備 01：開發者身分與安全',
-            'prepare-02-vscode-online.html': '準備 02：VS Code Online',
-            'prepare-03-vscode-setup.html': '準備 03：開發環境安裝設定',
-            'prepare-04-agent-mode.html': '準備 04：AI Agent 模式實務',
-            'prepare-05-vibe-coding.html': '準備 05：Vibe Coding 實戰',
-            'prepare-06-web-agents.html': '準備 06：網頁版 AI 代理人',
-            'prepare-07-github-classroom.html': '準備 07：GitHub Classroom 實務',
-            'prepare-08-motor-ramping.html': '準備 08：馬達 Ramping 控制',
-            'prepare-09-wifi-setup.html': '準備 09：ESP32 WiFi 連線設定'
+            'tw-common-developer-identity.html': '準備 01：開發者身分與安全',
+            'tw-common-vscode-online.html': '準備 02：VS Code Online',
+            'tw-common-vscode-setup.html': '準備 03：開發環境安裝設定',
+            'tw-common-agent-mode.html': '準備 04：AI Agent 模式實務',
+            'tw-common-vibe-coding.html': '準備 05：Vibe Coding 實戰',
+            'tw-common-web-agents.html': '準備 06：網頁版 AI 代理人',
+            'tw-common-github-classroom.html': '準備 07：GitHub Classroom 實務',
+            'tw-common-motor-ramping.html': '準備 08：馬達 Ramping 控制',
+            'tw-common-wifi-setup.html': '準備 09：ESP32 WiFi 連線設定'
         };
         
         // Combine into "Always Show" list
@@ -1561,7 +1561,7 @@ window.renderAssignmentsTable = window.renderAssignmentsTable || function(assign
             </td>
             <td class="py-2 px-1 sm:py-3 sm:px-2">
                 <div class="text-[10px] text-gray-400 capitalize mb-0.5">
-                    ${escapeHtml(a.unitId ? a.unitId.replace('.html', '').replace(/-/g, ' ') : 'N/A')}
+                    ${escapeHtml(window.formatUnitIdForUI(a.unitId))}
                 </div>
                 <div class="font-bold text-gray-800 text-xs md:text-sm">
                     ${escapeHtml(a.title || a.assignmentTitle || unitsTitleMap[resolveCanonicalUnitId(a.unitId)] || "未指定任務")}
@@ -3094,6 +3094,15 @@ window.formatUnitName = window.formatUnitName || function(fileName) {
     return name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); // Title Case
 }
 
+window.formatUnitIdForUI = window.formatUnitIdForUI || function(unitId) {
+    if (!unitId) return 'N/A';
+    return String(unitId)
+        .replace(/\.html$/i, '')
+        .replace(/-unit-/i, '-')
+        .replace(/-lesson-/i, '-')
+        .replace(/-/g, ' ');
+}
+
 // --- Data Aggregation Logic ---
 window.aggregateData = window.aggregateData || function(data) {
     if (!data.students) return;
@@ -4001,7 +4010,7 @@ function renderTutorAlerts(data) {
                             <span class="text-[9px] text-slate-400 font-medium whitespace-nowrap">${timeStr}</span>
                         </div>
                         <div class="text-[10px] text-slate-500 capitalize mb-2">
-                            單元：${escapeHtml(item.unitId ? item.unitId.replace('.html', '').replace(/-/g, ' ') : 'N/A')}
+                            單元：${escapeHtml(window.formatUnitIdForUI(item.unitId))}
                         </div>
                         <div class="text-xs text-red-700 bg-white/70 p-2.5 rounded-lg border border-red-50/50 mb-3">
                             <strong>原因：</strong> ${escapeHtml(item.triggerReason || '評分低於門檻')}
@@ -4044,7 +4053,7 @@ function renderTutorAlerts(data) {
                             <span class="text-[9px] text-slate-400 font-medium whitespace-nowrap">${timeStr}</span>
                         </div>
                         <div class="text-[10px] text-slate-500 capitalize mb-1">
-                            單元：${escapeHtml(a.unitId ? a.unitId.replace('.html', '').replace(/-/g, ' ') : 'N/A')}
+                            單元：${escapeHtml(window.formatUnitIdForUI(a.unitId))}
                         </div>
                         <div class="mb-2"><span class="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 border border-amber-300 text-amber-800">${typeLabel}</span></div>
                         <div class="text-xs text-slate-700 bg-white/70 p-2.5 rounded-lg border border-amber-50/50 mb-3 whitespace-pre-wrap truncate max-h-[80px]">
