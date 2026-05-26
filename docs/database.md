@@ -293,8 +293,8 @@
 2. 申請/推薦/審核流程以 `tutor_applications` 為單一真實來源（Source of Truth）；`users.tutorApplications` 僅作歷史快照，不得作為執行期判斷來源。
 3. 單元 key 含 `.html` 時，Firestore update 請使用 `FieldPath` 或一致正規化，避免 dot-in-key 巢狀化問題。
 4. 禁止新增白名單、相容名單、legacyMap 類型的執行期判斷層；需先完成 Firestore 資料遷移再上線。
-5. `courseId` 建議統一採用課程主頁檔名（page URL），例如：`01-master-getting-started.html`、`02-master-ai-agents.html`。
-6. 若要從舊 `courseId`（短碼/舊字串）遷移至 page URL，請使用：
+5. `courseId` 建議統一採用 canonical 課程/單元 page URL（以 Firestore `metadata_lessons` 實際值為準），優先使用可直接開課之 `entryUnitId` 對應頁面，不再以 `*-master-*` 作為新資料主鍵。
+6. 若要從舊 `courseId`（短碼/舊字串/`*-master-*`）遷移至 canonical page URL，請使用：
    - `node functions/scripts/migrate_courseid_to_page_url.js --dry-run`
    - `node functions/scripts/migrate_courseid_to_page_url.js --apply`
    - 來源映射會以 `metadata_lessons.classroomUrl` 的檔名為準，並同步更新 `orders`、`assignments`、`users.courseProgress`、`users.tutorConfigs` 的課程層 key。
