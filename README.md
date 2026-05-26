@@ -213,6 +213,10 @@ firebase deploy --only hosting --project e-learning-942f7
   3. 若有改 `public/js/*` 再部署 `hosting`
   4. 前端驗證時使用硬重新整理 `Cmd+Shift+R`
 
+### 課程單元內 Dashboard 開啟規範
+- 課程單元頁右下角 `FAB`（📊）與支援中心中的 Dashboard 入口，需開啟「全螢幕 Dialog」內嵌 Dashboard（`mode=iframe`），不可直接離開當前單元頁。
+- 使用者按下 `Esc` 時，若 Dashboard Dialog 開啟中，必須先關閉 Dialog 並回到原課程單元頁面。
+
 ### CI/CD 自動化流程 (GitHub Actions)
 1. **PR 預覽部署 (`firebase-hosting-pull-request.yml`)**
    - 觸發時機：發起 Pull Request 時。
