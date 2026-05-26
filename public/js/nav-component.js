@@ -384,9 +384,46 @@ function injectDashboardFAB() {
     document.body.appendChild(fab);
 }
 
+function normalizeCourseTopNavBrandLink() {
+    try {
+        const path = window.location.pathname || '';
+        if (!path.startsWith('/courses/')) return;
+        const file = (path.split('/').pop() || '').toLowerCase();
+        const topNav = document.querySelector('.ms-topnav');
+        const brand = topNav ? topNav.querySelector('.brand') : null;
+        if (!brand) return;
+
+        const href = (brand.getAttribute('href') || '').trim();
+        if (href && href !== '#' && href !== './#') return;
+
+        let target = '/';
+        if (file.startsWith('start-')) target = '/start.html';
+        else if (file.startsWith('basic-')) target = '/basic.html';
+        else if (file.startsWith('adv-')) target = '/advanced.html';
+        else if (file.startsWith('prepare-')) target = '/prepare.html';
+        brand.setAttribute('href', target);
+        brand.setAttribute('target', '_top');
+    } catch (e) {
+        console.warn('[NavComp] normalizeCourseTopNavBrandLink failed:', e);
+    }
+}
+
 // --- 3. Initializer Bootloader ---
 
 function initNavComponent() {
+    const path = window.location.pathname || '';
+    const isCoursePage = path.startsWith('/courses/');
+
+    if (isCoursePage) {
+        // Do not inject global nav inside course pages.
+        document.querySelectorAll('#main-nav').forEach((el) => el.remove());
+        const placeholder = document.getElementById('nav-placeholder');
+        if (placeholder) placeholder.remove();
+        normalizeCourseTopNavBrandLink();
+        injectDashboardFAB();
+        return;
+    }
+
     const placeholder = document.getElementById('nav-placeholder');
     const root = placeholder ? (placeholder.getAttribute('data-root') || '.') : '/';
     const showAuth = placeholder ? (placeholder.getAttribute('data-show-auth') === 'true') : false;

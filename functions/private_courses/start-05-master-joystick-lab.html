@@ -13,7 +13,8 @@
 
 <body id="page-started" class="bg-gray-50 flex flex-col min-h-screen font-[Inter]">
 
-    <script src="/js/course-shared.js?v=2026.05.21.V21.DISABLE_UNIFIED_SUPPORT_HUB"></script>
+    <script type="module" src="/js/nav-component.js?v=2026.05.26.V48.START_MASTER_PARITY"></script>
+    <script src="/js/course-shared.js?v=2026.05.26.V48.START_MASTER_PARITY"></script>
     
 
     <!-- Tab Navigation Bar -->
@@ -75,11 +76,15 @@
         }
 
         function loadContent(url) {
-            // Pass current query parameters to children (e.g., ?token=xyz)
-            const separator = url.includes('?') ? '&' : '?';
-            const query = window.location.search.substring(1);
-
-            iframe.src = query ? `${url}${separator}${query}` : url;
+            iframe.style.opacity = '0';
+            setTimeout(() => {
+                const separator = url.includes('?') ? '&' : '?';
+                const query = window.location.search.substring(1);
+                iframe.src = query ? `${url}${separator}${query}` : url;
+                iframe.onload = () => {
+                    iframe.style.opacity = '1';
+                };
+            }, 300);
         }
 
         // Handle browser back/forward if needed or deep linking hash
