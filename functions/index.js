@@ -709,19 +709,26 @@ async function getLessons() {
     return cachedLessons || [];
 }
 
+function cleanUnitId(unitId) {
+    if (!unitId) return "";
+    return String(unitId)
+        .trim()
+        .toLowerCase()
+        .replace(/\.html$/, '')
+        .replace(/^(?:tw-(?:common|car-(?:starter|basic|advanced))-|start-|basic-|adv-|advanced-|prepare-)?(?:\d{2}-)?(?:unit-|lesson-|master-)?/i, '');
+}
+
 function resolveCanonicalUnitId(unitId, lessons = []) {
     if (!unitId) return unitId;
 
-    // [V14.12] NORMALIZATION: Strip extension and handle 'start-' prefix
-    const cleanId = unitId.replace(/\.html$/, '').replace(/^start-/, '');
+    const cleanId = cleanUnitId(unitId);
 
     for (const lesson of lessons) {
         const courseUnits = Array.isArray(lesson.courseUnits) ? lesson.courseUnits : [];
         if (courseUnits.includes(unitId)) return unitId; // Match original
         
         const matchedUnit = courseUnits.find(courseUnit => {
-            const shortCourseUnit = courseUnit.replace(/\.html$/, '').replace(/^start-/, '');
-            return shortCourseUnit === cleanId;
+            return cleanUnitId(courseUnit) === cleanId;
         });
 
         if (matchedUnit) return matchedUnit;

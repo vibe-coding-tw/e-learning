@@ -451,7 +451,7 @@ Reference artifacts:
 - [x] Add upline share calculation for course developer (`courseDevUplineRate`)
 - [x] Persist `policySnapshot` into ledger records
 - [x] Add admin policy CRUD (MVP: list + inline update in Admin Console)
-- [x] Add admin revenue simulation UI (read-only calculator in Tutor Admin Console)
+- [x] Add admin revenue simulation UI (read-only calculator in Tutor Management)
 
 ### 7.6 Validation and pilot rollout
 
@@ -556,11 +556,18 @@ Validation matrix (Phase A):
 
 | Area | Check item | Method | Owner | Status |
 |---|---|---|---|---|
-| Runtime script loading | No invalid placeholder script token in served course HTML | `rg "P26\\.05\\.26"` on `functions/private_courses/*.html` | Engineering | Completed |
-| FAB visibility | FAB shows on `prepare-*`, `start-*`, `basic-*`, `adv-*` unit pages | Manual open + hard refresh on each track sample | QA/PM | In progress |
-| Nav de-duplication | No duplicate global nav on `/courses/*` | Manual check on 5 master pages + 4 unit pages | QA/PM | In progress |
+| Runtime script loading | No invalid placeholder script token in served course HTML | `rg "P26\\.05\\.26"` on `functions/private_courses/*.html` | Engineering | Completed (2026-05-26 recheck: 0 hit) |
+| FAB visibility | FAB shows on `prepare-*`, `start-*`, `basic-*`, `adv-*` unit pages | Manual open + hard refresh on each track sample | QA/PM | In progress (manual validation pending) |
+| Nav de-duplication | No duplicate global nav on `/courses/*` | Manual check on 5 master pages + 4 unit pages | QA/PM | In progress (manual validation pending) |
 | Start parity | `start` tab + iframe behavior matches `basic/adv` | Compare master wrappers (`start-01..05-master-*`) | Engineering | Completed |
-| Access route | token-based open does not return `File not found` on active units | Open from catalog + dashboard deep link | QA/PM | In progress |
+| Access route | token-based open does not return `File not found` on active units | Open from catalog + dashboard deep link | QA/PM | In progress (manual validation pending) |
+
+Validation note (2026-05-26):
+
+- `functions/private_courses/*.html` now uniformly loads hashed runtime asset:
+  - `/js/course-shared.1151b0620be1.js`
+- This confirms fingerprint pipeline is active for private course pages.
+- Remaining Phase A gate items require live-browser manual confirmation on production routes.
 
 ### 9.2 Phase B: `entryUnitId` promotion
 

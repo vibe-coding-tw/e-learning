@@ -25,8 +25,8 @@ graph TD
 | :--- | :--- | :--- |
 | `AWAITING_CANDIDATE_LINK` | Candidate was recommended and must submit classroom invite link first. | Tutor clicks "Recommend Student" in assignment workflow. |
 | `PENDING` | Ready for admin review. | Candidate submits classroom invite link (or self-application directly submits). |
-| `APPROVED` | Applicant is granted tutoring rights for a specific unit. | Admin clicks "Approve" in Tutor Admin tab. |
-| `REJECTED` | Application is dismissed. | Admin clicks "Reject" in Tutor Admin tab. |
+| `APPROVED` | Applicant is granted tutoring rights for a specific unit. | Admin clicks "Approve" in Tutor Management tab. |
+| `REJECTED` | Application is dismissed. | Admin clicks "Reject" in Tutor Management tab. |
 
 ## 3. Workflow Implementation
 
@@ -45,7 +45,7 @@ graph TD
 - **Notification**: Sends admin notification via `sendAdminNewApplicationEmail`.
 
 ### 3.3 Step 3: Administrative Review (Admin Action)
-- **Interface**: The **Tutor Admin** tab (`#view-admin`) in the Dashboard.
+- **Interface**: The **Tutor Management** tab (`#view-tutors`, route `tab=tutors`) in the Dashboard.
 - **Aggregation**: `getDashboardData` collects all documents in `tutor_applications` where `status === 'pending'`.
 - **Decision Logic**:
     - **Approval**: `decideTutorApplication` updates `tutor_applications` status and writes `users.tutorConfigs[unitId].authorized = true`.
@@ -91,4 +91,3 @@ graph TD
   - 檢查 Tutor 在該單元 `tutorConfigs[unitId].authorized === true`
   - 檢查該單元已配置 `assignmentUrl/githubClassroomUrl`
   - 驗證通過後，寫入 `users.unitAssignments` 與 `users.unitAssignmentMeta` 並開啟作業；若未通過，則提示錯誤阻擋進入。
-
